@@ -2,16 +2,16 @@
 
 import { InputHTMLAttributes, ReactNode, useState } from "react";
 
-interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  fieldId: string;
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  inputId: string;
   label?: string;
   icon?: ReactNode;
   errorMessage?: string;
   characterLength?: number;
 }
 
-export default function Field({
-  fieldId,
+export default function Input({
+  inputId,
   label,
   icon,
   errorMessage,
@@ -21,7 +21,7 @@ export default function Field({
   className,
   onChange,
   ...rest
-}: FieldProps) {
+}: InputProps) {
   const [internalError, setInternalError] = useState("");
   const characterLimitErrorMessage = "Oops, you've reached the character limit.";
 
@@ -40,7 +40,7 @@ export default function Field({
     <div className="flex flex-col gap-1">
       {label && (
         <label
-          htmlFor={fieldId}
+          htmlFor={inputId}
           className="flex items-center gap-0.5 pl-1 text-sm font-semibold text-[#172033]"
         >
           {label}
@@ -55,7 +55,7 @@ export default function Field({
           </div>
         )}
         <input
-          id={fieldId}
+          id={inputId}
           required={required}
           disabled={disabled}
           maxLength={characterLength}
