@@ -1,4 +1,4 @@
-import AuthLoginHMI from "@/components/pages/AuthLoginPage";
+import AuthLoginPage from "@/components/pages/AuthLoginPage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/auth/login",
   },
-openGraph: {
+  openGraph: {
     title: "Login | HMI Connect",
     description:
       "Masuk ke HMI Connect untuk melanjutkan akses akun dan aktivitas organisasi.",
@@ -18,5 +18,5 @@ openGraph: {
 };
 
 export default function LoginPage() {
-  return <AuthLoginHMI />;
+  return <AuthLoginPage />;
 }

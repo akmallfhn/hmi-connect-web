@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
         source:
           "/:path((?!auth/login|api/auth/callback/google|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
         missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
-        destination: "/auth/login?redirectTo=/:path",
+        destination: "/auth/login",
         permanent: false,
       },
       // Already signed in -> don't show the login page again.
@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
             {
               type: "header",
               key: "host",
-              value: "(example.com).*",
+              value: "www.(example.com).*",
             },
           ],
           destination: "/www/:path*",
