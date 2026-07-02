@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/auth/login",
   },
-  openGraph: {
+openGraph: {
     title: "Login | HMI Connect",
     description:
       "Masuk ke HMI Connect untuk melanjutkan akses akun dan aktivitas organisasi.",
