@@ -17,6 +17,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
   return <AuthLoginPage />;
 }
