@@ -4,9 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import NumberInput from "../fields/NumberInput";
+import RadioButton from "../fields/RadioButton";
 import Select from "../fields/Select";
-import SearchableSelect, {
+import CreateableSelect, {
   type SearchableOption,
+} from "../fields/CreateableSelect";
+import SearchableSelect, {
+  type SearchableOption as BranchOption,
 } from "../fields/SearchableSelect";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 import type { Branch } from "@/apis/branches";
@@ -38,6 +43,28 @@ function emptyTrainingRow(): TrainingRow {
   return { level: "", result: "", organizerName: "", year: "" };
 }
 
+type FormData = {
+  institution: SearchableOption | null;
+  major: string;
+  startYear: string;
+  endYear: string;
+  branch: BranchOption | null;
+  trainings: TrainingRow[];
+  hasSeniorCourse: boolean | null;
+};
+
+function emptyFormData(): FormData {
+  return {
+    institution: null,
+    major: "",
+    startYear: "",
+    endYear: "",
+    branch: null,
+    trainings: [emptyTrainingRow()],
+    hasSeniorCourse: null,
+  };
+}
+
 interface VerifyPageProps {
   fullName?: string;
   branches: Branch[];
@@ -55,53 +82,100 @@ export default function VerifyPage({
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [institutionOption, setInstitutionOption] =
-    useState<SearchableOption | null>(null);
-  const [major, setMajor] = useState("");
-  const [startYear, setStartYear] = useState("");
-  const [endYear, setEndYear] = useState("");
-  const [branchId, setBranchId] = useState<string | number | null>(null);
-  const [trainings, setTrainings] = useState<TrainingRow[]>([
-    emptyTrainingRow(),
-  ]);
-  const [hasSeniorCourse, setHasSeniorCourse] = useState<boolean | null>(null);
+  const [formData, setFormData] = useState<FormData>(emptyFormData);
+
+  function updateFormData<K extends keyof FormData>(
+    key: K,
+    value: FormData[K]
+  ) {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  }
 
   const institutionOptions: SearchableOption[] = institutions.map((item) => ({
     label: item.name,
     value: item.name,
+    image: item.image_url,
   }));
-  const branchOptions = branches.map((item) => ({
+  const branchOptions: BranchOption[] = branches.map((item) => ({
     label: item.name,
     value: item.id,
   }));
 
-  async function loadInstitutionOptions(
-    inputValue: string
-  ): Promise<SearchableOption[]> {
-    const response = await fetch(
-      `/api/institutions/search?q=${encodeURIComponent(inputValue)}`
-    );
+  async function loadInstitutionOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/institutions/search?${params}`);
     const json = await response.json();
     const results: Institution[] = json.data ?? [];
 
-    return results.map((item) => ({ label: item.name, value: item.name }));
+    return {
+      options: results.map((item) => ({
+        label: item.name,
+        value: item.name,
+        image: item.image_url,
+      })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
+  async function createInstitutionOption(
+    name: string
+  ): Promise<SearchableOption | null> {
+    const response = await fetch("/api/institutions/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const json = await response.json();
+    const created: Institution | null = json.data ?? null;
+
+    if (!created) return null;
+    return {
+      label: created.name,
+      value: created.name,
+      image: created.image_url,
+    };
+  }
+
+  async function loadBranchOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/branches/search?${params}`);
+    const json = await response.json();
+    const results: Branch[] = json.data ?? [];
+
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
   }
 
   function updateTraining(index: number, patch: Partial<TrainingRow>) {
-    setTrainings((rows) =>
-      rows.map((row, i) => (i === index ? { ...row, ...patch } : row))
-    );
+    setFormData((prev) => ({
+      ...prev,
+      trainings: prev.trainings.map((row, i) =>
+        i === index ? { ...row, ...patch } : row
+      ),
+    }));
   }
 
   function addTrainingRow() {
-    setTrainings((rows) => [...rows, emptyTrainingRow()]);
+    setFormData((prev) => ({
+      ...prev,
+      trainings: [...prev.trainings, emptyTrainingRow()],
+    }));
   }
 
   function removeTrainingRow(index: number) {
-    setTrainings((rows) => rows.filter((_, i) => i !== index));
+    setFormData((prev) => ({
+      ...prev,
+      trainings: prev.trainings.filter((_, i) => i !== index),
+    }));
   }
 
-  const filledTrainings = trainings.filter(
+  const filledTrainings = formData.trainings.filter(
     (row) => row.level || row.result || row.organizerName || row.year
   );
   const hasIncompleteTraining = filledTrainings.some(
@@ -109,13 +183,13 @@ export default function VerifyPage({
   );
 
   const isStep0Valid =
-    institutionOption !== null &&
-    major.trim() !== "" &&
-    startYear.trim() !== "" &&
-    endYear.trim() !== "" &&
-    branchId !== null;
+    formData.institution !== null &&
+    formData.major.trim() !== "" &&
+    formData.startYear.trim() !== "" &&
+    formData.endYear.trim() !== "" &&
+    formData.branch !== null;
   const isStep1Valid = !hasIncompleteTraining;
-  const isStep2Valid = hasSeniorCourse !== null;
+  const isStep2Valid = formData.hasSeniorCourse !== null;
 
   const canGoNext =
     (step === 0 && isStep0Valid) ||
@@ -129,7 +203,7 @@ export default function VerifyPage({
     setErrorMessage("");
 
     const result = await verifyUser({
-      branch_id: String(branchId),
+      branch_id: String(formData.branch?.value ?? ""),
       trainings: filledTrainings.map((row) => ({
         level: row.level,
         result: row.result,
@@ -138,13 +212,13 @@ export default function VerifyPage({
       })),
       educations: [
         {
-          institution_name: institutionOption?.label ?? "",
-          major,
-          start_year: Number(startYear),
-          end_year: Number(endYear),
+          institution_name: formData.institution?.label ?? "",
+          major: formData.major,
+          start_year: Number(formData.startYear),
+          end_year: Number(formData.endYear),
         },
       ],
-      has_senior_course: hasSeniorCourse ?? false,
+      has_senior_course: formData.hasSeniorCourse ?? false,
     });
 
     if (!result.success) {
@@ -202,14 +276,16 @@ export default function VerifyPage({
               Kamu berkuliah dimana dan dari cabang mana?
             </h2>
 
-            <SearchableSelect
+            <CreateableSelect
               selectId="institution"
               label="Universitas"
               placeholder="Cari universitas..."
-              value={institutionOption}
-              onChange={setInstitutionOption}
+              value={formData.institution}
+              onChange={(option) => updateFormData("institution", option)}
               loadOptions={loadInstitutionOptions}
               defaultOptions={institutionOptions}
+              onCreateOption={createInstitutionOption}
+              createLabel={(input) => `Tambah universitas "${input}"`}
               debounceMs={400}
               required
             />
@@ -217,37 +293,37 @@ export default function VerifyPage({
               inputId="major"
               label="Jurusan"
               placeholder="Contoh: Teknik Informatika"
-              value={major}
-              onChange={(e) => setMajor(e.target.value)}
+              value={formData.major}
+              onChange={(e) => updateFormData("major", e.target.value)}
               required
             />
             <div className="grid grid-cols-2 gap-4">
-              <Input
+              <NumberInput
                 inputId="start-year"
                 label="Tahun Masuk"
-                type="number"
                 placeholder="2020"
-                value={startYear}
-                onChange={(e) => setStartYear(e.target.value)}
+                value={formData.startYear}
+                onValueChange={(value) => updateFormData("startYear", value)}
                 required
               />
-              <Input
+              <NumberInput
                 inputId="end-year"
                 label="Tahun Lulus (Perkiraan)"
-                type="number"
                 placeholder="2024"
-                value={endYear}
-                onChange={(e) => setEndYear(e.target.value)}
+                value={formData.endYear}
+                onValueChange={(value) => updateFormData("endYear", value)}
                 required
               />
             </div>
-            <Select
+            <SearchableSelect
               selectId="branch"
               label="Cabang HMI"
-              placeholder="Pilih cabang"
-              value={branchId}
-              onChange={(value) => setBranchId(value)}
-              options={branchOptions}
+              placeholder="Cari cabang..."
+              value={formData.branch}
+              onChange={(option) => updateFormData("branch", option)}
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOptions}
+              debounceMs={400}
               required
             />
           </div>
@@ -264,7 +340,7 @@ export default function VerifyPage({
             </p>
 
             <div className="flex flex-col gap-6">
-              {trainings.map((row, index) => (
+              {formData.trainings.map((row, index) => (
                 <div
                   key={index}
                   className="flex flex-col gap-3 rounded-xl border border-[#dbe3ef] p-4"
@@ -273,7 +349,7 @@ export default function VerifyPage({
                     <p className="text-sm font-semibold text-[#172033]">
                       Jenjang {index + 1}
                     </p>
-                    {trainings.length > 1 && (
+                    {formData.trainings.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeTrainingRow(index)}
@@ -314,14 +390,13 @@ export default function VerifyPage({
                       updateTraining(index, { organizerName: e.target.value })
                     }
                   />
-                  <Input
+                  <NumberInput
                     inputId={`training-year-${index}`}
                     label="Tahun"
-                    type="number"
                     placeholder="2020"
                     value={row.year}
-                    onChange={(e) =>
-                      updateTraining(index, { year: e.target.value })
+                    onValueChange={(value) =>
+                      updateTraining(index, { year: value })
                     }
                   />
                 </div>
@@ -340,21 +415,21 @@ export default function VerifyPage({
               Apakah kamu sudah pernah mengikuti Senior Course?
             </h2>
 
-            <div className="flex gap-3">
-              <Button
-                variant={hasSeniorCourse === true ? "primary" : "outline"}
-                className="flex-1"
-                onClick={() => setHasSeniorCourse(true)}
-              >
-                Sudah
-              </Button>
-              <Button
-                variant={hasSeniorCourse === false ? "primary" : "outline"}
-                className="flex-1"
-                onClick={() => setHasSeniorCourse(false)}
-              >
-                Belum
-              </Button>
+            <div className="flex flex-col gap-3">
+              <RadioButton
+                radioName="has-senior-course"
+                label="Sudah"
+                value={true}
+                selectedValue={formData.hasSeniorCourse}
+                onChange={(value) => updateFormData("hasSeniorCourse", value)}
+              />
+              <RadioButton
+                radioName="has-senior-course"
+                label="Belum"
+                value={false}
+                selectedValue={formData.hasSeniorCourse}
+                onChange={(value) => updateFormData("hasSeniorCourse", value)}
+              />
             </div>
 
             {status === "error" && (

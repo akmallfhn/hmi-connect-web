@@ -62,7 +62,7 @@ export default function Select({
       {label && (
         <label
           htmlFor={selectId}
-          className="flex items-center gap-0.5 pl-1 text-sm font-semibold text-[#172033]"
+          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
         >
           {label}
           {required && <span className="text-red-600">*</span>}
@@ -72,8 +72,10 @@ export default function Select({
       <div
         id={selectId}
         className={[
-          "relative flex w-full items-center rounded-lg border p-2 text-sm font-medium transition",
-          isOpen ? "border-[#0b8f6a] ring-2 ring-[#0b8f6a]/15" : "border-[#dbe3ef]",
+          "relative flex w-full items-center rounded-lg border p-2 text-base transition",
+          isOpen
+            ? "border-[#0b8f6a] ring-2 ring-[#0b8f6a]/15"
+            : "border-[#dbe3ef]",
           disabled
             ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]"
             : "cursor-pointer bg-white",
@@ -104,7 +106,7 @@ export default function Select({
             </div>
           )}
           <span
-            className={`block truncate text-sm font-medium ${
+            className={`block truncate text-base ${
               selectedOption ? "" : "text-[#5f6573]"
             }`}
           >
@@ -120,7 +122,7 @@ export default function Select({
 
         {isOpen && !disabled && (
           <div className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md">
-            <ul className="flex max-h-60 flex-col overflow-auto text-sm font-medium">
+            <ul className="flex max-h-60 flex-col overflow-auto text-base">
               {options.map((opt, index) => (
                 <li
                   key={index}

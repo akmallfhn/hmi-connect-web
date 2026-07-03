@@ -1,12 +1,18 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, University } from "lucide-react";
+import Image from "next/image";
 import { createContext, useContext, useRef, useState } from "react";
-import ReactSelect, { components as SelectComponents, type MenuListProps } from "react-select";
+import CreatableSelect from "react-select/creatable";
+import {
+  components as SelectComponents,
+  type MenuListProps,
+} from "react-select";
 
 export interface SearchableOption {
   label: string;
   value: string | number;
+  image?: string | null;
 }
 
 export interface LoadOptionsResult {
@@ -34,7 +40,7 @@ function MenuListWithLoader(props: MenuListProps<SearchableOption, false>) {
 
 const selectComponents = { MenuList: MenuListWithLoader };
 
-interface SearchableSelectProps {
+interface CreateableSelectProps {
   selectId: string;
   label?: string;
   placeholder?: string;
@@ -46,9 +52,11 @@ interface SearchableSelectProps {
   required?: boolean;
   disabled?: boolean;
   noOptionsMessage?: string;
+  onCreateOption?: (inputValue: string) => Promise<SearchableOption | null>;
+  createLabel?: (inputValue: string) => string;
 }
 
-export default function SearchableSelect({
+export default function CreateableSelect({
   selectId,
   label,
   placeholder = "Cari...",
@@ -60,15 +68,20 @@ export default function SearchableSelect({
   required,
   disabled,
   noOptionsMessage = "Tidak ditemukan.",
-}: SearchableSelectProps) {
+  onCreateOption,
+  createLabel = (inputValue) => `Tambah "${inputValue}"`,
+}: CreateableSelectProps) {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<SearchableOption[]>(defaultOptions);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
   const requestIdRef = useRef(0);
 
   async function fetchPage(query: string, pageToLoad: number) {
@@ -111,6 +124,20 @@ export default function SearchableSelect({
     fetchPage("", 1);
   }
 
+  async function handleCreateOption(rawValue: string) {
+    if (!onCreateOption) return;
+    const name = rawValue.trim();
+    if (!name) return;
+
+    setIsCreating(true);
+    try {
+      const created = await onCreateOption(name);
+      if (created) handleChange(created);
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -124,7 +151,7 @@ export default function SearchableSelect({
       )}
 
       <IsLoadingMoreContext.Provider value={isLoadingMore}>
-        <ReactSelect<SearchableOption, false>
+        <CreatableSelect<SearchableOption, false>
           inputId={selectId}
           instanceId={selectId}
           isDisabled={disabled}
@@ -135,11 +162,51 @@ export default function SearchableSelect({
           isClearable
           options={options}
           filterOption={null}
-          isLoading={isLoading}
+          isLoading={isLoading || isCreating}
           onMenuScrollToBottom={handleMenuScrollToBottom}
+          isValidNewOption={(input) =>
+            Boolean(onCreateOption) &&
+            options.length === 0 &&
+            !isLoading &&
+            !isCreating &&
+            input.trim().length > 0
+          }
+          onCreateOption={handleCreateOption}
+          formatCreateLabel={createLabel}
           placeholder={placeholder}
           loadingMessage={() => "Mencari..."}
           noOptionsMessage={() => noOptionsMessage}
+          formatOptionLabel={(
+            option: SearchableOption & { __isNew__?: boolean }
+          ) => {
+            if (option.__isNew__) {
+              return (
+                <span className="flex items-center gap-2 text-[#0b8f6a]">
+                  <Plus className="size-4" />
+                  {option.label}
+                </span>
+              );
+            }
+
+            return (
+              <div className="flex items-center gap-2">
+                <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+                  {option.image ? (
+                    <Image
+                      className="h-full w-full object-cover"
+                      src={option.image}
+                      alt={option.label}
+                      width={24}
+                      height={24}
+                    />
+                  ) : (
+                    <University className="size-3.5 text-[#5f6573]" />
+                  )}
+                </span>
+                <span className="truncate">{option.label}</span>
+              </div>
+            );
+          }}
           components={selectComponents}
           unstyled
           classNames={{

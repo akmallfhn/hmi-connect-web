@@ -2,36 +2,67 @@
 
 import { InputHTMLAttributes, ReactNode, useState } from "react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export type NumberInputMode = "numeric" | "decimal";
+
+interface NumberInputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
   inputId: string;
   label?: string;
   icon?: ReactNode;
   errorMessage?: string;
   characterLength?: number;
+  mode?: NumberInputMode;
+  value: string;
+  onValueChange?: (value: string) => void;
 }
 
-export default function Input({
+const sanitizers: Record<NumberInputMode, (raw: string) => string> = {
+  numeric: (raw) => raw.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
+  decimal: (raw) =>
+    raw
+      .replace(/[^0-9.,]/g, "")
+      .replace(/,/g, ".")
+      .replace(/(\..*)\./g, "$1"),
+};
+
+const inputModeMap: Record<NumberInputMode, "numeric" | "decimal"> = {
+  numeric: "numeric",
+  decimal: "decimal",
+};
+
+const patternMap: Record<NumberInputMode, string> = {
+  numeric: "[0-9]*",
+  decimal: "^[0-9]*[.,]?[0-9]*$",
+};
+
+export default function NumberInput({
   inputId,
   label,
   icon,
   errorMessage,
   characterLength,
+  mode = "numeric",
+  value,
+  onValueChange,
   required,
   disabled,
   className,
-  onChange,
   ...rest
-}: InputProps) {
+}: NumberInputProps) {
   const [internalError, setInternalError] = useState("");
   const characterLimitErrorMessage = "Oops, you've reached the character limit.";
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (characterLength && event.target.value.length > characterLength) {
+    const rawValue = event.target.value;
+    const sanitized = sanitizers[mode](rawValue).slice(0, characterLength);
+
+    if (characterLength && rawValue.length > characterLength) {
       setInternalError(characterLimitErrorMessage);
     } else if (internalError) {
       setInternalError("");
     }
-    onChange?.(event);
+
+    onValueChange?.(sanitized);
   };
 
   const computedError = errorMessage || internalError;
@@ -56,9 +87,13 @@ export default function Input({
         )}
         <input
           id={inputId}
+          type="text"
+          inputMode={inputModeMap[mode]}
+          pattern={patternMap[mode]}
           required={required}
           disabled={disabled}
           maxLength={characterLength}
+          value={value}
           {...rest}
           onChange={handleChange}
           className={[

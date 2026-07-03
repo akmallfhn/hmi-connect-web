@@ -7,6 +7,7 @@ import { SESSION_COOKIE_NAME } from "./session";
 export type Institution = {
   id: number;
   name: string;
+  image_url?: string | null;
 };
 
 type InstitutionsListResponse = {
@@ -25,9 +26,14 @@ export type GetInstitutionsOptions = {
   pageSize?: number;
 };
 
-export async function getInstitutions(
+export type GetInstitutionsResult = {
+  list: Institution[];
+  hasMore: boolean;
+};
+
+async function fetchInstitutions(
   options: GetInstitutionsOptions = {}
-): Promise<Institution[]> {
+): Promise<GetInstitutionsResult> {
   const { search, page, pageSize } = options;
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -45,5 +51,38 @@ export async function getInstitutions(
     }
   );
 
-  return result.data?.list ?? [];
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+
+  return { list, hasMore };
+}
+
+export async function getInstitutions(
+  options: GetInstitutionsOptions = {}
+): Promise<Institution[]> {
+  const { list } = await fetchInstitutions(options);
+  return list;
+}
+
+export async function searchInstitutions(
+  options: GetInstitutionsOptions = {}
+): Promise<GetInstitutionsResult> {
+  return fetchInstitutions(options);
+}
+
+export async function createInstitution(
+  name: string
+): Promise<Institution | null> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  const result = await callApi<Institution>("/api/v1/institutions/create", {
+    method: "POST",
+    token: sessionToken,
+    body: { name },
+  });
+
+  if (!result.success || !result.data) return null;
+  return result.data;
 }
