@@ -1,0 +1,40 @@
+import DashboardHeader from "../dashboard/DashboardHeader";
+import Feed from "../dashboard/Feed";
+import ProfileSidebar from "../dashboard/ProfileSidebar";
+import RightSidebar from "../dashboard/RightSidebar";
+
+interface DashboardPageProps {
+  fullName?: string;
+  avatar?: string;
+  role?: string;
+}
+
+export default function DashboardPage({
+  fullName,
+  avatar,
+  role,
+}: DashboardPageProps) {
+  return (
+    <div className="min-h-screen bg-[#f5f7fb]">
+      <DashboardHeader fullName={fullName} avatar={avatar} role={role} />
+
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6 lg:px-8">
+        <aside>
+          <div className="lg:sticky lg:top-20">
+            <ProfileSidebar fullName={fullName} avatar={avatar} role={role} />
+          </div>
+        </aside>
+
+        <main>
+          <Feed fullName={fullName} avatar={avatar} />
+        </main>
+
+        <aside>
+          <div className="lg:sticky lg:top-20">
+            <RightSidebar />
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

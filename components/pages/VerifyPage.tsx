@@ -3,6 +3,7 @@
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
@@ -281,8 +282,10 @@ export default function VerifyPage({
 
       if (!result.success) {
         console.error("[VerifyPage] verifyUser rejected:", result);
-        setErrorMessage(result.message ?? "Verifikasi gagal. Coba lagi.");
+        const message = result.message ?? "Verifikasi gagal. Coba lagi.";
+        setErrorMessage(message);
         setStatus("error");
+        toast.error(message);
         return;
       }
 
@@ -292,6 +295,9 @@ export default function VerifyPage({
       console.error("[VerifyPage] verifyUser threw:", err);
       setErrorMessage("Verifikasi gagal. Coba lagi.");
       setStatus("error");
+      toast.error("Verifikasi gagal. Coba lagi.", {
+        description: err instanceof Error ? err.message : undefined,
+      });
     }
   }
 

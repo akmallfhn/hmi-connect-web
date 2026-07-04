@@ -34,6 +34,14 @@ export type VerifyPayload = {
   has_senior_course: boolean;
 };
 
+export type VerifyResult = {
+  user_id: string;
+  branch_id: string;
+  username: string;
+  user_email: string;
+  is_verified: boolean;
+};
+
 export async function verifyUser(payload: VerifyPayload) {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -42,15 +50,9 @@ export async function verifyUser(payload: VerifyPayload) {
     return { success: false, message: "Session expired. Please log in again." };
   }
 
-  const result = await callApi("/api/v1/users/update/verification", {
+  return callApi<VerifyResult>("/api/v1/users/update/verification", {
     method: "POST",
     token: sessionToken,
     body: payload,
   });
-
-  if (!result.success) {
-    return { success: false, message: result.message ?? "Verification failed" };
-  }
-
-  return { success: true, message: result.message ?? "Verified" };
 }
