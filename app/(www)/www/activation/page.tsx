@@ -3,18 +3,18 @@ import type { Metadata } from "next";
 import { getBranches } from "@/apis/branches";
 import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
-import VerifyPage from "@/components/pages/VerifyPage";
+import ActivationPage from "@/components/pages/ActivationPage";
 
 export const metadata: Metadata = {
-  title: "Verifikasi Akun | HMI Connect",
+  title: "Aktivasi Akun | HMI Connect",
 };
 
-export default async function Verify() {
+export default async function Activation() {
   const { sessionToken, user } = await getSession();
 
   if (!sessionToken) return null;
 
-  if (user?.is_verified) redirect("/");
+  if (user?.status !== "pending") redirect("/");
 
   const [branches, institutions] = await Promise.all([
     getBranches(),
@@ -22,7 +22,7 @@ export default async function Verify() {
   ]);
 
   return (
-    <VerifyPage
+    <ActivationPage
       fullName={user?.full_name}
       branches={branches}
       institutions={institutions}

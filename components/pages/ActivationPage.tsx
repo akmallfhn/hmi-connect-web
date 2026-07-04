@@ -1,13 +1,11 @@
 "use client";
 
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
-import RadioButton from "../fields/RadioButton";
 import Select from "../fields/Select";
 import CreateableSelect, {
   type SearchableOption,
@@ -19,7 +17,12 @@ import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 import type { Branch } from "@/apis/branches";
 import type { Institution } from "@/apis/institutions";
-import { verifyUser, type Degree } from "@/lib/actions";
+import { createInstitution, activateUser } from "@/lib/actions";
+import {
+  isSuccessStatus,
+  type Degree,
+  type TrainingResultEnum,
+} from "@/lib/types";
 
 const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
   { label: "Diploma (Ahli Pratama)", value: "diploma_ahli_pratama" },
@@ -30,30 +33,13 @@ const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
   { label: "Doktor", value: "doktor" },
 ];
 
-const TRAINING_LEVELS = [
-  { label: "LK1", value: "LK1" },
-  { label: "LK2", value: "LK2" },
-  { label: "LK3", value: "LK3" },
-];
-
-const TRAINING_RESULTS = [
+const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },
   { label: "Lulus Bersyarat", value: "conditional_pass" },
   { label: "Tidak Lulus", value: "failed" },
 ];
 
-const STEPS = ["Pendidikan & Cabang", "Jenjang Kaderisasi", "Senior Course"];
-
-type TrainingRow = {
-  level: string;
-  result: string;
-  organizerName: string;
-  year: string;
-};
-
-function emptyTrainingRow(): TrainingRow {
-  return { level: "", result: "", organizerName: "", year: "" };
-}
+const STEPS = ["Pendidikan & Cabang", "Latihan Kader 1"];
 
 type FormData = {
   institution: SearchableOption | null;
@@ -62,8 +48,9 @@ type FormData = {
   startYear: string;
   endYear: string;
   branch: BranchOption | null;
-  trainings: TrainingRow[];
-  hasSeniorCourse: boolean | null;
+  trainingResult: TrainingResultEnum | null;
+  trainingOrganizerName: string;
+  trainingYear: string;
 };
 
 function emptyFormData(): FormData {
@@ -74,8 +61,9 @@ function emptyFormData(): FormData {
     startYear: "",
     endYear: "",
     branch: null,
-    trainings: [emptyTrainingRow()],
-    hasSeniorCourse: null,
+    trainingResult: null,
+    trainingOrganizerName: "",
+    trainingYear: "",
   };
 }
 
@@ -121,18 +109,17 @@ function DecorativeBackground() {
   );
 }
 
-interface VerifyPageProps {
+interface ActivationPageProps {
   fullName?: string;
   branches: Branch[];
   institutions: Institution[];
 }
 
-export default function VerifyPage({
+export default function ActivationPage({
   fullName,
   branches,
   institutions,
-}: VerifyPageProps) {
-  const router = useRouter();
+}: ActivationPageProps) {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -149,7 +136,7 @@ export default function VerifyPage({
 
   const institutionOptions: SearchableOption[] = institutions.map((item) => ({
     label: item.name,
-    value: item.name,
+    value: item.id,
     image: item.image_url,
   }));
   const branchOptions: BranchOption[] = branches.map((item) => ({
@@ -168,7 +155,7 @@ export default function VerifyPage({
     return {
       options: results.map((item) => ({
         label: item.name,
-        value: item.name,
+        value: item.id,
         image: item.image_url,
       })),
       hasMore: Boolean(json.hasMore),
@@ -178,18 +165,12 @@ export default function VerifyPage({
   async function createInstitutionOption(
     name: string
   ): Promise<SearchableOption | null> {
-    const response = await fetch("/api/institutions/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const json = await response.json();
-    const created: Institution | null = json.data ?? null;
+    const created = await createInstitution(name);
 
     if (!created) return null;
     return {
       label: created.name,
-      value: created.name,
+      value: created.id,
       image: created.image_url,
     };
   }
@@ -208,94 +189,56 @@ export default function VerifyPage({
     };
   }
 
-  function updateTraining(index: number, patch: Partial<TrainingRow>) {
-    setFormData((prev) => ({
-      ...prev,
-      trainings: prev.trainings.map((row, i) =>
-        i === index ? { ...row, ...patch } : row
-      ),
-    }));
-  }
-
-  function addTrainingRow() {
-    setFormData((prev) => ({
-      ...prev,
-      trainings: [...prev.trainings, emptyTrainingRow()],
-    }));
-  }
-
-  function removeTrainingRow(index: number) {
-    setFormData((prev) => ({
-      ...prev,
-      trainings: prev.trainings.filter((_, i) => i !== index),
-    }));
-  }
-
-  const filledTrainings = formData.trainings.filter(
-    (row) => row.level || row.result || row.organizerName || row.year
-  );
-  const hasIncompleteTraining = filledTrainings.some(
-    (row) => !row.level || !row.result || !row.organizerName || !row.year
-  );
-
   const isStep0Valid =
     formData.institution !== null &&
     formData.degree !== null &&
     formData.major.trim() !== "" &&
     formData.startYear.trim() !== "" &&
-    formData.endYear.trim() !== "" &&
+    formData.endYear.trim() !== "";
+
+  const isStep1Valid =
+    formData.trainingResult !== null &&
+    formData.trainingOrganizerName.trim() !== "" &&
+    formData.trainingYear.trim() !== "" &&
     formData.branch !== null;
-  const isStep1Valid = !hasIncompleteTraining;
-  const isStep2Valid = formData.hasSeniorCourse !== null;
 
   const canGoNext =
-    (step === 0 && isStep0Valid) ||
-    (step === 1 && isStep1Valid) ||
-    (step === 2 && isStep2Valid);
+    (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid);
 
   async function handleSubmit() {
-    if (!isStep2Valid) return;
+    if (!isStep1Valid) return;
 
     setStatus("submitting");
     setErrorMessage("");
 
     try {
-      const result = await verifyUser({
+      const result = await activateUser({
         branch_id: String(formData.branch?.value ?? ""),
-        trainings: filledTrainings.map((row) => ({
-          level: row.level,
-          result: row.result,
-          organizer_name: row.organizerName,
-          year: Number(row.year),
-        })),
-        educations: [
-          {
-            institution_name: formData.institution?.label ?? "",
-            degree: formData.degree ?? "",
-            major: formData.major,
-            start_year: Number(formData.startYear),
-            end_year: Number(formData.endYear),
-          },
-        ],
-        has_senior_course: formData.hasSeniorCourse ?? false,
+        training_result: formData.trainingResult as TrainingResultEnum,
+        training_organizer_name: formData.trainingOrganizerName,
+        training_year: Number(formData.trainingYear),
+        education_institution_id: Number(formData.institution?.value ?? 0),
+        education_degree: formData.degree as Degree,
+        education_major: formData.major,
+        education_start_year: Number(formData.startYear),
+        education_end_year: Number(formData.endYear),
       });
 
-      if (!result.success) {
-        console.error("[VerifyPage] verifyUser rejected:", result);
-        const message = result.message ?? "Verifikasi gagal. Coba lagi.";
+      if (!isSuccessStatus(result.status)) {
+        console.error("[ActivationPage] activateUser rejected:", result);
+        const message = result.message ?? "Aktivasi gagal. Coba lagi.";
         setErrorMessage(message);
         setStatus("error");
         toast.error(message);
         return;
       }
 
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch (err) {
-      console.error("[VerifyPage] verifyUser threw:", err);
-      setErrorMessage("Verifikasi gagal. Coba lagi.");
+      console.error("[ActivationPage] activateUser threw:", err);
+      setErrorMessage("Aktivasi gagal. Coba lagi.");
       setStatus("error");
-      toast.error("Verifikasi gagal. Coba lagi.", {
+      toast.error("Aktivasi gagal. Coba lagi.", {
         description: err instanceof Error ? err.message : undefined,
       });
     }
@@ -316,7 +259,7 @@ export default function VerifyPage({
               </h1>
               <p className="text-[15px] leading-6 text-[#5f6573]">
                 Sebelum lanjut, lengkapi dulu data keanggotaan kamu supaya kami
-                bisa memverifikasi akun HMI Connect kamu.
+                bisa mengaktifkan akun HMI Connect kamu.
               </p>
             </div>
           </div>
@@ -326,7 +269,7 @@ export default function VerifyPage({
             className="w-full"
             onClick={() => setStarted(true)}
           >
-            Mulai Verifikasi
+            Mulai Aktivasi
             <ArrowRight className="size-4" />
           </Button>
         </div>
@@ -383,11 +326,11 @@ export default function VerifyPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+          <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
             {step === 0 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
-                  Kamu berkuliah dimana dan dari cabang mana?
+                  Kamu berkuliah dimana?
                 </h2>
 
                 <CreateableSelect
@@ -444,6 +387,54 @@ export default function VerifyPage({
                     required
                   />
                 </div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-[#172033]">
+                  Riwayat Latihan Kader 1
+                </h2>
+                <p className="text-sm text-[#5f6573]">
+                  Latihan Kader 1 adalah syarat minimal untuk mengaktifkan
+                  akun HMI Connect kamu.
+                </p>
+
+                <Select
+                  selectId="training-result"
+                  label="Hasil"
+                  placeholder="Pilih hasil"
+                  value={formData.trainingResult}
+                  onChange={(value) =>
+                    updateFormData(
+                      "trainingResult",
+                      value as TrainingResultEnum | null
+                    )
+                  }
+                  options={TRAINING_RESULTS}
+                  required
+                />
+                <Input
+                  inputId="training-organizer"
+                  label="Penyelenggara"
+                  placeholder="Contoh: Komisariat FH UI"
+                  value={formData.trainingOrganizerName}
+                  onChange={(e) =>
+                    updateFormData("trainingOrganizerName", e.target.value)
+                  }
+                  required
+                />
+                <NumberInput
+                  inputId="training-year"
+                  label="Tahun"
+                  placeholder="2020"
+                  value={formData.trainingYear}
+                  onValueChange={(value) =>
+                    updateFormData("trainingYear", value)
+                  }
+                  required
+                />
+
                 <SearchableSelect
                   selectId="branch"
                   label="Cabang HMI"
@@ -455,121 +446,6 @@ export default function VerifyPage({
                   debounceMs={400}
                   required
                 />
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
-                  Jenjang kaderisasi yang sudah dilalui
-                </h2>
-                <p className="text-sm text-[#5f6573]">
-                  Lewati bagian ini kalau kamu belum pernah mengikuti jenjang
-                  kaderisasi.
-                </p>
-
-                <div className="flex flex-col gap-6">
-                  {formData.trainings.map((row, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col gap-3 rounded-xl border border-[#dbe3ef] p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-[#172033]">
-                          Jenjang {index + 1}
-                        </p>
-                        {formData.trainings.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeTrainingRow(index)}
-                            className="cursor-pointer text-xs font-semibold text-[#b42318]"
-                          >
-                            Hapus
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                        <Select
-                          selectId={`training-level-${index}`}
-                          label="Level"
-                          placeholder="Pilih level"
-                          value={row.level || null}
-                          onChange={(value) =>
-                            updateTraining(index, {
-                              level: String(value ?? ""),
-                            })
-                          }
-                          options={TRAINING_LEVELS}
-                        />
-                        <Select
-                          selectId={`training-result-${index}`}
-                          label="Hasil"
-                          placeholder="Pilih hasil"
-                          value={row.result || null}
-                          onChange={(value) =>
-                            updateTraining(index, {
-                              result: String(value ?? ""),
-                            })
-                          }
-                          options={TRAINING_RESULTS}
-                        />
-                      </div>
-                      <Input
-                        inputId={`training-organizer-${index}`}
-                        label="Penyelenggara"
-                        placeholder="Contoh: Panitia Daerah Aceh"
-                        value={row.organizerName}
-                        onChange={(e) =>
-                          updateTraining(index, {
-                            organizerName: e.target.value,
-                          })
-                        }
-                      />
-                      <NumberInput
-                        inputId={`training-year-${index}`}
-                        label="Tahun"
-                        placeholder="2020"
-                        value={row.year}
-                        onValueChange={(value) =>
-                          updateTraining(index, { year: value })
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <Button variant="outline" onClick={addTrainingRow}>
-                  + Tambah Jenjang Kaderisasi
-                </Button>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
-                  Apakah kamu sudah pernah mengikuti Senior Course?
-                </h2>
-
-                <div className="flex flex-col gap-3">
-                  <RadioButton
-                    radioName="has-senior-course"
-                    label="Sudah"
-                    value={true}
-                    selectedValue={formData.hasSeniorCourse}
-                    onChange={(value) =>
-                      updateFormData("hasSeniorCourse", value)
-                    }
-                  />
-                  <RadioButton
-                    radioName="has-senior-course"
-                    label="Belum"
-                    value={false}
-                    selectedValue={formData.hasSeniorCourse}
-                    onChange={(value) =>
-                      updateFormData("hasSeniorCourse", value)
-                    }
-                  />
-                </div>
 
                 {status === "error" && (
                   <p className="text-xs font-semibold text-[#b42318]">
@@ -610,7 +486,7 @@ export default function VerifyPage({
                   disabled={!canGoNext || status === "submitting"}
                   onClick={handleSubmit}
                 >
-                  {status === "submitting" ? "Mengirim..." : "Kirim Verifikasi"}
+                  {status === "submitting" ? "Mengirim..." : "Aktivasi Akun"}
                 </Button>
               )}
             </div>

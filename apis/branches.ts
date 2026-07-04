@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi } from "./api";
-import { SESSION_COOKIE_NAME } from "./session";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Branch = {
   id: string;

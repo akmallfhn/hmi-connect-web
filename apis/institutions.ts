@@ -2,7 +2,8 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi } from "./api";
-import { SESSION_COOKIE_NAME } from "./session";
+import { isSuccessStatus } from "@/lib/types";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Institution = {
   id: number;
@@ -83,6 +84,6 @@ export async function createInstitution(
     body: { name },
   });
 
-  if (!result.success || !result.data) return null;
+  if (!isSuccessStatus(result.status) || !result.data) return null;
   return result.data;
 }

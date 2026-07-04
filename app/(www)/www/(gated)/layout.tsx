@@ -11,7 +11,7 @@ export default async function GatedLayout({
 
   if (!sessionToken) return null;
 
-  if (!user?.is_verified) redirect("/verify");
+  if (user?.status === "pending") redirect("/activation");
 
   return <>{children}</>;
 }

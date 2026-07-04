@@ -1,13 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { isSuccessStatus, type StatusName } from "@/lib/types";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
-const SESSION_COOKIE_NAME = "session_token_hmi";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 365;
 
 type AuthLoginResponse = {
-  success?: boolean;
   code?: number;
-  status?: string;
+  status?: StatusName;
   message?: string;
   data?: { access_token?: string };
 };
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   const sessionToken = authData.data?.access_token;
 
-  if (!authResponse.ok || !authData.success || !sessionToken) {
+  if (!authResponse.ok || !isSuccessStatus(authData.status) || !sessionToken) {
     console.error(
       "[auth/callback/google] unexpected backend response:",
       authResponse.status,

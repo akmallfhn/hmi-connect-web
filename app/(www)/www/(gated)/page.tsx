@@ -8,7 +8,7 @@ export default async function HomePage() {
     <DashboardPage
       fullName={user?.full_name}
       avatar={user?.avatar}
-      role={user?.role?.name}
+      role={user?.role_name}
     />
   );
 }

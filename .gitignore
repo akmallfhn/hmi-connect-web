@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+# AI agent tooling
+.claude
+.codex
+.agent
