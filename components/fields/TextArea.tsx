@@ -58,7 +58,7 @@ export default function TextArea({
             "w-full resize-none rounded-lg border px-3 py-2 text-base text-[#172033] transition placeholder:text-[#5f6573]/60 focus:outline-none focus:ring-2",
             computedError
               ? "border-red-500 focus:ring-red-200"
-              : "border-[#dbe3ef] focus:border-[#0b8f6a] focus:ring-[#0b8f6a]/15",
+              : "border-[#dbe3ef] focus:border-primary focus:ring-primary/15",
             disabled ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]" : "bg-white",
             className,
           ]

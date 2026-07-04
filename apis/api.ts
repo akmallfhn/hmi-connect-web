@@ -39,5 +39,10 @@ export async function callApi<T = unknown>(
     };
   }
 
-  return data;
+  // Some endpoints omit `success` and only report `code`/`status`/HTTP status —
+  // fall back to the real HTTP status so callers don't misread a 2xx as a failure.
+  return {
+    ...data,
+    success: data.success ?? response.ok,
+  };
 }

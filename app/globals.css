@@ -4,10 +4,14 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* HMI Connect brand green — same hue as Sevenpreneur's "champion" stakeholder color */
-  --primary: oklch(0.6 0.13 162);
-  --primary-soft: oklch(0.962 0.026 165);
-  --primary-foreground: oklch(0.46 0.1 162);
+  /* HMI Connect brand colors — tosca primary and orange secondary, matching the logo */
+  --primary: #159fa2;
+  --primary-soft: #e3f6f6;
+  --primary-foreground: #0f6f72;
+
+  --secondary: #ff5c53;
+  --secondary-soft: #ffe7e5;
+  --secondary-foreground: #bf453e;
 }
 
 @theme inline {
@@ -16,6 +20,9 @@
   --color-primary: var(--primary);
   --color-primary-soft: var(--primary-soft);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-secondary-foreground: var(--secondary-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-google-sans: var(--font-google-sans);
@@ -25,8 +32,6 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --primary-soft: oklch(0.7 0.14 162 / 0.15);
-    --primary-foreground: oklch(0.84 0.12 165);
   }
 }
 

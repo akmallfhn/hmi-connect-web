@@ -73,9 +73,7 @@ export default function Select({
         id={selectId}
         className={[
           "relative flex w-full items-center rounded-lg border p-2 text-base transition",
-          isOpen
-            ? "border-[#0b8f6a] ring-2 ring-[#0b8f6a]/15"
-            : "border-[#dbe3ef]",
+          isOpen ? "border-primary ring-2 ring-primary/15" : "border-[#dbe3ef]",
           disabled
             ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]"
             : "cursor-pointer bg-white",
@@ -131,8 +129,8 @@ export default function Select({
                     onChange?.(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-[#f5fbf8] ${
-                    value === opt.value ? "bg-[#f5fbf8] text-[#0b8f6a]" : ""
+                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-primary-soft ${
+                    value === opt.value ? "bg-primary-soft text-primary" : ""
                   }`}
                 >
                   {opt.image && (

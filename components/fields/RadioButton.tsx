@@ -28,7 +28,7 @@ export default function RadioButton<T extends string | number | boolean>({
       className={[
         "flex items-start gap-3 rounded-lg border p-3 transition",
         isSelected
-          ? "border-[#0b8f6a] bg-[#f5fbf8]"
+          ? "border-primary bg-primary-soft"
           : "border-[#dbe3ef] bg-white",
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
         className,
@@ -42,7 +42,7 @@ export default function RadioButton<T extends string | number | boolean>({
         checked={isSelected}
         onChange={() => onChange(value)}
         disabled={disabled}
-        className="mt-0.5 size-4 accent-[#0b8f6a]"
+        className="mt-0.5 size-4 accent-primary"
       />
       <div className="flex flex-col gap-0.5">
         <span className="text-base font-medium text-[#172033]">{label}</span>

@@ -4,6 +4,7 @@ import { ButtonHTMLAttributes, ForwardedRef, forwardRef } from "react";
 
 export type ButtonVariant =
   | "primary"
+  | "secondary"
   | "light"
   | "dark"
   | "outline"
@@ -30,15 +31,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref: ForwardedRef<HTMLButtonElement>
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center gap-2 font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b8f6a]/40";
+      "inline-flex items-center justify-center gap-2 font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
     const variantClasses: Record<ButtonVariant, string> = {
-      primary: "bg-[#0b8f6a] text-white hover:bg-[#097a5b] active:bg-[#086b50]",
+      primary: "bg-primary text-white hover:bg-[#128488] active:bg-primary-foreground",
+      secondary:
+        "bg-secondary text-white hover:bg-[#e6534b] active:bg-secondary-foreground",
       light:
         "border border-[#e6e9ef] bg-white text-[#172033] hover:-translate-y-0.5 hover:bg-[#f5f7fb]",
       dark: "bg-[#202125] text-white hover:bg-[#2b2c31] active:bg-[#17181b]",
       outline:
-        "border border-[#dbe3ef] bg-transparent text-[#172033] hover:bg-[#f5fbf8]",
+        "border border-[#dbe3ef] bg-transparent text-[#172033] hover:bg-primary-soft",
       ghost: "bg-transparent text-[#172033] hover:bg-black/5",
       destructive: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
     };

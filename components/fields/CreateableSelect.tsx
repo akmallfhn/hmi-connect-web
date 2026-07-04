@@ -2,7 +2,7 @@
 
 import { Loader2, Plus, University } from "lucide-react";
 import Image from "next/image";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, ReactNode, useContext, useRef, useState } from "react";
 import CreatableSelect from "react-select/creatable";
 import {
   components as SelectComponents,
@@ -43,6 +43,7 @@ const selectComponents = { MenuList: MenuListWithLoader };
 interface CreateableSelectProps {
   selectId: string;
   label?: string;
+  icon?: ReactNode;
   placeholder?: string;
   value: SearchableOption | null;
   onChange: (option: SearchableOption | null) => void;
@@ -59,6 +60,7 @@ interface CreateableSelectProps {
 export default function CreateableSelect({
   selectId,
   label,
+  icon,
   placeholder = "Cari...",
   value,
   onChange,
@@ -151,91 +153,103 @@ export default function CreateableSelect({
       )}
 
       <IsLoadingMoreContext.Provider value={isLoadingMore}>
-        <CreatableSelect<SearchableOption, false>
-          inputId={selectId}
-          instanceId={selectId}
-          isDisabled={disabled}
-          value={value}
-          inputValue={inputValue}
-          onInputChange={handleInputChange}
-          onChange={handleChange}
-          isClearable
-          options={options}
-          filterOption={null}
-          isLoading={isLoading || isCreating}
-          onMenuScrollToBottom={handleMenuScrollToBottom}
-          isValidNewOption={(input) =>
-            Boolean(onCreateOption) &&
-            options.length === 0 &&
-            !isLoading &&
-            !isCreating &&
-            input.trim().length > 0
-          }
-          onCreateOption={handleCreateOption}
-          formatCreateLabel={createLabel}
-          placeholder={placeholder}
-          loadingMessage={() => "Mencari..."}
-          noOptionsMessage={() => noOptionsMessage}
-          formatOptionLabel={(
-            option: SearchableOption & { __isNew__?: boolean }
-          ) => {
-            if (option.__isNew__) {
-              return (
-                <span className="flex items-center gap-2 text-[#0b8f6a]">
-                  <Plus className="size-4" />
-                  {option.label}
-                </span>
-              );
+        <div className="relative">
+          {icon && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-[#5f6573]">
+              {icon}
+            </div>
+          )}
+          <CreatableSelect<SearchableOption, false>
+            inputId={selectId}
+            instanceId={selectId}
+            isDisabled={disabled}
+            value={value}
+            inputValue={inputValue}
+            onInputChange={handleInputChange}
+            onChange={handleChange}
+            isClearable
+            options={options}
+            filterOption={null}
+            isLoading={isLoading || isCreating}
+            onMenuScrollToBottom={handleMenuScrollToBottom}
+            isValidNewOption={(input) =>
+              Boolean(onCreateOption) &&
+              options.length === 0 &&
+              !isLoading &&
+              !isCreating &&
+              input.trim().length > 0
             }
+            onCreateOption={handleCreateOption}
+            formatCreateLabel={createLabel}
+            placeholder={placeholder}
+            loadingMessage={() => "Mencari..."}
+            noOptionsMessage={() => noOptionsMessage}
+            menuPortalTarget={
+              typeof document !== "undefined" ? document.body : undefined
+            }
+            formatOptionLabel={(
+              option: SearchableOption & { __isNew__?: boolean }
+            ) => {
+              if (option.__isNew__) {
+                return (
+                  <span className="flex items-center gap-2 text-primary">
+                    <Plus className="size-4" />
+                    {option.label}
+                  </span>
+                );
+              }
 
-            return (
-              <div className="flex items-center gap-2">
-                <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
-                  {option.image ? (
-                    <Image
-                      className="h-full w-full object-cover"
-                      src={option.image}
-                      alt={option.label}
-                      width={24}
-                      height={24}
-                    />
-                  ) : (
-                    <University className="size-3.5 text-[#5f6573]" />
-                  )}
-                </span>
-                <span className="truncate">{option.label}</span>
-              </div>
-            );
-          }}
-          components={selectComponents}
-          unstyled
-          classNames={{
-            control: ({ isFocused }) =>
-              `cursor-pointer rounded-lg border bg-white px-2 py-1 text-base transition ${
-                isFocused
-                  ? "border-[#0b8f6a] ring-2 ring-[#0b8f6a]/15"
-                  : "border-[#dbe3ef]"
-              }`,
-            valueContainer: () => "cursor-pointer px-1 py-0.5",
-            placeholder: () =>
-              "cursor-pointer px-1 text-base text-[#5f6573]/60",
-            input: () => "cursor-pointer px-1 text-base text-[#172033]",
-            singleValue: () => "cursor-pointer px-1 text-base text-[#172033]",
-            indicatorsContainer: () => "cursor-pointer text-[#5f6573]",
-            indicatorSeparator: () => "hidden",
-            dropdownIndicator: () => "cursor-pointer px-1",
-            clearIndicator: () => "cursor-pointer px-1 hover:text-[#b42318]",
-            menu: () =>
-              "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
-            menuList: () => "max-h-60 overflow-y-auto p-1",
-            option: ({ isFocused }) =>
-              `cursor-pointer rounded-md px-3 py-2 text-base ${
-                isFocused ? "bg-[#f5fbf8] text-[#0b8f6a]" : "text-[#172033]"
-              }`,
-            noOptionsMessage: () => "p-2 text-sm text-[#5f6573]",
-            loadingMessage: () => "p-2 text-sm text-[#5f6573]",
-          }}
-        />
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+                    {option.image ? (
+                      <Image
+                        className="h-full w-full object-cover"
+                        src={option.image}
+                        alt={option.label}
+                        width={24}
+                        height={24}
+                      />
+                    ) : (
+                      <University className="size-3.5 text-[#5f6573]" />
+                    )}
+                  </span>
+                  <span className="truncate">{option.label}</span>
+                </div>
+              );
+            }}
+            components={selectComponents}
+            unstyled
+            classNames={{
+              control: ({ isFocused }) =>
+                `cursor-pointer rounded-lg border bg-white px-2 py-1 text-base transition ${
+                  isFocused
+                    ? "border-primary ring-2 ring-primary/15"
+                    : "border-[#dbe3ef]"
+                } ${icon ? "pl-7" : ""}`,
+              valueContainer: () => "cursor-pointer px-1 py-0.5",
+              placeholder: () =>
+                "cursor-pointer px-1 text-base text-[#5f6573]/60",
+              input: () => "cursor-pointer px-1 text-base text-[#172033]",
+              singleValue: () =>
+                "cursor-pointer px-1 text-base text-[#172033]",
+              indicatorsContainer: () => "cursor-pointer text-[#5f6573]",
+              indicatorSeparator: () => "hidden",
+              dropdownIndicator: () => "cursor-pointer px-1",
+              clearIndicator: () => "cursor-pointer px-1 hover:text-[#b42318]",
+              menuPortal: () => "z-50",
+              menu: () =>
+                "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
+              menuList: () => "max-h-60 overflow-y-auto p-1",
+              option: ({ isFocused }) =>
+                `cursor-pointer rounded-md px-3 py-2 text-base ${
+                  isFocused ? "bg-primary-soft text-primary" : "text-[#172033]"
+                }`,
+              noOptionsMessage: () => "p-2 text-sm text-[#5f6573]",
+              loadingMessage: () => "p-2 text-sm text-[#5f6573]",
+            }}
+          />
+        </div>
       </IsLoadingMoreContext.Provider>
     </div>
   );

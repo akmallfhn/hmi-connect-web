@@ -11,8 +11,17 @@ export type VerifyTraining = {
   year: number;
 };
 
+export type Degree =
+  | "diploma_ahli_pratama"
+  | "diploma_ahli_muda"
+  | "diploma_ahli_madya"
+  | "sarjana"
+  | "magister"
+  | "doktor";
+
 export type VerifyEducation = {
   institution_name: string;
+  degree: string;
   major: string;
   start_year: number;
   end_year: number;
