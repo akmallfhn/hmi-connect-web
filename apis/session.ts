@@ -7,6 +7,7 @@ import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type SessionUser = {
+  id?: string;
   organization_id?: string;
   organization_name?: string;
   coordinating_body_id?: string;
@@ -22,6 +23,18 @@ export type SessionUser = {
   is_subscribe?: boolean;
   access_token?: string;
 };
+
+// The session cookie is the backend's own JWT; its "sub" claim is the user's id. Decoding it
+// here (no signature check needed) avoids a backend round-trip just to get an id to link to.
+function decodeUserId(token: string): string | undefined {
+  try {
+    const payload = token.split(".")[1];
+    const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return typeof claims.sub === "string" ? claims.sub : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export const getSession = cache(async () => {
   const cookieStore = await cookies();
@@ -40,7 +53,10 @@ export const getSession = cache(async () => {
     return { sessionToken: undefined, user: null };
   }
 
-  return { sessionToken, user: result.data };
+  return {
+    sessionToken,
+    user: { ...result.data, id: decodeUserId(sessionToken) },
+  };
 });
 
 // Clears the cookie regardless of whether the backend logout call succeeds.

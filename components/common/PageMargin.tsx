@@ -13,7 +13,7 @@ export default function PageMargin({
   return (
     <div
       className={[
-        "mx-auto w-full px-4 lg:max-w-[988px] lg:px-8 xl:max-w-[1208px] 2xl:max-w-[1300px]",
+        "mx-auto w-full px-4 lg:max-w-[988px] lg:px-8 xl:max-w-[1248px] 2xl:max-w-[1300px] 3xl:max-w-[1440px]",
         className,
       ]
         .filter(Boolean)

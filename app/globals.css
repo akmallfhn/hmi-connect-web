@@ -33,6 +33,8 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-google-sans: var(--font-google-sans);
+
+  --breakpoint-3xl: 120rem;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -9,6 +9,7 @@ export default async function HomePage() {
       fullName={user?.full_name}
       avatar={user?.avatar}
       role={user?.role_name}
+      userId={user?.id}
     />
   );
 }

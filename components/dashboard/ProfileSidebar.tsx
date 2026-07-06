@@ -7,6 +7,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import Avatar from "../common/Avatar";
 import { WEEK_DAYS } from "./mockData";
 
@@ -14,6 +15,7 @@ interface ProfileSidebarProps {
   fullName?: string;
   avatar?: string;
   role?: string;
+  userId?: string;
 }
 
 const QUICK_LINKS = [
@@ -29,14 +31,15 @@ export default function ProfileSidebar({
   fullName,
   avatar,
   role,
+  userId,
 }: ProfileSidebarProps) {
   const displayName = fullName ?? "Kader";
 
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-        <a
-          href="/profile"
+        <Link
+          href={userId ? `/profile/${userId}` : "#"}
           className="flex flex-col items-center gap-3 text-center"
         >
           <Avatar src={avatar} name={displayName} size={72} ring />
@@ -46,7 +49,7 @@ export default function ProfileSidebar({
               {role ?? "Kader • HMI Connect"}
             </p>
           </div>
-        </a>
+        </Link>
 
         <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center">
           <div>

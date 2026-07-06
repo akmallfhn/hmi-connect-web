@@ -1,30 +1,41 @@
 "use client";
 
-import { BadgeCheck, Building2, MapPin, Pencil, Sparkles } from "lucide-react";
+import { BadgeCheck, Building2, MapPin, Pencil, Sparkles, UserPlus, UserCheck } from "lucide-react";
+import { useState } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
+import { useProfileEdit } from "../modals/AppModals";
+import { PLACEHOLDER_ACTIVITY } from "./mockData";
 
 interface ProfileHeaderProps {
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  headline?: string;
   branchName?: string;
   coordinatingBodyName?: string;
   organizationName?: string;
   isVerified?: boolean;
   isSubscribe?: boolean;
+  followingCount?: number;
+  followersCount?: number;
+  isOwnProfile?: boolean;
 }
 
 export default function ProfileHeader({
   fullName,
   avatar,
-  roleName,
+  headline,
   branchName,
   coordinatingBodyName,
   organizationName,
   isVerified,
   isSubscribe,
+  followingCount,
+  followersCount,
+  isOwnProfile,
 }: ProfileHeaderProps) {
+  const { openModal } = useProfileEdit();
+  const [isFollowing, setIsFollowing] = useState(false);
   const displayName = fullName ?? "Kader";
   const affiliation = [branchName, coordinatingBodyName, organizationName]
     .filter(Boolean)
@@ -46,10 +57,29 @@ export default function ProfileHeader({
           </div>
 
           <div className="flex shrink-0 justify-end pt-3 sm:pt-0">
-            <Button variant="light" size="sm">
-              <Pencil className="size-3.5" />
-              Edit Profil
-            </Button>
+            {isOwnProfile ? (
+              <Button
+                variant="light"
+                size="sm"
+                onClick={() => openModal("header")}
+              >
+                <Pencil className="size-3.5" />
+                Edit Profil
+              </Button>
+            ) : (
+              <Button
+                variant={isFollowing ? "light" : "primary"}
+                size="sm"
+                onClick={() => setIsFollowing((prev) => !prev)}
+              >
+                {isFollowing ? (
+                  <UserCheck className="size-3.5" />
+                ) : (
+                  <UserPlus className="size-3.5" />
+                )}
+                {isFollowing ? "Mengikuti" : "Ikuti"}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -66,9 +96,11 @@ export default function ProfileHeader({
             )}
           </div>
 
-          <p className="mt-1 text-sm font-medium text-[#5f6573]">
-            {roleName ?? "Kader HMI"}
-          </p>
+          {headline && (
+            <p className="mt-1 text-sm font-medium text-[#5f6573]">
+              {headline}
+            </p>
+          )}
 
           {affiliation && (
             <p className="mt-1 flex items-center gap-1.5 text-sm text-[#5f6573]">
@@ -101,15 +133,17 @@ export default function ProfileHeader({
 
         <div className="mt-4 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center sm:max-w-xs">
           <div>
-            <p className="font-bold text-[#172033]">128</p>
+            <p className="font-bold text-[#172033]">{followingCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Mengikuti</p>
           </div>
           <div>
-            <p className="font-bold text-[#172033]">64</p>
+            <p className="font-bold text-[#172033]">{followersCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Pengikut</p>
           </div>
           <div>
-            <p className="font-bold text-[#172033]">12</p>
+            <p className="font-bold text-[#172033]">
+              {PLACEHOLDER_ACTIVITY.length}
+            </p>
             <p className="text-xs text-[#5f6573]">Postingan</p>
           </div>
         </div>
