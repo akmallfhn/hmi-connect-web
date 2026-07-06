@@ -19,7 +19,7 @@ import CreateableSelect, {
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
-import AppModal from "../modals/AppModal";
+import Modal from "../modals/Modal";
 
 const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
   { label: "Diploma (Ahli Pratama)", value: "diploma_ahli_pratama" },
@@ -88,7 +88,7 @@ export default function EditEducationForm({
   institutions,
 }: EditEducationFormProps) {
   return (
-    <AppModal open={open} onClose={onClose} title="Edit Pendidikan">
+    <Modal open={open} onClose={onClose} title="Edit Pendidikan">
       {open && (
         <EducationFields
           onClose={onClose}
@@ -98,7 +98,7 @@ export default function EditEducationForm({
           institutions={institutions}
         />
       )}
-    </AppModal>
+    </Modal>
   );
 }
 

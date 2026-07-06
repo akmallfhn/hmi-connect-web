@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { ReactNode, useEffect } from "react";
 import Button from "../buttons/Button";
 
-interface AppModalProps {
+interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -12,7 +12,7 @@ interface AppModalProps {
 }
 
 // Generic modal chrome, imported by whichever form needs a dialog — each caller owns its own open/close state.
-export default function AppModal({ open, onClose, title, children }: AppModalProps) {
+export default function Modal({ open, onClose, title, children }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 

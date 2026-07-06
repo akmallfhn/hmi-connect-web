@@ -18,7 +18,7 @@ import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
-import AppModal from "../modals/AppModal";
+import Modal from "../modals/Modal";
 
 const LEVEL_OPTIONS: { label: string; value: TrainingStatusEnum }[] = [
   { label: "Latihan Kader 1 (LK1)", value: "LK1" },
@@ -82,7 +82,7 @@ export default function EditTrainingForm({
   entries,
 }: EditTrainingFormProps) {
   return (
-    <AppModal open={open} onClose={onClose} title="Edit Riwayat Kaderisasi">
+    <Modal open={open} onClose={onClose} title="Edit Riwayat Kaderisasi">
       {open && (
         <TrainingFields
           onClose={onClose}
@@ -91,7 +91,7 @@ export default function EditTrainingForm({
           entries={entries}
         />
       )}
-    </AppModal>
+    </Modal>
   );
 }
 

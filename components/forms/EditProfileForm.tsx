@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
-import AppModal from "../modals/AppModal";
+import Modal from "../modals/Modal";
 import { updateUser } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 
@@ -31,7 +31,7 @@ export default function EditProfileForm({
   avatar,
 }: EditProfileFormProps) {
   return (
-    <AppModal open={open} onClose={onClose} title="Edit Informasi Dasar">
+    <Modal open={open} onClose={onClose} title="Edit Informasi Dasar">
       {open && (
         <ProfileFields
           onClose={onClose}
@@ -43,7 +43,7 @@ export default function EditProfileForm({
           avatar={avatar}
         />
       )}
-    </AppModal>
+    </Modal>
   );
 }
 

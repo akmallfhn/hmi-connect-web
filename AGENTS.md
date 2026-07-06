@@ -162,11 +162,11 @@ not a name) — don't regress that to the display name.
   backed by `mockData.ts` — not yet wired to a real feed API).
 - `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
   `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`).
-- `components/modals/AppModal.tsx` — generic modal chrome (backdrop + panel + close
+- `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`); it does not orchestrate anything itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
-  `EditEducationForm`, `EditTrainingForm`), each wraps `<AppModal>` around an inner
+  `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around an inner
   `*Fields` component that's only mounted while `open` is true (so its `useState` seeds
   fresh from props every open — don't "fix" this with a `useEffect` + `setState`, that's
   the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,

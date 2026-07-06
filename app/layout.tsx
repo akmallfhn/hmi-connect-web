@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 const googleSans = Google_Sans({
   variable: "--font-google-sans",
   subsets: ["latin"],
+  adjustFontFallback: false, // next/font has no fallback-metrics entry for this font yet
 });
 
 export const metadata: Metadata = {
