@@ -1,9 +1,12 @@
 "use client";
 
 import { Award, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { TrainingResultEnum } from "@/lib/types";
 import type { TrainingHistoryEntry } from "@/apis/users";
-import { useProfileEdit } from "../modals/AppModals";
+import Button from "../buttons/Button";
+import EditTrainingForm from "../forms/EditTrainingForm";
 
 const RESULT_LABELS: Record<TrainingResultEnum, string> = {
   passed: "Lulus",
@@ -12,17 +15,20 @@ const RESULT_LABELS: Record<TrainingResultEnum, string> = {
 };
 
 interface TrainingCardProps {
+  userId?: string;
   entries: TrainingHistoryEntry[];
   isOwnProfile?: boolean;
 }
 
 export default function TrainingCard({
+  userId,
   entries,
   isOwnProfile,
 }: TrainingCardProps) {
-  const { openModal } = useProfileEdit();
+  const router = useRouter();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
@@ -31,14 +37,10 @@ export default function TrainingCard({
           Riwayat Kaderisasi
         </h2>
         {isOwnProfile && (
-          <button
-            type="button"
-            onClick={() => openModal("training")}
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-primary transition hover:bg-primary-soft"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
             <Pencil className="size-3.5" />
             Edit
-          </button>
+          </Button>
         )}
       </div>
 
@@ -60,6 +62,19 @@ export default function TrainingCard({
           </div>
         ))}
       </div>
+
+      {isOwnProfile && (
+        <EditTrainingForm
+          open={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          onSaved={() => {
+            setIsEditOpen(false);
+            router.refresh();
+          }}
+          userId={userId}
+          entries={entries}
+        />
+      )}
     </div>
   );
 }

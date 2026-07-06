@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
-import { getUserById } from "@/apis/users";
+import {
+  getUserById,
+  listEducationHistories,
+  listTrainingHistories,
+} from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
 
 interface ProfileRouteProps {
@@ -28,7 +33,21 @@ export default async function Profile({ params }: ProfileRouteProps) {
     getSession(),
   ]);
 
-  if (!profile) return notFound();
+  if (!profile || profile.status !== "active") return notFound();
+
+  const isOwnProfile = Boolean(viewer?.id && viewer.id === profile.id);
+
+  // education/training-histories/list are client-secret gated (like getUserById), so these
+  // work for anonymous visitors too.
+  const [
+    { list: educationHistories },
+    { list: trainingHistories },
+    institutions,
+  ] = await Promise.all([
+    listEducationHistories(profile.id),
+    listTrainingHistories(profile.id),
+    isOwnProfile ? getInstitutions() : Promise.resolve([]),
+  ]);
 
   return (
     <ProfilePage
@@ -44,8 +63,8 @@ export default async function Profile({ params }: ProfileRouteProps) {
         isSubscribe: profile.is_subscribe,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
-        educationHistories: profile.education_histories,
-        trainingHistories: profile.training_histories,
+        educationHistories,
+        trainingHistories,
         userId: profile.id,
       }}
       viewer={{
@@ -54,7 +73,8 @@ export default async function Profile({ params }: ProfileRouteProps) {
         roleName: viewer?.role_name,
         userId: viewer?.id,
       }}
-      isOwnProfile={Boolean(viewer?.id && viewer.id === profile.id)}
+      isOwnProfile={isOwnProfile}
+      institutions={institutions}
     />
   );
 }

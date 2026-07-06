@@ -34,7 +34,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center gap-2 font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
     const variantClasses: Record<ButtonVariant, string> = {
-      primary: "bg-primary text-white hover:bg-[#128488] active:bg-primary-foreground",
+      primary:
+        "bg-primary text-white hover:bg-[#128488] active:bg-primary-foreground",
       secondary:
         "bg-secondary text-white hover:bg-[#e6534b] active:bg-secondary-foreground",
       light:
@@ -49,7 +50,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const sizeClasses: Record<ButtonSize, string> = {
       sm: "h-8 rounded-lg px-3 text-xs",
-      default: "h-11 rounded-lg px-4 text-sm",
+      default: "h-9 rounded-lg px-3 text-sm",
       lg: "h-12 rounded-xl px-6 text-base",
       pill: "h-12 rounded-full px-5 text-sm",
       icon: "size-10 rounded-lg",

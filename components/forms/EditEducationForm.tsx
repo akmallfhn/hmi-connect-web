@@ -3,14 +3,23 @@
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { Institution } from "@/apis/institutions";
 import type { EducationHistoryEntry } from "@/apis/users";
-import { updateUser } from "@/lib/actions";
+import {
+  createEducationHistory,
+  createInstitution,
+  deleteEducationHistory,
+  updateEducationHistory,
+} from "@/lib/actions";
 import { isSuccessStatus, type Degree } from "@/lib/types";
 import Button from "../buttons/Button";
+import CreateableSelect, {
+  type SearchableOption,
+} from "../fields/CreateableSelect";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
-import Modal from "../common/Modal";
+import AppModal from "../modals/AppModal";
 
 const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
   { label: "Diploma (Ahli Pratama)", value: "diploma_ahli_pratama" },
@@ -24,6 +33,7 @@ const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
 type EducationDraft = {
   id: string;
   institutionName: string;
+  institution: SearchableOption | null;
   degree: Degree;
   major: string;
   startYear: string;
@@ -36,6 +46,7 @@ function toDrafts(entries: EducationHistoryEntry[]): EducationDraft[] {
   return entries.map((entry) => ({
     id: entry.id,
     institutionName: entry.institution_name,
+    institution: null,
     degree: entry.degree,
     major: entry.major,
     startYear: String(entry.start_year),
@@ -49,6 +60,7 @@ function emptyDraft(): EducationDraft {
   return {
     id: `new-${crypto.randomUUID()}`,
     institutionName: "",
+    institution: null,
     degree: "sarjana",
     major: "",
     startYear: "",
@@ -64,6 +76,7 @@ interface EditEducationFormProps {
   onSaved: () => void;
   userId?: string;
   entries: EducationHistoryEntry[];
+  institutions: Institution[];
 }
 
 export default function EditEducationForm({
@@ -72,18 +85,20 @@ export default function EditEducationForm({
   onSaved,
   userId,
   entries,
+  institutions,
 }: EditEducationFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Pendidikan">
+    <AppModal open={open} onClose={onClose} title="Edit Pendidikan">
       {open && (
         <EducationFields
           onClose={onClose}
           onSaved={onSaved}
           userId={userId}
           entries={entries}
+          institutions={institutions}
         />
       )}
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -92,18 +107,51 @@ interface EducationFieldsProps {
   onSaved: () => void;
   userId?: string;
   entries: EducationHistoryEntry[];
+  institutions: Institution[];
 }
 
-// Mounted only while the modal is open, so drafts are always seeded fresh from the
-// latest entries — no effect needed to "reset" it on reopen.
+async function loadInstitutionOptions(inputValue: string, page: number) {
+  const params = new URLSearchParams({ page: String(page) });
+  if (inputValue) params.set("q", inputValue);
+
+  const response = await fetch(`/api/institutions/search?${params}`);
+  const json = await response.json();
+  const results: Institution[] = json.data ?? [];
+
+  return {
+    options: results.map((item) => ({
+      label: item.name,
+      value: item.id,
+      image: item.image_url,
+    })),
+    hasMore: Boolean(json.hasMore),
+  };
+}
+
+async function createInstitutionOption(
+  name: string
+): Promise<SearchableOption | null> {
+  const created = await createInstitution(name);
+  if (!created) return null;
+  return { label: created.name, value: created.id, image: created.image_url };
+}
+
+// Mounted only while open, so drafts always seed fresh from entries — no reset effect needed.
 function EducationFields({
   onClose,
   onSaved,
   userId,
   entries,
+  institutions,
 }: EducationFieldsProps) {
   const [drafts, setDrafts] = useState<EducationDraft[]>(() => toDrafts(entries));
   const [isSaving, setIsSaving] = useState(false);
+
+  const institutionOptions: SearchableOption[] = institutions.map((item) => ({
+    label: item.name,
+    value: item.id,
+    image: item.image_url,
+  }));
 
   function updateDraft<K extends keyof EducationDraft>(
     id: string,
@@ -133,42 +181,57 @@ function EducationFields({
       return;
     }
 
-    // New rows have no backend id yet, and removed rows can't be deleted through this
-    // endpoint — /users/update only edits existing rows by id. Both are skipped here.
-    const savable = drafts.filter((draft) => !draft.isNew && !draft.removed);
+    const newDrafts = drafts.filter((draft) => draft.isNew && !draft.removed);
+    const missingInstitution = newDrafts.find((draft) => !draft.institution);
+    const missingStartYear = newDrafts.find((draft) => !draft.startYear.trim());
+    if (missingInstitution || missingStartYear) {
+      toast.error("Lengkapi universitas dan tahun masuk untuk entri baru.");
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const result = await updateUser({
-        id: userId,
-        ...(savable.length > 0
-          ? {
-              education_histories: savable.map((draft) => ({
-                id: draft.id,
-                degree: draft.degree,
-                major: draft.major,
-                start_year: Number(draft.startYear),
-                end_year: draft.endYear ? Number(draft.endYear) : undefined,
-              })),
-            }
-          : {}),
-      });
+      const results = await Promise.all(
+        drafts.map((draft) => {
+          if (draft.isNew) {
+            if (draft.removed) return null;
+            return createEducationHistory({
+              institution_id: Number(draft.institution!.value),
+              degree: draft.degree,
+              major: draft.major,
+              start_year: Number(draft.startYear),
+              end_year: draft.endYear ? Number(draft.endYear) : undefined,
+            });
+          }
+          if (draft.removed) {
+            return deleteEducationHistory(draft.id);
+          }
+          return updateEducationHistory({
+            id: draft.id,
+            degree: draft.degree,
+            major: draft.major,
+            start_year: Number(draft.startYear),
+            end_year: draft.endYear ? Number(draft.endYear) : undefined,
+          });
+        })
+      );
 
-      if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menyimpan perubahan.");
+      const attempted = results.filter(Boolean);
+      const failed = attempted.filter(
+        (result) => !isSuccessStatus(result!.status)
+      );
+
+      if (failed.length > 0) {
+        toast.error(
+          `${failed.length} dari ${attempted.length} perubahan gagal disimpan.`
+        );
         return;
       }
 
-      const skipped = drafts.length - savable.length;
       toast.success("Riwayat pendidikan berhasil diperbarui.");
-      if (skipped > 0) {
-        toast.info(
-          `${skipped} entri baru/dihapus belum tersimpan — backend belum mendukung penambahan atau penghapusan riwayat pendidikan.`
-        );
-      }
       onSaved();
     } catch (err) {
-      console.error("[EditEducationForm] updateUser threw:", err);
+      console.error("[EditEducationForm] history mutation threw:", err);
       toast.error("Gagal menyimpan perubahan.");
     } finally {
       setIsSaving(false);
@@ -181,52 +244,41 @@ function EducationFields({
         <div
           key={draft.id}
           className={[
-            "flex flex-col gap-4 rounded-xl border-b border-[#e6e9ef] pb-6 last:border-b-0 last:pb-0",
-            draft.removed ? "opacity-50" : "",
+            "flex flex-col gap-4 rounded-xl border p-4",
+            draft.removed
+              ? "border-destructive/30 bg-destructive-soft/30"
+              : "border-[#e6e9ef]",
           ].join(" ")}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-1">
+          {(draft.isNew || draft.removed) && (
+            <div className="flex flex-wrap gap-2">
               {draft.isNew && (
                 <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
-                  Baru — belum bisa disimpan
+                  Baru
                 </span>
               )}
               {draft.removed && (
                 <span className="inline-flex w-fit items-center rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-semibold text-destructive">
-                  Akan dihapus — belum bisa disimpan
+                  Akan dihapus
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => toggleRemoved(draft.id)}
-              className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-[#5f6573] transition hover:bg-[#f5f7fb]"
-            >
-              {draft.removed ? (
-                <>
-                  <RotateCcw className="size-3.5" />
-                  Batalkan
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  Hapus
-                </>
-              )}
-            </button>
-          </div>
+          )}
 
           {draft.isNew ? (
-            <Input
-              inputId={`edu-institution-${index}`}
+            <CreateableSelect
+              selectId={`edu-institution-${index}`}
               label="Universitas"
-              placeholder="Nama universitas"
-              value={draft.institutionName}
+              placeholder="Cari universitas..."
+              value={draft.institution}
+              onChange={(option) => updateDraft(draft.id, "institution", option)}
+              loadOptions={loadInstitutionOptions}
+              defaultOptions={institutionOptions}
+              onCreateOption={createInstitutionOption}
+              createLabel={(input) => `Tambah universitas "${input}"`}
+              debounceMs={400}
               disabled={draft.removed}
-              onChange={(e) =>
-                updateDraft(draft.id, "institutionName", e.target.value)
-              }
+              required
             />
           ) : (
             <p className="text-sm font-semibold text-[#172033]">
@@ -237,6 +289,7 @@ function EducationFields({
           <Input
             inputId={`edu-major-${index}`}
             label="Jurusan"
+            placeholder="Contoh: Teknik Informatika"
             value={draft.major}
             disabled={draft.removed}
             onChange={(e) => updateDraft(draft.id, "major", e.target.value)}
@@ -254,6 +307,7 @@ function EducationFields({
             <NumberInput
               inputId={`edu-start-${index}`}
               label="Tahun Masuk"
+              placeholder="2020"
               value={draft.startYear}
               disabled={draft.removed}
               onValueChange={(value) => updateDraft(draft.id, "startYear", value)}
@@ -261,22 +315,43 @@ function EducationFields({
             <NumberInput
               inputId={`edu-end-${index}`}
               label="Tahun Lulus"
+              placeholder="2024"
               value={draft.endYear}
               disabled={draft.removed}
               onValueChange={(value) => updateDraft(draft.id, "endYear", value)}
             />
           </div>
+
+          <div className="flex justify-end border-t border-[#e6e9ef] pt-4">
+            <Button
+              variant={draft.removed ? "outline" : "destructive"}
+              size="sm"
+              onClick={() => toggleRemoved(draft.id)}
+            >
+              {draft.removed ? (
+                <>
+                  <RotateCcw className="size-3.5" />
+                  Batalkan
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-3.5" />
+                  Hapus
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       ))}
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={addDraft}
-        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-sm font-medium text-primary transition hover:bg-primary-soft"
+        className="w-full gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-primary hover:bg-primary-soft"
       >
         <Plus className="size-4" />
         Tambah Pendidikan
-      </button>
+      </Button>
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>

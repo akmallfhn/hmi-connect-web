@@ -95,6 +95,7 @@ function LoginAction() {
 
           <Button
             variant="dark"
+            size="lg"
             onClick={() => handleAuthAction()}
             disabled={isLoading}
             className="w-full font-bold"

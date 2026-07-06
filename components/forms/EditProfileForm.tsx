@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
-import Modal from "../common/Modal";
+import AppModal from "../modals/AppModal";
 import { updateUser } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 
-interface EditHeaderFormProps {
+interface EditProfileFormProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
@@ -20,7 +20,7 @@ interface EditHeaderFormProps {
   avatar?: string;
 }
 
-export default function EditHeaderForm({
+export default function EditProfileForm({
   open,
   onClose,
   onSaved,
@@ -29,11 +29,11 @@ export default function EditHeaderForm({
   headline,
   bio,
   avatar,
-}: EditHeaderFormProps) {
+}: EditProfileFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Informasi Dasar">
+    <AppModal open={open} onClose={onClose} title="Edit Informasi Dasar">
       {open && (
-        <HeaderFields
+        <ProfileFields
           onClose={onClose}
           onSaved={onSaved}
           userId={userId}
@@ -43,11 +43,11 @@ export default function EditHeaderForm({
           avatar={avatar}
         />
       )}
-    </Modal>
+    </AppModal>
   );
 }
 
-interface HeaderFieldsProps {
+interface ProfileFieldsProps {
   onClose: () => void;
   onSaved: () => void;
   userId?: string;
@@ -57,9 +57,8 @@ interface HeaderFieldsProps {
   avatar?: string;
 }
 
-// Mounted only while the modal is open, so its initial state is always seeded fresh
-// from the latest props — no effect needed to "reset" it on reopen.
-function HeaderFields({
+// Mounted only while open, so state always seeds fresh from props — no reset effect needed.
+function ProfileFields({
   onClose,
   onSaved,
   userId,
@@ -67,7 +66,7 @@ function HeaderFields({
   headline,
   bio,
   avatar,
-}: HeaderFieldsProps) {
+}: ProfileFieldsProps) {
   const [form, setForm] = useState({
     fullName: fullName ?? "",
     headline: headline ?? "",
@@ -100,7 +99,7 @@ function HeaderFields({
       toast.success("Informasi dasar berhasil diperbarui.");
       onSaved();
     } catch (err) {
-      console.error("[EditHeaderForm] updateUser threw:", err);
+      console.error("[EditProfileForm] updateUser threw:", err);
       toast.error("Gagal menyimpan perubahan.");
     } finally {
       setIsSaving(false);
@@ -112,6 +111,7 @@ function HeaderFields({
       <Input
         inputId="edit-full-name"
         label="Nama Lengkap"
+        placeholder="Nama lengkap kamu"
         value={form.fullName}
         onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
       />

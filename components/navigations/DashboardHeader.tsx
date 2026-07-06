@@ -73,23 +73,25 @@ export default function DashboardHeader({
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="hidden size-10 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] sm:flex"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden rounded-full text-[#5f6573] hover:bg-[#f5f7fb] sm:flex"
             aria-label="Cari"
           >
             <Search className="size-5" />
-          </button>
+          </Button>
 
           {userId ? (
             <>
-              <button
-                type="button"
-                className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-secondary text-white transition hover:bg-[#e6534b]"
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-full"
                 aria-label="Buat postingan"
               >
                 <Plus className="size-5" />
-              </button>
+              </Button>
 
               <Dropdown
                 align="right"
@@ -200,12 +202,9 @@ export default function DashboardHeader({
               </Dropdown>
             </>
           ) : (
-            <Button
-              variant="primary"
-              onClick={() => (window.location.href = "/auth/login")}
-            >
-              Masuk
-            </Button>
+            <Link href="/auth/login">
+              <Button variant="primary">Masuk</Button>
+            </Link>
           )}
         </div>
       </PageMargin>

@@ -187,6 +187,9 @@ export default function CreateableSelect({
             menuPortalTarget={
               typeof document !== "undefined" ? document.body : undefined
             }
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 60 }),
+            }}
             formatOptionLabel={(
               option: SearchableOption & { __isNew__?: boolean }
             ) => {

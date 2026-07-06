@@ -2,15 +2,17 @@
 
 import { X } from "lucide-react";
 import { ReactNode, useEffect } from "react";
+import Button from "../buttons/Button";
 
-interface ModalProps {
+interface AppModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
 }
 
-export default function Modal({ open, onClose, title, children }: ModalProps) {
+// Generic modal chrome, imported by whichever form needs a dialog — each caller owns its own open/close state.
+export default function AppModal({ open, onClose, title, children }: AppModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -33,14 +35,15 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
       <div className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex shrink-0 items-center justify-between border-b border-[#e6e9ef] px-5 py-4">
           <h2 className="text-base font-semibold text-[#172033]">{title}</h2>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+            className="size-8 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
             aria-label="Tutup"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
       </div>

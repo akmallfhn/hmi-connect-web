@@ -4,7 +4,11 @@ import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { TrainingHistoryEntry } from "@/apis/users";
-import { updateUser } from "@/lib/actions";
+import {
+  createTrainingHistory,
+  deleteTrainingHistory,
+  updateTrainingHistory,
+} from "@/lib/actions";
 import {
   isSuccessStatus,
   type TrainingResultEnum,
@@ -14,7 +18,7 @@ import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
-import Modal from "../common/Modal";
+import AppModal from "../modals/AppModal";
 
 const LEVEL_OPTIONS: { label: string; value: TrainingStatusEnum }[] = [
   { label: "Latihan Kader 1 (LK1)", value: "LK1" },
@@ -78,7 +82,7 @@ export default function EditTrainingForm({
   entries,
 }: EditTrainingFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Riwayat Kaderisasi">
+    <AppModal open={open} onClose={onClose} title="Edit Riwayat Kaderisasi">
       {open && (
         <TrainingFields
           onClose={onClose}
@@ -87,7 +91,7 @@ export default function EditTrainingForm({
           entries={entries}
         />
       )}
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -98,8 +102,7 @@ interface TrainingFieldsProps {
   entries: TrainingHistoryEntry[];
 }
 
-// Mounted only while the modal is open, so drafts are always seeded fresh from the
-// latest entries — no effect needed to "reset" it on reopen.
+// Mounted only while open, so drafts always seed fresh from entries — no reset effect needed.
 function TrainingFields({
   onClose,
   onSaved,
@@ -137,42 +140,56 @@ function TrainingFields({
       return;
     }
 
-    // New rows have no backend id yet, and removed rows can't be deleted through this
-    // endpoint — /users/update only edits existing rows by id. Both are skipped here.
-    const savable = drafts.filter((draft) => !draft.isNew && !draft.removed);
+    const newDrafts = drafts.filter((draft) => draft.isNew && !draft.removed);
+    const missingOrganizer = newDrafts.find((draft) => !draft.organizerName.trim());
+    const missingYear = newDrafts.find((draft) => !draft.year.trim());
+    if (missingOrganizer || missingYear) {
+      toast.error("Lengkapi penyelenggara dan tahun untuk entri baru.");
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const result = await updateUser({
-        id: userId,
-        ...(savable.length > 0
-          ? {
-              training_histories: savable.map((draft) => ({
-                id: draft.id,
-                level: draft.level,
-                result: draft.result,
-                organizer_name: draft.organizerName,
-                year: Number(draft.year),
-              })),
-            }
-          : {}),
-      });
+      const results = await Promise.all(
+        drafts.map((draft) => {
+          if (draft.isNew) {
+            if (draft.removed) return null;
+            return createTrainingHistory({
+              level: draft.level,
+              result: draft.result,
+              organizer_name: draft.organizerName,
+              year: Number(draft.year),
+            });
+          }
+          if (draft.removed) {
+            return deleteTrainingHistory(draft.id);
+          }
+          return updateTrainingHistory({
+            id: draft.id,
+            level: draft.level,
+            result: draft.result,
+            organizer_name: draft.organizerName,
+            year: Number(draft.year),
+          });
+        })
+      );
 
-      if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menyimpan perubahan.");
+      const attempted = results.filter(Boolean);
+      const failed = attempted.filter(
+        (result) => !isSuccessStatus(result!.status)
+      );
+
+      if (failed.length > 0) {
+        toast.error(
+          `${failed.length} dari ${attempted.length} perubahan gagal disimpan.`
+        );
         return;
       }
 
-      const skipped = drafts.length - savable.length;
       toast.success("Riwayat kaderisasi berhasil diperbarui.");
-      if (skipped > 0) {
-        toast.info(
-          `${skipped} entri baru/dihapus belum tersimpan — backend belum mendukung penambahan atau penghapusan riwayat kaderisasi.`
-        );
-      }
       onSaved();
     } catch (err) {
-      console.error("[EditTrainingForm] updateUser threw:", err);
+      console.error("[EditTrainingForm] history mutation threw:", err);
       toast.error("Gagal menyimpan perubahan.");
     } finally {
       setIsSaving(false);
@@ -185,41 +202,26 @@ function TrainingFields({
         <div
           key={draft.id}
           className={[
-            "flex flex-col gap-4 rounded-xl border-b border-[#e6e9ef] pb-6 last:border-b-0 last:pb-0",
-            draft.removed ? "opacity-50" : "",
+            "flex flex-col gap-4 rounded-xl border p-4",
+            draft.removed
+              ? "border-destructive/30 bg-destructive-soft/30"
+              : "border-[#e6e9ef]",
           ].join(" ")}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-1">
+          {(draft.isNew || draft.removed) && (
+            <div className="flex flex-wrap gap-2">
               {draft.isNew && (
                 <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
-                  Baru — belum bisa disimpan
+                  Baru
                 </span>
               )}
               {draft.removed && (
                 <span className="inline-flex w-fit items-center rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-semibold text-destructive">
-                  Akan dihapus — belum bisa disimpan
+                  Akan dihapus
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => toggleRemoved(draft.id)}
-              className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-[#5f6573] transition hover:bg-[#f5f7fb]"
-            >
-              {draft.removed ? (
-                <>
-                  <RotateCcw className="size-3.5" />
-                  Batalkan
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  Hapus
-                </>
-              )}
-            </button>
-          </div>
+          )}
 
           <Select
             selectId={`training-level-${index}`}
@@ -235,6 +237,7 @@ function TrainingFields({
           <Input
             inputId={`training-organizer-${index}`}
             label="Penyelenggara"
+            placeholder="Contoh: Komisariat FH UI"
             value={draft.organizerName}
             disabled={draft.removed}
             onChange={(e) =>
@@ -256,22 +259,43 @@ function TrainingFields({
             <NumberInput
               inputId={`training-year-${index}`}
               label="Tahun"
+              placeholder="2020"
               value={draft.year}
               disabled={draft.removed}
               onValueChange={(value) => updateDraft(draft.id, "year", value)}
             />
           </div>
+
+          <div className="flex justify-end border-t border-[#e6e9ef] pt-4">
+            <Button
+              variant={draft.removed ? "outline" : "destructive"}
+              size="sm"
+              onClick={() => toggleRemoved(draft.id)}
+            >
+              {draft.removed ? (
+                <>
+                  <RotateCcw className="size-3.5" />
+                  Batalkan
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-3.5" />
+                  Hapus
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       ))}
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={addDraft}
-        className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-sm font-medium text-primary transition hover:bg-primary-soft"
+        className="w-full gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-primary hover:bg-primary-soft"
       >
         <Plus className="size-4" />
         Tambah Riwayat Kaderisasi
-      </button>
+      </Button>
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>

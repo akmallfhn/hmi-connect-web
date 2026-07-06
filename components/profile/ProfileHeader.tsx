@@ -1,16 +1,27 @@
 "use client";
 
-import { BadgeCheck, Building2, MapPin, Pencil, Sparkles, UserPlus, UserCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  MapPin,
+  Pencil,
+  Sparkles,
+  UserPlus,
+  UserCheck,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
-import { useProfileEdit } from "../modals/AppModals";
+import EditProfileForm from "../forms/EditProfileForm";
 import { PLACEHOLDER_ACTIVITY } from "./mockData";
 
 interface ProfileHeaderProps {
+  userId?: string;
   fullName?: string;
   avatar?: string;
   headline?: string;
+  bio?: string;
   branchName?: string;
   coordinatingBodyName?: string;
   organizationName?: string;
@@ -22,9 +33,11 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({
+  userId,
   fullName,
   avatar,
   headline,
+  bio,
   branchName,
   coordinatingBodyName,
   organizationName,
@@ -34,8 +47,9 @@ export default function ProfileHeader({
   followersCount,
   isOwnProfile,
 }: ProfileHeaderProps) {
-  const { openModal } = useProfileEdit();
+  const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const displayName = fullName ?? "Kader";
   const affiliation = [branchName, coordinatingBodyName, organizationName]
     .filter(Boolean)
@@ -56,20 +70,15 @@ export default function ProfileHeader({
             />
           </div>
 
-          <div className="flex shrink-0 justify-end pt-3 sm:pt-0">
+          <div className="flex shrink-0 justify-end pt-3">
             {isOwnProfile ? (
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() => openModal("header")}
-              >
+              <Button variant="light" onClick={() => setIsEditOpen(true)}>
                 <Pencil className="size-3.5" />
                 Edit Profil
               </Button>
             ) : (
               <Button
                 variant={isFollowing ? "light" : "primary"}
-                size="sm"
                 onClick={() => setIsFollowing((prev) => !prev)}
               >
                 {isFollowing ? (
@@ -85,9 +94,7 @@ export default function ProfileHeader({
 
         <div className="mt-3">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h1 className="text-xl font-bold text-[#172033]">
-              {displayName}
-            </h1>
+            <h1 className="text-xl font-bold text-[#172033]">{displayName}</h1>
             {isVerified && (
               <BadgeCheck
                 className="size-5 text-primary"
@@ -148,6 +155,22 @@ export default function ProfileHeader({
           </div>
         </div>
       </div>
+
+      {isOwnProfile && (
+        <EditProfileForm
+          open={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          onSaved={() => {
+            setIsEditOpen(false);
+            router.refresh();
+          }}
+          userId={userId}
+          fullName={fullName}
+          headline={headline}
+          bio={bio}
+          avatar={avatar}
+        />
+      )}
     </div>
   );
 }

@@ -2,9 +2,13 @@
 
 import { GraduationCap, Pencil } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { Institution } from "@/apis/institutions";
 import type { Degree } from "@/lib/types";
 import type { EducationHistoryEntry } from "@/apis/users";
-import { useProfileEdit } from "../modals/AppModals";
+import Button from "../buttons/Button";
+import EditEducationForm from "../forms/EditEducationForm";
 
 const DEGREE_LABELS: Record<Degree, string> = {
   diploma_ahli_pratama: "Diploma (Ahli Pratama)",
@@ -16,31 +20,32 @@ const DEGREE_LABELS: Record<Degree, string> = {
 };
 
 interface EducationCardProps {
+  userId?: string;
   entries: EducationHistoryEntry[];
+  institutions: Institution[];
   isOwnProfile?: boolean;
 }
 
 export default function EducationCard({
+  userId,
   entries,
+  institutions,
   isOwnProfile,
 }: EducationCardProps) {
-  const { openModal } = useProfileEdit();
+  const router = useRouter();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[#172033]">Pendidikan</h2>
         {isOwnProfile && (
-          <button
-            type="button"
-            onClick={() => openModal("education")}
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-primary transition hover:bg-primary-soft"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
             <Pencil className="size-3.5" />
             Edit
-          </button>
+          </Button>
         )}
       </div>
 
@@ -74,6 +79,20 @@ export default function EducationCard({
           </div>
         ))}
       </div>
+
+      {isOwnProfile && (
+        <EditEducationForm
+          open={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          onSaved={() => {
+            setIsEditOpen(false);
+            router.refresh();
+          }}
+          userId={userId}
+          entries={entries}
+          institutions={institutions}
+        />
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Heart, MessageCircle, MoreHorizontal, Share2, Trophy } from "lucide-react";
 import { useState } from "react";
 import Avatar from "../common/Avatar";
+import Button from "../buttons/Button";
 import type { FeedPost } from "./mockData";
 
 interface FeedPostCardProps {
@@ -30,13 +31,14 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             <p className="text-xs text-[#5f6573]">{post.timestamp}</p>
           </div>
         </div>
-        <button
-          type="button"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
           aria-label="Opsi lainnya"
         >
           <MoreHorizontal className="size-4" />
-        </button>
+        </Button>
       </div>
 
       {post.badge && (
@@ -69,31 +71,30 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       </div>
 
       <div className="mt-2 grid grid-cols-3 gap-1 border-t border-[#e6e9ef] pt-2">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={toggleLike}
-          className={[
-            "flex cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition hover:bg-[#f5f7fb]",
-            liked ? "text-secondary" : "text-[#5f6573]",
-          ].join(" ")}
+          className={`gap-2 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+            liked ? "text-secondary" : "text-[#5f6573]"
+          }`}
         >
           <Heart className={`size-4 ${liked ? "fill-secondary" : ""}`} />
           Suka
-        </button>
-        <button
-          type="button"
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-[#5f6573] transition hover:bg-[#f5f7fb]"
+        </Button>
+        <Button
+          variant="ghost"
+          className="gap-2 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
         >
           <MessageCircle className="size-4" />
           Komentar
-        </button>
-        <button
-          type="button"
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-[#5f6573] transition hover:bg-[#f5f7fb]"
+        </Button>
+        <Button
+          variant="ghost"
+          className="gap-2 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
         >
           <Share2 className="size-4" />
           Bagikan
-        </button>
+        </Button>
       </div>
     </article>
   );
