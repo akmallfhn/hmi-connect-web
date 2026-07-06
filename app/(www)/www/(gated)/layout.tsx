@@ -9,7 +9,7 @@ export default async function GatedLayout({
 }) {
   const { sessionToken, user } = await getSession();
 
-  if (!sessionToken) return null;
+  if (!sessionToken) redirect("/api/auth/clear-session");
 
   if (user?.status === "pending") redirect("/activation");
 

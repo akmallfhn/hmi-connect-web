@@ -17,7 +17,7 @@ import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 import type { Branch } from "@/apis/branches";
 import type { Institution } from "@/apis/institutions";
-import { createInstitution, activateUser } from "@/lib/actions";
+import { createInstitution, activateUser, logoutUser } from "@/lib/actions";
 import {
   isSuccessStatus,
   type Degree,
@@ -124,6 +124,18 @@ export default function ActivationPage({
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("[ActivationPage] logoutUser threw:", err);
+    } finally {
+      window.location.href = "/auth/login";
+    }
+  }
 
   const [formData, setFormData] = useState<FormData>(emptyFormData);
 
@@ -263,15 +275,27 @@ export default function ActivationPage({
               </p>
             </div>
           </div>
-          <Button
-            variant="dark"
-            size="lg"
-            className="w-full"
-            onClick={() => setStarted(true)}
-          >
-            Mulai Aktivasi
-            <ArrowRight className="size-4" />
-          </Button>
+          <div className="flex w-full flex-col items-center gap-4">
+            <Button
+              variant="dark"
+              size="lg"
+              className="w-full"
+              onClick={() => setStarted(true)}
+            >
+              Mulai Aktivasi
+              <ArrowRight className="size-4" />
+            </Button>
+            <span
+              onClick={loggingOut ? undefined : handleLogout}
+              className={`text-sm font-medium text-destructive underline underline-offset-2 ${
+                loggingOut
+                  ? "cursor-not-allowed opacity-60"
+                  : "cursor-pointer hover:text-destructive-foreground"
+              }`}
+            >
+              {loggingOut ? "Keluar..." : "Keluar"}
+            </span>
+          </div>
         </div>
       </main>
     );
@@ -448,7 +472,7 @@ export default function ActivationPage({
                 />
 
                 {status === "error" && (
-                  <p className="text-xs font-semibold text-[#b42318]">
+                  <p className="text-xs font-semibold text-destructive">
                     {errorMessage}
                   </p>
                 )}

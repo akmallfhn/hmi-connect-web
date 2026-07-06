@@ -35,7 +35,10 @@ export default function ProfileSidebar({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-        <div className="flex flex-col items-center gap-3 text-center">
+        <a
+          href="/profile"
+          className="flex flex-col items-center gap-3 text-center"
+        >
           <Avatar src={avatar} name={displayName} size={72} ring />
           <div>
             <p className="font-bold text-[#172033]">{displayName}</p>
@@ -43,7 +46,7 @@ export default function ProfileSidebar({
               {role ?? "Kader • HMI Connect"}
             </p>
           </div>
-        </div>
+        </a>
 
         <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center">
           <div>

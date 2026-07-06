@@ -42,7 +42,7 @@ export default function TextArea({
           className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
         >
           {label}
-          {required && <span className="text-red-600">*</span>}
+          {required && <span className="text-destructive">*</span>}
         </label>
       )}
 
@@ -57,7 +57,7 @@ export default function TextArea({
           className={[
             "w-full resize-none rounded-lg border px-3 py-2 text-base text-[#172033] transition placeholder:text-[#5f6573]/60 focus:outline-none focus:ring-2",
             computedError
-              ? "border-red-500 focus:ring-red-200"
+              ? "border-destructive focus:ring-destructive/20"
               : "border-[#dbe3ef] focus:border-primary focus:ring-primary/15",
             disabled ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]" : "bg-white",
             className,
@@ -67,7 +67,7 @@ export default function TextArea({
         />
       </div>
 
-      {computedError && <p className="text-xs text-red-600">{computedError}</p>}
+      {computedError && <p className="text-xs text-destructive">{computedError}</p>}
     </div>
   );
 }

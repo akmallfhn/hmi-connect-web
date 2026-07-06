@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
+import PageMargin from "../common/PageMargin";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 import { NAV_ITEMS, NOTIFICATIONS } from "./mockData";
@@ -32,7 +33,7 @@ export default function DashboardHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#e6e9ef] bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
+      <PageMargin className="flex h-16 items-center justify-between gap-4">
         <a href="#" className="flex shrink-0 items-center gap-2">
           <LogoHmi className="h-8 w-auto" />
           <LogoHmiConnect className="h-6 w-auto" />
@@ -146,7 +147,7 @@ export default function DashboardHeader({
             </div>
             <div className="flex flex-col py-1">
               <a
-                href="#"
+                href="/profile"
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
               >
                 <UserRound className="size-4 text-[#5f6573]" />
@@ -170,7 +171,7 @@ export default function DashboardHeader({
             <div className="border-t border-[#e6e9ef] py-1">
               <a
                 href="#"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#b42318] transition hover:bg-red-50"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-destructive transition hover:bg-destructive-soft"
               >
                 <LogOut className="size-4" />
                 Keluar
@@ -178,7 +179,7 @@ export default function DashboardHeader({
             </div>
           </Dropdown>
         </div>
-      </div>
+      </PageMargin>
     </header>
   );
 }

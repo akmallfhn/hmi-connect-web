@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function Activation() {
   const { sessionToken, user } = await getSession();
 
-  if (!sessionToken) return null;
+  if (!sessionToken) redirect("/api/auth/clear-session");
 
   if (user?.status !== "pending") redirect("/");
 

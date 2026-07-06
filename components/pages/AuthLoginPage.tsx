@@ -110,7 +110,7 @@ function LoginAction() {
           </Button>
 
           {status === "error" ? (
-            <p className="text-xs font-semibold text-[#b42318]">
+            <p className="text-xs font-semibold text-destructive">
               {errorMessage}
             </p>
           ) : null}

@@ -148,7 +148,7 @@ export default function CreateableSelect({
           className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
         >
           {label}
-          {required && <span className="text-red-600">*</span>}
+          {required && <span className="text-destructive">*</span>}
         </label>
       )}
 
@@ -236,7 +236,7 @@ export default function CreateableSelect({
               indicatorsContainer: () => "cursor-pointer text-[#5f6573]",
               indicatorSeparator: () => "hidden",
               dropdownIndicator: () => "cursor-pointer px-1",
-              clearIndicator: () => "cursor-pointer px-1 hover:text-[#b42318]",
+              clearIndicator: () => "cursor-pointer px-1 hover:text-destructive",
               menuPortal: () => "z-50",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",

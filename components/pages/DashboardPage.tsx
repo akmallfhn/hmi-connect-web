@@ -1,3 +1,4 @@
+import PageMargin from "../common/PageMargin";
 import DashboardHeader from "../dashboard/DashboardHeader";
 import Feed from "../dashboard/Feed";
 import ProfileSidebar from "../dashboard/ProfileSidebar";
@@ -18,7 +19,7 @@ export default function DashboardPage({
     <div className="min-h-screen bg-[#f5f7fb]">
       <DashboardHeader fullName={fullName} avatar={avatar} role={role} />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6 lg:px-8">
+      <PageMargin className="grid grid-cols-1 gap-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6">
         <aside>
           <div className="lg:sticky lg:top-20">
             <ProfileSidebar fullName={fullName} avatar={avatar} role={role} />
@@ -34,7 +35,7 @@ export default function DashboardPage({
             <RightSidebar />
           </div>
         </aside>
-      </div>
+      </PageMargin>
     </div>
   );
 }

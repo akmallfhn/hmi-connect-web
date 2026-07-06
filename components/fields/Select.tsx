@@ -65,7 +65,7 @@ export default function Select({
           className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
         >
           {label}
-          {required && <span className="text-red-600">*</span>}
+          {required && <span className="text-destructive">*</span>}
         </label>
       )}
 

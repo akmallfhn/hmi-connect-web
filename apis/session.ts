@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { callApi } from "./api";
+import { callApi, type ApiEnvelope } from "./api";
 import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
@@ -42,3 +42,20 @@ export const getSession = cache(async () => {
 
   return { sessionToken, user: result.data };
 });
+
+// Clears the cookie regardless of whether the backend logout call succeeds.
+export async function logoutUser(): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  const result = sessionToken
+    ? await callApi("/api/v1/auth/logout", {
+        method: "POST",
+        token: sessionToken,
+      })
+    : { status: "OK" as const, message: "Already logged out" };
+
+  cookieStore.delete(SESSION_COOKIE_NAME);
+
+  return result;
+}

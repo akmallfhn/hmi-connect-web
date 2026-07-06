@@ -4,6 +4,7 @@ import {
   createInstitution as createInstitutionApi,
   type Institution,
 } from "@/apis/institutions";
+import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
   activateUser as activateUserApi,
   type ActivationPayload,
@@ -11,6 +12,10 @@ import {
 
 export async function activateUser(payload: ActivationPayload) {
   return activateUserApi(payload);
+}
+
+export async function logoutUser() {
+  return logoutUserApi();
 }
 
 export async function createInstitution(

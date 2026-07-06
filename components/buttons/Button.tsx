@@ -43,7 +43,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       outline:
         "border border-[#dbe3ef] bg-transparent text-[#172033] hover:bg-primary-soft",
       ghost: "bg-transparent text-[#172033] hover:bg-black/5",
-      destructive: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
+      destructive:
+        "bg-destructive text-white hover:bg-[#c92e25] active:bg-destructive-foreground",
     };
 
     const sizeClasses: Record<ButtonSize, string> = {
