@@ -53,6 +53,43 @@ export async function activateUser(
   });
 }
 
+export type VerificationPayload = {
+  ktp_full_name: string;
+  nik: string;
+  phone_number: string;
+  date_of_birth: string;
+  gender: GenderEnum;
+  address_street: string;
+  subdistrict_id: number;
+};
+
+export type VerificationResult = {
+  user_id: string;
+  ktp_full_name: string;
+  subdistrict_id: number;
+  is_verified: boolean;
+};
+
+export async function verifyUser(
+  payload: VerificationPayload
+): Promise<ApiEnvelope<VerificationResult>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<VerificationResult>("/api/v1/users/verification", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
 export type TrainingHistoryEntry = {
   id: string;
   level: TrainingStatusEnum;

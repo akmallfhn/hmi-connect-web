@@ -8,7 +8,7 @@ interface AvatarProps {
   ring?: boolean;
 }
 
-function getInitials(name: string) {
+export function getInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -45,7 +45,7 @@ export default function Avatar({
 
   return (
     <div
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
       className={`${shared} flex items-center justify-center bg-primary-soft font-semibold text-primary`}
     >
       {getInitials(name)}

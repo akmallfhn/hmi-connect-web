@@ -1,18 +1,21 @@
 "use client";
 
 import {
-  BadgeCheck,
   Building2,
+  Camera,
   MapPin,
   Pencil,
   Sparkles,
+  TriangleAlert,
   UserPlus,
   UserCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Avatar from "../common/Avatar";
+import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
+import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import { PLACEHOLDER_ACTIVITY } from "./mockData";
 
@@ -50,6 +53,7 @@ export default function ProfileHeader({
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
   const displayName = fullName ?? "Kader";
   const affiliation = [branchName, coordinatingBodyName, organizationName]
     .filter(Boolean)
@@ -61,13 +65,27 @@ export default function ProfileHeader({
 
       <div className="px-5 pb-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="-mt-12 flex items-end gap-4 sm:-mt-14">
-            <Avatar
-              src={avatar}
-              name={displayName}
-              size={96}
-              className="border-4 border-white"
-            />
+          <div className="-mt-14 flex items-end gap-4 sm:-mt-16">
+            {isOwnProfile ? (
+              <button
+                type="button"
+                onClick={() => setIsAvatarEditOpen(true)}
+                className="group relative overflow-hidden rounded-full border-4 border-white hover:cursor-pointer"
+                aria-label="Ubah foto profil"
+              >
+                <Avatar src={avatar} name={displayName} size={112} />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+                  <Camera className="size-6" />
+                </span>
+              </button>
+            ) : (
+              <Avatar
+                src={avatar}
+                name={displayName}
+                size={112}
+                className="border-4 border-white"
+              />
+            )}
           </div>
 
           <div className="flex shrink-0 justify-end pt-3">
@@ -95,10 +113,12 @@ export default function ProfileHeader({
         <div className="mt-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <h1 className="text-xl font-bold text-[#172033]">{displayName}</h1>
-            {isVerified && (
-              <BadgeCheck
-                className="size-5 text-primary"
-                aria-label="Terverifikasi"
+            {isVerified ? (
+              <VerifiedBadge size={20} />
+            ) : (
+              <TriangleAlert
+                className="size-5 text-destructive"
+                aria-label="Belum terverifikasi"
               />
             )}
           </div>
@@ -119,7 +139,7 @@ export default function ProfileHeader({
           <div className="mt-3 flex flex-wrap gap-2">
             {isVerified && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                <BadgeCheck className="size-3.5" />
+                <VerifiedBadge size={14} />
                 Anggota Terverifikasi
               </span>
             )}
@@ -157,19 +177,31 @@ export default function ProfileHeader({
       </div>
 
       {isOwnProfile && (
-        <EditProfileForm
-          open={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
-          onSaved={() => {
-            setIsEditOpen(false);
-            router.refresh();
-          }}
-          userId={userId}
-          fullName={fullName}
-          headline={headline}
-          bio={bio}
-          avatar={avatar}
-        />
+        <>
+          <EditProfileForm
+            open={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            onSaved={() => {
+              setIsEditOpen(false);
+              router.refresh();
+            }}
+            userId={userId}
+            fullName={fullName}
+            headline={headline}
+            bio={bio}
+          />
+          <EditAvatarForm
+            open={isAvatarEditOpen}
+            onClose={() => setIsAvatarEditOpen(false)}
+            onSaved={() => {
+              setIsAvatarEditOpen(false);
+              router.refresh();
+            }}
+            userId={userId}
+            fullName={fullName}
+            avatar={avatar}
+          />
+        </>
       )}
     </div>
   );

@@ -7,23 +7,28 @@ import DashboardHeader from "../navigations/DashboardHeader";
 interface DashboardPageProps {
   fullName?: string;
   avatar?: string;
+  email?: string;
   role?: string;
   userId?: string;
+  isVerified?: boolean;
 }
 
 export default function DashboardPage({
   fullName,
   avatar,
+  email,
   role,
   userId,
+  isVerified,
 }: DashboardPageProps) {
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
       <DashboardHeader
         fullName={fullName}
         avatar={avatar}
-        role={role}
+        email={email}
         userId={userId}
+        isVerified={isVerified}
       />
 
       <PageMargin className="grid grid-cols-1 gap-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6">

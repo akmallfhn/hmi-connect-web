@@ -36,6 +36,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts` | Scopes branch lookups to this org. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. |
 | `NEXT_PUBLIC_BASE_URL` | client-side code that needs the public origin | |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` | Browser-side Supabase client, used only for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket. Not used for anything else — there's no ORM/DB usage here, see Stack above. |
 
 ## Domain routing
 
@@ -73,8 +74,10 @@ though the URLs you actually visit don't show `/www`.
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `branches.ts`, `users.ts`, `session.ts`, plus the shared
-   `api.ts`). Marked `import "server-only"`. Holds *every* operation for that resource
+   (`institutions.ts`, `branches.ts`, `locations.ts` (provinces/cities/subdistricts —
+   grouped together since they're a single cascading lookup, not independent resources),
+   `users.ts`, `session.ts`, plus the shared `api.ts`). Marked `import "server-only"`.
+   Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
    look. These functions know the backend's request/response shape; nothing outside this
    layer should construct a `callApi()` call by hand.
@@ -145,6 +148,26 @@ Two-step onboarding gated on `user.status === "pending"`, submitted via the
 Institution values are the numeric `id` (the backend wants `education_institution_id`,
 not a name) — don't regress that to the display name.
 
+## Verification flow (`components/pages/VerificationPage.tsx`)
+
+Two-step KTP (Indonesian ID card) identity check, submitted via the `verifyUser` Server
+Action → `POST /api/v1/users/verification`, which flips `is_verified` → `true`. Unlike
+activation this is **not** gated/mandatory — `app/(www)/www/verification/page.tsx` only
+redirects away pending users (to `/activation`) and already-verified users (to `/`);
+anyone else can reach it any time, and the page itself offers a "Nanti saja" (skip) link
+back to `/`. `DashboardHeader` links to it from the red "belum diverifikasi" banner (see
+below) when `isVerified === false`.
+
+1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
+   Google), 16-digit `nik`, phone number, date of birth, gender.
+2. **Alamat** — cascading Province → City → Subdistrict (`apis/locations.ts`, backed by
+   `/www/api/provinces/search`, `/www/api/cities/search`, `/www/api/subdistricts/search`),
+   plus street address. City/Subdistrict `SearchableSelect`s are remounted via a `key`
+   keyed off the parent selection so their internal option list resets when the parent
+   changes — don't try to reset them by clearing `value` alone, `SearchableSelect` doesn't
+   watch for that. Only `subdistrict_id` is submitted; city/province are derived
+   server-side from it.
+
 ## Component conventions
 
 - `components/pages/*` — one Client Component per route, holds the page's state machine;
@@ -166,13 +189,15 @@ not a name) — don't regress that to the display name.
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`); it does not orchestrate anything itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
-  `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around an inner
-  `*Fields` component that's only mounted while `open` is true (so its `useState` seeds
-  fresh from props every open — don't "fix" this with a `useEffect` + `setState`, that's
-  the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,
+  `EditAvatarForm`, `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around
+  an inner `*Fields` component that's only mounted while `open` is true (so its `useState`
+  seeds fresh from props every open — don't "fix" this with a `useEffect` + `setState`,
+  that's the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,
   `EducationCard`, `TrainingCard`) owns the `open` boolean itself via local `useState` and
   calls `router.refresh()` in `onSaved` — there's no shared modal context; each card is
-  independent.
+  independent. `EditAvatarForm` persists on every change/removal by itself (calling
+  `updateUser` directly) rather than batching into the profile form's own "Simpan" button,
+  since it's opened from a separate trigger (clicking the avatar itself).
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here.

@@ -14,16 +14,22 @@ import {
   updateEducationHistory as updateEducationHistoryApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
+  verifyUser as verifyUserApi,
   type ActivationPayload,
   type CreateEducationHistoryPayload,
   type CreateTrainingHistoryPayload,
   type UpdateEducationHistoryPayload,
   type UpdateTrainingHistoryPayload,
   type UpdateUserPayload,
+  type VerificationPayload,
 } from "@/apis/users";
 
 export async function activateUser(payload: ActivationPayload) {
   return activateUserApi(payload);
+}
+
+export async function verifyUser(payload: VerificationPayload) {
+  return verifyUserApi(payload);
 }
 
 export async function updateUser(payload: UpdateUserPayload) {

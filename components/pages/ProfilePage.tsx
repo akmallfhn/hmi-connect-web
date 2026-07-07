@@ -11,8 +11,9 @@ import TrainingCard from "../profile/TrainingCard";
 interface ViewerProps {
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  email?: string;
   userId?: string;
+  isVerified?: boolean;
 }
 
 interface ProfileProps extends ViewerProps {
@@ -47,8 +48,9 @@ export default function ProfilePage({
       <DashboardHeader
         fullName={viewer.fullName}
         avatar={viewer.avatar}
-        role={viewer.roleName}
+        email={viewer.email}
         userId={viewer.userId}
+        isVerified={viewer.isVerified}
       />
 
       <PageMargin className="py-6">

@@ -1,8 +1,18 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { createContext, ReactNode, useContext, useRef, useState } from "react";
-import ReactSelect, { components as SelectComponents, type MenuListProps } from "react-select";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import ReactSelect, {
+  components as SelectComponents,
+  type MenuListProps,
+} from "react-select";
 
 export interface SearchableOption {
   label: string;
@@ -70,7 +80,9 @@ export default function SearchableSelect({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
   const requestIdRef = useRef(0);
 
   async function fetchPage(query: string, pageToLoad: number) {
@@ -91,6 +103,14 @@ export default function SearchableSelect({
       if (requestId === requestIdRef.current) setLoadingState(false);
     }
   }
+
+  // No server-fetched defaultOptions (e.g. a dependent select whose parent just changed) — load page 1 immediately instead of waiting for the user to type. Deferred via setTimeout so the fetch's setState calls don't run synchronously inside the effect.
+  useEffect(() => {
+    if (disabled || defaultOptions.length > 0) return;
+    const timeoutId = setTimeout(() => fetchPage("", 1), 0);
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleInputChange(nextValue: string, meta: { action: string }) {
     if (meta.action !== "input-change") return;
@@ -167,12 +187,12 @@ export default function SearchableSelect({
               placeholder: () =>
                 "cursor-pointer px-1 text-base text-[#5f6573]/60",
               input: () => "cursor-pointer px-1 text-base text-[#172033]",
-              singleValue: () =>
-                "cursor-pointer px-1 text-base text-[#172033]",
+              singleValue: () => "cursor-pointer px-1 text-base text-[#172033]",
               indicatorsContainer: () => "cursor-pointer text-[#5f6573]",
               indicatorSeparator: () => "hidden",
               dropdownIndicator: () => "cursor-pointer px-1",
-              clearIndicator: () => "cursor-pointer px-1 hover:text-destructive",
+              clearIndicator: () =>
+                "cursor-pointer px-1 hover:text-destructive",
               menuPortal: () => "z-50",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",

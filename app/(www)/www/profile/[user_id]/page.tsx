@@ -43,10 +43,12 @@ export default async function Profile({ params }: ProfileRouteProps) {
     { list: educationHistories },
     { list: trainingHistories },
     institutions,
+    viewerProfile,
   ] = await Promise.all([
     listEducationHistories(profile.id),
     listTrainingHistories(profile.id),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
+    viewer?.id ? getUserById(viewer.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -70,8 +72,9 @@ export default async function Profile({ params }: ProfileRouteProps) {
       viewer={{
         fullName: viewer?.full_name,
         avatar: viewer?.avatar,
-        roleName: viewer?.role_name,
+        email: viewerProfile?.email,
         userId: viewer?.id,
+        isVerified: viewer?.is_verified,
       }}
       isOwnProfile={isOwnProfile}
       institutions={institutions}

@@ -17,7 +17,6 @@ interface EditProfileFormProps {
   fullName?: string;
   headline?: string;
   bio?: string;
-  avatar?: string;
 }
 
 export default function EditProfileForm({
@@ -28,7 +27,6 @@ export default function EditProfileForm({
   fullName,
   headline,
   bio,
-  avatar,
 }: EditProfileFormProps) {
   return (
     <Modal open={open} onClose={onClose} title="Edit Informasi Dasar">
@@ -40,7 +38,6 @@ export default function EditProfileForm({
           fullName={fullName}
           headline={headline}
           bio={bio}
-          avatar={avatar}
         />
       )}
     </Modal>
@@ -54,7 +51,6 @@ interface ProfileFieldsProps {
   fullName?: string;
   headline?: string;
   bio?: string;
-  avatar?: string;
 }
 
 // Mounted only while open, so state always seeds fresh from props — no reset effect needed.
@@ -65,13 +61,11 @@ function ProfileFields({
   fullName,
   headline,
   bio,
-  avatar,
 }: ProfileFieldsProps) {
   const [form, setForm] = useState({
     fullName: fullName ?? "",
     headline: headline ?? "",
     bio: bio ?? "",
-    avatar: avatar ?? "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -88,7 +82,6 @@ function ProfileFields({
         full_name: form.fullName,
         headline: form.headline,
         bio: form.bio,
-        avatar: form.avatar,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -130,13 +123,6 @@ function ProfileFields({
         onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
         rows={4}
         characterLength={280}
-      />
-      <Input
-        inputId="edit-avatar"
-        label="URL Foto Profil"
-        placeholder="https://..."
-        value={form.avatar}
-        onChange={(e) => setForm((prev) => ({ ...prev, avatar: e.target.value }))}
       />
 
       <div className="mt-2 flex justify-end gap-3">

@@ -9,6 +9,7 @@ import {
   Plus,
   Search,
   Settings,
+  TriangleAlert,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,7 @@ import { useState } from "react";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
+import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
 import { NAV_ITEMS, NOTIFICATIONS } from "../dashboard/mockData";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
@@ -23,15 +25,17 @@ import LogoHmiConnect from "../svg/LogoHmiConnect";
 interface DashboardHeaderProps {
   fullName?: string;
   avatar?: string;
-  role?: string;
+  email?: string;
   userId?: string;
+  isVerified?: boolean;
 }
 
 export default function DashboardHeader({
   fullName,
   avatar,
-  role,
+  email,
   userId,
+  isVerified,
 }: DashboardHeaderProps) {
   const displayName = fullName ?? "Kader";
   const unreadCount = NOTIFICATIONS.filter((item) => !item.read).length;
@@ -157,12 +161,11 @@ export default function DashboardHeader({
                 <div className="flex items-center gap-3 border-b border-[#e6e9ef] px-4 py-3">
                   <Avatar src={avatar} name={displayName} size={40} />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#172033]">
-                      {displayName}
+                    <p className="flex items-center gap-1 truncate text-sm font-semibold text-[#172033]">
+                      <span className="truncate">{displayName}</span>
+                      {isVerified && <VerifiedBadge size={14} />}
                     </p>
-                    <p className="truncate text-xs text-[#5f6573]">
-                      {role ?? "Kader HMI"}
-                    </p>
+                    <p className="truncate text-xs text-[#5f6573]">{email}</p>
                   </div>
                 </div>
                 <div className="flex flex-col py-1">
@@ -208,6 +211,21 @@ export default function DashboardHeader({
           )}
         </div>
       </PageMargin>
+
+      {userId && isVerified === false && (
+        <div className="border-t border-destructive/20 bg-destructive-soft">
+          <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-destructive">
+            <TriangleAlert className="size-4 shrink-0" />
+            <span>Data akun kamu belum diverifikasi oleh admin HMI Connect.</span>
+            <Link
+              href="/verification"
+              className="underline underline-offset-2 hover:text-destructive-foreground"
+            >
+              Verifikasi sekarang
+            </Link>
+          </PageMargin>
+        </div>
+      )}
     </header>
   );
 }
