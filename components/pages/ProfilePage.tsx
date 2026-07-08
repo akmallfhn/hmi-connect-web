@@ -26,6 +26,7 @@ interface ProfileProps extends ViewerProps {
   isSubscribe?: boolean;
   followingCount?: number;
   followersCount?: number;
+  isFollowedByMe?: boolean;
   educationHistories: EducationHistoryEntry[];
   trainingHistories: TrainingHistoryEntry[];
 }
@@ -56,6 +57,7 @@ export default function ProfilePage({
       <PageMargin className="py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <ProfileHeader
+            key={`${profile.userId}-${profile.isFollowedByMe}-${profile.followersCount}`}
             userId={profile.userId}
             fullName={profile.fullName}
             avatar={profile.avatar}
@@ -68,6 +70,7 @@ export default function ProfilePage({
             isSubscribe={profile.isSubscribe}
             followingCount={profile.followingCount}
             followersCount={profile.followersCount}
+            isFollowedByMe={profile.isFollowedByMe}
             isOwnProfile={isOwnProfile}
           />
           <AboutCard bio={profile.bio} />

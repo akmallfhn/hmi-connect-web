@@ -11,9 +11,11 @@ import {
   createTrainingHistory as createTrainingHistoryApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
+  followUser as followUserApi,
   updateEducationHistory as updateEducationHistoryApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
+  unfollowUser as unfollowUserApi,
   verifyUser as verifyUserApi,
   type ActivationPayload,
   type CreateEducationHistoryPayload,
@@ -52,6 +54,14 @@ export async function verifyUser(payload: VerificationPayload) {
 
 export async function updateUser(payload: UpdateUserPayload) {
   return updateUserApi(payload);
+}
+
+export async function followUser(userId: string) {
+  return followUserApi(userId);
+}
+
+export async function unfollowUser(userId: string) {
+  return unfollowUserApi(userId);
 }
 
 export async function createEducationHistory(

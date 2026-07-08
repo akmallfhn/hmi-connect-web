@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, Reply } from "lucide-react";
 import { FormEvent, useState } from "react";
@@ -135,11 +136,17 @@ export default function CommentItem({
 
   return (
     <div className="flex items-start gap-2">
-      <Avatar
-        src={comment.avatar}
-        name={comment.full_name}
-        size={isReply ? 28 : 32}
-      />
+      <Link
+        href={`/profile/${comment.user_id}`}
+        aria-label={`Lihat profil ${comment.full_name}`}
+        className="shrink-0 rounded-full"
+      >
+        <Avatar
+          src={comment.avatar}
+          name={comment.full_name}
+          size={isReply ? 28 : 32}
+        />
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-xl bg-[#f5f7fb] px-3 py-2">
           <p className="text-xs font-semibold text-[#172033]">{comment.full_name}</p>

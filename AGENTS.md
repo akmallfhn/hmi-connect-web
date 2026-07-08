@@ -210,7 +210,9 @@ below) when `isVerified === false`.
   `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
   returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
 - `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
-  `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`).
+  `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`). `ProfileHeader` uses
+  `users/detail.is_followed_by_me` for the initial follow state, then calls the
+  `followUser`/`unfollowUser` Server Actions for the button toggle.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

@@ -127,6 +127,7 @@ export type UserProfile = {
   following_count: number;
   followers_count: number;
   feed_count: number;
+  is_followed_by_me?: boolean;
   headline?: string;
   bio?: string;
   role_id: number;
@@ -145,15 +146,15 @@ export type UserProfile = {
   updated_at: string;
 };
 
-// Gated by the org client secret (not a user token), so this works for anonymous visitors too.
+// Pass a viewer JWT to include viewer-scoped fields, otherwise this falls back to the org client secret.
 export const getUserById = cache(
-  async (id: string): Promise<UserProfile | null> => {
-    const clientSecret = process.env.CLIENT_SECRET;
-    if (!clientSecret) return null;
+  async (id: string, token?: string): Promise<UserProfile | null> => {
+    const authToken = token ?? process.env.CLIENT_SECRET;
+    if (!authToken) return null;
 
     const result = await callApi<UserProfile>("/api/v1/users/detail", {
       method: "POST",
-      token: clientSecret,
+      token: authToken,
       body: { id },
     });
 
@@ -161,6 +162,51 @@ export const getUserById = cache(
     return result.data;
   }
 );
+
+export type FollowUserResult = {
+  follower_id: string;
+  following_id: string;
+};
+
+export async function followUser(
+  userId: string
+): Promise<ApiEnvelope<FollowUserResult>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<FollowUserResult>("/api/v1/users/follow", {
+    method: "POST",
+    token: sessionToken,
+    body: { user_id: userId },
+  });
+}
+
+export async function unfollowUser(
+  userId: string
+): Promise<ApiEnvelope<FollowUserResult>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<FollowUserResult>("/api/v1/users/unfollow", {
+    method: "POST",
+    token: sessionToken,
+    body: { user_id: userId },
+  });
+}
 
 export type UpdateUserPayload = {
   id: string;

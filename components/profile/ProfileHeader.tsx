@@ -12,11 +12,14 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
+import { followUser, unfollowUser } from "@/lib/actions";
+import { isSuccessStatus } from "@/lib/types";
 import { PLACEHOLDER_ACTIVITY } from "./mockData";
 
 interface ProfileHeaderProps {
@@ -32,6 +35,7 @@ interface ProfileHeaderProps {
   isSubscribe?: boolean;
   followingCount?: number;
   followersCount?: number;
+  isFollowedByMe?: boolean;
   isOwnProfile?: boolean;
 }
 
@@ -48,16 +52,51 @@ export default function ProfileHeader({
   isSubscribe,
   followingCount,
   followersCount,
+  isFollowedByMe,
   isOwnProfile,
 }: ProfileHeaderProps) {
   const router = useRouter();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(Boolean(isFollowedByMe));
+  const [followersTotal, setFollowersTotal] = useState(followersCount ?? 0);
+  const [followLoading, setFollowLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
   const displayName = fullName ?? "Kader";
   const affiliation = [branchName, coordinatingBodyName, organizationName]
     .filter(Boolean)
     .join(" • ");
+
+  async function handleFollowToggle() {
+    if (!userId || followLoading) return;
+
+    const nextFollowing = !isFollowing;
+    const previousFollowersTotal = followersTotal;
+    setIsFollowing(nextFollowing);
+    setFollowersTotal((prev) => Math.max(0, prev + (nextFollowing ? 1 : -1)));
+    setFollowLoading(true);
+
+    try {
+      const result = nextFollowing
+        ? await followUser(userId)
+        : await unfollowUser(userId);
+
+      if (!isSuccessStatus(result.status)) {
+        setIsFollowing(!nextFollowing);
+        setFollowersTotal(previousFollowersTotal);
+        toast.error(result.message ?? "Gagal memperbarui status mengikuti.");
+        return;
+      }
+
+      router.refresh();
+    } catch (err) {
+      console.error("[ProfileHeader] follow toggle threw:", err);
+      setIsFollowing(!nextFollowing);
+      setFollowersTotal(previousFollowersTotal);
+      toast.error("Gagal memperbarui status mengikuti.");
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white shadow-sm">
@@ -97,14 +136,15 @@ export default function ProfileHeader({
             ) : (
               <Button
                 variant={isFollowing ? "light" : "primary"}
-                onClick={() => setIsFollowing((prev) => !prev)}
+                onClick={handleFollowToggle}
+                disabled={followLoading}
               >
                 {isFollowing ? (
                   <UserCheck className="size-3.5" />
                 ) : (
                   <UserPlus className="size-3.5" />
                 )}
-                {isFollowing ? "Mengikuti" : "Ikuti"}
+                {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
               </Button>
             )}
           </div>
@@ -164,7 +204,7 @@ export default function ProfileHeader({
             <p className="text-xs text-[#5f6573]">Mengikuti</p>
           </div>
           <div>
-            <p className="font-bold text-[#172033]">{followersCount ?? 0}</p>
+            <p className="font-bold text-[#172033]">{followersTotal}</p>
             <p className="text-xs text-[#5f6573]">Pengikut</p>
           </div>
           <div>

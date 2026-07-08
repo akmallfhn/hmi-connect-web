@@ -28,10 +28,8 @@ export async function generateMetadata({
 
 export default async function Profile({ params }: ProfileRouteProps) {
   const { user_id } = await params;
-  const [profile, { user: viewer }] = await Promise.all([
-    getUserById(user_id),
-    getSession(),
-  ]);
+  const { sessionToken, user: viewer } = await getSession();
+  const profile = await getUserById(user_id, sessionToken);
 
   if (!profile || profile.status !== "active") return notFound();
 
@@ -48,7 +46,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     listEducationHistories(profile.id),
     listTrainingHistories(profile.id),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
-    viewer?.id ? getUserById(viewer.id) : Promise.resolve(null),
+    viewer?.id ? getUserById(viewer.id, sessionToken) : Promise.resolve(null),
   ]);
 
   return (
@@ -65,6 +63,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         isSubscribe: profile.is_subscribe,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
+        isFollowedByMe: profile.is_followed_by_me,
         educationHistories,
         trainingHistories,
         userId: profile.id,
