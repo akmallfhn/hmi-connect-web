@@ -3,31 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Repeat2,
-  Send,
-  Share2,
-} from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Repeat2, Send, Share2 } from "lucide-react";
 import { FormEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
+import CommentItem from "./CommentItem";
 import LinkPreviewCard from "./LinkPreviewCard";
-import ReactionPickerModal, { REACTIONS } from "../modals/ReactionPickerModal";
+import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ShareModal from "../modals/ShareModal";
+import { useReaction } from "@/hooks/useReaction";
 import type { Feed, FeedComment } from "@/apis/feeds";
-import {
-  createFeedComment,
-  listFeedComments,
-  repostFeed,
-  sendReaction,
-  unrepostFeed,
-  unsendReaction,
-} from "@/lib/actions";
-import { isSuccessStatus, type ReactionTypeEnum } from "@/lib/types";
+import { createFeedComment, listFeedComments, repostFeed, unrepostFeed } from "@/lib/actions";
+import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { isSuccessStatus } from "@/lib/types";
 
 interface FeedPostCardProps {
   feed: Feed;
@@ -36,28 +25,6 @@ interface FeedPostCardProps {
   currentUserAvatar?: string;
   isVerified?: boolean;
   initialReposted?: boolean;
-}
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
-  const divisions: [number, Intl.RelativeTimeFormatUnit][] = [
-    [60, "second"],
-    [60, "minute"],
-    [24, "hour"],
-    [7, "day"],
-    [4.34524, "week"],
-    [12, "month"],
-    [Number.POSITIVE_INFINITY, "year"],
-  ];
-
-  const formatter = new Intl.RelativeTimeFormat("id", { numeric: "auto" });
-  let duration = diffSeconds;
-  for (const [amount, unit] of divisions) {
-    if (Math.abs(duration) < amount) return formatter.format(Math.round(duration), unit);
-    duration /= amount;
-  }
-  return formatter.format(Math.round(duration), "year");
 }
 
 function MediaGrid({ media }: { media: NonNullable<Feed["media"]> }) {
@@ -130,9 +97,11 @@ export default function FeedPostCard({
   initialReposted,
 }: FeedPostCardProps) {
   const router = useRouter();
-  const [activeReaction, setActiveReaction] = useState<ReactionTypeEnum | null>(feed.my_reaction);
-  const [reactionCount, setReactionCount] = useState(feed.reaction_count.total);
-  const [reacting, startReactionTransition] = useTransition();
+  const reaction = useReaction("feed", feed.id, {
+    myReaction: feed.my_reaction,
+    total: feed.reaction_count.total,
+    byType: feed.reaction_count.by_type,
+  });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -151,43 +120,12 @@ export default function FeedPostCard({
   const photoMedia = feed.media?.filter((item) => item.type === "photo");
   const videoMedia = feed.media?.find((item) => item.type === "video");
   const urlMedia = feed.media?.find((item) => item.type === "url");
-  const activeReactionInfo = activeReaction
-    ? REACTIONS.find((reaction) => reaction.type === activeReaction)
-    : undefined;
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   function requireVerified(): boolean {
     if (isVerified) return true;
     router.push("/verification");
     return false;
-  }
-
-  function applyReaction(nextType: ReactionTypeEnum | null) {
-    const previousType = activeReaction;
-    if (nextType === previousType) return;
-
-    setActiveReaction(nextType);
-    setReactionCount((prev) => {
-      if (previousType === null && nextType !== null) return prev + 1;
-      if (previousType !== null && nextType === null) return Math.max(0, prev - 1);
-      return prev;
-    });
-
-    startReactionTransition(async () => {
-      const result = nextType
-        ? await sendReaction("feed", feed.id, nextType)
-        : await unsendReaction("feed", feed.id);
-
-      if (!isSuccessStatus(result.status)) {
-        setActiveReaction(previousType);
-        setReactionCount((prev) => {
-          if (previousType === null && nextType !== null) return Math.max(0, prev - 1);
-          if (previousType !== null && nextType === null) return prev + 1;
-          return prev;
-        });
-        toast.error(result.message ?? "Gagal memperbarui reaksi.");
-      }
-    });
   }
 
   function handleOpenReactionPicker() {
@@ -275,12 +213,23 @@ export default function FeedPostCard({
       {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
       {feed.repost_of && <QuotedFeed feed={feed.repost_of} />}
 
-      {(reactionCount > 0 || commentCount > 0) && (
+      {(reaction.reactionCount > 0 || commentCount > 0) && (
         <div className="mt-3 flex items-center justify-between text-xs text-[#5f6573]">
-          {reactionCount > 0 ? (
+          {reaction.reactionCount > 0 ? (
             <span className="flex items-center gap-1">
-              <span className="text-sm leading-none">{activeReactionInfo?.emoji ?? "👍"}</span>
-              {reactionCount}
+              <span className="flex items-center -space-x-1">
+                {(reaction.reactionEmojis.length > 0 ? reaction.reactionEmojis : ["👍"]).map(
+                  (emoji, index) => (
+                    <span
+                      key={`${emoji}-${index}`}
+                      className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
+                    >
+                      {emoji}
+                    </span>
+                  )
+                )}
+              </span>
+              {reaction.reactionCount}
             </span>
           ) : (
             <span />
@@ -301,17 +250,17 @@ export default function FeedPostCard({
         <Button
           variant="ghost"
           onClick={handleOpenReactionPicker}
-          disabled={reacting}
+          disabled={reaction.reacting}
           className={`gap-2 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
-            activeReaction ? "text-secondary" : "text-[#5f6573]"
+            reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
           }`}
         >
-          {activeReactionInfo ? (
-            <span className="text-base leading-none">{activeReactionInfo.emoji}</span>
+          {reaction.activeReactionInfo ? (
+            <span className="text-base leading-none">{reaction.activeReactionInfo.emoji}</span>
           ) : (
             <Heart className="size-4" />
           )}
-          {activeReactionInfo?.label ?? "Suka"}
+          {reaction.activeReactionInfo?.label ?? "Suka"}
         </Button>
         <Button
           variant="ghost"
@@ -343,6 +292,26 @@ export default function FeedPostCard({
         </Button>
       </div>
 
+      {!showComments && feed.top_comment && (
+        <div className="mt-3 border-t border-[#e6e9ef] pt-3">
+          <CommentItem
+            comment={feed.top_comment}
+            isVerified={isVerified}
+            currentUserName={currentUserName}
+            currentUserAvatar={currentUserAvatar}
+          />
+          {commentCount > 1 && (
+            <button
+              type="button"
+              onClick={handleToggleComments}
+              className="mt-2 pl-3 text-xs font-semibold text-[#5f6573] hover:underline"
+            >
+              Lihat {commentCount - 1} komentar lainnya
+            </button>
+          )}
+        </div>
+      )}
+
       {showComments && (
         <div className="mt-3 flex flex-col gap-3 border-t border-[#e6e9ef] pt-3">
           {loadingComments && <p className="text-xs text-[#5f6573]">Memuat komentar...</p>}
@@ -350,13 +319,13 @@ export default function FeedPostCard({
             <p className="text-xs text-[#5f6573]">Belum ada komentar.</p>
           )}
           {comments.map((comment) => (
-            <div key={comment.id} className="flex items-start gap-2">
-              <Avatar src={comment.avatar} name={comment.full_name} size={32} />
-              <div className="flex-1 rounded-xl bg-[#f5f7fb] px-3 py-2">
-                <p className="text-xs font-semibold text-[#172033]">{comment.full_name}</p>
-                <p className="text-sm text-[#172033]">{comment.message}</p>
-              </div>
-            </div>
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              isVerified={isVerified}
+              currentUserName={currentUserName}
+              currentUserAvatar={currentUserAvatar}
+            />
           ))}
 
           <form onSubmit={handleSubmitComment} className="flex items-center gap-2">
@@ -384,8 +353,8 @@ export default function FeedPostCard({
       <ReactionPickerModal
         open={showReactionPicker}
         onClose={() => setShowReactionPicker(false)}
-        activeReaction={activeReaction}
-        onSelect={(type) => applyReaction(activeReaction === type ? null : type)}
+        activeReaction={reaction.activeReaction}
+        onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
       />
       <ShareModal
         open={showShareModal}

@@ -383,6 +383,18 @@ export default function ActivationPage({
                   akun HMI Connect kamu.
                 </p>
 
+                <SearchableSelect
+                  selectId="branch"
+                  label="Cabang HMI"
+                  placeholder="Cari cabang..."
+                  value={formData.branch}
+                  onChange={(option) => updateFormData("branch", option)}
+                  loadOptions={loadBranchOptions}
+                  defaultOptions={branchOptions}
+                  debounceMs={400}
+                  required
+                />
+
                 <Select
                   selectId="training-result"
                   label="Hasil"
@@ -415,18 +427,6 @@ export default function ActivationPage({
                   onValueChange={(value) =>
                     updateFormData("trainingYear", value)
                   }
-                  required
-                />
-
-                <SearchableSelect
-                  selectId="branch"
-                  label="Cabang HMI"
-                  placeholder="Cari cabang..."
-                  value={formData.branch}
-                  onChange={(option) => updateFormData("branch", option)}
-                  loadOptions={loadBranchOptions}
-                  defaultOptions={branchOptions}
-                  debounceMs={400}
                   required
                 />
 

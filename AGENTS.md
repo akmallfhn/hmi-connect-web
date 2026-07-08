@@ -142,8 +142,8 @@ Two-step onboarding gated on `user.status === "pending"`, submitted via the
    year.
 2. **Riwayat Latihan Kader 1** — LK1 is a hard prerequisite for activation, not a
    yes/no question, so its fields (result/organizer/year) are always shown and required
-   — no "have you done LK1" gate. Branch (Cabang HMI) selection lives at the bottom of
-   this step.
+   — no "have you done LK1" gate. Branch (Cabang HMI) selection lives at the top of this
+   step, before the LK1 result fields.
 
 Institution values are the numeric `id` (the backend wants `education_institution_id`,
 not a name) — don't regress that to the display name.
@@ -187,8 +187,17 @@ below) when `isVerified === false`.
   header; `FeedPostCard.tsx` renders a feed's content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
-  Sidebar widgets (`ProfileSidebar`, `RightSidebar`, `NewsCard`, `UpcomingEventsCard`,
-  `SuggestedConnectionsCard`) are still backed by `mockData.ts`, not a real API.
+  `CommentItem.tsx` renders one comment (or, recursively via its own `isReply` prop, one
+  reply) — each gets its own `useReaction` (see `hooks/`) scoped to `target_type: "comment"`
+  vs `"comment_reply"`, and replies are lazy-loaded from `feeds/comments/replies/list` the
+  first time a comment's "Balas" toggle is expanded. Sidebar widgets (`ProfileSidebar`,
+  `RightSidebar`, `NewsCard`, `UpcomingEventsCard`, `SuggestedConnectionsCard`) are still
+  backed by `mockData.ts`, not a real API.
+- `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
+  total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
+  reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
+  `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
+  returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
 - `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
   `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`).
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close

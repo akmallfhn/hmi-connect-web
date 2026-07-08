@@ -24,7 +24,9 @@ import {
   type VerificationPayload,
 } from "@/apis/users";
 import {
+  createCommentReply as createCommentReplyApi,
   createFeedComment as createFeedCommentApi,
+  listCommentReplies as listCommentRepliesApi,
   listFeedComments as listFeedCommentsApi,
   listFeeds as listFeedsApi,
   repostFeed as repostFeedApi,
@@ -103,6 +105,14 @@ export async function listFeedComments(
 
 export async function createFeedComment(feedId: string, message: string) {
   return createFeedCommentApi({ feedId, message });
+}
+
+export async function listCommentReplies(commentId: string, page?: number) {
+  return listCommentRepliesApi(commentId, { page });
+}
+
+export async function createCommentReply(commentId: string, message: string) {
+  return createCommentReplyApi({ commentId, message });
 }
 
 export async function repostFeed(feedId: string) {

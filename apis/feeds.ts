@@ -29,6 +29,7 @@ export type Feed = {
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;
   comment_count: number;
+  top_comment?: FeedComment;
   created_at: string;
   updated_at: string;
 };
@@ -145,6 +146,50 @@ export async function createFeedComment(payload: {
     method: "POST",
     token: sessionToken,
     body: { feed_id: payload.feedId, message: payload.message },
+  });
+}
+
+export async function listCommentReplies(
+  commentId: string,
+  options: { page?: number; pageSize?: number } = {}
+): Promise<{ list: FeedComment[]; hasMore: boolean }> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) return { list: [], hasMore: false };
+
+  const { page = 1, pageSize = 20 } = options;
+  const result = await callApi<ListResponse<FeedComment>>(
+    "/api/v1/feeds/comments/replies/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { comment_id: commentId, page, page_size: pageSize },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listCommentReplies] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  return {
+    list: result.data?.list ?? [],
+    hasMore: hasMoreFromMetapaging(result.data?.metapaging),
+  };
+}
+
+export async function createCommentReply(payload: {
+  commentId: string;
+  message: string;
+}): Promise<ApiEnvelope<FeedComment>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<FeedComment>("/api/v1/feeds/comments/replies/create", {
+    method: "POST",
+    token: sessionToken,
+    body: { comment_id: payload.commentId, message: payload.message },
   });
 }
 
