@@ -9,7 +9,6 @@ import {
   MoreHorizontal,
   Pencil,
   Repeat2,
-  Send,
   Share2,
   Trash2,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
+import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
@@ -408,25 +408,15 @@ export default function FeedItemCard({
             />
           ))}
 
-          <form onSubmit={handleSubmitComment} className="flex items-center gap-2">
-            <Avatar src={currentUserAvatar} name={currentUserName ?? "Kader"} size={32} />
-            <input
-              value={commentText}
-              onChange={(event) => setCommentText(event.target.value)}
-              placeholder="Tulis komentar..."
-              className="flex-1 rounded-full border border-[#e6e9ef] bg-[#f5f7fb] px-4 py-2 text-sm outline-none focus:border-primary"
-            />
-            <Button
-              type="submit"
-              variant="ghost"
-              size="icon"
-              disabled={postingComment || !commentText.trim()}
-              className="shrink-0 rounded-full text-primary hover:bg-primary-soft"
-              aria-label="Kirim komentar"
-            >
-              <Send className="size-4" />
-            </Button>
-          </form>
+          <CommentSubmitter
+            avatar={currentUserAvatar}
+            name={currentUserName}
+            value={commentText}
+            onChange={setCommentText}
+            onSubmit={handleSubmitComment}
+            placeholder="Tulis komentar..."
+            disabled={postingComment}
+          />
         </div>
       )}
 

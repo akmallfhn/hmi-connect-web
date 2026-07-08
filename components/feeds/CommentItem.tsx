@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Heart, Reply, Send } from "lucide-react";
+import { Heart, Reply } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
-import Button from "../buttons/Button";
+import CommentSubmitter from "./CommentSubmitter";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
@@ -228,25 +228,16 @@ export default function CommentItem({
               />
             ))}
 
-            <form onSubmit={handleSubmitReply} className="flex items-center gap-2">
-              <Avatar src={currentUserAvatar} name={currentUserName ?? "Kader"} size={28} />
-              <input
-                value={replyText}
-                onChange={(event) => setReplyText(event.target.value)}
-                placeholder="Tulis balasan..."
-                className="flex-1 rounded-full border border-[#e6e9ef] bg-[#f5f7fb] px-3 py-1.5 text-sm outline-none focus:border-primary"
-              />
-              <Button
-                type="submit"
-                variant="ghost"
-                size="icon"
-                disabled={postingReply || !replyText.trim()}
-                className="shrink-0 rounded-full text-primary hover:bg-primary-soft"
-                aria-label="Kirim balasan"
-              >
-                <Send className="size-4" />
-              </Button>
-            </form>
+            <CommentSubmitter
+              avatar={currentUserAvatar}
+              name={currentUserName}
+              avatarSize={28}
+              value={replyText}
+              onChange={setReplyText}
+              onSubmit={handleSubmitReply}
+              placeholder="Tulis balasan..."
+              disabled={postingReply}
+            />
           </div>
         )}
       </div>
