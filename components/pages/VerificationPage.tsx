@@ -28,7 +28,7 @@ type FormData = {
   addressStreet: string;
   province: SearchableOption | null;
   city: SearchableOption | null;
-  subdistrict: SearchableOption | null;
+  district: SearchableOption | null;
 };
 
 function emptyFormData(): FormData {
@@ -41,7 +41,7 @@ function emptyFormData(): FormData {
     addressStreet: "",
     province: null,
     city: null,
-    subdistrict: null,
+    district: null,
   };
 }
 
@@ -70,12 +70,12 @@ export default function VerificationPage({
       ...prev,
       province: option,
       city: null,
-      subdistrict: null,
+      district: null,
     }));
   }
 
   function handleCityChange(option: SearchableOption | null) {
-    setFormData((prev) => ({ ...prev, city: option, subdistrict: null }));
+    setFormData((prev) => ({ ...prev, city: option, district: null }));
   }
 
   const provinceOptions: SearchableOption[] = provinces.map((item) => ({
@@ -116,7 +116,7 @@ export default function VerificationPage({
     };
   }
 
-  async function loadSubdistrictOptions(inputValue: string, page: number) {
+  async function loadDistrictOptions(inputValue: string, page: number) {
     if (!formData.city) return { options: [], hasMore: false };
 
     const params = new URLSearchParams({
@@ -125,7 +125,7 @@ export default function VerificationPage({
     });
     if (inputValue) params.set("q", inputValue);
 
-    const response = await fetch(`/api/subdistricts/search?${params}`);
+    const response = await fetch(`/api/districts/search?${params}`);
     const json = await response.json();
     const results: { id: number; name: string }[] = json.data ?? [];
 
@@ -146,7 +146,7 @@ export default function VerificationPage({
     formData.addressStreet.trim() !== "" &&
     formData.province !== null &&
     formData.city !== null &&
-    formData.subdistrict !== null;
+    formData.district !== null;
 
   const canGoNext =
     (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid);
@@ -165,7 +165,7 @@ export default function VerificationPage({
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender as GenderEnum,
         address_street: formData.addressStreet,
-        subdistrict_id: Number(formData.subdistrict?.value ?? 0),
+        district_id: Number(formData.district?.value ?? 0),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -350,13 +350,13 @@ export default function VerificationPage({
                   required
                 />
                 <SearchableSelect
-                  key={`subdistrict-${formData.city?.value ?? "none"}`}
-                  selectId="subdistrict"
+                  key={`district-${formData.city?.value ?? "none"}`}
+                  selectId="district"
                   label="Kecamatan"
                   placeholder="Cari kecamatan..."
-                  value={formData.subdistrict}
-                  onChange={(option) => updateFormData("subdistrict", option)}
-                  loadOptions={loadSubdistrictOptions}
+                  value={formData.district}
+                  onChange={(option) => updateFormData("district", option)}
+                  loadOptions={loadDistrictOptions}
                   debounceMs={400}
                   disabled={!formData.city}
                   required

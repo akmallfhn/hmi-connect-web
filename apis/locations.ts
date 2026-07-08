@@ -6,7 +6,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Province = { id: number; name: string };
 export type City = { id: number; province_id: number; name: string };
-export type Subdistrict = { id: number; city_id: number; name: string };
+export type District = { id: number; city_id: number; name: string };
 
 type LocationListResponse<T> = {
   list: T[];
@@ -73,12 +73,12 @@ export async function searchCities(
   });
 }
 
-export async function searchSubdistricts(
+export async function searchDistricts(
   cityId: number,
   options: LocationListOptions = {}
-): Promise<LocationListResult<Subdistrict>> {
+): Promise<LocationListResult<District>> {
   const { search, page, pageSize } = options;
-  return fetchLocationList<Subdistrict>("/api/v1/subdistricts/list", {
+  return fetchLocationList<District>("/api/v1/districts/list", {
     city_id: cityId,
     ...(search ? { search } : {}),
     ...(page ? { page } : {}),

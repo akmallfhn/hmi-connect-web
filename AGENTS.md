@@ -74,7 +74,7 @@ though the URLs you actually visit don't show `/www`.
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `branches.ts`, `locations.ts` (provinces/cities/subdistricts —
+   (`institutions.ts`, `branches.ts`, `locations.ts` (provinces/cities/districts —
    grouped together since they're a single cascading lookup, not independent resources),
    `users.ts`, `session.ts`, plus the shared `api.ts`). Marked `import "server-only"`.
    Holds *every* operation for that resource
@@ -160,13 +160,13 @@ below) when `isVerified === false`.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
    Google), 16-digit `nik`, phone number, date of birth, gender.
-2. **Alamat** — cascading Province → City → Subdistrict (`apis/locations.ts`, backed by
-   `/www/api/provinces/search`, `/www/api/cities/search`, `/www/api/subdistricts/search`),
-   plus street address. City/Subdistrict `SearchableSelect`s are remounted via a `key`
-   keyed off the parent selection so their internal option list resets when the parent
-   changes — don't try to reset them by clearing `value` alone, `SearchableSelect` doesn't
-   watch for that. Only `subdistrict_id` is submitted; city/province are derived
-   server-side from it.
+2. **Alamat** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
+   backed by `/www/api/provinces/search`, `/www/api/cities/search`,
+   `/www/api/districts/search`), plus street address. City/District `SearchableSelect`s
+   are remounted via a `key` keyed off the parent selection so their internal option list
+   resets when the parent changes — don't try to reset them by clearing `value` alone,
+   `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
+   are derived server-side from it.
 
 ## Component conventions
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchSubdistricts } from "@/apis/locations";
+import { searchDistricts } from "@/apis/locations";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
-  const { list, hasMore } = await searchSubdistricts(cityId, {
+  const { list, hasMore } = await searchDistricts(cityId, {
     search,
     page,
     pageSize,

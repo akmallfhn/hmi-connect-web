@@ -60,13 +60,13 @@ export type VerificationPayload = {
   date_of_birth: string;
   gender: GenderEnum;
   address_street: string;
-  subdistrict_id: number;
+  district_id: number;
 };
 
 export type VerificationResult = {
   user_id: string;
   ktp_full_name: string;
-  subdistrict_id: number;
+  district_id: number;
   is_verified: boolean;
 };
 
@@ -135,7 +135,7 @@ export type UserProfile = {
   date_of_birth?: string;
   gender?: GenderEnum;
   address_street?: string;
-  subdistrict_id?: number;
+  district_id?: number;
   is_trainer: boolean;
   is_subscribe: boolean;
   subscription_started_at?: string;
