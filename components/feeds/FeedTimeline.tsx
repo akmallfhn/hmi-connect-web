@@ -1,0 +1,94 @@
+"use client";
+
+import { Repeat2 } from "lucide-react";
+import { useState, useTransition } from "react";
+import Avatar from "../common/Avatar";
+import Button from "../buttons/Button";
+import FeedPostCard from "./FeedPostCard";
+import type { FeedTimelineItem } from "@/apis/feeds";
+import { loadMoreFeeds } from "@/lib/actions";
+
+interface FeedTimelineProps {
+  initialItems: FeedTimelineItem[];
+  initialHasMore: boolean;
+  currentUserId?: string;
+  currentUserName?: string;
+  currentUserAvatar?: string;
+  isVerified?: boolean;
+}
+
+export default function FeedTimeline({
+  initialItems,
+  initialHasMore,
+  currentUserId,
+  currentUserName,
+  currentUserAvatar,
+  isVerified,
+}: FeedTimelineProps) {
+  const [items, setItems] = useState(initialItems);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [page, setPage] = useState(1);
+  const [isPending, startTransition] = useTransition();
+
+  function handleLoadMore() {
+    startTransition(async () => {
+      const nextPage = page + 1;
+      const result = await loadMoreFeeds(nextPage);
+      setItems((prev) => [...prev, ...result.list]);
+      setHasMore(result.hasMore);
+      setPage(nextPage);
+    });
+  }
+
+  const repostedFeedIds = new Set(
+    items
+      .filter((item) => item.type === "repost" && item.reposter_id === currentUserId)
+      .map((item) => item.feed.id)
+  );
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
+        Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {items.map((item, index) => (
+        <div
+          key={`${item.type}-${item.feed.id}-${index}`}
+          className="flex flex-col gap-2"
+        >
+          {item.type === "repost" && (
+            <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
+              <Repeat2 className="size-3.5" />
+              <Avatar src={item.reposter_avatar} name={item.reposter_full_name} size={18} />
+              <span>{item.reposter_full_name} membagikan ulang</span>
+            </div>
+          )}
+          <FeedPostCard
+            feed={item.feed}
+            currentUserId={currentUserId}
+            currentUserName={currentUserName}
+            currentUserAvatar={currentUserAvatar}
+            isVerified={isVerified}
+            initialReposted={repostedFeedIds.has(item.feed.id)}
+          />
+        </div>
+      ))}
+
+      {hasMore && (
+        <Button
+          variant="light"
+          onClick={handleLoadMore}
+          disabled={isPending}
+          className="mx-auto"
+        >
+          {isPending ? "Memuat..." : "Muat lebih banyak"}
+        </Button>
+      )}
+    </div>
+  );
+}

@@ -19,7 +19,7 @@ import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
-import { NAV_ITEMS, NOTIFICATIONS } from "../dashboard/mockData";
+import { NAV_ITEMS, NOTIFICATIONS } from "../feeds/mockData";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 
 interface DashboardHeaderProps {

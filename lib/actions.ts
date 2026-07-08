@@ -23,6 +23,18 @@ import {
   type UpdateUserPayload,
   type VerificationPayload,
 } from "@/apis/users";
+import {
+  createFeedComment as createFeedCommentApi,
+  listFeedComments as listFeedCommentsApi,
+  listFeeds as listFeedsApi,
+  repostFeed as repostFeedApi,
+  unrepostFeed as unrepostFeedApi,
+} from "@/apis/feeds";
+import {
+  sendReaction as sendReactionApi,
+  unsendReaction as unsendReactionApi,
+} from "@/apis/reactions";
+import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
   return activateUserApi(payload);
@@ -76,4 +88,42 @@ export async function createInstitution(
   name: string
 ): Promise<Institution | null> {
   return createInstitutionApi(name);
+}
+
+export async function loadMoreFeeds(page: number) {
+  return listFeedsApi({ page, pageSize: 20 });
+}
+
+export async function listFeedComments(
+  feedId: string,
+  page?: number
+) {
+  return listFeedCommentsApi(feedId, { page });
+}
+
+export async function createFeedComment(feedId: string, message: string) {
+  return createFeedCommentApi({ feedId, message });
+}
+
+export async function repostFeed(feedId: string) {
+  return repostFeedApi(feedId);
+}
+
+export async function unrepostFeed(feedId: string) {
+  return unrepostFeedApi(feedId);
+}
+
+export async function sendReaction(
+  targetType: ReactionTargetTypeEnum,
+  targetId: string,
+  type: ReactionTypeEnum
+) {
+  return sendReactionApi({ targetType, targetId, type });
+}
+
+export async function unsendReaction(
+  targetType: ReactionTargetTypeEnum,
+  targetId: string
+) {
+  return unsendReactionApi({ targetType, targetId });
 }

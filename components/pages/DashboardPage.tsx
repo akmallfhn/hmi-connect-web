@@ -1,7 +1,7 @@
 import PageMargin from "../common/PageMargin";
-import Feed from "../dashboard/Feed";
-import ProfileSidebar from "../dashboard/ProfileSidebar";
-import RightSidebar from "../dashboard/RightSidebar";
+import Feed from "../feeds/Feed";
+import ProfileSidebar from "../feeds/ProfileSidebar";
+import RightSidebar from "../feeds/RightSidebar";
 import DashboardHeader from "../navigations/DashboardHeader";
 
 interface DashboardPageProps {
@@ -44,7 +44,12 @@ export default function DashboardPage({
         </aside>
 
         <main>
-          <Feed fullName={fullName} avatar={avatar} />
+          <Feed
+            fullName={fullName}
+            avatar={avatar}
+            currentUserId={userId}
+            isVerified={isVerified}
+          />
         </main>
 
         <aside>

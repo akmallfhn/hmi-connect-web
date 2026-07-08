@@ -2,7 +2,7 @@ import { FileText, ImageIcon, Video } from "lucide-react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 
-interface CreatePostCardProps {
+interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
 }
@@ -13,10 +13,10 @@ const ACTIONS = [
   { label: "Tulisan", icon: FileText, color: "text-[#5f6573]" },
 ];
 
-export default function CreatePostCard({
+export default function CreateFeedForms({
   fullName,
   avatar,
-}: CreatePostCardProps) {
+}: CreateFeedFormsProps) {
   const firstName = (fullName ?? "Kader").split(" ")[0];
 
   return (

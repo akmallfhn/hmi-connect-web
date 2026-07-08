@@ -181,13 +181,25 @@ below) when `isVerified === false`.
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page (currently
   `DashboardHeader.tsx`).
-- `components/dashboard/*` — the feed/sidebar widgets for the gated home page (currently
-  backed by `mockData.ts` — not yet wired to a real feed API).
+- `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
+  `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
+  `FeedTimeline.tsx` (client) owns pagination state and the "X membagikan ulang" repost
+  header; `FeedPostCard.tsx` renders a feed's content/media (photo grid, video, or
+  `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
+  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
+  Sidebar widgets (`ProfileSidebar`, `RightSidebar`, `NewsCard`, `UpcomingEventsCard`,
+  `SuggestedConnectionsCard`) are still backed by `mockData.ts`, not a real API.
 - `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
   `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`).
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
-  needs a dialog (`Edit*Form.tsx`); it does not orchestrate anything itself.
+  needs a dialog (`Edit*Form.tsx`, `ReactionPickerModal.tsx`, `ShareModal.tsx`); it does
+  not orchestrate anything itself. `ReactionPickerModal.tsx` lists the six
+  `ReactionTypeEnum` options as emoji buttons; `FeedPostCard`'s Suka button opens it
+  directly instead of quick-toggling a default "like" — there's no default reaction until
+  the user actually picks one. `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
+  Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
+  does not require `isVerified`.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
   `EditAvatarForm`, `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around
   an inner `*Fields` component that's only mounted while `open` is true (so its `useState`
@@ -198,6 +210,8 @@ below) when `isVerified === false`.
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateUser` directly) rather than batching into the profile form's own "Simpan" button,
   since it's opened from a separate trigger (clicking the avatar itself).
+  `components/forms/CreateFeedForms.tsx` is the composer card at the top of the feed
+  timeline (not yet wired to `feeds/create` — UI only).
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here.

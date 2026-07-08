@@ -11,6 +11,15 @@ export type Degree =
   | "sarjana"
   | "magister"
   | "doktor";
+export type FeedMediaTypeEnum = "photo" | "video" | "url";
+export type ReactionTypeEnum =
+  | "like"
+  | "love"
+  | "haha"
+  | "wow"
+  | "sad"
+  | "angry";
+export type ReactionTargetTypeEnum = "feed" | "comment" | "comment_reply";
 
 export type StatusName =
   | "OK"
