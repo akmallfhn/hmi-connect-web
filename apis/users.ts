@@ -126,6 +126,7 @@ export type UserProfile = {
   avatar?: string;
   following_count: number;
   followers_count: number;
+  feed_count: number;
   headline?: string;
   bio?: string;
   role_id: number;

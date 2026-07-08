@@ -195,9 +195,15 @@ below) when `isVerified === false`.
   recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
   (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
-  is expanded. Sidebar widgets (`ProfileSidebar`, `RightSidebar`, `NewsCard`,
-  `UpcomingEventsCard`, `SuggestedConnectionsCard`) are still backed by `mockData.ts`, not
-  a real API.
+  is expanded. `ProfileSidebar.tsx` (rendered by `FeedPage.tsx`, the gated home page's
+  Client Component) is real-API-backed: identity, `headline`, verified badge,
+  `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
+  `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
+  most-recent end year / highest training level) all come from `getUserById` +
+  those two list calls in `app/(www)/www/(gated)/page.tsx`. Its "Progres Minggu Ini"
+  weekly streak has no backing endpoint yet and stays a static illustration. The other
+  sidebar widgets (`RightSidebar`, `NewsCard`, `UpcomingEventsCard`,
+  `SuggestedConnectionsCard`) are still fully backed by `mockData.ts`, not a real API.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a

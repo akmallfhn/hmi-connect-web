@@ -1,39 +1,77 @@
-import {
-  Award,
-  ChevronRight,
-  Flame,
-  GraduationCap,
-  MessageCircle,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { Award, Flame, GraduationCap } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import Avatar from "../common/Avatar";
+import VerifiedBadge from "../common/VerifiedBadge";
 import { WEEK_DAYS } from "./mockData";
+import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
+import type { Degree, TrainingResultEnum, TrainingStatusEnum } from "@/lib/types";
 
 interface ProfileSidebarProps {
   fullName?: string;
   avatar?: string;
-  role?: string;
+  headline?: string;
   userId?: string;
+  isVerified?: boolean;
+  followingCount?: number;
+  followersCount?: number;
+  feedCount?: number;
+  educationHistories?: EducationHistoryEntry[];
+  trainingHistories?: TrainingHistoryEntry[];
 }
 
-const QUICK_LINKS = [
-  { label: "Postingan", icon: MessageCircle },
-  { label: "Sertifikat", icon: Award },
-  { label: "Kaderisasi", icon: GraduationCap },
-  { label: "Prestasi", icon: Trophy },
-];
+const DEGREE_LABELS: Record<Degree, string> = {
+  diploma_ahli_pratama: "Diploma (Ahli Pratama)",
+  diploma_ahli_muda: "Diploma (Ahli Muda)",
+  diploma_ahli_madya: "Diploma (Ahli Madya)",
+  sarjana: "Sarjana",
+  magister: "Magister",
+  doktor: "Doktor",
+};
 
+const RESULT_LABELS: Record<TrainingResultEnum, string> = {
+  passed: "Lulus",
+  conditional_pass: "Lulus Bersyarat",
+  failed: "Tidak Lulus",
+};
+
+const LEVEL_RANK: Record<TrainingStatusEnum, number> = { LK1: 1, LK2: 2, LK3: 3 };
+
+// This app-level engagement streak has no backing endpoint yet — kept as a static illustration until one exists.
 const WEEK_PROGRESS = [true, true, false, true, true, false, false];
+
+function getLatestEducation(
+  entries: EducationHistoryEntry[]
+): EducationHistoryEntry | undefined {
+  return [...entries].sort(
+    (a, b) => (b.end_year ?? b.start_year) - (a.end_year ?? a.start_year)
+  )[0];
+}
+
+function getLatestTraining(
+  entries: TrainingHistoryEntry[]
+): TrainingHistoryEntry | undefined {
+  return [...entries].sort((a, b) => {
+    const rankDiff = LEVEL_RANK[b.level] - LEVEL_RANK[a.level];
+    return rankDiff !== 0 ? rankDiff : b.year - a.year;
+  })[0];
+}
 
 export default function ProfileSidebar({
   fullName,
   avatar,
-  role,
+  headline,
   userId,
+  isVerified,
+  followingCount,
+  followersCount,
+  feedCount,
+  educationHistories = [],
+  trainingHistories = [],
 }: ProfileSidebarProps) {
   const displayName = fullName ?? "Kader";
+  const latestEducation = getLatestEducation(educationHistories);
+  const latestTraining = getLatestTraining(trainingHistories);
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,41 +82,76 @@ export default function ProfileSidebar({
         >
           <Avatar src={avatar} name={displayName} size={72} ring />
           <div>
-            <p className="font-bold text-[#172033]">{displayName}</p>
-            <p className="text-sm text-[#5f6573]">
-              {role ?? "Kader • HMI Connect"}
+            <p className="flex items-center justify-center gap-1 font-bold text-[#172033]">
+              <span>{displayName}</span>
+              {isVerified && <VerifiedBadge size={16} />}
             </p>
+            <p className="text-sm text-[#5f6573]">{headline || "Kader • HMI Connect"}</p>
           </div>
         </Link>
 
         <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center">
           <div>
-            <p className="font-bold text-[#172033]">128</p>
+            <p className="font-bold text-[#172033]">{followingCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Mengikuti</p>
           </div>
           <div>
-            <p className="font-bold text-[#172033]">64</p>
+            <p className="font-bold text-[#172033]">{followersCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Pengikut</p>
           </div>
           <div>
-            <p className="font-bold text-[#172033]">12</p>
+            <p className="font-bold text-[#172033]">{feedCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Postingan</p>
           </div>
         </div>
 
-        <div className="mt-4 flex items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
-            <GraduationCap className="size-4" />
+        {(latestEducation || latestTraining) && (
+          <div className="mt-4 flex flex-col gap-3 border-t border-[#e6e9ef] pt-4">
+            <p className="text-sm font-medium text-[#172033]">Informasi</p>
+            {latestEducation && (
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e6e9ef] bg-white text-primary">
+                  {latestEducation.image_url ? (
+                    <Image
+                      src={latestEducation.image_url}
+                      alt={latestEducation.institution_name}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 object-contain"
+                    />
+                  ) : (
+                    <GraduationCap className="size-5" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-[#5f6573]">Pendidikan Terakhir</p>
+                  <p className="truncate text-sm font-medium text-[#172033]">
+                    {latestEducation.institution_name}
+                  </p>
+                  <p className="text-xs text-[#5f6573]">
+                    {DEGREE_LABELS[latestEducation.degree]} • {latestEducation.major}
+                  </p>
+                </div>
+              </div>
+            )}
+            {latestTraining && (
+              <div className="flex items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary">
+                  <Award className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-[#5f6573]">Kaderisasi Terakhir</p>
+                  <p className="truncate text-sm font-medium text-[#172033]">
+                    Latihan Kader {latestTraining.level.replace("LK", "")}
+                  </p>
+                  <p className="text-xs text-[#5f6573]">
+                    {RESULT_LABELS[latestTraining.result]} • {latestTraining.year}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-sm font-medium text-[#172033]">
-              Aktivitas Terakhir
-            </p>
-            <p className="text-xs text-[#5f6573]">
-              Menyelesaikan LK1 • 2 hari lalu
-            </p>
-          </div>
-        </div>
+        )}
 
         <div className="mt-4 border-t border-[#e6e9ef] pt-4">
           <div className="mb-2 flex items-center justify-between">
@@ -110,39 +183,6 @@ export default function ProfileSidebar({
             ))}
           </div>
         </div>
-
-        <a
-          href="#"
-          className="mt-4 flex items-center justify-between border-t border-[#e6e9ef] pt-4 text-sm font-medium text-primary"
-        >
-          Lihat Log Kaderisasi Saya
-          <ChevronRight className="size-4" />
-        </a>
-      </div>
-
-      <div className="rounded-2xl border border-[#e6e9ef] bg-white p-3 shadow-sm">
-        <div className="grid grid-cols-4 gap-1">
-          {QUICK_LINKS.map(({ label, icon: Icon }) => (
-            <a
-              key={label}
-              href="#"
-              className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-center transition hover:bg-[#f5f7fb]"
-            >
-              <Icon className="size-5 text-[#5f6573]" />
-              <span className="text-[11px] text-[#5f6573]">{label}</span>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      <div className="hidden rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm lg:block">
-        <div className="flex items-center gap-2 text-sm font-medium text-[#172033]">
-          <Users className="size-4 text-[#5f6573]" />
-          Cabang & Komisariat
-        </div>
-        <p className="mt-1.5 text-xs text-[#5f6573]">
-          Cabang Banda Aceh • Komisariat Ekonomi
-        </p>
       </div>
     </div>
   );

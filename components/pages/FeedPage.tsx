@@ -3,24 +3,35 @@ import Feed from "../feeds/Feed";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
 import DashboardHeader from "../navigations/DashboardHeader";
+import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
 
-interface DashboardPageProps {
+interface FeedPageProps {
   fullName?: string;
   avatar?: string;
   email?: string;
-  role?: string;
+  headline?: string;
   userId?: string;
   isVerified?: boolean;
+  followingCount?: number;
+  followersCount?: number;
+  feedCount?: number;
+  educationHistories?: EducationHistoryEntry[];
+  trainingHistories?: TrainingHistoryEntry[];
 }
 
-export default function DashboardPage({
+export default function FeedPage({
   fullName,
   avatar,
   email,
-  role,
+  headline,
   userId,
   isVerified,
-}: DashboardPageProps) {
+  followingCount,
+  followersCount,
+  feedCount,
+  educationHistories,
+  trainingHistories,
+}: FeedPageProps) {
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
       <DashboardHeader
@@ -37,8 +48,14 @@ export default function DashboardPage({
             <ProfileSidebar
               fullName={fullName}
               avatar={avatar}
-              role={role}
+              headline={headline}
               userId={userId}
+              isVerified={isVerified}
+              followingCount={followingCount}
+              followersCount={followersCount}
+              feedCount={feedCount}
+              educationHistories={educationHistories}
+              trainingHistories={trainingHistories}
             />
           </div>
         </aside>
