@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "www.(example.com).*",
+            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
           },
         ],
         headers: [
@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "www.(example.com).*",
+            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
           },
           { type: "cookie", key: SESSION_COOKIE_NAME, value: undefined },
         ],
@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
             {
               type: "header",
               key: "host",
-              value: "www.(example.com).*",
+              value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
             },
           ],
           destination: "/www/:path*",
@@ -84,7 +84,11 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["example.com", "*.example.com"],
   experimental: {
     serverActions: {
-      allowedOrigins: ["example.com", "*.example.com"],
+      allowedOrigins: [
+        "example.com",
+        "*.example.com",
+        "hmi-connect-web.vercel.app",
+      ],
     },
   },
 };
