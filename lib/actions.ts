@@ -26,6 +26,9 @@ import {
 import {
   createCommentReply as createCommentReplyApi,
   createFeedComment as createFeedCommentApi,
+  deleteComment as deleteCommentApi,
+  deleteCommentReply as deleteCommentReplyApi,
+  deleteFeed as deleteFeedApi,
   listCommentReplies as listCommentRepliesApi,
   listFeedComments as listFeedCommentsApi,
   listFeeds as listFeedsApi,
@@ -33,6 +36,7 @@ import {
   unrepostFeed as unrepostFeedApi,
 } from "@/apis/feeds";
 import {
+  listReactors as listReactorsApi,
   sendReaction as sendReactionApi,
   unsendReaction as unsendReactionApi,
 } from "@/apis/reactions";
@@ -115,6 +119,18 @@ export async function createCommentReply(commentId: string, message: string) {
   return createCommentReplyApi({ commentId, message });
 }
 
+export async function deleteComment(commentId: string) {
+  return deleteCommentApi(commentId);
+}
+
+export async function deleteCommentReply(replyId: string) {
+  return deleteCommentReplyApi(replyId);
+}
+
+export async function deleteFeed(feedId: string) {
+  return deleteFeedApi(feedId);
+}
+
 export async function repostFeed(feedId: string) {
   return repostFeedApi(feedId);
 }
@@ -136,4 +152,12 @@ export async function unsendReaction(
   targetId: string
 ) {
   return unsendReactionApi({ targetType, targetId });
+}
+
+export async function listReactors(
+  targetType: ReactionTargetTypeEnum,
+  targetId: string,
+  page?: number
+) {
+  return listReactorsApi({ targetType, targetId, page });
 }

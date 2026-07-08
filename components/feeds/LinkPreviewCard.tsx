@@ -43,7 +43,7 @@ export default function LinkPreviewCard({ url }: LinkPreviewCardProps) {
 
   if (loading) {
     return (
-      <div className="mt-3 h-24 animate-pulse rounded-xl border border-[#e6e9ef] bg-[#f5f7fb]" />
+      <div className="mt-3 h-16 animate-pulse rounded-xl border border-[#e6e9ef] bg-[#f5f7fb]" />
     );
   }
 
@@ -55,7 +55,7 @@ export default function LinkPreviewCard({ url }: LinkPreviewCardProps) {
       className="mt-3 flex overflow-hidden rounded-xl border border-[#e6e9ef] transition hover:bg-[#f5f7fb]"
     >
       {preview?.image ? (
-        <div className="relative aspect-square w-24 shrink-0 bg-[#f5f7fb] sm:w-36">
+        <div className="relative aspect-square w-16 shrink-0 bg-[#f5f7fb] sm:w-24">
           <Image
             src={preview.image}
             alt={preview.title ?? hostname}
@@ -65,8 +65,8 @@ export default function LinkPreviewCard({ url }: LinkPreviewCardProps) {
           />
         </div>
       ) : (
-        <div className="flex aspect-square w-24 shrink-0 items-center justify-center bg-[#f5f7fb] text-[#5f6573] sm:w-36">
-          <Globe className="size-6" />
+        <div className="flex aspect-square w-16 shrink-0 items-center justify-center bg-[#f5f7fb] text-[#5f6573] sm:w-24">
+          <Globe className="size-5" />
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-3 py-2">

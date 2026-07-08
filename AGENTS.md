@@ -183,16 +183,21 @@ below) when `isVerified === false`.
   `DashboardHeader.tsx`).
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
-  `FeedTimeline.tsx` (client) owns pagination state and the "X membagikan ulang" repost
-  header; `FeedPostCard.tsx` renders a feed's content/media (photo grid, video, or
+  `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
+  header, and removes a feed from local state when `FeedItemCard`'s `onDeleted` fires.
+  `FeedItemCard.tsx` renders a feed's content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
-  `CommentItem.tsx` renders one comment (or, recursively via its own `isReply` prop, one
-  reply) — each gets its own `useReaction` (see `hooks/`) scoped to `target_type: "comment"`
-  vs `"comment_reply"`, and replies are lazy-loaded from `feeds/comments/replies/list` the
-  first time a comment's "Balas" toggle is expanded. Sidebar widgets (`ProfileSidebar`,
-  `RightSidebar`, `NewsCard`, `UpcomingEventsCard`, `SuggestedConnectionsCard`) are still
-  backed by `mockData.ts`, not a real API.
+  Its "..." menu (`Dropdown`, see `components/common/*` below) only renders when the
+  caller owns the feed (`creator_id === currentUserId`) and holds "Edit post" (UI only,
+  not wired to an endpoint yet) and "Delete post" (opens `AlertConfirmation`, then calls
+  `apis/feeds.ts#deleteFeed` on confirm). `CommentItem.tsx` renders one comment (or,
+  recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
+  (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
+  lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
+  is expanded. Sidebar widgets (`ProfileSidebar`, `RightSidebar`, `NewsCard`,
+  `UpcomingEventsCard`, `SuggestedConnectionsCard`) are still backed by `mockData.ts`, not
+  a real API.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
@@ -202,13 +207,22 @@ below) when `isVerified === false`.
   `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`).
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
-  needs a dialog (`Edit*Form.tsx`, `ReactionPickerModal.tsx`, `ShareModal.tsx`); it does
-  not orchestrate anything itself. `ReactionPickerModal.tsx` lists the six
-  `ReactionTypeEnum` options as emoji buttons; `FeedPostCard`'s Suka button opens it
-  directly instead of quick-toggling a default "like" — there's no default reaction until
-  the user actually picks one. `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
+  needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,
+  `AlertConfirmation.tsx`); it does not orchestrate anything itself.
+  `ReactionPickerModal.tsx` is the odd one out — it's *not* built on `Modal`, it's a small
+  self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
+  `absolute bottom-full` next to whatever trigger renders it, so the trigger must sit
+  inside a `relative`-positioned wrapper. The reaction button (feed or comment/reply) opens
+  it only when there's no active reaction yet; if the caller already reacted, clicking the
+  button calls `unsendReaction` directly instead of reopening the picker — there's no
+  default reaction until the user actually picks one the first time.
+  `ReactorsListModal.tsx` lists who reacted to a feed/comment/reply (`reactions/list`,
+  paginated), each row linking to `/profile/[user_id]`; opened by clicking the
+  emoji+count summary. `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
-  does not require `isVerified`.
+  does not require `isVerified`. `AlertConfirmation.tsx` is the generic
+  title/message/confirm/cancel dialog for destructive actions (currently just feed
+  delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
   `EditAvatarForm`, `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around
   an inner `*Fields` component that's only mounted while `open` is true (so its `useState`

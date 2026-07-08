@@ -29,7 +29,8 @@ export type Feed = {
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;
   comment_count: number;
-  top_comment?: FeedComment;
+  comment_reply_count: number;
+  top_comment: FeedComment | null;
   created_at: string;
   updated_at: string;
 };
@@ -59,6 +60,7 @@ export type FeedComment = {
   message: string;
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;
+  reply_count: number;
   created_at: string;
   updated_at: string;
 };
@@ -190,6 +192,45 @@ export async function createCommentReply(payload: {
     method: "POST",
     token: sessionToken,
     body: { comment_id: payload.commentId, message: payload.message },
+  });
+}
+
+export async function deleteComment(commentId: string): Promise<ApiEnvelope> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/feeds/comments/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id: commentId },
+  });
+}
+
+export async function deleteCommentReply(replyId: string): Promise<ApiEnvelope> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/feeds/comments/replies/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id: replyId },
+  });
+}
+
+export async function deleteFeed(feedId: string): Promise<ApiEnvelope> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/feeds/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id: feedId },
   });
 }
 

@@ -1,32 +1,43 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Send } from "lucide-react";
+import { Heart, Reply, Send } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
+import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
+import ReactorsListModal from "../modals/ReactorsListModal";
 import { useReaction } from "@/hooks/useReaction";
 import type { FeedComment } from "@/apis/feeds";
-import { createCommentReply, listCommentReplies } from "@/lib/actions";
+import {
+  createCommentReply,
+  deleteComment,
+  deleteCommentReply,
+  listCommentReplies,
+} from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { isSuccessStatus } from "@/lib/types";
 
 interface CommentItemProps {
   comment: FeedComment;
   isVerified?: boolean;
+  currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
   isReply?: boolean;
+  onDeleted?: (commentId: string) => void;
 }
 
 export default function CommentItem({
   comment,
   isVerified,
+  currentUserId,
   currentUserName,
   currentUserAvatar,
   isReply = false,
+  onDeleted,
 }: CommentItemProps) {
   const router = useRouter();
   const reaction = useReaction(isReply ? "comment_reply" : "comment", comment.id, {
@@ -35,9 +46,14 @@ export default function CommentItem({
     byType: comment.reaction_count.by_type,
   });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showReactorsModal, setShowReactorsModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const isOwnComment = Boolean(currentUserId) && comment.user_id === currentUserId;
 
   const [expanded, setExpanded] = useState(false);
   const [replies, setReplies] = useState<FeedComment[]>([]);
+  const [replyCount, setReplyCount] = useState(comment.reply_count);
   const [repliesLoaded, setRepliesLoaded] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -49,8 +65,12 @@ export default function CommentItem({
     return false;
   }
 
-  function handleOpenReactionPicker() {
+  function handleReactionButtonClick() {
     if (!requireVerified()) return;
+    if (reaction.activeReaction) {
+      reaction.apply(null);
+      return;
+    }
     setShowReactionPicker(true);
   }
 
@@ -82,12 +102,35 @@ export default function CommentItem({
         if (isSuccessStatus(result.status) && result.data) {
           setReplies((prev) => [...prev, result.data as FeedComment]);
           setRepliesLoaded(true);
+          setReplyCount((prev) => prev + 1);
           setReplyText("");
         } else {
           toast.error(result.message ?? "Gagal mengirim balasan.");
         }
       })
       .finally(() => setPostingReply(false));
+  }
+
+  function handleDelete() {
+    setDeleting(true);
+    const request = isReply ? deleteCommentReply(comment.id) : deleteComment(comment.id);
+    request
+      .then((result) => {
+        if (isSuccessStatus(result.status)) {
+          onDeleted?.(comment.id);
+        } else {
+          toast.error(result.message ?? "Gagal menghapus komentar.");
+        }
+      })
+      .finally(() => {
+        setDeleting(false);
+        setShowDeleteConfirm(false);
+      });
+  }
+
+  function handleReplyDeleted(replyId: string) {
+    setReplies((prev) => prev.filter((reply) => reply.id !== replyId));
+    setReplyCount((prev) => Math.max(0, prev - 1));
   }
 
   return (
@@ -105,49 +148,83 @@ export default function CommentItem({
 
         <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-[#5f6573]">
           <span className="text-[11px]">{formatRelativeTime(comment.created_at)}</span>
-          <button
-            type="button"
-            onClick={handleOpenReactionPicker}
-            disabled={reaction.reacting}
-            className={`font-semibold hover:underline ${
-              reaction.activeReaction ? "text-secondary" : ""
-            }`}
-          >
-            {reaction.activeReactionInfo?.label ?? "Suka"}
-          </button>
+
+          <span className="relative flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={handleReactionButtonClick}
+              disabled={reaction.reacting}
+              aria-label={reaction.activeReactionInfo?.label ?? "Suka"}
+              className={`cursor-pointer transition ${
+                reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
+              }`}
+            >
+              {reaction.activeReactionInfo ? (
+                <span className="text-sm leading-none">{reaction.activeReactionInfo.emoji}</span>
+              ) : (
+                <Heart className="size-3.5" />
+              )}
+            </button>
+            {reaction.reactionCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowReactorsModal(true)}
+                className="cursor-pointer font-semibold text-[#5f6573]"
+              >
+                {reaction.reactionCount}
+              </button>
+            )}
+            <ReactionPickerModal
+              open={showReactionPicker}
+              onClose={() => setShowReactionPicker(false)}
+              activeReaction={reaction.activeReaction}
+              onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+            />
+          </span>
+
           {!isReply && (
-            <button type="button" onClick={handleToggleExpanded} className="font-semibold hover:underline">
-              {expanded ? "Sembunyikan" : "Balas"}
+            <button
+              type="button"
+              onClick={handleToggleExpanded}
+              aria-label="Balas"
+              className="cursor-pointer text-[#5f6573]"
+            >
+              <Reply className="size-3.5" />
             </button>
           )}
-          {reaction.reactionCount > 0 && (
-            <span className="flex items-center gap-0.5">
-              {(reaction.reactionEmojis.length > 0 ? reaction.reactionEmojis : ["👍"])
-                .slice(0, 3)
-                .map((emoji, index) => (
-                  <span key={`${emoji}-${index}`} className="text-[11px] leading-none">
-                    {emoji}
-                  </span>
-                ))}
-              {reaction.reactionCount}
-            </span>
+          {!isReply && replyCount > 0 && (
+            <button
+              type="button"
+              onClick={handleToggleExpanded}
+              className="cursor-pointer font-semibold text-secondary underline-offset-2 hover:underline"
+            >
+              {expanded ? `Sembunyikan ${replyCount} balasan` : `Tampilkan ${replyCount} balasan`}
+            </button>
+          )}
+          {isOwnComment && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="cursor-pointer font-semibold text-destructive underline-offset-2 hover:underline"
+            >
+              Delete
+            </button>
           )}
         </div>
 
         {!isReply && expanded && (
           <div className="mt-2 flex flex-col gap-2 pl-3">
             {loadingReplies && <p className="text-xs text-[#5f6573]">Memuat balasan...</p>}
-            {!loadingReplies && repliesLoaded && replies.length === 0 && (
-              <p className="text-xs text-[#5f6573]">Belum ada balasan.</p>
-            )}
             {replies.map((reply) => (
               <CommentItem
                 key={reply.id}
                 comment={reply}
                 isVerified={isVerified}
+                currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 currentUserAvatar={currentUserAvatar}
                 isReply
+                onDeleted={handleReplyDeleted}
               />
             ))}
 
@@ -174,11 +251,24 @@ export default function CommentItem({
         )}
       </div>
 
-      <ReactionPickerModal
-        open={showReactionPicker}
-        onClose={() => setShowReactionPicker(false)}
-        activeReaction={reaction.activeReaction}
-        onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+      <ReactorsListModal
+        open={showReactorsModal}
+        onClose={() => setShowReactorsModal(false)}
+        targetType={isReply ? "comment_reply" : "comment"}
+        targetId={comment.id}
+      />
+      <AlertConfirmation
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title={isReply ? "Hapus Balasan?" : "Hapus Komentar?"}
+        message={
+          isReply
+            ? "Balasan yang sudah dihapus tidak bisa dikembalikan lagi."
+            : "Komentar beserta semua balasannya akan dihapus dan tidak bisa dikembalikan lagi."
+        }
+        confirmLabel="Hapus"
+        loading={deleting}
       />
     </div>
   );

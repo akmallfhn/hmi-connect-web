@@ -3,28 +3,47 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, MessageCircle, MoreHorizontal, Repeat2, Send, Share2 } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  MoreHorizontal,
+  Pencil,
+  Repeat2,
+  Send,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { FormEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
+import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import LinkPreviewCard from "./LinkPreviewCard";
+import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
+import ReactorsListModal from "../modals/ReactorsListModal";
 import ShareModal from "../modals/ShareModal";
 import { useReaction } from "@/hooks/useReaction";
 import type { Feed, FeedComment } from "@/apis/feeds";
-import { createFeedComment, listFeedComments, repostFeed, unrepostFeed } from "@/lib/actions";
+import {
+  createFeedComment,
+  deleteFeed,
+  listFeedComments,
+  repostFeed,
+  unrepostFeed,
+} from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { isSuccessStatus } from "@/lib/types";
 
-interface FeedPostCardProps {
+interface FeedItemCardProps {
   feed: Feed;
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
   isVerified?: boolean;
   initialReposted?: boolean;
+  onDeleted?: (feedId: string) => void;
 }
 
 function MediaGrid({ media }: { media: NonNullable<Feed["media"]> }) {
@@ -88,14 +107,15 @@ function QuotedFeed({ feed }: { feed: Feed }) {
   );
 }
 
-export default function FeedPostCard({
+export default function FeedItemCard({
   feed,
   currentUserId,
   currentUserName,
   currentUserAvatar,
   isVerified,
   initialReposted,
-}: FeedPostCardProps) {
+  onDeleted,
+}: FeedItemCardProps) {
   const router = useRouter();
   const reaction = useReaction("feed", feed.id, {
     myReaction: feed.my_reaction,
@@ -103,7 +123,10 @@ export default function FeedPostCard({
     byType: feed.reaction_count.by_type,
   });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
   const [reposting, startRepostTransition] = useTransition();
@@ -114,6 +137,7 @@ export default function FeedPostCard({
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentCount, setCommentCount] = useState(feed.comment_count);
+  const [topCommentDeleted, setTopCommentDeleted] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [postingComment, startCommentTransition] = useTransition();
 
@@ -121,6 +145,7 @@ export default function FeedPostCard({
   const videoMedia = feed.media?.find((item) => item.type === "video");
   const urlMedia = feed.media?.find((item) => item.type === "url");
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const totalCommentCount = commentCount + feed.comment_reply_count;
 
   function requireVerified(): boolean {
     if (isVerified) return true;
@@ -128,9 +153,29 @@ export default function FeedPostCard({
     return false;
   }
 
-  function handleOpenReactionPicker() {
+  function handleReactionButtonClick() {
     if (!requireVerified()) return;
+    if (reaction.activeReaction) {
+      reaction.apply(null);
+      return;
+    }
     setShowReactionPicker(true);
+  }
+
+  function handleDeleteFeed() {
+    setDeleting(true);
+    deleteFeed(feed.id)
+      .then((result) => {
+        if (isSuccessStatus(result.status)) {
+          onDeleted?.(feed.id);
+        } else {
+          toast.error(result.message ?? "Gagal menghapus postingan.");
+        }
+      })
+      .finally(() => {
+        setDeleting(false);
+        setShowDeleteConfirm(false);
+      });
   }
 
   function toggleRepost() {
@@ -165,6 +210,14 @@ export default function FeedPostCard({
     }
   }
 
+  function handleCommentDeleted(commentId: string) {
+    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+    setCommentCount((prev) => Math.max(0, prev - 1));
+    if (feed.top_comment?.id === commentId) {
+      setTopCommentDeleted(true);
+    }
+  }
+
   function handleSubmitComment(event: FormEvent) {
     event.preventDefault();
     if (!requireVerified()) return;
@@ -194,14 +247,40 @@ export default function FeedPostCard({
             <p className="text-xs text-[#5f6573]">{formatRelativeTime(feed.created_at)}</p>
           </div>
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
-          aria-label="Opsi lainnya"
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
+        {isOwnFeed && (
+          <Dropdown
+            align="right"
+            trigger={({ toggle }) => (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggle}
+                className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+                aria-label="Opsi lainnya"
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            )}
+          >
+            <div className="flex flex-col py-1">
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+              >
+                <Pencil className="size-4 text-[#5f6573]" />
+                Edit post
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+              >
+                <Trash2 className="size-4" />
+                Delete post
+              </button>
+            </div>
+          </Dropdown>
+        )}
       </div>
 
       <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033]">{feed.content}</p>
@@ -213,92 +292,89 @@ export default function FeedPostCard({
       {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
       {feed.repost_of && <QuotedFeed feed={feed.repost_of} />}
 
-      {(reaction.reactionCount > 0 || commentCount > 0) && (
-        <div className="mt-3 flex items-center justify-between text-xs text-[#5f6573]">
-          {reaction.reactionCount > 0 ? (
-            <span className="flex items-center gap-1">
-              <span className="flex items-center -space-x-1">
-                {(reaction.reactionEmojis.length > 0 ? reaction.reactionEmojis : ["👍"]).map(
-                  (emoji, index) => (
-                    <span
-                      key={`${emoji}-${index}`}
-                      className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
-                    >
-                      {emoji}
-                    </span>
-                  )
-                )}
-              </span>
-              {reaction.reactionCount}
-            </span>
-          ) : (
-            <span />
-          )}
-          {commentCount > 0 && (
-            <button
-              type="button"
-              onClick={handleToggleComments}
-              className="cursor-pointer hover:underline"
-            >
-              {commentCount} komentar
-            </button>
-          )}
-        </div>
+      {reaction.reactionCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowReactorsModal(true)}
+          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-[#5f6573]"
+        >
+          <span className="flex items-center -space-x-1">
+            {(reaction.reactionEmojis.length > 0 ? reaction.reactionEmojis : ["👍"]).map(
+              (emoji, index) => (
+                <span
+                  key={`${emoji}-${index}`}
+                  className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
+                >
+                  {emoji}
+                </span>
+              )
+            )}
+          </span>
+          {reaction.reactionCount}
+        </button>
       )}
 
-      <div className="mt-2 grid grid-cols-4 gap-1 border-t border-[#e6e9ef] pt-2">
-        <Button
-          variant="ghost"
-          onClick={handleOpenReactionPicker}
-          disabled={reaction.reacting}
-          className={`gap-2 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
-            reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
-          }`}
-        >
-          {reaction.activeReactionInfo ? (
-            <span className="text-base leading-none">{reaction.activeReactionInfo.emoji}</span>
-          ) : (
-            <Heart className="size-4" />
-          )}
-          {reaction.activeReactionInfo?.label ?? "Suka"}
-        </Button>
+      <div className="mt-3 grid grid-cols-4 gap-1 border-t border-[#e6e9ef] pt-2">
+        <div className="relative">
+          <Button
+            variant="ghost"
+            onClick={handleReactionButtonClick}
+            disabled={reaction.reacting}
+            className={`w-full gap-1.5 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+              reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
+            }`}
+          >
+            {reaction.activeReactionInfo ? (
+              <span className="text-base leading-none">{reaction.activeReactionInfo.emoji}</span>
+            ) : (
+              <Heart className="size-4" />
+            )}
+            {reaction.reactionCount > 0 && reaction.reactionCount}
+          </Button>
+          <ReactionPickerModal
+            open={showReactionPicker}
+            onClose={() => setShowReactionPicker(false)}
+            activeReaction={reaction.activeReaction}
+            onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+          />
+        </div>
         <Button
           variant="ghost"
           onClick={handleToggleComments}
-          className="gap-2 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
+          className="gap-1.5 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
         >
           <MessageCircle className="size-4" />
-          Komentar
+          {totalCommentCount > 0 && totalCommentCount}
         </Button>
         <Button
           variant="ghost"
           onClick={toggleRepost}
           disabled={reposting || isOwnFeed}
           title={isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined}
-          className={`gap-2 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
-            reposted ? "text-primary" : "text-[#5f6573]"
+          className={`rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+            reposted ? "text-primary" : isOwnFeed ? "text-[#c3c7d1]" : "text-[#5f6573]"
           }`}
         >
           <Repeat2 className="size-4" />
-          Repost
         </Button>
         <Button
           variant="ghost"
           onClick={() => setShowShareModal(true)}
-          className="gap-2 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
+          className="rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
         >
           <Share2 className="size-4" />
-          Bagikan
         </Button>
       </div>
 
-      {!showComments && feed.top_comment && (
+      {!showComments && feed.top_comment && !topCommentDeleted && (
         <div className="mt-3 border-t border-[#e6e9ef] pt-3">
           <CommentItem
             comment={feed.top_comment}
             isVerified={isVerified}
+            currentUserId={currentUserId}
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
+            onDeleted={handleCommentDeleted}
           />
           {commentCount > 1 && (
             <button
@@ -316,15 +392,19 @@ export default function FeedPostCard({
         <div className="mt-3 flex flex-col gap-3 border-t border-[#e6e9ef] pt-3">
           {loadingComments && <p className="text-xs text-[#5f6573]">Memuat komentar...</p>}
           {!loadingComments && commentsLoaded && comments.length === 0 && (
-            <p className="text-xs text-[#5f6573]">Belum ada komentar.</p>
+            <p className="py-4 text-center text-xs text-[#5f6573]">
+              Jadilah yang pertama berkomentar!
+            </p>
           )}
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}
               isVerified={isVerified}
+              currentUserId={currentUserId}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}
+              onDeleted={handleCommentDeleted}
             />
           ))}
 
@@ -350,11 +430,20 @@ export default function FeedPostCard({
         </div>
       )}
 
-      <ReactionPickerModal
-        open={showReactionPicker}
-        onClose={() => setShowReactionPicker(false)}
-        activeReaction={reaction.activeReaction}
-        onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+      <AlertConfirmation
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteFeed}
+        title="Hapus Postingan?"
+        message="Postingan yang sudah dihapus tidak bisa dikembalikan lagi."
+        confirmLabel="Hapus"
+        loading={deleting}
+      />
+      <ReactorsListModal
+        open={showReactorsModal}
+        onClose={() => setShowReactorsModal(false)}
+        targetType="feed"
+        targetId={feed.id}
       />
       <ShareModal
         open={showShareModal}

@@ -4,7 +4,7 @@ import { Repeat2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
-import FeedPostCard from "./FeedPostCard";
+import FeedItemCard from "./FeedItemCard";
 import type { FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
 
@@ -40,6 +40,10 @@ export default function FeedTimeline({
     });
   }
 
+  function handleFeedDeleted(feedId: string) {
+    setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
+  }
+
   const repostedFeedIds = new Set(
     items
       .filter((item) => item.type === "repost" && item.reposter_id === currentUserId)
@@ -68,13 +72,14 @@ export default function FeedTimeline({
               <span>{item.reposter_full_name} membagikan ulang</span>
             </div>
           )}
-          <FeedPostCard
+          <FeedItemCard
             feed={item.feed}
             currentUserId={currentUserId}
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
             isVerified={isVerified}
             initialReposted={repostedFeedIds.has(item.feed.id)}
+            onDeleted={handleFeedDeleted}
           />
         </div>
       ))}
