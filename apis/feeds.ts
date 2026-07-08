@@ -50,6 +50,14 @@ export type FeedTimelineItem =
       feed: Feed;
     };
 
+export type CreateFeedPayload = {
+  content: string;
+  media?: {
+    type: FeedMediaTypeEnum;
+    urls: string[];
+  };
+};
+
 export type FeedComment = {
   id: string;
   feed_id?: string;
@@ -108,6 +116,21 @@ export async function listFeeds(
     list: result.data?.list ?? [],
     hasMore: hasMoreFromMetapaging(result.data?.metapaging),
   };
+}
+
+export async function createFeed(
+  payload: CreateFeedPayload
+): Promise<ApiEnvelope<Feed>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<Feed>("/api/v1/feeds/create", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
 }
 
 export async function listFeedComments(

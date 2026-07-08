@@ -4,8 +4,24 @@ import { searchProvinces } from "@/apis/locations";
 import { getSession } from "@/apis/session";
 import VerificationPage from "@/components/pages/VerificationPage";
 
+const description =
+  "Verifikasi data KTP untuk melengkapi keamanan dan kredibilitas akun HMI Connect.";
+
 export const metadata: Metadata = {
-  title: "Verifikasi Akun | HMI Connect",
+  title: "Verifikasi Akun",
+  description,
+  alternates: {
+    canonical: "/verification",
+  },
+  openGraph: {
+    title: "Verifikasi Akun | HMI Connect",
+    description,
+    url: "/verification",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function Verification() {

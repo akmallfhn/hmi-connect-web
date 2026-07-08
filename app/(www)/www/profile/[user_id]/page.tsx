@@ -18,11 +18,40 @@ export async function generateMetadata({
 }: ProfileRouteProps): Promise<Metadata> {
   const { user_id } = await params;
   const profile = await getUserById(user_id);
+  const title = profile ? profile.full_name : "Profil Tidak Ditemukan";
+  const description = profile
+    ? profile.headline
+      ? `${profile.full_name} - ${profile.headline}`
+      : `Lihat profil ${profile.full_name} di HMI Connect.`
+    : "Profil HMI Connect yang kamu cari tidak ditemukan.";
+  const profileUrl = `/profile/${user_id}`;
+  const image = profile?.avatar
+    ? [{ url: profile.avatar, alt: `Foto profil ${profile.full_name}` }]
+    : undefined;
 
   return {
-    title: profile
-      ? `${profile.full_name} | HMI Connect`
-      : "Profil Tidak Ditemukan | HMI Connect",
+    title,
+    description,
+    alternates: {
+      canonical: profileUrl,
+    },
+    openGraph: {
+      title: `${title} | HMI Connect`,
+      description,
+      url: profileUrl,
+      type: "profile",
+      images: image,
+    },
+    twitter: {
+      card: profile?.avatar ? "summary_large_image" : "summary",
+      title: `${title} | HMI Connect`,
+      description,
+      images: profile?.avatar ? [profile.avatar] : undefined,
+    },
+    robots: {
+      index: profile?.status === "active",
+      follow: profile?.status === "active",
+    },
   };
 }
 

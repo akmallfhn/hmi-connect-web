@@ -5,8 +5,24 @@ import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
 import ActivationPage from "@/components/pages/ActivationPage";
 
+const description =
+  "Lengkapi data pendidikan, Latihan Kader 1, dan cabang untuk mengaktifkan akun HMI Connect.";
+
 export const metadata: Metadata = {
-  title: "Aktivasi Akun | HMI Connect",
+  title: "Aktivasi Akun",
+  description,
+  alternates: {
+    canonical: "/activation",
+  },
+  openGraph: {
+    title: "Aktivasi Akun | HMI Connect",
+    description,
+    url: "/activation",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function Activation() {

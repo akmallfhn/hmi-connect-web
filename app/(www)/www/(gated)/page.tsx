@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import FeedPage from "@/components/pages/FeedPage";
 import { getSession } from "@/apis/session";
 import {
@@ -5,6 +6,26 @@ import {
   listEducationHistories,
   listTrainingHistories,
 } from "@/apis/users";
+
+const description =
+  "Ikuti kabar, postingan, dan aktivitas kader HMI melalui feed HMI Connect.";
+
+export const metadata: Metadata = {
+  title: "Beranda",
+  description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Beranda | HMI Connect",
+    description,
+    url: "/",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function HomePage() {
   const { user } = await getSession();

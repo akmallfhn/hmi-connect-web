@@ -241,8 +241,11 @@ below) when `isVerified === false`.
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateUser` directly) rather than batching into the profile form's own "Simpan" button,
   since it's opened from a separate trigger (clicking the avatar itself).
-  `components/forms/CreateFeedForms.tsx` is the composer card at the top of the feed
-  timeline (not yet wired to `feeds/create` — UI only).
+  `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
+  top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
+  of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
+  to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs;
+  while storage policy is catching up, it falls back to `hmi-connect/avatars/feed_media`.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here.

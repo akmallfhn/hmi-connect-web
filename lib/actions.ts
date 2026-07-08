@@ -27,6 +27,7 @@ import {
 } from "@/apis/users";
 import {
   createCommentReply as createCommentReplyApi,
+  createFeed as createFeedApi,
   createFeedComment as createFeedCommentApi,
   deleteComment as deleteCommentApi,
   deleteCommentReply as deleteCommentReplyApi,
@@ -36,6 +37,7 @@ import {
   listFeeds as listFeedsApi,
   repostFeed as repostFeedApi,
   unrepostFeed as unrepostFeedApi,
+  type CreateFeedPayload,
 } from "@/apis/feeds";
 import {
   listReactors as listReactorsApi,
@@ -108,6 +110,10 @@ export async function createInstitution(
 
 export async function loadMoreFeeds(page: number) {
   return listFeedsApi({ page, pageSize: 20 });
+}
+
+export async function createFeed(payload: CreateFeedPayload) {
+  return createFeedApi(payload);
 }
 
 export async function listFeedComments(

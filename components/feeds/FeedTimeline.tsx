@@ -5,7 +5,8 @@ import { useState, useTransition } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 import FeedItemCard from "./FeedItemCard";
-import type { FeedTimelineItem } from "@/apis/feeds";
+import CreateFeedForms from "../forms/CreateFeedForms";
+import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
 
 interface FeedTimelineProps {
@@ -44,22 +45,34 @@ export default function FeedTimeline({
     setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
   }
 
+  function handleFeedCreated(feed: Feed) {
+    setItems((prev) => [
+      { type: "feed", created_at: feed.created_at, feed },
+      ...prev,
+    ]);
+  }
+
   const repostedFeedIds = new Set(
     items
       .filter((item) => item.type === "repost" && item.reposter_id === currentUserId)
       .map((item) => item.feed.id)
   );
 
-  if (items.length === 0) {
-    return (
-      <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
-        Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4">
+      <CreateFeedForms
+        fullName={currentUserName}
+        avatar={currentUserAvatar}
+        userId={currentUserId}
+        onCreated={handleFeedCreated}
+      />
+
+      {items.length === 0 && (
+        <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
+          Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
+        </div>
+      )}
+
       {items.map((item, index) => (
         <div
           key={`${item.type}-${item.feed.id}-${index}`}
