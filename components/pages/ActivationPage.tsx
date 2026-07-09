@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, Loader2, ShieldCheck, Upload } from "lucide-react";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import {
   isSuccessStatus,
   type Degree,
+  type StatusName,
   type TrainingResultEnum,
 } from "@/lib/types";
 
@@ -38,6 +39,14 @@ const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Tidak Lulus", value: "failed" },
 ];
 
+const EDUCATION_YEAR_OPTIONS = Array.from(
+  { length: 2026 - 1947 + 1 },
+  (_, index) => {
+    const year = String(2026 - index);
+    return { label: year, value: year };
+  }
+);
+
 const STEPS = ["Profil", "Pendidikan", "Latihan Kader 1"];
 const USERNAME_PATTERN = "[A-Za-z0-9._]+";
 const USERNAME_ERROR =
@@ -50,6 +59,12 @@ const ALLOWED_AVATAR_TYPES = [
 ];
 const ALLOWED_AVATAR_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+type UsernameAvailability =
+  | "idle"
+  | "checking"
+  | "available"
+  | "unavailable"
+  | "error";
 
 type FormData = {
   avatar: string;
@@ -100,6 +115,8 @@ export default function ActivationPage({
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [usernameApiError, setUsernameApiError] = useState("");
+  const [usernameAvailability, setUsernameAvailability] =
+    useState<UsernameAvailability>("idle");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -117,6 +134,52 @@ export default function ActivationPage({
   const [formData, setFormData] = useState<FormData>(() =>
     emptyFormData(fullName, avatar)
   );
+  const usernameHasValidFormat =
+    formData.username.trim() !== "" &&
+    new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(formData.username);
+
+  useEffect(() => {
+    if (!usernameHasValidFormat) return;
+
+    const controller = new AbortController();
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/users/check-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: formData.username.trim() }),
+          signal: controller.signal,
+        });
+        const result = (await response.json()) as {
+          status?: StatusName;
+          data?: { is_available?: boolean };
+        };
+
+        if (
+          !response.ok ||
+          !isSuccessStatus(result.status) ||
+          typeof result.data?.is_available !== "boolean"
+        ) {
+          setUsernameAvailability("error");
+          return;
+        }
+
+        setUsernameAvailability(
+          result.data.is_available ? "available" : "unavailable"
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("[ActivationPage] check username threw:", err);
+        setUsernameAvailability("error");
+      }
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [formData.username, usernameHasValidFormat]);
 
   function updateFormData<K extends keyof FormData>(
     key: K,
@@ -220,8 +283,8 @@ export default function ActivationPage({
 
   const isProfileStepValid =
     formData.fullName.trim() !== "" &&
-    formData.username.trim() !== "" &&
-    new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(formData.username);
+    usernameHasValidFormat &&
+    usernameAvailability === "available";
 
   const isEducationStepValid =
     formData.institution !== null &&
@@ -272,6 +335,7 @@ export default function ActivationPage({
           : result.message ?? "Aktivasi gagal. Coba lagi.";
         if (isUsernameConflict) {
           setUsernameApiError(message);
+          setUsernameAvailability("unavailable");
           setStep(0);
         }
         setErrorMessage(message);
@@ -449,8 +513,17 @@ export default function ActivationPage({
                   placeholder="Contoh: akmal.fhn"
                   value={formData.username}
                   onChange={(event) => {
+                    const nextUsername = event.target.value;
+                    const hasValidFormat =
+                      nextUsername.trim() !== "" &&
+                      new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(
+                        nextUsername
+                      );
                     setUsernameApiError("");
-                    updateFormData("username", event.target.value);
+                    setUsernameAvailability(
+                      hasValidFormat ? "checking" : "idle"
+                    );
+                    updateFormData("username", nextUsername);
                   }}
                   pattern={USERNAME_PATTERN}
                   patternErrorMessage={USERNAME_ERROR}
@@ -460,6 +533,27 @@ export default function ActivationPage({
                   spellCheck={false}
                   required
                 />
+                {usernameAvailability === "checking" && (
+                  <p className="-mt-2 pl-1 text-xs text-[#5f6573]">
+                    Memeriksa ketersediaan username...
+                  </p>
+                )}
+                {usernameAvailability === "available" && (
+                  <p className="-mt-2 pl-1 text-xs font-medium text-primary">
+                    Username tersedia.
+                  </p>
+                )}
+                {usernameAvailability === "unavailable" &&
+                  !usernameApiError && (
+                    <p className="-mt-2 pl-1 text-xs text-destructive">
+                      Username sudah digunakan. Silakan pilih username lain.
+                    </p>
+                  )}
+                {usernameAvailability === "error" && (
+                  <p className="-mt-2 pl-1 text-xs text-destructive">
+                    Ketersediaan username gagal diperiksa. Coba lagi.
+                  </p>
+                )}
               </div>
             )}
 
@@ -504,22 +598,26 @@ export default function ActivationPage({
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <NumberInput
-                    inputId="start-year"
+                  <Select
+                    selectId="start-year"
                     label="Tahun Masuk"
-                    placeholder="2020"
+                    placeholder="Pilih tahun masuk"
                     value={formData.startYear}
-                    onValueChange={(value) =>
-                      updateFormData("startYear", value)
+                    onChange={(value) =>
+                      updateFormData("startYear", String(value ?? ""))
                     }
+                    options={EDUCATION_YEAR_OPTIONS}
                     required
                   />
-                  <NumberInput
-                    inputId="end-year"
-                    label="Tahun Lulus (Perkiraan)"
-                    placeholder="2024"
+                  <Select
+                    selectId="end-year"
+                    label="Tahun Keluar"
+                    placeholder="Pilih tahun keluar"
                     value={formData.endYear}
-                    onValueChange={(value) => updateFormData("endYear", value)}
+                    onChange={(value) =>
+                      updateFormData("endYear", String(value ?? ""))
+                    }
+                    options={EDUCATION_YEAR_OPTIONS}
                     required
                   />
                 </div>

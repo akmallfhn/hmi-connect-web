@@ -139,6 +139,9 @@ Three-step onboarding gated on `user.status === "pending"`, submitted via the
 
 1. **Profile** — avatar and full name are seeded from `getSession()` and remain editable;
    username is required and only accepts letters, numbers, periods, and underscores.
+   Before this step can continue, the client debounces a request to
+   `/www/api/users/check-username`, which delegates to the backend's
+   `users/check-username`; only `is_available: true` unlocks the next step.
 2. **University** — institution (searchable + creatable, backed by
    `/www/api/institutions/search` + `createInstitution` action), major, degree, start/end
    year.

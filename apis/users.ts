@@ -36,6 +36,30 @@ export type ActivationResult = {
   status: UserStatusEnum;
 };
 
+export type CheckUsernameResult = {
+  is_available: boolean;
+};
+
+export async function checkUsernameAvailability(
+  username: string
+): Promise<ApiEnvelope<CheckUsernameResult>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<CheckUsernameResult>("/api/v1/users/check-username", {
+    method: "POST",
+    token: sessionToken,
+    body: { username },
+  });
+}
+
 export async function activateUser(
   payload: ActivationPayload
 ): Promise<ApiEnvelope<ActivationResult>> {
