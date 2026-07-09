@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getBranches } from "@/apis/branches";
 import { searchProvinces } from "@/apis/locations";
 import { getSession } from "@/apis/session";
 import VerificationPage from "@/components/pages/VerificationPage";
@@ -32,7 +33,10 @@ export default async function Verification() {
   if (user?.status === "pending") redirect("/activation");
   if (user?.is_verified) redirect("/");
 
-  const { list: provinces } = await searchProvinces();
+  const [{ list: provinces }, branches] = await Promise.all([
+    searchProvinces(),
+    getBranches(),
+  ]);
 
-  return <VerificationPage provinces={provinces} />;
+  return <VerificationPage branches={branches} provinces={provinces} />;
 }

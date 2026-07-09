@@ -11,6 +11,7 @@ import {
   deleteEducationHistory,
   updateEducationHistory,
 } from "@/lib/actions";
+import { DEGREE_OPTIONS } from "@/lib/education";
 import { isSuccessStatus, type Degree } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
@@ -20,15 +21,6 @@ import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
-
-const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
-  { label: "Diploma (Ahli Pratama)", value: "diploma_ahli_pratama" },
-  { label: "Diploma (Ahli Muda)", value: "diploma_ahli_muda" },
-  { label: "Diploma (Ahli Madya)", value: "diploma_ahli_madya" },
-  { label: "Sarjana", value: "sarjana" },
-  { label: "Magister", value: "magister" },
-  { label: "Doktor", value: "doktor" },
-];
 
 type EducationDraft = {
   id: string;

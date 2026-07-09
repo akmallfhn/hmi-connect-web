@@ -5,19 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Institution } from "@/apis/institutions";
-import type { Degree } from "@/lib/types";
 import type { EducationHistoryEntry } from "@/apis/users";
+import { DEGREE_LABELS } from "@/lib/education";
 import Button from "../buttons/Button";
 import EditEducationForm from "../forms/EditEducationForm";
-
-const DEGREE_LABELS: Record<Degree, string> = {
-  diploma_ahli_pratama: "Diploma (Ahli Pratama)",
-  diploma_ahli_muda: "Diploma (Ahli Muda)",
-  diploma_ahli_madya: "Diploma (Ahli Madya)",
-  sarjana: "Sarjana",
-  magister: "Magister",
-  doktor: "Doktor",
-};
 
 interface EducationCardProps {
   userId?: string;

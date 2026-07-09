@@ -81,6 +81,7 @@ export async function activateUser(
 }
 
 export type VerificationPayload = {
+  chapter_id: string;
   ktp_full_name: string;
   nik: string;
   phone_number: string;
@@ -92,9 +93,11 @@ export type VerificationPayload = {
 
 export type VerificationResult = {
   user_id: string;
+  chapter_id: string;
   ktp_full_name: string;
   district_id: number;
   is_verified: boolean;
+  member_card: string;
 };
 
 export async function verifyUser(

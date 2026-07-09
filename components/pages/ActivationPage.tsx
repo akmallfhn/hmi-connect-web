@@ -17,21 +17,13 @@ import LogoHmiConnect from "../svg/LogoHmiConnect";
 import type { Institution } from "@/apis/institutions";
 import { createInstitution, activateUser, logoutUser } from "@/lib/actions";
 import { supabase } from "@/lib/supabase";
+import { DEGREE_OPTIONS } from "@/lib/education";
 import {
   isSuccessStatus,
   type Degree,
   type StatusName,
   type TrainingResultEnum,
 } from "@/lib/types";
-
-const DEGREE_OPTIONS: { label: string; value: Degree }[] = [
-  { label: "Diploma (Ahli Pratama)", value: "diploma_ahli_pratama" },
-  { label: "Diploma (Ahli Muda)", value: "diploma_ahli_muda" },
-  { label: "Diploma (Ahli Madya)", value: "diploma_ahli_madya" },
-  { label: "Sarjana", value: "sarjana" },
-  { label: "Magister", value: "magister" },
-  { label: "Doktor", value: "doktor" },
-];
 
 const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },

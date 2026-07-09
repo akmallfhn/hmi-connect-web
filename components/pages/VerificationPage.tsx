@@ -13,11 +13,12 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
+import type { Branch } from "@/apis/branches";
 import type { Province } from "@/apis/locations";
 import { verifyUser } from "@/lib/actions";
 import { isSuccessStatus, type GenderEnum } from "@/lib/types";
 
-const STEPS = ["Data KTP", "Alamat"];
+const STEPS = ["Data KTP", "Alamat", "Cabang & Komisariat"];
 
 type FormData = {
   ktpFullName: string;
@@ -29,6 +30,8 @@ type FormData = {
   province: SearchableOption | null;
   city: SearchableOption | null;
   district: SearchableOption | null;
+  branch: SearchableOption | null;
+  chapter: SearchableOption | null;
 };
 
 function emptyFormData(): FormData {
@@ -42,14 +45,18 @@ function emptyFormData(): FormData {
     province: null,
     city: null,
     district: null,
+    branch: null,
+    chapter: null,
   };
 }
 
 interface VerificationPageProps {
+  branches: Branch[];
   provinces: Province[];
 }
 
 export default function VerificationPage({
+  branches,
   provinces,
 }: VerificationPageProps) {
   const [step, setStep] = useState(0);
@@ -78,7 +85,16 @@ export default function VerificationPage({
     setFormData((prev) => ({ ...prev, city: option, district: null }));
   }
 
+  function handleBranchChange(option: SearchableOption | null) {
+    setFormData((prev) => ({ ...prev, branch: option, chapter: null }));
+  }
+
   const provinceOptions: SearchableOption[] = provinces.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const branchOptions: SearchableOption[] = branches.map((item) => ({
     label: item.name,
     value: item.id,
   }));
@@ -135,6 +151,39 @@ export default function VerificationPage({
     };
   }
 
+  async function loadBranchOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/branches/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
+  async function loadChapterOptions(inputValue: string, page: number) {
+    if (!formData.branch) return { options: [], hasMore: false };
+
+    const params = new URLSearchParams({
+      page: String(page),
+      branch_id: String(formData.branch.value),
+    });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/chapters/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
   const isStep0Valid =
     formData.ktpFullName.trim() !== "" &&
     formData.nik.length === 16 &&
@@ -148,17 +197,22 @@ export default function VerificationPage({
     formData.city !== null &&
     formData.district !== null;
 
+  const isStep2Valid = formData.branch !== null && formData.chapter !== null;
+
   const canGoNext =
-    (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid);
+    (step === 0 && isStep0Valid) ||
+    (step === 1 && isStep1Valid) ||
+    (step === 2 && isStep2Valid);
 
   async function handleSubmit() {
-    if (!isStep1Valid) return;
+    if (!isStep0Valid || !isStep1Valid || !isStep2Valid) return;
 
     setStatus("submitting");
     setErrorMessage("");
 
     try {
       const result = await verifyUser({
+        chapter_id: String(formData.chapter?.value ?? ""),
         ktp_full_name: formData.ktpFullName,
         nik: formData.nik,
         phone_number: formData.phoneNumber,
@@ -173,7 +227,7 @@ export default function VerificationPage({
         const message =
           result.status === "CONFLICT"
             ? "NIK ini sudah terverifikasi di akun lain. Hubungi admin HMI Connect jika ini keliru."
-            : result.message ?? "Verifikasi gagal. Coba lagi.";
+            : (result.message ?? "Verifikasi gagal. Coba lagi.");
         setErrorMessage(message);
         setStatus("error");
         toast.error(message);
@@ -368,6 +422,49 @@ export default function VerificationPage({
                   value={formData.addressStreet}
                   onChange={(e) =>
                     updateFormData("addressStreet", e.target.value)
+                  }
+                  required
+                />
+
+                {status === "error" && (
+                  <p className="text-xs font-semibold text-destructive">
+                    {errorMessage}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-[#172033]">
+                  Pilih Cabang dan Komisariat
+                </h2>
+
+                <SearchableSelect
+                  selectId="branch"
+                  label="Asal Cabang"
+                  placeholder="Cari cabang..."
+                  value={formData.branch}
+                  onChange={handleBranchChange}
+                  loadOptions={loadBranchOptions}
+                  defaultOptions={branchOptions}
+                  debounceMs={400}
+                  required
+                />
+                <SearchableSelect
+                  key={`chapter-${formData.branch?.value ?? "none"}`}
+                  selectId="chapter"
+                  label="Asal Komisariat"
+                  placeholder="Cari komisariat..."
+                  value={formData.chapter}
+                  onChange={(option) => updateFormData("chapter", option)}
+                  loadOptions={loadChapterOptions}
+                  debounceMs={400}
+                  disabled={!formData.branch}
+                  noOptionsMessage={
+                    formData.branch
+                      ? "Komisariat tidak ditemukan."
+                      : "Pilih cabang terlebih dahulu."
                   }
                   required
                 />

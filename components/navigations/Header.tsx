@@ -22,7 +22,7 @@ import Button from "../buttons/Button";
 import { NAV_ITEMS, NOTIFICATIONS } from "../feeds/mockData";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 
-interface DashboardHeaderProps {
+interface HeaderProps {
   fullName?: string;
   avatar?: string;
   email?: string;
@@ -30,13 +30,13 @@ interface DashboardHeaderProps {
   isVerified?: boolean;
 }
 
-export default function DashboardHeader({
+export default function Header({
   fullName,
   avatar,
   email,
   userId,
   isVerified,
-}: DashboardHeaderProps) {
+}: HeaderProps) {
   const displayName = fullName ?? "Kader";
   const unreadCount = NOTIFICATIONS.filter((item) => !item.read).length;
   const [loggingOut, setLoggingOut] = useState(false);
@@ -46,7 +46,7 @@ export default function DashboardHeader({
     try {
       await logoutUser();
     } catch (err) {
-      console.error("[DashboardHeader] logoutUser threw:", err);
+      console.error("[Header] logoutUser threw:", err);
     } finally {
       window.location.href = "/auth/login";
     }
@@ -216,7 +216,7 @@ export default function DashboardHeader({
         <div className="border-t border-destructive/20 bg-destructive-soft">
           <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-destructive">
             <TriangleAlert className="size-4 shrink-0" />
-            <span>Data akun kamu belum diverifikasi oleh admin HMI Connect.</span>
+            <span>Akun kamu belum terverifikasi.</span>
             <Link
               href="/verification"
               className="underline underline-offset-2 hover:text-destructive-foreground"

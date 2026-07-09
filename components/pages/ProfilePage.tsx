@@ -1,7 +1,7 @@
 import type { Institution } from "@/apis/institutions";
 import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
 import PageMargin from "../common/PageMargin";
-import DashboardHeader from "../navigations/DashboardHeader";
+import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
 import ActivityCard from "../profile/ActivityCard";
 import EducationCard from "../profile/EducationCard";
@@ -46,7 +46,7 @@ export default function ProfilePage({
 }: ProfilePageProps) {
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <DashboardHeader
+      <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
         email={viewer.email}

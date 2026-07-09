@@ -2,7 +2,7 @@ import PageMargin from "../common/PageMargin";
 import Feed from "../feeds/Feed";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
-import DashboardHeader from "../navigations/DashboardHeader";
+import Header from "../navigations/Header";
 import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
 
 interface FeedPageProps {
@@ -34,7 +34,7 @@ export default function FeedPage({
 }: FeedPageProps) {
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <DashboardHeader
+      <Header
         fullName={fullName}
         avatar={avatar}
         email={email}

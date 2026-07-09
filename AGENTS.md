@@ -74,9 +74,10 @@ though the URLs you actually visit don't show `/www`.
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `branches.ts`, `locations.ts` (provinces/cities/districts —
-   grouped together since they're a single cascading lookup, not independent resources),
-   `users.ts`, `session.ts`, plus the shared `api.ts`). Marked `import "server-only"`.
+   (`institutions.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
+   (provinces/cities/districts — grouped together since they're a single cascading lookup,
+   not independent resources), `users.ts`, `session.ts`, plus the shared `api.ts`).
+   Marked `import "server-only"`.
    Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
    look. These functions know the backend's request/response shape; nothing outside this
@@ -154,12 +155,12 @@ not a name) — don't regress that to the display name.
 
 ## Verification flow (`components/pages/VerificationPage.tsx`)
 
-Two-step KTP (Indonesian ID card) identity check, submitted via the `verifyUser` Server
+Three-step KTP (Indonesian ID card) identity check, submitted via the `verifyUser` Server
 Action → `POST /api/v1/users/verification`, which flips `is_verified` → `true`. Unlike
 activation this is **not** gated/mandatory — `app/(www)/www/verification/page.tsx` only
 redirects away pending users (to `/activation`) and already-verified users (to `/`);
 anyone else can reach it any time, and the page itself offers a "Nanti saja" (skip) link
-back to `/`. `DashboardHeader` links to it from the red "belum diverifikasi" banner (see
+back to `/`. `Header` links to it from the red "belum diverifikasi" banner (see
 below) when `isVerified === false`.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
@@ -171,6 +172,11 @@ below) when `isVerified === false`.
    resets when the parent changes — don't try to reset them by clearing `value` alone,
    `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
    are derived server-side from it.
+3. **Asal Organisasi** — cascading Branch (Cabang HMI) → Chapter (Komisariat)
+   (`apis/branches.ts` + `apis/chapters.ts`, backed by `/www/api/branches/search` and
+   `/www/api/chapters/search`). `chapters/list` requires the selected `branch_id`, but
+   only `chapter_id` is submitted to `users/verification`; branch/coordinating body and
+   organization are derived server-side from the chapter.
 
 ## Component conventions
 
@@ -184,7 +190,7 @@ below) when `isVerified === false`.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page (currently
-  `DashboardHeader.tsx`).
+  `Header.tsx`).
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost

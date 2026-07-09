@@ -5,7 +5,8 @@ import Avatar from "../common/Avatar";
 import VerifiedBadge from "../common/VerifiedBadge";
 import { WEEK_DAYS } from "./mockData";
 import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
-import type { Degree, TrainingResultEnum, TrainingStatusEnum } from "@/lib/types";
+import { DEGREE_LABELS } from "@/lib/education";
+import type { TrainingResultEnum, TrainingStatusEnum } from "@/lib/types";
 
 interface ProfileSidebarProps {
   fullName?: string;
@@ -19,15 +20,6 @@ interface ProfileSidebarProps {
   educationHistories?: EducationHistoryEntry[];
   trainingHistories?: TrainingHistoryEntry[];
 }
-
-const DEGREE_LABELS: Record<Degree, string> = {
-  diploma_ahli_pratama: "Diploma (Ahli Pratama)",
-  diploma_ahli_muda: "Diploma (Ahli Muda)",
-  diploma_ahli_madya: "Diploma (Ahli Madya)",
-  sarjana: "Sarjana",
-  magister: "Magister",
-  doktor: "Doktor",
-};
 
 const RESULT_LABELS: Record<TrainingResultEnum, string> = {
   passed: "Lulus",
