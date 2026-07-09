@@ -14,7 +14,9 @@ import {
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type ActivationPayload = {
-  branch_id: string;
+  username: string;
+  full_name?: string;
+  avatar?: string;
   training_result: TrainingResultEnum;
   training_organizer_name: string;
   training_year: number;
@@ -27,7 +29,8 @@ export type ActivationPayload = {
 
 export type ActivationResult = {
   user_id: string;
-  branch_id: string;
+  full_name: string;
+  avatar?: string;
   username: string;
   user_email: string;
   status: UserStatusEnum;

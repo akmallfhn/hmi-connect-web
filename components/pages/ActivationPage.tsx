@@ -1,24 +1,22 @@
 "use client";
 
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Loader2, ShieldCheck, Upload } from "lucide-react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
+import Avatar from "../common/Avatar";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
 import CreateableSelect, {
   type SearchableOption,
 } from "../fields/CreateableSelect";
-import SearchableSelect, {
-  type SearchableOption as BranchOption,
-} from "../fields/SearchableSelect";
 import DecorativeBackground from "../common/DecorativeBackground";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
-import type { Branch } from "@/apis/branches";
 import type { Institution } from "@/apis/institutions";
 import { createInstitution, activateUser, logoutUser } from "@/lib/actions";
+import { supabase } from "@/lib/supabase";
 import {
   isSuccessStatus,
   type Degree,
@@ -40,28 +38,43 @@ const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Tidak Lulus", value: "failed" },
 ];
 
-const STEPS = ["Pendidikan & Cabang", "Latihan Kader 1"];
+const STEPS = ["Profil", "Pendidikan", "Latihan Kader 1"];
+const USERNAME_PATTERN = "[A-Za-z0-9._]+";
+const USERNAME_ERROR =
+  "Username hanya boleh berisi huruf, angka, titik (.), atau garis bawah (_). Spasi dan tanda hubung (-) tidak diperbolehkan.";
+const ALLOWED_AVATAR_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
+const ALLOWED_AVATAR_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 type FormData = {
+  avatar: string;
+  fullName: string;
+  username: string;
   institution: SearchableOption | null;
   degree: Degree | null;
   major: string;
   startYear: string;
   endYear: string;
-  branch: BranchOption | null;
   trainingResult: TrainingResultEnum | null;
   trainingOrganizerName: string;
   trainingYear: string;
 };
 
-function emptyFormData(): FormData {
+function emptyFormData(fullName?: string, avatar?: string): FormData {
   return {
+    avatar: avatar ?? "",
+    fullName: fullName ?? "",
+    username: "",
     institution: null,
     degree: null,
     major: "",
     startYear: "",
     endYear: "",
-    branch: null,
     trainingResult: null,
     trainingOrganizerName: "",
     trainingYear: "",
@@ -69,20 +82,25 @@ function emptyFormData(): FormData {
 }
 
 interface ActivationPageProps {
+  userId?: string;
   fullName?: string;
-  branches: Branch[];
+  avatar?: string;
   institutions: Institution[];
 }
 
 export default function ActivationPage({
+  userId,
   fullName,
-  branches,
+  avatar,
   institutions,
 }: ActivationPageProps) {
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [usernameApiError, setUsernameApiError] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
@@ -96,7 +114,9 @@ export default function ActivationPage({
     }
   }
 
-  const [formData, setFormData] = useState<FormData>(emptyFormData);
+  const [formData, setFormData] = useState<FormData>(() =>
+    emptyFormData(fullName, avatar)
+  );
 
   function updateFormData<K extends keyof FormData>(
     key: K,
@@ -105,16 +125,68 @@ export default function ActivationPage({
     setFormData((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("Ukuran foto maksimal 2MB.");
+      return;
+    }
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
+      return;
+    }
+
+    const fileExtension = file.name.split(".").pop()?.toLowerCase();
+    if (
+      !fileExtension ||
+      !ALLOWED_AVATAR_EXTENSIONS.includes(fileExtension)
+    ) {
+      toast.error("Ekstensi file tidak valid.");
+      return;
+    }
+
+    const ownerKey = userId ?? crypto.randomUUID();
+    const filePath = `avatars/${ownerKey}-${Date.now()}.${fileExtension}`;
+
+    setUploadingAvatar(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("hmi-connect")
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        console.error("[ActivationPage] avatar upload failed:", uploadError);
+        toast.error("Gagal mengunggah foto. Coba lagi.");
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("hmi-connect")
+        .getPublicUrl(filePath);
+
+      if (!data.publicUrl) {
+        toast.error("Gagal mendapatkan URL foto.");
+        return;
+      }
+
+      updateFormData("avatar", data.publicUrl);
+      toast.success("Foto profil berhasil diunggah.");
+    } catch (err) {
+      console.error("[ActivationPage] avatar upload threw:", err);
+      toast.error("Gagal mengunggah foto. Coba lagi.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
   const institutionOptions: SearchableOption[] = institutions.map((item) => ({
     label: item.name,
     value: item.id,
     image: item.image_url,
   }));
-  const branchOptions: BranchOption[] = branches.map((item) => ({
-    label: item.name,
-    value: item.id,
-  }));
-
   async function loadInstitutionOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });
     if (inputValue) params.set("q", inputValue);
@@ -146,45 +218,42 @@ export default function ActivationPage({
     };
   }
 
-  async function loadBranchOptions(inputValue: string, page: number) {
-    const params = new URLSearchParams({ page: String(page) });
-    if (inputValue) params.set("q", inputValue);
+  const isProfileStepValid =
+    formData.fullName.trim() !== "" &&
+    formData.username.trim() !== "" &&
+    new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(formData.username);
 
-    const response = await fetch(`/api/branches/search?${params}`);
-    const json = await response.json();
-    const results: Branch[] = json.data ?? [];
-
-    return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
-      hasMore: Boolean(json.hasMore),
-    };
-  }
-
-  const isStep0Valid =
+  const isEducationStepValid =
     formData.institution !== null &&
     formData.degree !== null &&
     formData.major.trim() !== "" &&
     formData.startYear.trim() !== "" &&
     formData.endYear.trim() !== "";
 
-  const isStep1Valid =
+  const isTrainingStepValid =
     formData.trainingResult !== null &&
     formData.trainingOrganizerName.trim() !== "" &&
-    formData.trainingYear.trim() !== "" &&
-    formData.branch !== null;
+    formData.trainingYear.trim() !== "";
 
   const canGoNext =
-    (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid);
+    ((step === 0 && isProfileStepValid) ||
+      (step === 1 && isEducationStepValid) ||
+      (step === 2 && isTrainingStepValid)) &&
+    !uploadingAvatar;
 
   async function handleSubmit() {
-    if (!isStep1Valid) return;
+    if (!isProfileStepValid || !isEducationStepValid || !isTrainingStepValid) {
+      return;
+    }
 
     setStatus("submitting");
     setErrorMessage("");
 
     try {
       const result = await activateUser({
-        branch_id: String(formData.branch?.value ?? ""),
+        username: formData.username.trim(),
+        full_name: formData.fullName.trim(),
+        ...(formData.avatar ? { avatar: formData.avatar } : {}),
         training_result: formData.trainingResult as TrainingResultEnum,
         training_organizer_name: formData.trainingOrganizerName,
         training_year: Number(formData.trainingYear),
@@ -197,7 +266,14 @@ export default function ActivationPage({
 
       if (!isSuccessStatus(result.status)) {
         console.error("[ActivationPage] activateUser rejected:", result);
-        const message = result.message ?? "Aktivasi gagal. Coba lagi.";
+        const isUsernameConflict = result.status === "CONFLICT";
+        const message = isUsernameConflict
+          ? "Username ini sudah digunakan. Silakan pilih username lain."
+          : result.message ?? "Aktivasi gagal. Coba lagi.";
+        if (isUsernameConflict) {
+          setUsernameApiError(message);
+          setStep(0);
+        }
         setErrorMessage(message);
         setStatus("error");
         toast.error(message);
@@ -309,8 +385,85 @@ export default function ActivationPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
+          <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:p-1">
             {step === 0 && (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-[#172033]">
+                    Lengkapi profil kamu
+                  </h2>
+                  <p className="mt-1 text-sm text-[#5f6573]">
+                    Kamu bisa menyesuaikan foto dan nama dari akun Google kamu.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 rounded-2xl bg-[#f7fbfa] p-5">
+                  <Avatar
+                    src={formData.avatar}
+                    name={formData.fullName || "Kader"}
+                    size={104}
+                    ring
+                  />
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.avif"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="size-3.5" />
+                    )}
+                    {uploadingAvatar
+                      ? "Mengunggah..."
+                      : formData.avatar
+                        ? "Ganti Foto"
+                        : "Unggah Foto"}
+                  </Button>
+                  <p className="text-center text-xs text-[#5f6573]">
+                    JPG, PNG, WEBP, atau AVIF. Maksimal 2MB.
+                  </p>
+                </div>
+
+                <Input
+                  inputId="full-name"
+                  label="Nama Lengkap"
+                  placeholder="Masukkan nama lengkap"
+                  value={formData.fullName}
+                  onChange={(event) =>
+                    updateFormData("fullName", event.target.value)
+                  }
+                  required
+                />
+                <Input
+                  inputId="username"
+                  label="Username"
+                  placeholder="Contoh: akmal.fhn"
+                  value={formData.username}
+                  onChange={(event) => {
+                    setUsernameApiError("");
+                    updateFormData("username", event.target.value);
+                  }}
+                  pattern={USERNAME_PATTERN}
+                  patternErrorMessage={USERNAME_ERROR}
+                  errorMessage={usernameApiError}
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  spellCheck={false}
+                  required
+                />
+              </div>
+            )}
+
+            {step === 1 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
                   Kamu berkuliah dimana?
@@ -373,7 +526,7 @@ export default function ActivationPage({
               </div>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
                   Riwayat Latihan Kader 1
@@ -382,18 +535,6 @@ export default function ActivationPage({
                   Latihan Kader 1 adalah syarat minimal untuk mengaktifkan
                   akun HMI Connect kamu.
                 </p>
-
-                <SearchableSelect
-                  selectId="branch"
-                  label="Cabang HMI"
-                  placeholder="Cari cabang..."
-                  value={formData.branch}
-                  onChange={(option) => updateFormData("branch", option)}
-                  loadOptions={loadBranchOptions}
-                  defaultOptions={branchOptions}
-                  debounceMs={400}
-                  required
-                />
 
                 <Select
                   selectId="training-result"

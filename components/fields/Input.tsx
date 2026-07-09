@@ -8,6 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: ReactNode;
   errorMessage?: string;
   characterLength?: number;
+  patternErrorMessage?: string;
 }
 
 export default function Input({
@@ -16,10 +17,12 @@ export default function Input({
   icon,
   errorMessage,
   characterLength,
+  patternErrorMessage,
   required,
   disabled,
   className,
   onChange,
+  pattern,
   ...rest
 }: InputProps) {
   const [internalError, setInternalError] = useState("");
@@ -28,6 +31,13 @@ export default function Input({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (characterLength && event.target.value.length > characterLength) {
       setInternalError(characterLimitErrorMessage);
+    } else if (
+      pattern &&
+      patternErrorMessage &&
+      event.target.value !== "" &&
+      !new RegExp(`^(?:${pattern})$`, "u").test(event.target.value)
+    ) {
+      setInternalError(patternErrorMessage);
     } else if (internalError) {
       setInternalError("");
     }
@@ -59,6 +69,7 @@ export default function Input({
           required={required}
           disabled={disabled}
           maxLength={characterLength}
+          pattern={pattern}
           {...rest}
           onChange={handleChange}
           className={[

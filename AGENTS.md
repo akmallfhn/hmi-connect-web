@@ -1,7 +1,7 @@
 # HMI Connect — Web
 
 Membership platform for HMI (Himpunan Mahasiswa Islam). Members log in with Google,
-complete a one-time account activation (education + Latihan Kader 1 + branch), and land
+complete a one-time account activation (profile + education + Latihan Kader 1), and land
 on a social-feed-style dashboard. This file documents the codebase for anyone (human or
 agent) working in it. Keep it in sync with reality — if a rule below stops being true,
 fix the rule, not just the code.
@@ -134,16 +134,17 @@ inline a `string` union somewhere else in the tree.
 
 ## Activation flow (`components/pages/ActivationPage.tsx`)
 
-Two-step onboarding gated on `user.status === "pending"`, submitted via the
+Three-step onboarding gated on `user.status === "pending"`, submitted via the
 `activateUser` Server Action → `POST /api/v1/users/activation`:
 
-1. **University** — institution (searchable + creatable, backed by
+1. **Profile** — avatar and full name are seeded from `getSession()` and remain editable;
+   username is required and only accepts letters, numbers, periods, and underscores.
+2. **University** — institution (searchable + creatable, backed by
    `/www/api/institutions/search` + `createInstitution` action), major, degree, start/end
    year.
-2. **Riwayat Latihan Kader 1** — LK1 is a hard prerequisite for activation, not a
+3. **Riwayat Latihan Kader 1** — LK1 is a hard prerequisite for activation, not a
    yes/no question, so its fields (result/organizer/year) are always shown and required
-   — no "have you done LK1" gate. Branch (Cabang HMI) selection lives at the top of this
-   step, before the LK1 result fields.
+   — no "have you done LK1" gate. Branch is not part of the activation request.
 
 Institution values are the numeric `id` (the backend wants `education_institution_id`,
 not a name) — don't regress that to the display name.
@@ -171,7 +172,7 @@ below) when `isVerified === false`.
 ## Component conventions
 
 - `components/pages/*` — one Client Component per route, holds the page's state machine;
-  the `app/.../page.tsx` Server Component fetches data (`getSession`, `getBranches`,
+  the `app/.../page.tsx` Server Component fetches data (`getSession`,
   `getInstitutions`, ...) and passes it down as props.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
   `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`). `CreateableSelect`/
