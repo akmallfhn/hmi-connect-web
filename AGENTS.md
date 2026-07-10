@@ -207,10 +207,10 @@ below) when `isVerified === false`.
   the feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
   page (`/feeds/[feed_id]`) only happens through the "..." menu. That menu (`Dropdown`,
   see `components/common/*` below) always renders and always has "Lihat post" (links to
-  `/feeds/[feed.id]`); "Edit post" (UI only, not wired to an endpoint yet) and "Delete
-  post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on confirm) only
-  show up when the caller owns the feed (`creator_id === currentUserId`). `CommentItem.tsx`
-  renders one comment (or,
+  `/feeds/[feed.id]`); "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)
+  and "Delete post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on
+  confirm) only show up when the caller owns the feed (`creator_id === currentUserId`).
+  `CommentItem.tsx` renders one comment (or,
   recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
   (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
@@ -298,6 +298,11 @@ below) when `isVerified === false`.
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
   to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs;
   while storage policy is catching up, it falls back to `hmi-connect/avatars/feed_media`.
+  `EditFeedForm.tsx` is the odd one out in this folder — it only edits `content` via
+  `feeds/update` (media can't be added/changed/removed after creation, so there's no
+  attachment UI at all), and its `onSaved` updates `FeedItemCard`'s own local `content`
+  state directly instead of calling `router.refresh()`, since a feed card lives inside a
+  timeline list, not a page it owns.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here.

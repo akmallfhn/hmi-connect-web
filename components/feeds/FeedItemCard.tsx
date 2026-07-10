@@ -22,6 +22,7 @@ import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
+import EditFeedForm from "../forms/EditFeedForm";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
@@ -219,6 +220,10 @@ export default function FeedItemCard({
   const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [content, setContent] = useState(feed.content);
+  const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
+  const isEdited = updatedAt !== feed.created_at;
   const [previewPhoto, setPreviewPhoto] = useState<FeedMedia | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -348,7 +353,10 @@ export default function FeedItemCard({
           <Avatar src={feed.creator_avatar} name={feed.creator_full_name} size={44} />
           <div>
             <p className="font-semibold text-[#172033]">{feed.creator_full_name}</p>
-            <p className="text-xs text-[#5f6573]">{formatRelativeTime(feed.created_at)}</p>
+            <p className="text-xs text-[#5f6573]">
+              {formatRelativeTime(feed.created_at)}
+              {isEdited && " • Diedit"}
+            </p>
           </div>
         </Link>
         <Dropdown
@@ -377,6 +385,7 @@ export default function FeedItemCard({
               <>
                 <button
                   type="button"
+                  onClick={() => setShowEditForm(true)}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                 >
                   <Pencil className="size-4 text-[#5f6573]" />
@@ -397,7 +406,7 @@ export default function FeedItemCard({
       </div>
 
       <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033]">
-        {feed.content}
+        {content}
       </p>
 
       {photoMedia && photoMedia.length > 0 && (
@@ -549,6 +558,17 @@ export default function FeedItemCard({
         </div>
       )}
 
+      <EditFeedForm
+        open={showEditForm}
+        onClose={() => setShowEditForm(false)}
+        onSaved={(updated) => {
+          setContent(updated.content);
+          setUpdatedAt(updated.updated_at);
+          setShowEditForm(false);
+        }}
+        feedId={feed.id}
+        initialContent={content}
+      />
       <AlertConfirmation
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}

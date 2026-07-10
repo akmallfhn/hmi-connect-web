@@ -49,6 +49,7 @@ import {
   listFeeds as listFeedsApi,
   repostFeed as repostFeedApi,
   unrepostFeed as unrepostFeedApi,
+  updateFeed as updateFeedApi,
   type CreateFeedPayload,
 } from "@/apis/feeds";
 import {
@@ -166,6 +167,10 @@ export async function loadMoreFeeds(page: number) {
 
 export async function createFeed(payload: CreateFeedPayload) {
   return createFeedApi(payload);
+}
+
+export async function updateFeed(id: string, content: string) {
+  return updateFeedApi({ id, content });
 }
 
 export async function listFeedComments(

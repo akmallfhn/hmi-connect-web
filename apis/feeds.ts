@@ -154,6 +154,27 @@ export async function createFeed(
   });
 }
 
+export type UpdateFeedPayload = {
+  id: string;
+  content: string;
+};
+
+// Only content can change — media cannot be added, removed, or replaced after creation.
+export async function updateFeed(
+  payload: UpdateFeedPayload
+): Promise<ApiEnvelope<Feed>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<Feed>("/api/v1/feeds/update", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
 export async function listFeedComments(
   feedId: string,
   options: { page?: number; pageSize?: number; token?: string } = {}
