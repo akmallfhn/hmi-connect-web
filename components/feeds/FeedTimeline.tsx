@@ -1,9 +1,8 @@
 "use client";
 
 import { Repeat2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "../common/Avatar";
-import Button from "../buttons/Button";
 import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
@@ -28,18 +27,44 @@ export default function FeedTimeline({
 }: FeedTimelineProps) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [page, setPage] = useState(1);
-  const [isPending, startTransition] = useTransition();
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef(1);
+  const loadingRef = useRef(false);
 
-  function handleLoadMore() {
-    startTransition(async () => {
-      const nextPage = page + 1;
+  const loadNextPage = useCallback(async () => {
+    if (loadingRef.current || !hasMore) return;
+
+    loadingRef.current = true;
+    setLoadingMore(true);
+    try {
+      const nextPage = pageRef.current + 1;
       const result = await loadMoreFeeds(nextPage);
       setItems((prev) => [...prev, ...result.list]);
       setHasMore(result.hasMore);
-      setPage(nextPage);
-    });
-  }
+      pageRef.current = nextPage;
+    } finally {
+      loadingRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [hasMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadNextPage();
+        }
+      },
+      { rootMargin: "600px 0px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadNextPage]);
 
   function handleFeedDeleted(feedId: string) {
     setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
@@ -102,15 +127,13 @@ export default function FeedTimeline({
           </div>
         ))}
 
-        {hasMore && (
-          <Button
-            variant="light"
-            onClick={handleLoadMore}
-            disabled={isPending}
-            className="mx-auto"
+        {(hasMore || loadingMore) && (
+          <div
+            ref={sentinelRef}
+            className="flex h-12 items-center justify-center text-xs font-medium text-[#5f6573]"
           >
-            {isPending ? "Memuat..." : "Muat lebih banyak"}
-          </Button>
+            {loadingMore ? "Memuat..." : null}
+          </div>
         )}
       </div>
     </div>

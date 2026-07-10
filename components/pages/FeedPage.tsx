@@ -48,10 +48,10 @@ export default function FeedPage({
 
       <PageMargin
         noMobilePadding
-        className="grid grid-cols-1 gap-1.5 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6"
+        className="grid grid-cols-1 gap-1.5 py-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-4 xl:grid-cols-[280px_minmax(0,1fr)_280px]"
       >
-        <aside className="hidden lg:block">
-          <div className="lg:sticky lg:top-20">
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+          <div className="flex flex-col gap-4">
             <ProfileSidebar
               fullName={fullName}
               avatar={avatar}
@@ -64,10 +64,13 @@ export default function FeedPage({
               educationHistories={educationHistories}
               trainingHistories={trainingHistories}
             />
+            <div className="xl:hidden">
+              <RightSidebar />
+            </div>
           </div>
         </aside>
 
-        <main>
+        <main className="min-w-0">
           <Feed
             fullName={fullName}
             avatar={avatar}
@@ -76,10 +79,8 @@ export default function FeedPage({
           />
         </main>
 
-        <aside>
-          <div className="lg:sticky lg:top-20">
-            <RightSidebar />
-          </div>
+        <aside className="lg:hidden xl:sticky xl:top-20 xl:block xl:self-start">
+          <RightSidebar />
         </aside>
       </PageMargin>
 

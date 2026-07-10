@@ -6,7 +6,6 @@ import {
   ChevronDown,
   CreditCard,
   LogOut,
-  Plus,
   Search,
   Settings,
   TriangleAlert,
@@ -19,8 +18,8 @@ import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
-import { NAV_ITEMS, NOTIFICATIONS } from "../feeds/mockData";
-import LogoHmiConnect from "../svg/LogoHmiConnect";
+import { NOTIFICATIONS } from "../feeds/mockData";
+import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
 interface HeaderProps {
   fullName?: string;
@@ -56,49 +55,29 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#e6e9ef] bg-white/90 backdrop-blur">
-      <PageMargin className="flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <LogoHmiConnect className="h-10 w-auto" />
+      <PageMargin className="flex h-16 items-center justify-center lg:grid lg:grid-cols-[280px_minmax(0,1fr)_auto] lg:gap-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 lg:justify-self-start"
+        >
+          <LogoHmiConnectHorizontal className="h-8 w-auto" />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex">
-          {NAV_ITEMS.map((item, index) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className={[
-                "rounded-lg px-3 py-2 text-sm font-medium transition",
-                index === 0
-                  ? "bg-primary-soft text-primary"
-                  : "text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033]",
-              ].join(" ")}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+          <label className="relative w-full">
+            <span className="sr-only">Cari</span>
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+            <input
+              type="search"
+              placeholder="Cari di HMI Connect"
+              className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+            />
+          </label>
+        </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden rounded-full text-[#5f6573] hover:bg-[#f5f7fb] sm:flex"
-            aria-label="Cari"
-          >
-            <Search className="size-5" />
-          </Button>
-
+        <div className="hidden items-center gap-2 lg:flex lg:justify-self-end">
           {userId ? (
             <>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="rounded-full"
-                aria-label="Buat postingan"
-              >
-                <Plus className="size-5" />
-              </Button>
-
               <Dropdown
                 align="right"
                 trigger={({ toggle }) => (

@@ -73,7 +73,7 @@ export default function ProfilePage({
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:py-6">
-        <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:items-start lg:gap-6">
+        <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
           <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
             <ProfileHeader
               key={`${profile.userId}-${profile.isFollowedByMe}-${profile.followersCount}`}
@@ -115,10 +115,8 @@ export default function ProfilePage({
             <ActivityCard />
           </div>
 
-          <aside className="hidden lg:block">
-            <div className="lg:sticky lg:top-20">
-              <SuggestedConnectionsCard title="Orang yang Mungkin Kamu Kenal" />
-            </div>
+          <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+            <SuggestedConnectionsCard title="Orang yang Mungkin Kamu Kenal" />
           </aside>
         </div>
       </PageMargin>

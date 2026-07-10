@@ -121,6 +121,24 @@ export async function listFeeds(
   };
 }
 
+export async function getFeedById(id: string, token?: string): Promise<Feed | null> {
+  const authToken = token ?? process.env.CLIENT_SECRET;
+  if (!authToken) return null;
+
+  const result = await callApi<Feed>("/api/v1/feeds/detail", {
+    method: "POST",
+    token: authToken,
+    body: { id },
+  });
+
+  if (!isSuccessStatus(result.status) || !result.data) {
+    console.error("[getFeedById] request failed:", result);
+    return null;
+  }
+
+  return result.data;
+}
+
 export async function createFeed(
   payload: CreateFeedPayload
 ): Promise<ApiEnvelope<Feed>> {

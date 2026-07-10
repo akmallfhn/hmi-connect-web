@@ -11,8 +11,9 @@ import {
   Repeat2,
   Share2,
   Trash2,
+  X,
 } from "lucide-react";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
@@ -25,7 +26,7 @@ import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
 import ShareModal from "../modals/ShareModal";
 import { useReaction } from "@/hooks/useReaction";
-import type { Feed, FeedComment } from "@/apis/feeds";
+import type { Feed, FeedComment, FeedMedia } from "@/apis/feeds";
 import {
   createFeedComment,
   deleteFeed,
@@ -46,16 +47,27 @@ interface FeedItemCardProps {
   onDeleted?: (feedId: string) => void;
 }
 
-function MediaGrid({ media }: { media: NonNullable<Feed["media"]> }) {
+function MediaGrid({
+  media,
+  onPreview,
+}: {
+  media: NonNullable<Feed["media"]>;
+  onPreview: (photo: FeedMedia) => void;
+}) {
   const photos = [...media].sort((a, b) => a.index - b.index);
   const visible = photos.slice(0, 4);
   const overflow = photos.length - visible.length;
 
   if (photos.length === 1) {
     return (
-      <div className="relative mt-3 aspect-video w-full overflow-hidden rounded-xl bg-[#f5f7fb]">
+      <button
+        type="button"
+        onClick={() => onPreview(photos[0])}
+        className="relative mt-3 aspect-video w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f7fb]"
+        aria-label="Buka pratinjau gambar"
+      >
         <Image src={photos[0].url} alt="" fill className="object-cover" unoptimized />
-      </div>
+      </button>
     );
   }
 
@@ -65,9 +77,12 @@ function MediaGrid({ media }: { media: NonNullable<Feed["media"]> }) {
         const isLastVisible = idx === visible.length - 1;
         const spanFull = photos.length === 3 && idx === 0;
         return (
-          <div
+          <button
+            type="button"
             key={photo.id}
+            onClick={() => onPreview(photo)}
             className={`relative aspect-square bg-[#f5f7fb] ${spanFull ? "col-span-2" : ""}`}
+            aria-label="Buka pratinjau gambar"
           >
             <Image src={photo.url} alt="" fill className="object-cover" unoptimized />
             {isLastVisible && overflow > 0 && (
@@ -75,9 +90,82 @@ function MediaGrid({ media }: { media: NonNullable<Feed["media"]> }) {
                 +{overflow}
               </div>
             )}
-          </div>
+          </button>
         );
       })}
+    </div>
+  );
+}
+
+function ImagePreviewModal({
+  photo,
+  onClose,
+}: {
+  photo: FeedMedia | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!photo) return;
+
+    const scrollY = window.scrollY;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      window.scrollTo(0, scrollY);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [photo, onClose]);
+
+  if (!photo) return null;
+
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/90">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-zoom-out"
+        onClick={onClose}
+        aria-label="Tutup pratinjau gambar"
+      />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-8">
+        <div className="relative max-h-full w-full max-w-6xl">
+          <Image
+            src={photo.url}
+            alt=""
+            width={1600}
+            height={1200}
+            className="mx-auto max-h-[92vh] w-auto max-w-full object-contain"
+            unoptimized
+          />
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+        aria-label="Tutup"
+      >
+        <X className="size-5" />
+      </button>
     </div>
   );
 }
@@ -126,6 +214,7 @@ export default function FeedItemCard({
   const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<FeedMedia | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
@@ -144,10 +233,15 @@ export default function FeedItemCard({
   const photoMedia = feed.media?.filter((item) => item.type === "photo");
   const videoMedia = feed.media?.find((item) => item.type === "video");
   const urlMedia = feed.media?.find((item) => item.type === "url");
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/feeds/${feed.id}` : "";
   const totalCommentCount = commentCount + feed.comment_reply_count;
 
   function requireVerified(): boolean {
+    if (!currentUserId) {
+      router.push("/auth/login");
+      return false;
+    }
     if (isVerified) return true;
     router.push("/verification");
     return false;
@@ -286,9 +380,16 @@ export default function FeedItemCard({
         )}
       </div>
 
-      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033]">{feed.content}</p>
+      <Link
+        href={`/feeds/${feed.id}`}
+        className="mt-3 block whitespace-pre-line text-sm leading-6 text-[#172033]"
+      >
+        {feed.content}
+      </Link>
 
-      {photoMedia && photoMedia.length > 0 && <MediaGrid media={photoMedia} />}
+      {photoMedia && photoMedia.length > 0 && (
+        <MediaGrid media={photoMedia} onPreview={setPreviewPhoto} />
+      )}
       {videoMedia && (
         <video controls src={videoMedia.url} className="mt-3 w-full rounded-xl bg-black" />
       )}
@@ -443,6 +544,10 @@ export default function FeedItemCard({
         onClose={() => setShowShareModal(false)}
         url={shareUrl}
         text={`Lihat postingan dari ${feed.creator_full_name} di HMI Connect`}
+      />
+      <ImagePreviewModal
+        photo={previewPhoto}
+        onClose={() => setPreviewPhoto(null)}
       />
     </article>
   );
