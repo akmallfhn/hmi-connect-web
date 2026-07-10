@@ -4,7 +4,7 @@ import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
 import { getSocialMediaPlatforms } from "@/apis/social-media-platforms";
 import {
-  getUserById,
+  getUserByUsername,
   listEducationHistories,
   listOrganizationExperiences,
   listSocialMediaAccounts,
@@ -13,21 +13,21 @@ import {
 import ProfilePage from "@/components/pages/ProfilePage";
 
 interface ProfileRouteProps {
-  params: Promise<{ user_id: string }>;
+  params: Promise<{ username: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: ProfileRouteProps): Promise<Metadata> {
-  const { user_id } = await params;
-  const profile = await getUserById(user_id);
+  const { username } = await params;
+  const profile = await getUserByUsername(username);
   const title = profile ? profile.full_name : "Profil Tidak Ditemukan";
   const description = profile
     ? profile.headline
       ? `${profile.full_name} - ${profile.headline}`
       : `Lihat profil ${profile.full_name} di HMI Connect.`
     : "Profil HMI Connect yang kamu cari tidak ditemukan.";
-  const profileUrl = `/profile/${user_id}`;
+  const profileUrl = `/profile/${username}`;
   const image = profile?.avatar
     ? [{ url: profile.avatar, alt: `Foto profil ${profile.full_name}` }]
     : undefined;
@@ -59,16 +59,16 @@ export async function generateMetadata({
 }
 
 export default async function Profile({ params }: ProfileRouteProps) {
-  const { user_id } = await params;
+  const { username } = await params;
   const { sessionToken, user: viewer } = await getSession();
-  const profile = await getUserById(user_id, sessionToken);
+  const profile = await getUserByUsername(username, sessionToken);
 
   if (!profile || profile.status !== "active") return notFound();
 
   const isOwnProfile = Boolean(viewer?.id && viewer.id === profile.id);
 
-  // education/training-histories/list are client-secret gated (like getUserById), so these
-  // work for anonymous visitors too.
+  // education/training/organization-experiences list are client-secret gated (like
+  // getUserByUsername), so these work for anonymous visitors too.
   const [
     { list: educationHistories },
     { list: trainingHistories },
@@ -78,13 +78,17 @@ export default async function Profile({ params }: ProfileRouteProps) {
     socialMediaPlatforms,
     viewerProfile,
   ] = await Promise.all([
-    listEducationHistories(profile.id),
-    listTrainingHistories(profile.id),
-    listOrganizationExperiences(profile.id),
+    listEducationHistories(username),
+    listTrainingHistories(username),
+    listOrganizationExperiences(username),
     listSocialMediaAccounts(profile.id),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
-    isOwnProfile ? getSocialMediaPlatforms() : Promise.resolve([]),
-    viewer?.id ? getUserById(viewer.id, sessionToken) : Promise.resolve(null),
+    isOwnProfile
+      ? getSocialMediaPlatforms({ page: 1, pageSize: 20 })
+      : Promise.resolve([]),
+    viewer?.username
+      ? getUserByUsername(viewer.username, sessionToken)
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -109,12 +113,14 @@ export default async function Profile({ params }: ProfileRouteProps) {
         socialMediaAccounts,
         trainingHistories,
         userId: profile.id,
+        username,
       }}
       viewer={{
         fullName: viewer?.full_name,
         avatar: viewer?.avatar,
         email: viewerProfile?.email,
         userId: viewer?.id,
+        username: viewer?.username,
         isVerified: viewer?.is_verified,
       }}
       isOwnProfile={isOwnProfile}

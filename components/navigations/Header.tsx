@@ -27,6 +27,7 @@ interface HeaderProps {
   avatar?: string;
   email?: string;
   userId?: string;
+  username?: string;
   isVerified?: boolean;
 }
 
@@ -35,6 +36,7 @@ export default function Header({
   avatar,
   email,
   userId,
+  username,
   isVerified,
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
@@ -170,7 +172,7 @@ export default function Header({
                 </div>
                 <div className="flex flex-col py-1">
                   <Link
-                    href={`/profile/${userId}`}
+                    href={username ? `/profile/${username}` : "#"}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                   >
                     <UserRound className="size-4 text-[#5f6573]" />

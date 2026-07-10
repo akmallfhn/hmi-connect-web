@@ -15,6 +15,7 @@ export type SessionUser = {
   branch_id?: string;
   branch_name?: string;
   full_name?: string;
+  username?: string;
   avatar?: string;
   role_id?: number;
   role_name?: string;
@@ -23,18 +24,6 @@ export type SessionUser = {
   is_subscribe?: boolean;
   access_token?: string;
 };
-
-// The session cookie is the backend's own JWT; its "sub" claim is the user's id. Decoding it
-// here (no signature check needed) avoids a backend round-trip just to get an id to link to.
-function decodeUserId(token: string): string | undefined {
-  try {
-    const payload = token.split(".")[1];
-    const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    return typeof claims.sub === "string" ? claims.sub : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 export const getSession = cache(async () => {
   const cookieStore = await cookies();
@@ -55,7 +44,7 @@ export const getSession = cache(async () => {
 
   return {
     sessionToken,
-    user: { ...result.data, id: decodeUserId(sessionToken) },
+    user: result.data,
   };
 });
 

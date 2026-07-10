@@ -2,6 +2,7 @@ import PageMargin from "../common/PageMargin";
 import Feed from "../feeds/Feed";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
+import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
 
@@ -11,6 +12,7 @@ interface FeedPageProps {
   email?: string;
   headline?: string;
   userId?: string;
+  username?: string;
   isVerified?: boolean;
   followingCount?: number;
   followersCount?: number;
@@ -25,6 +27,7 @@ export default function FeedPage({
   email,
   headline,
   userId,
+  username,
   isVerified,
   followingCount,
   followersCount,
@@ -33,12 +36,13 @@ export default function FeedPage({
   trainingHistories,
 }: FeedPageProps) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
+    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}
         email={email}
         userId={userId}
+        username={username}
         isVerified={isVerified}
       />
 
@@ -49,7 +53,7 @@ export default function FeedPage({
               fullName={fullName}
               avatar={avatar}
               headline={headline}
-              userId={userId}
+              username={username}
               isVerified={isVerified}
               followingCount={followingCount}
               followersCount={followersCount}
@@ -75,6 +79,8 @@ export default function FeedPage({
           </div>
         </aside>
       </PageMargin>
+
+      <BottomNav username={username} avatar={avatar} fullName={fullName} />
     </div>
   );
 }

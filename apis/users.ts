@@ -196,15 +196,15 @@ export type UserProfile = {
 };
 
 // Pass a viewer JWT to include viewer-scoped fields, otherwise this falls back to the org client secret.
-export const getUserById = cache(
-  async (id: string, token?: string): Promise<UserProfile | null> => {
+export const getUserByUsername = cache(
+  async (username: string, token?: string): Promise<UserProfile | null> => {
     const authToken = token ?? process.env.CLIENT_SECRET;
     if (!authToken) return null;
 
     const result = await callApi<UserProfile>("/api/v1/users/detail", {
       method: "POST",
       token: authToken,
-      body: { id },
+      body: { username },
     });
 
     if (!isSuccessStatus(result.status) || !result.data) return null;
@@ -320,9 +320,9 @@ type ListResponse<T> = {
   };
 };
 
-// Gated by the org client secret like getUserById — `id` is whichever profile is being viewed, not the caller.
+// Gated by the org client secret like getUserByUsername — `username` is whichever profile is being viewed, not the caller.
 export async function listEducationHistories(
-  id: string,
+  username: string,
   options: ListOptions = {}
 ): Promise<ListResult<EducationHistoryEntry>> {
   const clientSecret = process.env.CLIENT_SECRET;
@@ -335,7 +335,7 @@ export async function listEducationHistories(
       method: "POST",
       token: clientSecret,
       body: {
-        id,
+        username,
         ...(search ? { search } : {}),
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),
@@ -355,7 +355,7 @@ export async function listEducationHistories(
 }
 
 export async function listTrainingHistories(
-  id: string,
+  username: string,
   options: ListOptions = {}
 ): Promise<ListResult<TrainingHistoryEntry>> {
   const clientSecret = process.env.CLIENT_SECRET;
@@ -368,7 +368,7 @@ export async function listTrainingHistories(
       method: "POST",
       token: clientSecret,
       body: {
-        id,
+        username,
         ...(search ? { search } : {}),
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),
@@ -390,7 +390,7 @@ export async function listTrainingHistories(
 // create/update/delete below are always scoped to the caller (JWT) — no user id in these bodies, unlike list above.
 
 export async function listOrganizationExperiences(
-  id: string,
+  username: string,
   options: ListOptions = {}
 ): Promise<ListResult<OrganizationExperienceEntry>> {
   const clientSecret = process.env.CLIENT_SECRET;
@@ -403,7 +403,7 @@ export async function listOrganizationExperiences(
       method: "POST",
       token: clientSecret,
       body: {
-        id,
+        username,
         ...(search ? { search } : {}),
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),

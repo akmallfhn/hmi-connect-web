@@ -58,7 +58,8 @@ though the URLs you actually visit don't show `/www`.
 - `apis/session.ts#getSession()` (wrapped in React's `cache()`, per-request only — not a
   cross-request cache) reads the cookie, calls the backend's `/api/v1/auth/check-session`,
   and returns `{ sessionToken, user }`. `SessionUser.status` is the source of truth for
-  gating (see below).
+  gating (see below). `SessionUser.id`/`SessionUser.username` come straight from that
+  response — don't decode the JWT for them.
 - Route gating is done per-segment, not in a global middleware:
   - `app/(www)/www/(gated)/layout.tsx`: if `user.status === "pending"` → `redirect("/activation")`.
   - `app/(www)/www/activation/page.tsx`: if `user.status !== "pending"` → `redirect("/")`
@@ -210,7 +211,7 @@ below) when `isVerified === false`.
   Client Component) is real-API-backed: identity, `headline`, verified badge,
   `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
   `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
-  most-recent end year / highest training level) all come from `getUserById` +
+  most-recent end year / highest training level) all come from `getUserByUsername` +
   those two list calls in `app/(www)/www/(gated)/page.tsx`. Its "Progres Minggu Ini"
   weekly streak has no backing endpoint yet and stays a static illustration. The other
   sidebar widgets (`RightSidebar`, `NewsCard`, `UpcomingEventsCard`,
@@ -220,10 +221,19 @@ below) when `isVerified === false`.
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
   `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
   returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
-- `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
+- `components/profile/*` — the `/profile/[username]` page's sections (`ProfileHeader`,
   `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`,
-  `ActivityCard`). `ProfilePage` also renders `SuggestedConnectionsCard` as the desktop
-  right sidebar. `ProfileHeader` uses `users/detail.is_followed_by_me` for the initial
+  `ActivityCard`). The route is keyed by `username`, not the user's id — `users/detail`,
+  `education-histories/list`, `training-histories/list`, and
+  `organization-experiences/list` all take `{ username }` now (`apis/users.ts#getUserByUsername`
+  + the matching `list*` functions); `social-media-accounts/list` is the one holdout still
+  keyed by `{ id }`. Known gap: feed (`creator_id`), comment/reply (`user_id`), and reactor
+  (`reactions/list`'s `user_id`) responses only expose a UUID, never a username, so
+  `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links can't resolve under this
+  route until those backend responses grow a username field too — don't "fix" those links
+  without that backend work landing first. `ProfilePage` also renders
+  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` uses
+  `users/detail.is_followed_by_me` for the initial
   follow state, then calls the `followUser`/`unfollowUser` Server Actions for the button
   toggle. It also shows `users/social-media-accounts/list` links at the desktop top-right
   and below the identity block on mobile.
@@ -239,7 +249,7 @@ below) when `isVerified === false`.
   button calls `unsendReaction` directly instead of reopening the picker — there's no
   default reaction until the user actually picks one the first time.
   `ReactorsListModal.tsx` lists who reacted to a feed/comment/reply (`reactions/list`,
-  paginated), each row linking to `/profile/[user_id]`; opened by clicking the
+  paginated), each row linking to `/profile/${reactor.user_id}`; opened by clicking the
   emoji+count summary. `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
   does not require `isVerified`. `AlertConfirmation.tsx` is the generic

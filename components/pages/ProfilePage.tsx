@@ -8,6 +8,7 @@ import type {
 } from "@/apis/users";
 import PageMargin from "../common/PageMargin";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
+import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
 import ActivityCard from "../profile/ActivityCard";
@@ -21,6 +22,7 @@ interface ViewerProps {
   avatar?: string;
   email?: string;
   userId?: string;
+  username?: string;
   isVerified?: boolean;
 }
 
@@ -59,12 +61,13 @@ export default function ProfilePage({
   socialMediaPlatforms,
 }: ProfilePageProps) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
+    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
         email={viewer.email}
         userId={viewer.userId}
+        username={viewer.username}
         isVerified={viewer.isVerified}
       />
 
@@ -119,6 +122,12 @@ export default function ProfilePage({
           </aside>
         </div>
       </PageMargin>
+
+      <BottomNav
+        username={viewer.username}
+        avatar={viewer.avatar}
+        fullName={viewer.fullName}
+      />
     </div>
   );
 }

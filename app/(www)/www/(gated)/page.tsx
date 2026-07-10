@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import FeedPage from "@/components/pages/FeedPage";
 import { getSession } from "@/apis/session";
 import {
-  getUserById,
+  getUserByUsername,
   listEducationHistories,
   listTrainingHistories,
 } from "@/apis/users";
@@ -30,11 +30,11 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const { user } = await getSession();
 
-  const [profile, educationHistories, trainingHistories] = user?.id
+  const [profile, educationHistories, trainingHistories] = user?.username
     ? await Promise.all([
-        getUserById(user.id),
-        listEducationHistories(user.id),
-        listTrainingHistories(user.id),
+        getUserByUsername(user.username),
+        listEducationHistories(user.username),
+        listTrainingHistories(user.username),
       ])
     : [null, { list: [], hasMore: false }, { list: [], hasMore: false }];
 
@@ -45,6 +45,7 @@ export default async function HomePage() {
       email={profile?.email}
       headline={profile?.headline}
       userId={user?.id}
+      username={user?.username}
       isVerified={user?.is_verified}
       followingCount={profile?.following_count}
       followersCount={profile?.followers_count}

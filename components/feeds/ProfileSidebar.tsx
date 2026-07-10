@@ -12,7 +12,7 @@ interface ProfileSidebarProps {
   fullName?: string;
   avatar?: string;
   headline?: string;
-  userId?: string;
+  username?: string;
   isVerified?: boolean;
   followingCount?: number;
   followersCount?: number;
@@ -53,7 +53,7 @@ export default function ProfileSidebar({
   fullName,
   avatar,
   headline,
-  userId,
+  username,
   isVerified,
   followingCount,
   followersCount,
@@ -69,7 +69,7 @@ export default function ProfileSidebar({
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
         <Link
-          href={userId ? `/profile/${userId}` : "#"}
+          href={username ? `/profile/${username}` : "#"}
           className="flex flex-col items-center gap-3 text-center"
         >
           <Avatar src={avatar} name={displayName} size={72} ring />
