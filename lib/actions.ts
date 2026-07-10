@@ -8,19 +8,29 @@ import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
   activateUser as activateUserApi,
   createEducationHistory as createEducationHistoryApi,
+  createOrganizationExperience as createOrganizationExperienceApi,
+  createSocialMediaAccount as createSocialMediaAccountApi,
   createTrainingHistory as createTrainingHistoryApi,
   deleteEducationHistory as deleteEducationHistoryApi,
+  deleteOrganizationExperience as deleteOrganizationExperienceApi,
+  deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
   followUser as followUserApi,
   updateEducationHistory as updateEducationHistoryApi,
+  updateOrganizationExperience as updateOrganizationExperienceApi,
+  updateSocialMediaAccount as updateSocialMediaAccountApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
   unfollowUser as unfollowUserApi,
   verifyUser as verifyUserApi,
   type ActivationPayload,
   type CreateEducationHistoryPayload,
+  type CreateOrganizationExperiencePayload,
+  type CreateSocialMediaAccountPayload,
   type CreateTrainingHistoryPayload,
   type UpdateEducationHistoryPayload,
+  type UpdateOrganizationExperiencePayload,
+  type UpdateSocialMediaAccountPayload,
   type UpdateTrainingHistoryPayload,
   type UpdateUserPayload,
   type VerificationPayload,
@@ -96,6 +106,38 @@ export async function updateTrainingHistory(
 
 export async function deleteTrainingHistory(id: string) {
   return deleteTrainingHistoryApi(id);
+}
+
+export async function createOrganizationExperience(
+  payload: CreateOrganizationExperiencePayload
+) {
+  return createOrganizationExperienceApi(payload);
+}
+
+export async function updateOrganizationExperience(
+  payload: UpdateOrganizationExperiencePayload
+) {
+  return updateOrganizationExperienceApi(payload);
+}
+
+export async function deleteOrganizationExperience(id: string) {
+  return deleteOrganizationExperienceApi(id);
+}
+
+export async function createSocialMediaAccount(
+  payload: CreateSocialMediaAccountPayload
+) {
+  return createSocialMediaAccountApi(payload);
+}
+
+export async function updateSocialMediaAccount(
+  payload: UpdateSocialMediaAccountPayload
+) {
+  return updateSocialMediaAccountApi(payload);
+}
+
+export async function deleteSocialMediaAccount(id: string) {
+  return deleteSocialMediaAccountApi(id);
 }
 
 export async function logoutUser() {

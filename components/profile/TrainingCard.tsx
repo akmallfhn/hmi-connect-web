@@ -31,7 +31,7 @@ export default function TrainingCard({
   if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 shadow-sm lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[#172033]">
           Riwayat Kaderisasi

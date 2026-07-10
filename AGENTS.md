@@ -76,7 +76,8 @@ Three layers, each with one job. Don't blend them.
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
    (`institutions.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
-   not independent resources), `users.ts`, `session.ts`, plus the shared `api.ts`).
+   not independent resources), `social-media-platforms.ts`, `users.ts`, `session.ts`,
+   plus the shared `api.ts`).
    Marked `import "server-only"`.
    Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
@@ -220,9 +221,12 @@ below) when `isVerified === false`.
   `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
   returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
 - `components/profile/*` — the `/profile/[user_id]` page's sections (`ProfileHeader`,
-  `AboutCard`, `EducationCard`, `TrainingCard`, `ActivityCard`). `ProfileHeader` uses
-  `users/detail.is_followed_by_me` for the initial follow state, then calls the
-  `followUser`/`unfollowUser` Server Actions for the button toggle.
+  `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`,
+  `ActivityCard`). `ProfilePage` also renders `SuggestedConnectionsCard` as the desktop
+  right sidebar. `ProfileHeader` uses `users/detail.is_followed_by_me` for the initial
+  follow state, then calls the `followUser`/`unfollowUser` Server Actions for the button
+  toggle. It also shows `users/social-media-accounts/list` links at the desktop top-right
+  and below the identity block on mobile.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,
@@ -242,15 +246,19 @@ below) when `isVerified === false`.
   title/message/confirm/cancel dialog for destructive actions (currently just feed
   delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
-  `EditAvatarForm`, `EditEducationForm`, `EditTrainingForm`), each wraps `<Modal>` around
+  `EditAvatarForm`, `EditOrganizationExperienceForm`, `EditEducationForm`,
+  `EditTrainingForm`), each wraps `<Modal>` around
   an inner `*Fields` component that's only mounted while `open` is true (so its `useState`
   seeds fresh from props every open — don't "fix" this with a `useEffect` + `setState`,
   that's the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,
-  `EducationCard`, `TrainingCard`) owns the `open` boolean itself via local `useState` and
+  `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`) owns the `open` boolean
+  itself via local `useState` and
   calls `router.refresh()` in `onSaved` — there's no shared modal context; each card is
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateUser` directly) rather than batching into the profile form's own "Simpan" button,
-  since it's opened from a separate trigger (clicking the avatar itself).
+  since it's opened from a separate trigger (clicking the avatar itself). `EditProfileForm`
+  also manages linked social media accounts using `users/social-media-accounts/*` and the
+  `social-media-platforms/list` lookup.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments

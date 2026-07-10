@@ -139,6 +139,23 @@ export type EducationHistoryEntry = {
   end_year?: number;
 };
 
+export type OrganizationExperienceEntry = {
+  id: string;
+  organization_name: string;
+  position_title: string;
+  start_year: number;
+  end_year?: number;
+  description?: string;
+};
+
+export type SocialMediaAccountEntry = {
+  id: string;
+  platform_id: number;
+  platform_name: string;
+  logo_url?: string;
+  url: string;
+};
+
 // Mirrors POST /api/v1/users/detail's response 1:1 — some fields here are PII, opt in per field rather than spreading this whole object into UI.
 export type UserProfile = {
   id: string;
@@ -146,6 +163,8 @@ export type UserProfile = {
   organization_name?: string;
   coordinating_body_id?: string;
   coordinating_body_name?: string;
+  chapter_id?: string;
+  chapter_name?: string;
   branch_id?: string;
   branch_name?: string;
   full_name: string;
@@ -370,6 +389,72 @@ export async function listTrainingHistories(
 
 // create/update/delete below are always scoped to the caller (JWT) — no user id in these bodies, unlike list above.
 
+export async function listOrganizationExperiences(
+  id: string,
+  options: ListOptions = {}
+): Promise<ListResult<OrganizationExperienceEntry>> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<OrganizationExperienceEntry>>(
+    "/api/v1/users/organization-experiences/list",
+    {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        id,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listOrganizationExperiences] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
+export async function listSocialMediaAccounts(
+  id: string,
+  options: ListOptions = {}
+): Promise<ListResult<SocialMediaAccountEntry>> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<SocialMediaAccountEntry>>(
+    "/api/v1/users/social-media-accounts/list",
+    {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        id,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listSocialMediaAccounts] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
 export type CreateEducationHistoryPayload = {
   institution_id: number;
   degree: Degree;
@@ -488,6 +573,138 @@ export async function deleteTrainingHistory(id: string): Promise<ApiEnvelope> {
   }
 
   return callApi("/api/v1/users/training-histories/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
+export type CreateOrganizationExperiencePayload = {
+  organization_name: string;
+  position_title: string;
+  start_year: number;
+  end_year?: number;
+  description?: string;
+};
+
+export async function createOrganizationExperience(
+  payload: CreateOrganizationExperiencePayload
+): Promise<ApiEnvelope<OrganizationExperienceEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<OrganizationExperienceEntry>(
+    "/api/v1/users/organization-experiences/create",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
+}
+
+export type UpdateOrganizationExperiencePayload = {
+  id: string;
+  organization_name?: string;
+  position_title?: string;
+  start_year?: number;
+  end_year?: number;
+  description?: string;
+};
+
+export async function updateOrganizationExperience(
+  payload: UpdateOrganizationExperiencePayload
+): Promise<ApiEnvelope<OrganizationExperienceEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<OrganizationExperienceEntry>(
+    "/api/v1/users/organization-experiences/update",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
+}
+
+export async function deleteOrganizationExperience(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/organization-experiences/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
+export type CreateSocialMediaAccountPayload = {
+  platform_id: number;
+  url: string;
+};
+
+export async function createSocialMediaAccount(
+  payload: CreateSocialMediaAccountPayload
+): Promise<ApiEnvelope<SocialMediaAccountEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<SocialMediaAccountEntry>(
+    "/api/v1/users/social-media-accounts/create",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
+}
+
+export type UpdateSocialMediaAccountPayload = {
+  id: string;
+  platform_id?: number;
+  url?: string;
+};
+
+export async function updateSocialMediaAccount(
+  payload: UpdateSocialMediaAccountPayload
+): Promise<ApiEnvelope<SocialMediaAccountEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<SocialMediaAccountEntry>(
+    "/api/v1/users/social-media-accounts/update",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
+}
+
+export async function deleteSocialMediaAccount(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/social-media-accounts/delete", {
     method: "POST",
     token: sessionToken,
     body: { id },

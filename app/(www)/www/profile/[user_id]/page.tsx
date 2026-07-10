@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
+import { getSocialMediaPlatforms } from "@/apis/social-media-platforms";
 import {
   getUserById,
   listEducationHistories,
+  listOrganizationExperiences,
+  listSocialMediaAccounts,
   listTrainingHistories,
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
@@ -69,12 +72,18 @@ export default async function Profile({ params }: ProfileRouteProps) {
   const [
     { list: educationHistories },
     { list: trainingHistories },
+    { list: organizationExperiences },
+    { list: socialMediaAccounts },
     institutions,
+    socialMediaPlatforms,
     viewerProfile,
   ] = await Promise.all([
     listEducationHistories(profile.id),
     listTrainingHistories(profile.id),
+    listOrganizationExperiences(profile.id),
+    listSocialMediaAccounts(profile.id),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
+    isOwnProfile ? getSocialMediaPlatforms() : Promise.resolve([]),
     viewer?.id ? getUserById(viewer.id, sessionToken) : Promise.resolve(null),
   ]);
 
@@ -85,6 +94,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         avatar: profile.avatar,
         headline: profile.headline,
         bio: profile.bio,
+        chapterName: profile.chapter_name,
         branchName: profile.branch_name,
         coordinatingBodyName: profile.coordinating_body_name,
         organizationName: profile.organization_name,
@@ -92,8 +102,11 @@ export default async function Profile({ params }: ProfileRouteProps) {
         isSubscribe: profile.is_subscribe,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
+        feedCount: profile.feed_count,
         isFollowedByMe: profile.is_followed_by_me,
         educationHistories,
+        organizationExperiences,
+        socialMediaAccounts,
         trainingHistories,
         userId: profile.id,
       }}
@@ -106,6 +119,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
       }}
       isOwnProfile={isOwnProfile}
       institutions={institutions}
+      socialMediaPlatforms={socialMediaPlatforms}
     />
   );
 }
