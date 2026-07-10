@@ -156,15 +156,16 @@ export async function createFeed(
 
 export async function listFeedComments(
   feedId: string,
-  options: { page?: number; pageSize?: number } = {}
+  options: { page?: number; pageSize?: number; token?: string } = {}
 ): Promise<{ list: FeedComment[]; hasMore: boolean }> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  const sessionToken = options.token ?? (await getSessionToken());
+  const authToken = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!authToken) return { list: [], hasMore: false };
 
   const { page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<FeedComment>>("/api/v1/feeds/comments/list", {
     method: "POST",
-    token: sessionToken,
+    token: authToken,
     body: { feed_id: feedId, page, page_size: pageSize },
   });
 
@@ -177,6 +178,29 @@ export async function listFeedComments(
     list: result.data?.list ?? [],
     hasMore: hasMoreFromMetapaging(result.data?.metapaging),
   };
+}
+
+export async function listAllFeedComments(
+  feedId: string,
+  options: { pageSize?: number; token?: string } = {}
+): Promise<FeedComment[]> {
+  const pageSize = options.pageSize ?? 50;
+  const comments: FeedComment[] = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const result = await listFeedComments(feedId, {
+      page,
+      pageSize,
+      token: options.token,
+    });
+    comments.push(...result.list);
+    hasMore = result.hasMore;
+    page += 1;
+  }
+
+  return comments;
 }
 
 export async function createFeedComment(payload: {

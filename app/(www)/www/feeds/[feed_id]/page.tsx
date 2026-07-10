@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getFeedById } from "@/apis/feeds";
+import { getFeedById, listAllFeedComments } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
-import { getUserByUsername } from "@/apis/users";
+import {
+  getUserByUsername,
+  listEducationHistories,
+  listTrainingHistories,
+} from "@/apis/users";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
+import ProfileSidebar from "@/components/feeds/ProfileSidebar";
 import PageMargin from "@/components/common/PageMargin";
 import BottomNav from "@/components/navigations/BottomNav";
 import Header from "@/components/navigations/Header";
@@ -55,14 +60,28 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
   const { feed_id } = await params;
   const { sessionToken, user } = await getSession();
 
-  const [feed, viewerProfile] = await Promise.all([
+  const [
+    feed,
+    comments,
+    viewerProfile,
+    educationHistories,
+    trainingHistories,
+  ] = await Promise.all([
     getFeedById(feed_id, sessionToken),
+    listAllFeedComments(feed_id, { token: sessionToken }),
     user?.username
       ? getUserByUsername(user.username, sessionToken)
       : Promise.resolve(null),
+    user?.username
+      ? listEducationHistories(user.username)
+      : Promise.resolve({ list: [], hasMore: false }),
+    user?.username
+      ? listTrainingHistories(user.username)
+      : Promise.resolve({ list: [], hasMore: false }),
   ]);
 
   if (!feed) return notFound();
+  const hasViewer = Boolean(user?.id);
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
@@ -75,17 +94,44 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
         isVerified={user?.is_verified}
       />
 
-      <PageMargin
-        noMobilePadding
-        className="py-6 lg:max-w-[820px] xl:max-w-[820px]"
-      >
-        <FeedItemCard
-          feed={feed}
-          currentUserId={user?.id}
-          currentUserName={user?.full_name}
-          currentUserAvatar={user?.avatar}
-          isVerified={user?.is_verified}
-        />
+      <PageMargin noMobilePadding className="pb-6 lg:pt-6">
+        <div
+          className={[
+            "grid grid-cols-1 gap-1.5 lg:gap-4",
+            hasViewer
+              ? "mx-auto lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)]"
+              : "mx-auto lg:max-w-[600px]",
+          ].join(" ")}
+        >
+          {hasViewer && (
+            <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+              <ProfileSidebar
+                fullName={user?.full_name}
+                avatar={user?.avatar}
+                headline={viewerProfile?.headline}
+                username={user?.username}
+                isVerified={user?.is_verified}
+                followingCount={viewerProfile?.following_count}
+                followersCount={viewerProfile?.followers_count}
+                feedCount={viewerProfile?.feed_count}
+                educationHistories={educationHistories.list}
+                trainingHistories={trainingHistories.list}
+              />
+            </aside>
+          )}
+
+          <main className="min-w-0">
+            <FeedItemCard
+              feed={feed}
+              currentUserId={user?.id}
+              currentUserName={user?.full_name}
+              currentUserAvatar={user?.avatar}
+              isVerified={user?.is_verified}
+              initialComments={comments}
+              defaultShowComments
+            />
+          </main>
+        </div>
       </PageMargin>
 
       <BottomNav

@@ -73,12 +73,13 @@ export async function listReactors(payload: {
   pageSize?: number;
 }): Promise<{ list: Reactor[]; hasMore: boolean }> {
   const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  const authToken = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!authToken) return { list: [], hasMore: false };
 
   const { page = 1, pageSize = 20 } = payload;
   const result = await callApi<ReactorListResponse>("/api/v1/reactions/list", {
     method: "POST",
-    token: sessionToken,
+    token: authToken,
     body: {
       target_type: payload.targetType,
       target_id: payload.targetId,

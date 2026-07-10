@@ -61,6 +61,10 @@ export default function CommentItem({
   const [postingReply, setPostingReply] = useState(false);
 
   function requireVerified(): boolean {
+    if (!currentUserId) {
+      router.push("/auth/login");
+      return false;
+    }
     if (isVerified) return true;
     router.push("/verification");
     return false;
@@ -235,16 +239,28 @@ export default function CommentItem({
               />
             ))}
 
-            <CommentSubmitter
-              avatar={currentUserAvatar}
-              name={currentUserName}
-              avatarSize={28}
-              value={replyText}
-              onChange={setReplyText}
-              onSubmit={handleSubmitReply}
-              placeholder="Tulis balasan..."
-              disabled={postingReply}
-            />
+            {currentUserId ? (
+              <CommentSubmitter
+                avatar={currentUserAvatar}
+                name={currentUserName}
+                avatarSize={28}
+                value={replyText}
+                onChange={setReplyText}
+                onSubmit={handleSubmitReply}
+                placeholder="Tulis balasan..."
+                disabled={postingReply}
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-white px-3 py-2 text-xs text-[#5f6573]">
+                <Link
+                  href="/auth/login"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Login
+                </Link>{" "}
+                untuk membalas komentar.
+              </div>
+            )}
           </div>
         )}
       </div>

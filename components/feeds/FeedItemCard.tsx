@@ -43,6 +43,8 @@ interface FeedItemCardProps {
   currentUserName?: string;
   currentUserAvatar?: string;
   isVerified?: boolean;
+  initialComments?: FeedComment[];
+  defaultShowComments?: boolean;
   initialReposted?: boolean;
   onDeleted?: (feedId: string) => void;
 }
@@ -201,6 +203,8 @@ export default function FeedItemCard({
   currentUserName,
   currentUserAvatar,
   isVerified,
+  initialComments,
+  defaultShowComments = false,
   initialReposted,
   onDeleted,
 }: FeedItemCardProps) {
@@ -221,9 +225,11 @@ export default function FeedItemCard({
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
 
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<FeedComment[]>([]);
-  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [showComments, setShowComments] = useState(defaultShowComments);
+  const [comments, setComments] = useState<FeedComment[]>(initialComments ?? []);
+  const [commentsLoaded, setCommentsLoaded] = useState(
+    initialComments !== undefined
+  );
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentCount, setCommentCount] = useState(feed.comment_count);
   const [topCommentDeleted, setTopCommentDeleted] = useState(false);
@@ -512,15 +518,27 @@ export default function FeedItemCard({
             />
           ))}
 
-          <CommentSubmitter
-            avatar={currentUserAvatar}
-            name={currentUserName}
-            value={commentText}
-            onChange={setCommentText}
-            onSubmit={handleSubmitComment}
-            placeholder="Tulis komentar..."
-            disabled={postingComment}
-          />
+          {currentUserId ? (
+            <CommentSubmitter
+              avatar={currentUserAvatar}
+              name={currentUserName}
+              value={commentText}
+              onChange={setCommentText}
+              onSubmit={handleSubmitComment}
+              placeholder="Tulis komentar..."
+              disabled={postingComment}
+            />
+          ) : (
+            <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-[#f8fafc] px-4 py-3 text-sm text-[#5f6573]">
+              <Link
+                href="/auth/login"
+                className="font-semibold text-primary hover:underline"
+              >
+                Login
+              </Link>{" "}
+              untuk menambahkan komentar.
+            </div>
+          )}
         </div>
       )}
 

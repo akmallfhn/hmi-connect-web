@@ -37,13 +37,13 @@ export default function BottomNav({
         Beranda
       </Link>
 
-      <a
-        href="#"
+      <Link
+        href={username ? "#" : "/auth/login"}
         className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium text-[#5f6573]"
       >
         <Search className="size-5" />
         Cari
-      </a>
+      </Link>
 
       <Link
         href="/membership"
@@ -58,16 +58,16 @@ export default function BottomNav({
         E-KTA
       </Link>
 
-      <a
-        href="#"
+      <Link
+        href={username ? "#" : "/auth/login"}
         className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium text-[#5f6573]"
       >
         <Bell className="size-5" />
         Notifikasi
-      </a>
+      </Link>
 
       <Link
-        href={username ? `/profile/${username}` : "#"}
+        href={username ? `/profile/${username}` : "/auth/login"}
         className={[
           "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
           isProfile ? "text-primary" : "text-[#5f6573]",
