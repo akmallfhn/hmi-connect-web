@@ -4,7 +4,7 @@ import UpcomingEventsCard from "./UpcomingEventsCard";
 
 export default function RightSidebar() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1.5 lg:gap-4">
       <UpcomingEventsCard />
       <SuggestedConnectionsCard />
       <NewsCard />

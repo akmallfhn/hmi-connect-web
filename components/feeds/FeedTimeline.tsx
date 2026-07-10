@@ -67,46 +67,52 @@ export default function FeedTimeline({
         onCreated={handleFeedCreated}
       />
 
-      {items.length === 0 && (
-        <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
-          Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
-        </div>
-      )}
+      <div className="flex flex-col gap-1.5 lg:gap-4">
+        {items.length === 0 && (
+          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
+            Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
+          </div>
+        )}
 
-      {items.map((item, index) => (
-        <div
-          key={`${item.type}-${item.feed.id}-${index}`}
-          className="flex flex-col gap-2"
-        >
-          {item.type === "repost" && (
-            <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
-              <Repeat2 className="size-3.5" />
-              <Avatar src={item.reposter_avatar} name={item.reposter_full_name} size={18} />
-              <span>{item.reposter_full_name} membagikan ulang</span>
-            </div>
-          )}
-          <FeedItemCard
-            feed={item.feed}
-            currentUserId={currentUserId}
-            currentUserName={currentUserName}
-            currentUserAvatar={currentUserAvatar}
-            isVerified={isVerified}
-            initialReposted={repostedFeedIds.has(item.feed.id)}
-            onDeleted={handleFeedDeleted}
-          />
-        </div>
-      ))}
+        {items.map((item, index) => (
+          <div
+            key={`${item.type}-${item.feed.id}-${index}`}
+            className="flex flex-col gap-2"
+          >
+            {item.type === "repost" && (
+              <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
+                <Repeat2 className="size-3.5" />
+                <Avatar
+                  src={item.reposter_avatar}
+                  name={item.reposter_full_name}
+                  size={18}
+                />
+                <span>{item.reposter_full_name} membagikan ulang</span>
+              </div>
+            )}
+            <FeedItemCard
+              feed={item.feed}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              currentUserAvatar={currentUserAvatar}
+              isVerified={isVerified}
+              initialReposted={repostedFeedIds.has(item.feed.id)}
+              onDeleted={handleFeedDeleted}
+            />
+          </div>
+        ))}
 
-      {hasMore && (
-        <Button
-          variant="light"
-          onClick={handleLoadMore}
-          disabled={isPending}
-          className="mx-auto"
-        >
-          {isPending ? "Memuat..." : "Muat lebih banyak"}
-        </Button>
-      )}
+        {hasMore && (
+          <Button
+            variant="light"
+            onClick={handleLoadMore}
+            disabled={isPending}
+            className="mx-auto"
+          >
+            {isPending ? "Memuat..." : "Muat lebih banyak"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default async function Feed({
   const { list, hasMore } = await listFeeds({ page: 1, pageSize: 20 });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1.5 lg:gap-4">
       <FeedTimeline
         initialItems={list}
         initialHasMore={hasMore}

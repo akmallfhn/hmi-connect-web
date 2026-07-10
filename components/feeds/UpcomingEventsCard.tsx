@@ -3,7 +3,7 @@ import { UPCOMING_EVENTS } from "./mockData";
 
 export default function UpcomingEventsCard() {
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center gap-2 text-sm font-semibold text-[#172033]">
         <CalendarDays className="size-4 text-primary" />
         Event & Kalender

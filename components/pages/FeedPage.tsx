@@ -46,8 +46,11 @@ export default function FeedPage({
         isVerified={isVerified}
       />
 
-      <PageMargin className="grid grid-cols-1 gap-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6">
-        <aside>
+      <PageMargin
+        noMobilePadding
+        className="grid grid-cols-1 gap-1.5 py-6 lg:grid-cols-[280px_minmax(0,1fr)_320px] lg:gap-6"
+      >
+        <aside className="hidden lg:block">
           <div className="lg:sticky lg:top-20">
             <ProfileSidebar
               fullName={fullName}

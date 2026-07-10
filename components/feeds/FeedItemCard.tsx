@@ -238,7 +238,7 @@ export default function FeedItemCard({
   }
 
   return (
-    <article className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <Link
           href={feed.creator_username ? `/profile/${feed.creator_username}` : "#"}

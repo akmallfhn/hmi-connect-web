@@ -158,7 +158,7 @@ export default function CreateFeedForms({
 
   return (
     <>
-      <div className="rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm">
+      <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
         <div className="flex items-center gap-3">
           <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />
           <div
