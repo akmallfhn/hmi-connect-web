@@ -38,6 +38,7 @@ interface ProfileProps extends ViewerProps {
   followingCount?: number;
   followersCount?: number;
   feedCount?: number;
+  createdAt?: string;
   isFollowedByMe?: boolean;
   educationHistories: EducationHistoryEntry[];
   organizationExperiences: OrganizationExperienceEntry[];
@@ -84,13 +85,11 @@ export default function ProfilePage({
               bio={profile.bio}
               chapterName={profile.chapterName}
               branchName={profile.branchName}
-              coordinatingBodyName={profile.coordinatingBodyName}
-              organizationName={profile.organizationName}
               isVerified={profile.isVerified}
               isSubscribe={profile.isSubscribe}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
-              feedCount={profile.feedCount}
+              createdAt={profile.createdAt}
               isFollowedByMe={profile.isFollowedByMe}
               isOwnProfile={isOwnProfile}
               socialMediaAccounts={profile.socialMediaAccounts}

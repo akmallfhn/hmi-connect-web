@@ -4,36 +4,42 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Avatar from "../common/Avatar";
 import Modal from "./Modal";
-import type { Reactor } from "@/apis/reactions";
-import { listReactors } from "@/lib/actions";
-import type { ReactionTargetTypeEnum } from "@/lib/types";
+import type { FollowUserEntry } from "@/apis/users";
+import { listFollowers, listFollowing } from "@/lib/actions";
 
-interface ReactorsListModalProps {
+interface FollowListModalProps {
   open: boolean;
   onClose: () => void;
-  targetType: ReactionTargetTypeEnum;
-  targetId: string;
+  userId: string;
+  type: "following" | "followers";
 }
 
-export default function ReactorsListModal({
+const TITLES: Record<FollowListModalProps["type"], string> = {
+  following: "Mengikuti",
+  followers: "Pengikut",
+};
+
+export default function FollowListModal({
   open,
   onClose,
-  targetType,
-  targetId,
-}: ReactorsListModalProps) {
-  const [reactors, setReactors] = useState<Reactor[]>([]);
+  userId,
+  type,
+}: FollowListModalProps) {
+  const [users, setUsers] = useState<FollowUserEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const fetchList = type === "following" ? listFollowing : listFollowers;
+
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
 
-    listReactors(targetType, targetId, 1).then((result) => {
+    fetchList(userId, 1).then((result) => {
       if (cancelled) return;
-      setReactors(result.list);
+      setUsers(result.list);
       setHasMore(result.hasMore);
       setPage(1);
       setLoaded(true);
@@ -42,13 +48,13 @@ export default function ReactorsListModal({
     return () => {
       cancelled = true;
     };
-  }, [open, targetType, targetId]);
+  }, [open, userId, type, fetchList]);
 
   function handleLoadMore() {
     setLoadingMore(true);
-    listReactors(targetType, targetId, page + 1)
+    fetchList(userId, page + 1)
       .then((result) => {
-        setReactors((prev) => [...prev, ...result.list]);
+        setUsers((prev) => [...prev, ...result.list]);
         setHasMore(result.hasMore);
         setPage((prev) => prev + 1);
       })
@@ -56,28 +62,30 @@ export default function ReactorsListModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Reaksi">
+    <Modal open={open} onClose={onClose} title={TITLES[type]}>
       <div className="flex flex-col gap-1">
         {!loaded && (
           <p className="py-4 text-center text-sm text-[#5f6573]">Memuat...</p>
         )}
-        {loaded && reactors.length === 0 && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">Belum ada reaksi.</p>
+        {loaded && users.length === 0 && (
+          <p className="py-4 text-center text-sm text-[#5f6573]">
+            {type === "following" ? "Belum mengikuti siapa pun." : "Belum ada pengikut."}
+          </p>
         )}
-        {reactors.map((reactor) => (
+        {users.map((user) => (
           <Link
-            key={reactor.id}
-            href={reactor.username ? `/profile/${reactor.username}` : "#"}
+            key={user.id}
+            href={user.username ? `/profile/${user.username}` : "#"}
             onClick={onClose}
             className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
           >
-            <Avatar src={reactor.avatar} name={reactor.full_name} size={40} />
+            <Avatar src={user.avatar} name={user.full_name} size={40} />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-[#172033]">
-                {reactor.full_name}
+                {user.full_name}
               </p>
-              {reactor.username && (
-                <p className="truncate text-xs text-[#5f6573]">@{reactor.username}</p>
+              {user.username && (
+                <p className="truncate text-xs text-[#5f6573]">@{user.username}</p>
               )}
             </div>
           </Link>

@@ -212,6 +212,36 @@ export const getUserByUsername = cache(
   }
 );
 
+// Mirrors POST /api/v1/users/membership-details's response — the caller's own membership card.
+export type MembershipDetail = {
+  id: string;
+  full_name: string;
+  ktp_full_name?: string;
+  username?: string;
+  member_card?: string;
+  chapter_id?: string;
+  chapter_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  coordinating_body_id?: string;
+  coordinating_body_name?: string;
+  is_subscribe: boolean;
+  subscription_started_at?: string;
+  subscription_ended_at?: string;
+};
+
+export const getMembershipDetail = cache(
+  async (token: string): Promise<MembershipDetail | null> => {
+    const result = await callApi<MembershipDetail>("/api/v1/users/membership-details", {
+      method: "POST",
+      token,
+    });
+
+    if (!isSuccessStatus(result.status) || !result.data) return null;
+    return result.data;
+  }
+);
+
 export type FollowUserResult = {
   follower_id: string;
   following_id: string;
@@ -255,6 +285,62 @@ export async function unfollowUser(
     token: sessionToken,
     body: { user_id: userId },
   });
+}
+
+export type FollowUserEntry = {
+  id: string;
+  full_name: string;
+  username?: string;
+  avatar?: string;
+};
+
+async function listFollowRelation(
+  endpoint: "following" | "followers",
+  userId: string,
+  options: ListOptions = {}
+): Promise<ListResult<FollowUserEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<FollowUserEntry>>(
+    `/api/v1/users/${endpoint}/list`,
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        user_id: userId,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error(`[listFollowRelation:${endpoint}] request failed:`, result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
+export async function listFollowing(
+  userId: string,
+  options: ListOptions = {}
+): Promise<ListResult<FollowUserEntry>> {
+  return listFollowRelation("following", userId, options);
+}
+
+export async function listFollowers(
+  userId: string,
+  options: ListOptions = {}
+): Promise<ListResult<FollowUserEntry>> {
+  return listFollowRelation("followers", userId, options);
 }
 
 export type UpdateUserPayload = {

@@ -107,6 +107,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
         feedCount: profile.feed_count,
+        createdAt: profile.created_at,
         isFollowedByMe: profile.is_followed_by_me,
         educationHistories,
         organizationExperiences,

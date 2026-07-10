@@ -2,9 +2,9 @@
 
 import {
   Building2,
+  Calendar,
   Camera,
   ExternalLink,
-  MapPin,
   Pencil,
   Plus,
   Sparkles,
@@ -25,6 +25,7 @@ import Avatar from "../common/Avatar";
 import VerifiedBadge from "../common/VerifiedBadge";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
+import FollowListModal from "../modals/FollowListModal";
 
 interface ProfileHeaderProps {
   userId?: string;
@@ -35,13 +36,11 @@ interface ProfileHeaderProps {
   bio?: string;
   chapterName?: string;
   branchName?: string;
-  coordinatingBodyName?: string;
-  organizationName?: string;
   isVerified?: boolean;
   isSubscribe?: boolean;
   followingCount?: number;
   followersCount?: number;
-  feedCount?: number;
+  createdAt?: string;
   isFollowedByMe?: boolean;
   isOwnProfile?: boolean;
   socialMediaAccounts: SocialMediaAccountEntry[];
@@ -73,7 +72,7 @@ function SocialLinks({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#dbe3ef] bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft"
+          className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#dbe3ef] bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-[#f5f7fb]"
         >
           <Plus className="size-3.5" />
           Tambah sosial media
@@ -90,7 +89,7 @@ function SocialLinks({
           href={normalizeSocialUrl(account.url)}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#e6e9ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#172033] transition hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
+          className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#e6e9ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#172033] transition hover:bg-[#f5f7fb]"
           title={account.url}
         >
           {account.logo_url ? (
@@ -123,13 +122,11 @@ export default function ProfileHeader({
   bio,
   chapterName,
   branchName,
-  coordinatingBodyName,
-  organizationName,
   isVerified,
   isSubscribe,
   followingCount,
   followersCount,
-  feedCount,
+  createdAt,
   isFollowedByMe,
   isOwnProfile,
   socialMediaAccounts,
@@ -141,12 +138,22 @@ export default function ProfileHeader({
   const [followLoading, setFollowLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
+  const [followListType, setFollowListType] = useState<"following" | "followers" | null>(
+    null
+  );
   const displayName = fullName ?? "Kader";
-  const primaryAffiliation = [chapterName, branchName].filter(Boolean).join(" • ");
-  const organizationInfo = [coordinatingBodyName, organizationName]
+  const affiliation = [
+    chapterName ? `HMI ${chapterName}` : null,
+    branchName ? `Cabang ${branchName}` : null,
+  ]
     .filter(Boolean)
     .join(" • ");
-  const hasAffiliation = Boolean(primaryAffiliation || organizationInfo);
+  const hasAffiliation = Boolean(affiliation);
+  const joinedLabel = createdAt
+    ? new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(
+        new Date(createdAt)
+      )
+    : null;
 
   async function handleFollowToggle() {
     if (!userId || followLoading) return;
@@ -181,7 +188,7 @@ export default function ProfileHeader({
   }
 
   const actionButton = isOwnProfile ? (
-    <Button variant="light" onClick={() => setIsEditOpen(true)} className="w-full lg:w-auto">
+    <Button variant="light" onClick={() => setIsEditOpen(true)}>
       <Pencil className="size-3.5" />
       Edit Profil
     </Button>
@@ -190,7 +197,6 @@ export default function ProfileHeader({
       variant={isFollowing ? "light" : "primary"}
       onClick={handleFollowToggle}
       disabled={followLoading}
-      className="w-full lg:w-auto"
     >
       {isFollowing ? (
         <UserCheck className="size-3.5" />
@@ -206,120 +212,94 @@ export default function ProfileHeader({
       <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
-        <div className="flex flex-col items-center text-center lg:flex-row lg:items-end lg:justify-between lg:gap-6 lg:text-left">
-          <div className="-mt-14 flex flex-col items-center gap-3 lg:-mt-16 lg:min-w-0 lg:flex-1 lg:flex-row lg:items-end lg:gap-4">
-            {isOwnProfile ? (
-              <button
-                type="button"
-                onClick={() => setIsAvatarEditOpen(true)}
-                className="group relative shrink-0 overflow-hidden rounded-full border-4 border-white hover:cursor-pointer"
-                aria-label="Ubah foto profil"
-              >
-                <Avatar src={avatar} name={displayName} size={112} />
-                <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
-                  <Camera className="size-6" />
-                </span>
-              </button>
+        <div className="flex items-start justify-between">
+          {isOwnProfile ? (
+            <button
+              type="button"
+              onClick={() => setIsAvatarEditOpen(true)}
+              className="group relative -mt-14 shrink-0 overflow-hidden rounded-full border-4 border-white hover:cursor-pointer lg:-mt-16"
+              aria-label="Ubah foto profil"
+            >
+              <Avatar src={avatar} name={displayName} size={112} />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+                <Camera className="size-6" />
+              </span>
+            </button>
+          ) : (
+            <Avatar
+              src={avatar}
+              name={displayName}
+              size={112}
+              className="-mt-14 shrink-0 border-4 border-white lg:-mt-16"
+            />
+          )}
+
+          <div className="mt-3">{actionButton}</div>
+        </div>
+
+        <div className="mt-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
+              {displayName}
+            </h1>
+            {isVerified ? (
+              <VerifiedBadge size={20} />
             ) : (
-              <Avatar
-                src={avatar}
-                name={displayName}
-                size={112}
-                className="shrink-0 border-4 border-white"
+              <TriangleAlert
+                className="size-5 text-destructive"
+                aria-label="Belum terverifikasi"
               />
             )}
-
-            <div className="min-w-0 lg:pb-1">
-              <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5 lg:justify-start">
-                <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
-                  {displayName}
-                </h1>
-                {isVerified ? (
-                  <VerifiedBadge size={20} />
-                ) : (
-                  <TriangleAlert
-                    className="size-5 text-destructive"
-                    aria-label="Belum terverifikasi"
-                  />
-                )}
-              </div>
-
-              {username && (
-                <p className="text-sm text-[#5f6573]">@{username}</p>
-              )}
-
-              {headline && (
-                <p className="mt-1 line-clamp-2 text-sm font-medium text-[#5f6573]">
-                  {headline}
-                </p>
-              )}
-            </div>
+            {isSubscribe && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary-soft px-2 py-0.5 text-xs font-semibold text-secondary">
+                <Sparkles className="size-3" />
+                HMI Connect+
+              </span>
+            )}
           </div>
 
-          <div className="mt-4 hidden shrink-0 lg:mb-1 lg:block">
-            {actionButton}
+          {username && <p className="text-sm text-[#5f6573]">@{username}</p>}
+
+          {headline && <p className="mt-3 text-sm text-[#172033]">{headline}</p>}
+
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573]">
+            <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+            <span>{hasAffiliation ? affiliation : "Belum tergabung cabang"}</span>
+          </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <SocialLinks
+              accounts={socialMediaAccounts}
+              isOwnProfile={isOwnProfile}
+              onAdd={() => setIsEditOpen(true)}
+            />
+            {joinedLabel && (
+              <span className="flex items-center gap-1.5 text-sm text-[#5f6573]">
+                <Calendar className="size-3.5" />
+                Bergabung {joinedLabel}
+              </span>
+            )}
           </div>
-        </div>
 
-        <div className="mt-4 flex flex-col items-center gap-2 text-sm text-[#5f6573] lg:flex-row lg:flex-wrap lg:gap-x-5 lg:gap-y-1.5">
-          {primaryAffiliation && (
-            <p className="flex items-start gap-1.5">
-              <MapPin className="mt-0.5 size-3.5 shrink-0 text-primary" />
-              <span>{primaryAffiliation}</span>
-            </p>
-          )}
-          {organizationInfo && (
-            <p className="flex items-start gap-1.5">
-              <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
-              <span>{organizationInfo}</span>
-            </p>
-          )}
-        </div>
-
-        <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
-          {isVerified && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-              <VerifiedBadge size={14} />
-              Anggota Terverifikasi
-            </span>
-          )}
-          {isSubscribe && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-soft px-3 py-1 text-xs font-semibold text-secondary">
-              <Sparkles className="size-3.5" />
-              HMI Connect+
-            </span>
-          )}
-          {!hasAffiliation && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f7fb] px-3 py-1 text-xs font-medium text-[#5f6573]">
-              <Building2 className="size-3.5" />
-              Belum tergabung cabang
-            </span>
-          )}
-        </div>
-
-        <SocialLinks
-          accounts={socialMediaAccounts}
-          isOwnProfile={isOwnProfile}
-          onAdd={() => setIsEditOpen(true)}
-          className="mt-4 justify-center lg:justify-start"
-        />
-
-        <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center lg:max-w-md">
-          <div>
-            <p className="font-bold text-[#172033]">{followingCount ?? 0}</p>
-            <p className="text-xs text-[#5f6573]">Mengikuti</p>
-          </div>
-          <div>
-            <p className="font-bold text-[#172033]">{followersTotal}</p>
-            <p className="text-xs text-[#5f6573]">Pengikut</p>
-          </div>
-          <div>
-            <p className="font-bold text-[#172033]">{feedCount ?? 0}</p>
-            <p className="text-xs text-[#5f6573]">Postingan</p>
+          <div className="mt-3 flex items-center gap-4 text-sm">
+            <button
+              type="button"
+              onClick={() => setFollowListType("following")}
+              className="cursor-pointer hover:underline"
+            >
+              <span className="font-bold text-[#172033]">{followingCount ?? 0}</span>{" "}
+              <span className="text-[#5f6573]">Mengikuti</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFollowListType("followers")}
+              className="cursor-pointer hover:underline"
+            >
+              <span className="font-bold text-[#172033]">{followersTotal}</span>{" "}
+              <span className="text-[#5f6573]">Pengikut</span>
+            </button>
           </div>
         </div>
-
-        <div className="mt-4 lg:hidden">{actionButton}</div>
       </div>
 
       {isOwnProfile && (
@@ -350,6 +330,15 @@ export default function ProfileHeader({
             avatar={avatar}
           />
         </>
+      )}
+
+      {userId && followListType && (
+        <FollowListModal
+          open
+          onClose={() => setFollowListType(null)}
+          userId={userId}
+          type={followListType}
+        />
       )}
     </div>
   );

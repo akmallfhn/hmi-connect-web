@@ -16,6 +16,8 @@ import {
   deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
   followUser as followUserApi,
+  listFollowers as listFollowersApi,
+  listFollowing as listFollowingApi,
   updateEducationHistory as updateEducationHistoryApi,
   updateOrganizationExperience as updateOrganizationExperienceApi,
   updateSocialMediaAccount as updateSocialMediaAccountApi,
@@ -74,6 +76,14 @@ export async function followUser(userId: string) {
 
 export async function unfollowUser(userId: string) {
   return unfollowUserApi(userId);
+}
+
+export async function listFollowing(userId: string, page?: number) {
+  return listFollowingApi(userId, { page });
+}
+
+export async function listFollowers(userId: string, page?: number) {
+  return listFollowersApi(userId, { page });
 }
 
 export async function createEducationHistory(
