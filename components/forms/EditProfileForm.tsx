@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type { SocialMediaAccountEntry } from "@/apis/users";
@@ -11,7 +11,12 @@ import {
   updateSocialMediaAccount,
   updateUser,
 } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
+import { isSuccessStatus, type StatusName } from "@/lib/types";
+import {
+  isUsernameFormatValid,
+  USERNAME_ERROR,
+  USERNAME_PATTERN,
+} from "@/lib/username";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select, { type SelectOption } from "../fields/Select";
@@ -27,6 +32,13 @@ type SocialMediaDraft = {
   isNew: boolean;
   removed: boolean;
 };
+
+type UsernameAvailability =
+  | "idle"
+  | "checking"
+  | "available"
+  | "unavailable"
+  | "error";
 
 function normalizeSocialUrl(url: string) {
   const trimmed = url.trim();
@@ -63,6 +75,7 @@ interface EditProfileFormProps {
   onClose: () => void;
   onSaved: () => void;
   userId?: string;
+  username?: string;
   fullName?: string;
   headline?: string;
   bio?: string;
@@ -75,6 +88,7 @@ export default function EditProfileForm({
   onClose,
   onSaved,
   userId,
+  username,
   fullName,
   headline,
   bio,
@@ -93,6 +107,7 @@ export default function EditProfileForm({
           onClose={onClose}
           onSaved={onSaved}
           userId={userId}
+          username={username}
           fullName={fullName}
           headline={headline}
           bio={bio}
@@ -108,6 +123,7 @@ interface ProfileFieldsProps {
   onClose: () => void;
   onSaved: () => void;
   userId?: string;
+  username?: string;
   fullName?: string;
   headline?: string;
   bio?: string;
@@ -120,6 +136,7 @@ function ProfileFields({
   onClose,
   onSaved,
   userId,
+  username,
   fullName,
   headline,
   bio,
@@ -127,6 +144,7 @@ function ProfileFields({
   socialMediaPlatforms,
 }: ProfileFieldsProps) {
   const [form, setForm] = useState({
+    username: username ?? "",
     fullName: fullName ?? "",
     headline: headline ?? "",
     bio: bio ?? "",
@@ -135,6 +153,13 @@ function ProfileFields({
     toSocialDrafts(socialMediaAccounts)
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] =
+    useState<UsernameAvailability>("idle");
+  const [usernameApiError, setUsernameApiError] = useState("");
+  const initialUsername = username ?? "";
+  const normalizedUsername = form.username.trim();
+  const usernameChanged = normalizedUsername !== initialUsername;
+  const usernameHasValidFormat = isUsernameFormatValid(form.username);
 
   const platformOptions: SelectOption[] = socialMediaPlatforms.map((platform) => ({
     label: platform.name,
@@ -151,6 +176,58 @@ function ProfileFields({
         image: account.logo_url,
       });
     }
+  }
+
+  useEffect(() => {
+    if (!usernameChanged || !usernameHasValidFormat) return;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/users/check-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: normalizedUsername }),
+          signal: controller.signal,
+        });
+        const result = (await response.json()) as {
+          status?: StatusName;
+          data?: { is_available?: boolean };
+        };
+
+        if (
+          !response.ok ||
+          !isSuccessStatus(result.status) ||
+          typeof result.data?.is_available !== "boolean"
+        ) {
+          setUsernameAvailability("error");
+          return;
+        }
+
+        setUsernameAvailability(
+          result.data.is_available ? "available" : "unavailable"
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("[EditProfileForm] check username threw:", err);
+        setUsernameAvailability("error");
+      }
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [normalizedUsername, usernameChanged, usernameHasValidFormat]);
+
+  function handleUsernameChange(value: string) {
+    const nextUsername = value.trim();
+    const changed = nextUsername !== initialUsername;
+    const hasValidFormat = isUsernameFormatValid(value);
+
+    setUsernameApiError("");
+    setUsernameAvailability(changed && hasValidFormat ? "checking" : "idle");
+    setForm((prev) => ({ ...prev, username: value }));
   }
 
   function updateSocialDraft<K extends keyof SocialMediaDraft>(
@@ -180,6 +257,20 @@ function ProfileFields({
       toast.error("ID pengguna tidak ditemukan.");
       return;
     }
+    if (!usernameHasValidFormat) {
+      toast.error("Username tidak valid.");
+      return;
+    }
+    if (usernameChanged && usernameAvailability !== "available") {
+      const message =
+        usernameAvailability === "checking"
+          ? "Tunggu sampai ketersediaan username selesai diperiksa."
+          : usernameAvailability === "unavailable"
+            ? "Username ini sudah digunakan. Silakan pilih username lain."
+            : "Ketersediaan username gagal diperiksa. Coba lagi.";
+      toast.error(message);
+      return;
+    }
 
     const activeSocialDrafts = socialDrafts.filter((draft) => !draft.removed);
     const incompleteSocial = activeSocialDrafts.find(
@@ -201,12 +292,20 @@ function ProfileFields({
     try {
       const profileResult = await updateUser({
         id: userId,
+        ...(usernameChanged ? { username: normalizedUsername } : {}),
         full_name: form.fullName,
         headline: form.headline,
         bio: form.bio,
       });
 
       if (!isSuccessStatus(profileResult.status)) {
+        if (profileResult.status === "CONFLICT") {
+          const message = "Username ini sudah digunakan. Silakan pilih username lain.";
+          setUsernameApiError(message);
+          setUsernameAvailability("unavailable");
+          toast.error(message);
+          return;
+        }
         toast.error(profileResult.message ?? "Gagal menyimpan perubahan.");
         return;
       }
@@ -245,6 +344,10 @@ function ProfileFields({
       }
 
       toast.success("Profil berhasil diperbarui.");
+      if (usernameChanged) {
+        window.location.href = `/profile/${encodeURIComponent(normalizedUsername)}`;
+        return;
+      }
       onSaved();
     } catch (err) {
       console.error("[EditProfileForm] update profile threw:", err);
@@ -264,6 +367,40 @@ function ProfileFields({
           value={form.fullName}
           onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
         />
+        <Input
+          inputId="edit-username"
+          label="Username"
+          placeholder="Contoh: akmal.fhn"
+          value={form.username}
+          onChange={(e) => handleUsernameChange(e.target.value)}
+          pattern={USERNAME_PATTERN}
+          patternErrorMessage={USERNAME_ERROR}
+          errorMessage={usernameApiError}
+          autoCapitalize="none"
+          autoComplete="username"
+          spellCheck={false}
+          required
+        />
+        {usernameAvailability === "checking" && (
+          <p className="-mt-2 pl-1 text-xs text-[#5f6573]">
+            Memeriksa ketersediaan username...
+          </p>
+        )}
+        {usernameAvailability === "available" && (
+          <p className="-mt-2 pl-1 text-xs font-medium text-primary">
+            Username tersedia.
+          </p>
+        )}
+        {usernameAvailability === "unavailable" && !usernameApiError && (
+          <p className="-mt-2 pl-1 text-xs text-destructive">
+            Username sudah digunakan. Silakan pilih username lain.
+          </p>
+        )}
+        {usernameAvailability === "error" && (
+          <p className="-mt-2 pl-1 text-xs text-destructive">
+            Ketersediaan username gagal diperiksa. Coba lagi.
+          </p>
+        )}
         <Input
           inputId="edit-headline"
           label="Headline"

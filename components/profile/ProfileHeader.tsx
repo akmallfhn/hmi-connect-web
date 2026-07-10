@@ -208,7 +208,7 @@ export default function ProfileHeader({
   );
 
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white shadow-sm lg:rounded-2xl lg:border-x">
+    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
@@ -312,6 +312,7 @@ export default function ProfileHeader({
               router.refresh();
             }}
             userId={userId}
+            username={username}
             fullName={fullName}
             headline={headline}
             bio={bio}

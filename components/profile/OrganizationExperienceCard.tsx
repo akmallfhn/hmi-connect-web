@@ -24,7 +24,7 @@ export default function OrganizationExperienceCard({
   if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 shadow-sm lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[#172033]">
           Pengalaman Organisasi

@@ -24,6 +24,11 @@ import {
   type StatusName,
   type TrainingResultEnum,
 } from "@/lib/types";
+import {
+  isUsernameFormatValid,
+  USERNAME_ERROR,
+  USERNAME_PATTERN,
+} from "@/lib/username";
 
 const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },
@@ -40,9 +45,6 @@ const EDUCATION_YEAR_OPTIONS = Array.from(
 );
 
 const STEPS = ["Profil", "Pendidikan", "Latihan Kader 1"];
-const USERNAME_PATTERN = "[A-Za-z0-9._]+";
-const USERNAME_ERROR =
-  "Username hanya boleh berisi huruf, angka, titik (.), atau garis bawah (_). Spasi dan tanda hubung (-) tidak diperbolehkan.";
 const ALLOWED_AVATAR_TYPES = [
   "image/jpeg",
   "image/png",
@@ -126,9 +128,7 @@ export default function ActivationPage({
   const [formData, setFormData] = useState<FormData>(() =>
     emptyFormData(fullName, avatar)
   );
-  const usernameHasValidFormat =
-    formData.username.trim() !== "" &&
-    new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(formData.username);
+  const usernameHasValidFormat = isUsernameFormatValid(formData.username);
 
   useEffect(() => {
     if (!usernameHasValidFormat) return;
@@ -506,11 +506,7 @@ export default function ActivationPage({
                   value={formData.username}
                   onChange={(event) => {
                     const nextUsername = event.target.value;
-                    const hasValidFormat =
-                      nextUsername.trim() !== "" &&
-                      new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(
-                        nextUsername
-                      );
+                    const hasValidFormat = isUsernameFormatValid(nextUsername);
                     setUsernameApiError("");
                     setUsernameAvailability(
                       hasValidFormat ? "checking" : "idle"

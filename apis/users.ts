@@ -168,6 +168,7 @@ export type UserProfile = {
   branch_id?: string;
   branch_name?: string;
   full_name: string;
+  username?: string;
   ktp_full_name?: string;
   email: string;
   phone_number?: string;
@@ -345,6 +346,7 @@ export async function listFollowers(
 
 export type UpdateUserPayload = {
   id: string;
+  username?: string;
   full_name?: string;
   headline?: string;
   bio?: string;
@@ -353,6 +355,7 @@ export type UpdateUserPayload = {
 
 export type UpdateUserResult = {
   id: string;
+  username?: string;
   full_name: string;
   email: string;
   role_id: number;

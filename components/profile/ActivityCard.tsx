@@ -5,7 +5,7 @@ import { PLACEHOLDER_ACTIVITY } from "./mockData";
 
 export default function ActivityCard() {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 shadow-sm lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <h2 className="text-sm font-semibold text-[#172033]">Aktivitas</h2>
 
       <div className="mt-3 flex flex-col gap-4">
