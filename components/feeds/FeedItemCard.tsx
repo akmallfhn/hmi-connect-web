@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Eye,
   Heart,
   MessageCircle,
   MoreHorizontal,
@@ -350,48 +351,54 @@ export default function FeedItemCard({
             <p className="text-xs text-[#5f6573]">{formatRelativeTime(feed.created_at)}</p>
           </div>
         </Link>
-        {isOwnFeed && (
-          <Dropdown
-            align="right"
-            trigger={({ toggle }) => (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggle}
-                className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
-                aria-label="Opsi lainnya"
-              >
-                <MoreHorizontal className="size-4" />
-              </Button>
+        <Dropdown
+          align="right"
+          trigger={({ toggle }) => (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+              aria-label="Opsi lainnya"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          )}
+        >
+          <div className="flex flex-col py-1">
+            <Link
+              href={`/feeds/${feed.id}`}
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+            >
+              <Eye className="size-4 text-[#5f6573]" />
+              Lihat post
+            </Link>
+            {isOwnFeed && (
+              <>
+                <button
+                  type="button"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                >
+                  <Pencil className="size-4 text-[#5f6573]" />
+                  Edit post
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+                >
+                  <Trash2 className="size-4" />
+                  Delete post
+                </button>
+              </>
             )}
-          >
-            <div className="flex flex-col py-1">
-              <button
-                type="button"
-                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-              >
-                <Pencil className="size-4 text-[#5f6573]" />
-                Edit post
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-              >
-                <Trash2 className="size-4" />
-                Delete post
-              </button>
-            </div>
-          </Dropdown>
-        )}
+          </div>
+        </Dropdown>
       </div>
 
-      <Link
-        href={`/feeds/${feed.id}`}
-        className="mt-3 block whitespace-pre-line text-sm leading-6 text-[#172033]"
-      >
+      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033]">
         {feed.content}
-      </Link>
+      </p>
 
       {photoMedia && photoMedia.length > 0 && (
         <MediaGrid media={photoMedia} onPreview={setPreviewPhoto} />

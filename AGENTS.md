@@ -193,20 +193,24 @@ below) when `isVerified === false`.
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` (top bar,
   all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/E-KTA/
-  Notifikasi/Profil). Only Beranda (`/`), E-KTA (`/membership`), and Profil
-  (`/profile/[username]`) have real destinations; Cari/Notifikasi are still `href="#"`
-  placeholders.
+  Notifikasi/Profil). Beranda (`/`) and E-KTA (`/membership`) are always real links.
+  Cari, Notifikasi, and Profil route to `/auth/login` when there's no `username` (logged
+  out); Profil goes to `/profile/[username]` when logged in, Cari/Notifikasi are still
+  `href="#"` placeholders (no page built yet) once logged in.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
   header, and removes a feed from local state when `FeedItemCard`'s `onDeleted` fires.
   `FeedItemCard.tsx` renders a feed's content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
-  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
-  Its "..." menu (`Dropdown`, see `components/common/*` below) only renders when the
-  caller owns the feed (`creator_id === currentUserId`) and holds "Edit post" (UI only,
-  not wired to an endpoint yet) and "Delete post" (opens `AlertConfirmation`, then calls
-  `apis/feeds.ts#deleteFeed` on confirm). `CommentItem.tsx` renders one comment (or,
+  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions;
+  the feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
+  page (`/feeds/[feed_id]`) only happens through the "..." menu. That menu (`Dropdown`,
+  see `components/common/*` below) always renders and always has "Lihat post" (links to
+  `/feeds/[feed.id]`); "Edit post" (UI only, not wired to an endpoint yet) and "Delete
+  post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on confirm) only
+  show up when the caller owns the feed (`creator_id === currentUserId`). `CommentItem.tsx`
+  renders one comment (or,
   recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
   (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
