@@ -123,6 +123,7 @@ export default function FeedTimeline({
               isVerified={isVerified}
               initialReposted={repostedFeedIds.has(item.feed.id)}
               onDeleted={handleFeedDeleted}
+              onFeedCreated={handleFeedCreated}
             />
           </div>
         ))}

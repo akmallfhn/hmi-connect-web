@@ -58,6 +58,7 @@ export type CreateFeedPayload = {
     type: FeedMediaTypeEnum;
     urls: string[];
   };
+  repost_of_id?: string;
 };
 
 export type FeedComment = {

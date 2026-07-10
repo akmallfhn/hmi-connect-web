@@ -200,11 +200,20 @@ below) when `isVerified === false`.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
-  header, and removes a feed from local state when `FeedItemCard`'s `onDeleted` fires.
-  `FeedItemCard.tsx` renders a feed's content/media (photo grid, video, or
+  header, prepends a new feed via `handleFeedCreated` (passed to both `CreateFeedForms`'s
+  `onCreated` and each `FeedItemCard`'s `onFeedCreated` — the latter fires from quote
+  repost, since that also creates a new top-level feed), and removes a feed from local
+  state when `FeedItemCard`'s `onDeleted` fires. `FeedItemCard.tsx` renders a feed's
+  content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
-  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions;
-  the feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
+  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
+  The Repeat2 button is itself a `Dropdown` (not a direct toggle) with two entries: "Repost"
+  (the plain toggleable repost, disabled for your own feed — unchanged `feeds/repost`/
+  `feeds/unrepost` behavior, `text-secondary` while active) and "Quote Repost" (opens
+  `CreateFeedForms`'s exported `FeedComposerModal` with `quoteFeed={feed}`, which hides all
+  attachment UI and renders the quoted feed via `QuotedFeed.tsx` — shared between here and
+  `FeedItemCard`'s own repost-of preview — then submits `feeds/create` with `repost_of_id`).
+  The feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
   page (`/feeds/[feed_id]`) only happens through the "..." menu. That menu (`Dropdown`,
   see `components/common/*` below) always renders and always has "Lihat post" (links to
   `/feeds/[feed.id]`); "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)

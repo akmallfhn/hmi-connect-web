@@ -29,6 +29,7 @@ import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
+import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus, type FeedMediaTypeEnum } from "@/lib/types";
@@ -191,24 +192,63 @@ export default function CreateFeedForms({
         </div>
       </div>
 
-      <Modal
+      <FeedComposerModal
         open={open}
         onClose={() => setOpen(false)}
-        title="Buat Postingan"
-        panelClassName="max-w-2xl lg:max-w-3xl"
-      >
-        {open && (
-          <FeedComposerFields
-            fullName={fullName}
-            avatar={avatar}
-            userId={userId}
-            initialMode={initialMode}
-            onClose={() => setOpen(false)}
-            onCreated={onCreated}
-          />
-        )}
-      </Modal>
+        fullName={fullName}
+        avatar={avatar}
+        userId={userId}
+        initialMode={initialMode}
+        onCreated={onCreated}
+      />
     </>
+  );
+}
+
+interface FeedComposerModalProps {
+  open: boolean;
+  onClose: () => void;
+  fullName?: string;
+  avatar?: string;
+  userId?: string;
+  initialMode?: FeedMediaTypeEnum | null;
+  /** When set, the composer becomes a quote-repost of this feed: no attachment UI, and the
+   *  quoted feed renders read-only below the textarea (see QuotedFeed). */
+  quoteFeed?: Feed;
+  onCreated?: (feed: Feed) => void;
+}
+
+// Exported so FeedItemCard's "Quote Repost" action can open this same modal externally,
+// controlled by its own open state, without rendering CreateFeedForms's trigger card.
+export function FeedComposerModal({
+  open,
+  onClose,
+  fullName,
+  avatar,
+  userId,
+  initialMode,
+  quoteFeed,
+  onCreated,
+}: FeedComposerModalProps) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={quoteFeed ? "Quote Repost" : "Buat Postingan"}
+      panelClassName="max-w-2xl lg:max-w-3xl"
+    >
+      {open && (
+        <FeedComposerFields
+          fullName={fullName}
+          avatar={avatar}
+          userId={userId}
+          initialMode={initialMode}
+          quoteFeed={quoteFeed}
+          onClose={onClose}
+          onCreated={onCreated}
+        />
+      )}
+    </Modal>
   );
 }
 
@@ -217,6 +257,7 @@ interface FeedComposerFieldsProps {
   avatar?: string;
   userId?: string;
   initialMode?: FeedMediaTypeEnum | null;
+  quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
 }
@@ -226,6 +267,7 @@ function FeedComposerFields({
   avatar,
   userId,
   initialMode,
+  quoteFeed,
   onClose,
   onCreated,
 }: FeedComposerFieldsProps) {
@@ -450,29 +492,37 @@ function FeedComposerFields({
     try {
       let media: { type: FeedMediaTypeEnum; urls: string[] } | undefined;
 
-      if (photos.length > 0) {
-        const urls = await Promise.all(
-          photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo"))
-        );
-        media = { type: "photo", urls };
-      } else if (video) {
-        const url = await uploadFeedMedia(video.file, userId, "video");
-        media = { type: "video", urls: [url] };
-      } else if (urlActive && urlValue.trim()) {
-        media = { type: "url", urls: [normalizedUrl] };
+      if (!quoteFeed) {
+        if (photos.length > 0) {
+          const urls = await Promise.all(
+            photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo"))
+          );
+          media = { type: "photo", urls };
+        } else if (video) {
+          const url = await uploadFeedMedia(video.file, userId, "video");
+          media = { type: "video", urls: [url] };
+        } else if (urlActive && urlValue.trim()) {
+          media = { type: "url", urls: [normalizedUrl] };
+        }
       }
 
       const result = await createFeed({
         content: content.trim(),
         ...(media ? { media } : {}),
+        ...(quoteFeed ? { repost_of_id: quoteFeed.id } : {}),
       });
 
       if (!isSuccessStatus(result.status) || !result.data) {
-        toast.error(result.message ?? "Gagal membuat postingan.");
+        toast.error(
+          result.message ??
+            (quoteFeed ? "Gagal membuat quote repost." : "Gagal membuat postingan.")
+        );
         return;
       }
 
-      toast.success("Postingan berhasil dibuat.");
+      toast.success(
+        quoteFeed ? "Quote repost berhasil dibuat." : "Postingan berhasil dibuat."
+      );
       onCreated?.(result.data);
       clearAllMedia();
       setContent("");
@@ -484,7 +534,9 @@ function FeedComposerFields({
           "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect."
         );
       } else {
-        toast.error("Gagal membuat postingan. Coba lagi.");
+        toast.error(
+          quoteFeed ? "Gagal membuat quote repost. Coba lagi." : "Gagal membuat postingan. Coba lagi."
+        );
       }
     } finally {
       setSubmitting(false);
@@ -508,7 +560,9 @@ function FeedComposerFields({
           ref={textareaRef}
           value={content}
           onChange={handleContentChange}
-          placeholder="Apa yang ingin kamu bagikan?"
+          placeholder={
+            quoteFeed ? "Tambahkan komentar..." : "Apa yang ingin kamu bagikan?"
+          }
           rows={5}
           disabled={submitting}
           className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-white px-0 py-2 text-base leading-7 text-[#172033] placeholder:text-[#5f6573]/70 focus:outline-none disabled:cursor-not-allowed disabled:text-[#5f6573]"
@@ -591,6 +645,9 @@ function FeedComposerFields({
 
       {previewUrl && <LinkPreviewCard url={previewUrl} />}
 
+      {quoteFeed && <QuotedFeed feed={quoteFeed} />}
+
+      {!quoteFeed && (
       <div className="rounded-xl border border-[#e6e9ef] p-3">
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="text-sm font-semibold text-[#172033]">
@@ -698,6 +755,7 @@ function FeedComposerFields({
           onChange={handleVideoFile}
         />
       </div>
+      )}
 
       <div className="flex justify-end gap-2 border-t border-[#e6e9ef] pt-4">
         <Button
@@ -717,7 +775,11 @@ function FeedComposerFields({
           ) : (
             <Send className="size-4" />
           )}
-          {submitting ? "Memposting..." : "Posting"}
+          {submitting
+            ? "Memposting..."
+            : quoteFeed
+              ? "Quote Repost"
+              : "Posting"}
         </Button>
       </div>
     </form>

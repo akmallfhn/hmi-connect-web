@@ -9,6 +9,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pencil,
+  Quote,
   Repeat2,
   Share2,
   Trash2,
@@ -22,7 +23,9 @@ import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
+import QuotedFeed from "./QuotedFeed";
 import EditFeedForm from "../forms/EditFeedForm";
+import { FeedComposerModal } from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
@@ -49,6 +52,7 @@ interface FeedItemCardProps {
   defaultShowComments?: boolean;
   initialReposted?: boolean;
   onDeleted?: (feedId: string) => void;
+  onFeedCreated?: (feed: Feed) => void;
 }
 
 function MediaGrid({
@@ -174,31 +178,6 @@ function ImagePreviewModal({
   );
 }
 
-function QuotedFeed({ feed }: { feed: Feed }) {
-  const photo = feed.media?.find((item) => item.type === "photo");
-  return (
-    <div className="mt-3 rounded-xl border border-[#e6e9ef] p-3">
-      <div className="flex items-center gap-2">
-        <Avatar src={feed.creator_avatar} name={feed.creator_full_name} size={28} />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#172033]">
-            {feed.creator_full_name}
-          </p>
-          <p className="text-xs text-[#5f6573]">{formatRelativeTime(feed.created_at)}</p>
-        </div>
-      </div>
-      <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-[#172033]">
-        {feed.content}
-      </p>
-      {photo && (
-        <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-[#f5f7fb]">
-          <Image src={photo.url} alt="" fill className="object-cover" unoptimized />
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function FeedItemCard({
   feed,
   currentUserId,
@@ -209,6 +188,7 @@ export default function FeedItemCard({
   defaultShowComments = false,
   initialReposted,
   onDeleted,
+  onFeedCreated,
 }: FeedItemCardProps) {
   const router = useRouter();
   const reaction = useReaction("feed", feed.id, {
@@ -221,6 +201,7 @@ export default function FeedItemCard({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showQuoteRepost, setShowQuoteRepost] = useState(false);
   const [content, setContent] = useState(feed.content);
   const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
   const isEdited = updatedAt !== feed.created_at;
@@ -299,6 +280,11 @@ export default function FeedItemCard({
         toast.error(result.message ?? "Gagal memperbarui repost.");
       }
     });
+  }
+
+  function handleQuoteRepost() {
+    if (!requireVerified()) return;
+    setShowQuoteRepost(true);
   }
 
   function handleToggleComments() {
@@ -472,17 +458,42 @@ export default function FeedItemCard({
           <MessageCircle className="size-4" />
           {totalCommentCount > 0 && totalCommentCount}
         </Button>
-        <Button
-          variant="ghost"
-          onClick={toggleRepost}
-          disabled={reposting || isOwnFeed}
-          title={isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined}
-          className={`rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
-            reposted ? "text-primary" : isOwnFeed ? "text-[#c3c7d1]" : "text-[#5f6573]"
-          }`}
+        <Dropdown
+          align="right"
+          trigger={({ toggle }) => (
+            <Button
+              variant="ghost"
+              onClick={toggle}
+              disabled={reposting}
+              className={`w-full rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+                reposted ? "text-secondary" : "text-[#5f6573]"
+              }`}
+            >
+              <Repeat2 className="size-4" />
+            </Button>
+          )}
         >
-          <Repeat2 className="size-4" />
-        </Button>
+          <div className="flex flex-col py-1">
+            <button
+              type="button"
+              onClick={toggleRepost}
+              disabled={isOwnFeed}
+              title={isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined}
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1]"
+            >
+              <Repeat2 className="size-4 text-[#5f6573]" />
+              {reposted ? "Batalkan Repost" : "Repost"}
+            </button>
+            <button
+              type="button"
+              onClick={handleQuoteRepost}
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+            >
+              <Quote className="size-4 text-[#5f6573]" />
+              Quote Repost
+            </button>
+          </div>
+        </Dropdown>
         <Button
           variant="ghost"
           onClick={() => setShowShareModal(true)}
@@ -568,6 +579,18 @@ export default function FeedItemCard({
         }}
         feedId={feed.id}
         initialContent={content}
+      />
+      <FeedComposerModal
+        open={showQuoteRepost}
+        onClose={() => setShowQuoteRepost(false)}
+        fullName={currentUserName}
+        avatar={currentUserAvatar}
+        userId={currentUserId}
+        quoteFeed={feed}
+        onCreated={(created) => {
+          setShowQuoteRepost(false);
+          onFeedCreated?.(created);
+        }}
       />
       <AlertConfirmation
         open={showDeleteConfirm}
