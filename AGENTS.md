@@ -191,8 +191,11 @@ below) when `isVerified === false`.
   their own debounce/pagination/loading state.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
-- `components/navigations/*` — site chrome shown on every page (currently
-  `Header.tsx`).
+- `components/navigations/*` — site chrome shown on every page: `Header.tsx` (top bar,
+  all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/E-KTA/
+  Notifikasi/Profil). Only Beranda (`/`), E-KTA (`/membership`), and Profil
+  (`/profile/[username]`) have real destinations; Cari/Notifikasi are still `href="#"`
+  placeholders.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
@@ -232,11 +235,24 @@ below) when `isVerified === false`.
   `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
   route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
   it's still `omitempty` on the Go side). `ProfilePage` also renders
-  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` uses
-  `users/detail.is_followed_by_me` for the initial
-  follow state, then calls the `followUser`/`unfollowUser` Server Actions for the button
-  toggle. It also shows `users/social-media-accounts/list` links at the desktop top-right
-  and below the identity block on mobile.
+  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` is an X/Twitter-
+  style single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
+  button top-right, then name+badge/`@username`/headline/affiliation/social links+joined-date/
+  stats flowing below) — deliberately doesn't show `coordinatingBodyName`/`organizationName`
+  or a `feedCount` stat; affiliation renders as `"HMI {chapterName} • Cabang {branchName}"`.
+  It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
+  `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
+  counts open `FollowListModal`. It also shows `users/social-media-accounts/list` links
+  (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
+  `hover:text-primary`/`hover:bg-primary-soft` tint there).
+- `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
+  banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
+  (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered
+  by `components/pages/MembershipPage.tsx` for the `/membership` ("E-KTA") route, backed by
+  `apis/users.ts#getMembershipDetail` (`users/membership-details`, session-JWT-only, no
+  request body — always the caller's own card). `member_card` is `null` until
+  `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
+  `/verification` instead of a broken card when it's missing.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,
@@ -249,8 +265,12 @@ below) when `isVerified === false`.
   button calls `unsendReaction` directly instead of reopening the picker — there's no
   default reaction until the user actually picks one the first time.
   `ReactorsListModal.tsx` lists who reacted to a feed/comment/reply (`reactions/list`,
-  paginated), each row linking to `/profile/${reactor.user_id}`; opened by clicking the
-  emoji+count summary. `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
+  paginated), each row showing `full_name` + `@username` and linking to
+  `/profile/${reactor.username}`; opened by clicking the emoji+count summary.
+  `FollowListModal.tsx` is the same list-in-a-modal shape for `users/following/list`/
+  `users/followers/list` (still `user_id`-keyed requests, unlike the username-keyed
+  endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.
+  `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
   does not require `isVerified`. `AlertConfirmation.tsx` is the generic
   title/message/confirm/cancel dialog for destructive actions (currently just feed

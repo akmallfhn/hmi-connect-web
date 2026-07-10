@@ -4,7 +4,7 @@ import { logoutUser } from "@/lib/actions";
 import {
   Bell,
   ChevronDown,
-  ClipboardList,
+  CreditCard,
   LogOut,
   Plus,
   Search,
@@ -178,13 +178,13 @@ export default function Header({
                     <UserRound className="size-4 text-[#5f6573]" />
                     Profil Saya
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    href="/membership"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                   >
-                    <ClipboardList className="size-4 text-[#5f6573]" />
-                    Log Kaderisasi
-                  </a>
+                    <CreditCard className="size-4 text-[#5f6573]" />
+                    E-KTA
+                  </Link>
                   <a
                     href="#"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"

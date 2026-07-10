@@ -18,6 +18,7 @@ export default function BottomNav({
 }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isMembership = pathname === "/membership";
   const isProfile = username ? pathname === `/profile/${username}` : false;
 
   return (
@@ -44,15 +45,18 @@ export default function BottomNav({
         Cari
       </a>
 
-      <a
-        href="#"
-        className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
+      <Link
+        href="/membership"
+        className={[
+          "flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium",
+          isMembership ? "text-primary" : "text-[#5f6573]",
+        ].join(" ")}
       >
         <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30">
           <CreditCard className="size-5" />
         </span>
         E-KTA
-      </a>
+      </Link>
 
       <a
         href="#"
