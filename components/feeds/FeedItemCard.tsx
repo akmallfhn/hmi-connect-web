@@ -240,7 +240,10 @@ export default function FeedItemCard({
   return (
     <article className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <Link href={`/profile/${feed.creator_id}`} className="flex items-start gap-3">
+        <Link
+          href={feed.creator_username ? `/profile/${feed.creator_username}` : "#"}
+          className="flex items-start gap-3"
+        >
           <Avatar src={feed.creator_avatar} name={feed.creator_full_name} size={44} />
           <div>
             <p className="font-semibold text-[#172033]">{feed.creator_full_name}</p>

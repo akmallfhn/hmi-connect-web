@@ -137,7 +137,7 @@ export default function CommentItem({
   return (
     <div className="flex items-start gap-2">
       <Link
-        href={`/profile/${comment.user_id}`}
+        href={comment.username ? `/profile/${comment.username}` : "#"}
         aria-label={`Lihat profil ${comment.full_name}`}
         className="shrink-0 rounded-full"
       >

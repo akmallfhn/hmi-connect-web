@@ -66,8 +66,8 @@ export default function ReactorsListModal({
         )}
         {reactors.map((reactor) => (
           <Link
-            key={reactor.user_id}
-            href={`/profile/${reactor.user_id}`}
+            key={reactor.id}
+            href={reactor.username ? `/profile/${reactor.username}` : "#"}
             className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
           >
             <Avatar src={reactor.avatar} name={reactor.full_name} size={40} />

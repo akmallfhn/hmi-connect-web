@@ -227,11 +227,11 @@ below) when `isVerified === false`.
   `education-histories/list`, `training-histories/list`, and
   `organization-experiences/list` all take `{ username }` now (`apis/users.ts#getUserByUsername`
   + the matching `list*` functions); `social-media-accounts/list` is the one holdout still
-  keyed by `{ id }`. Known gap: feed (`creator_id`), comment/reply (`user_id`), and reactor
-  (`reactions/list`'s `user_id`) responses only expose a UUID, never a username, so
-  `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links can't resolve under this
-  route until those backend responses grow a username field too — don't "fix" those links
-  without that backend work landing first. `ProfilePage` also renders
+  keyed by `{ id }`. Feed (`creator_username`), comment/reply (`username`), and reactor
+  (`reactions/list`'s `username`) responses also carry a username alongside their `id`/
+  `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
+  route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
+  it's still `omitempty` on the Go side). `ProfilePage` also renders
   `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` uses
   `users/detail.is_followed_by_me` for the initial
   follow state, then calls the `followUser`/`unfollowUser` Server Actions for the button

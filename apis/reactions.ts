@@ -6,8 +6,9 @@ import { isSuccessStatus, type ReactionTargetTypeEnum, type ReactionTypeEnum } f
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Reactor = {
-  user_id: string;
+  id: string;
   full_name: string;
+  username?: string;
   avatar?: string;
 };
 
