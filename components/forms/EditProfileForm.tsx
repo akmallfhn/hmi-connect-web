@@ -238,7 +238,8 @@ function ProfileFields({
 
       if (failedSocialResults.length > 0) {
         toast.error(
-          `${failedSocialResults.length} dari ${attemptedSocialResults.length} sosial media gagal disimpan.`
+          failedSocialResults[0]?.message ??
+            `${failedSocialResults.length} dari ${attemptedSocialResults.length} sosial media gagal disimpan.`
         );
         return;
       }
@@ -369,7 +370,7 @@ function ProfileFields({
         <Button
           variant="ghost"
           onClick={addSocialDraft}
-          disabled={platformOptions.length === 0 || isSaving}
+          disabled={isSaving}
           className="mt-4 w-full gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-primary hover:bg-primary-soft"
         >
           <Plus className="size-4" />
