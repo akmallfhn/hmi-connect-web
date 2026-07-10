@@ -28,6 +28,7 @@ import EditProfileForm from "../forms/EditProfileForm";
 
 interface ProfileHeaderProps {
   userId?: string;
+  username?: string;
   fullName?: string;
   avatar?: string;
   headline?: string;
@@ -115,6 +116,7 @@ function SocialLinks({
 
 export default function ProfileHeader({
   userId,
+  username,
   fullName,
   avatar,
   headline,
@@ -178,18 +180,39 @@ export default function ProfileHeader({
     }
   }
 
+  const actionButton = isOwnProfile ? (
+    <Button variant="light" onClick={() => setIsEditOpen(true)} className="w-full lg:w-auto">
+      <Pencil className="size-3.5" />
+      Edit Profil
+    </Button>
+  ) : (
+    <Button
+      variant={isFollowing ? "light" : "primary"}
+      onClick={handleFollowToggle}
+      disabled={followLoading}
+      className="w-full lg:w-auto"
+    >
+      {isFollowing ? (
+        <UserCheck className="size-3.5" />
+      ) : (
+        <UserPlus className="size-3.5" />
+      )}
+      {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
+    </Button>
+  );
+
   return (
     <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white shadow-sm lg:rounded-2xl lg:border-x">
       <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-          <div className="-mt-12 flex min-w-0 items-end gap-4 lg:-mt-16">
+        <div className="flex flex-col items-center text-center lg:flex-row lg:items-end lg:justify-between lg:gap-6 lg:text-left">
+          <div className="-mt-14 flex flex-col items-center gap-3 lg:-mt-16 lg:min-w-0 lg:flex-1 lg:flex-row lg:items-end lg:gap-4">
             {isOwnProfile ? (
               <button
                 type="button"
                 onClick={() => setIsAvatarEditOpen(true)}
-                className="group relative overflow-hidden rounded-full border-4 border-white hover:cursor-pointer"
+                className="group relative shrink-0 overflow-hidden rounded-full border-4 border-white hover:cursor-pointer"
                 aria-label="Ubah foto profil"
               >
                 <Avatar src={avatar} name={displayName} size={112} />
@@ -202,12 +225,12 @@ export default function ProfileHeader({
                 src={avatar}
                 name={displayName}
                 size={112}
-                className="border-4 border-white"
+                className="shrink-0 border-4 border-white"
               />
             )}
 
-            <div className="min-w-0 pb-1">
-              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <div className="min-w-0 lg:pb-1">
+              <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5 lg:justify-start">
                 <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
                   {displayName}
                 </h1>
@@ -221,6 +244,10 @@ export default function ProfileHeader({
                 )}
               </div>
 
+              {username && (
+                <p className="text-sm text-[#5f6573]">@{username}</p>
+              )}
+
               {headline && (
                 <p className="mt-1 line-clamp-2 text-sm font-medium text-[#5f6573]">
                   {headline}
@@ -229,37 +256,12 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-3 lg:mt-5 lg:min-w-[220px] lg:items-end">
-            {isOwnProfile ? (
-              <Button variant="light" onClick={() => setIsEditOpen(true)}>
-                <Pencil className="size-3.5" />
-                Edit Profil
-              </Button>
-            ) : (
-              <Button
-                variant={isFollowing ? "light" : "primary"}
-                onClick={handleFollowToggle}
-                disabled={followLoading}
-              >
-                {isFollowing ? (
-                  <UserCheck className="size-3.5" />
-                ) : (
-                  <UserPlus className="size-3.5" />
-                )}
-                {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
-              </Button>
-            )}
-
-            <SocialLinks
-              accounts={socialMediaAccounts}
-              isOwnProfile={isOwnProfile}
-              onAdd={() => setIsEditOpen(true)}
-              className="hidden justify-end lg:flex"
-            />
+          <div className="mt-4 hidden shrink-0 lg:mb-1 lg:block">
+            {actionButton}
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 text-sm text-[#5f6573] lg:max-w-2xl">
+        <div className="mt-4 flex flex-col items-center gap-2 text-sm text-[#5f6573] lg:flex-row lg:flex-wrap lg:gap-x-5 lg:gap-y-1.5">
           {primaryAffiliation && (
             <p className="flex items-start gap-1.5">
               <MapPin className="mt-0.5 size-3.5 shrink-0 text-primary" />
@@ -274,14 +276,7 @@ export default function ProfileHeader({
           )}
         </div>
 
-        <SocialLinks
-          accounts={socialMediaAccounts}
-          isOwnProfile={isOwnProfile}
-          onAdd={() => setIsEditOpen(true)}
-          className="mt-4 lg:hidden"
-        />
-
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
           {isVerified && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
               <VerifiedBadge size={14} />
@@ -302,20 +297,29 @@ export default function ProfileHeader({
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-3 overflow-hidden rounded-xl border border-[#e6e9ef] bg-[#fbfcfe] text-center lg:max-w-md">
-          <div className="px-3 py-3">
+        <SocialLinks
+          accounts={socialMediaAccounts}
+          isOwnProfile={isOwnProfile}
+          onAdd={() => setIsEditOpen(true)}
+          className="mt-4 justify-center lg:justify-start"
+        />
+
+        <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center lg:max-w-md">
+          <div>
             <p className="font-bold text-[#172033]">{followingCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Mengikuti</p>
           </div>
-          <div className="border-x border-[#e6e9ef] px-3 py-3">
+          <div>
             <p className="font-bold text-[#172033]">{followersTotal}</p>
             <p className="text-xs text-[#5f6573]">Pengikut</p>
           </div>
-          <div className="px-3 py-3">
+          <div>
             <p className="font-bold text-[#172033]">{feedCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Postingan</p>
           </div>
         </div>
+
+        <div className="mt-4 lg:hidden">{actionButton}</div>
       </div>
 
       {isOwnProfile && (

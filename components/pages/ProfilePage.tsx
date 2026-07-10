@@ -77,6 +77,7 @@ export default function ProfilePage({
             <ProfileHeader
               key={`${profile.userId}-${profile.isFollowedByMe}-${profile.followersCount}`}
               userId={profile.userId}
+              username={profile.username}
               fullName={profile.fullName}
               avatar={profile.avatar}
               headline={profile.headline}
