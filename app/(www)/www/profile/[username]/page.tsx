@@ -9,6 +9,7 @@ import {
   listOrganizationExperiences,
   listSocialMediaAccounts,
   listTrainingHistories,
+  listUserActivity,
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
 
@@ -74,6 +75,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     { list: trainingHistories },
     { list: organizationExperiences },
     { list: socialMediaAccounts },
+    { list: activities },
     institutions,
     socialMediaPlatforms,
     viewerProfile,
@@ -82,6 +84,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     listTrainingHistories(username),
     listOrganizationExperiences(username),
     listSocialMediaAccounts(profile.id),
+    listUserActivity(username, { pageSize: 3 }),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
     isOwnProfile
       ? getSocialMediaPlatforms({ page: 1, pageSize: 20 })
@@ -113,6 +116,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         organizationExperiences,
         socialMediaAccounts,
         trainingHistories,
+        activities,
         userId: profile.id,
         username,
       }}

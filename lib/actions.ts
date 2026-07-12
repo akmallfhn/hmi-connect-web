@@ -18,6 +18,7 @@ import {
   followUser as followUserApi,
   listFollowers as listFollowersApi,
   listFollowing as listFollowingApi,
+  listUserActivity as listUserActivityApi,
   updateEducationHistory as updateEducationHistoryApi,
   updateOrganizationExperience as updateOrganizationExperienceApi,
   updateSocialMediaAccount as updateSocialMediaAccountApi,
@@ -85,6 +86,10 @@ export async function listFollowing(userId: string, page?: number) {
 
 export async function listFollowers(userId: string, page?: number) {
   return listFollowersApi(userId, { page });
+}
+
+export async function loadMoreUserActivity(username: string, page: number) {
+  return listUserActivityApi(username, { page, pageSize: 20 });
 }
 
 export async function createEducationHistory(

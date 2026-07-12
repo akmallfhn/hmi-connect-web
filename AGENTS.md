@@ -257,7 +257,16 @@ below) when `isVerified === false`.
   `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
   counts open `FollowListModal`. It also shows `users/social-media-accounts/list` links
   (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
-  `hover:text-primary`/`hover:bg-primary-soft` tint there).
+  `hover:text-primary`/`hover:bg-primary-soft` tint there). `ActivityCard` is real-API-backed
+  via `apis/users.ts#listUserActivity` (`users/activity/list`, gated like `getUserByUsername`
+  but also reads the viewer's own session cookie internally so nested feed/comment carry
+  `my_reaction`) — it shows only the 3 most recent entries on the profile page itself, each
+  rendered by the shared `ActivityEntryCard` (type is one of `post`/`quote_repost`/`repost`/
+  `comment`; for a plain `repost` the entry's `feed` is the *original* post, not one the user
+  authored, so it renders through `QuotedFeed` same as a quote repost's `repost_of`). The full,
+  paginated history lives at `/profile/[username]/activities`
+  (`components/pages/ProfileActivitiesPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
+  shape as `FeedTimeline`, backed by the `loadMoreUserActivity` Server Action).
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered

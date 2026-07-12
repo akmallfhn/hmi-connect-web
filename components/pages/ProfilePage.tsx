@@ -1,6 +1,7 @@
 import type { Institution } from "@/apis/institutions";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
+  ActivityEntry,
   EducationHistoryEntry,
   OrganizationExperienceEntry,
   SocialMediaAccountEntry,
@@ -44,6 +45,7 @@ interface ProfileProps extends ViewerProps {
   organizationExperiences: OrganizationExperienceEntry[];
   socialMediaAccounts: SocialMediaAccountEntry[];
   trainingHistories: TrainingHistoryEntry[];
+  activities: ActivityEntry[];
 }
 
 interface ProfilePageProps {
@@ -112,7 +114,7 @@ export default function ProfilePage({
               entries={profile.trainingHistories}
               isOwnProfile={isOwnProfile}
             />
-            <ActivityCard />
+            <ActivityCard username={profile.username} entries={profile.activities} />
           </div>
 
           <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">

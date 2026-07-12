@@ -1,49 +1,42 @@
-"use client";
+import Link from "next/link";
+import type { ActivityEntry } from "@/apis/users";
+import ActivityEntryCard from "./ActivityEntryCard";
 
-import { Heart, MessageCircle, Share2, Trophy } from "lucide-react";
-import { PLACEHOLDER_ACTIVITY } from "./mockData";
+interface ActivityCardProps {
+  username?: string;
+  entries: ActivityEntry[];
+}
 
-export default function ActivityCard() {
+export default function ActivityCard({ username, entries }: ActivityCardProps) {
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <h2 className="text-sm font-semibold text-[#172033]">Aktivitas</h2>
 
       <div className="mt-3 flex flex-col gap-4">
-        {PLACEHOLDER_ACTIVITY.map((post) => (
-          <article
-            key={post.id}
-            className="border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0"
-          >
-            <p className="text-xs text-[#5f6573]">{post.timestamp}</p>
-
-            {post.badge && (
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                <Trophy className="size-3.5" />
-                {post.badge}
-              </div>
-            )}
-
-            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#172033]">
-              {post.content}
-            </p>
-
-            <div className="mt-3 flex items-center gap-4 text-xs text-[#5f6573]">
-              <span className="flex items-center gap-1.5">
-                <Heart className="size-3.5" />
-                {post.likes}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <MessageCircle className="size-3.5" />
-                {post.comments}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Share2 className="size-3.5" />
-                {post.shares}
-              </span>
+        {entries.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573]">
+            Belum ada aktivitas.
+          </p>
+        ) : (
+          entries.map((entry, index) => (
+            <div
+              key={`${entry.type}-${entry.feed.id}-${entry.comment?.id ?? index}`}
+              className="border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0"
+            >
+              <ActivityEntryCard entry={entry} />
             </div>
-          </article>
-        ))}
+          ))
+        )}
       </div>
+
+      {username && entries.length > 0 && (
+        <Link
+          href={`/profile/${username}/activities`}
+          className="mt-4 block border-t border-[#e6e9ef] pt-3 text-center text-xs font-semibold text-primary hover:underline"
+        >
+          Lihat semua
+        </Link>
+      )}
     </div>
   );
 }

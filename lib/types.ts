@@ -20,6 +20,7 @@ export type ReactionTypeEnum =
   | "sad"
   | "angry";
 export type ReactionTargetTypeEnum = "feed" | "comment" | "comment_reply";
+export type ActivityTypeEnum = "post" | "quote_repost" | "repost" | "comment";
 
 export type StatusName =
   | "OK"

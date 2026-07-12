@@ -3,8 +3,10 @@ import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
+import type { Feed, FeedComment } from "./feeds";
 import {
   isSuccessStatus,
+  type ActivityTypeEnum,
   type Degree,
   type GenderEnum,
   type TrainingResultEnum,
@@ -535,6 +537,47 @@ export async function listSocialMediaAccounts(
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listSocialMediaAccounts] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
+// Mirrors POST /api/v1/users/activity/list's response — one entry of a user's merged post/repost/comment activity.
+export type ActivityEntry = {
+  type: ActivityTypeEnum;
+  created_at: string;
+  feed: Feed;
+  comment: FeedComment | null;
+};
+
+// Gated by the org client secret like getUserByUsername, but reads the viewer's own session
+// cookie too so nested feed/comment carry viewer-scoped fields (my_reaction) when logged in.
+export async function listUserActivity(
+  username: string,
+  options: ListOptions = {}
+): Promise<ListResult<ActivityEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const authToken = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!authToken) return { list: [], hasMore: false };
+
+  const { page, pageSize } = options;
+  const result = await callApi<ListResponse<ActivityEntry>>("/api/v1/users/activity/list", {
+    method: "POST",
+    token: authToken,
+    body: {
+      username,
+      ...(page ? { page } : {}),
+      ...(pageSize ? { page_size: pageSize } : {}),
+    },
+  });
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listUserActivity] request failed:", result);
     return { list: [], hasMore: false };
   }
 
