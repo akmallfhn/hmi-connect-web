@@ -27,6 +27,40 @@ interface NewsPageProps {
   initialHasMore: boolean;
 }
 
+function pillClassName(active: boolean): string {
+  return [
+    "shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition",
+    active
+      ? "border-white bg-white text-primary"
+      : "border-white/30 bg-white/10 text-white hover:bg-white/20",
+  ].join(" ");
+}
+
+function CategoryPills({
+  categories,
+  activeCategorySlug,
+}: {
+  categories: NewsCategory[];
+  activeCategorySlug?: string;
+}) {
+  return (
+    <>
+      <Link href="/news" className={pillClassName(!activeCategorySlug)}>
+        Semua
+      </Link>
+      {categories.map((category) => (
+        <Link
+          key={category.id}
+          href={`/news/${category.slug}`}
+          className={pillClassName(activeCategorySlug === category.slug)}
+        >
+          {category.name}
+        </Link>
+      ))}
+    </>
+  );
+}
+
 export default function NewsPage({
   viewer,
   categories,
@@ -89,38 +123,27 @@ export default function NewsPage({
       />
 
       <div className="sticky top-16 z-30 bg-primary">
-        <PageMargin className="flex items-center gap-4 py-3">
+        {/* Mobile: no title, just the scrollable category pills, flush on the right only. */}
+        <PageMargin noMobilePadding className="pl-4 sm:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <CategoryPills
+              categories={categories}
+              activeCategorySlug={activeCategorySlug}
+            />
+          </div>
+        </PageMargin>
+
+        {/* sm+: title stays fixed, only the pills scroll if they overflow. */}
+        <PageMargin className="hidden sm:flex sm:items-center sm:gap-4 sm:py-3">
           <div className="flex shrink-0 items-center gap-2">
             <Newspaper className="size-3.5 text-white" />
             <h1 className="text-sm font-semibold text-white">Kabar HMI</h1>
           </div>
-
           <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link
-              href="/news"
-              className={[
-                "shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition",
-                !activeCategorySlug
-                  ? "border-white bg-white text-primary"
-                  : "border-white/30 bg-white/10 text-white hover:bg-white/20",
-              ].join(" ")}
-            >
-              Semua
-            </Link>
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/news/${category.slug}`}
-                className={[
-                  "shrink-0 rounded-full border px-4 py-1.5 text-[13px] font-medium transition",
-                  activeCategorySlug === category.slug
-                    ? "border-white bg-white text-primary"
-                    : "border-white/30 bg-white/10 text-white hover:bg-white/20",
-                ].join(" ")}
-              >
-                {category.name}
-              </Link>
-            ))}
+            <CategoryPills
+              categories={categories}
+              activeCategorySlug={activeCategorySlug}
+            />
           </div>
         </PageMargin>
       </div>
