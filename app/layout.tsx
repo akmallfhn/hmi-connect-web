@@ -1,6 +1,7 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Geist, Geist_Mono, Google_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import ScrollToTop from "@/lib/ScrollToTop";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +32,8 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col scroll-smooth">
+        <ScrollToTop />
         <GoogleOAuthProvider clientId={googleOauthId!}>
           {children}
         </GoogleOAuthProvider>
