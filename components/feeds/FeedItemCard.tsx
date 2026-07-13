@@ -51,6 +51,7 @@ interface FeedItemCardProps {
   initialComments?: FeedComment[];
   defaultShowComments?: boolean;
   initialReposted?: boolean;
+  repostedBy?: { fullName: string; avatar?: string };
   onDeleted?: (feedId: string) => void;
   onFeedCreated?: (feed: Feed) => void;
 }
@@ -74,7 +75,13 @@ function MediaGrid({
         className="relative mt-3 aspect-video w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f7fb]"
         aria-label="Buka pratinjau gambar"
       >
-        <Image src={photos[0].url} alt="" fill className="object-cover" unoptimized />
+        <Image
+          src={photos[0].url}
+          alt=""
+          fill
+          className="object-cover"
+          unoptimized
+        />
       </button>
     );
   }
@@ -92,7 +99,13 @@ function MediaGrid({
             className={`relative aspect-square bg-[#f5f7fb] ${spanFull ? "col-span-2" : ""}`}
             aria-label="Buka pratinjau gambar"
           >
-            <Image src={photo.url} alt="" fill className="object-cover" unoptimized />
+            <Image
+              src={photo.url}
+              alt=""
+              fill
+              className="object-cover"
+              unoptimized
+            />
             {isLastVisible && overflow > 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-lg font-semibold text-white">
                 +{overflow}
@@ -187,6 +200,7 @@ export default function FeedItemCard({
   initialComments,
   defaultShowComments = false,
   initialReposted,
+  repostedBy,
   onDeleted,
   onFeedCreated,
 }: FeedItemCardProps) {
@@ -213,7 +227,9 @@ export default function FeedItemCard({
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
 
   const [showComments, setShowComments] = useState(defaultShowComments);
-  const [comments, setComments] = useState<FeedComment[]>(initialComments ?? []);
+  const [comments, setComments] = useState<FeedComment[]>(
+    initialComments ?? []
+  );
   const [commentsLoaded, setCommentsLoaded] = useState(
     initialComments !== undefined
   );
@@ -227,7 +243,9 @@ export default function FeedItemCard({
   const videoMedia = feed.media?.find((item) => item.type === "video");
   const urlMedia = feed.media?.find((item) => item.type === "url");
   const shareUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/feeds/${feed.id}` : "";
+    typeof window !== "undefined"
+      ? `${window.location.origin}/feeds/${feed.id}`
+      : "";
   const totalCommentCount = commentCount + feed.comment_reply_count;
 
   function requireVerified(): boolean {
@@ -273,7 +291,9 @@ export default function FeedItemCard({
     setReposted(nextReposted);
 
     startRepostTransition(async () => {
-      const result = nextReposted ? await repostFeed(feed.id) : await unrepostFeed(feed.id);
+      const result = nextReposted
+        ? await repostFeed(feed.id)
+        : await unrepostFeed(feed.id);
 
       if (!isSuccessStatus(result.status)) {
         setReposted(!nextReposted);
@@ -331,14 +351,33 @@ export default function FeedItemCard({
 
   return (
     <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+      {repostedBy && (
+        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573]">
+          <Repeat2 className="size-3.5" />
+          <Avatar
+            src={repostedBy.avatar}
+            name={repostedBy.fullName}
+            size={18}
+          />
+          <span>{repostedBy.fullName} membagikan ulang</span>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <Link
-          href={feed.creator_username ? `/profile/${feed.creator_username}` : "#"}
+          href={
+            feed.creator_username ? `/profile/${feed.creator_username}` : "#"
+          }
           className="flex items-start gap-3"
         >
-          <Avatar src={feed.creator_avatar} name={feed.creator_full_name} size={44} />
+          <Avatar
+            src={feed.creator_avatar}
+            name={feed.creator_full_name}
+            size={44}
+          />
           <div>
-            <p className="font-semibold text-[#172033]">{feed.creator_full_name}</p>
+            <p className="font-semibold text-[#172033]">
+              {feed.creator_full_name}
+            </p>
             <p className="text-xs text-[#5f6573]">
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
@@ -399,7 +438,11 @@ export default function FeedItemCard({
         <MediaGrid media={photoMedia} onPreview={setPreviewPhoto} />
       )}
       {videoMedia && (
-        <video controls src={videoMedia.url} className="mt-3 w-full rounded-xl bg-black" />
+        <video
+          controls
+          src={videoMedia.url}
+          className="mt-3 w-full rounded-xl bg-black"
+        />
       )}
       {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
       {feed.repost_of && <QuotedFeed feed={feed.repost_of} />}
@@ -411,16 +454,17 @@ export default function FeedItemCard({
           className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-[#5f6573]"
         >
           <span className="flex items-center -space-x-1">
-            {(reaction.reactionEmojis.length > 0 ? reaction.reactionEmojis : ["👍"]).map(
-              (emoji, index) => (
-                <span
-                  key={`${emoji}-${index}`}
-                  className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
-                >
-                  {emoji}
-                </span>
-              )
-            )}
+            {(reaction.reactionEmojis.length > 0
+              ? reaction.reactionEmojis
+              : ["👍"]
+            ).map((emoji, index) => (
+              <span
+                key={`${emoji}-${index}`}
+                className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
+              >
+                {emoji}
+              </span>
+            ))}
           </span>
           {reaction.reactionCount}
         </button>
@@ -437,7 +481,9 @@ export default function FeedItemCard({
             }`}
           >
             {reaction.activeReactionInfo ? (
-              <span className="text-base leading-none">{reaction.activeReactionInfo.emoji}</span>
+              <span className="text-base leading-none">
+                {reaction.activeReactionInfo.emoji}
+              </span>
             ) : (
               <Heart className="size-4" />
             )}
@@ -447,7 +493,9 @@ export default function FeedItemCard({
             open={showReactionPicker}
             onClose={() => setShowReactionPicker(false)}
             activeReaction={reaction.activeReaction}
-            onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+            onSelect={(type) =>
+              reaction.apply(reaction.activeReaction === type ? null : type)
+            }
           />
         </div>
         <Button
@@ -478,7 +526,9 @@ export default function FeedItemCard({
               type="button"
               onClick={toggleRepost}
               disabled={isOwnFeed}
-              title={isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined}
+              title={
+                isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined
+              }
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1]"
             >
               <Repeat2 className="size-4 text-[#5f6573]" />
@@ -527,7 +577,9 @@ export default function FeedItemCard({
 
       {showComments && (
         <div className="mt-3 flex flex-col gap-3 border-t border-[#e6e9ef] pt-3">
-          {loadingComments && <p className="text-xs text-[#5f6573]">Memuat komentar...</p>}
+          {loadingComments && (
+            <p className="text-xs text-[#5f6573]">Memuat komentar...</p>
+          )}
           {!loadingComments && commentsLoaded && comments.length === 0 && (
             <p className="py-4 text-center text-xs text-[#5f6573]">
               Jadilah yang pertama berkomentar!

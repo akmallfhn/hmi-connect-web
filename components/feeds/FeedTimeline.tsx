@@ -1,8 +1,6 @@
 "use client";
 
-import { Repeat2 } from "lucide-react";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import Avatar from "../common/Avatar";
 import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
@@ -88,7 +86,9 @@ export default function FeedTimeline({
 
   const repostedFeedIds = new Set(
     items
-      .filter((item) => item.type === "repost" && item.reposter_id === currentUserId)
+      .filter(
+        (item) => item.type === "repost" && item.reposter_id === currentUserId
+      )
       .map((item) => item.feed.id)
   );
 
@@ -109,36 +109,35 @@ export default function FeedTimeline({
         )}
 
         {items.map((item, index) => (
-          <div key={`${item.type}-${item.feed.id}-${index}`} className="contents">
-            <div className="flex flex-col gap-2">
-              {item.type === "repost" && (
-                <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
-                  <Repeat2 className="size-3.5" />
-                  <Avatar
-                    src={item.reposter_avatar}
-                    name={item.reposter_full_name}
-                    size={18}
-                  />
-                  <span>{item.reposter_full_name} membagikan ulang</span>
-                </div>
-              )}
-              <FeedItemCard
-                feed={item.feed}
-                currentUserId={currentUserId}
-                currentUserName={currentUserName}
-                currentUserAvatar={currentUserAvatar}
-                isVerified={isVerified}
-                initialReposted={repostedFeedIds.has(item.feed.id)}
-                onDeleted={handleFeedDeleted}
-                onFeedCreated={handleFeedCreated}
-              />
-            </div>
+          <div
+            key={`${item.type}-${item.feed.id}-${index}`}
+            className="contents"
+          >
+            <FeedItemCard
+              feed={item.feed}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              currentUserAvatar={currentUserAvatar}
+              isVerified={isVerified}
+              initialReposted={repostedFeedIds.has(item.feed.id)}
+              repostedBy={
+                item.type === "repost"
+                  ? {
+                      fullName: item.reposter_full_name,
+                      avatar: item.reposter_avatar,
+                    }
+                  : undefined
+              }
+              onDeleted={handleFeedDeleted}
+              onFeedCreated={handleFeedCreated}
+            />
             {index === NEWS_CARD_AFTER_INDEX && newsCard && (
               <div className="lg:hidden">{newsCard}</div>
             )}
-            {index === SUGGESTED_CONNECTIONS_AFTER_INDEX && suggestedConnectionsCard && (
-              <div className="lg:hidden">{suggestedConnectionsCard}</div>
-            )}
+            {index === SUGGESTED_CONNECTIONS_AFTER_INDEX &&
+              suggestedConnectionsCard && (
+                <div className="lg:hidden">{suggestedConnectionsCard}</div>
+              )}
           </div>
         ))}
 
