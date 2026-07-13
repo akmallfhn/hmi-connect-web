@@ -78,7 +78,10 @@ Three layers, each with one job. Don't blend them.
    (`institutions.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
    not independent resources), `social-media-platforms.ts`, `users.ts`, `session.ts`,
-   plus the shared `api.ts`).
+   `news.ts` (categories + articles — grouped together like locations.ts, since
+   `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
+   independent resources; there's no `news-sources` wrapper since no page here lists/filters
+   by source), plus the shared `api.ts`).
    Marked `import "server-only"`.
    Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
@@ -229,9 +232,13 @@ below) when `isVerified === false`.
   `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
   most-recent end year / highest training level) all come from `getUserByUsername` +
   those two list calls in `app/(www)/www/(gated)/page.tsx`. Its "Progres Minggu Ini"
-  weekly streak has no backing endpoint yet and stays a static illustration. The other
-  sidebar widgets (`RightSidebar`, `NewsCard`, `UpcomingEventsCard`,
-  `SuggestedConnectionsCard`) are still fully backed by `mockData.ts`, not a real API.
+  weekly streak has no backing endpoint yet and stays a static illustration. `NewsCard.tsx`
+  (rendered by `RightSidebar`, titled "Kabar Trending") is real-API-backed — an async Server
+  Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5 })` directly (no
+  category filter, just the 5 most-recently-published articles) and renders nothing if the
+  list comes back empty; its "Lihat Semua Berita" link goes to `/news`. The other sidebar
+  widgets (`RightSidebar` itself, `UpcomingEventsCard`, `SuggestedConnectionsCard`) are
+  still fully backed by `mockData.ts`, not a real API.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
@@ -275,6 +282,34 @@ below) when `isVerified === false`.
   request body — always the caller's own card). `member_card` is `null` until
   `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
   `/verification` instead of a broken card when it's missing.
+- `components/news/NewsArticleCard.tsx` — one article card, `variant` prop picks the shape:
+  `"featured"` (the top article — image left/summary right on `lg:`, stacked on mobile),
+  `"grid"` (image-on-top card, used in the `sm:`+ multi-column grid), `"mobileBig"` and
+  `"mobileList"` (source row on top, then either a full-width image or a title+small-square-
+  thumbnail row, timestamp at the bottom — a Google News-style mix used only below `sm:`).
+  The `<a>` itself always links straight out to `article.source_url` on the outlet's own
+  site — there's no `news-articles/detail` endpoint or in-app article page, by design (see
+  the news API's own README). The source name is paired with `SourceLogo`, which renders
+  `article.source_logo_url` when present and falls back to an empty placeholder square
+  otherwise (some sources still don't have a `news_sources.logo_url` set). Shared by
+  `components/pages/NewsPage.tsx`, the client component behind both `/news`
+  (`app/(www)/www/(gated)/news/page.tsx`) and `/news/[category_slug]`
+  (`.../news/[category_slug]/page.tsx`) — same component, `activeCategorySlug` prop is what
+  differs, so switching categories is plain `<Link>` navigation between the two routes, not
+  client-side state. Below `sm:`, the rest of the list (after the featured card) renders as
+  a single Google News-style column mixing `mobileBig`/`mobileList` (every 4th item is
+  `mobileBig`); at `sm:` and up that same list instead renders as the `"grid"` variant in a
+  multi-column grid — both are rendered and toggled via `sm:hidden`/`hidden sm:grid` rather
+  than JS viewport detection. The title strip right below `Header` (`bg-primary`, sticky
+  `top-16`) holds "Kabar HMI" sized to match the category pills next to it, not as an
+  oversized page heading; the active pill is `bg-white text-primary`, inactive pills are
+  translucent white on top of the green bar. Category filter pills are sourced from
+  `apis/news.ts#listNewsCategories`, and further pages of `apis/news.ts#listNewsArticles`
+  paginate via the `loadMoreNewsArticles` Server Action, same infinite-scroll-via-
+  `IntersectionObserver` shape as `FeedTimeline`/`ProfileActivitiesPage`. Both route
+  `page.tsx`s fetch `page: 1` server-side and pass `key={category_slug}` (or `key="all"`)
+  to `<NewsPage>` so switching categories remounts it with fresh pagination state instead
+  of leaking the previous category's items in.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

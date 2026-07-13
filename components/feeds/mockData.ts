@@ -7,13 +7,6 @@ export interface UpcomingEvent {
   location: string;
 }
 
-export interface NewsItem {
-  id: string;
-  title: string;
-  source: string;
-  thumbnail: string;
-}
-
 export interface SuggestedConnection {
   id: string;
   name: string;
@@ -55,27 +48,6 @@ export const UPCOMING_EVENTS: UpcomingEvent[] = [
     month: "Agu",
     time: "09.00 WIB",
     location: "Aula PB HMI, Jakarta",
-  },
-];
-
-export const NEWS_ITEMS: NewsItem[] = [
-  {
-    id: "news-1",
-    title: "PB HMI Gelar Rapat Koordinasi Nasional Jelang Kongres",
-    source: "hmi.or.id",
-    thumbnail: "https://picsum.photos/seed/hmi-news-1/200/200",
-  },
-  {
-    id: "news-2",
-    title: "5 Alumni HMI yang Kini Jadi Menteri di Kabinet",
-    source: "Kabar Kader",
-    thumbnail: "https://picsum.photos/seed/hmi-news-2/200/200",
-  },
-  {
-    id: "news-3",
-    title: "Cabang Makassar Raih Penghargaan Cabang Terbaik 2026",
-    source: "hmi.or.id",
-    thumbnail: "https://picsum.photos/seed/hmi-news-3/200/200",
   },
 ];
 

@@ -58,6 +58,7 @@ import {
   sendReaction as sendReactionApi,
   unsendReaction as unsendReactionApi,
 } from "@/apis/reactions";
+import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
 import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
@@ -168,6 +169,10 @@ export async function createInstitution(
 
 export async function loadMoreFeeds(page: number) {
   return listFeedsApi({ page, pageSize: 20 });
+}
+
+export async function loadMoreNewsArticles(page: number, categorySlug?: string) {
+  return listNewsArticlesApi({ page, pageSize: 12, categorySlug });
 }
 
 export async function createFeed(payload: CreateFeedPayload) {
