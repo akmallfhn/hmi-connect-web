@@ -1,14 +1,18 @@
-import { Award, Flame, GraduationCap } from "lucide-react";
+"use client";
+
+import { Award, GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import Avatar from "../common/Avatar";
 import VerifiedBadge from "../common/VerifiedBadge";
-import { WEEK_DAYS } from "./mockData";
+import FollowListModal from "../modals/FollowListModal";
 import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
 import { DEGREE_LABELS } from "@/lib/education";
 import type { TrainingResultEnum, TrainingStatusEnum } from "@/lib/types";
 
 interface ProfileSidebarProps {
+  userId?: string;
   fullName?: string;
   avatar?: string;
   headline?: string;
@@ -29,9 +33,6 @@ const RESULT_LABELS: Record<TrainingResultEnum, string> = {
 
 const LEVEL_RANK: Record<TrainingStatusEnum, number> = { LK1: 1, LK2: 2, LK3: 3 };
 
-// This app-level engagement streak has no backing endpoint yet — kept as a static illustration until one exists.
-const WEEK_PROGRESS = [true, true, false, true, true, false, false];
-
 function getLatestEducation(
   entries: EducationHistoryEntry[]
 ): EducationHistoryEntry | undefined {
@@ -50,6 +51,7 @@ function getLatestTraining(
 }
 
 export default function ProfileSidebar({
+  userId,
   fullName,
   avatar,
   headline,
@@ -61,6 +63,9 @@ export default function ProfileSidebar({
   educationHistories = [],
   trainingHistories = [],
 }: ProfileSidebarProps) {
+  const [followListType, setFollowListType] = useState<"following" | "followers" | null>(
+    null
+  );
   const displayName = fullName ?? "Kader";
   const latestEducation = getLatestEducation(educationHistories);
   const latestTraining = getLatestTraining(trainingHistories);
@@ -83,22 +88,30 @@ export default function ProfileSidebar({
         </Link>
 
         <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3 text-center">
-          <div>
+          <button
+            type="button"
+            onClick={() => setFollowListType("following")}
+            className="cursor-pointer"
+          >
             <p className="font-bold text-[#172033]">{followingCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Mengikuti</p>
-          </div>
-          <div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFollowListType("followers")}
+            className="cursor-pointer"
+          >
             <p className="font-bold text-[#172033]">{followersCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Pengikut</p>
-          </div>
-          <div>
+          </button>
+          <Link href={username ? `/profile/${username}/activities` : "#"}>
             <p className="font-bold text-[#172033]">{feedCount ?? 0}</p>
             <p className="text-xs text-[#5f6573]">Postingan</p>
-          </div>
+          </Link>
         </div>
 
         {(latestEducation || latestTraining) && (
-          <div className="mt-4 flex flex-col gap-3 border-t border-[#e6e9ef] pt-4">
+          <div className="mt-4 flex flex-col gap-3">
             <p className="text-sm font-medium text-[#172033]">Informasi</p>
             {latestEducation && (
               <div className="flex items-start gap-3">
@@ -144,38 +157,16 @@ export default function ProfileSidebar({
             )}
           </div>
         )}
-
-        <div className="mt-4 border-t border-[#e6e9ef] pt-4">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-[#172033]">
-              Progres Minggu Ini
-            </p>
-            <span className="flex items-center gap-1 text-xs font-semibold text-secondary">
-              <Flame className="size-3.5" />3 Minggu
-            </span>
-          </div>
-          <div className="flex justify-between">
-            {WEEK_DAYS.map((day, index) => (
-              <div
-                key={`${day}-${index}`}
-                className="flex flex-col items-center gap-1"
-              >
-                <span className="text-[10px] text-[#5f6573]">{day}</span>
-                <div
-                  className={[
-                    "flex size-7 items-center justify-center rounded-full text-xs font-semibold",
-                    WEEK_PROGRESS[index]
-                      ? "bg-primary text-white"
-                      : "border border-[#dbe3ef] text-[#5f6573]",
-                  ].join(" ")}
-                >
-                  {WEEK_PROGRESS[index] ? "✓" : ""}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
+
+      {userId && followListType && (
+        <FollowListModal
+          open
+          onClose={() => setFollowListType(null)}
+          userId={userId}
+          type={followListType}
+        />
+      )}
     </div>
   );
 }

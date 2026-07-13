@@ -22,6 +22,7 @@ interface ViewerProps {
 }
 
 interface ProfileSummary {
+  userId: string;
   fullName: string;
   avatar?: string;
   headline?: string;
@@ -103,6 +104,7 @@ export default function ProfileActivitiesPage({
         <div className="mx-auto grid grid-cols-1 gap-1.5 lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)] lg:gap-4">
           <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
             <ProfileSidebar
+              userId={profile.userId}
               fullName={profile.fullName}
               avatar={profile.avatar}
               headline={profile.headline}

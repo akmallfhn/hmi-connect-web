@@ -231,14 +231,23 @@ below) when `isVerified === false`.
   `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
   `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
   most-recent end year / highest training level) all come from `getUserByUsername` +
-  those two list calls in `app/(www)/www/(gated)/page.tsx`. Its "Progres Minggu Ini"
-  weekly streak has no backing endpoint yet and stays a static illustration. `NewsCard.tsx`
+  those two list calls in `app/(www)/www/(gated)/page.tsx`. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar Trending") is real-API-backed — an async Server
   Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5 })` directly (no
   category filter, just the 5 most-recently-published articles) and renders nothing if the
-  list comes back empty; its "Lihat Semua Berita" link goes to `/news`. The other sidebar
-  widgets (`RightSidebar` itself, `UpcomingEventsCard`, `SuggestedConnectionsCard`) are
-  still fully backed by `mockData.ts`, not a real API.
+  list comes back empty; its "Lihat Semua Berita" link goes to `/news`. `UpcomingEventsCard`
+  is still fully backed by `mockData.ts`, not a real API, and is currently commented out of
+  `RightSidebar` (no backing endpoint yet). `SuggestedConnectionsCard.tsx` (rendered by both
+  `RightSidebar` and `ProfilePage`, titled "Mungkin Kamu Kenal"/"Orang yang Mungkin Kamu Kenal"
+  via its `title` prop) is real-API-backed — an async Server Component that calls
+  `apis/users.ts#listFollowRecommendations({ pageSize: 5 })` and renders nothing if the list
+  comes back empty; it has no "see all" link, just the raw list. Each row is
+  `FollowRecommendationRow.tsx` (client), which shows a plain affiliation subtitle —
+  "Cabang {branch_name}", falling back to `coordinating_body_name` then `chapter_name` —
+  rather than surfacing the raw `closeness_score` the API ranks by, and calls the
+  `followUser`/`unfollowUser` Server Actions for its own Ikuti/Mengikuti toggle —
+  same optimistic-with-rollback shape as `ProfileHeader`'s follow button, just without the
+  `router.refresh()` (this card doesn't own any follower-count display to keep in sync).
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a

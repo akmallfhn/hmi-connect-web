@@ -1,5 +1,7 @@
 import { listFeeds } from "@/apis/feeds";
 import FeedTimeline from "./FeedTimeline";
+import NewsCard from "./NewsCard";
+import SuggestedConnectionsCard from "./SuggestedConnectionsCard";
 
 interface FeedProps {
   fullName?: string;
@@ -25,6 +27,8 @@ export default async function Feed({
         currentUserName={fullName}
         currentUserAvatar={avatar}
         isVerified={isVerified}
+        newsCard={<NewsCard />}
+        suggestedConnectionsCard={<SuggestedConnectionsCard />}
       />
     </div>
   );

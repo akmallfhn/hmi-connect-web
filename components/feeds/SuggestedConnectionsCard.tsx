@@ -1,19 +1,17 @@
-"use client";
-
-import { useState } from "react";
-import { ChevronRight, Users } from "lucide-react";
-import Avatar from "../common/Avatar";
-import Button from "../buttons/Button";
-import { SUGGESTED_CONNECTIONS } from "./mockData";
+import { Users } from "lucide-react";
+import { listFollowRecommendations } from "@/apis/users";
+import FollowRecommendationRow from "./FollowRecommendationRow";
 
 interface SuggestedConnectionsCardProps {
   title?: string;
 }
 
-export default function SuggestedConnectionsCard({
-  title = "Kader Disarankan",
+export default async function SuggestedConnectionsCard({
+  title = "Mungkin Kamu Kenal",
 }: SuggestedConnectionsCardProps) {
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const { list } = await listFollowRecommendations({ pageSize: 5 });
+
+  if (list.length === 0) return null;
 
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
@@ -23,50 +21,10 @@ export default function SuggestedConnectionsCard({
       </div>
 
       <div className="mt-3 flex flex-col gap-3">
-        {SUGGESTED_CONNECTIONS.map((connection) => {
-          const isFollowing = Boolean(following[connection.id]);
-          return (
-            <div key={connection.id} className="flex items-center gap-3">
-              <Avatar
-                src={connection.avatar}
-                name={connection.name}
-                size={40}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[#172033]">
-                  {connection.name}
-                </p>
-                <p className="truncate text-xs text-[#5f6573]">
-                  {connection.role}
-                </p>
-                <p className="text-xs text-[#5f6573]">
-                  {connection.mutual} koneksi bersama
-                </p>
-              </div>
-              <Button
-                variant={isFollowing ? "outline" : "primary"}
-                size="sm"
-                onClick={() =>
-                  setFollowing((prev) => ({
-                    ...prev,
-                    [connection.id]: !prev[connection.id],
-                  }))
-                }
-              >
-                {isFollowing ? "Mengikuti" : "Ikuti"}
-              </Button>
-            </div>
-          );
-        })}
+        {list.map((connection) => (
+          <FollowRecommendationRow key={connection.id} connection={connection} />
+        ))}
       </div>
-
-      <a
-        href="#"
-        className="mt-3 flex items-center justify-between border-t border-[#e6e9ef] pt-3 text-sm font-medium text-primary"
-      >
-        Lihat Semua Saran
-        <ChevronRight className="size-4" />
-      </a>
     </div>
   );
 }

@@ -346,6 +346,52 @@ export async function listFollowers(
   return listFollowRelation("followers", userId, options);
 }
 
+// Mirrors POST /api/v1/users/follow-recommendations/list's response — closeness_score: 3 = same chapter, 2 = same branch, 1 = same coordinating body, 0 = unrelated.
+export type FollowRecommendationEntry = {
+  id: string;
+  full_name: string;
+  username?: string;
+  avatar?: string;
+  chapter_id?: string;
+  chapter_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  coordinating_body_id?: string;
+  coordinating_body_name?: string;
+  closeness_score: number;
+};
+
+export async function listFollowRecommendations(
+  options: ListOptions = {}
+): Promise<ListResult<FollowRecommendationEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return { list: [], hasMore: false };
+
+  const { page, pageSize } = options;
+  const result = await callApi<ListResponse<FollowRecommendationEntry>>(
+    "/api/v1/users/follow-recommendations/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listFollowRecommendations] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
 export type UpdateUserPayload = {
   id: string;
   username?: string;

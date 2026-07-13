@@ -50,6 +50,7 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
       initialItems={activities}
       initialHasMore={hasMore}
       profile={{
+        userId: profile.id,
         fullName: profile.full_name,
         avatar: profile.avatar,
         headline: profile.headline,

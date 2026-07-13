@@ -1,7 +1,7 @@
 "use client";
 
 import { Repeat2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "../common/Avatar";
 import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms from "../forms/CreateFeedForms";
@@ -15,7 +15,14 @@ interface FeedTimelineProps {
   currentUserName?: string;
   currentUserAvatar?: string;
   isVerified?: boolean;
+  newsCard?: ReactNode;
+  suggestedConnectionsCard?: ReactNode;
 }
+
+// Index (0-based) after which each inline card is inserted into the feed — after the 3rd and 6th posts.
+// Mobile-only (lg:hidden): at lg+ these same cards render as a persistent sidebar via RightSidebar instead.
+const NEWS_CARD_AFTER_INDEX = 2;
+const SUGGESTED_CONNECTIONS_AFTER_INDEX = 5;
 
 export default function FeedTimeline({
   initialItems,
@@ -24,6 +31,8 @@ export default function FeedTimeline({
   currentUserName,
   currentUserAvatar,
   isVerified,
+  newsCard,
+  suggestedConnectionsCard,
 }: FeedTimelineProps) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -100,31 +109,36 @@ export default function FeedTimeline({
         )}
 
         {items.map((item, index) => (
-          <div
-            key={`${item.type}-${item.feed.id}-${index}`}
-            className="flex flex-col gap-2"
-          >
-            {item.type === "repost" && (
-              <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
-                <Repeat2 className="size-3.5" />
-                <Avatar
-                  src={item.reposter_avatar}
-                  name={item.reposter_full_name}
-                  size={18}
-                />
-                <span>{item.reposter_full_name} membagikan ulang</span>
-              </div>
+          <div key={`${item.type}-${item.feed.id}-${index}`} className="contents">
+            <div className="flex flex-col gap-2">
+              {item.type === "repost" && (
+                <div className="flex items-center gap-2 px-1 text-xs font-medium text-[#5f6573]">
+                  <Repeat2 className="size-3.5" />
+                  <Avatar
+                    src={item.reposter_avatar}
+                    name={item.reposter_full_name}
+                    size={18}
+                  />
+                  <span>{item.reposter_full_name} membagikan ulang</span>
+                </div>
+              )}
+              <FeedItemCard
+                feed={item.feed}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                currentUserAvatar={currentUserAvatar}
+                isVerified={isVerified}
+                initialReposted={repostedFeedIds.has(item.feed.id)}
+                onDeleted={handleFeedDeleted}
+                onFeedCreated={handleFeedCreated}
+              />
+            </div>
+            {index === NEWS_CARD_AFTER_INDEX && newsCard && (
+              <div className="lg:hidden">{newsCard}</div>
             )}
-            <FeedItemCard
-              feed={item.feed}
-              currentUserId={currentUserId}
-              currentUserName={currentUserName}
-              currentUserAvatar={currentUserAvatar}
-              isVerified={isVerified}
-              initialReposted={repostedFeedIds.has(item.feed.id)}
-              onDeleted={handleFeedDeleted}
-              onFeedCreated={handleFeedCreated}
-            />
+            {index === SUGGESTED_CONNECTIONS_AFTER_INDEX && suggestedConnectionsCard && (
+              <div className="lg:hidden">{suggestedConnectionsCard}</div>
+            )}
           </div>
         ))}
 

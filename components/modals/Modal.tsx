@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Button from "../buttons/Button";
 
 interface ModalProps {
@@ -13,6 +14,7 @@ interface ModalProps {
 }
 
 // Generic modal chrome, imported by whichever form needs a dialog — each caller owns its own open/close state.
+// Rendered via a portal into document.body so its stacking never depends on where it's invoked in the tree.
 export default function Modal({
   open,
   onClose,
@@ -42,8 +44,8 @@ export default function Modal({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overscroll-contain p-4">
+  return createPortal(
+    <div className="font-google-sans fixed inset-0 z-[100] flex items-center justify-center overscroll-contain p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
@@ -73,6 +75,7 @@ export default function Modal({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

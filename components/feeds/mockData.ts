@@ -7,14 +7,6 @@ export interface UpcomingEvent {
   location: string;
 }
 
-export interface SuggestedConnection {
-  id: string;
-  name: string;
-  role: string;
-  avatar: string;
-  mutual: number;
-}
-
 export interface NotificationItem {
   id: string;
   actor: string;
@@ -48,30 +40,6 @@ export const UPCOMING_EVENTS: UpcomingEvent[] = [
     month: "Agu",
     time: "09.00 WIB",
     location: "Aula PB HMI, Jakarta",
-  },
-];
-
-export const SUGGESTED_CONNECTIONS: SuggestedConnection[] = [
-  {
-    id: "conn-1",
-    name: "Rizky Ramadhan",
-    role: "Kader • Cabang Bandung",
-    avatar: "https://i.pravatar.cc/150?img=14",
-    mutual: 6,
-  },
-  {
-    id: "conn-2",
-    name: "Dewi Anggraini",
-    role: "Kader • Cabang Semarang",
-    avatar: "https://i.pravatar.cc/150?img=45",
-    mutual: 3,
-  },
-  {
-    id: "conn-3",
-    name: "Fajar Nugroho",
-    role: "Kader • Cabang Surabaya",
-    avatar: "https://i.pravatar.cc/150?img=60",
-    mutual: 9,
   },
 ];
 
@@ -117,5 +85,3 @@ export const NAV_ITEMS = [
   { label: "Kaderisasi", href: "#" },
   { label: "Event", href: "#" },
 ];
-
-export const WEEK_DAYS = ["S", "S", "R", "K", "J", "S", "M"];

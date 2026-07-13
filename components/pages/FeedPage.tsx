@@ -53,6 +53,7 @@ export default function FeedPage({
         <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
           <div className="flex flex-col gap-4">
             <ProfileSidebar
+              userId={userId}
               fullName={fullName}
               avatar={avatar}
               headline={headline}
@@ -79,7 +80,7 @@ export default function FeedPage({
           />
         </main>
 
-        <aside className="lg:hidden xl:sticky xl:top-20 xl:block xl:self-start">
+        <aside className="hidden xl:sticky xl:top-20 xl:block xl:self-start">
           <RightSidebar />
         </aside>
       </PageMargin>
