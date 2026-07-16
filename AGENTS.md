@@ -197,9 +197,29 @@ below) when `isVerified === false`.
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` (top bar,
   all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/E-KTA/
   Notifikasi/Profil). Beranda (`/`) and E-KTA (`/membership`) are always real links.
-  Cari, Notifikasi, and Profil route to `/auth/login` when there's no `username` (logged
-  out); Profil goes to `/profile/[username]` when logged in, Cari/Notifikasi are still
-  `href="#"` placeholders (no page built yet) once logged in.
+  Cari and Profil route to `/auth/login` when there's no `username` (logged out); Profil
+  goes to `/profile/[username]` when logged in, Cari is still an `href="#"` placeholder
+  (no page built yet) once logged in. Notifikasi routes to `/notifications` when logged in.
+  `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
+  server-first pages) since it's shared by every route without a common data-fetching
+  ancestor: it fetches its own list via the `listNotifications` Server Action on mount
+  (`apis/notifications.ts#listNotifications`, `notifications/list`, session-cookie-scoped
+  like `feeds.ts`) and shows the unread count as a badge, with the dropdown itself capped
+  to the 5 most recent (`DROPDOWN_LIMIT`) plus a "Lihat semua notifikasi" link to
+  `/notifications` for the rest. `NotificationRow.tsx` (`components/notifications/`) is
+  shared between that dropdown and the full `/notifications` page
+  (`components/pages/NotificationsPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
+  shape as `FeedTimeline`/`ProfileActivitiesPage`, backed by the `loadMoreNotifications`
+  Server Action) — clicking an unread row (or "Tandai semua dibaca") calls the
+  `markNotificationsAsRead` Server Action (`notifications/mark-as-read`) and updates local
+  state optimistically, no rollback since the backend call is fire-and-forget for this one.
+  A row only renders as a `Link` when `feed_id` is present (→ `/feeds/[feed_id]`, resolved
+  server-side up through the comment/comment_reply for every type except `follow`) or
+  `entity_type` is `user` (→ `/profile/[actor_username]`, for `follow` notifications, whose
+  `feed_id` is `null`). `entity_content` (also from the backend) is a text preview of the
+  liked/commented-on/replied-to entity — the row appends it inline after a colon (same
+  line, same size/color as the actor name/action text, no quotes) when present (`null` for
+  `follow`).
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost

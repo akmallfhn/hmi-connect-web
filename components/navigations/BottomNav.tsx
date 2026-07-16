@@ -19,6 +19,7 @@ export default function BottomNav({
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isMembership = pathname === "/membership";
+  const isNotifications = pathname === "/notifications";
   const isProfile = username ? pathname === `/profile/${username}` : false;
 
   return (
@@ -59,10 +60,13 @@ export default function BottomNav({
       </Link>
 
       <Link
-        href={username ? "#" : "/auth/login"}
-        className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium text-[#5f6573]"
+        href={username ? "/notifications" : "/auth/login"}
+        className={[
+          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+          isNotifications ? "text-primary" : "text-[#5f6573]",
+        ].join(" ")}
       >
-        <Bell className="size-5" />
+        <Bell className="size-5" strokeWidth={isNotifications ? 2.5 : 2} />
         Notifikasi
       </Link>
 

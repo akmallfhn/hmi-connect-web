@@ -1,6 +1,6 @@
 "use client";
 
-import { logoutUser } from "@/lib/actions";
+import { listNotifications, logoutUser, markNotificationsAsRead } from "@/lib/actions";
 import {
   Bell,
   ChevronDown,
@@ -12,14 +12,17 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Notification } from "@/apis/notifications";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
-import { NOTIFICATIONS } from "../feeds/mockData";
+import NotificationRow from "../notifications/NotificationRow";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
+
+const DROPDOWN_LIMIT = 5;
 
 interface HeaderProps {
   fullName?: string;
@@ -39,8 +42,41 @@ export default function Header({
   isVerified,
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
-  const unreadCount = NOTIFICATIONS.filter((item) => !item.read).length;
   const [loggingOut, setLoggingOut] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const unreadCount = notifications.filter((item) => !item.read_at).length;
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    listNotifications(1).then((result) => {
+      if (!cancelled) setNotifications(result.list);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  function handleRead(id: string) {
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === id && !item.read_at
+          ? { ...item, read_at: new Date().toISOString() }
+          : item
+      )
+    );
+    markNotificationsAsRead([id]);
+  }
+
+  function handleMarkAllRead() {
+    if (unreadCount === 0) return;
+    setNotifications((prev) =>
+      prev.map((item) => (item.read_at ? item : { ...item, read_at: new Date().toISOString() }))
+    );
+    markNotificationsAsRead();
+  }
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -100,30 +136,32 @@ export default function Header({
                   <p className="text-sm font-semibold text-[#172033]">
                     Notifikasi
                   </p>
-                  <span className="text-xs font-medium text-primary">
-                    Tandai semua dibaca
-                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="cursor-pointer text-xs font-medium text-primary hover:underline"
+                    >
+                      Tandai semua dibaca
+                    </button>
+                  )}
                 </div>
                 <div className="flex max-h-80 flex-col overflow-y-auto">
-                  {NOTIFICATIONS.map((item) => (
-                    <div
-                      key={item.id}
-                      className={[
-                        "flex cursor-pointer items-start gap-3 px-4 py-3 transition hover:bg-[#f5f7fb]",
-                        !item.read ? "bg-primary-soft/40" : "",
-                      ].join(" ")}
-                    >
-                      <Avatar src={item.avatar} name={item.actor} size={36} />
-                      <p className="text-sm text-[#172033]">
-                        <span className="font-semibold">{item.actor}</span>{" "}
-                        {item.action}
-                        <span className="mt-0.5 block text-xs text-[#5f6573]">
-                          {item.timestamp}
-                        </span>
-                      </p>
-                    </div>
+                  {notifications.length === 0 && (
+                    <p className="px-4 py-6 text-center text-sm text-[#5f6573]">
+                      Belum ada notifikasi.
+                    </p>
+                  )}
+                  {notifications.slice(0, DROPDOWN_LIMIT).map((item) => (
+                    <NotificationRow key={item.id} notification={item} onRead={handleRead} />
                   ))}
                 </div>
+                <Link
+                  href="/notifications"
+                  className="block border-t border-[#e6e9ef] px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-[#f5f7fb]"
+                >
+                  Lihat semua notifikasi
+                </Link>
               </Dropdown>
 
               <Dropdown

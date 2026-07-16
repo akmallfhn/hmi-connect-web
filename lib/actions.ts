@@ -59,6 +59,10 @@ import {
   unsendReaction as unsendReactionApi,
 } from "@/apis/reactions";
 import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
+import {
+  listNotifications as listNotificationsApi,
+  markNotificationsAsRead as markNotificationsAsReadApi,
+} from "@/apis/notifications";
 import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
@@ -235,6 +239,18 @@ export async function unsendReaction(
   targetId: string
 ) {
   return unsendReactionApi({ targetType, targetId });
+}
+
+export async function listNotifications(page?: number) {
+  return listNotificationsApi({ page, pageSize: 20 });
+}
+
+export async function loadMoreNotifications(page: number) {
+  return listNotificationsApi({ page, pageSize: 20 });
+}
+
+export async function markNotificationsAsRead(ids?: string[]) {
+  return markNotificationsAsReadApi(ids);
 }
 
 export async function listReactors(
