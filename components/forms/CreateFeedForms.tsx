@@ -153,7 +153,8 @@ export default function CreateFeedForms({
   const [initialMode, setInitialMode] = useState<FeedMediaTypeEnum | null>(
     null
   );
-  const [seenForceOpenSignal, setSeenForceOpenSignal] = useState(forceOpenSignal);
+  const [seenForceOpenSignal, setSeenForceOpenSignal] =
+    useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
 
   function openComposer(mode: FeedMediaTypeEnum | null = null) {
@@ -168,9 +169,11 @@ export default function CreateFeedForms({
 
   return (
     <>
-      <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
+      <div className="-mt-16 mx-4 rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm lg:mx-0 lg:mt-0">
         <div className="flex items-center gap-3">
-          <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />
+          <div className="hidden lg:block">
+            <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />
+          </div>
           <div
             role="button"
             tabIndex={0}
@@ -524,13 +527,17 @@ function FeedComposerFields({
       if (!isSuccessStatus(result.status) || !result.data) {
         toast.error(
           result.message ??
-            (quoteFeed ? "Gagal membuat quote repost." : "Gagal membuat postingan.")
+            (quoteFeed
+              ? "Gagal membuat quote repost."
+              : "Gagal membuat postingan.")
         );
         return;
       }
 
       toast.success(
-        quoteFeed ? "Quote repost berhasil dibuat." : "Postingan berhasil dibuat."
+        quoteFeed
+          ? "Quote repost berhasil dibuat."
+          : "Postingan berhasil dibuat."
       );
       onCreated?.(result.data);
       clearAllMedia();
@@ -544,7 +551,9 @@ function FeedComposerFields({
         );
       } else {
         toast.error(
-          quoteFeed ? "Gagal membuat quote repost. Coba lagi." : "Gagal membuat postingan. Coba lagi."
+          quoteFeed
+            ? "Gagal membuat quote repost. Coba lagi."
+            : "Gagal membuat postingan. Coba lagi."
         );
       }
     } finally {
@@ -657,113 +666,115 @@ function FeedComposerFields({
       {quoteFeed && <QuotedFeed feed={quoteFeed} />}
 
       {!quoteFeed && (
-      <div className="rounded-xl border border-[#e6e9ef] p-3">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-[#172033]">
-            Tambahkan lampiran
-          </p>
-          {attachmentMode && (
+        <div className="rounded-xl border border-[#e6e9ef] p-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-[#172033]">
+              Tambahkan lampiran
+            </p>
+            {attachmentMode && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearAllMedia}
+                disabled={submitting}
+                className="text-destructive hover:bg-destructive-soft"
+              >
+                <Trash2 className="size-3.5" />
+                Hapus
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              onClick={clearAllMedia}
-              disabled={submitting}
-              className="text-destructive hover:bg-destructive-soft"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={
+                submitting || isPhotoLocked || photos.length >= MAX_PHOTOS
+              }
+              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
             >
-              <Trash2 className="size-3.5" />
-              Hapus
+              <ImageIcon className="size-4 text-primary" />
+              Foto
             </Button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => photoInputRef.current?.click()}
-            disabled={
-              submitting || isPhotoLocked || photos.length >= MAX_PHOTOS
-            }
-            className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-          >
-            <ImageIcon className="size-4 text-primary" />
-            Foto
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => videoInputRef.current?.click()}
-            disabled={submitting || isVideoLocked}
-            className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-          >
-            <Video className="size-4 text-secondary" />
-            Video
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              if (!isUrlLocked) setUrlActive(true);
-            }}
-            disabled={submitting || isUrlLocked}
-            className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-          >
-            <Link2 className="size-4 text-[#5f6573]" />
-            URL
-          </Button>
-        </div>
-
-        {attachmentMode === "url" && (
-          <div className="mt-3">
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-[#5f6573]">
-                URL yang dibagikan
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setUrlValue("");
-                  setUrlActive(false);
-                  setPreviewUrl("");
-                }}
-                disabled={submitting}
-                className="flex size-7 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033] disabled:cursor-not-allowed disabled:opacity-60"
-                aria-label="Hapus URL"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <input
-              type="url"
-              value={urlValue}
-              onChange={(event) => setUrlValue(event.target.value)}
-              disabled={submitting}
-              placeholder="https://contoh.com/artikel"
-              className="w-full rounded-lg border border-[#dbe3ef] px-3 py-2 text-sm text-[#172033] outline-none transition placeholder:text-[#5f6573]/60 focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[#f5f7fb]"
-            />
-            {urlValue.trim() && !hasValidUrl && (
-              <p className="mt-1 text-xs text-destructive">URL belum valid.</p>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => videoInputRef.current?.click()}
+              disabled={submitting || isVideoLocked}
+              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
+            >
+              <Video className="size-4 text-secondary" />
+              Video
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                if (!isUrlLocked) setUrlActive(true);
+              }}
+              disabled={submitting || isUrlLocked}
+              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
+            >
+              <Link2 className="size-4 text-[#5f6573]" />
+              URL
+            </Button>
           </div>
-        )}
 
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp,.avif"
-          multiple
-          className="hidden"
-          onChange={handlePhotoFiles}
-        />
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept=".mp4,.webm,.mov"
-          className="hidden"
-          onChange={handleVideoFile}
-        />
-      </div>
+          {attachmentMode === "url" && (
+            <div className="mt-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-[#5f6573]">
+                  URL yang dibagikan
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUrlValue("");
+                    setUrlActive(false);
+                    setPreviewUrl("");
+                  }}
+                  disabled={submitting}
+                  className="flex size-7 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033] disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label="Hapus URL"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <input
+                type="url"
+                value={urlValue}
+                onChange={(event) => setUrlValue(event.target.value)}
+                disabled={submitting}
+                placeholder="https://contoh.com/artikel"
+                className="w-full rounded-lg border border-[#dbe3ef] px-3 py-2 text-sm text-[#172033] outline-none transition placeholder:text-[#5f6573]/60 focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[#f5f7fb]"
+              />
+              {urlValue.trim() && !hasValidUrl && (
+                <p className="mt-1 text-xs text-destructive">
+                  URL belum valid.
+                </p>
+              )}
+            </div>
+          )}
+
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,.avif"
+            multiple
+            className="hidden"
+            onChange={handlePhotoFiles}
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept=".mp4,.webm,.mov"
+            className="hidden"
+            onChange={handleVideoFile}
+          />
+        </div>
       )}
 
       <div className="flex justify-end gap-2 border-t border-[#e6e9ef] pt-4">

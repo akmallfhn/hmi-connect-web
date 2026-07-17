@@ -16,6 +16,7 @@ interface FeedTimelineProps {
   isVerified?: boolean;
   newsCard?: ReactNode;
   suggestedConnectionsCard?: ReactNode;
+  quickMenu?: ReactNode;
 }
 
 // Index (0-based) after which each inline card is inserted into the feed — after the 3rd and 6th posts.
@@ -32,6 +33,7 @@ export default function FeedTimeline({
   isVerified,
   newsCard,
   suggestedConnectionsCard,
+  quickMenu,
 }: FeedTimelineProps) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -107,7 +109,7 @@ export default function FeedTimeline({
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1.5 lg:gap-4">
       <CreateFeedForms
         fullName={currentUserName}
         avatar={currentUserAvatar}
@@ -115,6 +117,8 @@ export default function FeedTimeline({
         onCreated={handleFeedCreated}
         forceOpenSignal={composerSignal}
       />
+
+      {quickMenu && <div className="lg:hidden">{quickMenu}</div>}
 
       <div className="flex flex-col gap-1.5 lg:gap-4">
         {items.length === 0 && (

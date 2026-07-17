@@ -1,5 +1,6 @@
 import PageMargin from "../common/PageMargin";
 import Feed from "../feeds/Feed";
+import MobileGreetingBar from "../feeds/MobileGreetingBar";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
@@ -46,6 +47,10 @@ export default function FeedPage({
         isVerified={isVerified}
       />
 
+      {userId && (
+        <MobileGreetingBar fullName={fullName} avatar={avatar} username={username} />
+      )}
+
       <PageMargin
         noMobilePadding
         className="grid grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-4 lg:pt-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]"
@@ -85,7 +90,7 @@ export default function FeedPage({
         </aside>
       </PageMargin>
 
-      <BottomNav username={username} avatar={avatar} fullName={fullName} />
+      <BottomNav username={username} />
     </div>
   );
 }

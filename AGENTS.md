@@ -213,10 +213,13 @@ below) when `isVerified === false`.
   button) instead of raw `lucide-react` icons — each has an `outline` variant (default,
   `currentColor`, so the existing `text-primary`/`text-[#5f6573]` classes still drive its
   color) and a `bulk` variant (two-tone: dominant shape in `var(--primary)`, accent shape
-  in `color-mix(in srgb, var(--secondary-foreground) 65%, white)` — muted rather than the
-  vivid `--secondary`, and green stays dominant rather than orange since orange competing
-  with the tab label's own `text-primary` read as two big color blocks fighting each
-  other). `BottomNav` swaps a tab to `bulk` when that tab's route is the current page.
+  in `color-mix(in srgb, var(--secondary-foreground) 40%, white)` — lightened further
+  toward white rather than the vivid `--secondary`, and green stays dominant rather than
+  orange since orange competing with the tab label's own `text-primary` read as two big
+  color blocks fighting each other). `BottomNav` swaps a tab to `bulk` when that tab's
+  route is the current page. Profil always renders `ProfileIcon`, never the caller's actual
+  avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only
+  `username`, for the active-route check and the `/profile/[username]` href).
   Since real `:active` is too short-lived on a tap to render its transition, both the
   pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
@@ -322,6 +325,39 @@ below) when `isVerified === false`.
   `followUser`/`unfollowUser` Server Actions for its own Ikuti/Mengikuti toggle —
   same optimistic-with-rollback shape as `ProfileHeader`'s follow button, just without the
   `router.refresh()` (this card doesn't own any follower-count display to keep in sync).
+  `MobileGreetingBar.tsx` and `MobileQuickMenu.tsx` are `FeedPage.tsx`/`Feed.tsx`-only,
+  `lg:hidden` — together they take over what `Header`'s top bar used to show on mobile
+  before that row went desktop-only (see `components/navigations/*` above).
+  `MobileGreetingBar` sits directly under `Header` in `FeedPage.tsx` (only when `userId` is
+  set), not inside the `PageMargin` grid, and isn't `sticky` (unlike `Header`, to avoid
+  stacking against the verification banner, which can also be showing there); it links the
+  avatar/name to the caller's own profile, with a plain "Welcome!" line above the name — an
+  earlier version used HMI's own gendered address terms ("Abangda"/"Ayunda") here, but that
+  was swapped out for a fixed English greeting, so there's no `gender` prop on this component
+  (or threaded through `FeedPage`/the home route) anymore. It has no Cari/Notifikasi buttons
+  either — those were cut since `BottomNav` already covers both. Its `bg-primary` block is
+  taller (`pb-20`) than its own content needs, on purpose: `CreateFeedForms`'s composer card
+  is pulled up into that green area on mobile via `-mt-16` (reset with `lg:mt-0` on desktop,
+  where there's no greeting bar to overlap) and hides its own avatar there too (`hidden
+  lg:block` — the overlapping card reads better without one competing with the greeting
+  bar's own avatar right above it), the same "float a card up over a colored band" idea as
+  `ProfileHeader`'s avatar-over-banner overlap — nothing else sits between them vertically
+  (no padding on `PageMargin`/`main`/`Feed.tsx`'s wrapper on mobile) so the offset lands
+  predictably. Its shadow is a flat `shadow-sm` at every breakpoint now, not a heavier
+  mobile-only value — a floating overlapped card still reads as elevated without needing
+  much shadow weight.
+  `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (same shape as
+  `newsCard`/`suggestedConnectionsCard` — an unscoped `ReactNode`, wrapped in `lg:hidden` by
+  `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
+  above the timeline. Its four entries use `components/icons/{NewsIcon,EKTAIcon,EventIcon,
+  AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`SearchIcon`/
+  `NotificationIcon`/`ProfileIcon`, these have no `outline`/`bulk` variant since they're not
+  nav-bar active-state icons, just static menu glyphs) converted 1:1 from designer-provided
+  SVGs; `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset as a module-level
+  `PATTERN_DATA_URI` constant rather than a `public/` file, since nothing else needed it
+  optimized or reused. Berita (`/news`) and E-KTA (`/membership`) route through `Link`;
+  Event and Al-Qur'an have no page yet, so they're plain `href="#"` `<a>` tags per the
+  ground rule on placeholder links below.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a

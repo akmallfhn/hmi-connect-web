@@ -134,11 +134,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
         </div>
       </PageMargin>
 
-      <BottomNav
-        username={user?.username}
-        avatar={user?.avatar}
-        fullName={user?.full_name}
-      />
+      <BottomNav username={user?.username} />
     </div>
   );
 }

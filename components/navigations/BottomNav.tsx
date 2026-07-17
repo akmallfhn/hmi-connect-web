@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { COMPOSE_INTENT_KEY } from "@/lib/constants";
-import Avatar from "../common/Avatar";
 import HomeIcon from "../icons/HomeIcon";
 import NotificationIcon from "../icons/NotificationIcon";
 import PlusIcon from "../icons/PlusIcon";
@@ -49,15 +48,9 @@ function NavIconPulse({ pressed, children }: { pressed: boolean; children: React
 
 interface BottomNavProps {
   username?: string;
-  avatar?: string;
-  fullName?: string;
 }
 
-export default function BottomNav({
-  username,
-  avatar,
-  fullName,
-}: BottomNavProps) {
+export default function BottomNav({ username }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";
@@ -141,16 +134,7 @@ export default function BottomNav({
         ].join(" ")}
       >
         <NavIconPulse pressed={profilePressed}>
-          {avatar || fullName ? (
-            <Avatar
-              src={avatar}
-              name={fullName ?? "Kader"}
-              size={20}
-              className={isProfile ? "ring-2 ring-primary" : ""}
-            />
-          ) : (
-            <ProfileIcon variant={isProfile ? "bulk" : "outline"} className="size-5" />
-          )}
+          <ProfileIcon variant={isProfile ? "bulk" : "outline"} className="size-5" />
         </NavIconPulse>
         Profil
       </Link>

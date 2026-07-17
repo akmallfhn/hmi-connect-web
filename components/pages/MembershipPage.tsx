@@ -75,7 +75,7 @@ export default function MembershipPage({
         )}
       </PageMargin>
 
-      <BottomNav username={username} avatar={avatar} fullName={fullName} />
+      <BottomNav username={username} />
     </div>
   );
 }

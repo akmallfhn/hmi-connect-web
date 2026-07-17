@@ -1,5 +1,6 @@
 import { listFeeds } from "@/apis/feeds";
 import FeedTimeline from "./FeedTimeline";
+import MobileQuickMenu from "./MobileQuickMenu";
 import NewsCard from "./NewsCard";
 import SuggestedConnectionsCard from "./SuggestedConnectionsCard";
 
@@ -29,6 +30,7 @@ export default async function Feed({
         isVerified={isVerified}
         newsCard={<NewsCard />}
         suggestedConnectionsCard={<SuggestedConnectionsCard />}
+        quickMenu={<MobileQuickMenu />}
       />
     </div>
   );
