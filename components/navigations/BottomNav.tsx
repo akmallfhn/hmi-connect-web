@@ -60,6 +60,7 @@ export default function BottomNav({
 }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isSearch = pathname === "/search";
   const isNotifications = pathname === "/notifications";
   const isProfile = username ? pathname === `/profile/${username}` : false;
 
@@ -93,12 +94,15 @@ export default function BottomNav({
       </Link>
 
       <Link
-        href={username ? "#" : "/auth/login"}
+        href={username ? "/search" : "/auth/login"}
         onClick={triggerSearch}
-        className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium text-[#5f6573]"
+        className={[
+          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+          isSearch ? "text-primary" : "text-[#5f6573]",
+        ].join(" ")}
       >
         <NavIconPulse pressed={searchPressed}>
-          <SearchIcon className="size-5" />
+          <SearchIcon variant={isSearch ? "bulk" : "outline"} className="size-5" />
         </NavIconPulse>
         Cari
       </Link>

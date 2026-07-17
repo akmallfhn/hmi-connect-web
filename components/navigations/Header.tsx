@@ -1,6 +1,10 @@
 "use client";
 
-import { listNotifications, logoutUser, markNotificationsAsRead } from "@/lib/actions";
+import {
+  listNotifications,
+  logoutUser,
+  markNotificationsAsRead,
+} from "@/lib/actions";
 import {
   Bell,
   ChevronDown,
@@ -12,7 +16,8 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Notification } from "@/apis/notifications";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
@@ -46,9 +51,18 @@ export default function Header({
   loading,
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
+  const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [searchValue, setSearchValue] = useState("");
   const unreadCount = notifications.filter((item) => !item.read_at).length;
+
+  function handleSearchSubmit(event: FormEvent) {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (searchValue.trim()) params.set("q", searchValue.trim());
+    router.push(`/search${params.toString() ? `?${params}` : ""}`);
+  }
 
   useEffect(() => {
     if (!userId) return;
@@ -77,7 +91,9 @@ export default function Header({
   function handleMarkAllRead() {
     if (unreadCount === 0) return;
     setNotifications((prev) =>
-      prev.map((item) => (item.read_at ? item : { ...item, read_at: new Date().toISOString() }))
+      prev.map((item) =>
+        item.read_at ? item : { ...item, read_at: new Date().toISOString() }
+      )
     );
     markNotificationsAsRead();
   }
@@ -104,15 +120,25 @@ export default function Header({
         </Link>
 
         <div className="hidden min-w-0 flex-1 justify-center lg:flex">
-          <label className="relative w-full">
-            <span className="sr-only">Cari</span>
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
-            <input
-              type="search"
-              placeholder="Cari di HMI Connect"
-              className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
-            />
-          </label>
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex w-full items-center gap-2"
+          >
+            <label className="relative flex-1">
+              <span className="sr-only">Cari</span>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder="Cari orang atau postingan..."
+                className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+              />
+            </label>
+            <Button type="submit" variant="primary" size="pillSm" className="shrink-0">
+              Cari
+            </Button>
+          </form>
         </div>
 
         <div className="hidden items-center gap-2 lg:flex lg:justify-self-end">
@@ -162,7 +188,11 @@ export default function Header({
                     </p>
                   )}
                   {notifications.slice(0, DROPDOWN_LIMIT).map((item) => (
-                    <NotificationRow key={item.id} notification={item} onRead={handleRead} />
+                    <NotificationRow
+                      key={item.id}
+                      notification={item}
+                      onRead={handleRead}
+                    />
                   ))}
                 </div>
                 <Link

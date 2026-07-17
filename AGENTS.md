@@ -195,12 +195,31 @@ below) when `isVerified === false`.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` (top bar,
-  all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/E-KTA/
-  Notifikasi/Profil). Beranda (`/`) and E-KTA (`/membership`) are always real links.
-  Cari and Profil route to `/auth/login` when there's no `username` (logged out); Profil
-  goes to `/profile/[username]` when logged in, Cari is still an `href="#"` placeholder
-  (no page built yet) once logged in. Notifikasi routes to `/notifications` when logged in.
-  `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
+  all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/
+  Notifikasi/Profil). Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
+  route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
+  `/search`, Notifikasi to `/notifications`, Profil to `/profile/[username]`. The middle
+  slot is a "Posting" button (`PlusIcon`, always the raised filled-circle style, no
+  outline/bulk swap) instead of a plain link — see the compose-intent paragraph below.
+  Home/Cari/Notifikasi/Profil use the matching icon component from `components/icons/`
+  (`HomeIcon`/`SearchIcon`/`NotificationIcon`/`ProfileIcon`, `PlusIcon` for the middle
+  button) instead of raw `lucide-react` icons — each has an `outline` variant (default,
+  `currentColor`, so the existing `text-primary`/`text-[#5f6573]` classes still drive its
+  color) and a `bulk` variant (two-tone: dominant shape in `var(--primary)`, accent shape
+  in `color-mix(in srgb, var(--secondary-foreground) 65%, white)` — muted rather than the
+  vivid `--secondary`, and green stays dominant rather than orange since orange competing
+  with the tab label's own `text-primary` read as two big color blocks fighting each
+  other). `BottomNav` swaps a tab to `bulk` when that tab's route is the current page.
+  Since real `:active` is too short-lived on a tap to render its transition, both the
+  pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
+  JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
+  than a CSS pseudo-class — see that file before changing the tap-feedback timing/size.
+  Clicking "Posting" from any page sets `sessionStorage[COMPOSE_INTENT_KEY]` (see
+  `lib/constants.ts`) and dispatches a same-named `window` event, then navigates to `/`;
+  `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
+  live listener, so it also fires when "Posting" is clicked while already on `/` — and
+  bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
+  modal in response. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
   server-first pages) since it's shared by every route without a common data-fetching
   ancestor: it fetches its own list via the `listNotifications` Server Action on mount
   (`apis/notifications.ts#listNotifications`, `notifications/list`, session-cookie-scoped
@@ -220,6 +239,34 @@ below) when `isVerified === false`.
   liked/commented-on/replied-to entity — the row appends it inline after a colon (same
   line, same size/color as the actor name/action text, no quotes) when present (`null` for
   `follow`).
+- `/search` (`components/pages/SearchPage.tsx`) — keyword search across people and postings,
+  backed by `apis/search.ts`'s single `search/list` endpoint (`type: "people" | "posting"`,
+  `SearchTypeEnum` in `lib/types.ts`; there's no unified result shape between the two per
+  the backend's own README, hence `searchPeople`/`searchPostings` as separate thin wrappers
+  over one shared internal `search()`). The page always fetches *both* first pages
+  server-side for a given `q` and renders them as two stacked sections — "Orang" then
+  "Postingan" below it, not tabs. "Orang" is capped to manual "Muat lebih banyak" pagination
+  (a button, not an `IntersectionObserver`) since it sits above "Postingan" in the same
+  scroll container — an auto-loading sentinel there would fire while the user is just
+  scrolling past it to reach postings. "Postingan" gets the usual
+  infinite-scroll-via-`IntersectionObserver` treatment since it's the last thing on the
+  page. `q` is the only thing that's URL state (`?q=...`). `SearchPage` itself only renders
+  its own keyword input on mobile (`lg:hidden`, debounces 400ms into a `router.replace` to
+  `/search?q=...`) — on desktop, typing lives entirely in `Header`'s navbar search box
+  (`hidden lg:flex`) instead, so there's no duplicate input competing for the same state.
+  That box is a real `<form>` submitted by its magnifying-glass button or Enter — no
+  debounce there, it only navigates (`router.push`, from any page, not just `/search`) on
+  explicit submit. Since a debounced mobile `router.replace` would otherwise remount the
+  input and drop focus mid-keystroke, `SearchPage` isn't remounted via `key` — instead it
+  compares the incoming `initialQuery` prop against a locally-tracked `seenQuery` state
+  during render (the "adjust state during render" pattern, not a `useEffect`, since this
+  project's `eslint-plugin-react-hooks` flags `setState` inside an effect body) to reset
+  pagination state (and resync the mobile input's own value) only when the server actually
+  returns results for a new query — covers both someone searching from the desktop box and
+  back/forward navigation. `SearchPersonRow`/`SearchPostingRow` (`components/search/`) render the two
+  result types; `SearchPersonRow` has no follow button (unlike `FollowRecommendationRow`)
+  since `search/list`'s people result doesn't include `is_followed_by_me`. Desktop also gets
+  the `ProfileSidebar` in an `aside`, same two-column shape as `/notifications`.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
