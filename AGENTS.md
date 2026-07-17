@@ -470,6 +470,20 @@ below) when `isVerified === false`.
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
   to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs;
   while storage policy is catching up, it falls back to `hmi-connect/avatars/feed_media`.
+  Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
+  run through `lib/compressImage.ts` — a plain Canvas API resize/re-encode (max 1920px
+  edge, JPEG, quality stepped down from 0.8 to a 0.5 floor) — before they're staged or
+  uploaded, targeting ~500KB per photo. `MAX_PHOTO_BYTES` (5MB) is checked *after*
+  compression, not before — the whole point of the client-side pass is to shrink what
+  actually hits Supabase, so gating on the raw pre-compression size would reject large
+  photos that compression could otherwise have handled fine. GIFs are skipped (canvas
+  would flatten the animation to one frame), and a photo whose compressed output isn't
+  actually smaller than the original falls back to the original file — which is also why
+  the post-compression check still exists, as a safety net for those cases.
+  `handlePhotoFiles` awaits `compressImage` one file at a time (not
+  `Promise.all`) so selecting several photos at once doesn't spike the main thread all at
+  once — the Foto button shows a spinner and disables via `compressingPhotos` while that
+  runs, no queue infrastructure needed for a bounded, sequential, client-only job like this.
   `EditFeedForm.tsx` is the odd one out in this folder — it only edits `content` via
   `feeds/update` (media can't be added/changed/removed after creation, so there's no
   attachment UI at all), and its `onSaved` updates `FeedItemCard`'s own local `content`

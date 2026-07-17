@@ -31,6 +31,7 @@ import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
 import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
+import { compressImage } from "@/lib/compressImage";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus, type FeedMediaTypeEnum } from "@/lib/types";
 import type { Feed } from "@/apis/feeds";
@@ -60,7 +61,8 @@ const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov"];
 const MAX_PHOTOS = 5;
-const MAX_PHOTO_BYTES = 1 * 1024 * 1024;
+const MAX_RAW_PHOTO_BYTES = 20 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 const ACTIONS = [
@@ -289,6 +291,7 @@ function FeedComposerFields({
   const previewUrlsRef = useRef(new Set<string>());
   const [content, setContent] = useState("");
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [compressingPhotos, setCompressingPhotos] = useState(false);
   const [video, setVideo] = useState<VideoDraft | null>(null);
   const [urlValue, setUrlValue] = useState("");
   const [urlActive, setUrlActive] = useState(initialMode === "url");
@@ -405,7 +408,7 @@ function FeedComposerFields({
     setContent(textarea.value);
   }
 
-  function handlePhotoFiles(event: ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (files.length === 0) return;
@@ -420,30 +423,43 @@ function FeedComposerFields({
       return;
     }
 
-    const accepted: PhotoDraft[] = [];
-    for (const file of files.slice(0, remainingSlots)) {
-      const extension = getExtension(file);
-      if (
-        !PHOTO_TYPES.includes(file.type) ||
-        !PHOTO_EXTENSIONS.includes(extension)
-      ) {
-        toast.error("Format foto hanya JPG, PNG, WEBP, atau AVIF.");
-        continue;
-      }
-      if (file.size > MAX_PHOTO_BYTES) {
-        toast.error("Ukuran tiap foto maksimal 1MB.");
-        continue;
-      }
-      accepted.push({
-        id: `${file.name}-${file.lastModified}-${randomId()}`,
-        file,
-        previewUrl: createPreviewUrl(file),
-      });
-    }
-
+    const candidates = files.slice(0, remainingSlots);
     if (files.length > remainingSlots) {
       toast.error("Foto maksimal 5 item.");
     }
+
+    const accepted: PhotoDraft[] = [];
+    setCompressingPhotos(true);
+    try {
+      // Sequential, not Promise.all — avoids spiking the main thread with several compressions at once.
+      for (const file of candidates) {
+        const extension = getExtension(file);
+        if (
+          !PHOTO_TYPES.includes(file.type) ||
+          !PHOTO_EXTENSIONS.includes(extension)
+        ) {
+          toast.error("Format foto hanya JPG, PNG, WEBP, atau AVIF.");
+          continue;
+        }
+        if (file.size > MAX_RAW_PHOTO_BYTES) {
+          toast.error("Ukuran foto maksimal 20MB.");
+          continue;
+        }
+        const compressed = await compressImage(file);
+        if (compressed.size > MAX_PHOTO_BYTES) {
+          toast.error("Foto masih terlalu besar setelah dikompres.");
+          continue;
+        }
+        accepted.push({
+          id: `${file.name}-${file.lastModified}-${randomId()}`,
+          file: compressed,
+          previewUrl: createPreviewUrl(compressed),
+        });
+      }
+    } finally {
+      setCompressingPhotos(false);
+    }
+
     if (accepted.length > 0) {
       clearVideo();
       setUrlValue("");
@@ -692,12 +708,19 @@ function FeedComposerFields({
               variant="ghost"
               onClick={() => photoInputRef.current?.click()}
               disabled={
-                submitting || isPhotoLocked || photos.length >= MAX_PHOTOS
+                submitting ||
+                isPhotoLocked ||
+                photos.length >= MAX_PHOTOS ||
+                compressingPhotos
               }
               className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
             >
-              <ImageIcon className="size-4 text-primary" />
-              Foto
+              {compressingPhotos ? (
+                <Loader2 className="size-4 animate-spin text-primary" />
+              ) : (
+                <ImageIcon className="size-4 text-primary" />
+              )}
+              {compressingPhotos ? "Memproses..." : "Foto"}
             </Button>
             <Button
               type="button"
