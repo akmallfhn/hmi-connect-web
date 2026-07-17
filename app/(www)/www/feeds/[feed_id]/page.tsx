@@ -134,7 +134,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
         </div>
       </PageMargin>
 
-      <BottomNav username={user?.username} />
+      <BottomNav userId={user?.id} username={user?.username} />
     </div>
   );
 }

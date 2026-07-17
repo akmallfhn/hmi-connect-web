@@ -36,7 +36,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts` | Scopes branch lookups to this org. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. |
 | `NEXT_PUBLIC_BASE_URL` | client-side code that needs the public origin | |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` | Browser-side Supabase client, used only for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket. Not used for anything else — there's no ORM/DB usage here, see Stack above. |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres *is* this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
 
 ## Domain routing
 
@@ -219,7 +219,12 @@ below) when `isVerified === false`.
   color blocks fighting each other). `BottomNav` swaps a tab to `bulk` when that tab's
   route is the current page. Profil always renders `ProfileIcon`, never the caller's actual
   avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only
-  `username`, for the active-route check and the `/profile/[username]` href).
+  `username`, for the active-route check and the `/profile/[username]` href, and `userId`,
+  used only to key the notifications realtime subscription below — every page that renders
+  `BottomNav` passes it the same `userId` it already passes to `Header`). The Notifikasi tab
+  shows a small unread dot (no count, unlike `Header`'s bell — there's no room for a number
+  next to a 20px icon) driven by its own `listNotifications(1)` fetch on mount plus
+  `useNotificationsRealtime`, same as `Header`'s bell (see below).
   Since real `:active` is too short-lived on a tap to render its transition, both the
   pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
@@ -235,7 +240,19 @@ below) when `isVerified === false`.
   (`apis/notifications.ts#listNotifications`, `notifications/list`, session-cookie-scoped
   like `feeds.ts`) and shows the unread count as a badge, with the dropdown itself capped
   to the 5 most recent (`DROPDOWN_LIMIT`) plus a "Lihat semua notifikasi" link to
-  `/notifications` for the rest. `NotificationRow.tsx` (`components/notifications/`) is
+  `/notifications` for the rest. Both `Header`'s bell and `BottomNav`'s Notifikasi tab stay
+  live via `hooks/useNotificationsRealtime.ts`, which subscribes to the Supabase Realtime
+  Broadcast channel `notifications:<userId>` — the backend's `notifications` table (this is
+  the one exception to "no direct DB usage," see Stack above: the Go backend's Postgres
+  *is* the Supabase project in `NEXT_PUBLIC_SUPABASE_URL`) broadcasts on that channel via a
+  `notifications_change()` trigger on insert/update/delete (see `ordina-ddl.sql`), and an RLS
+  policy on `realtime.messages` allows any client to listen on `notifications:%` topics — so
+  the channel name itself (a UUID) is what scopes a subscriber to their own notifications,
+  not RLS. The broadcast payload only carries the raw row (id/recipient_id/actor_id/type/
+  entity_type/entity_id/read_at/created_at), not the enriched actor/entity fields
+  `notifications/list` returns, so the hook is a "something changed, refetch" signal —
+  both callers respond by re-running `listNotifications(1)` rather than reading the payload
+  directly. `NotificationRow.tsx` (`components/notifications/`) is
   shared between that dropdown and the full `/notifications` page
   (`components/pages/NotificationsPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
   shape as `FeedTimeline`/`ProfileActivitiesPage`, backed by the `loadMoreNotifications`
@@ -363,6 +380,11 @@ below) when `isVerified === false`.
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
   `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
   returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
+- `hooks/useNotificationsRealtime.ts` — subscribes a `userId` to the Supabase Realtime
+  Broadcast channel `notifications:<userId>` and calls the given `onChange` callback on every
+  insert/update/delete broadcast for that user; used by `Header` and `BottomNav` (see
+  `components/navigations/*` above) to keep the bell/tab live without polling. Not a
+  `postgres_changes` subscription — see the note under `Header`'s bell above for why.
 - `components/profile/*` — the `/profile/[username]` page's sections (`ProfileHeader`,
   `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`,
   `ActivityCard`). The route is keyed by `username`, not the user's id — `users/detail`,
@@ -491,7 +513,9 @@ below) when `isVerified === false`.
   timeline list, not a page it owns.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
-  in that caller's own folder, not here.
+  in that caller's own folder, not here — `ScrollToTop` is the one exception, since its
+  only caller is `app/layout.tsx` and there's no components-style folder for the root
+  layout to own a file in.
 - `components/svg/*` — brand logo components (`LogoHmi`, `LogoHmiConnect`,
   `LogoSilaturahmi`).
 

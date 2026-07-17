@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { listNotifications } from "@/lib/actions";
 import { COMPOSE_INTENT_KEY } from "@/lib/constants";
+import { useNotificationsRealtime } from "@/hooks/useNotificationsRealtime";
 import HomeIcon from "../icons/HomeIcon";
 import NotificationIcon from "../icons/NotificationIcon";
 import PlusIcon from "../icons/PlusIcon";
@@ -47,10 +49,11 @@ function NavIconPulse({ pressed, children }: { pressed: boolean; children: React
 }
 
 interface BottomNavProps {
+  userId?: string;
   username?: string;
 }
 
-export default function BottomNav({ username }: BottomNavProps) {
+export default function BottomNav({ userId, username }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";
@@ -61,6 +64,21 @@ export default function BottomNav({ username }: BottomNavProps) {
   const [searchPressed, triggerSearch] = usePressPulse();
   const [notificationsPressed, triggerNotifications] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
+
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const refetchUnread = useCallback(() => {
+    if (!userId) return;
+    listNotifications(1).then((result) =>
+      setHasUnread(result.list.some((item) => !item.read_at))
+    );
+  }, [userId]);
+
+  useEffect(() => {
+    refetchUnread();
+  }, [refetchUnread]);
+
+  useNotificationsRealtime(userId, refetchUnread);
 
   function handleComposeClick() {
     window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
@@ -121,6 +139,9 @@ export default function BottomNav({ username }: BottomNavProps) {
       >
         <NavIconPulse pressed={notificationsPressed}>
           <NotificationIcon variant={isNotifications ? "bulk" : "outline"} className="size-5" />
+          {hasUnread && (
+            <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-secondary" />
+          )}
         </NavIconPulse>
         Notifikasi
       </Link>

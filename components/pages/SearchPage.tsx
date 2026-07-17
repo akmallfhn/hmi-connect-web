@@ -249,7 +249,7 @@ export default function SearchPage({
         </div>
       </PageMargin>
 
-      <BottomNav username={viewer.username} />
+      <BottomNav userId={viewer.userId} username={viewer.username} />
     </div>
   );
 }

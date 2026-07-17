@@ -75,7 +75,7 @@ export default function MembershipPage({
         )}
       </PageMargin>
 
-      <BottomNav username={username} />
+      <BottomNav userId={userId} username={username} />
     </div>
   );
 }

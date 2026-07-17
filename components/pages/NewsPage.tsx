@@ -195,7 +195,7 @@ export default function NewsPage({
         )}
       </PageMargin>
 
-      <BottomNav username={viewer.username} />
+      <BottomNav userId={viewer.userId} username={viewer.username} />
     </div>
   );
 }

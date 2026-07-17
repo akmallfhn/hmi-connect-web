@@ -90,7 +90,7 @@ export default function FeedPage({
         </aside>
       </PageMargin>
 
-      <BottomNav username={username} />
+      <BottomNav userId={userId} username={username} />
     </div>
   );
 }

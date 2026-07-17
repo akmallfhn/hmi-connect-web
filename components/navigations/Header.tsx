@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Notification } from "@/apis/notifications";
+import { useNotificationsRealtime } from "@/hooks/useNotificationsRealtime";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
@@ -64,6 +65,10 @@ export default function Header({
     router.push(`/search${params.toString() ? `?${params}` : ""}`);
   }
 
+  const refetchNotifications = useCallback(() => {
+    listNotifications(1).then((result) => setNotifications(result.list));
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -76,6 +81,8 @@ export default function Header({
       cancelled = true;
     };
   }, [userId]);
+
+  useNotificationsRealtime(userId, refetchNotifications);
 
   function handleRead(id: string) {
     setNotifications((prev) =>
