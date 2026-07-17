@@ -9,7 +9,7 @@ interface SearchIconProps extends SVGProps<SVGSVGElement> {
 export default function SearchIcon({
   variant = "outline",
   primaryColor = "var(--primary)",
-  secondaryColor = "color-mix(in srgb, var(--secondary-foreground) 65%, white)",
+  secondaryColor = "color-mix(in srgb, var(--secondary-foreground) 40%, white)",
   ...props
 }: SearchIconProps) {
   if (variant === "bulk") {

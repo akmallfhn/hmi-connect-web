@@ -9,7 +9,7 @@ interface HomeIconProps extends SVGProps<SVGSVGElement> {
 export default function HomeIcon({
   variant = "outline",
   primaryColor = "var(--primary)",
-  secondaryColor = "color-mix(in srgb, var(--secondary-foreground) 65%, white)",
+  secondaryColor = "color-mix(in srgb, var(--secondary-foreground) 40%, white)",
   ...props
 }: HomeIconProps) {
   if (variant === "bulk") {

@@ -194,9 +194,16 @@ below) when `isVerified === false`.
   their own debounce/pagination/loading state.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
-- `components/navigations/*` — site chrome shown on every page: `Header.tsx` (top bar,
-  all breakpoints) and `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/
-  Notifikasi/Profil). Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
+- `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
+  `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Notifikasi/Profil).
+  `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
+  Cari/Notifikasi/Profil on mobile, so the top bar would just be redundant chrome there. The
+  "belum diverifikasi" banner is a sibling of that row (not nested inside it), so it still
+  shows on mobile when `isVerified === false`. The outer `<header>`'s own
+  `border-b`/`bg-white/90`/`backdrop-blur` are pushed behind `lg:` too — without that,
+  they'd render as a bare 1px border strip on mobile on pages with no banner, since the row
+  being `hidden` doesn't stop the header element itself from painting its own border/background.
+  Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
   `/search`, Notifikasi to `/notifications`, Profil to `/profile/[username]`. The middle
   slot is a "Posting" button (`PlusIcon`, always the raised filled-circle style, no

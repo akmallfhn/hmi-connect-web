@@ -110,8 +110,8 @@ export default function Header({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#e6e9ef] bg-white/90 backdrop-blur">
-      <PageMargin className="flex h-16 items-center justify-center lg:grid lg:grid-cols-[280px_minmax(0,1fr)_auto] lg:gap-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
+    <header className="sticky top-0 z-40 lg:border-b lg:border-[#e6e9ef] lg:bg-white/90 lg:backdrop-blur">
+      <PageMargin className="hidden h-16 items-center justify-center lg:grid lg:grid-cols-[280px_minmax(0,1fr)_auto] lg:gap-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 lg:justify-self-start"
