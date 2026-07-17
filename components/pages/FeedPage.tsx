@@ -53,7 +53,7 @@ export default function FeedPage({
 
       <PageMargin
         noMobilePadding
-        className="grid grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-4 lg:pt-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]"
+        className="grid grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[1fr_2fr] lg:gap-4 lg:pt-6 xl:grid-cols-[1fr_2fr_1fr]"
       >
         <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
           <div className="flex flex-col gap-4">
@@ -76,7 +76,7 @@ export default function FeedPage({
           </div>
         </aside>
 
-        <main className="min-w-0 lg:mx-auto lg:max-w-[600px]">
+        <main className="min-w-0">
           <Feed
             fullName={fullName}
             avatar={avatar}
