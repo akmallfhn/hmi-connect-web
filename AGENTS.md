@@ -248,7 +248,11 @@ below) when `isVerified === false`.
   `notifications_change()` trigger on insert/update/delete (see `ordina-ddl.sql`), and an RLS
   policy on `realtime.messages` allows any client to listen on `notifications:%` topics — so
   the channel name itself (a UUID) is what scopes a subscriber to their own notifications,
-  not RLS. The broadcast payload only carries the raw row (id/recipient_id/actor_id/type/
+  not RLS. The channel must be created with `{ config: { private: true } }` for that RLS
+  policy to even be evaluated — without it the join still succeeds (channel join always
+  succeeds regardless of topic name) but database-originated broadcasts are silently never
+  delivered, which is a very easy way to end up with a "connected" channel that never
+  actually receives anything. The broadcast payload only carries the raw row (id/recipient_id/actor_id/type/
   entity_type/entity_id/read_at/created_at), not the enriched actor/entity fields
   `notifications/list` returns, so the hook is a "something changed, refetch" signal —
   both callers respond by re-running `listNotifications(1)` rather than reading the payload
