@@ -6,7 +6,7 @@ import { Bar } from "@/components/states/Skeleton";
 export default function MembershipLoading() {
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
-      <Header />
+      <Header loading />
 
       <PageMargin className="animate-pulse py-6">
         <Bar className="h-6 w-24" />

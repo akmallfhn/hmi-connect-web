@@ -31,6 +31,9 @@ interface HeaderProps {
   userId?: string;
   username?: string;
   isVerified?: boolean;
+  /** Set from loading.tsx, where session data isn't available yet — an absent userId there
+   *  doesn't mean logged out, so this skips the "Masuk" fallback in favor of a neutral skeleton. */
+  loading?: boolean;
 }
 
 export default function Header({
@@ -40,6 +43,7 @@ export default function Header({
   userId,
   username,
   isVerified,
+  loading,
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
   const [loggingOut, setLoggingOut] = useState(false);
@@ -112,7 +116,12 @@ export default function Header({
         </div>
 
         <div className="hidden items-center gap-2 lg:flex lg:justify-self-end">
-          {userId ? (
+          {loading ? (
+            <div className="flex items-center gap-2 animate-pulse">
+              <div className="size-10 rounded-full bg-[#e6e9ef]" />
+              <div className="size-8 rounded-full bg-[#e6e9ef]" />
+            </div>
+          ) : userId ? (
             <>
               <Dropdown
                 align="right"

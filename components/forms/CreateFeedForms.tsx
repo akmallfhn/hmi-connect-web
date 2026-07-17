@@ -40,6 +40,8 @@ interface CreateFeedFormsProps {
   avatar?: string;
   userId?: string;
   onCreated?: (feed: Feed) => void;
+  /** Bump this (e.g. from a counter) to force the composer open from outside — see BottomNav. */
+  forceOpenSignal?: number;
 }
 
 type PhotoDraft = {
@@ -145,16 +147,23 @@ export default function CreateFeedForms({
   avatar,
   userId,
   onCreated,
+  forceOpenSignal,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] = useState<FeedMediaTypeEnum | null>(
     null
   );
+  const [seenForceOpenSignal, setSeenForceOpenSignal] = useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
 
   function openComposer(mode: FeedMediaTypeEnum | null = null) {
     setInitialMode(mode);
     setOpen(true);
+  }
+
+  if (forceOpenSignal !== seenForceOpenSignal) {
+    setSeenForceOpenSignal(forceOpenSignal);
+    if (forceOpenSignal) openComposer();
   }
 
   return (

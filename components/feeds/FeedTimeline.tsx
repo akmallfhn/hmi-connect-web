@@ -5,6 +5,7 @@ import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
+import { COMPOSE_INTENT_KEY } from "@/lib/constants";
 
 interface FeedTimelineProps {
   initialItems: FeedTimelineItem[];
@@ -38,6 +39,7 @@ export default function FeedTimeline({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
+  const [composerSignal, setComposerSignal] = useState(0);
 
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -73,6 +75,18 @@ export default function FeedTimeline({
     return () => observer.disconnect();
   }, [hasMore, loadNextPage]);
 
+  useEffect(() => {
+    function consumeComposeIntent() {
+      if (!window.sessionStorage.getItem(COMPOSE_INTENT_KEY)) return;
+      window.sessionStorage.removeItem(COMPOSE_INTENT_KEY);
+      setComposerSignal((prev) => prev + 1);
+    }
+
+    consumeComposeIntent();
+    window.addEventListener(COMPOSE_INTENT_KEY, consumeComposeIntent);
+    return () => window.removeEventListener(COMPOSE_INTENT_KEY, consumeComposeIntent);
+  }, []);
+
   function handleFeedDeleted(feedId: string) {
     setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
   }
@@ -99,6 +113,7 @@ export default function FeedTimeline({
         avatar={currentUserAvatar}
         userId={currentUserId}
         onCreated={handleFeedCreated}
+        forceOpenSignal={composerSignal}
       />
 
       <div className="flex flex-col gap-1.5 lg:gap-4">

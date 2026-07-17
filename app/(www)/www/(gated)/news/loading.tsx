@@ -11,7 +11,7 @@ import {
 export default function NewsLoading() {
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
-      <Header />
+      <Header loading />
 
       <div className="sticky top-16 z-30 animate-pulse bg-[#eef1f5]">
         <PageMargin noMobilePadding className="pl-4 sm:hidden">

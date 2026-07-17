@@ -11,7 +11,7 @@ import {
 export default function GatedHomeLoading() {
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
-      <Header />
+      <Header loading />
 
       <PageMargin
         noMobilePadding

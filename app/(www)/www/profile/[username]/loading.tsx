@@ -11,7 +11,7 @@ import {
 export default function ProfileLoading() {
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
-      <Header />
+      <Header loading />
 
       <PageMargin noMobilePadding className="animate-pulse pb-6 lg:py-6">
         <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
