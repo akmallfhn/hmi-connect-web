@@ -120,21 +120,12 @@ export default function NewsPage({
         userId={viewer.userId}
         username={viewer.username}
         isVerified={viewer.isVerified}
+        mobileBackTitle="HMI News"
       />
 
-      <div className="sticky top-16 z-30 bg-primary">
-        {/* Mobile: no title, just the scrollable category pills, flush on the right only. */}
-        <PageMargin noMobilePadding className="pl-4 sm:hidden">
-          <div className="flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <CategoryPills
-              categories={categories}
-              activeCategorySlug={activeCategorySlug}
-            />
-          </div>
-        </PageMargin>
-
-        {/* sm+: title stays fixed, only the pills scroll if they overflow. */}
-        <PageMargin className="hidden sm:flex sm:items-center sm:gap-4 sm:py-3">
+      {/* lg+: title stays fixed, only the pills scroll if they overflow. Category filtering is desktop-only. */}
+      <div className="sticky top-16 z-30 hidden bg-primary lg:block">
+        <PageMargin className="flex items-center gap-4 py-3">
           <div className="flex shrink-0 items-center gap-2">
             <Newspaper className="size-3.5 text-white" />
             <h1 className="text-sm font-semibold text-white">Kabar HMI</h1>

@@ -6,9 +6,11 @@ import {
   markNotificationsAsRead,
 } from "@/lib/actions";
 import {
+  ArrowLeft,
   Bell,
   ChevronDown,
   CreditCard,
+  EllipsisVertical,
   LogOut,
   Search,
   Settings,
@@ -17,7 +19,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import type { Notification } from "@/apis/notifications";
 import { useNotificationsRealtime } from "@/hooks/useNotificationsRealtime";
 import Avatar from "../common/Avatar";
@@ -37,9 +45,10 @@ interface HeaderProps {
   userId?: string;
   username?: string;
   isVerified?: boolean;
-  /** Set from loading.tsx, where session data isn't available yet — an absent userId there
-   *  doesn't mean logged out, so this skips the "Masuk" fallback in favor of a neutral skeleton. */
   loading?: boolean;
+  mobileBackTitle?: string;
+  mobileMenu?: ReactNode;
+  mobileMenuLabel?: string;
 }
 
 export default function Header({
@@ -50,6 +59,9 @@ export default function Header({
   username,
   isVerified,
   loading,
+  mobileBackTitle,
+  mobileMenu,
+  mobileMenuLabel = "Menu",
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
   const router = useRouter();
@@ -142,7 +154,12 @@ export default function Header({
                 className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
               />
             </label>
-            <Button type="submit" variant="primary" size="pillSm" className="shrink-0">
+            <Button
+              type="submit"
+              variant="primary"
+              size="pillSm"
+              className="shrink-0"
+            >
               Cari
             </Button>
           </form>
@@ -288,6 +305,49 @@ export default function Header({
             >
               Verifikasi sekarang
             </Link>
+          </PageMargin>
+        </div>
+      )}
+
+      {(mobileBackTitle || mobileMenu) && (
+        <div className="border-t border-[#e6e9ef] bg-white lg:hidden">
+          <PageMargin className="flex h-12 items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              aria-label="Kembali"
+              className="-ml-2 size-8 shrink-0 rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+            >
+              <ArrowLeft className="size-5" />
+            </Button>
+            {mobileBackTitle ? (
+              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-[#172033]">
+                {mobileBackTitle}
+              </h1>
+            ) : (
+              <div className="min-w-0 flex-1" />
+            )}
+            {mobileMenu && (
+              <Dropdown
+                align="right"
+                panelClassName="w-56 rounded-xl"
+                trigger={({ open, toggle }) => (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggle}
+                    aria-label={mobileMenuLabel}
+                    aria-expanded={open}
+                    className="-mr-2 size-8 shrink-0 rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+                  >
+                    <EllipsisVertical className="size-5" />
+                  </Button>
+                )}
+              >
+                {mobileMenu}
+              </Dropdown>
+            )}
           </PageMargin>
         </div>
       )}

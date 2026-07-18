@@ -36,13 +36,16 @@ export default function MembershipPage({
         userId={userId}
         username={username}
         isVerified={isVerified}
+        mobileBackTitle="E-KTA"
       />
 
       <PageMargin className="py-6">
-        <h1 className="text-xl font-bold text-[#172033]">E-KTA</h1>
-        <p className="mt-1 text-sm text-[#5f6573]">
-          Kartu Tanda Anggota digital kamu di HMI Connect.
-        </p>
+        <div className="hidden lg:block">
+          <h1 className="text-xl font-bold text-[#172033]">E-KTA</h1>
+          <p className="mt-1 text-sm text-[#5f6573]">
+            Kartu Tanda Anggota digital kamu di HMI Connect.
+          </p>
+        </div>
 
         {membership?.member_card ? (
           <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">

@@ -101,7 +101,9 @@ export default function NotificationsPage({
   function handleMarkAllRead() {
     if (unreadCount === 0) return;
     setItems((prev) =>
-      prev.map((item) => (item.read_at ? item : { ...item, read_at: new Date().toISOString() }))
+      prev.map((item) =>
+        item.read_at ? item : { ...item, read_at: new Date().toISOString() }
+      )
     );
     markNotificationsAsRead();
   }
@@ -114,6 +116,18 @@ export default function NotificationsPage({
         userId={viewer.userId}
         username={viewer.username}
         isVerified={viewer.isVerified}
+        mobileBackTitle="Notifikasi"
+        mobileMenu={
+          <button
+            type="button"
+            onClick={handleMarkAllRead}
+            disabled={unreadCount === 0}
+            className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm font-medium text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#9aa1ad] disabled:hover:bg-transparent"
+          >
+            Tandai semua dibaca
+          </button>
+        }
+        mobileMenuLabel="Menu notifikasi"
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
@@ -135,7 +149,7 @@ export default function NotificationsPage({
           </aside>
 
           <main className="min-w-0">
-            <div className="flex items-center justify-between border border-x-0 border-b-0 border-[#e6e9ef] bg-white px-5 py-4 lg:rounded-t-2xl lg:border-x">
+            <div className="hidden items-center justify-between rounded-t-2xl border border-b-0 border-[#e6e9ef] bg-white px-5 py-4 lg:flex">
               <h1 className="text-lg font-bold text-[#172033]">Notifikasi</h1>
               {unreadCount > 0 && (
                 <button
