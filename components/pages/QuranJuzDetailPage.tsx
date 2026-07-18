@@ -128,7 +128,6 @@ export default function QuranJuzDetailPage({
                     verse.audio
                       ? {
                           id: `verse-${verse.id}`,
-                          badge: verse.number,
                           title: `${group.surahName} Ayat ${verse.number}`,
                           subtitle: "Sedang diputar",
                           audioUrl: verse.audio,

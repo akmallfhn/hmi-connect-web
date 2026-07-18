@@ -91,7 +91,6 @@ export default function QuranSurahDetailPage({
               onClick={() =>
                 handleToggleTrack({
                   id: "surah",
-                  badge: surah.number,
                   title: surah.name_latin,
                   subtitle: "Murottal lengkap",
                   audioUrl: surah.audio!,
@@ -99,7 +98,10 @@ export default function QuranSurahDetailPage({
               }
               className="mt-4 gap-2"
             >
-              <Play className="size-4 translate-x-0.5 text-primary" />
+              <Play
+                className="size-4 translate-x-0.5 text-primary"
+                fill="currentColor"
+              />
               Putar Semua
             </Button>
           )}
@@ -118,7 +120,6 @@ export default function QuranSurahDetailPage({
                   verse.audio
                     ? {
                         id: `verse-${verse.id}`,
-                        badge: verse.number,
                         title: `${surah.name_latin} Ayat ${verse.number}`,
                         subtitle: "Sedang diputar",
                         audioUrl: verse.audio,

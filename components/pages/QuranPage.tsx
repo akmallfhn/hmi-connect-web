@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuz, QuranSurah } from "@/apis/quran";
@@ -10,6 +11,9 @@ import Header from "../navigations/Header";
 import JuzRow from "../quran/JuzRow";
 import QuranMiniPlayer from "../quran/QuranMiniPlayer";
 import SurahRow from "../quran/SurahRow";
+
+const BANNER_ILLUSTRATION_URL =
+  "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/wallpaper-alquran.webp";
 
 interface ViewerProps {
   fullName?: string;
@@ -88,16 +92,31 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
         mobileBackTitle="Al-Qur'an"
       />
 
-      <div className="bg-gradient-to-br from-primary to-[#0d5f63] pb-6 pt-6 text-white">
-        <PageMargin>
-          <p className="text-sm font-medium text-white/80">
-            Assalamu&apos;alaikum
-          </p>
-          <h1 className="mt-1 text-xl font-bold leading-snug">
-            Yuk, luangkan waktu membaca Al-Qur&apos;an hari ini
-          </h1>
-        </PageMargin>
-      </div>
+      <PageMargin className="pt-4">
+        <div className="relative overflow-hidden rounded-2xl bg-[#013334] p-5 text-white">
+          <div className="relative z-10 max-w-[60%]">
+            <h1 className="text-xl font-bold leading-snug">
+              Yuk, luangkan waktu membaca{" "}
+              <span className="text-secondary">Al-Quran</span>
+            </h1>
+            <p className="mt-2 text-sm text-white/70">
+              Jadikan Al-Quran sebagai penuntun hidup.
+            </p>
+          </div>
+          <div className="pointer-events-none absolute bottom-0 right-0">
+            <div className="relative inline-flex">
+              <Image
+                src={BANNER_ILLUSTRATION_URL}
+                alt="Ilustrasi Al-Qur'an"
+                width={1417}
+                height={1110}
+                className="block h-36 w-auto"
+              />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#013334]" />
+            </div>
+          </div>
+        </div>
+      </PageMargin>
 
       <PageMargin className="py-4">
         <label className="relative flex items-center">
@@ -161,7 +180,6 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
           key={playingSurah.id}
           track={{
             id: `surah-${playingSurah.id}`,
-            badge: playingSurah.number,
             title: playingSurah.name_latin,
             subtitle: "Sedang diputar",
             audioUrl: playingSurah.audio!,

@@ -11,7 +11,14 @@ export type ButtonVariant =
   | "ghost"
   | "destructive";
 
-export type ButtonSize = "sm" | "default" | "lg" | "pill" | "pillSm" | "icon";
+export type ButtonSize =
+  | "sm"
+  | "default"
+  | "lg"
+  | "pill"
+  | "pillSm"
+  | "icon"
+  | "iconSm";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -55,6 +62,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       pill: "h-12 rounded-full px-5 text-sm",
       pillSm: "h-9 rounded-full px-4 text-sm",
       icon: "size-10 rounded-lg",
+      iconSm: "size-7 rounded-full",
     };
 
     const finalClasses = [

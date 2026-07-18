@@ -5,10 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import Button from "../buttons/Button";
 
 // A track is either a whole-surah recitation (QuranPage) or a single verse (surah detail
-// page) — both just need a badge/title/subtitle/audio URL to drive this player.
+// page) — both just need a title/subtitle/audio URL to drive this player.
 export interface QuranAudioTrack {
   id: string;
-  badge: string | number;
   title: string;
   subtitle: string;
   audioUrl: string;
@@ -60,9 +59,6 @@ export default function QuranMiniPlayer({
           />
         </div>
         <div className="flex items-center gap-3 px-3 py-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold">
-            {track.badge}
-          </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{track.title}</p>
             <p className="truncate text-xs text-white/60">{track.subtitle}</p>
@@ -73,12 +69,12 @@ export default function QuranMiniPlayer({
             size="icon"
             onClick={onTogglePlay}
             aria-label={isPlaying ? "Jeda" : "Putar"}
-            className="size-9 shrink-0 rounded-full text-white hover:bg-white/10"
+            className="size-9 shrink-0 !rounded-full text-white hover:bg-white/10"
           >
             {isPlaying ? (
-              <Pause className="size-4" />
+              <Pause className="size-4" fill="currentColor" />
             ) : (
-              <Play className="size-4 translate-x-0.5" />
+              <Play className="size-4 translate-x-0.5" fill="currentColor" />
             )}
           </Button>
           <Button
@@ -87,7 +83,7 @@ export default function QuranMiniPlayer({
             size="icon"
             onClick={onClose}
             aria-label="Tutup pemutar"
-            className="size-9 shrink-0 rounded-full text-white/70 hover:bg-white/10"
+            className="size-9 shrink-0 !rounded-full text-white/70 hover:bg-white/10"
           >
             <X className="size-4" />
           </Button>

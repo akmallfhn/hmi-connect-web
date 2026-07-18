@@ -12,10 +12,6 @@ interface SurahRowProps {
   onTogglePlay: () => void;
 }
 
-function revelationLabel(place: QuranSurah["revelation_place"]) {
-  return place === "madinah" ? "Madaniyah" : "Makkiyah";
-}
-
 function readingMinutesLabel(seconds: number) {
   const minutes = Math.max(1, Math.round(seconds / 60));
   return `${minutes} menit baca`;
@@ -39,7 +35,7 @@ export default function SurahRow({
       href={`/quran/${surah.slug}`}
       className="flex items-center gap-3 py-3"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-sm font-semibold text-secondary">
         {surah.number}
       </span>
 
@@ -48,25 +44,29 @@ export default function SurahRow({
           {surah.name_latin}
         </p>
         <p className="truncate text-xs text-[#5f6573]">
-          {surah.total_verses} ayat • {revelationLabel(surah.revelation_place)} •{" "}
+          {surah.total_verses} ayat •{" "}
           {readingMinutesLabel(surah.estimated_reading_seconds)}
         </p>
       </div>
 
+      <p className="font-arabic-quran shrink-0 text-xl text-secondary">
+        {surah.name_arabic}
+      </p>
+
       <Button
         type="button"
         variant="primary"
-        size="icon"
+        size="iconSm"
         onClick={handlePlayClick}
         aria-label={
           isPlaying ? `Jeda ${surah.name_latin}` : `Putar ${surah.name_latin}`
         }
-        className="size-10 shrink-0 rounded-full"
+        className="shrink-0"
       >
         {isPlaying ? (
-          <Pause className="size-4" />
+          <Pause className="size-3.5" fill="currentColor" />
         ) : (
-          <Play className="size-4 translate-x-0.5" />
+          <Play className="size-3.5" fill="currentColor" />
         )}
       </Button>
     </Link>
