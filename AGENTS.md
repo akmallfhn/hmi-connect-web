@@ -545,10 +545,10 @@ below) when `isVerified === false`.
   rather than reset via effect). The player is local to whichever page mounted it, not a
   global/cross-page player — it stops as soon as you navigate away. A track with no audio
   (nullable per the API, not every surah/verse row has an audio file attached yet) shows a
-  toast instead of doing anything on play. `components/quran/JuzRow.tsx` is deliberately
-  non-interactive (no `href="#"`, since that convention is for future nav destinations, not a
-  list of 30 plain rows) — the API's juz payload is just `{ id, number }`, and there's no juz
-  detail page or whole-juz audio to link to yet.
+  toast instead of doing anything on play. `components/quran/JuzRow.tsx` is a `Link` to
+  `/quran/juz/{id}` (the juz's `id`, not its `number` — that's what `quran-juz/detail`
+  actually keys on, and the two aren't guaranteed to always match even though they do in the
+  seeded data today).
 - `components/pages/QuranSurahDetailPage.tsx` (`/quran/[surah_slug]`) — same mobile-only
   scope as `QuranPage`. Backed by `apis/quran.ts#getQuranSurahDetail` (`quran-surahs/detail`),
   fetched once in `generateMetadata` and again in the page component (same accepted
@@ -566,6 +566,17 @@ below) when `isVerified === false`.
   with correct tashkeel/diacritic placement, not just a generic Arabic UI font, and it's the
   only place in the app this font is used (every other page still uses the Latin/Indonesian
   fonts from `layout.tsx`).
+- `components/pages/QuranJuzDetailPage.tsx` (`/quran/juz/[juz_id]`) — same layout shape as
+  `QuranSurahDetailPage` (gradient header + `VerseCard` list + `QuranMiniPlayer`), backed by
+  `apis/quran.ts#getQuranJuzDetail` (`quran-juz/detail`, `notFound()` on an unparseable or
+  unmatched `juz_id`). Diverges from the surah page in two ways forced by the data: there's
+  no `audio` field on a juz itself (only per-verse, via `QuranJuzVerse.audio` — same as
+  `QuranSurahDetail`'s verses), so there's no "Putar Semua" button, just per-verse play; and
+  since a juz's verses can span multiple surahs, `groupBySurah` splits `juz.verses` into
+  consecutive runs by `surah_id` (verses already arrive in surah/verse order, so this is a
+  single pass, no sorting) and renders one bordered card per surah with its own name as a
+  header row, rather than one flat list — the gradient header's `coverageLabel` then
+  summarizes those groups as e.g. "Al-Fatihah 1-7, Al-Baqarah 1-141".
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

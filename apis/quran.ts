@@ -37,6 +37,18 @@ export type QuranSurahDetail = QuranSurah & {
   verses: QuranVerse[];
 };
 
+// A juz's verses can span more than one surah, so each verse also carries its own surah's
+// id/number/name — everything QuranVerse has, plus that.
+export type QuranJuzVerse = QuranVerse & {
+  surah_id: number;
+  surah_number: number;
+  surah_name_latin: string;
+};
+
+export type QuranJuzDetail = QuranJuz & {
+  verses: QuranJuzVerse[];
+};
+
 type Metapaging = {
   total_data: number;
   total_page: number;
@@ -149,6 +161,26 @@ export async function getQuranSurahDetail(
 
   if (!isSuccessStatus(result.status) || !result.data) {
     console.error("[getQuranSurahDetail] request failed:", result);
+    return null;
+  }
+
+  return result.data;
+}
+
+export async function getQuranJuzDetail(
+  id: number
+): Promise<QuranJuzDetail | null> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) return null;
+
+  const result = await callApi<QuranJuzDetail>("/api/v1/quran-juz/detail", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+
+  if (!isSuccessStatus(result.status) || !result.data) {
+    console.error("[getQuranJuzDetail] request failed:", result);
     return null;
   }
 
