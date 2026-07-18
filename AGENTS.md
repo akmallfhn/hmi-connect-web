@@ -203,7 +203,17 @@ below) when `isVerified === false`.
   `border-b`/`bg-white/90`/`backdrop-blur` are pushed behind `lg:` too — without that,
   they'd render as a bare 1px border strip on mobile on pages with no banner, since the row
   being `hidden` doesn't stop the header element itself from painting its own border/background.
-  Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
+  `Header` also takes three optional props for pages reached by drilling in rather than
+  top-level nav (news, membership, notifications, ...): `mobileBackTitle` renders a
+  `lg:hidden` back-arrow (`router.back()`) + title row; `mobileMenu`/`mobileMenuLabel` add an
+  "⋮" overflow-menu trigger next to it (a `Dropdown`, only rendered when `mobileMenu` is
+  passed); `desktopFilterBar` renders a `lg:`-only bar for page-level filters (e.g. news
+  category pills) that should live in the sticky navbar. All three render as extra rows
+  inside `Header`'s own `sticky top-0` `<header>` element (after the verification banner)
+  rather than as separately `sticky`-positioned siblings — a second independently-sticky
+  element needs to know `Header`'s real rendered height to offset against, and that height
+  is dynamic (0, banner-only, or more), so a hardcoded offset silently leaves a gap once you
+  scroll. Being one sticky block sidesteps that entirely. Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
   `/search`, Notifikasi to `/notifications`, Profil to `/profile/[username]`. The middle
   slot is a "Posting" button (`PlusIcon`, always the raised filled-circle style, no
@@ -428,33 +438,68 @@ below) when `isVerified === false`.
   `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
   `/verification` instead of a broken card when it's missing.
 - `components/news/NewsArticleCard.tsx` — one article card, `variant` prop picks the shape:
-  `"featured"` (the top article — image left/summary right on `lg:`, stacked on mobile),
-  `"grid"` (image-on-top card, used in the `sm:`+ multi-column grid), `"mobileBig"` and
-  `"mobileList"` (source row on top, then either a full-width image or a title+small-square-
-  thumbnail row, timestamp at the bottom — a Google News-style mix used only below `sm:`).
-  The `<a>` itself always links straight out to `article.source_url` on the outlet's own
-  site — there's no `news-articles/detail` endpoint or in-app article page, by design (see
-  the news API's own README). The source name is paired with `SourceLogo`, which renders
-  `article.source_logo_url` when present and falls back to an empty placeholder square
-  otherwise (some sources still don't have a `news_sources.logo_url` set). Shared by
-  `components/pages/NewsPage.tsx`, the client component behind both `/news`
-  (`app/(www)/www/(gated)/news/page.tsx`) and `/news/[category_slug]`
+  `"grid"` (image-on-top, no card chrome — no white bg/border/padding, just floats on the
+  page background, used in the `lg:` 4-column grid), `"mobileBig"` and `"mobileList"`
+  (source row on top, then either a full-width image or a title+small-square-thumbnail row —
+  a Google News-style mix used only below `lg:`, `mobileList`'s timestamp sits under the
+  title, in the same column, not spanning the full row under the thumbnail), and
+  `"heroMain"`/`"heroSide"` (the `lg:`-only hero treatment: `heroMain` overlays publisher,
+  timestamp, title, and summary directly on the image — a `bg-gradient-to-t from-black/85
+  via-black/40 to-transparent` scrim anchored to the image's bottom via `ArticleImage`'s
+  `overlay` prop, all text in white — rather than putting that text below the image, so
+  there's no separate white-on-page text block for `heroMain`; `heroSide` is a small
+  thumbnail-left row with timestamp above a 2-line title. Both used for the top-4 hero and
+  inside `NewsCategoryPreview`, see below. Text sizes across `grid`/`heroMain`/`heroSide`
+  step up again at `xl:` (title, publisher, timestamp, category badge) since `mobileBig`/
+  `mobileList` never render at `xl:` anyway (both `lg:hidden`), there's no risk of those
+  `xl:` classes leaking into the mobile rows. The `<a>` itself always links straight out to
+  `article.source_url` on the outlet's own site — there's no `news-articles/detail` endpoint
+  or in-app article page, by design (see the news API's own README). The source name is
+  paired with `SourceLogo`, which renders `article.source_logo_url` when present and falls
+  back to an empty placeholder square otherwise (some sources still don't have a
+  `news_sources.logo_url` set).
+  `components/news/NewsCategoryPreview.tsx` renders one category's teaser block — accent
+  bar + category name + "Selengkapnya" link to `/news/{slug}`, then one `heroMain` article
+  plus up to 3 `heroSide` articles — used only on the desktop grid, see below.
+  Both are shared by `components/pages/NewsPage.tsx`, the client component behind both
+  `/news` (`app/(www)/www/(gated)/news/page.tsx`) and `/news/[category_slug]`
   (`.../news/[category_slug]/page.tsx`) — same component, `activeCategorySlug` prop is what
   differs, so switching categories is plain `<Link>` navigation between the two routes, not
-  client-side state. Below `sm:`, the rest of the list (after the featured card) renders as
-  a single Google News-style column mixing `mobileBig`/`mobileList` (every 4th item is
-  `mobileBig`); at `sm:` and up that same list instead renders as the `"grid"` variant in a
-  multi-column grid — both are rendered and toggled via `sm:hidden`/`hidden sm:grid` rather
-  than JS viewport detection. The title strip right below `Header` (`bg-primary`, sticky
-  `top-16`) holds "Kabar HMI" sized to match the category pills next to it, not as an
-  oversized page heading; the active pill is `bg-white text-primary`, inactive pills are
-  translucent white on top of the green bar. Category filter pills are sourced from
-  `apis/news.ts#listNewsCategories`, and further pages of `apis/news.ts#listNewsArticles`
-  paginate via the `loadMoreNewsArticles` Server Action, same infinite-scroll-via-
-  `IntersectionObserver` shape as `FeedTimeline`/`ProfileActivitiesPage`. Both route
-  `page.tsx`s fetch `page: 1` server-side and pass `key={category_slug}` (or `key="all"`)
-  to `<NewsPage>` so switching categories remounts it with fresh pagination state instead
-  of leaking the previous category's items in.
+  client-side state. `NewsPage`'s "mobile" vs "desktop" split uses `lg:` (matching the rest
+  of the app's nav chrome, not the `sm:`-based split used elsewhere in this file for content
+  grids). Below `lg:`, every item (no separate featured/hero treatment) renders as a single
+  Google News-style column mixing `mobileBig`/`mobileList` (every 4th item is `mobileBig`).
+  At `lg:` and up, the first 4 items render as a hero (1 `heroMain` + 3 `heroSide` in a
+  narrower side column, `heroMain`'s image is a `21/9` letterbox crop rather than `16/9` so
+  it doesn't dwarf the 360px side column), then the rest render in a 4-column `"grid"`,
+  chunked into groups of 8 (`ITEMS_PER_PREVIEW` = 2 rows × 4 columns) — after chunk `i`, if
+  `categoryPreviews[i]` exists, it's inserted via `NewsCategoryPreview` (`groupIndex <
+  categoryPreviews.length`, not a modulo cycle) — each preview category appears at most
+  once, and once every entry in `categoryPreviews` has been placed, later chunks render with
+  no preview at all, even as the infinite-scroll grid keeps growing. `categoryPreviews`
+  (`{ category, articles }[]`) is only fetched by the "all categories" `/news` route —
+  `app/(www)/www/(gated)/news/page.tsx` looks up a fixed, ordered allowlist
+  (`CATEGORY_PREVIEW_SLUGS` — currently `hmi`/`politik`/`nusantara`, matched against a
+  category's `slug` or lowercased `name`) rather than pulling in whatever categories the
+  backend happens to return, fetches `CATEGORY_PREVIEW_ARTICLES` (4) articles per matched
+  category in parallel via `apis/news.ts#listNewsArticles({ categorySlug })`, and drops any
+  category that came back empty; `/news/[category_slug]` doesn't pass this prop (no nested
+  category previews inside an already-filtered category view), so it defaults to `[]` and
+  the hero/grid render with no interspersed previews. Category filter pills
+  (`apis/news.ts#listNewsCategories`) render twice depending on breakpoint, not as one
+  shared sticky element: at `lg:` they're passed to `Header`'s `desktopFilterBar` prop, so
+  they live inside `Header`'s own sticky block (see `Header`'s notes above on why
+  page-level chrome that needs to sit flush under the navbar belongs inside `Header` rather
+  than in a separately-offset sticky element); below `lg:` they render as a plain
+  (non-sticky, no `bg-white` — left transparent over the page's `#f5f7fb`) bar in
+  `NewsPage`'s own JSX, right under `Header` — deliberately page-level, not navbar chrome,
+  per `mobileBackTitle`'s already-mobile-only back+title row also living in `Header`.
+  Further pages of `apis/news.ts#listNewsArticles` paginate via the
+  `loadMoreNewsArticles` Server Action, same infinite-scroll-via-`IntersectionObserver` shape
+  as `FeedTimeline`/`ProfileActivitiesPage`. Both route `page.tsx`s fetch `page: 1`
+  server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
+  categories remounts it with fresh pagination state instead of leaking the previous
+  category's items in.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

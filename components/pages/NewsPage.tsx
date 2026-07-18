@@ -7,6 +7,7 @@ import type { NewsArticle, NewsCategory } from "@/apis/news";
 import { loadMoreNewsArticles } from "@/lib/actions";
 import PageMargin from "../common/PageMargin";
 import NewsArticleCard from "../news/NewsArticleCard";
+import NewsCategoryPreview from "../news/NewsCategoryPreview";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 
@@ -19,20 +20,30 @@ interface ViewerProps {
   isVerified?: boolean;
 }
 
+interface CategoryPreviewData {
+  category: NewsCategory;
+  articles: NewsArticle[];
+}
+
 interface NewsPageProps {
   viewer: ViewerProps;
   categories: NewsCategory[];
   activeCategorySlug?: string;
   initialItems: NewsArticle[];
   initialHasMore: boolean;
+  categoryPreviews?: CategoryPreviewData[];
 }
+
+const GRID_ROWS_PER_PREVIEW = 2;
+const GRID_COLUMNS = 4;
+const ITEMS_PER_PREVIEW = GRID_ROWS_PER_PREVIEW * GRID_COLUMNS;
 
 function pillClassName(active: boolean): string {
   return [
     "shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition",
     active
-      ? "border-white bg-white text-primary"
-      : "border-white/30 bg-white/10 text-white hover:bg-white/20",
+      ? "border-primary bg-primary text-white"
+      : "border-[#dbe3ef] bg-white text-[#172033] hover:border-primary/50 hover:text-primary",
   ].join(" ");
 }
 
@@ -61,12 +72,21 @@ function CategoryPills({
   );
 }
 
+function chunk<T>(items: T[], size: number): T[][] {
+  const groups: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    groups.push(items.slice(i, i + size));
+  }
+  return groups;
+}
+
 export default function NewsPage({
   viewer,
   categories,
   activeCategorySlug,
   initialItems,
   initialHasMore,
+  categoryPreviews = [],
 }: NewsPageProps) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -109,7 +129,9 @@ export default function NewsPage({
     return () => observer.disconnect();
   }, [hasMore, loadNextPage]);
 
-  const [featured, ...rest] = items;
+  const heroItems = items.slice(0, 4);
+  const [heroMain, ...heroSide] = heroItems;
+  const gridChunks = chunk(items.slice(4), ITEMS_PER_PREVIEW);
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
@@ -121,21 +143,29 @@ export default function NewsPage({
         username={viewer.username}
         isVerified={viewer.isVerified}
         mobileBackTitle="HMI News"
+        desktopFilterBar={
+          <>
+            <div className="flex shrink-0 items-center gap-2">
+              <Newspaper className="size-4 text-primary" />
+              <h1 className="text-sm font-semibold text-[#172033]">HMI News</h1>
+            </div>
+            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <CategoryPills
+                categories={categories}
+                activeCategorySlug={activeCategorySlug}
+              />
+            </div>
+          </>
+        }
       />
 
-      {/* lg+: title stays fixed, only the pills scroll if they overflow. Category filtering is desktop-only. */}
-      <div className="sticky top-16 z-30 hidden bg-primary lg:block">
-        <PageMargin className="flex items-center gap-4 py-3">
-          <div className="flex shrink-0 items-center gap-2">
-            <Newspaper className="size-3.5 text-white" />
-            <h1 className="text-sm font-semibold text-white">Kabar HMI</h1>
-          </div>
-          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <CategoryPills
-              categories={categories}
-              activeCategorySlug={activeCategorySlug}
-            />
-          </div>
+      {/* Mobile-only: category filter lives at page level, not pinned to the navbar. */}
+      <div className="border-b border-[#e6e9ef] lg:hidden">
+        <PageMargin className="flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <CategoryPills
+            categories={categories}
+            activeCategorySlug={activeCategorySlug}
+          />
         </PageMargin>
       </div>
 
@@ -145,34 +175,60 @@ export default function NewsPage({
             Belum ada berita untuk kategori ini.
           </p>
         ) : (
-          <div className="flex flex-col gap-6">
-            <NewsArticleCard article={featured} variant="featured" />
+          <div className="flex flex-col gap-10">
+            {/* Mobile: Google News-style mixed list — big thumbnail every 4th item, list rows otherwise. */}
+            <div className="flex flex-col divide-y divide-[#e6e9ef] lg:hidden">
+              {items.map((article, index) => (
+                <div key={article.id} className="py-4 first:pt-0">
+                  <NewsArticleCard
+                    article={article}
+                    variant={index % 4 === 0 ? "mobileBig" : "mobileList"}
+                  />
+                </div>
+              ))}
+            </div>
 
-            {rest.length > 0 && (
-              <>
-                {/* Mobile: Google News-style mixed list — big thumbnail every 4th item, list rows otherwise. */}
-                <div className="flex flex-col divide-y divide-[#e6e9ef] sm:hidden">
-                  {rest.map((article, index) => (
-                    <div key={article.id} className="py-4 first:pt-0">
-                      <NewsArticleCard
-                        article={article}
-                        variant={index % 4 === 0 ? "mobileBig" : "mobileList"}
-                      />
+            {/* Desktop: top 4 as a hero (1 big + 3 side rows), then a 4-col grid with a category preview every 2 rows. */}
+            <div className="hidden flex-col gap-10 lg:flex">
+              {heroMain && (
+                <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+                  <NewsArticleCard article={heroMain} variant="heroMain" />
+                  {heroSide.length > 0 && (
+                    <div className="flex flex-col gap-4 divide-y divide-[#e6e9ef]">
+                      {heroSide.map((article) => (
+                        <div key={article.id} className="pt-4 first:pt-0">
+                          <NewsArticleCard
+                            article={article}
+                            variant="heroSide"
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
+              )}
 
-                <div className="hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-3">
-                  {rest.map((article) => (
-                    <NewsArticleCard
-                      key={article.id}
-                      article={article}
-                      variant="grid"
+              {gridChunks.map((group, groupIndex) => (
+                <div key={groupIndex} className="flex flex-col gap-10">
+                  <div className="grid grid-cols-4 gap-6">
+                    {group.map((article) => (
+                      <NewsArticleCard
+                        key={article.id}
+                        article={article}
+                        variant="grid"
+                      />
+                    ))}
+                  </div>
+
+                  {groupIndex < categoryPreviews.length && (
+                    <NewsCategoryPreview
+                      category={categoryPreviews[groupIndex].category}
+                      articles={categoryPreviews[groupIndex].articles}
                     />
-                  ))}
+                  )}
                 </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
         )}
 

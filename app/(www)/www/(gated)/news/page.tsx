@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   },
 };
 
+// Order here is the order previews are inserted into the feed — each shown once, not cycled.
+const CATEGORY_PREVIEW_SLUGS = ["hmi", "politik", "nusantara"];
+const CATEGORY_PREVIEW_ARTICLES = 4;
+
 export default async function News() {
   const { user } = await getSession();
 
@@ -25,6 +29,25 @@ export default async function News() {
     listNewsCategories({ pageSize: 50 }),
     listNewsArticles({ page: 1, pageSize: 12 }),
   ]);
+
+  const previewCategories = CATEGORY_PREVIEW_SLUGS.map((slug) =>
+    categories.list.find(
+      (category) =>
+        category.slug === slug || category.name.toLowerCase() === slug
+    )
+  ).filter((category) => category !== undefined);
+
+  const categoryPreviews = (
+    await Promise.all(
+      previewCategories.map(async (category) => {
+        const result = await listNewsArticles({
+          categorySlug: category.slug,
+          pageSize: CATEGORY_PREVIEW_ARTICLES,
+        });
+        return { category, articles: result.list };
+      })
+    )
+  ).filter((preview) => preview.articles.length > 0);
 
   return (
     <NewsPage
@@ -39,6 +62,7 @@ export default async function News() {
       categories={categories.list}
       initialItems={articles.list}
       initialHasMore={articles.hasMore}
+      categoryPreviews={categoryPreviews}
     />
   );
 }

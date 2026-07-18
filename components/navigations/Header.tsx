@@ -49,6 +49,9 @@ interface HeaderProps {
   mobileBackTitle?: string;
   mobileMenu?: ReactNode;
   mobileMenuLabel?: string;
+  /** Renders as a colored strip below the banner, desktop-only — for page-level filters
+   *  (e.g. news categories) that should live in the sticky navbar rather than the page body. */
+  desktopFilterBar?: ReactNode;
 }
 
 export default function Header({
@@ -62,6 +65,7 @@ export default function Header({
   mobileBackTitle,
   mobileMenu,
   mobileMenuLabel = "Menu",
+  desktopFilterBar,
 }: HeaderProps) {
   const displayName = fullName ?? "Kader";
   const router = useRouter();
@@ -305,6 +309,14 @@ export default function Header({
             >
               Verifikasi sekarang
             </Link>
+          </PageMargin>
+        </div>
+      )}
+
+      {desktopFilterBar && (
+        <div className="hidden border-t border-[#e6e9ef] bg-white lg:block">
+          <PageMargin className="flex items-center gap-4 py-3">
+            {desktopFilterBar}
           </PageMargin>
         </div>
       )}
