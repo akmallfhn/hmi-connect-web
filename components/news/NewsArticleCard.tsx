@@ -3,6 +3,7 @@ import { Newspaper } from "lucide-react";
 import type { ReactNode } from "react";
 import type { NewsArticle } from "@/apis/news";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import RepostToFeedButton from "./RepostToFeedButton";
 
 type NewsArticleCardVariant =
   | "grid"
@@ -20,10 +21,12 @@ function ArticleImage({
   article,
   className,
   overlay,
+  cornerAction,
 }: {
   article: NewsArticle;
   className: string;
   overlay?: ReactNode;
+  cornerAction?: ReactNode;
 }) {
   return (
     <div
@@ -46,6 +49,7 @@ function ArticleImage({
           {overlay}
         </div>
       )}
+      {cornerAction}
     </div>
   );
 }
@@ -99,14 +103,17 @@ function Timestamp({ article }: { article: NewsArticle }) {
 
 function ArticleMeta({ article }: { article: NewsArticle }) {
   return (
-    <div className="mt-auto flex items-center gap-1.5 pt-1.5 text-xs text-[#7b8190] xl:text-sm">
-      <SourceLogo article={article} />
-      <p className="truncate">
-        {article.source_name}
-        {article.published_at && (
-          <> · {formatRelativeTime(article.published_at)}</>
-        )}
-      </p>
+    <div className="mt-auto flex items-center gap-2 pt-1.5">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-[#7b8190] xl:text-sm">
+        <SourceLogo article={article} />
+        <p className="truncate">
+          {article.source_name}
+          {article.published_at && (
+            <> · {formatRelativeTime(article.published_at)}</>
+          )}
+        </p>
+      </div>
+      <RepostToFeedButton article={article} className="text-[#5f6573]" />
     </div>
   );
 }
@@ -129,7 +136,12 @@ export default function NewsArticleCard({
         <p className="line-clamp-2 text-base font-bold leading-snug text-[#172033] transition group-hover:underline">
           {article.title}
         </p>
-        <Timestamp article={article} />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <Timestamp article={article} />
+          </div>
+          <RepostToFeedButton article={article} className="text-[#5f6573]" />
+        </div>
       </a>
     );
   }
@@ -149,7 +161,12 @@ export default function NewsArticleCard({
             <p className="line-clamp-3 text-sm font-semibold leading-snug text-[#172033] transition group-hover:underline">
               {article.title}
             </p>
-            <Timestamp article={article} />
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <Timestamp article={article} />
+              </div>
+              <RepostToFeedButton article={article} className="text-[#5f6573]" />
+            </div>
           </div>
           <ArticleImage
             article={article}
@@ -185,15 +202,24 @@ export default function NewsArticleCard({
                   </span>
                 )}
               </div>
-              <p className="line-clamp-2 text-xl font-bold leading-snug text-white transition group-hover:underline group-hover:decoration-1 group-hover:underline-offset-2 xl:text-2xl">
+              {/* pr- reserves room so these lines never run under the corner button. */}
+              <p className="line-clamp-2 pr-16 text-xl font-bold leading-snug text-white transition group-hover:underline group-hover:decoration-1 group-hover:underline-offset-2 xl:pr-20 xl:text-2xl">
                 {article.title}
               </p>
               {article.summary && (
-                <p className="line-clamp-2 text-sm text-white/85 xl:text-base">
+                <p className="line-clamp-2 pr-16 text-sm text-white/85 xl:pr-20 xl:text-base">
                   {article.summary}
                 </p>
               )}
             </>
+          }
+          cornerAction={
+            <RepostToFeedButton
+              article={article}
+              variant="secondary"
+              size="lg"
+              className="absolute bottom-4 right-4 z-10 shadow-lg"
+            />
           }
         />
       </a>
@@ -218,6 +244,7 @@ export default function NewsArticleCard({
           <p className="line-clamp-2 text-sm font-semibold leading-snug text-[#172033] transition group-hover:underline xl:text-base">
             {article.title}
           </p>
+          <RepostToFeedButton article={article} className="text-[#5f6573]" />
         </div>
       </a>
     );

@@ -244,7 +244,15 @@ below) when `isVerified === false`.
   `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
   live listener, so it also fires when "Posting" is clicked while already on `/` — and
   bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
-  modal in response. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
+  modal in response. `components/news/RepostToFeedButton.tsx` (the `Repeat2` icon rendered
+  on every `NewsArticleCard` variant, see below) rides the same mechanism plus a companion
+  `sessionStorage[COMPOSE_INTENT_URL_KEY]` — `FeedTimeline` reads both together and passes
+  the URL through as `forceOpenUrl` on `CreateFeedForms`, which opens the composer already
+  in URL-attachment mode with that value pre-filled, so reposting a news article to the feed
+  is a straight click-then-post instead of copy/pasting the link by hand. Since the button
+  sits inside `NewsArticleCard`'s own outer `<a>` (the whole card links out to
+  `article.source_url`), its `onClick` calls `preventDefault`/`stopPropagation` so it doesn't
+  also trigger that outer link's navigation. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
   server-first pages) since it's shared by every route without a common data-fetching
   ancestor: it fetches its own list via the `listNotifications` Server Action on mount
   (`apis/notifications.ts#listNotifications`, `notifications/list`, session-cookie-scoped
@@ -457,7 +465,17 @@ below) when `isVerified === false`.
   or in-app article page, by design (see the news API's own README). The source name is
   paired with `SourceLogo`, which renders `article.source_logo_url` when present and falls
   back to an empty placeholder square otherwise (some sources still don't have a
-  `news_sources.logo_url` set).
+  `news_sources.logo_url` set). Every variant also renders `RepostToFeedButton` (see the
+  compose-intent paragraph above for what it does), placement chosen per variant rather than
+  standardized on one spot: `mobileBig`/`mobileList` put it beside `Timestamp` (not
+  `SourceRow` — the source row up top is left alone), `grid` puts it in `ArticleMeta` beside
+  the source/timestamp line, `heroSide` puts it on its own line below the title, and
+  `heroMain` is the odd one out — instead of sitting inline in the meta row, it's passed as
+  `ArticleImage`'s `cornerAction` prop (a sibling of the gradient `overlay`, not part of its
+  text flow) so it can render as an enlarged (`size="lg"`), `variant="secondary"` (solid
+  orange, not the default `ghost`) badge fixed to the image's bottom-right corner; the
+  title/summary paragraphs in the overlay carry a matching `pr-16`/`xl:pr-20` so their text
+  never wraps under it.
   `components/news/NewsCategoryPreview.tsx` renders one category's teaser block — accent
   bar + category name + "Selengkapnya" link to `/news/{slug}`, then one `heroMain` article
   plus up to 3 `heroSide` articles — used only on the desktop grid, see below.

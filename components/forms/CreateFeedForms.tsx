@@ -43,6 +43,9 @@ interface CreateFeedFormsProps {
   onCreated?: (feed: Feed) => void;
   /** Bump this (e.g. from a counter) to force the composer open from outside — see BottomNav. */
   forceOpenSignal?: number;
+  /** Paired with forceOpenSignal — when set, the composer opens straight into the URL
+   *  attachment mode with this value pre-filled — see RepostToFeedButton. */
+  forceOpenUrl?: string;
 }
 
 type PhotoDraft = {
@@ -150,23 +153,29 @@ export default function CreateFeedForms({
   userId,
   onCreated,
   forceOpenSignal,
+  forceOpenUrl,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] = useState<FeedMediaTypeEnum | null>(
     null
   );
+  const [initialUrl, setInitialUrl] = useState<string | undefined>(undefined);
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
 
-  function openComposer(mode: FeedMediaTypeEnum | null = null) {
+  function openComposer(mode: FeedMediaTypeEnum | null = null, url?: string) {
     setInitialMode(mode);
+    setInitialUrl(url);
     setOpen(true);
   }
 
   if (forceOpenSignal !== seenForceOpenSignal) {
     setSeenForceOpenSignal(forceOpenSignal);
-    if (forceOpenSignal) openComposer();
+    if (forceOpenSignal) {
+      if (forceOpenUrl) openComposer("url", forceOpenUrl);
+      else openComposer();
+    }
   }
 
   return (
@@ -213,6 +222,7 @@ export default function CreateFeedForms({
         avatar={avatar}
         userId={userId}
         initialMode={initialMode}
+        initialUrl={initialUrl}
         onCreated={onCreated}
       />
     </>
@@ -226,6 +236,8 @@ interface FeedComposerModalProps {
   avatar?: string;
   userId?: string;
   initialMode?: FeedMediaTypeEnum | null;
+  /** Pre-fills the URL attachment field — see RepostToFeedButton. */
+  initialUrl?: string;
   /** When set, the composer becomes a quote-repost of this feed: no attachment UI, and the
    *  quoted feed renders read-only below the textarea (see QuotedFeed). */
   quoteFeed?: Feed;
@@ -241,6 +253,7 @@ export function FeedComposerModal({
   avatar,
   userId,
   initialMode,
+  initialUrl,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -257,6 +270,7 @@ export function FeedComposerModal({
           avatar={avatar}
           userId={userId}
           initialMode={initialMode}
+          initialUrl={initialUrl}
           quoteFeed={quoteFeed}
           onClose={onClose}
           onCreated={onCreated}
@@ -271,6 +285,7 @@ interface FeedComposerFieldsProps {
   avatar?: string;
   userId?: string;
   initialMode?: FeedMediaTypeEnum | null;
+  initialUrl?: string;
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -281,6 +296,7 @@ function FeedComposerFields({
   avatar,
   userId,
   initialMode,
+  initialUrl,
   quoteFeed,
   onClose,
   onCreated,
@@ -293,8 +309,10 @@ function FeedComposerFields({
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [compressingPhotos, setCompressingPhotos] = useState(false);
   const [video, setVideo] = useState<VideoDraft | null>(null);
-  const [urlValue, setUrlValue] = useState("");
-  const [urlActive, setUrlActive] = useState(initialMode === "url");
+  const [urlValue, setUrlValue] = useState(initialUrl ?? "");
+  const [urlActive, setUrlActive] = useState(
+    initialMode === "url" || Boolean(initialUrl)
+  );
   const [previewUrl, setPreviewUrl] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [submitting, setSubmitting] = useState(false);

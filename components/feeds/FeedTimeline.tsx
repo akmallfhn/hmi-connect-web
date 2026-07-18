@@ -5,7 +5,7 @@ import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
-import { COMPOSE_INTENT_KEY } from "@/lib/constants";
+import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_URL_KEY } from "@/lib/constants";
 
 interface FeedTimelineProps {
   initialItems: FeedTimelineItem[];
@@ -42,6 +42,9 @@ export default function FeedTimeline({
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
   const [composerSignal, setComposerSignal] = useState(0);
+  const [composerUrl, setComposerUrl] = useState<string | undefined>(
+    undefined
+  );
 
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -81,6 +84,11 @@ export default function FeedTimeline({
     function consumeComposeIntent() {
       if (!window.sessionStorage.getItem(COMPOSE_INTENT_KEY)) return;
       window.sessionStorage.removeItem(COMPOSE_INTENT_KEY);
+
+      const url = window.sessionStorage.getItem(COMPOSE_INTENT_URL_KEY);
+      if (url) window.sessionStorage.removeItem(COMPOSE_INTENT_URL_KEY);
+
+      setComposerUrl(url ?? undefined);
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -116,6 +124,7 @@ export default function FeedTimeline({
         userId={currentUserId}
         onCreated={handleFeedCreated}
         forceOpenSignal={composerSignal}
+        forceOpenUrl={composerUrl}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}
