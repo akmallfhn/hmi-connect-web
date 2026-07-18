@@ -1,5 +1,5 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { Geist, Geist_Mono, Google_Sans } from "next/font/google";
+import { Amiri_Quran, Geist, Geist_Mono, Google_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import "./globals.css";
@@ -20,6 +20,14 @@ const googleSans = Google_Sans({
   adjustFontFallback: false,
 });
 
+// Purpose-built for Quranic Arabic (correct tashkeel/diacritic placement), not a general
+// Arabic UI font — used only for text_arabic/name_arabic in the Quran pages (see globals.css).
+const amiriQuran = Amiri_Quran({
+  variable: "--font-amiri-quran",
+  subsets: ["arabic"],
+  weight: "400",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${amiriQuran.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col scroll-smooth">
         <ScrollToTop />

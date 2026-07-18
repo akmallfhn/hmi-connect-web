@@ -4,13 +4,13 @@ import EKTAIcon from "../icons/EKTAIcon";
 import EventIcon from "../icons/EventIcon";
 import NewsIcon from "../icons/NewsIcon";
 
-// Event and Al-Qur'an have no page built yet, so they're href="#" placeholders (plain <a>,
-// not <Link>) — News and E-KTA route to real pages.
+// Event has no page built yet, so it's still an href="#" placeholder (plain <a>, not
+// <Link>) — News, E-KTA, and Al-Qur'an route to real pages.
 const MENU_ITEMS = [
   { label: "News", href: "/news", icon: NewsIcon, isReal: true },
   { label: "E-KTA", href: "/membership", icon: EKTAIcon, isReal: true },
   { label: "Event", href: "#", icon: EventIcon, isReal: false },
-  { label: "Al-Qur'an", href: "#", icon: AlQuranIcon, isReal: false },
+  { label: "Al-Qur'an", href: "/quran", icon: AlQuranIcon, isReal: true },
 ] as const;
 
 export default function MobileQuickMenu() {

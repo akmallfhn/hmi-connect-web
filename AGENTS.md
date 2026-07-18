@@ -394,9 +394,9 @@ below) when `isVerified === false`.
   nav-bar active-state icons, just static menu glyphs) converted 1:1 from designer-provided
   SVGs; `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset as a module-level
   `PATTERN_DATA_URI` constant rather than a `public/` file, since nothing else needed it
-  optimized or reused. Berita (`/news`) and E-KTA (`/membership`) route through `Link`;
-  Event and Al-Qur'an have no page yet, so they're plain `href="#"` `<a>` tags per the
-  ground rule on placeholder links below.
+  optimized or reused. Berita (`/news`), E-KTA (`/membership`), and Al-Qur'an (`/quran`, see
+  `QuranPage` below) route through `Link`; Event has no page yet, so it's still a plain
+  `href="#"` `<a>` tag per the ground rule on placeholder links below.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
@@ -518,6 +518,54 @@ below) when `isVerified === false`.
   server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
   categories remounts it with fresh pagination state instead of leaking the previous
   category's items in.
+- `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
+  here instead of `href="#"`) — mobile-only for now, by explicit instruction: no `lg:`
+  layout/styling has been done for it yet, unlike every other page in this file. Backed by
+  `apis/quran.ts` (`quran-surahs/list`, `quran-juz/list` — read-only, seeded reference data,
+  no create/update/delete per the API's own README). Both are small, fixed datasets (114
+  surahs, 30 juz) capped at `page_size: 100` server-side, so `listAllQuranSurahs`/
+  `listAllQuranJuz` loop pages until exhausted and the page fetches everything upfront —
+  search/tab-switching is plain client-side `.filter()` over that in-memory list, not a
+  debounced endpoint like `CreateableSelect`/`SearchableSelect`'s `loadOptions`. The Surah/Juz
+  segmented control is a plain two-button toggle (no "Page" tab — the API has no
+  Mushaf-page grouping to back one). `components/quran/SurahRow.tsx` — a `Link` to
+  `/quran/{slug}` — shows `name_latin`/`total_verses`/`revelation_place` (mapped to
+  "Makkiyah"/"Madaniyah")/`estimated_reading_seconds` (rounded to whole minutes) plus a play
+  button; the button's own `onClick` calls `preventDefault`/`stopPropagation` (same nested-
+  interactive-inside-a-link pattern as `RepostToFeedButton`) so tapping it toggles playback
+  in place instead of also navigating. Playback (here and on the surah detail page) mounts
+  `components/quran/QuranMiniPlayer.tsx` (a `lg:hidden` floating bar fixed above `BottomNav`,
+  real `<audio>` element, play/pause + a thin progress bar + close), driven by a generic
+  `QuranAudioTrack` (`{ id, badge, title, subtitle, audioUrl }`) rather than a raw
+  `QuranSurah`/`QuranVerse`, so the same player works for both a whole-surah recitation and a
+  single verse — the caller remounts it via `key={track.id}` on every track change
+  specifically so its progress-bar state seeds fresh from a plain `useState(0)` instead of
+  needing a `setState`-in-`useEffect` reset (this project's `eslint-plugin-react-hooks` flags
+  that pattern, same reason `Edit*Form.tsx`'s `*Fields` components are conditionally mounted
+  rather than reset via effect). The player is local to whichever page mounted it, not a
+  global/cross-page player — it stops as soon as you navigate away. A track with no audio
+  (nullable per the API, not every surah/verse row has an audio file attached yet) shows a
+  toast instead of doing anything on play. `components/quran/JuzRow.tsx` is deliberately
+  non-interactive (no `href="#"`, since that convention is for future nav destinations, not a
+  list of 30 plain rows) — the API's juz payload is just `{ id, number }`, and there's no juz
+  detail page or whole-juz audio to link to yet.
+- `components/pages/QuranSurahDetailPage.tsx` (`/quran/[surah_slug]`) — same mobile-only
+  scope as `QuranPage`. Backed by `apis/quran.ts#getQuranSurahDetail` (`quran-surahs/detail`),
+  fetched once in `generateMetadata` and again in the page component (same accepted
+  double-fetch as `/feeds/[feed_id]`'s `getFeedById`, not deduped — `getSession()` is the only
+  request-scoped-cached fetcher in this codebase). `notFound()` on a `slug` that doesn't
+  match any surah. The gradient header shows the surah's Arabic name, latin name,
+  translation, meta line, and — when the surah has its own `audio` — a "Putar Semua" button
+  that starts a whole-surah `QuranAudioTrack`. Below that,
+  `components/quran/VerseCard.tsx` renders every verse: ayat-number badge + its own play
+  button (building a per-verse `QuranAudioTrack` from `verse.audio`, again nullable) at the
+  top, then `text_arabic` (right-to-left, `lang="ar"`), `text_latin`, and `translation_id`.
+  `text_arabic`/`name_arabic` use the `font-arabic-quran` Tailwind utility (wired in
+  `app/globals.css`'s `@theme inline` to `--font-amiri-quran`, loaded in `app/layout.tsx` via
+  `next/font/google`'s `Amiri_Quran`) — picked specifically because it's a Quran-script font
+  with correct tashkeel/diacritic placement, not just a generic Arabic UI font, and it's the
+  only place in the app this font is used (every other page still uses the Latin/Indonesian
+  fonts from `layout.tsx`).
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

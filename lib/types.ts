@@ -24,6 +24,7 @@ export type ActivityTypeEnum = "post" | "quote_repost" | "repost" | "comment";
 export type NotificationTypeEnum = "like" | "comment" | "comment_reply" | "follow";
 export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | "user";
 export type SearchTypeEnum = "people" | "posting";
+export type RevelationPlaceEnum = "mekkah" | "madinah";
 
 export type StatusName =
   | "OK"
