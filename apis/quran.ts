@@ -75,18 +75,18 @@ function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
 }
 
 export async function listQuranSurahs(
-  options: { page?: number; pageSize?: number } = {}
+  options: { search?: string; page?: number; pageSize?: number } = {}
 ): Promise<{ list: QuranSurah[]; hasMore: boolean }> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) return { list: [], hasMore: false };
 
-  const { page = 1, pageSize = 20 } = options;
+  const { search, page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<QuranSurah>>(
     "/api/v1/quran-surahs/list",
     {
       method: "POST",
       token: sessionToken,
-      body: { page, page_size: pageSize },
+      body: { search, page, page_size: pageSize },
     }
   );
 

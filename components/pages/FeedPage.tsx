@@ -1,4 +1,5 @@
 import PageMargin from "../common/PageMargin";
+import DesktopSidebarMenu from "../feeds/DesktopSidebarMenu";
 import Feed from "../feeds/Feed";
 import MobileGreetingBar from "../feeds/MobileGreetingBar";
 import ProfileSidebar from "../feeds/ProfileSidebar";
@@ -70,6 +71,7 @@ export default function FeedPage({
               educationHistories={educationHistories}
               trainingHistories={trainingHistories}
             />
+            <DesktopSidebarMenu />
             <div className="xl:hidden">
               <RightSidebar />
             </div>

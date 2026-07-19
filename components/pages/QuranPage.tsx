@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuz, QuranSurah } from "@/apis/quran";
 import PageMargin from "../common/PageMargin";
@@ -31,6 +31,8 @@ interface QuranPageProps {
 
 type QuranTab = "surah" | "juz";
 
+const SURAH_SEARCH_DEBOUNCE_MS = 400;
+
 function tabClassName(active: boolean): string {
   return [
     "flex-1 min-w-[96px] rounded-full py-2 px-4 text-sm font-semibold transition lg:flex-none",
@@ -41,19 +43,58 @@ function tabClassName(active: boolean): string {
 export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
   const [tab, setTab] = useState<QuranTab>("surah");
   const [query, setQuery] = useState("");
+  const [searchedSurahs, setSearchedSurahs] = useState(surahs);
+  const [isSearchingSurahs, setIsSearchingSurahs] = useState(false);
   const [playingSurah, setPlayingSurah] = useState<QuranSurah | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const filteredSurahs = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return surahs;
-    return surahs.filter(
-      (surah) =>
-        surah.name_latin.toLowerCase().includes(q) ||
-        surah.name_translation.toLowerCase().includes(q) ||
-        String(surah.number) === q
-    );
-  }, [surahs, query]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+  const requestIdRef = useRef(0);
+
+  // Surah search hits the backend (its regex normalizes punctuation, e.g. "yasin" still
+  // matches "Ya-Sin") — debounced + guarded by requestIdRef so a slow earlier response can't
+  // clobber a faster later one. Juz has no name to search (just a number), so filtering it
+  // stays client-side over the already-fetched full list. Every setState is deferred into the
+  // setTimeout callback (0ms for the empty-query case) rather than called synchronously in the
+  // effect body — same reason SearchableSelect defers its own immediate load.
+  useEffect(() => {
+    const trimmed = query.trim();
+    const requestId = ++requestIdRef.current;
+    clearTimeout(debounceRef.current);
+
+    if (!trimmed) {
+      debounceRef.current = setTimeout(() => {
+        if (requestId !== requestIdRef.current) return;
+        setSearchedSurahs(surahs);
+        setIsSearchingSurahs(false);
+      }, 0);
+      return () => clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      if (requestId !== requestIdRef.current) return;
+      setIsSearchingSurahs(true);
+      try {
+        const params = new URLSearchParams({ q: trimmed });
+        const response = await fetch(`/api/quran-surahs/search?${params}`);
+        const json = await response.json();
+        if (requestId !== requestIdRef.current) return;
+        setSearchedSurahs(json.data ?? []);
+      } catch (error) {
+        if (requestId === requestIdRef.current) {
+          console.error("[QuranPage] surah search failed:", error);
+        }
+      } finally {
+        if (requestId === requestIdRef.current) setIsSearchingSurahs(false);
+      }
+    }, SURAH_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [query, surahs]);
+
+  const filteredSurahs = searchedSurahs;
 
   const filteredJuz = useMemo(() => {
     const q = query.trim();
@@ -155,7 +196,11 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
 
             <div className="flex flex-col divide-y divide-[#e6e9ef] rounded-2xl border border-[#e6e9ef] bg-white px-4">
               {tab === "surah" ? (
-                filteredSurahs.length === 0 ? (
+                isSearchingSurahs ? (
+                  <p className="py-10 text-center text-sm text-[#5f6573]">
+                    Mencari...
+                  </p>
+                ) : filteredSurahs.length === 0 ? (
                   <p className="py-10 text-center text-sm text-[#5f6573]">
                     Surah tidak ditemukan.
                   </p>
