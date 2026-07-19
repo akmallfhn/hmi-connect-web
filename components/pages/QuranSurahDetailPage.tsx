@@ -3,7 +3,7 @@
 import type { QuranSurahDetail } from "@/apis/quran";
 import { faKaaba, faMosque } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { BookOpen, Play } from "lucide-react";
+import { BookOpen, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -65,6 +65,8 @@ export default function QuranSurahDetailPage({
     setPlayingTrack(null);
     setIsPlaying(false);
   }
+
+  const isSurahPlaying = isPlaying && playingTrack?.id === "surah";
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
@@ -128,8 +130,15 @@ export default function QuranSurahDetailPage({
                 }
                 className="mt-4 gap-2"
               >
-                <Play className="size-4 translate-x-0.5" fill="currentColor" />
-                Putar Murottal
+                {isSurahPlaying ? (
+                  <Pause className="size-4" fill="currentColor" />
+                ) : (
+                  <Play
+                    className="size-4 translate-x-0.5"
+                    fill="currentColor"
+                  />
+                )}
+                {isSurahPlaying ? "Jeda Murottal" : "Putar Murottal"}
               </Button>
             )}
           </div>
