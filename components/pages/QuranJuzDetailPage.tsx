@@ -1,15 +1,17 @@
 "use client";
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, Clock } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { QuranJuzDetail, QuranJuzVerse } from "@/apis/quran";
+import type { QuranJuzDetail, QuranJuzVerse, QuranSurah } from "@/apis/quran";
+import { readingMinutesLabel } from "@/lib/quranReadingTime";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import MetaPill from "../quran/MetaPill";
 import QuranMiniPlayer, { type QuranAudioTrack } from "../quran/QuranMiniPlayer";
+import SurahIntro from "../quran/SurahIntro";
 import VerseCard from "../quran/VerseCard";
 
 const HEADER_BACKGROUND_URL =
@@ -26,6 +28,7 @@ interface ViewerProps {
 interface QuranJuzDetailPageProps {
   viewer: ViewerProps;
   juz: QuranJuzDetail;
+  surahs: QuranSurah[];
 }
 
 interface SurahGroup {
@@ -53,19 +56,10 @@ function groupBySurah(verses: QuranJuzVerse[]): SurahGroup[] {
   return groups;
 }
 
-function coverageLabel(groups: SurahGroup[]): string {
-  return groups
-    .map((group) => {
-      const first = group.verses[0].number;
-      const last = group.verses[group.verses.length - 1].number;
-      return `${group.surahName} ${first}${first === last ? "" : `-${last}`}`;
-    })
-    .join(", ");
-}
-
 export default function QuranJuzDetailPage({
   viewer,
   juz,
+  surahs,
 }: QuranJuzDetailPageProps) {
   const [playingTrack, setPlayingTrack] = useState<QuranAudioTrack | null>(
     null
@@ -73,6 +67,10 @@ export default function QuranJuzDetailPage({
   const [isPlaying, setIsPlaying] = useState(false);
 
   const groups = groupBySurah(juz.verses);
+  const surahById = useMemo(
+    () => new Map(surahs.map((surah) => [surah.id, surah])),
+    [surahs]
+  );
 
   function handleToggleTrack(track: QuranAudioTrack | null) {
     if (!track) {
@@ -118,14 +116,15 @@ export default function QuranJuzDetailPage({
 
           <div className="relative z-10 p-5">
             <h1 className="text-2xl font-bold">Juz {juz.number}</h1>
-            <p className="mt-1 text-sm text-white/80">
-              {coverageLabel(groups)}
-            </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <MetaPill
                 icon={<BookOpen className="size-3.5" />}
                 label={`${juz.verses.length} ayat`}
+              />
+              <MetaPill
+                icon={<Clock className="size-3.5" />}
+                label={readingMinutesLabel(juz.estimated_reading_seconds)}
               />
             </div>
           </div>
@@ -135,35 +134,45 @@ export default function QuranJuzDetailPage({
       <PageMargin
         className={`flex flex-col gap-6 pt-4 ${playingTrack ? "pb-24" : "pb-6"}`}
       >
-        {groups.map((group) => (
-          <div
-            key={group.surahId}
-            className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4"
-          >
-            <p className="border-b border-[#e6e9ef] py-3 text-sm font-semibold text-primary">
-              {group.surahName}
-            </p>
-            {group.verses.map((verse) => (
-              <VerseCard
-                key={verse.id}
-                verse={verse}
-                isPlaying={isPlaying && playingTrack?.id === `verse-${verse.id}`}
-                onTogglePlay={() =>
-                  handleToggleTrack(
-                    verse.audio
-                      ? {
-                          id: `verse-${verse.id}`,
-                          title: `${group.surahName} Ayat ${verse.number}`,
-                          subtitle: "Sedang diputar",
-                          audioUrl: verse.audio,
-                        }
-                      : null
-                  )
-                }
-              />
-            ))}
-          </div>
-        ))}
+        {groups.map((group) => {
+          const surah = surahById.get(group.surahId);
+
+          return (
+            <div
+              key={group.surahId}
+              className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4"
+            >
+              {surah ? (
+                <SurahIntro surah={surah} />
+              ) : (
+                <p className="border-b border-[#e6e9ef] py-3 text-sm font-semibold text-primary">
+                  {group.surahName}
+                </p>
+              )}
+              {group.verses.map((verse) => (
+                <VerseCard
+                  key={verse.id}
+                  verse={verse}
+                  isPlaying={
+                    isPlaying && playingTrack?.id === `verse-${verse.id}`
+                  }
+                  onTogglePlay={() =>
+                    handleToggleTrack(
+                      verse.audio
+                        ? {
+                            id: `verse-${verse.id}`,
+                            title: `${group.surahName} Ayat ${verse.number}`,
+                            subtitle: "Sedang diputar",
+                            audioUrl: verse.audio,
+                          }
+                        : null
+                    )
+                  }
+                />
+              ))}
+            </div>
+          );
+        })}
       </PageMargin>
 
       {playingTrack && (

@@ -5,17 +5,13 @@ import Link from "next/link";
 import type { MouseEvent } from "react";
 import type { QuranSurah } from "@/apis/quran";
 import { toArabicNumerals } from "@/lib/arabicNumerals";
+import { readingMinutesLabel } from "@/lib/quranReadingTime";
 import Button from "../buttons/Button";
 
 interface SurahRowProps {
   surah: QuranSurah;
   isPlaying: boolean;
   onTogglePlay: () => void;
-}
-
-function readingMinutesLabel(seconds: number) {
-  const minutes = Math.max(1, Math.round(seconds / 60));
-  return `${minutes} menit baca`;
 }
 
 export default function SurahRow({

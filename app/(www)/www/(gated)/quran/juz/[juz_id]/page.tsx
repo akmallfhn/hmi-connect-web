@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import QuranJuzDetailPage from "@/components/pages/QuranJuzDetailPage";
 import { getSession } from "@/apis/session";
-import { getQuranJuzDetail } from "@/apis/quran";
+import { getQuranJuzDetail, listAllQuranSurahs } from "@/apis/quran";
 
 interface QuranJuzRouteProps {
   params: Promise<{ juz_id: string }>;
@@ -40,7 +40,11 @@ export async function generateMetadata({
 export default async function QuranJuz({ params }: QuranJuzRouteProps) {
   const { juz_id } = await params;
 
-  const [{ user }, juz] = await Promise.all([getSession(), fetchJuz(juz_id)]);
+  const [{ user }, juz, surahs] = await Promise.all([
+    getSession(),
+    fetchJuz(juz_id),
+    listAllQuranSurahs(),
+  ]);
 
   if (!juz) notFound();
 
@@ -54,6 +58,7 @@ export default async function QuranJuz({ params }: QuranJuzRouteProps) {
         isVerified: user?.is_verified,
       }}
       juz={juz}
+      surahs={surahs}
     />
   );
 }

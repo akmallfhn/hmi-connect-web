@@ -21,6 +21,7 @@ export type QuranSurah = {
 export type QuranJuz = {
   id: number;
   number: number;
+  estimated_reading_seconds: number;
 };
 
 export type QuranVerse = {
