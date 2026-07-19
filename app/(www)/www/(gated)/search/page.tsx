@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import SearchPage from "@/components/pages/SearchPage";
 import { getSession } from "@/apis/session";
-import {
-  getUserByUsername,
-  listEducationHistories,
-  listTrainingHistories,
-} from "@/apis/users";
+import { getUserByUsername, listEducationHistories } from "@/apis/users";
 import { searchPeople, searchPostings } from "@/apis/search";
 
 export const metadata: Metadata = {
@@ -26,22 +22,19 @@ export default async function Search({ searchParams }: SearchRouteProps) {
 
   const { sessionToken, user } = await getSession();
 
-  const [people, postings, profile, educationHistories, trainingHistories] =
-    user?.username
-      ? await Promise.all([
-          searchPeople(keyword, { page: 1, pageSize: 20 }),
-          searchPostings(keyword, { page: 1, pageSize: 20 }),
-          getUserByUsername(user.username, sessionToken),
-          listEducationHistories(user.username),
-          listTrainingHistories(user.username),
-        ])
-      : [
-          await searchPeople(keyword, { page: 1, pageSize: 20 }),
-          await searchPostings(keyword, { page: 1, pageSize: 20 }),
-          null,
-          { list: [], hasMore: false },
-          { list: [], hasMore: false },
-        ];
+  const [people, postings, profile, educationHistories] = user?.username
+    ? await Promise.all([
+        searchPeople(keyword, { page: 1, pageSize: 20 }),
+        searchPostings(keyword, { page: 1, pageSize: 20 }),
+        getUserByUsername(user.username, sessionToken),
+        listEducationHistories(user.username),
+      ])
+    : [
+        await searchPeople(keyword, { page: 1, pageSize: 20 }),
+        await searchPostings(keyword, { page: 1, pageSize: 20 }),
+        null,
+        { list: [], hasMore: false },
+      ];
 
   return (
     <SearchPage
@@ -63,9 +56,7 @@ export default async function Search({ searchParams }: SearchRouteProps) {
         isVerified: user?.is_verified,
         followingCount: profile?.following_count,
         followersCount: profile?.followers_count,
-        feedCount: profile?.feed_count,
         educationHistories: educationHistories.list,
-        trainingHistories: trainingHistories.list,
       }}
     />
   );

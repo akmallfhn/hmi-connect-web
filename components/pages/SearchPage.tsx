@@ -3,7 +3,7 @@
 import { Search as SearchIconLucide } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
+import type { EducationHistoryEntry } from "@/apis/users";
 import type { SearchPersonResult, SearchPostingResult } from "@/apis/search";
 import { loadMoreSearchPeople, loadMoreSearchPostings } from "@/lib/actions";
 import PageMargin from "../common/PageMargin";
@@ -29,9 +29,7 @@ interface ProfileSummary {
   isVerified?: boolean;
   followingCount?: number;
   followersCount?: number;
-  feedCount?: number;
   educationHistories: EducationHistoryEntry[];
-  trainingHistories: TrainingHistoryEntry[];
 }
 
 interface SearchResult<T> {
@@ -163,9 +161,7 @@ export default function SearchPage({
               isVerified={profile.isVerified}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
-              feedCount={profile.feedCount}
               educationHistories={profile.educationHistories}
-              trainingHistories={profile.trainingHistories}
             />
           </aside>
 

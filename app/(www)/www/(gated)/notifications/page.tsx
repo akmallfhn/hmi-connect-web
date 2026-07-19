@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import NotificationsPage from "@/components/pages/NotificationsPage";
 import { getSession } from "@/apis/session";
-import {
-  getUserByUsername,
-  listEducationHistories,
-  listTrainingHistories,
-} from "@/apis/users";
+import { getUserByUsername, listEducationHistories } from "@/apis/users";
 import { listNotifications } from "@/apis/notifications";
 
 export const metadata: Metadata = {
@@ -19,17 +15,15 @@ export const metadata: Metadata = {
 export default async function Notifications() {
   const { sessionToken, user } = await getSession();
 
-  const [notifications, profile, educationHistories, trainingHistories] = user?.username
+  const [notifications, profile, educationHistories] = user?.username
     ? await Promise.all([
         listNotifications({ page: 1, pageSize: 20 }),
         getUserByUsername(user.username, sessionToken),
         listEducationHistories(user.username),
-        listTrainingHistories(user.username),
       ])
     : [
         await listNotifications({ page: 1, pageSize: 20 }),
         null,
-        { list: [], hasMore: false },
         { list: [], hasMore: false },
       ];
 
@@ -52,9 +46,7 @@ export default async function Notifications() {
         isVerified: user?.is_verified,
         followingCount: profile?.following_count,
         followersCount: profile?.followers_count,
-        feedCount: profile?.feed_count,
         educationHistories: educationHistories.list,
-        trainingHistories: trainingHistories.list,
       }}
     />
   );

@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import FeedPage from "@/components/pages/FeedPage";
 import { getSession } from "@/apis/session";
-import {
-  getUserByUsername,
-  listEducationHistories,
-  listTrainingHistories,
-} from "@/apis/users";
+import { getUserByUsername, listEducationHistories } from "@/apis/users";
 
 const description =
   "Ikuti kabar, postingan, dan aktivitas kader HMI melalui feed HMI Connect.";
@@ -30,13 +26,12 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const { user } = await getSession();
 
-  const [profile, educationHistories, trainingHistories] = user?.username
+  const [profile, educationHistories] = user?.username
     ? await Promise.all([
         getUserByUsername(user.username),
         listEducationHistories(user.username),
-        listTrainingHistories(user.username),
       ])
-    : [null, { list: [], hasMore: false }, { list: [], hasMore: false }];
+    : [null, { list: [], hasMore: false }];
 
   return (
     <FeedPage
@@ -49,9 +44,7 @@ export default async function HomePage() {
       isVerified={user?.is_verified}
       followingCount={profile?.following_count}
       followersCount={profile?.followers_count}
-      feedCount={profile?.feed_count}
       educationHistories={educationHistories.list}
-      trainingHistories={trainingHistories.list}
     />
   );
 }

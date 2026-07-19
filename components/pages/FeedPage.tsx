@@ -6,7 +6,7 @@ import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import type { EducationHistoryEntry, TrainingHistoryEntry } from "@/apis/users";
+import type { EducationHistoryEntry } from "@/apis/users";
 
 interface FeedPageProps {
   fullName?: string;
@@ -18,9 +18,7 @@ interface FeedPageProps {
   isVerified?: boolean;
   followingCount?: number;
   followersCount?: number;
-  feedCount?: number;
   educationHistories?: EducationHistoryEntry[];
-  trainingHistories?: TrainingHistoryEntry[];
 }
 
 export default function FeedPage({
@@ -33,9 +31,7 @@ export default function FeedPage({
   isVerified,
   followingCount,
   followersCount,
-  feedCount,
   educationHistories,
-  trainingHistories,
 }: FeedPageProps) {
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
@@ -67,9 +63,7 @@ export default function FeedPage({
               isVerified={isVerified}
               followingCount={followingCount}
               followersCount={followersCount}
-              feedCount={feedCount}
               educationHistories={educationHistories}
-              trainingHistories={trainingHistories}
             />
             <DesktopSidebarMenu />
             <div className="xl:hidden">

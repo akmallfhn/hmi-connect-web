@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFeedById, listAllFeedComments } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
-import {
-  getUserByUsername,
-  listEducationHistories,
-  listTrainingHistories,
-} from "@/apis/users";
+import { getUserByUsername, listEducationHistories } from "@/apis/users";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
 import ProfileSidebar from "@/components/feeds/ProfileSidebar";
 import PageMargin from "@/components/common/PageMargin";
@@ -60,25 +56,17 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
   const { feed_id } = await params;
   const { sessionToken, user } = await getSession();
 
-  const [
-    feed,
-    comments,
-    viewerProfile,
-    educationHistories,
-    trainingHistories,
-  ] = await Promise.all([
-    getFeedById(feed_id, sessionToken),
-    listAllFeedComments(feed_id, { token: sessionToken }),
-    user?.username
-      ? getUserByUsername(user.username, sessionToken)
-      : Promise.resolve(null),
-    user?.username
-      ? listEducationHistories(user.username)
-      : Promise.resolve({ list: [], hasMore: false }),
-    user?.username
-      ? listTrainingHistories(user.username)
-      : Promise.resolve({ list: [], hasMore: false }),
-  ]);
+  const [feed, comments, viewerProfile, educationHistories] =
+    await Promise.all([
+      getFeedById(feed_id, sessionToken),
+      listAllFeedComments(feed_id, { token: sessionToken }),
+      user?.username
+        ? getUserByUsername(user.username, sessionToken)
+        : Promise.resolve(null),
+      user?.username
+        ? listEducationHistories(user.username)
+        : Promise.resolve({ list: [], hasMore: false }),
+    ]);
 
   if (!feed) return notFound();
   const hasViewer = Boolean(user?.id);
@@ -113,9 +101,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
                 isVerified={user?.is_verified}
                 followingCount={viewerProfile?.following_count}
                 followersCount={viewerProfile?.followers_count}
-                feedCount={viewerProfile?.feed_count}
                 educationHistories={educationHistories.list}
-                trainingHistories={trainingHistories.list}
               />
             </aside>
           )}

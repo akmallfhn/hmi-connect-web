@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  ActivityEntry,
-  EducationHistoryEntry,
-  TrainingHistoryEntry,
-} from "@/apis/users";
+import type { ActivityEntry, EducationHistoryEntry } from "@/apis/users";
 import { loadMoreUserActivity } from "@/lib/actions";
 import PageMargin from "../common/PageMargin";
 import ActivityEntryCard from "../profile/ActivityEntryCard";
@@ -29,9 +25,7 @@ interface ProfileSummary {
   isVerified: boolean;
   followingCount: number;
   followersCount: number;
-  feedCount: number;
   educationHistories: EducationHistoryEntry[];
-  trainingHistories: TrainingHistoryEntry[];
 }
 
 interface ProfileActivitiesPageProps {
@@ -112,9 +106,7 @@ export default function ProfileActivitiesPage({
               isVerified={profile.isVerified}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
-              feedCount={profile.feedCount}
               educationHistories={profile.educationHistories}
-              trainingHistories={profile.trainingHistories}
             />
           </aside>
 
