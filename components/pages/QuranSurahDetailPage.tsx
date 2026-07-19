@@ -1,14 +1,20 @@
 "use client";
 
-import { Play } from "lucide-react";
+import type { QuranSurahDetail } from "@/apis/quran";
+import { faKaaba, faMosque } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BookOpen, Play } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { QuranSurahDetail } from "@/apis/quran";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import QuranMiniPlayer, { type QuranAudioTrack } from "../quran/QuranMiniPlayer";
+import MetaPill from "../quran/MetaPill";
+import QuranMiniPlayer, {
+  type QuranAudioTrack,
+} from "../quran/QuranMiniPlayer";
 import VerseCard from "../quran/VerseCard";
 
 interface ViewerProps {
@@ -24,13 +30,11 @@ interface QuranSurahDetailPageProps {
   surah: QuranSurahDetail;
 }
 
+const HEADER_BACKGROUND_URL =
+  "https://i.pinimg.com/1200x/4c/9e/c1/4c9ec1fc041bc95d95bcd738e597645d.jpg";
+
 function revelationLabel(place: QuranSurahDetail["revelation_place"]) {
   return place === "madinah" ? "Madaniyah" : "Makkiyah";
-}
-
-function readingMinutesLabel(seconds: number) {
-  const minutes = Math.max(1, Math.round(seconds / 60));
-  return `${minutes} menit baca`;
 }
 
 export default function QuranSurahDetailPage({
@@ -73,40 +77,64 @@ export default function QuranSurahDetailPage({
         mobileBackTitle={surah.name_latin}
       />
 
-      <div className="bg-gradient-to-br from-primary to-[#0d5f63] pb-6 pt-6 text-white">
-        <PageMargin>
-          <p className="font-arabic-quran text-3xl">{surah.name_arabic}</p>
-          <h1 className="mt-1 text-lg font-bold">{surah.name_latin}</h1>
-          <p className="text-sm text-white/80">{surah.name_translation}</p>
-          <p className="mt-2 text-xs text-white/70">
-            {revelationLabel(surah.revelation_place)} • {surah.total_verses}{" "}
-            ayat • {readingMinutesLabel(surah.estimated_reading_seconds)}
-          </p>
+      <PageMargin className="pt-4">
+        <div className="relative overflow-hidden rounded-2xl bg-white text-white">
+          <div className="absolute inset-0 h-full w-full">
+            <Image
+              src={HEADER_BACKGROUND_URL}
+              alt="Header Al-Quran Detail"
+              fill
+              className="object-cover"
+            />
+          </div>
 
-          {surah.audio && (
-            <Button
-              type="button"
-              variant="light"
-              size="pillSm"
-              onClick={() =>
-                handleToggleTrack({
-                  id: "surah",
-                  title: surah.name_latin,
-                  subtitle: "Murottal lengkap",
-                  audioUrl: surah.audio!,
-                })
-              }
-              className="mt-4 gap-2"
-            >
-              <Play
-                className="size-4 translate-x-0.5 text-primary"
-                fill="currentColor"
+          <div className="relative z-10 p-5">
+            <p className="font-arabic-quran text-4xl">{surah.name_arabic}</p>
+            <h1 className="mt-2 text-2xl font-bold">{surah.name_latin}</h1>
+            <p className="mt-1 text-sm text-white/80">
+              {surah.name_translation}
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <MetaPill
+                icon={
+                  <FontAwesomeIcon
+                    icon={
+                      surah.revelation_place === "madinah" ? faMosque : faKaaba
+                    }
+                    className="size-3"
+                  />
+                }
+                label={revelationLabel(surah.revelation_place)}
               />
-              Putar Semua
-            </Button>
-          )}
-        </PageMargin>
-      </div>
+              <MetaPill
+                icon={<BookOpen className="size-3.5" />}
+                label={`${surah.total_verses} ayat`}
+              />
+            </div>
+
+            {surah.audio && (
+              <Button
+                type="button"
+                size="pillSm"
+                variant="secondary"
+                onClick={() =>
+                  handleToggleTrack({
+                    id: "surah",
+                    title: surah.name_latin,
+                    subtitle: "Murottal lengkap",
+                    audioUrl: surah.audio!,
+                  })
+                }
+                className="mt-4 gap-2"
+              >
+                <Play className="size-4 translate-x-0.5" fill="currentColor" />
+                Putar Murottal
+              </Button>
+            )}
+          </div>
+        </div>
+      </PageMargin>
 
       <PageMargin className={playingTrack ? "pb-24 pt-4" : "pb-6 pt-4"}>
         <div className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4">

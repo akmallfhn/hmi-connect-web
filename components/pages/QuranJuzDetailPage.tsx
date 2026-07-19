@@ -1,13 +1,19 @@
 "use client";
 
+import { BookOpen } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuzDetail, QuranJuzVerse } from "@/apis/quran";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
+import MetaPill from "../quran/MetaPill";
 import QuranMiniPlayer, { type QuranAudioTrack } from "../quran/QuranMiniPlayer";
 import VerseCard from "../quran/VerseCard";
+
+const HEADER_BACKGROUND_URL =
+  "https://i.pinimg.com/1200x/4c/9e/c1/4c9ec1fc041bc95d95bcd738e597645d.jpg";
 
 interface ViewerProps {
   fullName?: string;
@@ -99,13 +105,32 @@ export default function QuranJuzDetailPage({
         mobileBackTitle={`Juz ${juz.number}`}
       />
 
-      <div className="bg-gradient-to-br from-primary to-[#0d5f63] pb-6 pt-6 text-white">
-        <PageMargin>
-          <h1 className="text-lg font-bold">Juz {juz.number}</h1>
-          <p className="mt-1 text-sm text-white/80">{juz.verses.length} ayat</p>
-          <p className="mt-2 text-xs text-white/70">{coverageLabel(groups)}</p>
-        </PageMargin>
-      </div>
+      <PageMargin className="pt-4">
+        <div className="relative overflow-hidden rounded-2xl bg-white text-white">
+          <div className="absolute inset-0 h-full w-full">
+            <Image
+              src={HEADER_BACKGROUND_URL}
+              alt="Header Al-Quran Detail"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="relative z-10 p-5">
+            <h1 className="text-2xl font-bold">Juz {juz.number}</h1>
+            <p className="mt-1 text-sm text-white/80">
+              {coverageLabel(groups)}
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <MetaPill
+                icon={<BookOpen className="size-3.5" />}
+                label={`${juz.verses.length} ayat`}
+              />
+            </div>
+          </div>
+        </div>
+      </PageMargin>
 
       <PageMargin
         className={`flex flex-col gap-6 pt-4 ${playingTrack ? "pb-24" : "pb-6"}`}

@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
 import type { QuranSurah } from "@/apis/quran";
+import { toArabicNumerals } from "@/lib/arabicNumerals";
 import Button from "../buttons/Button";
 
 interface SurahRowProps {
@@ -36,7 +37,7 @@ export default function SurahRow({
       className="flex items-center gap-3 py-3"
     >
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-sm font-semibold text-secondary">
-        {surah.number}
+        {toArabicNumerals(surah.number)}
       </span>
 
       <div className="min-w-0 flex-1">

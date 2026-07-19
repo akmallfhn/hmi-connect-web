@@ -1,8 +1,14 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { config as fontAwesomeConfig } from "@fortawesome/fontawesome-svg-core";
 import { Amiri_Quran, Geist, Geist_Mono, Google_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
+
+// Ship Font Awesome's CSS ourselves (imported above) instead of letting it inject a <style>
+// tag at runtime — the latter races with SSR/hydration and flashes oversized unstyled icons.
+fontAwesomeConfig.autoAddCss = false;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

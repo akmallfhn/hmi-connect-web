@@ -8,12 +8,16 @@ export default function QuranLoading() {
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
       <Header loading />
 
-      <div className="bg-gradient-to-br from-primary to-[#0d5f63] pb-6 pt-6">
-        <PageMargin className="animate-pulse">
-          <div className="h-3.5 w-32 rounded-full bg-white/20" />
-          <div className="mt-2 h-5 w-64 rounded-full bg-white/20" />
-        </PageMargin>
-      </div>
+      <PageMargin className="pt-4">
+        <div className="relative overflow-hidden rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-5">
+          <div className="max-w-[60%] animate-pulse">
+            <Bar className="h-5 w-full" />
+            <Bar className="mt-2 h-5 w-4/5" />
+            <Bar className="mt-3 h-3 w-full" />
+          </div>
+          <div className="absolute bottom-0 right-0 h-36 w-28 animate-pulse bg-[#e6e9ef]" />
+        </div>
+      </PageMargin>
 
       <PageMargin className="animate-pulse py-4">
         <div className="h-11 w-full rounded-full bg-[#e6e9ef]" />
@@ -29,7 +33,7 @@ export default function QuranLoading() {
                 <Bar className="h-3.5 w-32" />
                 <Bar className="h-2.5 w-48" />
               </div>
-              <div className="size-10 shrink-0 rounded-full bg-[#e6e9ef]" />
+              <div className="size-7 shrink-0 rounded-full bg-[#e6e9ef]" />
             </div>
           ))}
         </div>
