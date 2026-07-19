@@ -22,11 +22,13 @@ function ArticleImage({
   className,
   overlay,
   cornerAction,
+  dim,
 }: {
   article: NewsArticle;
   className: string;
   overlay?: ReactNode;
   cornerAction?: ReactNode;
+  dim?: boolean;
 }) {
   return (
     <div
@@ -44,6 +46,7 @@ function ArticleImage({
           <Newspaper className="size-8 text-[#c3c7d1]" />
         </div>
       )}
+      {dim && <div className="absolute inset-0 bg-black/25" />}
       {overlay && (
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-5 pb-4 pt-12">
           {overlay}
@@ -56,7 +59,7 @@ function ArticleImage({
 
 function CategoryBadge({ name }: { name: string }) {
   return (
-    <span className="w-fit rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary xl:text-sm">
+    <span className="w-fit rounded-full border border-primary bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary xl:text-sm">
       {name}
     </span>
   );
@@ -132,7 +135,10 @@ export default function NewsArticleCard({
         className="group flex flex-col gap-2"
       >
         <SourceRow article={article} />
-        <ArticleImage article={article} className="aspect-[16/9] w-full rounded-xl" />
+        <ArticleImage
+          article={article}
+          className="aspect-[16/9] w-full rounded-xl"
+        />
         <p className="line-clamp-2 text-base font-bold leading-snug text-[#172033] transition group-hover:underline">
           {article.title}
         </p>
@@ -165,7 +171,10 @@ export default function NewsArticleCard({
               <div className="min-w-0 flex-1">
                 <Timestamp article={article} />
               </div>
-              <RepostToFeedButton article={article} className="text-[#5f6573]" />
+              <RepostToFeedButton
+                article={article}
+                className="text-[#5f6573]"
+              />
             </div>
           </div>
           <ArticleImage
@@ -189,6 +198,7 @@ export default function NewsArticleCard({
         <ArticleImage
           article={article}
           className="aspect-[21/9] w-full rounded-2xl"
+          dim
           overlay={
             <>
               <div className="flex min-w-0 items-center gap-1.5 text-xs text-white/80 xl:text-sm">
@@ -202,7 +212,6 @@ export default function NewsArticleCard({
                   </span>
                 )}
               </div>
-              {/* pr- reserves room so these lines never run under the corner button. */}
               <p className="line-clamp-2 pr-16 text-xl font-bold leading-snug text-white transition group-hover:underline group-hover:decoration-1 group-hover:underline-offset-2 xl:pr-20 xl:text-2xl">
                 {article.title}
               </p>
@@ -241,10 +250,12 @@ export default function NewsArticleCard({
         />
         <div className="flex min-w-0 flex-col gap-1.5">
           <Timestamp article={article} />
-          <p className="line-clamp-2 text-sm font-semibold leading-snug text-[#172033] transition group-hover:underline xl:text-base">
-            {article.title}
-          </p>
-          <RepostToFeedButton article={article} className="text-[#5f6573]" />
+          <div className="flex items-start justify-between gap-2">
+            <p className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold leading-snug text-[#172033] transition group-hover:underline xl:text-base">
+              {article.title}
+            </p>
+            <RepostToFeedButton article={article} className="text-[#5f6573]" />
+          </div>
         </div>
       </a>
     );

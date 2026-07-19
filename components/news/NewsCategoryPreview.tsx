@@ -33,7 +33,7 @@ export default function NewsCategoryPreview({
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_360px]">
         <NewsArticleCard article={main} variant="heroMain" />
 
         {side.length > 0 && (

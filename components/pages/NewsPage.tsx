@@ -191,7 +191,7 @@ export default function NewsPage({
             {/* Desktop: top 4 as a hero (1 big + 3 side rows), then a 4-col grid with a category preview every 2 rows. */}
             <div className="hidden flex-col gap-10 lg:flex">
               {heroMain && (
-                <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+                <div className="grid items-start gap-6 lg:grid-cols-[1fr_360px]">
                   <NewsArticleCard article={heroMain} variant="heroMain" />
                   {heroSide.length > 0 && (
                     <div className="flex flex-col gap-4 divide-y divide-[#e6e9ef]">
