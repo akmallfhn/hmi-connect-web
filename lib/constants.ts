@@ -8,3 +8,9 @@ export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 // RepostToFeedButton), the home feed opens the composer pre-filled with this URL instead of
 // a blank post. Read once and cleared, same as COMPOSE_INTENT_KEY.
 export const COMPOSE_INTENT_URL_KEY = "hmi-compose-intent-url";
+
+// sessionStorage key NewMessageModal uses to hand the picked recipient's basic profile
+// (id/username/full_name/avatar) to the /chats/new page — there's no conversation id yet
+// until the first message is actually sent, so there's nothing to navigate straight to.
+// Read once on mount and cleared, same handoff shape as COMPOSE_INTENT_KEY.
+export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";

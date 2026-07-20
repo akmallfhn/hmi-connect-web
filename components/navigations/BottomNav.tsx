@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { listNotifications } from "@/lib/actions";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { COMPOSE_INTENT_KEY } from "@/lib/constants";
-import { useNotificationsRealtime } from "@/hooks/useNotificationsRealtime";
+import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
+import ChatIcon from "../icons/ChatIcon";
 import HomeIcon from "../icons/HomeIcon";
-import NotificationIcon from "../icons/NotificationIcon";
 import PlusIcon from "../icons/PlusIcon";
 import ProfileIcon from "../icons/ProfileIcon";
 import SearchIcon from "../icons/SearchIcon";
@@ -57,28 +56,15 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";
-  const isNotifications = pathname === "/notifications";
+  const isChats = pathname === "/chats" || (pathname?.startsWith("/chats/") ?? false);
   const isProfile = username ? pathname === `/profile/${username}` : false;
 
   const [homePressed, triggerHome] = usePressPulse();
   const [searchPressed, triggerSearch] = usePressPulse();
-  const [notificationsPressed, triggerNotifications] = usePressPulse();
+  const [chatsPressed, triggerChats] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
 
-  const [hasUnread, setHasUnread] = useState(false);
-
-  const refetchUnread = useCallback(() => {
-    if (!userId) return;
-    listNotifications(1).then((result) =>
-      setHasUnread(result.list.some((item) => !item.read_at))
-    );
-  }, [userId]);
-
-  useEffect(() => {
-    refetchUnread();
-  }, [refetchUnread]);
-
-  useNotificationsRealtime(userId, refetchUnread);
+  const unreadChatCount = useUnreadChatCount(userId);
 
   function handleComposeClick() {
     window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
@@ -130,20 +116,20 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
       </Link>
 
       <Link
-        href={username ? "/notifications" : "/auth/login"}
-        onClick={triggerNotifications}
+        href={username ? "/chats" : "/auth/login"}
+        onClick={triggerChats}
         className={[
           "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-          isNotifications ? "text-primary" : "text-[#5f6573]",
+          isChats ? "text-primary" : "text-[#5f6573]",
         ].join(" ")}
       >
-        <NavIconPulse pressed={notificationsPressed}>
-          <NotificationIcon variant={isNotifications ? "bulk" : "outline"} className="size-5" />
-          {hasUnread && (
+        <NavIconPulse pressed={chatsPressed}>
+          <ChatIcon variant={isChats ? "bulk" : "outline"} className="size-5" />
+          {unreadChatCount > 0 && (
             <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-secondary" />
           )}
         </NavIconPulse>
-        Notifikasi
+        Pesan
       </Link>
 
       <Link

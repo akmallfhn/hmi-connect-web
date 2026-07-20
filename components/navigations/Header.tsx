@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  listNotifications,
-  logoutUser,
-  markNotificationsAsRead,
-} from "@/lib/actions";
+import { logoutUser } from "@/lib/actions";
 import {
   ArrowLeft,
   Bell,
@@ -12,6 +8,7 @@ import {
   CreditCard,
   EllipsisVertical,
   LogOut,
+  MessageCircleMore,
   Search,
   Settings,
   TriangleAlert,
@@ -19,24 +16,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
-import type { Notification } from "@/apis/notifications";
-import { useNotificationsRealtime } from "@/hooks/useNotificationsRealtime";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
-import NotificationRow from "../notifications/NotificationRow";
+import NotificationsDropdownPanel from "../notifications/NotificationsDropdownPanel";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
-
-const DROPDOWN_LIMIT = 5;
 
 interface HeaderProps {
   fullName?: string;
@@ -70,55 +58,15 @@ export default function Header({
   const displayName = fullName ?? "Kader";
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const unreadCount = notifications.filter((item) => !item.read_at).length;
+  const { notifications, unreadCount, handleRead, handleMarkAllRead } =
+    useNotificationsBell(userId);
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams();
     if (searchValue.trim()) params.set("q", searchValue.trim());
     router.push(`/search${params.toString() ? `?${params}` : ""}`);
-  }
-
-  const refetchNotifications = useCallback(() => {
-    listNotifications(1).then((result) => setNotifications(result.list));
-  }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-
-    listNotifications(1).then((result) => {
-      if (!cancelled) setNotifications(result.list);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  useNotificationsRealtime(userId, refetchNotifications);
-
-  function handleRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id && !item.read_at
-          ? { ...item, read_at: new Date().toISOString() }
-          : item
-      )
-    );
-    markNotificationsAsRead([id]);
-  }
-
-  function handleMarkAllRead() {
-    if (unreadCount === 0) return;
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.read_at ? item : { ...item, read_at: new Date().toISOString() }
-      )
-    );
-    markNotificationsAsRead();
   }
 
   async function handleLogout() {
@@ -177,6 +125,14 @@ export default function Header({
             </div>
           ) : userId ? (
             <>
+              <Link
+                href="/chats"
+                aria-label="Pesan"
+                className="flex size-10 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+              >
+                <MessageCircleMore className="size-5" />
+              </Link>
+
               <Dropdown
                 align="right"
                 trigger={({ toggle }) => (
@@ -195,40 +151,12 @@ export default function Header({
                   </button>
                 )}
               >
-                <div className="flex items-center justify-between border-b border-[#e6e9ef] px-4 py-3">
-                  <p className="text-sm font-semibold text-[#172033]">
-                    Notifikasi
-                  </p>
-                  {unreadCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleMarkAllRead}
-                      className="cursor-pointer text-xs font-medium text-primary hover:underline"
-                    >
-                      Tandai semua dibaca
-                    </button>
-                  )}
-                </div>
-                <div className="flex max-h-80 flex-col overflow-y-auto">
-                  {notifications.length === 0 && (
-                    <p className="px-4 py-6 text-center text-sm text-[#5f6573]">
-                      Belum ada notifikasi.
-                    </p>
-                  )}
-                  {notifications.slice(0, DROPDOWN_LIMIT).map((item) => (
-                    <NotificationRow
-                      key={item.id}
-                      notification={item}
-                      onRead={handleRead}
-                    />
-                  ))}
-                </div>
-                <Link
-                  href="/notifications"
-                  className="block border-t border-[#e6e9ef] px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-[#f5f7fb]"
-                >
-                  Lihat semua notifikasi
-                </Link>
+                <NotificationsDropdownPanel
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkAllRead={handleMarkAllRead}
+                  onRead={handleRead}
+                />
               </Dropdown>
 
               <Dropdown

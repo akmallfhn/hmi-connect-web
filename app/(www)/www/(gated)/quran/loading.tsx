@@ -9,7 +9,7 @@ export default function QuranLoading() {
       <Header loading />
 
       <PageMargin className="lg:pb-10 lg:pt-6">
-        <div className="lg:mx-auto lg:grid lg:max-w-[988px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-3 lg:mx-auto lg:grid lg:max-w-[988px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
           <div className="lg:sticky lg:top-20 lg:flex lg:flex-col lg:gap-4">
             <div className="pt-4 lg:pt-0">
               <div className="relative overflow-hidden rounded-2xl bg-[#eef1f5] p-5">

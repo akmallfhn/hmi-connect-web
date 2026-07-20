@@ -45,7 +45,12 @@ export default function FeedPage({
       />
 
       {userId && (
-        <MobileGreetingBar fullName={fullName} avatar={avatar} username={username} />
+        <MobileGreetingBar
+          fullName={fullName}
+          avatar={avatar}
+          username={username}
+          userId={userId}
+        />
       )}
 
       <PageMargin

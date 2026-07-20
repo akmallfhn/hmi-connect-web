@@ -240,14 +240,13 @@ below) when `isVerified === false`.
   only the three "typing dots" use `secondaryColor`). `BottomNav` swaps a tab to `bulk` when that tab's
   route is the current page (Pesan matches both `/chats` and any `/chats/[conversation_id]`).
   Profil always renders `ProfileIcon`, never the caller's actual
-  avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props, or `userId`
-  anymore (only `username`, for the active-route check and the `/profile/[username]` href) —
-  once the Notifikasi tab (which used to key a realtime subscription off `userId`) became the
-  Pesan tab, `BottomNav` had nothing left to do with it. The Pesan tab
-  shows a small unread dot (no count, unlike `Header`'s bell — there's no room for a number
-  next to a 20px icon) driven by `lib/chatStore.ts#useUnreadChatCount()` — see
-  the `components/chats/*` entry below for why that's a mock external store and not a real
-  fetch.
+  avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only `username`,
+  for the active-route check and the `/profile/[username]` href, and `userId`, which now
+  keys `hooks/useUnreadChatCount.ts` for the Pesan tab's badge rather than the old
+  notifications realtime subscription the Notifikasi tab used to need before it became
+  Pesan). The Pesan tab shows a small unread dot (no count, unlike `Header`'s bell — there's
+  no room for a number next to a 20px icon) driven by that hook — see the
+  `components/chats/*` entry below for the real backend/realtime this reads from.
   Since real `:active` is too short-lived on a tap to render its transition, both the
   pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
@@ -306,71 +305,109 @@ below) when `isVerified === false`.
   liked/commented-on/replied-to entity — the row appends it inline after a colon (same
   line, same size/color as the actor name/action text, no quotes) when present (`null` for
   `follow`).
-- `components/chats/*` (`/chats` + `/chats/[conversation_id]`, "Pesan" in the nav) — **frontend-only,
-  no backend**: there's deliberately no `apis/conversations.ts`/`apis/messages.ts`; every
-  conversation and message lives in `lib/chatStore.ts`, a module-level
-  `useSyncExternalStore` store seeded once from `lib/chatMockData.ts` (fixed cast of
-  mock personas + seed message history, timestamps generated relative to "now" at module load
-  so the demo never looks stale, types in `lib/chatTypes.ts`) and mutated only by client actions
-  in `chatStore.ts` itself
-  (`sendMessage`, `toggleMessageReaction`, `startConversationWith`, `markConversationRead`). These
-  three live under `lib/` rather than `components/chats/` since they're plain data/state modules
-  with no JSX — `lib/chatTypes.ts` sits alongside (not merged into) the unrelated `lib/types.ts`,
-  which is reserved for the backend's real Postgres enums, not this feature's mock shape.
-  This is the same "every component independently subscribes to one shared source of truth"
-  shape the app already uses for real notifications (`Header`'s bell and `BottomNav` both
-  call `useUnreadChatCount()`/`useConversations()` directly, no context provider) — just
-  backed by in-memory state instead of a server round-trip, so it works from anywhere in the
-  tree without needing to sit under `/chats`. Sending a message locally echoes it immediately,
-  then `sendMessage` simulates delivered → read receipts and, after a typing-indicator delay,
-  appends a canned reply (`getCannedReply`) from the conversation's mock persona — entirely
-  client-side, nothing here calls out to a real endpoint.
+- `components/chats/*` (`/chats` + `/chats/[conversation_id]` + `/chats/new`, "Pesan" in the
+  nav) — **real backend**, `apis/chats.ts` (`listConversations`, `deleteConversation`,
+  `listMessages`, `sendChatMessage`, `updateChatMessage`, `deleteChatMessage`,
+  `markMessagesAsRead`), hitting the Go backend's `conversations/list`, `conversations/delete`,
+  `messages/list`, `messages/send`, `messages/update`, `messages/delete`,
+  `messages/mark-as-read` — same envelope/pagination convention as every other `apis/*.ts`
+  file. `deleteConversation`/`updateChatMessage`/`deleteChatMessage` are wired at the data
+  layer (so "what can I do with chat" has one place to look, per the data-layer convention
+  above) but have **no UI yet** — see the disabled-features list below. `lib/actions.ts` has
+  the matching thin Server Action wrappers (`listConversations`/`loadMoreConversations`,
+  `listMessages`/`loadMoreMessages`, `sendChatMessage`, `markMessagesAsRead`, ...), which is
+  what every client component here actually calls, per the usual three-layer split.
+  **Deliberately disabled for now** (ask before re-enabling any of these): message reactions
+  (there's no `sendMessageReaction`/double-tap-to-react anywhere), online/presence indicators
+  (`ConversationSummary`/no per-person "aktif sekarang" status is ever rendered), typing
+  indicators (no `TypingIndicator` component, no "sedang mengetik" state), group chat
+  (`conversations` is strictly 1:1 — `other_user_id`/`other_full_name`/etc. are singular
+  fields, not a participants array), and block/mute/report/"delete for everyone" (no delete
+  UI on a message or conversation at all, even though the backend endpoints exist).
+  Real-time: two Supabase Realtime Broadcast topics, `conversations:<user_id>` (fires on any
+  message change across any of that user's conversations — used for the sidebar list and the
+  global unread badge) and `messages:<conversation_id>` (fires on any change within one
+  thread) — both driven by DB triggers on the backend's `messages` table, same
+  `realtime.broadcast_changes`/`private: true` mechanism as the existing notifications bell.
+  `hooks/useRealtimeTopic.ts` is the generic version of that subscription (topic string +
+  onChange callback); `hooks/useNotificationsRealtime.ts` is now a two-line wrapper over it,
+  and chat components call it directly. `hooks/useUnreadChatCount.ts` mirrors
+  `useNotificationsBell`'s "independent per-component fetch" shape for `BottomNav`'s Pesan
+  badge, since `BottomNav` renders on every page, not just under `/chats`.
+  There's no `conversations/detail` endpoint on the backend, so a thread's header info
+  (name/avatar/affiliation) can't be fetched standalone — `components/chats/ChatConversationsContext.tsx`
+  solves this by owning the conversation list once at the `/chats` shell level
+  (`ChatConversationsProvider`, fetched + realtime-refreshed there) so both the sidebar
+  (`useChatConversations()`) and the open thread (`useConversationSummary(conversationId)`,
+  a `.find()` over the same array) read from one fetch instead of the thread re-querying.
   `app/(www)/www/(gated)/chats/layout.tsx` is the only nested `layout.tsx` in this codebase
   below the top `(gated)/layout.tsx` — every other feature's whole page lives in one
-  `page.tsx`/`components/pages/*Page.tsx`, and this feature follows that same split: its two
-  top-level pieces, `components/pages/ChatsPage.tsx` and `components/pages/ChatThreadPage.tsx`,
-  live in `components/pages/` per the `*Page.tsx` convention, while `components/chats/*` holds
-  only the feature's leaf sub-components (`ConversationList`, `ChatThreadHeader`,
-  `MessageComposer`, `MessageList`, etc.) — the same relationship `components/pages/FeedPage.tsx`
-  has to `components/feeds/*`. A DM inbox needs its conversation list to
-  survive navigating between threads rather than remount per route, so the layout fetches
-  `getSession()` once and hands viewer identity to `components/pages/ChatsPage.tsx`, which
-  renders `Header` (no `mobileBackTitle` — the "Pesan" title lives in `ConversationList`'s own
-  header row instead, so mobile doesn't show it twice), then a `PageMargin` (`noMobilePadding`,
-  same as `NotificationsPage`) wrapping an inner div — `lg:border-x` framing the whole two-pane
-  surface the same way `lg:border-x` frames every card elsewhere in this file lives on that
-  inner div, not on `PageMargin` itself — which in turn wraps the sidebar + `{children}`
-  row so the two-pane surface lines up with the rest of the site's standard content width on
-  `lg:` instead of running edge-to-edge — mobile stays full-bleed either way (no border, no
-  `PageMargin` padding), matching every chat app's own convention.
-  Inside that, `ConversationList` is the persistent sidebar,
-  and `{children}` is the swappable pane — mobile shows exactly one of
-  {list, thread} at a time via responsive classes keyed off `usePathname()`, desktop always
-  shows both side by side, Instagram-web style. The shell is pinned to `h-dvh` with
-  `overflow-hidden` (unlike every other page's normal scrolling document flow) since only the
-  list and the open thread scroll internally, and `BottomNav` is hidden entirely while a
-  thread is open on mobile (immersive, no bottom tab bar, matching Instagram/WhatsApp) rather
-  than just collapsing chrome the way other drill-in pages do.
+  `page.tsx`/`components/pages/*Page.tsx`, and this feature follows that same split: its
+  top-level pieces, `components/pages/ChatsPage.tsx`, `components/pages/ChatThreadPage.tsx`,
+  and `components/pages/ChatNewThreadPage.tsx`, live in `components/pages/` per the
+  `*Page.tsx` convention, while `components/chats/*` holds only the feature's leaf
+  sub-components (`ConversationList`, `ChatThreadHeader`, `MessageComposer`, `MessageList`,
+  etc., plus the context above) — the same relationship `components/pages/FeedPage.tsx` has
+  to `components/feeds/*`. A DM inbox needs its conversation list to survive navigating
+  between threads rather than remount per route, so the layout fetches `getSession()` once
+  and hands viewer identity to `ChatsPage`, which wraps everything in
+  `ChatConversationsProvider` and renders `Header` (no `mobileBackTitle` — the "Pesan" title
+  lives in `ConversationList`'s own header row instead, so mobile doesn't show it twice),
+  then a `PageMargin` (`noMobilePadding`, same as `NotificationsPage`) wrapping an inner div
+  — `lg:border-x` framing the whole two-pane surface lives on that inner div, not on
+  `PageMargin` itself, so it sits inside `PageMargin`'s own default `lg:px-8` gutter the same
+  way every other bordered card in this file does — which in turn wraps the sidebar +
+  `{children}` row. Inside that, `ConversationList` is the persistent sidebar, and
+  `{children}` is the swappable pane — mobile shows exactly one of {list, thread} at a time
+  via responsive classes keyed off `usePathname()`, desktop always shows both side by side,
+  Instagram-web style. The shell is pinned to `h-dvh` with `overflow-hidden` (unlike every
+  other page's normal scrolling document flow) since only the list and the open thread
+  scroll internally, and `BottomNav` is hidden entirely while a thread is open on mobile
+  (immersive, no bottom tab bar, matching Instagram/WhatsApp) rather than just collapsing
+  chrome the way other drill-in pages do.
   `app/(www)/www/(gated)/chats/page.tsx` renders `ChatEmptyState` (the desktop-only "Pesan
-  Anda" placeholder — hidden on mobile by the shell, since mobile shows the list instead) and
-  `.../chats/[conversation_id]/page.tsx` is a thin pass-through of the route param into
-  `ChatThreadPage`, which looks the conversation up from `chatStore` client-side rather than
-  server-fetching it — there's nothing to 404 against, since a freshly-started conversation
-  (via `NewMessageModal`) only ever exists in that client store. `ChatThreadPage` renders
-  `ChatThreadHeader` (avatar/name/online-status, a `lg:hidden` back arrow to `/chats`, and
-  call/video buttons that toast "akan segera hadir" rather than pretending to place a real
-  call), `MessageList` (day dividers, a time-gap divider once 20+ minutes pass within the same
-  day, consecutive-message grouping with the avatar shown only on the last bubble of a
-  received run, auto-scroll-to-bottom on new messages), and `MessageComposer` (auto-growing
-  textarea, Enter-to-send/Shift+Enter-newline, emoji button reusing `emoji-picker-react` same
-  as `CreateFeedForms`, and a local-only image attach via `URL.createObjectURL` — no Supabase
-  upload, since a mock feature has no real storage destination to upload to). Per
-  `MessageBubble.tsx`, a lone-emoji message (including the composer's quick heart-send button,
-  shown in place of the send button while the input is empty) renders large and bare with no
-  bubble chrome, matching WhatsApp/iMessage/Instagram convention, and double-clicking any
-  bubble toggles a ❤️ reaction badge via `toggleMessageReaction`. `NewMessageModal` (built on
-  the shared `components/modals/Modal.tsx`) filters `ALL_PEOPLE` client-side by name/username
-  and either opens the existing thread for that person or creates a new in-memory one.
+  Anda" placeholder, backed by `NewMessageModal` — hidden on mobile by the shell, since
+  mobile shows the list instead). `.../chats/[conversation_id]/page.tsx` fetches
+  `getSession()` for `viewerId` and passes it plus the route param straight into
+  `ChatThreadPage`, which fetches/paginates messages itself (most-recent-first from the
+  backend, merged-and-sorted-ascending client-side into `messages`, so a realtime refetch or
+  an older-messages page can never introduce a duplicate — see `mergeMessages`), subscribes
+  to `messages:<conversation_id>`, and calls `markMessagesAsRead` on mount/whenever the
+  message count changes while the thread stays open. Older messages load via a manual "Muat
+  pesan lebih lama" button at the top of the list rather than scroll-triggered infinite
+  scroll, since preserving scroll position while prepending older content is a real
+  scroll-anchoring problem this pass doesn't attempt to solve. `ChatThreadPage` renders
+  `ChatThreadHeader` (avatar/name/affiliation — `"Cabang {branch}"` falling back to
+  coordinating body then chapter, same fallback shape as `SearchPersonRow`'s — a `lg:hidden`
+  back arrow to `/chats`; no call/video buttons, since there's no calling feature at all),
+  `MessageList` (day dividers, a time-gap divider once
+  20+ minutes pass within the same day, consecutive-message grouping with the avatar shown
+  only on the last bubble of a received run, auto-scroll-to-bottom only when the last
+  message's id actually changes — so loading older messages above doesn't yank the view back
+  down), and `MessageComposer` (auto-growing textarea, Enter-to-send/Shift+Enter-newline,
+  emoji button reusing `emoji-picker-react` same as `CreateFeedForms`, and a real image
+  attachment upload straight to the public `hmi-connect` bucket's `chat_media/` folder,
+  same direct-to-storage convention as `feed_media` — unlike a mock feature, a real message
+  needs a real, shareable URL, not a same-tab-only blob URL). The composer's send button is
+  always the same button, just `disabled` while there's nothing to send or a send is in
+  flight — there's no separate quick-heart button (that was the reaction feature, disabled).
+  Since there's no `conversations/create` endpoint — a conversation only exists as a side
+  effect of the first `messages/send` call — starting a new one can't navigate straight to a
+  conversation id. `NewMessageModal` (built on the shared `components/modals/Modal.tsx`)
+  shows the caller's top 5 `users/following/list` entries (`lib/actions.ts#listFollowing`,
+  same endpoint `FollowListModal` uses) before anything is typed — an empty search box
+  isn't an empty list — then swaps to debounced real people search against the new
+  `/www/api/users/search` Route Handler (wrapping `apis/search.ts#searchPeople`, same
+  debounced-read-needs-a-Route-Handler reasoning as `institutions/search`) once there's a
+  query. Both lists render through the same `PersonRow` (a `FollowUserEntry` and a
+  `SearchPersonResult` both satisfy the same minimal `{id, full_name, username?, avatar?}`
+  shape this component actually needs). Picking anyone, from either list, stashes their basic profile in
+  `sessionStorage[CHAT_NEW_RECIPIENT_KEY]` (`lib/constants.ts`, same handoff shape as
+  `COMPOSE_INTENT_KEY`) and navigates to `/chats/new`, which reads that entry, shows the
+  picked person + an empty-thread composer, and on the first successful send calls the
+  conversation-list's `refetch()` before `router.replace`-ing to the real
+  `/chats/{conversation_id}` the send response returned — clearing the sessionStorage entry
+  along the way so a stray back-navigation to `/chats/new` doesn't resurrect it.
   `components/icons/ChatIcon.tsx` follows the same outline/bulk pattern as
   Home/Search/Notification/Profile, converted 1:1 from designer-provided
   `iconly-chat(-outline).svg` (now deleted, same conversion convention as `AlQuranIcon`).

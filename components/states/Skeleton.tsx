@@ -38,6 +38,19 @@ export function CardSkeleton({
   );
 }
 
+export function SidebarMenuSkeleton() {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={index} className="flex items-center gap-2.5 px-2 py-1.5">
+          <div className="size-11 shrink-0 rounded-xl bg-[#e6e9ef]" />
+          <Bar className="h-3.5 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ProfileMiniCardSkeleton() {
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-5 shadow-sm">

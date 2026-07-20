@@ -67,6 +67,16 @@ import {
   searchPeople as searchPeopleApi,
   searchPostings as searchPostingsApi,
 } from "@/apis/search";
+import {
+  deleteChatMessage as deleteChatMessageApi,
+  deleteConversation as deleteConversationApi,
+  listConversations as listConversationsApi,
+  listMessages as listMessagesApi,
+  markMessagesAsRead as markMessagesAsReadApi,
+  sendChatMessage as sendChatMessageApi,
+  updateChatMessage as updateChatMessageApi,
+  type SendMessagePayload,
+} from "@/apis/chats";
 import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
@@ -271,4 +281,40 @@ export async function listReactors(
   page?: number
 ) {
   return listReactorsApi({ targetType, targetId, page });
+}
+
+export async function listConversations(page?: number) {
+  return listConversationsApi({ page, pageSize: 20 });
+}
+
+export async function loadMoreConversations(page: number) {
+  return listConversationsApi({ page, pageSize: 20 });
+}
+
+export async function deleteConversation(id: string) {
+  return deleteConversationApi(id);
+}
+
+export async function listMessages(conversationId: string, page?: number) {
+  return listMessagesApi(conversationId, { page, pageSize: 30 });
+}
+
+export async function loadMoreMessages(conversationId: string, page: number) {
+  return listMessagesApi(conversationId, { page, pageSize: 30 });
+}
+
+export async function sendChatMessage(payload: SendMessagePayload) {
+  return sendChatMessageApi(payload);
+}
+
+export async function updateChatMessage(id: string, content: string) {
+  return updateChatMessageApi(id, content);
+}
+
+export async function deleteChatMessage(id: string) {
+  return deleteChatMessageApi(id);
+}
+
+export async function markMessagesAsRead(conversationId: string) {
+  return markMessagesAsReadApi(conversationId);
 }
