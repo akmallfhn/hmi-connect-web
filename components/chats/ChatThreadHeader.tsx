@@ -32,8 +32,12 @@ export default function ChatThreadHeader({
         >
           <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#172033]">{fullName}</p>
-            {username && <p className="truncate text-xs text-[#7b8190]">@{username}</p>}
+            <p className="truncate text-sm font-semibold text-[#172033]">
+              {fullName}
+            </p>
+            {username && (
+              <p className="truncate text-xs text-[#7b8190]">@{username}</p>
+            )}
           </div>
         </Link>
       </div>
@@ -41,7 +45,7 @@ export default function ChatThreadHeader({
       <div className="flex items-center justify-center gap-1.5 border-t border-[#e6e9ef] bg-[#f8fafb] px-3 py-1.5">
         <Lock className="size-3 shrink-0 text-[#9aa1ad]" />
         <p className="text-center text-[11px] text-[#9aa1ad]">
-          Pesan di percakapan ini diamankan dengan enkripsi end-to-end
+          Pesan di percakapan ini terenkripsi end-to-end
         </p>
       </div>
     </div>

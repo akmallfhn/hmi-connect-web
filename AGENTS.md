@@ -420,6 +420,14 @@ below) when `isVerified === false`.
   double gray check for `sent`, a double primary-colored check for `read`. This replaced an
   earlier version that only spelled out "Terkirim"/"Dibaca" under the very last message,
   which read as unclear about where any individual message actually stood.
+  When a message has *both* `attachment_url` and `content`, they render as one shared card
+  (single `p-2`-padded `rounded-[20px]` bubble-color background wrapping both) rather than as
+  two separately-bubbled pieces stacked with a gap — benchmarked against
+  `WhatsappChatItemCMS.tsx`'s `IMAGE` case in the sibling `sevenpreneur` project, which insets
+  the photo *within* the bubble's own padding with a smaller `rounded-xl` of its own (not
+  bled edge-to-edge to the outer bubble's corners) and puts the caption directly below it in
+  that same padded card; a photo-only or text-only message still gets its own single bubble
+  as before (photo-only has no padding/caption slot, so it stays edge-to-edge).
   Since there's no `conversations/create` endpoint — a conversation only exists as a side
   effect of the first `messages/send` call — starting a new one can't navigate straight to a
   conversation id. `NewMessageModal` (built on the shared `components/modals/Modal.tsx`)

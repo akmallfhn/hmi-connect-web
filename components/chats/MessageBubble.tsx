@@ -31,33 +31,56 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
   return (
     <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
       <div className="w-fit max-w-[min(75%,480px)]">
-        {message.attachment_url && (
+        {message.attachment_url && message.content ? (
+          // Photo + caption share one padded card (bubble padding wraps both, photo sits
+          // inset with its own smaller rounding — WhatsApp's own convention — rather than
+          // bleeding edge-to-edge to the outer bubble's corners).
+          <div
+            className={[
+              "w-full rounded-lg p-2",
+              isOwn ? "bg-primary" : "bg-[#f0f2f6]",
+            ].join(" ")}
+          >
+            <button
+              type="button"
+              onClick={() => onOpenImage(message.attachment_url!)}
+              className="block w-full cursor-zoom-in overflow-hidden rounded-lg"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
+              <img src={message.attachment_url} alt="Lampiran" className="max-h-72 w-full object-cover" />
+            </button>
+            <div
+              className={[
+                "select-none whitespace-pre-wrap px-1 pb-1 pt-2 text-sm leading-relaxed break-words",
+                isOwn ? "text-white" : "text-[#172033]",
+              ].join(" ")}
+            >
+              {message.content}
+            </div>
+          </div>
+        ) : message.attachment_url ? (
           <button
             type="button"
             onClick={() => onOpenImage(message.attachment_url!)}
-            className="block cursor-zoom-in overflow-hidden rounded-[20px]"
+            className="block cursor-zoom-in overflow-hidden rounded-lg"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
             <img src={message.attachment_url} alt="Lampiran" className="max-h-72 w-auto object-cover" />
           </button>
-        )}
-
-        {message.content && (
+        ) : message.content ? (
           <div
-            className={[
-              "select-none",
-              message.attachment_url ? "mt-1" : "",
+            className={
               bare
-                ? "px-1 py-1 text-4xl leading-none"
+                ? "select-none px-1 py-1 text-4xl leading-none"
                 : [
-                    "rounded-[20px] px-4 py-2.5 text-sm leading-relaxed break-words",
+                    "select-none whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words",
                     isOwn ? "bg-primary text-white" : "bg-[#f0f2f6] text-[#172033]",
-                  ].join(" "),
-            ].join(" ")}
+                  ].join(" ")
+            }
           >
             {message.content}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* WhatsApp-style meta row — clock time always, ticks only for messages the viewer sent:
