@@ -29,7 +29,7 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
   const bare = Boolean(message.content) && isEmojiOnly(message.content) && !message.attachment_url;
 
   return (
-    <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
       <div className="w-fit max-w-[min(75%,480px)]">
         {message.attachment_url && message.content ? (
           // Photo + caption share one padded card (bubble padding wraps both, photo sits
@@ -82,18 +82,25 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
 
-      {/* WhatsApp-style meta row — clock time always, ticks only for messages the viewer sent:
-          double gray check = sent, double primary-colored check = read (no "delivered" state,
-          backend only tracks sent/read). */}
-      <div className="mt-1 flex items-center gap-1 px-1">
-        <span className="text-[11px] text-[#9aa1ad]">{formatClockTime(message.created_at)}</span>
-        {isOwn && (
-          <CheckCheck
-            className={`size-3.5 ${message.status === "read" ? "text-primary" : "text-[#9aa1ad]"}`}
-          />
-        )}
-      </div>
+interface MessageMetaProps {
+  message: ChatMessage;
+  isOwn: boolean;
+}
+
+// Separate row (not inside MessageBubble's column) so the avatar aligns with the bubble, not this.
+export function MessageMeta({ message, isOwn }: MessageMetaProps) {
+  return (
+    <div className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+      <span className="text-[11px] text-[#9aa1ad]">{formatClockTime(message.created_at)}</span>
+      {isOwn && (
+        <CheckCheck
+          className={`size-3.5 ${message.status === "read" ? "text-primary" : "text-[#9aa1ad]"}`}
+        />
+      )}
     </div>
   );
 }

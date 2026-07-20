@@ -5,7 +5,7 @@ import "dayjs/locale/id";
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "@/apis/chats";
 import Avatar from "../common/Avatar";
-import MessageBubble from "./MessageBubble";
+import MessageBubble, { MessageMeta } from "./MessageBubble";
 
 const GROUP_GAP_MINUTES = 5;
 
@@ -131,6 +131,9 @@ export default function MessageList({
                   <div className="min-w-0 flex-1">
                     <MessageBubble message={message} isOwn={isOwn} onOpenImage={onOpenImage} />
                   </div>
+                </div>
+                <div className={`mt-1 ${isOwn ? "" : "pl-9"}`}>
+                  <MessageMeta message={message} isOwn={isOwn} />
                 </div>
               </div>
             </div>

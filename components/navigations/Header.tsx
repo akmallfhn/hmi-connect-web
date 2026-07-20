@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
+import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
@@ -61,6 +62,7 @@ export default function Header({
   const [searchValue, setSearchValue] = useState("");
   const { notifications, unreadCount, handleRead, handleMarkAllRead } =
     useNotificationsBell(userId);
+  const unreadChatCount = useUnreadChatCount(userId);
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
@@ -128,9 +130,14 @@ export default function Header({
               <Link
                 href="/chats"
                 aria-label="Pesan"
-                className="flex size-10 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+                className="relative flex size-10 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
               >
                 <MessageCircleMore className="size-5" />
+                {unreadChatCount > 0 && (
+                  <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-white">
+                    {unreadChatCount}
+                  </span>
+                )}
               </Link>
 
               <Dropdown
