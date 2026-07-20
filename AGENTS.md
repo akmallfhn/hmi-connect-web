@@ -195,15 +195,22 @@ below) when `isVerified === false`.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
-  `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Notifikasi/Profil).
+  `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil).
   `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
-  Cari/Notifikasi/Profil on mobile, so the top bar would just be redundant chrome there. The
+  Cari/Pesan/Profil on mobile, so that full row would just be redundant chrome there. Desktop's
+  row also carries a plain `lucide-react` `MessageCircleMore` link to `/chats` immediately to
+  the left of the bell — deliberately a lucide glyph like every other icon in that row (Bell,
+  ChevronDown, Search, ...), not the custom bulk/outline `ChatIcon` (that one's reserved for
+  `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
+  how the bell/avatar triggers next to it also don't. The
   "belum diverifikasi" banner is a sibling of that row (not nested inside it), so it still
   shows on mobile when `isVerified === false`. The outer `<header>`'s own
   `border-b`/`bg-white/90`/`backdrop-blur` are pushed behind `lg:` too — without that,
   they'd render as a bare 1px border strip on mobile on pages with no banner, since the row
   being `hidden` doesn't stop the header element itself from painting its own border/background.
-  `Header` also takes three optional props for pages reached by drilling in rather than
+  There is deliberately no mobile notification affordance in `Header` itself — the bell only
+  shows up on mobile inside `MobileGreetingBar` (see below), so it doesn't need a second,
+  sitewide top-right-corner bar competing for space on every page. `Header` also takes three optional props for pages reached by drilling in rather than
   top-level nav (news, membership, notifications, ...): `mobileBackTitle` renders a
   `lg:hidden` back-arrow (`router.back()`) + title row; `mobileMenu`/`mobileMenuLabel` add an
   "⋮" overflow-menu trigger next to it (a `Dropdown`, only rendered when `mobileMenu` is
@@ -213,28 +220,34 @@ below) when `isVerified === false`.
   rather than as separately `sticky`-positioned siblings — a second independently-sticky
   element needs to know `Header`'s real rendered height to offset against, and that height
   is dynamic (0, banner-only, or more), so a hardcoded offset silently leaves a gap once you
-  scroll. Being one sticky block sidesteps that entirely. Beranda (`/`) is always a real link. Cari, Notifikasi, and Profil
+  scroll. Being one sticky block sidesteps that entirely. Beranda (`/`) is always a real link. Cari, Pesan, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
-  `/search`, Notifikasi to `/notifications`, Profil to `/profile/[username]`. The middle
+  `/search`, Pesan to `/chats`, Profil to `/profile/[username]`. The middle
   slot is a "Posting" button (`PlusIcon`, always the raised filled-circle style, no
   outline/bulk swap) instead of a plain link — see the compose-intent paragraph below.
-  Home/Cari/Notifikasi/Profil use the matching icon component from `components/icons/`
-  (`HomeIcon`/`SearchIcon`/`NotificationIcon`/`ProfileIcon`, `PlusIcon` for the middle
+  Home/Cari/Pesan/Profil use the matching icon component from `components/icons/`
+  (`HomeIcon`/`SearchIcon`/`ChatIcon`/`ProfileIcon`, `PlusIcon` for the middle
   button) instead of raw `lucide-react` icons — each has an `outline` variant (default,
   `currentColor`, so the existing `text-primary`/`text-[#5f6573]` classes still drive its
   color) and a `bulk` variant (two-tone: dominant shape in `var(--primary)`, accent shape
   in `color-mix(in srgb, var(--secondary-foreground) 40%, white)` — lightened further
   toward white rather than the vivid `--secondary`, and green stays dominant rather than
   orange since orange competing with the tab label's own `text-primary` read as two big
-  color blocks fighting each other). `BottomNav` swaps a tab to `bulk` when that tab's
-  route is the current page. Profil always renders `ProfileIcon`, never the caller's actual
-  avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only
-  `username`, for the active-route check and the `/profile/[username]` href, and `userId`,
-  used only to key the notifications realtime subscription below — every page that renders
-  `BottomNav` passes it the same `userId` it already passes to `Header`). The Notifikasi tab
+  color blocks fighting each other; `ChatIcon`'s source asset originally baked a fade
+  (`opacity="0.4"`) onto the big bubble shape, but that's dropped in this codebase's version —
+  the bulk variant renders the bubble in solid, full-opacity `primaryColor` like every other
+  icon's dominant shape, so the active Pesan tab reads as clearly "on" rather than washed out;
+  only the three "typing dots" use `secondaryColor`). `BottomNav` swaps a tab to `bulk` when that tab's
+  route is the current page (Pesan matches both `/chats` and any `/chats/[conversation_id]`).
+  Profil always renders `ProfileIcon`, never the caller's actual
+  avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props, or `userId`
+  anymore (only `username`, for the active-route check and the `/profile/[username]` href) —
+  once the Notifikasi tab (which used to key a realtime subscription off `userId`) became the
+  Pesan tab, `BottomNav` had nothing left to do with it. The Pesan tab
   shows a small unread dot (no count, unlike `Header`'s bell — there's no room for a number
-  next to a 20px icon) driven by its own `listNotifications(1)` fetch on mount plus
-  `useNotificationsRealtime`, same as `Header`'s bell (see below).
+  next to a 20px icon) driven by `lib/chatStore.ts#useUnreadChatCount()` — see
+  the `components/chats/*` entry below for why that's a mock external store and not a real
+  fetch.
   Since real `:active` is too short-lived on a tap to render its transition, both the
   pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
@@ -254,11 +267,16 @@ below) when `isVerified === false`.
   `article.source_url`), its `onClick` calls `preventDefault`/`stopPropagation` so it doesn't
   also trigger that outer link's navigation. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
   server-first pages) since it's shared by every route without a common data-fetching
-  ancestor: it fetches its own list via the `listNotifications` Server Action on mount
-  (`apis/notifications.ts#listNotifications`, `notifications/list`, session-cookie-scoped
-  like `feeds.ts`) and shows the unread count as a badge, with the dropdown itself capped
-  to the 5 most recent (`DROPDOWN_LIMIT`) plus a "Lihat semua notifikasi" link to
-  `/notifications` for the rest. Both `Header`'s bell and `BottomNav`'s Notifikasi tab stay
+  ancestor. Both it and `MobileGreetingBar`'s own bell (see below) share
+  `hooks/useNotificationsBell.ts` — a small hook (same idea as `useReaction`, just for the
+  bell instead of reactions) that fetches the list via the `listNotifications` Server Action
+  on mount (`apis/notifications.ts#listNotifications`, `notifications/list`,
+  session-cookie-scoped like `feeds.ts`), exposes the unread count, and wires up
+  `handleRead`/`handleMarkAllRead` — so neither caller re-implements that fetch/mark-as-read
+  logic on its own. The dropdown itself renders via the shared
+  `components/notifications/NotificationsDropdownPanel.tsx`, capped to the 5 most recent
+  (its own internal `DROPDOWN_LIMIT`) plus a "Lihat semua notifikasi" link to
+  `/notifications` for the rest. Both bells stay
   live via `hooks/useNotificationsRealtime.ts`, which subscribes to the Supabase Realtime
   Broadcast channel `notifications:<userId>` — the backend's `notifications` table (this is
   the one exception to "no direct DB usage," see Stack above: the Go backend's Postgres
@@ -288,6 +306,74 @@ below) when `isVerified === false`.
   liked/commented-on/replied-to entity — the row appends it inline after a colon (same
   line, same size/color as the actor name/action text, no quotes) when present (`null` for
   `follow`).
+- `components/chats/*` (`/chats` + `/chats/[conversation_id]`, "Pesan" in the nav) — **frontend-only,
+  no backend**: there's deliberately no `apis/conversations.ts`/`apis/messages.ts`; every
+  conversation and message lives in `lib/chatStore.ts`, a module-level
+  `useSyncExternalStore` store seeded once from `lib/chatMockData.ts` (fixed cast of
+  mock personas + seed message history, timestamps generated relative to "now" at module load
+  so the demo never looks stale, types in `lib/chatTypes.ts`) and mutated only by client actions
+  in `chatStore.ts` itself
+  (`sendMessage`, `toggleMessageReaction`, `startConversationWith`, `markConversationRead`). These
+  three live under `lib/` rather than `components/chats/` since they're plain data/state modules
+  with no JSX — `lib/chatTypes.ts` sits alongside (not merged into) the unrelated `lib/types.ts`,
+  which is reserved for the backend's real Postgres enums, not this feature's mock shape.
+  This is the same "every component independently subscribes to one shared source of truth"
+  shape the app already uses for real notifications (`Header`'s bell and `BottomNav` both
+  call `useUnreadChatCount()`/`useConversations()` directly, no context provider) — just
+  backed by in-memory state instead of a server round-trip, so it works from anywhere in the
+  tree without needing to sit under `/chats`. Sending a message locally echoes it immediately,
+  then `sendMessage` simulates delivered → read receipts and, after a typing-indicator delay,
+  appends a canned reply (`getCannedReply`) from the conversation's mock persona — entirely
+  client-side, nothing here calls out to a real endpoint.
+  `app/(www)/www/(gated)/chats/layout.tsx` is the only nested `layout.tsx` in this codebase
+  below the top `(gated)/layout.tsx` — every other feature's whole page lives in one
+  `page.tsx`/`components/pages/*Page.tsx`, and this feature follows that same split: its two
+  top-level pieces, `components/pages/ChatsPage.tsx` and `components/pages/ChatThreadPage.tsx`,
+  live in `components/pages/` per the `*Page.tsx` convention, while `components/chats/*` holds
+  only the feature's leaf sub-components (`ConversationList`, `ChatThreadHeader`,
+  `MessageComposer`, `MessageList`, etc.) — the same relationship `components/pages/FeedPage.tsx`
+  has to `components/feeds/*`. A DM inbox needs its conversation list to
+  survive navigating between threads rather than remount per route, so the layout fetches
+  `getSession()` once and hands viewer identity to `components/pages/ChatsPage.tsx`, which
+  renders `Header` (no `mobileBackTitle` — the "Pesan" title lives in `ConversationList`'s own
+  header row instead, so mobile doesn't show it twice), then a `PageMargin` (`noMobilePadding`,
+  same as `NotificationsPage`) wrapping an inner div — `lg:border-x` framing the whole two-pane
+  surface the same way `lg:border-x` frames every card elsewhere in this file lives on that
+  inner div, not on `PageMargin` itself — which in turn wraps the sidebar + `{children}`
+  row so the two-pane surface lines up with the rest of the site's standard content width on
+  `lg:` instead of running edge-to-edge — mobile stays full-bleed either way (no border, no
+  `PageMargin` padding), matching every chat app's own convention.
+  Inside that, `ConversationList` is the persistent sidebar,
+  and `{children}` is the swappable pane — mobile shows exactly one of
+  {list, thread} at a time via responsive classes keyed off `usePathname()`, desktop always
+  shows both side by side, Instagram-web style. The shell is pinned to `h-dvh` with
+  `overflow-hidden` (unlike every other page's normal scrolling document flow) since only the
+  list and the open thread scroll internally, and `BottomNav` is hidden entirely while a
+  thread is open on mobile (immersive, no bottom tab bar, matching Instagram/WhatsApp) rather
+  than just collapsing chrome the way other drill-in pages do.
+  `app/(www)/www/(gated)/chats/page.tsx` renders `ChatEmptyState` (the desktop-only "Pesan
+  Anda" placeholder — hidden on mobile by the shell, since mobile shows the list instead) and
+  `.../chats/[conversation_id]/page.tsx` is a thin pass-through of the route param into
+  `ChatThreadPage`, which looks the conversation up from `chatStore` client-side rather than
+  server-fetching it — there's nothing to 404 against, since a freshly-started conversation
+  (via `NewMessageModal`) only ever exists in that client store. `ChatThreadPage` renders
+  `ChatThreadHeader` (avatar/name/online-status, a `lg:hidden` back arrow to `/chats`, and
+  call/video buttons that toast "akan segera hadir" rather than pretending to place a real
+  call), `MessageList` (day dividers, a time-gap divider once 20+ minutes pass within the same
+  day, consecutive-message grouping with the avatar shown only on the last bubble of a
+  received run, auto-scroll-to-bottom on new messages), and `MessageComposer` (auto-growing
+  textarea, Enter-to-send/Shift+Enter-newline, emoji button reusing `emoji-picker-react` same
+  as `CreateFeedForms`, and a local-only image attach via `URL.createObjectURL` — no Supabase
+  upload, since a mock feature has no real storage destination to upload to). Per
+  `MessageBubble.tsx`, a lone-emoji message (including the composer's quick heart-send button,
+  shown in place of the send button while the input is empty) renders large and bare with no
+  bubble chrome, matching WhatsApp/iMessage/Instagram convention, and double-clicking any
+  bubble toggles a ❤️ reaction badge via `toggleMessageReaction`. `NewMessageModal` (built on
+  the shared `components/modals/Modal.tsx`) filters `ALL_PEOPLE` client-side by name/username
+  and either opens the existing thread for that person or creates a new in-memory one.
+  `components/icons/ChatIcon.tsx` follows the same outline/bulk pattern as
+  Home/Search/Notification/Profile, converted 1:1 from designer-provided
+  `iconly-chat(-outline).svg` (now deleted, same conversion convention as `AlQuranIcon`).
 - `/search` (`components/pages/SearchPage.tsx`) — keyword search across people and postings,
   backed by `apis/search.ts`'s single `search/list` endpoint (`type: "people" | "posting"`,
   `SearchTypeEnum` in `lib/types.ts`; there's no unified result shape between the two per
@@ -373,8 +459,16 @@ below) when `isVerified === false`.
   avatar/name to the caller's own profile, with a plain "Welcome!" line above the name — an
   earlier version used HMI's own gendered address terms ("Abangda"/"Ayunda") here, but that
   was swapped out for a fixed English greeting, so there's no `gender` prop on this component
-  (or threaded through `FeedPage`/the home route) anymore. It has no Cari/Notifikasi buttons
-  either — those were cut since `BottomNav` already covers both. Its `bg-primary` block is
+  (or threaded through `FeedPage`/the home route) anymore. It has no Cari button — cut since
+  `BottomNav` already covers that — but it does render a notification bell, right-aligned
+  opposite the avatar/name; this is deliberately the *only* place the bell shows up on mobile
+  (see `components/navigations/*` above for why `Header` itself doesn't repeat it, now that
+  `BottomNav`'s own tab is Pesan rather than Notifikasi). Unlike `Header`'s desktop bell, it's
+  a plain `Link` straight to `/notifications`, not a `Dropdown` — a mobile-width dropdown panel
+  right under the greeting card had nowhere good to breathe, so it just navigates instead. It
+  only pulls the `unreadCount` half of `hooks/useNotificationsBell.ts` for the badge (not the
+  `handleRead`/`handleMarkAllRead` half, which only a rendered list needs), and needs `userId`
+  threaded down from `FeedPage` (alongside `fullName`/`avatar`/`username`) purely for that. Its `bg-primary` block is
   taller (`pb-20`) than its own content needs, on purpose: `CreateFeedForms`'s composer card
   is pulled up into that green area on mobile via `-mt-16` (reset with `lg:mt-0` on desktop,
   where there's no greeting bar to overlap) and hides its own avatar there too (`hidden
