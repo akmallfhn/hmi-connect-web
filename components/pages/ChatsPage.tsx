@@ -46,12 +46,12 @@ export default function ChatsPage({ viewer, children }: ChatsPageProps) {
           />
         </div>
 
-        <PageMargin noMobilePadding className="flex min-h-0 flex-1">
-          <div className="flex min-h-0 flex-1 lg:border-x lg:border-[#e6e9ef]">
+        <PageMargin noMobilePadding className="flex min-h-0 min-w-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 lg:border-x lg:border-[#e6e9ef]">
             <aside
               className={[
                 isThreadRoute ? "hidden lg:flex" : "flex",
-                "w-full flex-col lg:w-[360px] lg:shrink-0 lg:border-r lg:border-[#e6e9ef] xl:w-[400px]",
+                "min-w-0 w-full flex-col lg:w-[360px] lg:shrink-0 lg:border-r lg:border-[#e6e9ef] xl:w-[400px]",
               ].join(" ")}
             >
               <ConversationList viewerId={viewer.userId} activeConversationId={activeConversationId} />
