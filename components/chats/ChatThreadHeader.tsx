@@ -3,17 +3,20 @@
 import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import Avatar from "../common/Avatar";
+import { Bar, Circle } from "../states/Skeleton";
 
 interface ChatThreadHeaderProps {
   fullName: string;
   username?: string;
   avatar?: string;
+  loading?: boolean;
 }
 
 export default function ChatThreadHeader({
   fullName,
   username,
   avatar,
+  loading,
 }: ChatThreadHeaderProps) {
   return (
     <div className="flex shrink-0 flex-col border-b border-[#e6e9ef] bg-white">
@@ -26,20 +29,26 @@ export default function ChatThreadHeader({
           <ArrowLeft className="size-5" />
         </Link>
 
-        <Link
-          href={username ? `/profile/${username}` : "#"}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 transition hover:bg-[#f5f7fb]"
-        >
-          <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#172033]">
-              {fullName}
-            </p>
-            {username && (
-              <p className="truncate text-xs text-[#7b8190]">@{username}</p>
-            )}
+        {loading ? (
+          <div className="flex min-w-0 flex-1 animate-pulse items-center gap-3 px-1 py-1">
+            <Circle className="size-[34px]" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Bar className="h-3 w-28" />
+              <Bar className="h-2.5 w-16" />
+            </div>
           </div>
-        </Link>
+        ) : (
+          <Link
+            href={username ? `/profile/${username}` : "#"}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 transition hover:bg-[#f5f7fb]"
+          >
+            <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#172033]">{fullName}</p>
+              {username && <p className="truncate text-xs text-[#7b8190]">@{username}</p>}
+            </div>
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center justify-center gap-1.5 border-t border-[#e6e9ef] bg-[#f8fafb] px-3 py-1.5">

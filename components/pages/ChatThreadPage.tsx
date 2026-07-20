@@ -8,7 +8,7 @@ import type { ChatMessage } from "@/apis/chats";
 import { listMessages, loadMoreMessages, markMessagesAsRead, sendChatMessage } from "@/lib/actions";
 import { useRealtimeTopic } from "@/hooks/useRealtimeTopic";
 import Button from "../buttons/Button";
-import { useConversationSummary } from "../chats/ChatConversationsContext";
+import { useChatConversations, useConversationSummary } from "../chats/ChatConversationsContext";
 import ChatThreadHeader from "../chats/ChatThreadHeader";
 import MessageComposer from "../chats/MessageComposer";
 import MessageList from "../chats/MessageList";
@@ -27,6 +27,7 @@ function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMes
 export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadPageProps) {
   const router = useRouter();
   const conversation = useConversationSummary(conversationId);
+  const { loading: conversationsLoading } = useChatConversations();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,8 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
     );
   }
 
-  const personName = conversation?.other_full_name ?? "Kader";
+  const headerLoading = !conversation && (conversationsLoading || loading);
+  const personName = conversation?.other_full_name ?? "";
   const personAvatar = conversation?.other_avatar;
 
   return (
@@ -118,6 +120,7 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
         fullName={personName}
         username={conversation?.other_username}
         avatar={personAvatar}
+        loading={headerLoading}
       />
       <MessageList
         messages={messages}

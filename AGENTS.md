@@ -380,8 +380,14 @@ below) when `isVerified === false`.
   `ChatThreadHeader` (avatar/name/`@username` — deliberately not the branch/chapter
   affiliation shown elsewhere, and hidden entirely when the other person has no username —
   plus a `lg:hidden` back arrow to `/chats`; no call/video buttons, since there's no calling
-  feature at all; and a second, visually distinct strip below the name row with a lock icon
-  and a static "diamankan dengan enkripsi end-to-end" notice — copy only, matching the same
+  feature at all). Its own `loading` prop swaps the avatar/name for a `Circle`/`Bar` skeleton
+  (`components/states/Skeleton.tsx`) instead of falling back to a placeholder name like
+  "Kader" while the conversation summary isn't in `ChatConversationsContext` yet — driven by
+  `ChatThreadPage`'s `headerLoading = !conversation && (conversationsLoading || loading)`, so
+  it only shows once messages or the summary are still genuinely in flight, not once the
+  "not found" state has already taken over the whole pane. A second, visually distinct strip
+  below the name row has a lock icon
+  and a static "terenkripsi end-to-end" notice — copy only, matching the same
   reassurance banner WhatsApp/Signal show, not an actual E2EE implementation, so don't treat
   its presence as a real security guarantee when reasoning about this codebase), `MessageList`
   (day dividers only — an earlier "N menit yang lalu" time-gap divider between same-day
@@ -593,7 +599,16 @@ below) when `isVerified === false`.
   or a `feedCount` stat; affiliation renders as `"HMI {chapterName} • Cabang {branchName}"`.
   It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
   `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
-  counts open `FollowListModal`. It also shows `users/social-media-accounts/list` links
+  counts open `FollowListModal`. When viewing someone else's profile while logged in
+  (`viewerId` set, threaded down from `ProfilePage`'s own `viewer.userId`), a "Chat" button
+  (`components/profile/SendMessageButton.tsx`) shows up twice in the markup for two different
+  breakpoints rather than being repositioned via CSS — `hidden lg:block` next to the Ikuti
+  button at the top on desktop, and a `w-full lg:hidden` copy below the Mengikuti/Pengikut
+  counts on mobile — same find-or-jump-to-existing-thread-or-else-`/chats/new` logic
+  `NewMessageModal` uses (`apis/chats.ts#findConversationWithUser` scans the caller's own
+  `conversations/list` for a matching `other_user_id`, since there's no lookup-by-user
+  endpoint; falls back to the same `sessionStorage[CHAT_NEW_RECIPIENT_KEY]` handoff
+  otherwise). It also shows `users/social-media-accounts/list` links
   (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
   `hover:text-primary`/`hover:bg-primary-soft` tint there). `ActivityCard` is real-API-backed
   via `apis/users.ts#listUserActivity` (`users/activity/list`, gated like `getUserByUsername`

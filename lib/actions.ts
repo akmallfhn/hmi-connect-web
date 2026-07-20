@@ -70,6 +70,7 @@ import {
 import {
   deleteChatMessage as deleteChatMessageApi,
   deleteConversation as deleteConversationApi,
+  findConversationWithUser as findConversationWithUserApi,
   listConversations as listConversationsApi,
   listMessages as listMessagesApi,
   markMessagesAsRead as markMessagesAsReadApi,
@@ -293,6 +294,10 @@ export async function loadMoreConversations(page: number) {
 
 export async function deleteConversation(id: string) {
   return deleteConversationApi(id);
+}
+
+export async function findConversationWithUser(otherUserId: string) {
+  return findConversationWithUserApi(otherUserId);
 }
 
 export async function listMessages(conversationId: string, page?: number) {

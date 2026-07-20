@@ -79,6 +79,13 @@ export async function listConversations(
   };
 }
 
+// No lookup-by-user endpoint exists, so this scans the caller's own conversations/list.
+export async function findConversationWithUser(otherUserId: string): Promise<string | null> {
+  const { list } = await listConversations({ pageSize: 100 });
+  const match = list.find((conversation) => conversation.other_user_id === otherUserId);
+  return match?.id ?? null;
+}
+
 export async function deleteConversation(id: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {

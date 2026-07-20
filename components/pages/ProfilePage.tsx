@@ -79,6 +79,7 @@ export default function ProfilePage({
           <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
             <ProfileHeader
               key={`${profile.userId}-${profile.isFollowedByMe}-${profile.followersCount}`}
+              viewerId={viewer.userId}
               userId={profile.userId}
               username={profile.username}
               fullName={profile.fullName}

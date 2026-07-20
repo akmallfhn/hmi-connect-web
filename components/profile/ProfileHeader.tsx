@@ -26,8 +26,10 @@ import VerifiedBadge from "../common/VerifiedBadge";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
+import SendMessageButton from "./SendMessageButton";
 
 interface ProfileHeaderProps {
+  viewerId?: string;
   userId?: string;
   username?: string;
   fullName?: string;
@@ -114,6 +116,7 @@ function SocialLinks({
 }
 
 export default function ProfileHeader({
+  viewerId,
   userId,
   username,
   fullName,
@@ -193,18 +196,30 @@ export default function ProfileHeader({
       Edit Profil
     </Button>
   ) : (
-    <Button
-      variant={isFollowing ? "light" : "primary"}
-      onClick={handleFollowToggle}
-      disabled={followLoading}
-    >
-      {isFollowing ? (
-        <UserCheck className="size-3.5" />
-      ) : (
-        <UserPlus className="size-3.5" />
+    <div className="flex items-center gap-2">
+      {viewerId && userId && (
+        <div className="hidden lg:block">
+          <SendMessageButton
+            userId={userId}
+            username={username}
+            fullName={displayName}
+            avatar={avatar}
+          />
+        </div>
       )}
-      {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
-    </Button>
+      <Button
+        variant={isFollowing ? "light" : "primary"}
+        onClick={handleFollowToggle}
+        disabled={followLoading}
+      >
+        {isFollowing ? (
+          <UserCheck className="size-3.5" />
+        ) : (
+          <UserPlus className="size-3.5" />
+        )}
+        {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
+      </Button>
+    </div>
   );
 
   return (
@@ -299,6 +314,18 @@ export default function ProfileHeader({
               <span className="text-[#5f6573]">Pengikut</span>
             </button>
           </div>
+
+          {!isOwnProfile && viewerId && userId && (
+            <div className="mt-3 lg:hidden">
+              <SendMessageButton
+                userId={userId}
+                username={username}
+                fullName={displayName}
+                avatar={avatar}
+                className="w-full"
+              />
+            </div>
+          )}
         </div>
       </div>
 
