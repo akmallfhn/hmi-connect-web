@@ -30,7 +30,6 @@ export type ChatMessage = {
   content: string;
   attachment_url?: string;
   status: MessageStatusEnum;
-  delivered_at?: string;
   read_at?: string;
   created_at: string;
   updated_at: string;

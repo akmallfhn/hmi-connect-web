@@ -335,7 +335,7 @@ below) when `isVerified === false`.
   `useNotificationsBell`'s "independent per-component fetch" shape for `BottomNav`'s Pesan
   badge, since `BottomNav` renders on every page, not just under `/chats`.
   There's no `conversations/detail` endpoint on the backend, so a thread's header info
-  (name/avatar/affiliation) can't be fetched standalone — `components/chats/ChatConversationsContext.tsx`
+  (name/avatar/username) can't be fetched standalone — `components/chats/ChatConversationsContext.tsx`
   solves this by owning the conversation list once at the `/chats` shell level
   (`ChatConversationsProvider`, fetched + realtime-refreshed there) so both the sidebar
   (`useChatConversations()`) and the open thread (`useConversationSummary(conversationId)`,
@@ -377,20 +377,49 @@ below) when `isVerified === false`.
   pesan lebih lama" button at the top of the list rather than scroll-triggered infinite
   scroll, since preserving scroll position while prepending older content is a real
   scroll-anchoring problem this pass doesn't attempt to solve. `ChatThreadPage` renders
-  `ChatThreadHeader` (avatar/name/affiliation — `"Cabang {branch}"` falling back to
-  coordinating body then chapter, same fallback shape as `SearchPersonRow`'s — a `lg:hidden`
-  back arrow to `/chats`; no call/video buttons, since there's no calling feature at all),
-  `MessageList` (day dividers, a time-gap divider once
-  20+ minutes pass within the same day, consecutive-message grouping with the avatar shown
-  only on the last bubble of a received run, auto-scroll-to-bottom only when the last
-  message's id actually changes — so loading older messages above doesn't yank the view back
-  down), and `MessageComposer` (auto-growing textarea, Enter-to-send/Shift+Enter-newline,
-  emoji button reusing `emoji-picker-react` same as `CreateFeedForms`, and a real image
-  attachment upload straight to the public `hmi-connect` bucket's `chat_media/` folder,
-  same direct-to-storage convention as `feed_media` — unlike a mock feature, a real message
-  needs a real, shareable URL, not a same-tab-only blob URL). The composer's send button is
+  `ChatThreadHeader` (avatar/name/`@username` — deliberately not the branch/chapter
+  affiliation shown elsewhere, and hidden entirely when the other person has no username —
+  plus a `lg:hidden` back arrow to `/chats`; no call/video buttons, since there's no calling
+  feature at all; and a second, visually distinct strip below the name row with a lock icon
+  and a static "diamankan dengan enkripsi end-to-end" notice — copy only, matching the same
+  reassurance banner WhatsApp/Signal show, not an actual E2EE implementation, so don't treat
+  its presence as a real security guarantee when reasoning about this codebase), `MessageList`
+  (day dividers only — an earlier "N menit yang lalu" time-gap divider between same-day
+  message groups was removed as unnecessary noise — consecutive-message grouping with the
+  avatar shown only on the last bubble of a received run, auto-scroll-to-bottom only when the
+  last message's id actually changes — so loading older messages above doesn't yank the view
+  back down), and `MessageComposer` (auto-growing textarea — the pill wrapping it is
+  `flex items-center` specifically because a `<textarea>` always top-anchors its own text/
+  placeholder with no CSS lever to center it internally, so the only way to visually center a
+  short single line is to center the whole (correctly content-sized) textarea box within its
+  wrapper — Enter-to-send/Shift+Enter-newline, emoji button reusing `emoji-picker-react` same
+  as `CreateFeedForms` — including a click-outside listener to close the picker, the same
+  pattern `Dropdown.tsx` already uses — and a real image attachment upload straight to the
+  public `hmi-connect` bucket's `chat_media/` folder, same direct-to-storage convention as
+  `feed_media`, right down to the `avatars/chat_media/` fallback path for when the primary
+  path 403s on a row-level-security error — unlike a mock feature, a real message needs a
+  real, shareable URL, not a same-tab-only blob URL). The composer's send button is
   always the same button, just `disabled` while there's nothing to send or a send is in
   flight — there's no separate quick-heart button (that was the reaction feature, disabled).
+  `MessageBubble.tsx` caps each bubble at `w-fit max-w-[min(75%,480px)]` (a percentage that
+  also can't blow past a fixed pixel ceiling on wide screens — benchmarked against
+  `WhatsappChatBubbleCMS.tsx` in the sibling `sevenpreneur` project) — the `w-fit` matters on
+  its own, separately from the `max-w`: without it, short messages were wrapping onto two
+  lines despite having plenty of room, because relying on implicit flexbox shrink-to-fit
+  through several nested flex layers (row → per-message wrapper → `MessageBubble`'s own
+  `flex-col`) is exactly the kind of chain that trips up premature-wrap flexbox quirks; the
+  fix was two-part — `w-fit` forces the bubble to size off its own content rather than
+  whatever the nested shrink-to-fit chain resolves to, and `MessageList`'s per-message
+  wrapper around `MessageBubble` was simplified from a redundant `flex justify-end`/`flex-1`
+  split back down to a single plain `flex-1` div, since `MessageBubble`'s own root
+  (`flex flex-col items-end`/`items-start`) already does 100% of the alignment work and a
+  second flex layer around it was just adding ambiguity. Every bubble renders a small meta
+  row underneath it (not just the last message) with the clock time plus, for the viewer's
+  own messages, a WhatsApp-style tick — the backend only tracks `sent`/`read` (no
+  `delivered` state, and no `delivered_at` column), so there are exactly two states: a
+  double gray check for `sent`, a double primary-colored check for `read`. This replaced an
+  earlier version that only spelled out "Terkirim"/"Dibaca" under the very last message,
+  which read as unclear about where any individual message actually stood.
   Since there's no `conversations/create` endpoint — a conversation only exists as a side
   effect of the first `messages/send` call — starting a new one can't navigate straight to a
   conversation id. `NewMessageModal` (built on the shared `components/modals/Modal.tsx`)

@@ -2,7 +2,7 @@
 
 import EmojiPicker, { EmojiClickData, EmojiStyle, Theme } from "emoji-picker-react";
 import { ImageIcon, Send, SmilePlus, X } from "lucide-react";
-import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -17,13 +17,14 @@ function randomId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-// Direct-to-storage upload, same convention as CreateFeedForms' feed_media — its own folder
-// under the shared public hmi-connect bucket since chat attachments are their own resource.
-async function uploadChatAttachment(file: File, userId: string | undefined): Promise<string> {
-  const extension = getExtension(file);
-  const fileName = `${Date.now()}-${randomId()}.${extension}`;
-  const filePath = `chat_media/${userId ?? "anonymous"}/${fileName}`;
+function isStoragePolicyError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.toLowerCase().includes("row-level security")
+  );
+}
 
+async function uploadPublicStorageFile(filePath: string, file: File): Promise<string> {
   const { error } = await supabase.storage
     .from("hmi-connect")
     .upload(filePath, file, { cacheControl: "3600", upsert: false });
@@ -33,6 +34,24 @@ async function uploadChatAttachment(file: File, userId: string | undefined): Pro
   if (!data?.publicUrl) throw new Error("missing public url");
 
   return data.publicUrl;
+}
+
+// Direct-to-storage upload, same convention as CreateFeedForms' feed_media — its own folder
+// under the shared public hmi-connect bucket since chat attachments are their own resource.
+// Falls back under avatars/ while storage policy is catching up, same reason feed_media does.
+async function uploadChatAttachment(file: File, userId: string | undefined): Promise<string> {
+  const extension = getExtension(file);
+  const fileName = `${Date.now()}-${randomId()}.${extension}`;
+  const primaryPath = `chat_media/${userId ?? "anonymous"}/${fileName}`;
+
+  try {
+    return await uploadPublicStorageFile(primaryPath, file);
+  } catch (error) {
+    if (!isStoragePolicyError(error)) throw error;
+
+    const fallbackPath = `avatars/chat_media/${userId ?? "anonymous"}/${fileName}`;
+    return uploadPublicStorageFile(fallbackPath, file);
+  }
 }
 
 interface MessageComposerProps {
@@ -48,6 +67,21 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showEmoji) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        emojiContainerRef.current &&
+        !emojiContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmoji(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showEmoji]);
 
   function resizeTextarea() {
     const el = textareaRef.current;
@@ -55,6 +89,13 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
   }
+
+  // Runs once on mount so the very first paint already matches one line of text height —
+  // otherwise the browser's own default `rows={1}` sizing can render a hair taller than a
+  // real single line, leaving the placeholder looking top-anchored instead of centered.
+  useEffect(() => {
+    resizeTextarea();
+  }, []);
 
   function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
     setText(event.target.value);
@@ -109,7 +150,13 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch (error) {
       console.error("[MessageComposer] send failed:", error);
-      toast.error("Gagal mengirim pesan. Coba lagi.");
+      if (isStoragePolicyError(error)) {
+        toast.error(
+          "Upload gambar ditolak Supabase. Izinkan folder chat_media di bucket hmi-connect."
+        );
+      } else {
+        toast.error("Gagal mengirim pesan. Coba lagi.");
+      }
     } finally {
       setSending(false);
     }
@@ -138,7 +185,7 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
       )}
 
       <div className="flex items-end gap-1.5">
-        <div className="relative">
+        <div className="relative" ref={emojiContainerRef}>
           <button
             type="button"
             onClick={() => setShowEmoji((prev) => !prev)}
@@ -179,7 +226,7 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
           className="hidden"
         />
 
-        <div className="flex-1 rounded-3xl border border-[#dbe3ef] bg-[#f5f7fb] px-4 py-2">
+        <div className="flex flex-1 items-center rounded-3xl border border-[#dbe3ef] bg-[#f5f7fb] px-4 py-2">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -187,7 +234,7 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder="Tulis pesan..."
-            className="max-h-[120px] w-full resize-none bg-transparent text-sm text-[#172033] outline-none placeholder:text-[#7b8190]"
+            className="block max-h-[120px] w-full resize-none bg-transparent text-sm leading-6 text-[#172033] outline-none placeholder:text-[#7b8190]"
           />
         </div>
 

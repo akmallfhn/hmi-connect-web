@@ -1,7 +1,7 @@
 "use client";
 
+import { CheckCheck } from "lucide-react";
 import type { ChatMessage } from "@/apis/chats";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
 
 // A short, emoji-only message renders large and bare, with no bubble background — same
 // convention as WhatsApp/iMessage/Instagram.
@@ -12,32 +12,25 @@ function isEmojiOnly(text: string): boolean {
   return EMOJI_ONLY_PATTERN.test(text.trim());
 }
 
+function formatClockTime(dateString: string): string {
+  return new Date(dateString).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 interface MessageBubbleProps {
   message: ChatMessage;
   isOwn: boolean;
-  showTimestampDivider: boolean;
-  statusLabel?: string;
   onOpenImage: (url: string) => void;
 }
 
-export default function MessageBubble({
-  message,
-  isOwn,
-  showTimestampDivider,
-  statusLabel,
-  onOpenImage,
-}: MessageBubbleProps) {
+export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBubbleProps) {
   const bare = Boolean(message.content) && isEmojiOnly(message.content) && !message.attachment_url;
 
   return (
     <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
-      {showTimestampDivider && (
-        <p className="mb-3 self-center text-xs font-medium text-[#9aa1ad]">
-          {formatRelativeTime(message.created_at)}
-        </p>
-      )}
-
-      <div className="relative max-w-[78%] sm:max-w-[65%]">
+      <div className="w-fit max-w-[min(75%,480px)]">
         {message.attachment_url && (
           <button
             type="button"
@@ -67,7 +60,17 @@ export default function MessageBubble({
         )}
       </div>
 
-      {statusLabel && <p className="mt-2 text-xs text-[#9aa1ad]">{statusLabel}</p>}
+      {/* WhatsApp-style meta row — clock time always, ticks only for messages the viewer sent:
+          double gray check = sent, double primary-colored check = read (no "delivered" state,
+          backend only tracks sent/read). */}
+      <div className="mt-1 flex items-center gap-1 px-1">
+        <span className="text-[11px] text-[#9aa1ad]">{formatClockTime(message.created_at)}</span>
+        {isOwn && (
+          <CheckCheck
+            className={`size-3.5 ${message.status === "read" ? "text-primary" : "text-[#9aa1ad]"}`}
+          />
+        )}
+      </div>
     </div>
   );
 }

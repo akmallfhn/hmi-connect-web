@@ -8,7 +8,6 @@ import Avatar from "../common/Avatar";
 import MessageBubble from "./MessageBubble";
 
 const GROUP_GAP_MINUTES = 5;
-const TIME_GAP_DIVIDER_MINUTES = 20;
 
 function dayLabel(dateString: string): string {
   const date = dayjs(dateString);
@@ -107,23 +106,12 @@ export default function MessageList({
           const isFirstInGroup = !(sameSenderAsPrevious && closeToPrevious);
 
           const showDayDivider = !previous || !dayjs(message.created_at).isSame(previous.created_at, "day");
-          const showTimeGapLabel =
-            !showDayDivider &&
-            isFirstInGroup &&
-            Boolean(previous) &&
-            dayjs(message.created_at).diff(previous?.created_at, "minute") >= TIME_GAP_DIVIDER_MINUTES;
 
           const sameSenderAsNext = Boolean(next) && next.sender_id === message.sender_id;
           const closeToNext =
             Boolean(next) && dayjs(next?.created_at).diff(message.created_at, "minute") < GROUP_GAP_MINUTES;
           const isLastInGroup = !(sameSenderAsNext && closeToNext);
           const showAvatar = !isOwn && isLastInGroup;
-
-          let statusLabel: string | undefined;
-          if (isOwn && index === messages.length - 1) {
-            if (message.status === "read") statusLabel = "Dibaca";
-            else if (message.status === "delivered") statusLabel = "Terkirim";
-          }
 
           return (
             <div key={message.id}>
@@ -133,21 +121,15 @@ export default function MessageList({
                 </p>
               )}
 
-              <div className={isFirstInGroup ? "mt-3" : "mt-0.5"}>
+              <div className={isFirstInGroup ? "mt-3" : "mt-1.5"}>
                 <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
                   {!isOwn && (
                     <div className="w-7 shrink-0">
                       {showAvatar && <Avatar src={personAvatar} name={personName} size={28} />}
                     </div>
                   )}
-                  <div className={isOwn ? "flex flex-1 justify-end" : "flex-1"}>
-                    <MessageBubble
-                      message={message}
-                      isOwn={isOwn}
-                      showTimestampDivider={showTimeGapLabel}
-                      statusLabel={statusLabel}
-                      onOpenImage={onOpenImage}
-                    />
+                  <div className="min-w-0 flex-1">
+                    <MessageBubble message={message} isOwn={isOwn} onOpenImage={onOpenImage} />
                   </div>
                 </div>
               </div>

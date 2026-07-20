@@ -18,16 +18,6 @@ interface ChatThreadPageProps {
   viewerId?: string;
 }
 
-function affiliationLabel(
-  chapterName?: string,
-  branchName?: string,
-  coordinatingBodyName?: string
-): string | undefined {
-  if (branchName) return `Cabang ${branchName}`;
-  if (coordinatingBodyName) return coordinatingBodyName;
-  return chapterName;
-}
-
 function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
   const byId = new Map(current.map((message) => [message.id, message]));
   for (const message of incoming) byId.set(message.id, message);
@@ -128,11 +118,6 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
         fullName={personName}
         username={conversation?.other_username}
         avatar={personAvatar}
-        affiliation={affiliationLabel(
-          conversation?.other_chapter_name,
-          conversation?.other_branch_name,
-          conversation?.other_coordinating_body_name
-        )}
       />
       <MessageList
         messages={messages}

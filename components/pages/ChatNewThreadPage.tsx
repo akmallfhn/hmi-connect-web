@@ -13,12 +13,6 @@ import { useChatConversations } from "../chats/ChatConversationsContext";
 import ChatThreadHeader from "../chats/ChatThreadHeader";
 import MessageComposer from "../chats/MessageComposer";
 
-function affiliationLabel(person: SearchPersonResult): string | undefined {
-  if (person.branch_name) return `Cabang ${person.branch_name}`;
-  if (person.coordinating_body_name) return person.coordinating_body_name;
-  return person.chapter_name;
-}
-
 interface ChatNewThreadPageProps {
   viewerId?: string;
 }
@@ -86,7 +80,6 @@ export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) 
         fullName={recipient.full_name}
         username={recipient.username}
         avatar={recipient.avatar}
-        affiliation={affiliationLabel(recipient)}
       />
 
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">

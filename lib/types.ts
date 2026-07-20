@@ -25,7 +25,7 @@ export type NotificationTypeEnum = "like" | "comment" | "comment_reply" | "follo
 export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | "user";
 export type SearchTypeEnum = "people" | "posting";
 export type RevelationPlaceEnum = "mekkah" | "madinah";
-export type MessageStatusEnum = "sent" | "delivered" | "read";
+export type MessageStatusEnum = "sent" | "read";
 
 export type StatusName =
   | "OK"
