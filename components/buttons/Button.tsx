@@ -5,6 +5,7 @@ import { ButtonHTMLAttributes, ForwardedRef, forwardRef } from "react";
 export type ButtonVariant =
   | "primary"
   | "secondary"
+  | "tertiary"
   | "light"
   | "dark"
   | "outline"
@@ -45,6 +46,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "bg-primary text-white hover:bg-[#128488] active:bg-primary-foreground",
       secondary:
         "bg-secondary text-white hover:bg-[#e6534b] active:bg-secondary-foreground",
+      tertiary: "bg-tertiary text-white hover:bg-[#023c4d] active:bg-[#023c4d]",
       light:
         "border border-[#e6e9ef] bg-white text-[#172033] hover:-translate-y-0.5 hover:bg-[#f5f7fb]",
       dark: "bg-[#202125] text-white hover:bg-[#2b2c31] active:bg-[#17181b]",

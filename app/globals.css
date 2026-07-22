@@ -13,6 +13,9 @@
   --secondary-soft: #ffe7e5;
   --secondary-foreground: #bf453e;
 
+  --tertiary: #02465b;
+  --tertiary-foreground: #012c39;
+
   --destructive: #e6392f;
   --destructive-soft: #fdeceb;
   --destructive-foreground: #b42318;
@@ -27,6 +30,8 @@
   --color-secondary: var(--secondary);
   --color-secondary-soft: var(--secondary-soft);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
   --color-destructive-foreground: var(--destructive-foreground);
