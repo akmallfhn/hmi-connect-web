@@ -20,7 +20,9 @@ function formatLongDate(value?: string) {
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-[#5f6573]">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-[#5f6573]">
+        {label}
+      </p>
       <p className="mt-0.5 text-sm font-semibold text-[#172033]">
         {value || "Belum tergabung"}
       </p>
@@ -38,7 +40,7 @@ export default function MembershipInfoCard({
   const validUntil = formatLongDate(subscriptionEndedAt);
 
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <div className="w-full rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
       <p className="text-sm font-bold text-[#172033]">Status Keanggotaan</p>
 
       <div className="mt-4 flex flex-col gap-4">
@@ -59,7 +61,10 @@ export default function MembershipInfoCard({
             </span>
             {validUntil && (
               <p className="mt-2 text-sm text-[#5f6573]">
-                Berlaku sampai <span className="font-semibold text-[#172033]">{validUntil}</span>
+                Berlaku sampai{" "}
+                <span className="font-semibold text-[#172033]">
+                  {validUntil}
+                </span>
               </p>
             )}
           </>

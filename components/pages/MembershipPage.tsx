@@ -48,7 +48,7 @@ export default function MembershipPage({
         </div>
 
         {membership?.member_card ? (
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
+          <div className="mt-6 flex flex-col items-center gap-6 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start">
             <MembershipCard
               fullName={membership.full_name}
               memberCard={membership.member_card}
