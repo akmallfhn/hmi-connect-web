@@ -5,12 +5,16 @@ import type { ConversationSummary } from "@/apis/chats";
 import { formatCompactTime } from "@/lib/formatCompactTime";
 import Avatar from "../common/Avatar";
 
-function previewText(conversation: ConversationSummary, viewerId: string | undefined): string {
+function previewText(
+  conversation: ConversationSummary,
+  viewerId: string | undefined
+): string {
   const hasContent = Boolean(conversation.last_message_content);
   const hasAttachment = Boolean(conversation.last_message_attachment_url);
   if (!hasContent && !hasAttachment) return "Mulai percakapan baru";
 
-  const prefix = conversation.last_message_sender_id === viewerId ? "Anda: " : "";
+  const prefix =
+    conversation.last_message_sender_id === viewerId ? "Anda: " : "";
   if (!hasContent && hasAttachment) return `${prefix}📷 Foto`;
   return `${prefix}${conversation.last_message_content}`;
 }
@@ -34,7 +38,11 @@ export default function ConversationListItem({
       href={`/chats/${conversation.id}`}
       className={[
         "flex items-center gap-3 px-4 py-3 transition",
-        active ? "bg-[#eef1f5]" : unread ? "bg-primary-soft/40 hover:bg-primary-soft/60" : "hover:bg-[#f5f7fb]",
+        active
+          ? "bg-[#eef1f5]"
+          : unread
+            ? "bg-primary-soft/40 hover:bg-primary-soft/60"
+            : "hover:bg-[#f5f7fb]",
       ].join(" ")}
     >
       <Avatar
@@ -49,7 +57,9 @@ export default function ConversationListItem({
           <p
             className={[
               "min-w-0 truncate text-sm",
-              unread ? "font-semibold text-[#172033]" : "font-medium text-[#172033]",
+              unread
+                ? "font-semibold text-[#172033]"
+                : "font-medium text-[#172033]",
             ].join(" ")}
           >
             {conversation.other_full_name}
@@ -73,7 +83,9 @@ export default function ConversationListItem({
         </p>
       </div>
 
-      {unread && !active && <span className="size-2.5 shrink-0 rounded-full bg-primary" />}
+      {unread && !active && (
+        <span className="size-2.5 shrink-0 rounded-full bg-primary" />
+      )}
     </Link>
   );
 }

@@ -108,12 +108,7 @@ export default function Header({
                 className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
               />
             </label>
-            <Button
-              type="submit"
-              variant="primary"
-              size="pillSm"
-              className="shrink-0"
-            >
+            <Button type="submit" size="pillSm" className="shrink-0">
               Cari
             </Button>
           </form>
