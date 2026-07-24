@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Force revalidation on www.example.com so a cookie-dependent response never gets served stale.
+  // Force revalidation on www.example.com/admin.example.com so a cookie-dependent response never gets served stale.
   async headers() {
     return [
       {
@@ -18,7 +18,8 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
+            value:
+              "((www|admin).(example.com)|hmi-connect-web\\.vercel\\.app).*",
           },
         ],
         headers: [
@@ -36,8 +37,30 @@ const nextConfig: NextConfig = {
       {
         source:
           "/:path((?!auth/login|api/auth/callback/google|profile/.*|feeds/.*|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
+        has: [
+          {
+            type: "header",
+            key: "host",
+            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
+          },
+        ],
         missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
         destination: "/auth/login",
+        permanent: false,
+      },
+      // No session cookie on the admin subdomain -> bounce out to the main site's login page.
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "header",
+            key: "host",
+            value: "admin.(example.com).*",
+          },
+        ],
+        missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
+        destination: "https://www.example.com/auth/login",
+        basePath: false,
         permanent: false,
       },
       // Already signed in -> don't show the login page again.
@@ -58,14 +81,26 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      // Hide the internal "/www" route group from direct access.
+      // Hide the internal "/www" and "/admin" route groups from direct access.
       beforeFiles: [
         {
-          source: "/www",
+          source: "/(www|admin)",
           destination: "/_not-found/page",
         },
       ],
       afterFiles: [
+        // admin.example.com -> the /admin route group.
+        {
+          source: "/:path*",
+          has: [
+            {
+              type: "header",
+              key: "host",
+              value: "admin.(example.com).*",
+            },
+          ],
+          destination: "/admin/:path*",
+        },
         // Everything else falls through into the /www route group.
         {
           source: "/:path*",

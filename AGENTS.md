@@ -46,6 +46,22 @@ holds the cookie-based redirect rules (no session → `/auth/login`, has session
 show login again). This is why almost every route lives under `app/(www)/www/...` even
 though the URLs you actually visit don't show `/www`.
 
+`admin.(example.com)` is rewritten into `/admin` the same way (see `app/(admin)/admin/`),
+mirroring the sibling `sevenpreneur` project's subdomain-per-app-area pattern — `/admin`
+is likewise hidden from direct access. Since it's a separate subdomain rather than a path
+under `/www`, a logged-out request there can't just relative-redirect to `/auth/login`
+(that path doesn't exist under `/admin`); `next.config.mts` sends it to an absolute
+`https://www.example.com/auth/login` instead, same as sevenpreneur's admin redirect.
+`app/(admin)/admin/layout.tsx` re-checks the session (defense-in-depth, since the
+subdomain-based host match in `next.config.mts` can't be exercised in local dev without
+real DNS/hosts-file setup) and gates on `SessionUser.role_name` — anything other than the
+default member role (currently a single literal check against `"General User"`, the same
+default role name sevenpreneur's backend uses; there's no fixed role_name union in
+`lib/types.ts` yet because this backend hasn't published its full role list) renders an
+inline "Akses ditolak" state instead of the admin UI. The route group itself is currently
+just that gated shell plus a placeholder dashboard page — no real admin features have
+been built yet.
+
 ## Auth & session flow
 
 - Session cookie name: **`SESSION_COOKIE_NAME`** lives in **`lib/constants.ts`** and
