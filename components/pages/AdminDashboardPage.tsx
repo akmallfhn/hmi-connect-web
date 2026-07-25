@@ -1,22 +1,17 @@
+import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Building2,
-  GraduationCap,
-  Network,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { SessionUser } from "@/apis/session";
+import { getMainSiteOrigin } from "@/lib/constants";
+import PageMargin from "../common/PageMargin";
+import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import AdminUserMenu from "../buttons/AdminUserMenu";
 
 type MenuItem = {
   title: string;
   description: string;
   href: string;
-  icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
-  featured?: boolean;
+  illustration: string;
   visible: (isSuperAdmin: boolean, user: SessionUser | null) => boolean;
 };
 
@@ -25,9 +20,8 @@ const MENU_ITEMS: MenuItem[] = [
     title: "Kelola Cabang",
     description: "Kelola data dan status Cabang HMI di seluruh wilayah.",
     href: "/branches",
-    icon: Building2,
-    iconBg: "bg-primary-soft",
-    iconColor: "text-primary",
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_27_53%20PM.webp",
     visible: (isSuperAdmin, user) =>
       isSuperAdmin || Boolean(user?.can_manage_branch),
   },
@@ -35,9 +29,8 @@ const MENU_ITEMS: MenuItem[] = [
     title: "Kelola Komisariat",
     description: "Kelola data Komisariat di bawah naungan tiap Cabang.",
     href: "/chapters",
-    icon: GraduationCap,
-    iconBg: "bg-tertiary/10",
-    iconColor: "text-tertiary",
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_00%20PM.webp",
     visible: (isSuperAdmin, user) =>
       isSuperAdmin || Boolean(user?.can_manage_chapter),
   },
@@ -45,9 +38,8 @@ const MENU_ITEMS: MenuItem[] = [
     title: "Kelola Badko",
     description: "Kelola data Badan Koordinasi (Badko) tingkat wilayah.",
     href: "/coordinating-bodies",
-    icon: Network,
-    iconBg: "bg-secondary-soft",
-    iconColor: "text-secondary",
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_11%20PM.webp",
     visible: (isSuperAdmin, user) =>
       isSuperAdmin || Boolean(user?.can_manage_coordinating_body),
   },
@@ -55,10 +47,8 @@ const MENU_ITEMS: MenuItem[] = [
     title: "Dashboard Super Admin",
     description: "Akses penuh ke seluruh pengaturan dan data platform.",
     href: "/master",
-    icon: ShieldCheck,
-    iconBg: "bg-white/10",
-    iconColor: "text-white",
-    featured: true,
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_29_46%20PM.webp",
     visible: (isSuperAdmin) => isSuperAdmin,
   },
 ];
@@ -72,62 +62,61 @@ export default function AdminDashboardPage({ user }: AdminDashboardPageProps) {
   const menuItems = MENU_ITEMS.filter((item) =>
     item.visible(isSuperAdmin, user)
   );
+  const firstName = user?.full_name?.split(" ")[0] ?? "Admin";
+  const mainSiteOrigin = getMainSiteOrigin();
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] px-6 py-10">
-      <h1 className="text-2xl font-bold text-[#172033]">Admin Dashboard</h1>
-      <p className="mt-1 text-sm text-[#5f6573]">
-        Selamat datang, {user?.full_name ?? "Admin"}.
-      </p>
-
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {menuItems.map(
-          ({
-            title,
-            description,
-            href,
-            icon: Icon,
-            iconBg,
-            iconColor,
-            featured,
-          }) => (
+    <div className="min-h-screen bg-[#f5f7fb] pb-16">
+      <PageMargin className="py-8 lg:py-12">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+              Selamat datang, {firstName} 👋
+            </h1>
+            <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
+              Kelola data dan pengaturan HMI dengan mudah dan efisien.
+            </p>
+          </div>
+          <AdminUserMenu
+            fullName={user?.full_name}
+            avatar={user?.avatar}
+            roleName={user?.role_name}
+            mainSiteOrigin={mainSiteOrigin}
+          />
+        </div>
+        <div className="mt-6">
+          <AdminDashboardBanner />
+        </div>
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {menuItems.map(({ title, description, href, illustration }) => (
             <Link
               key={href}
               href={href}
-              className={[
-                "group flex flex-col justify-between rounded-2xl p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-                featured
-                  ? "bg-[#172033] hover:bg-[#1d2740]"
-                  : "border border-[#e6e9ef] bg-white",
-              ].join(" ")}
+              className="group flex flex-col rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div>
-                <div
-                  className={`flex size-11 items-center justify-center rounded-xl ${iconBg} ${iconColor}`}
-                >
-                  <Icon className="size-5" />
-                </div>
-                <p
-                  className={`mt-4 text-base font-bold ${featured ? "text-white" : "text-[#172033]"}`}
-                >
-                  {title}
-                </p>
-                <p
-                  className={`mt-1.5 text-sm ${featured ? "text-white/70" : "text-[#5f6573]"}`}
-                >
-                  {description}
-                </p>
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white">
+                <Image
+                  src={illustration}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-contain"
+                />
               </div>
-              <div
-                className={`mt-5 flex items-center gap-1 text-sm font-semibold ${featured ? "text-white" : "text-primary"}`}
-              >
+
+              <div className="mt-4 flex-1">
+                <p className="font-bold text-[#172033]">{title}</p>
+                <p className="mt-1.5 text-sm text-[#5f6573]">{description}</p>
+              </div>
+
+              <div className="mt-4 flex items-center gap-1 border-t border-[#e6e9ef] pt-4 text-sm font-semibold text-secondary">
                 Buka
                 <ArrowRight className="size-4 transition group-hover:translate-x-1" />
               </div>
             </Link>
-          )
-        )}
-      </div>
+          ))}
+        </div>
+      </PageMargin>
     </div>
   );
 }
