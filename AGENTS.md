@@ -59,17 +59,29 @@ which has genuinely distinct prod/staging/local domains so rule order there does
 this repo reuses the one placeholder `example.com` domain for all of them, so the `:3000`
 rule **must** come first in the `redirects()` array — otherwise the broader prod pattern
 (`admin.(example.com).*`) would match the local host too and the port-specific rule would
-never be reached. `app/(admin)/admin/layout.tsx` mirrors the same admin→www host swap via
-`lib/constants.ts#getMainSiteOrigin` (reads the request host from `next/headers`, so it
-stays port-correct dynamically without needing its own hardcoded local/prod split) for its
-own defense-in-depth session re-check and its "Akses ditolak" back-link. It also gates on
-`SessionUser.role_name` — anything
-other than the default member role (currently a single literal check against
-`"General User"`, the same default role name sevenpreneur's backend uses; there's no fixed
-role_name union in `lib/types.ts` yet because this backend hasn't published its full role
-list) renders that inline "Akses ditolak" state instead of the admin UI. The route group
-itself is currently just that gated shell plus a placeholder dashboard page — no real
-admin features have been built yet.
+never be reached. `app/(admin)/admin/layout.tsx` gets the main site's origin via
+`lib/constants.ts#getMainSiteOrigin`, a static per-environment switch driven by `DOMAIN_MODE`
+(same convention as `getSessionCookieDomain`) — `"local"` returns `https://www.example.com:3000`,
+anything else returns `https://hmi-connect-web.vercel.app` (swap for the real domain once one
+is live in production) — for its own defense-in-depth session re-check, its `/auth/login`
+bounce when there's no session, and the "Akses Ditolak" back-link (via
+`<PageState variant="forbidden">`, see `components/states/PageState.tsx` below). Access itself
+is gated on `SessionUser.role_name === "Super Admin"` (note the space — matches the backend's
+`RoleNameSuperAdmin` constant in `internal/shared/entity/role.go`, not the `SuperAdmin` you'd
+guess from camelCase) or any of `can_manage_branch`/`can_manage_chapter`/
+`can_manage_coordinating_body` being true (mirrors the backend's `check-session` response, see
+`internal/auth/README.md` in the `ordina` backend repo) — there's no fixed `role_name` union in
+`lib/types.ts` yet because this backend hasn't published its full role list. The backend also
+has a broader `"Administrator"` role (see `AUTH.md` in `ordina`) that most other admin write
+endpoints accept alongside `Super Admin`, but this app's admin gate/dashboard don't special-case
+it yet — an `Administrator` account currently only sees what its own `can_manage_*` flags allow,
+same as a plain member. Anyone failing the gate check renders `PageState` instead of the
+admin UI. `app/(admin)/admin/page.tsx` delegates straight to
+`components/pages/AdminDashboardPage.tsx`, which filters its menu cards by that same
+`isSuperAdmin`/`can_manage_*` split — a `Super Admin` sees every card (including the
+"Dashboard Super Admin" card, which is otherwise hidden), everyone else only sees the cards for
+whichever of Cabang/Komisariat/Badko they can manage. The route group's actual admin features
+(`/branches`, `/chapters`, `/coordinating-bodies`, `/master`) don't have pages built yet.
 
 ## Auth & session flow
 
@@ -863,6 +875,15 @@ below) when `isVerified === false`.
   layout to own a file in.
 - `components/svg/*` — brand logo components (`LogoHmi`, `LogoHmiConnect`,
   `LogoSilaturahmi`).
+- `components/states/PageState.tsx` — single full-page 403/404 state component, `variant:
+  "forbidden" | "not_found"` picks title/message/illustration, plus optional `backHref`/
+  `message` overrides. `app/not-found.tsx` renders `variant="not_found"` for the framework's
+  built-in 404 convention; `app/(admin)/admin/layout.tsx`'s access gate renders
+  `variant="forbidden"` (see Domain routing above).
+- `components/illustrations/*` — `ForbiddenIllustration`/`NotFoundIllustration`, the same
+  illustration artwork the sibling `sevenpreneur` project uses for its own 403/404 states,
+  hand-converted from SVG to inline JSX (not hotlinked to their Supabase bucket) so `PageState`
+  can size them via a plain `className` instead of a `next/image` + `public/` file.
 
 ## Ground rules
 

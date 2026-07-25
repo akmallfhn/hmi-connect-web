@@ -49,7 +49,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col scroll-smooth">
         <ScrollToTop />
         <GoogleOAuthProvider clientId={googleOauthId!}>
-          {children}
+          <div className="font-google-sans flex min-h-full flex-1 flex-col">
+            {children}
+          </div>
         </GoogleOAuthProvider>
         <Toaster richColors position="top-center" />
       </body>

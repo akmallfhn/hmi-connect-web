@@ -47,5 +47,5 @@ export const metadata: Metadata = {
 };
 
 export default function WwwLayout({ children }: { children: ReactNode }) {
-  return <div className="font-google-sans">{children}</div>;
+  return <>{children}</>;
 }

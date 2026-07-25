@@ -12,8 +12,13 @@ export type SessionUser = {
   organization_name?: string;
   coordinating_body_id?: string;
   coordinating_body_name?: string;
+  can_manage_coordinating_body?: boolean;
   branch_id?: string;
   branch_name?: string;
+  can_manage_branch?: boolean;
+  chapter_id?: string;
+  chapter_name?: string;
+  can_manage_chapter?: boolean;
   full_name?: string;
   username?: string;
   avatar?: string;

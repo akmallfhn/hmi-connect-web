@@ -7,6 +7,13 @@ export function getSessionCookieDomain(): string | undefined {
     : "hmi-connect-web.vercel.app";
 }
 
+// Main site origin per DOMAIN_MODE — swap the vercel.app default once a real domain is live.
+export function getMainSiteOrigin(): string {
+  return process.env.DOMAIN_MODE === "local"
+    ? "https://www.example.com:3000"
+    : "https://hmi-connect-web.vercel.app";
+}
+
 // sessionStorage key + window event name the bottom navbar's compose button uses to open the composer after navigating.
 export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 
