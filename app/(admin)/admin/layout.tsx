@@ -1,7 +1,7 @@
+import { getSession } from "@/apis/session";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { getSession } from "@/apis/session";
 
 // Mirrors sevenpreneur's admin gating; no role_name union in lib/types.ts yet since the backend hasn't published its full role list.
 const DEFAULT_MEMBER_ROLE_NAME = "General User";
@@ -14,7 +14,7 @@ export default async function AdminLayout({
   const { sessionToken, user } = await getSession();
 
   // next.config.mts already bounces logged-out admin-subdomain requests to login before this layout runs.
-  if (!sessionToken) redirect("https://www.example.com/auth/login");
+  if (!sessionToken) redirect("/auth/login");
 
   if (!user?.role_name || user.role_name === DEFAULT_MEMBER_ROLE_NAME) {
     return (
@@ -24,7 +24,7 @@ export default async function AdminLayout({
           Akun ini tidak memiliki akses ke panel admin.
         </p>
         <Link
-          href="https://www.example.com"
+          href={"/"}
           className="mt-2 text-sm font-semibold text-primary hover:underline"
         >
           Kembali ke HMI Connect

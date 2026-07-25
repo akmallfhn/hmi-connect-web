@@ -32,6 +32,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | Variable | Used by | Notes |
 |---|---|---|
 | `BASE_URL` | `apis/api.ts` | Base URL of the Go backend all `callApi()` calls hit. |
+| `DOMAIN_MODE` | `lib/constants.ts#getSessionCookieDomain` | `"local"` → session cookie domain `example.com`; anything else → `hmi-connect-web.vercel.app` (update once a real domain is live). Set to `local` in local `.env`. |
 | `CLIENT_SECRET` | `app/.../api/auth/callback/google/route.ts` | Bearer secret for the backend's `/api/v1/auth/login` exchange. |
 | `ORGANIZATION_ID` | `apis/branches.ts` | Scopes branch lookups to this org. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. |
@@ -50,17 +51,25 @@ though the URLs you actually visit don't show `/www`.
 mirroring the sibling `sevenpreneur` project's subdomain-per-app-area pattern — `/admin`
 is likewise hidden from direct access. Since it's a separate subdomain rather than a path
 under `/www`, a logged-out request there can't just relative-redirect to `/auth/login`
-(that path doesn't exist under `/admin`); `next.config.mts` sends it to an absolute
-`https://www.example.com/auth/login` instead, same as sevenpreneur's admin redirect.
-`app/(admin)/admin/layout.tsx` re-checks the session (defense-in-depth, since the
-subdomain-based host match in `next.config.mts` can't be exercised in local dev without
-real DNS/hosts-file setup) and gates on `SessionUser.role_name` — anything other than the
-default member role (currently a single literal check against `"General User"`, the same
-default role name sevenpreneur's backend uses; there's no fixed role_name union in
-`lib/types.ts` yet because this backend hasn't published its full role list) renders an
-inline "Akses ditolak" state instead of the admin UI. The route group itself is currently
-just that gated shell plus a placeholder dashboard page — no real admin features have
-been built yet.
+(that path doesn't exist under `/admin`); `next.config.mts`'s admin redirect instead sends
+it to an absolute `https://www.example.com/auth/login`, same as sevenpreneur's own admin
+redirect — including sevenpreneur's two-rule split for local dev (`next.config.mjs` has one
+rule for the prod host, one hardcoding `:3000` for `example.com:3000`). Unlike sevenpreneur,
+which has genuinely distinct prod/staging/local domains so rule order there doesn't matter,
+this repo reuses the one placeholder `example.com` domain for all of them, so the `:3000`
+rule **must** come first in the `redirects()` array — otherwise the broader prod pattern
+(`admin.(example.com).*`) would match the local host too and the port-specific rule would
+never be reached. `app/(admin)/admin/layout.tsx` mirrors the same admin→www host swap via
+`lib/constants.ts#getMainSiteOrigin` (reads the request host from `next/headers`, so it
+stays port-correct dynamically without needing its own hardcoded local/prod split) for its
+own defense-in-depth session re-check and its "Akses ditolak" back-link. It also gates on
+`SessionUser.role_name` — anything
+other than the default member role (currently a single literal check against
+`"General User"`, the same default role name sevenpreneur's backend uses; there's no fixed
+role_name union in `lib/types.ts` yet because this backend hasn't published its full role
+list) renders that inline "Akses ditolak" state instead of the admin UI. The route group
+itself is currently just that gated shell plus a placeholder dashboard page — no real
+admin features have been built yet.
 
 ## Auth & session flow
 
@@ -69,8 +78,19 @@ been built yet.
   `next.config.mts`) imports it from there. Do not re-declare or hardcode the literal
   string anywhere else.
 - `POST /www/api/auth/callback/google` exchanges a Google access token for the backend's
-  session token (via `CLIENT_SECRET`) and sets the cookie.
-- `GET /www/api/auth/clear-session` deletes the cookie (logout).
+  session token (via `CLIENT_SECRET`) and sets the cookie. It's set via
+  `lib/constants.ts#getSessionCookieDomain()`, which — same convention as sevenpreneur's
+  callback route — is a static per-environment switch driven by `DOMAIN_MODE`, not the
+  request host: `DOMAIN_MODE=local` returns the bare `"example.com"` (no leading dot), so
+  the cookie is shared between `www.` and `admin.` locally; anything else returns
+  `"hmi-connect-web.vercel.app"` (swap this for the real domain once one is live in
+  production — Vercel preview deployments, which each get their own `hmi-connect-web-*
+  .vercel.app` host, are a known gap here: the browser rejects a `Domain` that doesn't
+  match/superdomain the actual host, so login silently doesn't persist on preview URLs).
+  Any code that deletes this cookie must call the same helper (no arguments needed) or the
+  browser won't match it — see `logoutUser()` in `apis/session.ts` and
+  `GET /www/api/auth/clear-session` below.
+- `GET /www/api/auth/clear-session` deletes the cookie (logout), domain-aware as above.
 - `apis/session.ts#getSession()` (wrapped in React's `cache()`, per-request only — not a
   cross-request cache) reads the cookie, calls the backend's `/api/v1/auth/check-session`,
   and returns `{ sessionToken, user }`. `SessionUser.status` is the source of truth for

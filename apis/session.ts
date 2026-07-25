@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
 import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
 
 export type SessionUser = {
   id?: string;
@@ -60,7 +60,11 @@ export async function logoutUser(): Promise<ApiEnvelope> {
       })
     : { status: "OK" as const, message: "Already logged out" };
 
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  const cookieDomain = getSessionCookieDomain();
+  cookieStore.delete({
+    name: SESSION_COOKIE_NAME,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  });
 
   return result;
 }

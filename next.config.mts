@@ -48,18 +48,18 @@ const nextConfig: NextConfig = {
         destination: "/auth/login",
         permanent: false,
       },
-      // No session cookie on the admin subdomain -> bounce out to the main site's login page.
+      // No session cookie on the admin subdomain -> bounce to the main site's login.
       {
-        source: "/:path*",
+        source: "/(.*)",
         has: [
           {
             type: "header",
             key: "host",
-            value: "admin.(example.com).*",
+            value: "admin.(example.com):3000.*",
           },
         ],
         missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
-        destination: "https://www.example.com/auth/login",
+        destination: "https://www.example.com:3000/auth/login",
         basePath: false,
         permanent: false,
       },
