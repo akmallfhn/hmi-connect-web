@@ -10,7 +10,7 @@ import AdminUserMenu from "../buttons/AdminUserMenu";
 type MenuItem = {
   title: string;
   description: string;
-  href: string;
+  getHref: (user: SessionUser | null) => string;
   illustration: string;
   visible: (isSuperAdmin: boolean, user: SessionUser | null) => boolean;
 };
@@ -19,7 +19,8 @@ const MENU_ITEMS: MenuItem[] = [
   {
     title: "Kelola Cabang",
     description: "Kelola data dan status Cabang HMI di seluruh wilayah.",
-    href: "/branches",
+    getHref: (user) =>
+      user?.branch_id ? `/branches/${user.branch_id}` : "/branches",
     illustration:
       "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_27_53%20PM.webp",
     visible: (isSuperAdmin, user) =>
@@ -28,7 +29,8 @@ const MENU_ITEMS: MenuItem[] = [
   {
     title: "Kelola Komisariat",
     description: "Kelola data Komisariat di bawah naungan tiap Cabang.",
-    href: "/chapters",
+    getHref: (user) =>
+      user?.chapter_id ? `/chapters/${user.chapter_id}` : "/chapters",
     illustration:
       "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_00%20PM.webp",
     visible: (isSuperAdmin, user) =>
@@ -37,7 +39,10 @@ const MENU_ITEMS: MenuItem[] = [
   {
     title: "Kelola Badko",
     description: "Kelola data Badan Koordinasi (Badko) tingkat wilayah.",
-    href: "/coordinating-bodies",
+    getHref: (user) =>
+      user?.coordinating_body_id
+        ? `/coordinating-bodies/${user.coordinating_body_id}`
+        : "/coordinating-bodies",
     illustration:
       "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_11%20PM.webp",
     visible: (isSuperAdmin, user) =>
@@ -46,18 +51,18 @@ const MENU_ITEMS: MenuItem[] = [
   {
     title: "Dashboard Super Admin",
     description: "Akses penuh ke seluruh pengaturan dan data platform.",
-    href: "/master",
+    getHref: () => "/master",
     illustration:
       "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_29_46%20PM.webp",
     visible: (isSuperAdmin) => isSuperAdmin,
   },
 ];
 
-interface AdminDashboardPageProps {
+interface AdminIndexPageProps {
   user: SessionUser | null;
 }
 
-export default function AdminDashboardPage({ user }: AdminDashboardPageProps) {
+export default function AdminIndexPage({ user }: AdminIndexPageProps) {
   const isSuperAdmin = user?.role_name === "Super Admin";
   const menuItems = MENU_ITEMS.filter((item) =>
     item.visible(isSuperAdmin, user)
@@ -88,10 +93,10 @@ export default function AdminDashboardPage({ user }: AdminDashboardPageProps) {
           <AdminDashboardBanner />
         </div>
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {menuItems.map(({ title, description, href, illustration }) => (
+          {menuItems.map(({ title, description, getHref, illustration }) => (
             <Link
-              key={href}
-              href={href}
+              key={title}
+              href={getHref(user)}
               className="group flex flex-col rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-white">

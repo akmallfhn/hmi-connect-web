@@ -77,11 +77,19 @@ endpoints accept alongside `Super Admin`, but this app's admin gate/dashboard do
 it yet — an `Administrator` account currently only sees what its own `can_manage_*` flags allow,
 same as a plain member. Anyone failing the gate check renders `PageState` instead of the
 admin UI. `app/(admin)/admin/page.tsx` delegates straight to
-`components/pages/AdminDashboardPage.tsx`, which filters its menu cards by that same
+`components/pages/AdminIndexPage.tsx`, which filters its menu cards by that same
 `isSuperAdmin`/`can_manage_*` split — a `Super Admin` sees every card (including the
 "Dashboard Super Admin" card, which is otherwise hidden), everyone else only sees the cards for
-whichever of Cabang/Komisariat/Badko they can manage. The route group's actual admin features
-(`/branches`, `/chapters`, `/coordinating-bodies`, `/master`) don't have pages built yet.
+whichever of Cabang/Komisariat/Badko they can manage. Each of those three cards links straight
+to the viewer's own entity — `/branches/{user.branch_id}`, `/chapters/{user.chapter_id}`,
+`/coordinating-bodies/{user.coordinating_body_id}` — falling back to the bare (pageless) list
+route if that id is missing (a `Super Admin` isn't necessarily affiliated with one), not to a
+picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin` or
+`can_manage_*` **and** the id matches the viewer's own) rather than trusting the outer
+`/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
+*this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
+`[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
+real dashboard (see Component conventions below).
 
 ## Auth & session flow
 

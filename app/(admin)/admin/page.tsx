@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
-import AdminDashboardPage from "@/components/pages/AdminDashboardPage";
+import AdminIndexPage from "@/components/pages/AdminIndexPage";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   const { user } = await getSession();
-  return <AdminDashboardPage user={user} />;
+  return <AdminIndexPage user={user} />;
 }
