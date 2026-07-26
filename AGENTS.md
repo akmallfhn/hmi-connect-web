@@ -129,7 +129,11 @@ Three layers, each with one job. Don't blend them.
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
-   by source), plus the shared `api.ts`).
+   by source), `stat.ts` (the `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
+   backing `/master`'s dashboard — summary totals, branch distribution, user growth,
+   membership/branch/coordinating-body status breakdowns; every function reads the session
+   cookie itself and returns `null` on a non-success status rather than throwing, since the
+   dashboard renders each widget's own empty state), plus the shared `api.ts`).
    Marked `import "server-only"`.
    Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
