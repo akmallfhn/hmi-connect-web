@@ -184,6 +184,8 @@ export default function CreateableSelect({
             placeholder={placeholder}
             loadingMessage={() => "Mencari..."}
             noOptionsMessage={() => noOptionsMessage}
+            menuPlacement="auto"
+            maxMenuHeight={160}
             menuPortalTarget={
               typeof document !== "undefined" ? document.body : undefined
             }
@@ -244,7 +246,7 @@ export default function CreateableSelect({
               menuPortal: () => "z-[110]",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
-              menuList: () => "max-h-60 overflow-y-auto p-1",
+              menuList: () => "max-h-40 overflow-y-auto p-1",
               option: ({ isFocused }) =>
                 `cursor-pointer rounded-md px-3 py-2 text-base ${
                   isFocused ? "bg-primary-soft text-primary" : "text-[#172033]"

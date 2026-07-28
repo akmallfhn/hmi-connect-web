@@ -264,7 +264,18 @@ below) when `isVerified === false`.
   lower menu z-index would paint the dropdown behind the modal panel, making it look like the menu
   never opens at all when either select is used inside a `Modal`-based form (as the admin user
   edit/create forms do for branch/chapter and province/city/district). Bump this again if a future
-  overlay ever needs to sit above `Modal` itself.
+  overlay ever needs to sit above `Modal` itself. Both also set `menuPlacement="auto"` — react-select
+  defaults to always opening downward regardless of available space, which visibly overflows past
+  a `Modal` panel's own edge (or the page's bottom) when the field sits near the bottom of a short
+  form; `"auto"` lets it flip the menu upward when there isn't enough room below. `menuList` is
+  capped at `max-h-40` (not the unstyled default) partly for that same reason — a shorter list
+  keeps the upward-flipped case from looming too tall over the field above it. That class alone
+  isn't enough, though — react-select applies its own `maxMenuHeight` (300px default) as an
+  inline style regardless of `unstyled`, which wins over any Tailwind class on `menuList`, so
+  both selects also pass `maxMenuHeight={160}` explicitly to match `max-h-40`. `SearchableSelect`
+  takes an optional `menuPlacement` prop (default `"auto"`) to opt a specific field back into
+  always-downward — `AdminEditUserOrganizationForm`'s Cabang/Komisariat pair sets `"bottom"` since
+  flipping upward read as disorienting for a cascading pair the user reads top-to-bottom.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite

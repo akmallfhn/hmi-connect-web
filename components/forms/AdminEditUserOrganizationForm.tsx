@@ -139,6 +139,7 @@ function OrganizationFields({
         }}
         loadOptions={loadBranchOptions}
         defaultOptions={branchDefaultOptions}
+        menuPlacement="bottom"
         required
       />
       <SearchableSelect
@@ -150,6 +151,7 @@ function OrganizationFields({
         onChange={setChapter}
         loadOptions={loadChapterOptions}
         disabled={!branch}
+        menuPlacement="bottom"
         required
       />
 

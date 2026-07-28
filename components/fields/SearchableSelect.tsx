@@ -12,6 +12,7 @@ import {
 import ReactSelect, {
   components as SelectComponents,
   type MenuListProps,
+  type MenuPlacement,
 } from "react-select";
 
 export interface SearchableOption {
@@ -57,6 +58,7 @@ interface SearchableSelectProps {
   required?: boolean;
   disabled?: boolean;
   noOptionsMessage?: string;
+  menuPlacement?: MenuPlacement;
 }
 
 export default function SearchableSelect({
@@ -72,6 +74,7 @@ export default function SearchableSelect({
   required,
   disabled,
   noOptionsMessage = "Tidak ditemukan.",
+  menuPlacement = "auto",
 }: SearchableSelectProps) {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<SearchableOption[]>(defaultOptions);
@@ -168,6 +171,8 @@ export default function SearchableSelect({
             placeholder={placeholder}
             loadingMessage={() => "Mencari..."}
             noOptionsMessage={() => noOptionsMessage}
+            menuPlacement={menuPlacement}
+            maxMenuHeight={160}
             menuPortalTarget={
               typeof document !== "undefined" ? document.body : undefined
             }
@@ -197,7 +202,7 @@ export default function SearchableSelect({
               menuPortal: () => "z-[110]",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
-              menuList: () => "max-h-60 overflow-y-auto p-1",
+              menuList: () => "max-h-40 overflow-y-auto p-1",
               option: ({ isFocused }) =>
                 `cursor-pointer rounded-md px-3 py-2 text-base ${
                   isFocused ? "bg-primary-soft text-primary" : "text-[#172033]"
