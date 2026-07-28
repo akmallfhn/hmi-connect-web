@@ -90,8 +90,8 @@ picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin`
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
 `[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
 real dashboard, `/master/users` has the real User Management CRUD panel, and `/master/branches`
-has the real Cabang CRUD panel (see Component conventions below). `/master/chapters` and
-`/master/coordinating-bodies` are still `MasterPlaceholderPage`.
+and `/master/chapters` have the real Cabang/Komisariat CRUD panels (see Component conventions
+below). `/master/coordinating-bodies` is still `MasterPlaceholderPage`.
 
 ## Auth & session flow
 
@@ -995,7 +995,9 @@ below) when `isVerified === false`.
   is the Cabang CRUD panel — same server-first list/search/status-filter/pagination shape as
   `/master/users`, backed by `apis/branches.ts#listBranchesAdmin` (`branches/list` with
   `include_aggregates: true`, scoped by `ORGANIZATION_ID`) — the list table itself shows Nama Cabang
-  (with the Badko name as a subtitle underneath, not its own column), Tipe, Jumlah Kader
+  (with the Badko name as a subtitle underneath, not its own column), Tipe (rendered as a `Label`
+  pill too — blue "Status: Penuh"/yellow "Status: Persiapan", inline in the page rather than its
+  own file in `components/labels/`, per the one-off-vs-shared rule below), Jumlah Kader
   (`user_count`, only populated when `include_aggregates` is requested), and Status. Unlike User
   Management, create/edit here don't get their own route or a centered `Modal` — the whole point of
   asking for this one to use a sheet was a lighter-weight CRUD panel, so
@@ -1016,6 +1018,24 @@ below) when `isVerified === false`.
   (list/detail/create/update/delete, mirroring branches/chapters) but only `list` is wired up on
   this side so far — there's no Badko admin panel yet, this was added specifically to unblock the
   Cabang form's picker.
+- `/master/chapters` (`app/(admin)/admin/master/chapters/page.tsx` → `components/pages/AdminChapterListPage.tsx`)
+  is the Komisariat CRUD panel, same shape as `/master/branches` but forced into an extra step by
+  the backend: `chapters/list` requires a `branch_id` (there's no organization-wide chapter list,
+  unlike `branches/list`'s `organization_id` scoping), so the page's own filter row leads with a
+  required Cabang `SearchableSelect` (backed by the existing `apis/branches.ts#searchBranches`
+  through the same `app/(admin)/admin/api/branches/search/route.ts` the Cabang form already uses)
+  that drives a `branch_id` URL param — until one is picked, the page renders a "Pilih Cabang
+  terlebih dahulu" empty state instead of a table, and the search/status filters and "Tambah
+  Komisariat" button are hidden entirely (there's no chapter to create/filter without a branch to
+  put it in). `chapters/list` also doesn't return a `branch_name` per row the way `branches/list`
+  returns `coordinating_body_name` — moot here, since every row in the table already belongs to
+  the one selected branch, so the table has no branch column/subtitle at all. `apis/chapters.ts`
+  gained the same `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin
+  surface `branches.ts` has (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/
+  `BranchDetail`), and `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx`
+  field-for-field with Cabang standing in for Badko — seeded from the list page's own selected
+  `branch_id`/name (passed down as `defaultBranch`) for both create and edit, since a chapter's
+  branch is always the one currently filtered on, not fetched per-row.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

@@ -9,6 +9,13 @@ import {
   type UpdateBranchPayload,
 } from "@/apis/branches";
 import {
+  createChapter as createChapterApi,
+  deleteChapter as deleteChapterApi,
+  updateChapter as updateChapterApi,
+  type CreateChapterPayload,
+  type UpdateChapterPayload,
+} from "@/apis/chapters";
+import {
   createInstitution as createInstitutionApi,
   type Institution,
 } from "@/apis/institutions";
@@ -133,6 +140,18 @@ export async function updateBranch(payload: UpdateBranchPayload) {
 
 export async function deleteBranch(id: string) {
   return deleteBranchApi(id);
+}
+
+export async function createChapter(payload: CreateChapterPayload) {
+  return createChapterApi(payload);
+}
+
+export async function updateChapter(payload: UpdateChapterPayload) {
+  return updateChapterApi(payload);
+}
+
+export async function deleteChapter(id: string) {
+  return deleteChapterApi(id);
 }
 
 export async function followUser(userId: string) {

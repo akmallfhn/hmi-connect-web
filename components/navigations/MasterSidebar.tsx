@@ -31,9 +31,9 @@ const SIDEBAR_COLLAPSED_KEY = "master_sidebar_collapsed";
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/master", icon: LayoutDashboard, exact: true },
   { label: "User Management", href: "/master/users", icon: Users },
-  { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
-  { label: "Cabang", href: "/master/branches", icon: Building2 },
   { label: "Badko", href: "/master/coordinating-bodies", icon: Network },
+  { label: "Cabang", href: "/master/branches", icon: Building2 },
+  { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
 ];
 
 function NavList({
