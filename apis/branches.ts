@@ -83,6 +83,7 @@ export type BranchListEntry = {
 };
 
 export type ListBranchesOptions = {
+  coordinatingBodyId?: string;
   search?: string;
   status?: StatusEnum;
   page?: number;
@@ -114,13 +115,14 @@ export async function listBranchesAdmin(
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { search, status, page, pageSize } = options;
+  const { coordinatingBodyId, search, status, page, pageSize } = options;
   const result = await callApi<BranchListAdminResponse>("/api/v1/branches/list", {
     method: "POST",
     token: sessionToken,
     body: {
       organization_id: process.env.ORGANIZATION_ID,
       include_aggregates: true,
+      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),
       page: page ?? 1,

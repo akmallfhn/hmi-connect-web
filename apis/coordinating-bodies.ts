@@ -2,12 +2,41 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi } from "./api";
+import { isSuccessStatus, type StatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type CoordinatingBody = {
   id: string;
   name: string;
 };
+
+// Mirrors POST /api/v1/coordinating-bodies/detail's response — used to seed the Badko filter's default label on /master/branches.
+export type CoordinatingBodyDetail = {
+  id: string;
+  organization_id: string;
+  name: string;
+  status: StatusEnum;
+};
+
+export async function getCoordinatingBodyDetail(
+  id: string
+): Promise<CoordinatingBodyDetail | null> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return null;
+
+  const result = await callApi<CoordinatingBodyDetail>(
+    "/api/v1/coordinating-bodies/detail",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { id },
+    }
+  );
+
+  if (!isSuccessStatus(result.status) || !result.data) return null;
+  return result.data;
+}
 
 type CoordinatingBodiesListResponse = {
   list: CoordinatingBody[];

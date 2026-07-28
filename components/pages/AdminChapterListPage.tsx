@@ -39,6 +39,7 @@ interface AdminChapterListPageProps {
   initialStatus: string;
   pageSize: number;
   selectedBranch: { id: string; name: string } | null;
+  branchNameById: Record<string, string>;
 }
 
 export default function AdminChapterListPage({
@@ -50,6 +51,7 @@ export default function AdminChapterListPage({
   initialStatus,
   pageSize,
   selectedBranch,
+  branchNameById,
 }: AdminChapterListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,7 +100,6 @@ export default function AdminChapterListPage({
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (!selectedBranch) return;
       if (searchInput === initialSearch) return;
       pushParams({ search: searchInput });
     }, 500);
@@ -137,23 +138,30 @@ export default function AdminChapterListPage({
             Kelola data Komisariat HMI.
           </p>
         </div>
-        {selectedBranch && (
-          <Button
-            variant="primary"
-            onClick={() => setSheetTarget("create")}
-            className="w-fit"
-          >
-            <PlusCircle className="size-4" />
-            Tambah Komisariat
-          </Button>
-        )}
+        <Button
+          variant="primary"
+          onClick={() => setSheetTarget("create")}
+          className="w-fit"
+        >
+          <PlusCircle className="size-4" />
+          Tambah Komisariat
+        </Button>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-xs">
+          <Input
+            inputId="chapter-search"
+            placeholder="Cari nama komisariat..."
+            icon={<Search className="size-4" />}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+        <div className="w-full sm:max-w-xs">
           <SearchableSelect
             selectId="chapter-branch-filter"
-            placeholder="Pilih Cabang..."
+            placeholder="Semua Cabang"
             value={branchOption}
             onChange={(option) =>
               pushParams({ branch_id: option ? String(option.value) : "" })
@@ -162,154 +170,131 @@ export default function AdminChapterListPage({
             defaultOptions={branchOption ? [branchOption] : []}
           />
         </div>
-        {selectedBranch && (
-          <>
-            <div className="w-full sm:max-w-xs">
-              <Input
-                inputId="chapter-search"
-                placeholder="Cari nama komisariat..."
-                icon={<Search className="size-4" />}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-            </div>
-            <div className="w-full sm:max-w-52">
-              <Select
-                selectId="chapter-status-filter"
-                placeholder="Semua Status"
-                value={initialStatus}
-                onChange={(value) => pushParams({ status: String(value ?? "") })}
-                options={STATUS_FILTER_OPTIONS}
-              />
-            </div>
-          </>
-        )}
+        <div className="w-full sm:max-w-52">
+          <Select
+            selectId="chapter-status-filter"
+            placeholder="Semua Status"
+            value={initialStatus}
+            onChange={(value) => pushParams({ status: String(value ?? "") })}
+            options={STATUS_FILTER_OPTIONS}
+          />
+        </div>
       </div>
 
-      {!selectedBranch ? (
-        <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-[#e6e9ef] bg-white px-4 py-16 text-center">
-          <GraduationCap className="size-8 text-[#5f6573]" />
-          <p className="text-sm font-medium text-[#172033]">
-            Pilih Cabang terlebih dahulu
-          </p>
-          <p className="max-w-sm text-xs text-[#5f6573]">
-            Komisariat dikelompokkan per Cabang. Pilih salah satu Cabang di
-            atas untuk melihat daftar Komisariatnya.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            {chapters.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-                <GraduationCap className="size-8 text-[#5f6573]" />
-                <p className="text-sm font-medium text-[#172033]">
-                  Tidak ada komisariat ditemukan.
-                </p>
-                {(initialSearch || initialStatus) && (
-                  <p className="text-xs text-[#5f6573]">
-                    Coba ubah kata kunci pencarian atau filter status.
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-                    <tr>
-                      <th className="px-4 py-3">Nama Komisariat</th>
-                      <th className="px-4 py-3">Tipe</th>
-                      <th className="px-4 py-3">Jumlah Kader</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                    {chapters.map((chapter) => (
-                      <tr key={chapter.id} className="align-middle">
-                        <td className="px-4 py-3">
+      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        {chapters.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
+            <GraduationCap className="size-8 text-[#5f6573]" />
+            <p className="text-sm font-medium text-[#172033]">
+              Tidak ada komisariat ditemukan.
+            </p>
+            {(initialSearch || initialStatus || selectedBranch) && (
+              <p className="text-xs text-[#5f6573]">
+                Coba ubah kata kunci pencarian atau filter.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <tr>
+                  <th className="px-4 py-3">Nama Komisariat</th>
+                  <th className="px-4 py-3">Tipe</th>
+                  <th className="px-4 py-3">Jumlah Kader</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                {chapters.map((chapter) => (
+                  <tr key={chapter.id} className="align-middle">
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => setSheetTarget(chapter)}
+                        className="cursor-pointer text-left"
+                      >
+                        <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
+                          {chapter.name}
+                        </p>
+                        {!selectedBranch && (
+                          <p className="truncate text-[13px] text-[#5f6573]">
+                            {branchNameById[chapter.branch_id] ?? "—"}
+                          </p>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Label
+                        variant={chapter.type === "full" ? "blue" : "yellow"}
+                      >
+                        {chapter.type === "full"
+                          ? "Status: Penuh"
+                          : "Status: Persiapan"}
+                      </Label>
+                    </td>
+                    <td className="px-4 py-3 text-[#172033]">
+                      {chapter.user_count ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Label
+                        variant={chapter.status === "active" ? "green" : "red"}
+                      >
+                        {chapter.status === "active" ? "Aktif" : "Tidak Aktif"}
+                      </Label>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        <Dropdown
+                          panelClassName="w-44"
+                          trigger={({ toggle }) => (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={toggle}
+                              aria-label="Aksi"
+                            >
+                              <EllipsisVertical className="size-4" />
+                            </Button>
+                          )}
+                        >
                           <button
                             type="button"
                             onClick={() => setSheetTarget(chapter)}
-                            className="cursor-pointer text-left"
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                           >
-                            <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
-                              {chapter.name}
-                            </p>
+                            <Pencil className="size-4 text-[#5f6573]" />
+                            Edit
                           </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Label
-                            variant={chapter.type === "full" ? "blue" : "yellow"}
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(chapter)}
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
                           >
-                            {chapter.type === "full"
-                              ? "Status: Penuh"
-                              : "Status: Persiapan"}
-                          </Label>
-                        </td>
-                        <td className="px-4 py-3 text-[#172033]">
-                          {chapter.user_count ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Label
-                            variant={chapter.status === "active" ? "green" : "red"}
-                          >
-                            {chapter.status === "active" ? "Aktif" : "Tidak Aktif"}
-                          </Label>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex justify-end">
-                            <Dropdown
-                              panelClassName="w-44"
-                              trigger={({ toggle }) => (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={toggle}
-                                  aria-label="Aksi"
-                                >
-                                  <EllipsisVertical className="size-4" />
-                                </Button>
-                              )}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => setSheetTarget(chapter)}
-                                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                              >
-                                <Pencil className="size-4 text-[#5f6573]" />
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setDeleteTarget(chapter)}
-                                className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-                              >
-                                <Trash2 className="size-4" />
-                                Hapus
-                              </button>
-                            </Dropdown>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                            <Trash2 className="size-4" />
+                            Hapus
+                          </button>
+                        </Dropdown>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        )}
+      </div>
 
-          {chapters.length > 0 && (
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <Pagination currentPage={currentPage} totalPages={totalPage} />
-              <p className="text-center text-sm text-[#5f6573]">
-                Menampilkan {(currentPage - 1) * pageSize + 1}–
-                {(currentPage - 1) * pageSize + chapters.length} dari{" "}
-                {totalData} komisariat
-              </p>
-            </div>
-          )}
-        </>
+      {chapters.length > 0 && (
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Pagination currentPage={currentPage} totalPages={totalPage} />
+          <p className="text-center text-sm text-[#5f6573]">
+            Menampilkan {(currentPage - 1) * pageSize + 1}–
+            {(currentPage - 1) * pageSize + chapters.length} dari{" "}
+            {totalData} komisariat
+          </p>
+        </div>
       )}
 
       <ChapterFormSheet

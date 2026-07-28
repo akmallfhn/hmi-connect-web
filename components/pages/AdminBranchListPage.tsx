@@ -20,6 +20,7 @@ import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
+import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import BranchFormSheet from "../forms/BranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 
@@ -37,6 +38,7 @@ interface AdminBranchListPageProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
+  selectedCoordinatingBody: { id: string; name: string } | null;
 }
 
 export default function AdminBranchListPage({
@@ -47,6 +49,7 @@ export default function AdminBranchListPage({
   initialSearch,
   initialStatus,
   pageSize,
+  selectedCoordinatingBody,
 }: AdminBranchListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,6 +70,10 @@ export default function AdminBranchListPage({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const coordinatingBodyOption: SearchableOption | null = selectedCoordinatingBody
+    ? { label: selectedCoordinatingBody.name, value: selectedCoordinatingBody.id }
+    : null;
+
   function pushParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(next).forEach(([key, value]) => {
@@ -75,6 +82,18 @@ export default function AdminBranchListPage({
     });
     params.set("page", "1");
     router.push(`?${params.toString()}`);
+  }
+
+  async function loadCoordinatingBodyOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+    const response = await fetch(`/api/coordinating-bodies/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
   }
 
   useEffect(() => {
@@ -137,6 +156,18 @@ export default function AdminBranchListPage({
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
+        <div className="w-full sm:max-w-xs">
+          <SearchableSelect
+            selectId="branch-coordinating-body-filter"
+            placeholder="Semua Badko"
+            value={coordinatingBodyOption}
+            onChange={(option) =>
+              pushParams({ coordinating_body_id: option ? String(option.value) : "" })
+            }
+            loadOptions={loadCoordinatingBodyOptions}
+            defaultOptions={coordinatingBodyOption ? [coordinatingBodyOption] : []}
+          />
+        </div>
         <div className="w-full sm:max-w-52">
           <Select
             selectId="branch-status-filter"
@@ -155,9 +186,9 @@ export default function AdminBranchListPage({
             <p className="text-sm font-medium text-[#172033]">
               Tidak ada cabang ditemukan.
             </p>
-            {(initialSearch || initialStatus) && (
+            {(initialSearch || initialStatus || selectedCoordinatingBody) && (
               <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter status.
+                Coba ubah kata kunci pencarian atau filter.
               </p>
             )}
           </div>
@@ -268,6 +299,7 @@ export default function AdminBranchListPage({
           router.refresh();
         }}
         branch={sheetTarget === "create" ? null : sheetTarget}
+        defaultCoordinatingBody={coordinatingBodyOption}
       />
 
       <AlertConfirmation

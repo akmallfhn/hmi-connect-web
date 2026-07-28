@@ -61,7 +61,7 @@ export async function searchChapters(
   return { list, hasMore };
 }
 
-// Mirrors POST /api/v1/chapters/list's response — the admin table shape (/master/chapters). Unlike branches/list, chapters/list has no name field for its parent (branch_name), so the admin list page carries that via its own required Cabang filter selection instead.
+// Mirrors POST /api/v1/chapters/list's response — the admin table shape (/master/chapters). Unlike branches/list, chapters/list has no name field for its parent (branch_name), so the admin list page resolves it separately when browsing unfiltered.
 export type ChapterListEntry = {
   id: string;
   branch_id: string;
@@ -73,7 +73,7 @@ export type ChapterListEntry = {
 };
 
 export type ListChaptersOptions = {
-  branchId: string;
+  branchId?: string;
   search?: string;
   status?: StatusEnum;
   page?: number;
@@ -99,7 +99,7 @@ type ChapterListAdminResponse = {
 
 // Requires Super Admin/Administrator — only called from the /master/chapters admin panel, gated by MasterLayout.
 export async function listChaptersAdmin(
-  options: ListChaptersOptions
+  options: ListChaptersOptions = {}
 ): Promise<PagedListResult<ChapterListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -110,7 +110,7 @@ export async function listChaptersAdmin(
     method: "POST",
     token: sessionToken,
     body: {
-      branch_id: branchId,
+      ...(branchId ? { branch_id: branchId } : {}),
       include_aggregates: true,
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),

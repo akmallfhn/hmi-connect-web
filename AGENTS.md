@@ -246,9 +246,12 @@ below) when `isVerified === false`.
    are derived server-side from it.
 3. **Asal Organisasi** — cascading Branch (Cabang HMI) → Chapter (Komisariat)
    (`apis/branches.ts` + `apis/chapters.ts`, backed by `/www/api/branches/search` and
-   `/www/api/chapters/search`). `chapters/list` requires the selected `branch_id`, but
-   only `chapter_id` is submitted to `users/verification`; branch/coordinating body and
-   organization are derived server-side from the chapter.
+   `/www/api/chapters/search`). `searchChapters` always scopes its `chapters/list` call to the
+   selected `branch_id` here (`chapters/list` itself now accepts an optional `branch_id`, see
+   `/master/chapters` below, but this cascading picker still always passes one — a Komisariat
+   pick with no Cabang context wouldn't make sense in this flow); only `chapter_id` is submitted
+   to `users/verification`, branch/coordinating body and organization are derived server-side
+   from the chapter.
 
 ## Component conventions
 
@@ -998,7 +1001,13 @@ below) when `isVerified === false`.
   (with the Badko name as a subtitle underneath, not its own column), Tipe (rendered as a `Label`
   pill too — blue "Status: Penuh"/yellow "Status: Persiapan", inline in the page rather than its
   own file in `components/labels/`, per the one-off-vs-shared rule below), Jumlah Kader
-  (`user_count`, only populated when `include_aggregates` is requested), and Status. Unlike User
+  (`user_count`, only populated when `include_aggregates` is requested), and Status. The filter row
+  also has an optional Badko `SearchableSelect` (`coordinating_body_id`, backed by
+  `apis/coordinating-bodies.ts#searchCoordinatingBodies` through
+  `app/(admin)/admin/api/coordinating-bodies/search/route.ts`) alongside search/status — `branches/list`
+  narrows to one Badko when set, omit for every branch org-wide; the page resolves the selected
+  Badko's own name for the filter's default label via the new
+  `apis/coordinating-bodies.ts#getCoordinatingBodyDetail` (`coordinating-bodies/detail`). Unlike User
   Management, create/edit here don't get their own route or a centered `Modal` — the whole point of
   asking for this one to use a sheet was a lighter-weight CRUD panel, so
   `components/forms/BranchFormSheet.tsx` opens in `components/modals/Sheet.tsx`, a right-anchored
@@ -1009,33 +1018,32 @@ below) when `isVerified === false`.
   (`branch` prop set from the clicked row) — small enough (name/Badko/type/status) not to need
   per-section modals like Users got. `branches/list` already returns `type`/`coordinating_body_name`
   alongside `name`/`status`, so editing seeds the form straight from the clicked `BranchListEntry`
-  row — no `branches/detail` fetch-on-open needed. The Badko field is a `SearchableSelect` backed by
-  the new `apis/coordinating-bodies.ts#searchCoordinatingBodies` (`coordinating-bodies/list`, same
-  `{id, name}` picker shape as `searchBranches`/`searchChapters`) through
-  `app/(admin)/admin/api/coordinating-bodies/search/route.ts` — another
-  `admin.(example.com)`-is-a-separate-origin duplicate, same reasoning as the branches/chapters/
-  locations search routes above. `coordinating-bodies/*` now has full CRUD on the backend too
-  (list/detail/create/update/delete, mirroring branches/chapters) but only `list` is wired up on
-  this side so far — there's no Badko admin panel yet, this was added specifically to unblock the
-  Cabang form's picker.
+  row — no `branches/detail` fetch-on-open needed; creating while a Badko filter is active seeds the
+  same field via the sheet's optional `defaultCoordinatingBody` prop (the filter's own selected
+  option), so starting "Tambah Cabang" from a filtered view doesn't make you re-pick the Badko.
+  `coordinating-bodies/*` now has full CRUD on the backend too (list/detail/create/update/delete,
+  mirroring branches/chapters) but only `list`/`detail` are wired up on this side so far — there's
+  no Badko admin panel yet, these were added specifically to unblock the Cabang list/form's pickers.
 - `/master/chapters` (`app/(admin)/admin/master/chapters/page.tsx` → `components/pages/AdminChapterListPage.tsx`)
-  is the Komisariat CRUD panel, same shape as `/master/branches` but forced into an extra step by
-  the backend: `chapters/list` requires a `branch_id` (there's no organization-wide chapter list,
-  unlike `branches/list`'s `organization_id` scoping), so the page's own filter row leads with a
-  required Cabang `SearchableSelect` (backed by the existing `apis/branches.ts#searchBranches`
-  through the same `app/(admin)/admin/api/branches/search/route.ts` the Cabang form already uses)
-  that drives a `branch_id` URL param — until one is picked, the page renders a "Pilih Cabang
-  terlebih dahulu" empty state instead of a table, and the search/status filters and "Tambah
-  Komisariat" button are hidden entirely (there's no chapter to create/filter without a branch to
-  put it in). `chapters/list` also doesn't return a `branch_name` per row the way `branches/list`
-  returns `coordinating_body_name` — moot here, since every row in the table already belongs to
-  the one selected branch, so the table has no branch column/subtitle at all. `apis/chapters.ts`
-  gained the same `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin
-  surface `branches.ts` has (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/
-  `BranchDetail`), and `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx`
-  field-for-field with Cabang standing in for Badko — seeded from the list page's own selected
-  `branch_id`/name (passed down as `defaultBranch`) for both create and edit, since a chapter's
-  branch is always the one currently filtered on, not fetched per-row.
+  is the Komisariat CRUD panel, same shape as `/master/branches` including its own optional entity
+  filter — `chapters/list`'s `branch_id` is optional (omit to list chapters across every branch), so
+  the page's filter row has search, an optional Cabang `SearchableSelect` (backed by the existing
+  `apis/branches.ts#searchBranches` through the same `app/(admin)/admin/api/branches/search/route.ts`
+  the Cabang form already uses) driving a `branch_id` URL param, and status — table/pagination render
+  unconditionally, there's no "pick a branch first" gate. `chapters/list` still doesn't return a
+  `branch_name` per row the way `branches/list` returns `coordinating_body_name`, which only matters
+  when browsing unfiltered: `app/(admin)/admin/master/chapters/page.tsx` resolves that case itself —
+  when `branch_id` is omitted, it collects the unique `branch_id`s in the current page of results and
+  resolves each one's name via parallel `getBranchDetail` calls, passed down as a `branchNameById`
+  map for the table's subtitle row; once a Cabang filter is active every row already shares that one
+  branch, so the map isn't needed and the subtitle is skipped entirely. `apis/chapters.ts` gained the
+  same `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts`
+  has (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/`BranchDetail`), and
+  `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx` field-for-field with Cabang
+  standing in for Badko — seeded from the list page's own selected `branch_id`/name (passed down as
+  `defaultBranch`, optional here too) for both create and edit when a filter is active, otherwise
+  starts empty and the admin picks a Cabang in the sheet itself (`branch_id` is still required by
+  `chapters/create`/`update`, only `list` relaxed it).
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

@@ -26,6 +26,7 @@ interface BranchFormSheetProps {
   onClose: () => void;
   onSaved: () => void;
   branch: BranchListEntry | null;
+  defaultCoordinatingBody?: SearchableOption | null;
 }
 
 export default function BranchFormSheet({
@@ -33,6 +34,7 @@ export default function BranchFormSheet({
   onClose,
   onSaved,
   branch,
+  defaultCoordinatingBody = null,
 }: BranchFormSheetProps) {
   return (
     <Sheet
@@ -45,7 +47,14 @@ export default function BranchFormSheet({
           : "Buat cabang (Cabang HMI) baru di bawah sebuah Badko."
       }
     >
-      {open && <BranchFields branch={branch} onClose={onClose} onSaved={onSaved} />}
+      {open && (
+        <BranchFields
+          branch={branch}
+          defaultCoordinatingBody={defaultCoordinatingBody}
+          onClose={onClose}
+          onSaved={onSaved}
+        />
+      )}
     </Sheet>
   );
 }
@@ -53,10 +62,12 @@ export default function BranchFormSheet({
 // Mounted only while open, so state always seeds fresh from the row — no reset effect needed.
 function BranchFields({
   branch,
+  defaultCoordinatingBody,
   onClose,
   onSaved,
 }: {
   branch: BranchListEntry | null;
+  defaultCoordinatingBody: SearchableOption | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -66,14 +77,16 @@ function BranchFields({
   const [coordinatingBody, setCoordinatingBody] = useState<SearchableOption | null>(
     branch?.coordinating_body_id && branch.coordinating_body_name
       ? { label: branch.coordinating_body_name, value: branch.coordinating_body_id }
-      : null
+      : defaultCoordinatingBody
   );
   const [isSaving, setIsSaving] = useState(false);
 
   const coordinatingBodyDefaultOptions: SearchableOption[] =
     branch?.coordinating_body_id && branch.coordinating_body_name
       ? [{ label: branch.coordinating_body_name, value: branch.coordinating_body_id }]
-      : [];
+      : defaultCoordinatingBody
+        ? [defaultCoordinatingBody]
+        : [];
 
   async function loadCoordinatingBodyOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });

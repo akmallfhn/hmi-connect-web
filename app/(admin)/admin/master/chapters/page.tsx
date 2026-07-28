@@ -34,16 +34,30 @@ export default async function MasterChaptersPage({
 
   const [branch, result] = await Promise.all([
     branchId ? getBranchDetail(branchId) : Promise.resolve(null),
-    branchId
-      ? listChaptersAdmin({
-          branchId,
-          search: search || undefined,
-          status: (status || undefined) as StatusEnum | undefined,
-          page,
-          pageSize: PAGE_SIZE,
-        })
-      : Promise.resolve({ list: [], totalData: 0, totalPage: 1, currentPage: 1 }),
+    listChaptersAdmin({
+      branchId: branchId || undefined,
+      search: search || undefined,
+      status: (status || undefined) as StatusEnum | undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    }),
   ]);
+
+  // chapters/list has no branch_name per row, so resolve it separately when browsing unfiltered.
+  let branchNameById: Record<string, string> = {};
+  if (!branchId) {
+    const uniqueBranchIds = Array.from(
+      new Set(result.list.map((chapter) => chapter.branch_id))
+    );
+    const branches = await Promise.all(
+      uniqueBranchIds.map((id) => getBranchDetail(id))
+    );
+    branchNameById = Object.fromEntries(
+      branches
+        .filter((b): b is NonNullable<typeof b> => b !== null)
+        .map((b) => [b.id, b.name])
+    );
+  }
 
   return (
     <AdminChapterListPage
@@ -55,6 +69,7 @@ export default async function MasterChaptersPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedBranch={branch ? { id: branch.id, name: branch.name } : null}
+      branchNameById={branchNameById}
     />
   );
 }
