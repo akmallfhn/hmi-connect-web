@@ -21,7 +21,7 @@ export type Feed = {
   id: string;
   creator_id: string;
   creator_full_name: string;
-  creator_username?: string;
+  creator_username: string;
   creator_avatar?: string;
   content: string;
   media?: FeedMedia[];
@@ -42,7 +42,7 @@ export type FeedTimelineItem =
       created_at: string;
       reposter_id: string;
       reposter_full_name: string;
-      reposter_username?: string;
+      reposter_username: string;
       reposter_avatar?: string;
       feed: Feed;
     }
@@ -67,7 +67,7 @@ export type FeedComment = {
   comment_id?: string;
   user_id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
   message: string;
   reaction_count: FeedReactionCount;

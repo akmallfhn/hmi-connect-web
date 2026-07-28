@@ -67,7 +67,7 @@ export default function ReactorsListModal({
         {reactors.map((reactor) => (
           <Link
             key={reactor.id}
-            href={reactor.username ? `/profile/${reactor.username}` : "#"}
+            href={`/profile/${reactor.username}`}
             onClick={onClose}
             className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
           >
@@ -76,9 +76,7 @@ export default function ReactorsListModal({
               <p className="truncate text-sm font-medium text-[#172033]">
                 {reactor.full_name}
               </p>
-              {reactor.username && (
-                <p className="truncate text-xs text-[#5f6573]">@{reactor.username}</p>
-              )}
+              <p className="truncate text-xs text-[#5f6573]">@{reactor.username}</p>
             </div>
           </Link>
         ))}

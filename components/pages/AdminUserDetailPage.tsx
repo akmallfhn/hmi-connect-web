@@ -180,7 +180,7 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SectionCard title="Akun & Peran" onEdit={() => setEditSection("account")}>
           <Field label="Nama Lengkap" value={user.full_name} />
-          <Field label="Username" value={user.username ? `@${user.username}` : "—"} />
+          <Field label="Username" value={`@${user.username}`} />
           <Field label="Email" value={user.email} />
           <Field
             label="Role"

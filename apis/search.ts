@@ -8,7 +8,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 export type SearchPersonResult = {
   id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
   headline?: string;
   chapter_id?: string;
@@ -24,7 +24,7 @@ export type SearchPostingResult = {
   content: string;
   creator_id: string;
   creator_full_name: string;
-  creator_username?: string;
+  creator_username: string;
   creator_avatar?: string;
   created_at: string;
 };

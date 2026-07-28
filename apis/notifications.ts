@@ -18,7 +18,7 @@ export type Notification = {
   feed_id: string | null;
   actor_id: string;
   actor_full_name: string;
-  actor_username?: string;
+  actor_username: string;
   actor_avatar?: string;
   read_at: string | null;
   created_at: string;

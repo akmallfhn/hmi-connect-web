@@ -54,7 +54,7 @@ function AccountFields({
   onSaved: () => void;
 }) {
   const [fullName, setFullName] = useState(user.full_name);
-  const [username, setUsername] = useState(user.username ?? "");
+  const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
   const [avatar, setAvatar] = useState(user.avatar ?? "");
   const [roleId, setRoleId] = useState<number>(user.role_id);
@@ -64,7 +64,7 @@ function AccountFields({
   const [isSaving, setIsSaving] = useState(false);
 
   const trimmedUsername = username.trim();
-  const usernameChanged = trimmedUsername !== (user.username ?? "");
+  const usernameChanged = trimmedUsername !== user.username;
 
   async function handleSubmit() {
     if (!fullName.trim() || !email.trim()) {

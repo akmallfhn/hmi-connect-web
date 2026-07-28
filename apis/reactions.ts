@@ -8,7 +8,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 export type Reactor = {
   id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
 };
 

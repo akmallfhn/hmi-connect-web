@@ -24,7 +24,7 @@ export default function FollowRecommendationRow({
 }: FollowRecommendationRowProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const profileHref = connection.username ? `/profile/${connection.username}` : "#";
+  const profileHref = `/profile/${connection.username}`;
   const subtitle = affiliationLabel(connection);
 
   async function handleFollowToggle() {

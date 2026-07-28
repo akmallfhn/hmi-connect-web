@@ -14,7 +14,7 @@ const FOLLOWING_SUGGESTIONS_LIMIT = 5;
 interface MessagablePerson {
   id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
 }
 
@@ -166,9 +166,7 @@ function PersonRow({
       <Avatar src={person.avatar} name={person.full_name} size={44} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-[#172033]">{person.full_name}</p>
-        {person.username && (
-          <p className="truncate text-xs text-[#7b8190]">@{person.username}</p>
-        )}
+        <p className="truncate text-xs text-[#7b8190]">@{person.username}</p>
       </div>
     </button>
   );

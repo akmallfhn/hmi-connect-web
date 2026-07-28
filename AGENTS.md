@@ -219,6 +219,11 @@ Three-step onboarding gated on `user.status === "pending"`, submitted via the
 Institution values are the numeric `id` (the backend wants `education_institution_id`,
 not a name) — don't regress that to the display name.
 
+**`username` is never null.** The backend auto-generates a `user_<12 hex chars>` placeholder
+at sign-up (before this flow even runs) and this step overwrites it with the real one — so
+every `User.username` in `apis/*.ts` is typed as a required `string`, not optional. To detect
+an unactivated account, check `status === "pending"`, not username presence/absence.
+
 ## Verification flow (`components/pages/VerificationPage.tsx`)
 
 Three-step KTP (Indonesian ID card) identity check, submitted via the `verifyUser` Server
@@ -901,13 +906,18 @@ below) when `isVerified === false`.
   `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
   same backend shape — the read page is keyed by **username**, not id:
   `app/(admin)/admin/master/users/[username]/page.tsx` calls `getUserByUsername` and renders
-  `components/pages/AdminUserDetailPage.tsx`. A user who hasn't activated yet (`pending`, no
-  username) has no valid detail URL as a result; the list row's "Lihat Detail" action is
-  disabled for those rows (tooltip explains why) and offers "Edit Cepat" instead — a modal
+  `components/pages/AdminUserDetailPage.tsx`. This works for every user, `pending` included —
+  the backend auto-generates a `user_<12 hex chars>` placeholder username at sign-up and
+  overwrites it once `users/activation` sets the real one, so `username` is never actually
+  null (use `status === "pending"` to detect an unactivated account, not username nullity;
+  see `internal/user/README.md`) — every `apis/*.ts` type for a real, persisted user's
+  `username` is typed as a required `string`, not optional, on that guarantee. The list row's
+  "..." menu still offers "Edit Cepat" alongside "Lihat Detail" — a modal
   (`components/forms/AdminUserQuickEditForm.tsx`) pre-filled straight from that row's own
   `users/list` fields (full name/branch/chapter/role/status/verified — everything `UserListEntry`
-  already carries) rather than needing a fetch. The detail page's four section cards (Akun &
-  Peran / Data KTP & Kontak / Organisasi / Keanggotaan Lainnya) each open their own scoped edit
+  already carries) rather than needing a fetch, useful as a faster inline edit even though
+  every row can now also reach the full detail page. The detail page's four section cards (Akun
+  & Peran / Data KTP & Kontak / Organisasi / Informasi Lainnya) each open their own scoped edit
   modal — `AdminEditUserAccountForm` / `AdminEditUserContactForm` / `AdminEditUserOrganizationForm`
   / `AdminEditUserMembershipForm` in `components/forms/` — the same "one `Edit*Form.tsx` wrapping
   a `Modal` + a mounted-only-while-open `*Fields` component" shape as the self-service

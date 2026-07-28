@@ -20,7 +20,7 @@ export type SessionUser = {
   chapter_name?: string;
   can_manage_chapter?: boolean;
   full_name?: string;
-  username?: string;
+  username: string; // backend auto-generates a placeholder at sign-up, never null — see internal/user/README.md
   avatar?: string;
   role_id?: number;
   role_name?: string;

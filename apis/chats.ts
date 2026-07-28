@@ -9,7 +9,7 @@ export type ConversationSummary = {
   id: string;
   other_user_id: string;
   other_full_name: string;
-  other_username?: string;
+  other_username: string;
   other_avatar?: string;
   other_chapter_name?: string;
   other_branch_name?: string;

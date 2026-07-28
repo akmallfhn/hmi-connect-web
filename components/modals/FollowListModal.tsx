@@ -75,7 +75,7 @@ export default function FollowListModal({
         {users.map((user) => (
           <Link
             key={user.id}
-            href={user.username ? `/profile/${user.username}` : "#"}
+            href={`/profile/${user.username}`}
             onClick={onClose}
             className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
           >
@@ -84,9 +84,7 @@ export default function FollowListModal({
               <p className="truncate text-sm font-medium text-[#172033]">
                 {user.full_name}
               </p>
-              {user.username && (
-                <p className="truncate text-xs text-[#5f6573]">@{user.username}</p>
-              )}
+              <p className="truncate text-xs text-[#5f6573]">@{user.username}</p>
             </div>
           </Link>
         ))}

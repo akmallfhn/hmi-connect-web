@@ -50,7 +50,7 @@ export type UserListEntry = {
   branch_id?: string;
   branch_name?: string;
   full_name: string;
-  username?: string;
+  username: string;
   email: string;
   avatar?: string;
   role_id: number;
@@ -138,7 +138,7 @@ export type CreateUserResult = {
   branch_id?: string;
   branch_name?: string;
   full_name: string;
-  username?: string;
+  username: string;
   email: string;
   role_id: number;
   role_name?: string;
@@ -306,7 +306,7 @@ export type UserProfile = {
   branch_id?: string;
   branch_name?: string;
   full_name: string;
-  username?: string;
+  username: string;
   ktp_full_name?: string;
   email: string;
   phone_number?: string;
@@ -361,7 +361,7 @@ export type MembershipDetail = {
   id: string;
   full_name: string;
   ktp_full_name?: string;
-  username?: string;
+  username: string;
   member_card?: string;
   chapter_id?: string;
   chapter_name?: string;
@@ -434,7 +434,7 @@ export async function unfollowUser(
 export type FollowUserEntry = {
   id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
 };
 
@@ -491,7 +491,7 @@ export async function listFollowers(
 export type FollowRecommendationEntry = {
   id: string;
   full_name: string;
-  username?: string;
+  username: string;
   avatar?: string;
   chapter_id?: string;
   chapter_name?: string;
@@ -559,7 +559,7 @@ export type UpdateUserPayload = {
 
 export type UpdateUserResult = {
   id: string;
-  username?: string;
+  username: string;
   full_name: string;
   email: string;
   role_id: number;

@@ -9,7 +9,7 @@ function affiliationLabel(person: SearchPersonResult): string | undefined {
 }
 
 export default function SearchPersonRow({ person }: { person: SearchPersonResult }) {
-  const href = person.username ? `/profile/${person.username}` : "#";
+  const href = `/profile/${person.username}`;
   const subtitle = affiliationLabel(person);
 
   return (

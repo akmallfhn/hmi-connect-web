@@ -364,9 +364,7 @@ export default function FeedItemCard({
       )}
       <div className="flex items-start justify-between gap-3">
         <Link
-          href={
-            feed.creator_username ? `/profile/${feed.creator_username}` : "#"
-          }
+          href={`/profile/${feed.creator_username}`}
           className="flex items-start gap-3"
         >
           <Avatar

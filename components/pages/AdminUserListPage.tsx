@@ -178,42 +178,20 @@ export default function AdminUserListPage({
                 {users.map((user) => (
                   <tr key={user.id} className="align-middle">
                     <td className="px-4 py-3">
-                      {user.username ? (
-                        <Link
-                          href={`/master/users/${encodeURIComponent(user.username)}`}
-                          className="group flex items-center gap-3"
-                        >
-                          <Avatar
-                            src={user.avatar}
-                            name={user.full_name}
-                            size={36}
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
-                              {user.full_name}
-                            </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
-                              @{user.username}
-                            </p>
-                          </div>
-                        </Link>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            src={user.avatar}
-                            name={user.full_name}
-                            size={36}
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033]">
-                              {user.full_name}
-                            </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
-                              {user.email}
-                            </p>
-                          </div>
+                      <Link
+                        href={`/master/users/${encodeURIComponent(user.username)}`}
+                        className="group flex items-center gap-3"
+                      >
+                        <Avatar src={user.avatar} name={user.full_name} size={36} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
+                            {user.full_name}
+                          </p>
+                          <p className="truncate text-[13px] text-[#5f6573]">
+                            @{user.username}
+                          </p>
                         </div>
-                      )}
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
                       {user.chapter_name ? (
@@ -254,24 +232,12 @@ export default function AdminUserListPage({
                             </Button>
                           )}
                         >
-                          {user.username ? (
-                            <Link
-                              href={`/master/users/${encodeURIComponent(user.username)}`}
-                            >
-                              <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
-                                <Eye className="size-4 text-[#5f6573]" />
-                                Lihat Detail
-                              </div>
-                            </Link>
-                          ) : (
-                            <div
-                              title="Pengguna belum memiliki username (belum aktivasi)"
-                              className="flex w-full cursor-not-allowed items-center gap-3 px-4 py-2.5 text-left text-sm text-[#5f6573]/60"
-                            >
-                              <Eye className="size-4" />
+                          <Link href={`/master/users/${encodeURIComponent(user.username)}`}>
+                            <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
+                              <Eye className="size-4 text-[#5f6573]" />
                               Lihat Detail
                             </div>
-                          )}
+                          </Link>
                           <button
                             type="button"
                             onClick={() => setEditTarget(user)}
