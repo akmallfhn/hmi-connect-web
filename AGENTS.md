@@ -89,9 +89,10 @@ picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin`
 `/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
 `[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
-real dashboard, `/master/users` has the real User Management CRUD panel, and `/master/branches`
-and `/master/chapters` have the real Cabang/Komisariat CRUD panels (see Component conventions
-below). `/master/coordinating-bodies` is still `MasterPlaceholderPage`.
+real dashboard, `/master/users` has the real User Management CRUD panel, and
+`/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
+Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` itself is
+only still used by the three `[id]` pages above, not by anything under `/master`.
 
 ## Auth & session flow
 
@@ -1021,9 +1022,8 @@ below) when `isVerified === false`.
   row — no `branches/detail` fetch-on-open needed; creating while a Badko filter is active seeds the
   same field via the sheet's optional `defaultCoordinatingBody` prop (the filter's own selected
   option), so starting "Tambah Cabang" from a filtered view doesn't make you re-pick the Badko.
-  `coordinating-bodies/*` now has full CRUD on the backend too (list/detail/create/update/delete,
-  mirroring branches/chapters) but only `list`/`detail` are wired up on this side so far — there's
-  no Badko admin panel yet, these were added specifically to unblock the Cabang list/form's pickers.
+  `coordinating-bodies/*` has full CRUD on the backend (list/detail/create/update/delete, mirroring
+  branches/chapters) and now on this side too, see `/master/coordinating-bodies` below.
 - `/master/chapters` (`app/(admin)/admin/master/chapters/page.tsx` → `components/pages/AdminChapterListPage.tsx`)
   is the Komisariat CRUD panel, same shape as `/master/branches` including its own optional entity
   filter — `chapters/list`'s `branch_id` is optional (omit to list chapters across every branch), so
@@ -1042,6 +1042,18 @@ below) when `isVerified === false`.
   browsing unfiltered); only creating falls back to the filter's selected branch via the sheet's
   optional `defaultBranch` prop, same reasoning as `BranchFormSheet`'s `defaultCoordinatingBody`.
   `branch_id` is still required by `chapters/create`/`update`, only `list` relaxed it.
+- `/master/coordinating-bodies` (`app/(admin)/admin/master/coordinating-bodies/page.tsx` →
+  `components/pages/AdminCoordinatingBodyListPage.tsx`) is the Badko CRUD panel, the simplest of
+  the three org-hierarchy panels since a coordinating body sits at the top — no `type` field
+  (unlike branch/chapter's full/provisional), no parent picker (this app only ever manages the one
+  `ORGANIZATION_ID`, injected server-side by `apis/coordinating-bodies.ts#createCoordinatingBody`/
+  `listCoordinatingBodiesAdmin`, never taken from the caller), and no filter row beyond search/status
+  — there's nothing above a Badko to filter by. `coordinating-bodies/list` does return an
+  `organization_name` per row, but it's deliberately left off `CoordinatingBodyListEntry` and the
+  table entirely — this app only has one organization, so every row would repeat the same value.
+  The table is just Nama Badko, Jumlah Kader (`user_count`, `include_aggregates: true`), and Status.
+  `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
+  sheets — just Nama Badko + Status, no `SearchableSelect` at all.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

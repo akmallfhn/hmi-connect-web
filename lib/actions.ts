@@ -16,6 +16,13 @@ import {
   type UpdateChapterPayload,
 } from "@/apis/chapters";
 import {
+  createCoordinatingBody as createCoordinatingBodyApi,
+  deleteCoordinatingBody as deleteCoordinatingBodyApi,
+  updateCoordinatingBody as updateCoordinatingBodyApi,
+  type CreateCoordinatingBodyPayload,
+  type UpdateCoordinatingBodyPayload,
+} from "@/apis/coordinating-bodies";
+import {
   createInstitution as createInstitutionApi,
   type Institution,
 } from "@/apis/institutions";
@@ -152,6 +159,18 @@ export async function updateChapter(payload: UpdateChapterPayload) {
 
 export async function deleteChapter(id: string) {
   return deleteChapterApi(id);
+}
+
+export async function createCoordinatingBody(payload: CreateCoordinatingBodyPayload) {
+  return createCoordinatingBodyApi(payload);
+}
+
+export async function updateCoordinatingBody(payload: UpdateCoordinatingBodyPayload) {
+  return updateCoordinatingBodyApi(payload);
+}
+
+export async function deleteCoordinatingBody(id: string) {
+  return deleteCoordinatingBodyApi(id);
 }
 
 export async function followUser(userId: string) {

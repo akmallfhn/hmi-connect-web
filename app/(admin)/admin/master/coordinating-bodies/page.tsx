@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import MasterPlaceholderPage from "@/components/pages/MasterPlaceholderPage";
+import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
+import AdminCoordinatingBodyListPage from "@/components/pages/AdminCoordinatingBodyListPage";
+import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Badko",
@@ -9,11 +11,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MasterCoordinatingBodiesPage() {
+const PAGE_SIZE = 20;
+
+interface MasterCoordinatingBodiesPageProps {
+  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+}
+
+export default async function MasterCoordinatingBodiesPage({
+  searchParams,
+}: MasterCoordinatingBodiesPageProps) {
+  const params = await searchParams;
+  const search = params.search?.trim() ?? "";
+  const status = params.status ?? "";
+  const page = Number(params.page ?? "1") || 1;
+
+  const result = await listCoordinatingBodiesAdmin({
+    search: search || undefined,
+    status: (status || undefined) as StatusEnum | undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
   return (
-    <MasterPlaceholderPage
-      title="Badko"
-      description="Kelola data Badan Koordinasi (Badko) tingkat wilayah."
+    <AdminCoordinatingBodyListPage
+      coordinatingBodies={result.list}
+      totalData={result.totalData}
+      totalPage={result.totalPage}
+      currentPage={result.currentPage}
+      initialSearch={search}
+      initialStatus={status}
+      pageSize={PAGE_SIZE}
     />
   );
 }
