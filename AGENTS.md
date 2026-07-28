@@ -998,7 +998,7 @@ below) when `isVerified === false`.
   is the Cabang CRUD panel — same server-first list/search/status-filter/pagination shape as
   `/master/users`, backed by `apis/branches.ts#listBranchesAdmin` (`branches/list` with
   `include_aggregates: true`, scoped by `ORGANIZATION_ID`) — the list table itself shows Nama Cabang
-  (with the Badko name as a subtitle underneath, not its own column), Tipe (rendered as a `Label`
+  (with "Badko {coordinating_body_name}" as a subtitle underneath, not its own column), Tipe (rendered as a `Label`
   pill too — blue "Status: Penuh"/yellow "Status: Persiapan", inline in the page rather than its
   own file in `components/labels/`, per the one-off-vs-shared rule below), Jumlah Kader
   (`user_count`, only populated when `include_aggregates` is requested), and Status. The filter row
@@ -1031,9 +1031,9 @@ below) when `isVerified === false`.
   `apis/branches.ts#searchBranches` through the same `app/(admin)/admin/api/branches/search/route.ts`
   the Cabang form already uses) driving a `branch_id` URL param, and status — table/pagination render
   unconditionally, there's no "pick a branch first" gate. `chapters/list` now also returns
-  `branch_name` per row (mirroring `branches/list`'s `coordinating_body_name`), so the table shows it
-  as a subtitle under the chapter name unconditionally, same as Cabang's Badko subtitle — no
-  extra per-row lookup needed. `apis/chapters.ts` gained the same
+  `branch_name` per row (mirroring `branches/list`'s `coordinating_body_name`), so the table shows
+  "Cabang {branch_name}" as a subtitle under the chapter name unconditionally, same as Cabang's
+  "Badko {coordinating_body_name}" subtitle — no extra per-row lookup needed. `apis/chapters.ts` gained the same
   `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts` has
   (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/`BranchDetail`), and
   `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx` field-for-field with Cabang

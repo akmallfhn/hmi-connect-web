@@ -217,7 +217,7 @@ export default function AdminChapterListPage({
                           {chapter.name}
                         </p>
                         <p className="truncate text-[13px] text-[#5f6573]">
-                          {chapter.branch_name}
+                          Cabang {chapter.branch_name}
                         </p>
                       </button>
                     </td>

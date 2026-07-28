@@ -217,7 +217,9 @@ export default function AdminBranchListPage({
                           {branch.name}
                         </p>
                         <p className="truncate text-[13px] text-[#5f6573]">
-                          {branch.coordinating_body_name ?? "—"}
+                          {branch.coordinating_body_name
+                            ? `Badko ${branch.coordinating_body_name}`
+                            : "—"}
                         </p>
                       </button>
                     </td>
