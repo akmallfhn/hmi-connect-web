@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AdminUserCreatePage from "@/components/pages/AdminUserCreatePage";
 
 export const metadata: Metadata = {
-  title: "Tambah Pengguna",
+  title: "Tambah User",
   robots: {
     index: false,
     follow: false,

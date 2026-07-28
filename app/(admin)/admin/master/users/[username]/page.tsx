@@ -13,7 +13,7 @@ export async function generateMetadata({
 }: MasterUserDetailPageProps): Promise<Metadata> {
   const { username } = await params;
   return {
-    title: `Detail Pengguna — ${username}`,
+    title: `Detail User — ${username}`,
     robots: { index: false, follow: false },
   };
 }

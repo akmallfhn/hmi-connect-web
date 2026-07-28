@@ -94,15 +94,15 @@ export default function AdminUserListPage({
     try {
       const result = await deleteUser(deleteTarget.id);
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menghapus pengguna.");
+        toast.error(result.message ?? "Gagal menghapus user.");
         return;
       }
-      toast.success("Pengguna berhasil dihapus.");
+      toast.success("User berhasil dihapus.");
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
       console.error("[AdminUserListPage] deleteUser threw:", err);
-      toast.error("Gagal menghapus pengguna.");
+      toast.error("Gagal menghapus user.");
     } finally {
       setIsDeleting(false);
     }
@@ -116,13 +116,13 @@ export default function AdminUserListPage({
             User Management
           </h1>
           <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Kelola akun dan hak akses pengguna HMI Connect.
+            Kelola akun dan hak akses user HMI Connect.
           </p>
         </div>
         <Link href="/master/users/create" className="w-fit">
           <Button variant="primary">
             <PlusCircle className="size-4" />
-            Tambah Pengguna
+            Tambah User
           </Button>
         </Link>
       </div>
@@ -153,7 +153,7 @@ export default function AdminUserListPage({
           <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
             <Users className="size-8 text-[#5f6573]" />
             <p className="text-sm font-medium text-[#172033]">
-              Tidak ada pengguna ditemukan.
+              Tidak ada user ditemukan.
             </p>
             {(initialSearch || initialStatus) && (
               <p className="text-xs text-[#5f6573]">
@@ -277,7 +277,7 @@ export default function AdminUserListPage({
           <p className="text-center text-xs text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
             {(currentPage - 1) * pageSize + users.length} dari {totalData}{" "}
-            pengguna
+            user
           </p>
         </div>
       )}
@@ -296,7 +296,7 @@ export default function AdminUserListPage({
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Hapus pengguna ini?"
+        title="Hapus user ini?"
         message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.full_name}? Tindakan ini tidak dapat dibatalkan.`}
         confirmLabel="Hapus"
         loading={isDeleting}

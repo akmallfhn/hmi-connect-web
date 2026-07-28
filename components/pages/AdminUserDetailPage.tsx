@@ -64,7 +64,7 @@ function SectionCard({
   return (
     <div className="rounded-xl border border-[#e6e9ef] bg-white p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#172033]">{title}</h2>
+        <h2 className="text-base font-semibold text-[#172033]">{title}</h2>
         <Button variant="ghost" size="sm" onClick={onEdit}>
           <Pencil className="size-3.5" />
           Edit
@@ -80,8 +80,8 @@ function SectionCard({
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-xs text-[#5f6573]">{label}</p>
-      <p className="text-sm font-medium text-[#172033]">{value ?? "—"}</p>
+      <p className="text-sm text-[#5f6573]">{label}</p>
+      <p className="text-[15px] font-medium text-[#172033]">{value ?? "—"}</p>
     </div>
   );
 }
@@ -101,8 +101,8 @@ function StatPill({
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs text-[#5f6573]">{label}</p>
-        <p className="truncate text-sm font-bold text-[#172033]">{value}</p>
+        <p className="truncate text-[13px] text-[#5f6573]">{label}</p>
+        <p className="truncate text-[15px] font-bold text-[#172033]">{value}</p>
       </div>
     </div>
   );
@@ -128,14 +128,14 @@ export default function AdminUserDetailPage({
     try {
       const result = await deleteUser(user.id);
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menghapus pengguna.");
+        toast.error(result.message ?? "Gagal menghapus user.");
         return;
       }
-      toast.success("Pengguna berhasil dihapus.");
+      toast.success("User berhasil dihapus.");
       router.push("/master/users");
     } catch (err) {
       console.error("[AdminUserDetailPage] deleteUser threw:", err);
-      toast.error("Gagal menghapus pengguna.");
+      toast.error("Gagal menghapus user.");
     } finally {
       setIsDeleting(false);
     }
@@ -146,7 +146,7 @@ export default function AdminUserDetailPage({
       <Link href="/master/users" className="inline-block w-fit">
         <Button variant="ghost">
           <ArrowLeft className="size-4" />
-          Kembali ke daftar pengguna
+          Kembali ke daftar user
         </Button>
       </Link>
 
@@ -163,9 +163,7 @@ export default function AdminUserDetailPage({
             <h1 className="text-xl font-bold text-[#172033]">
               {user.full_name}
             </h1>
-            <p className="mt-0.5 text-sm text-[#5f6573]">
-              @{user.username} · {user.email}
-            </p>
+            <p className="mt-0.5 text-sm text-[#5f6573]">@{user.username}</p>
           </div>
         </div>
 
@@ -265,7 +263,7 @@ export default function AdminUserDetailPage({
           className="w-fit"
         >
           <Trash2 className="size-3.5" />
-          Hapus Pengguna
+          Hapus User
         </Button>
       </div>
 
@@ -298,7 +296,7 @@ export default function AdminUserDetailPage({
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDelete}
-        title="Hapus pengguna ini?"
+        title="Hapus user ini?"
         message={`Apakah kamu yakin ingin menghapus ${user.full_name}? Tindakan ini tidak dapat dibatalkan.`}
         confirmLabel="Hapus"
         loading={isDeleting}

@@ -33,7 +33,7 @@ export default function AdminUserQuickEditForm({
   user,
 }: AdminUserQuickEditFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Cepat Pengguna">
+    <Modal open={open} onClose={onClose} title="Edit Cepat User">
       {open && user && (
         <QuickEditFields user={user} onClose={onClose} onSaved={onSaved} />
       )}
@@ -115,7 +115,7 @@ function QuickEditFields({ user, onClose, onSaved }: QuickEditFieldsProps) {
         return;
       }
 
-      toast.success("Pengguna berhasil diperbarui.");
+      toast.success("User berhasil diperbarui.");
       onSaved();
     } catch (err) {
       console.error("[AdminUserQuickEditForm] updateUser threw:", err);

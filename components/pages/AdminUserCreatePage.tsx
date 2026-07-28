@@ -243,18 +243,18 @@ export default function AdminUserCreatePage() {
           toast.error(message);
           return;
         }
-        toast.error(result.message ?? "Gagal membuat pengguna.");
+        toast.error(result.message ?? "Gagal membuat user.");
         return;
       }
 
-      toast.success("Pengguna berhasil dibuat.");
+      toast.success("User berhasil dibuat.");
       const createdUsername = result.data?.username;
       window.location.href = createdUsername
         ? `/master/users/${encodeURIComponent(createdUsername)}`
         : "/master/users";
     } catch (err) {
       console.error("[AdminUserCreatePage] createUser threw:", err);
-      toast.error("Gagal membuat pengguna.");
+      toast.error("Gagal membuat user.");
     } finally {
       setIsSaving(false);
     }
@@ -265,17 +265,17 @@ export default function AdminUserCreatePage() {
       <Link href="/master/users" className="inline-block w-fit">
         <Button variant="ghost">
           <ArrowLeft className="size-4" />
-          Kembali ke daftar pengguna
+          Kembali ke daftar user
         </Button>
       </Link>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
-            Tambah Pengguna
+            Tambah User
           </h1>
           <p className="mt-1.5 text-sm text-[#5f6573]">
-            Buat akun pengguna baru secara langsung dari panel admin.
+            Buat akun user baru secara langsung dari panel admin.
           </p>
         </div>
         <Button
@@ -284,7 +284,7 @@ export default function AdminUserCreatePage() {
           disabled={isSaving}
           className="w-fit"
         >
-          {isSaving ? "Menyimpan..." : "Simpan Pengguna"}
+          {isSaving ? "Menyimpan..." : "Simpan User"}
         </Button>
       </div>
 
@@ -525,7 +525,7 @@ export default function AdminUserCreatePage() {
           <TextArea
             textAreaId="create-bio"
             label="Bio"
-            placeholder="Ceritakan sedikit tentang pengguna ini"
+            placeholder="Ceritakan sedikit tentang user ini"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}

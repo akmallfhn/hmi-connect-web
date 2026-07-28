@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Loader2, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
+import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import type { UserProfile } from "@/apis/users";
 import { updateUser } from "@/lib/actions";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
 import {
   isUsernameFormatValid,
@@ -13,9 +16,14 @@ import {
 } from "@/lib/username";
 import Button from "../buttons/Button";
 import Switch from "../buttons/Switch";
+import { getInitials } from "../common/Avatar";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
+
+const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const AVATAR_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Pending", value: "pending" },
@@ -57,6 +65,8 @@ function AccountFields({
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
   const [avatar, setAvatar] = useState(user.avatar ?? "");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [roleId, setRoleId] = useState<number>(user.role_id);
   const [status, setStatus] = useState<UserStatusEnum>(user.status);
   const [isVerified, setIsVerified] = useState(user.is_verified);
@@ -65,6 +75,58 @@ function AccountFields({
 
   const trimmedUsername = username.trim();
   const usernameChanged = trimmedUsername !== user.username;
+
+  function handleAvatarPickClick() {
+    avatarInputRef.current?.click();
+  }
+
+  async function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error("Ukuran foto maksimal 2MB.");
+      return;
+    }
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
+      return;
+    }
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (!fileExt || !AVATAR_ALLOWED_EXTENSIONS.includes(fileExt)) {
+      toast.error("Ekstensi file tidak valid.");
+      return;
+    }
+
+    const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+
+    setIsUploadingAvatar(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("hmi-connect")
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        console.error("[AdminEditUserAccountForm] avatar upload error:", uploadError.message);
+        toast.error("Gagal mengunggah foto. Coba lagi.");
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("hmi-connect")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData?.publicUrl) {
+        toast.error("Gagal mendapatkan URL foto.");
+        return;
+      }
+
+      setAvatar(publicUrlData.publicUrl);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!fullName.trim() || !email.trim()) {
@@ -141,13 +203,59 @@ function AccountFields({
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-      <Input
-        inputId="admin-account-avatar"
-        label="URL Avatar"
-        placeholder="https://..."
-        value={avatar}
-        onChange={(e) => setAvatar(e.target.value)}
-      />
+      <div className="flex items-center gap-4">
+        <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-[#e6e9ef]">
+          {avatar ? (
+            <Image
+              src={avatar}
+              alt={fullName || "Foto profil"}
+              width={64}
+              height={64}
+              className="size-full object-cover"
+            />
+          ) : (
+            <div
+              style={{ fontSize: 64 * 0.4 }}
+              className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary"
+            >
+              {getInitials(fullName || "?")}
+            </div>
+          )}
+        </div>
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp,.avif"
+          className="hidden"
+          onChange={handleAvatarFileChange}
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="light"
+            size="sm"
+            onClick={handleAvatarPickClick}
+            disabled={isUploadingAvatar}
+          >
+            {isUploadingAvatar ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Upload className="size-3.5" />
+            )}
+            {isUploadingAvatar ? "Mengunggah..." : "Unggah Foto"}
+          </Button>
+          {avatar && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setAvatar("")}
+              disabled={isUploadingAvatar}
+            >
+              <Trash2 className="size-3.5" />
+              Hapus
+            </Button>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Select
