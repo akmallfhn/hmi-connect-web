@@ -267,6 +267,10 @@ below) when `isVerified === false`.
   overlay ever needs to sit above `Modal` itself.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
+  `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
+  looking like a field primitive) — an accessible toggle built on a visually-hidden native
+  checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
+  checkbox (e.g. the admin user "Terverifikasi" field, see below).
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
   `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil).
   `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
@@ -942,7 +946,20 @@ below) when `isVerified === false`.
   a flat (non-modal, non-stepped) form covering the same four sections in one page, posting to
   `users/create`; on success it hard-navigates to the new user's detail page if an admin-assigned
   `username` was set, otherwise back to the list (a `users/create` response has no username
-  unless the admin typed one in — there's no self-service activation step here).
+  unless the admin typed one in — there's no self-service activation step here). Its avatar field
+  uploads straight to the public `hmi-connect` bucket the same way `EditAvatarForm` does, except
+  the resulting URL is just kept in local state (`avatars/admin-create-<timestamp>.<ext>`, not
+  `avatars/<userId>-...`, since there's no user id yet) and only sent along with the rest of the
+  form on submit, rather than persisted immediately on change like the self-service form does.
+  `MasterSidebar.tsx` — desktop-only collapse (`isCollapsed`, persisted to `localStorage` under
+  `master_sidebar_collapsed`, read after mount like the sibling `ailene-os` project's
+  `SidebarContext` to avoid a hydration mismatch) shrinks the `aside` from `w-64` to `w-20` and
+  drops every label down to icon-only (`title` attributes pick up the slack for a11y/hover
+  tooltips); the mobile drawer has no separate collapse concept, it's just open or closed. Each
+  `NAV_ITEMS` entry now also carries an optional `exact` flag — `NavList`'s active-route check is
+  `pathname.startsWith(href)` by default so "User Management" stays lit on `/master/users/[username]`
+  and `/master/users/create` too, but "Dashboard" (`href: "/master"`) opts into exact matching
+  since every other item's href would otherwise also start with `/master`.
   `components/labels/UserStatusLabel.tsx`/`UserRoleLabel.tsx` map their own enum/id to a
   `{variant, text}` pair and render through `components/common/Label.tsx` — a generic
   color-variant pill (same idea as the sibling `sevenpreneur` project's `AppBasedLabel`/

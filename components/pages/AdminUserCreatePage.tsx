@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { ReactNode, useState } from "react";
+import { ReactNode, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { createUser } from "@/lib/actions";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 import { isSuccessStatus, type GenderEnum, type UserStatusEnum } from "@/lib/types";
 import {
   isUsernameFormatValid,
@@ -13,6 +15,8 @@ import {
   USERNAME_PATTERN,
 } from "@/lib/username";
 import Button from "../buttons/Button";
+import Switch from "../buttons/Switch";
+import { getInitials } from "../common/Avatar";
 import Input from "../fields/Input";
 import RadioButton from "../fields/RadioButton";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
@@ -24,6 +28,10 @@ const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
 ];
+
+const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const AVATAR_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 function SectionCard({
   title,
@@ -45,6 +53,8 @@ export default function AdminUserCreatePage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [avatar, setAvatar] = useState("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [roleId, setRoleId] = useState<number>(2);
   const [status, setStatus] = useState<UserStatusEnum>("pending");
   const [isVerified, setIsVerified] = useState(false);
@@ -66,6 +76,58 @@ export default function AdminUserCreatePage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+
+  function handleAvatarPickClick() {
+    avatarInputRef.current?.click();
+  }
+
+  async function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error("Ukuran foto maksimal 2MB.");
+      return;
+    }
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
+      return;
+    }
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (!fileExt || !AVATAR_ALLOWED_EXTENSIONS.includes(fileExt)) {
+      toast.error("Ekstensi file tidak valid.");
+      return;
+    }
+
+    const filePath = `avatars/admin-create-${Date.now()}.${fileExt}`;
+
+    setIsUploadingAvatar(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("hmi-connect")
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        console.error("[AdminUserCreatePage] avatar upload error:", uploadError.message);
+        toast.error("Gagal mengunggah foto. Coba lagi.");
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("hmi-connect")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData?.publicUrl) {
+        toast.error("Gagal mendapatkan URL foto.");
+        return;
+      }
+
+      setAvatar(publicUrlData.publicUrl);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
 
   async function loadBranchOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });
@@ -200,12 +262,11 @@ export default function AdminUserCreatePage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link
-        href="/master/users"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#5f6573] hover:text-[#172033]"
-      >
-        <ArrowLeft className="size-4" />
-        Kembali ke daftar pengguna
+      <Link href="/master/users" className="inline-block w-fit">
+        <Button variant="ghost">
+          <ArrowLeft className="size-4" />
+          Kembali ke daftar pengguna
+        </Button>
       </Link>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -229,9 +290,64 @@ export default function AdminUserCreatePage() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SectionCard title="Akun & Peran">
+          <div className="flex items-center gap-4">
+            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-[#e6e9ef]">
+              {avatar ? (
+                <Image
+                  src={avatar}
+                  alt="Foto profil"
+                  width={64}
+                  height={64}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <div
+                  style={{ fontSize: 64 * 0.4 }}
+                  className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary"
+                >
+                  {getInitials(fullName || "?")}
+                </div>
+              )}
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,.avif"
+              className="hidden"
+              onChange={handleAvatarFileChange}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="light"
+                size="sm"
+                onClick={handleAvatarPickClick}
+                disabled={isUploadingAvatar}
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Upload className="size-3.5" />
+                )}
+                {isUploadingAvatar ? "Mengunggah..." : "Unggah Foto"}
+              </Button>
+              {avatar && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setAvatar("")}
+                  disabled={isUploadingAvatar}
+                >
+                  <Trash2 className="size-3.5" />
+                  Hapus
+                </Button>
+              )}
+            </div>
+          </div>
+
           <Input
             inputId="create-full-name"
             label="Nama Lengkap"
+            placeholder="Contoh: Akmal Luthfiansyah"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
@@ -240,6 +356,7 @@ export default function AdminUserCreatePage() {
             inputId="create-email"
             label="Email"
             type="email"
+            placeholder="nama@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -255,13 +372,6 @@ export default function AdminUserCreatePage() {
             errorMessage={usernameError}
             autoCapitalize="none"
             spellCheck={false}
-          />
-          <Input
-            inputId="create-avatar"
-            label="URL Avatar"
-            placeholder="https://..."
-            value={avatar}
-            onChange={(e) => setAvatar(e.target.value)}
           />
           <div className="grid grid-cols-2 gap-4">
             <Select
@@ -283,21 +393,19 @@ export default function AdminUserCreatePage() {
               required
             />
           </div>
-          <label className="flex cursor-pointer items-center gap-2 pl-1 text-sm font-medium text-[#172033]">
-            <input
-              type="checkbox"
-              checked={isVerified}
-              onChange={(e) => setIsVerified(e.target.checked)}
-              className="size-4 accent-primary"
-            />
-            Terverifikasi (KTP)
-          </label>
+          <Switch
+            switchId="create-is-verified"
+            label="Terverifikasi"
+            checked={isVerified}
+            onChange={setIsVerified}
+          />
         </SectionCard>
 
         <SectionCard title="Data KTP & Kontak">
           <Input
             inputId="create-ktp-name"
             label="Nama Lengkap (sesuai KTP)"
+            placeholder="Sesuai KTP"
             value={ktpFullName}
             onChange={(e) => setKtpFullName(e.target.value)}
           />
@@ -305,6 +413,7 @@ export default function AdminUserCreatePage() {
             <Input
               inputId="create-phone"
               label="Nomor HP"
+              placeholder="081234567890"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
@@ -340,6 +449,7 @@ export default function AdminUserCreatePage() {
           <Input
             inputId="create-address"
             label="Alamat (Jalan)"
+            placeholder="Jl. Merdeka No. 10"
             value={addressStreet}
             onChange={(e) => setAddressStreet(e.target.value)}
           />
@@ -404,16 +514,18 @@ export default function AdminUserCreatePage() {
           />
         </SectionCard>
 
-        <SectionCard title="Keanggotaan Lainnya">
+        <SectionCard title="Informasi Lainnya">
           <Input
             inputId="create-headline"
             label="Headline"
+            placeholder="Contoh: Ketua Bidang"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
           />
           <TextArea
             textAreaId="create-bio"
             label="Bio"
+            placeholder="Ceritakan sedikit tentang pengguna ini"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}

@@ -261,7 +261,6 @@ export default function AdminUserDetailPage({
       <div className="mt-4 flex justify-end">
         <Button
           variant="destructive"
-          size="sm"
           onClick={() => setShowDeleteConfirm(true)}
           className="w-fit"
         >

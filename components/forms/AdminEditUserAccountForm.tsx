@@ -12,9 +12,9 @@ import {
   USERNAME_PATTERN,
 } from "@/lib/username";
 import Button from "../buttons/Button";
+import Switch from "../buttons/Switch";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import Switch from "../fields/Switch";
 import Modal from "../modals/Modal";
 
 const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
