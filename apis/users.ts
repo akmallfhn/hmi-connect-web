@@ -126,7 +126,6 @@ export type CreateUserPayload = {
   gender?: GenderEnum;
   address_street?: string;
   district_id?: number;
-  is_trainer?: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
 };
@@ -331,7 +330,6 @@ export type UserProfile = {
   city_name?: string;
   province_id?: number;
   province_name?: string;
-  is_trainer: boolean;
   is_subscribe: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
@@ -552,7 +550,6 @@ export type UpdateUserPayload = {
   gender?: GenderEnum;
   address_street?: string;
   district_id?: number;
-  is_trainer?: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
 };
@@ -566,7 +563,6 @@ export type UpdateUserResult = {
   role_name?: string;
   status: UserStatusEnum;
   is_verified: boolean;
-  is_trainer: boolean;
   is_subscribe: boolean;
   created_at: string;
   updated_at: string;

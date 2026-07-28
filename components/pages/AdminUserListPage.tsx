@@ -131,7 +131,7 @@ export default function AdminUserListPage({
         <div className="w-full sm:max-w-xs">
           <Input
             inputId="user-search"
-            placeholder="Cari nama atau email..."
+            placeholder="Cari nama, username, atau email..."
             icon={<Search className="size-4" />}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -182,7 +182,11 @@ export default function AdminUserListPage({
                         href={`/master/users/${encodeURIComponent(user.username)}`}
                         className="group flex items-center gap-3"
                       >
-                        <Avatar src={user.avatar} name={user.full_name} size={36} />
+                        <Avatar
+                          src={user.avatar}
+                          name={user.full_name}
+                          size={36}
+                        />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
                             {user.full_name}
@@ -232,7 +236,9 @@ export default function AdminUserListPage({
                             </Button>
                           )}
                         >
-                          <Link href={`/master/users/${encodeURIComponent(user.username)}`}>
+                          <Link
+                            href={`/master/users/${encodeURIComponent(user.username)}`}
+                          >
                             <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
                               <Eye className="size-4 text-[#5f6573]" />
                               Lihat Detail

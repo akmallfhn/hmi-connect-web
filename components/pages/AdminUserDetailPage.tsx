@@ -214,7 +214,6 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
 
         <SectionCard title="Informasi Lainnya" onEdit={() => setEditSection("membership")}>
           <Field label="Headline" value={user.headline} />
-          <Field label="Trainer/Instruktur" value={user.is_trainer ? "Ya" : "Tidak"} />
           <Field label="Mulai Langganan" value={formatDate(user.subscription_started_at)} />
           <Field label="Berakhir Langganan" value={formatDate(user.subscription_ended_at)} />
           <Field label="Bio" value={user.bio} />

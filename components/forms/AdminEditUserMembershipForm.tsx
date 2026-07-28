@@ -47,7 +47,6 @@ function MembershipFields({
 }) {
   const [headline, setHeadline] = useState(user.headline ?? "");
   const [bio, setBio] = useState(user.bio ?? "");
-  const [isTrainer, setIsTrainer] = useState(user.is_trainer);
   const [subscriptionStart, setSubscriptionStart] = useState(
     toDateInputValue(user.subscription_started_at)
   );
@@ -63,7 +62,6 @@ function MembershipFields({
         id: user.id,
         headline,
         bio,
-        is_trainer: isTrainer,
         ...(subscriptionStart ? { subscription_started_at: subscriptionStart } : {}),
         ...(subscriptionEnd ? { subscription_ended_at: subscriptionEnd } : {}),
       });
@@ -116,16 +114,6 @@ function MembershipFields({
           onChange={(e) => setSubscriptionEnd(e.target.value)}
         />
       </div>
-
-      <label className="flex cursor-pointer items-center gap-2 pl-1 text-sm font-medium text-[#172033]">
-        <input
-          type="checkbox"
-          checked={isTrainer}
-          onChange={(e) => setIsTrainer(e.target.checked)}
-          className="size-4 accent-primary"
-        />
-        Sebagai Trainer/Instruktur
-      </label>
 
       <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>

@@ -63,7 +63,6 @@ export default function AdminUserCreatePage() {
 
   const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
-  const [isTrainer, setIsTrainer] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [usernameError, setUsernameError] = useState("");
@@ -172,7 +171,6 @@ export default function AdminUserCreatePage() {
         ...(chapter ? { chapter_id: String(chapter.value) } : {}),
         ...(headline ? { headline } : {}),
         ...(bio ? { bio } : {}),
-        is_trainer: isTrainer,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -421,15 +419,6 @@ export default function AdminUserCreatePage() {
             rows={3}
             characterLength={280}
           />
-          <label className="flex cursor-pointer items-center gap-2 pl-1 text-sm font-medium text-[#172033]">
-            <input
-              type="checkbox"
-              checked={isTrainer}
-              onChange={(e) => setIsTrainer(e.target.checked)}
-              className="size-4 accent-primary"
-            />
-            Sebagai Trainer/Instruktur
-          </label>
         </SectionCard>
       </div>
     </div>
