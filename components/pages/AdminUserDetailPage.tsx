@@ -108,7 +108,9 @@ function StatPill({
   );
 }
 
-export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) {
+export default function AdminUserDetailPage({
+  user,
+}: AdminUserDetailPageProps) {
   const router = useRouter();
   const [editSection, setEditSection] = useState<
     "account" | "contact" | "organization" | "membership" | null
@@ -142,7 +144,7 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <Link href="/master/users" className="inline-block w-fit">
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost">
           <ArrowLeft className="size-4" />
           Kembali ke daftar pengguna
         </Button>
@@ -158,7 +160,9 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#172033]">{user.full_name}</h1>
+            <h1 className="text-xl font-bold text-[#172033]">
+              {user.full_name}
+            </h1>
             <p className="mt-0.5 text-sm text-[#5f6573]">
               @{user.username} · {user.email}
             </p>
@@ -166,8 +170,16 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:shrink-0">
-          <StatPill icon={UserCheck} label="Mengikuti" value={user.following_count} />
-          <StatPill icon={UsersIcon} label="Pengikut" value={user.followers_count} />
+          <StatPill
+            icon={UserCheck}
+            label="Mengikuti"
+            value={user.following_count}
+          />
+          <StatPill
+            icon={UsersIcon}
+            label="Pengikut"
+            value={user.followers_count}
+          />
           <StatPill icon={FileText} label="Postingan" value={user.feed_count} />
           <StatPill
             icon={CalendarDays}
@@ -178,19 +190,33 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <SectionCard title="Akun & Peran" onEdit={() => setEditSection("account")}>
+        <SectionCard
+          title="Akun & Peran"
+          onEdit={() => setEditSection("account")}
+        >
           <Field label="Nama Lengkap" value={user.full_name} />
           <Field label="Username" value={`@${user.username}`} />
           <Field label="Email" value={user.email} />
           <Field
             label="Role"
-            value={<UserRoleLabel roleId={user.role_id} roleName={user.role_name} />}
+            value={
+              <UserRoleLabel roleId={user.role_id} roleName={user.role_name} />
+            }
           />
-          <Field label="Status" value={<UserStatusLabel status={user.status} />} />
-          <Field label="Terverifikasi" value={<UserVerifiedLabel isVerified={user.is_verified} />} />
+          <Field
+            label="Status"
+            value={<UserStatusLabel status={user.status} />}
+          />
+          <Field
+            label="Terverifikasi"
+            value={<UserVerifiedLabel isVerified={user.is_verified} />}
+          />
         </SectionCard>
 
-        <SectionCard title="Data KTP & Kontak" onEdit={() => setEditSection("contact")}>
+        <SectionCard
+          title="Data KTP & Kontak"
+          onEdit={() => setEditSection("contact")}
+        >
           <Field label="Nama Sesuai KTP" value={user.ktp_full_name} />
           <Field label="Nomor HP" value={user.phone_number} />
           <Field label="Tanggal Lahir" value={formatDate(user.date_of_birth)} />
@@ -204,7 +230,10 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
           <Field label="Kecamatan" value={user.district_name} />
         </SectionCard>
 
-        <SectionCard title="Organisasi" onEdit={() => setEditSection("organization")}>
+        <SectionCard
+          title="Organisasi"
+          onEdit={() => setEditSection("organization")}
+        >
           <Field label="Komisariat" value={user.chapter_name} />
           <Field label="Cabang" value={user.branch_name} />
           <Field label="Badko" value={user.coordinating_body_name} />
@@ -212,10 +241,19 @@ export default function AdminUserDetailPage({ user }: AdminUserDetailPageProps) 
           <Field label="Nomor Kartu Anggota" value={user.member_card} />
         </SectionCard>
 
-        <SectionCard title="Informasi Lainnya" onEdit={() => setEditSection("membership")}>
+        <SectionCard
+          title="Informasi Lainnya"
+          onEdit={() => setEditSection("membership")}
+        >
           <Field label="Headline" value={user.headline} />
-          <Field label="Mulai Langganan" value={formatDate(user.subscription_started_at)} />
-          <Field label="Berakhir Langganan" value={formatDate(user.subscription_ended_at)} />
+          <Field
+            label="Mulai Langganan"
+            value={formatDate(user.subscription_started_at)}
+          />
+          <Field
+            label="Berakhir Langganan"
+            value={formatDate(user.subscription_ended_at)}
+          />
           <Field label="Bio" value={user.bio} />
         </SectionCard>
       </div>
