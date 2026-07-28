@@ -11,14 +11,17 @@ import {
   createOrganizationExperience as createOrganizationExperienceApi,
   createSocialMediaAccount as createSocialMediaAccountApi,
   createTrainingHistory as createTrainingHistoryApi,
+  createUser as createUserApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
   deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
+  deleteUser as deleteUserApi,
   followUser as followUserApi,
   listFollowers as listFollowersApi,
   listFollowing as listFollowingApi,
   listUserActivity as listUserActivityApi,
+  listUsers as listUsersApi,
   updateEducationHistory as updateEducationHistoryApi,
   updateOrganizationExperience as updateOrganizationExperienceApi,
   updateSocialMediaAccount as updateSocialMediaAccountApi,
@@ -31,6 +34,8 @@ import {
   type CreateOrganizationExperiencePayload,
   type CreateSocialMediaAccountPayload,
   type CreateTrainingHistoryPayload,
+  type CreateUserPayload,
+  type ListUsersOptions,
   type UpdateEducationHistoryPayload,
   type UpdateOrganizationExperiencePayload,
   type UpdateSocialMediaAccountPayload,
@@ -90,6 +95,19 @@ export async function verifyUser(payload: VerificationPayload) {
 
 export async function updateUser(payload: UpdateUserPayload) {
   return updateUserApi(payload);
+}
+
+// Super Admin-only admin panel (/master/users) — gated by MasterLayout, not re-checked here.
+export async function listUsersAdmin(options: ListUsersOptions) {
+  return listUsersApi(options);
+}
+
+export async function createUser(payload: CreateUserPayload) {
+  return createUserApi(payload);
+}
+
+export async function deleteUser(id: string) {
+  return deleteUserApi(id);
 }
 
 export async function followUser(userId: string) {

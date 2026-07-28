@@ -116,7 +116,8 @@ export default function MasterSidebar({
         <Link href="/master" className="px-1">
           <LogoHmiConnectHorizontal className="h-7 w-auto" />
         </Link>
-        <div className="mt-8 flex-1">
+        <div className="mt-4 -mx-4 border-t border-[#e6e9ef]" />
+        <div className="mt-6 flex-1">
           <NavList pathname={pathname} />
         </div>
         <ProfileBlock fullName={fullName} avatar={avatar} roleName={roleName} />
@@ -154,7 +155,8 @@ export default function MasterSidebar({
                 <X className="size-5" />
               </button>
             </div>
-            <div className="mt-8 flex-1" onClick={() => setMobileOpen(false)}>
+            <div className="mt-4 -mx-4 border-t border-[#e6e9ef]" />
+            <div className="mt-6 flex-1" onClick={() => setMobileOpen(false)}>
               <NavList pathname={pathname} />
             </div>
             <ProfileBlock

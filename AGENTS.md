@@ -89,7 +89,8 @@ picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin`
 `/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
 `[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
-real dashboard (see Component conventions below).
+real dashboard, and `/master/users` has the real User Management CRUD panel (see Component
+conventions below).
 
 ## Auth & session flow
 
@@ -251,7 +252,14 @@ below) when `isVerified === false`.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
   `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`). `CreateableSelect`/
   `SearchableSelect` take `loadOptions(inputValue, page)` + `defaultOptions` and handle
-  their own debounce/pagination/loading state.
+  their own debounce/pagination/loading state. Both portal their menu to `document.body` at
+  `z-[110]` (the `styles.menuPortal` inline value wins over the `classNames.menuPortal` Tailwind
+  class, which is only kept in sync for readability) — that's deliberately above `Modal`'s own
+  `z-[100]` (`components/modals/Modal.tsx`), since both are siblings under `document.body` and a
+  lower menu z-index would paint the dropdown behind the modal panel, making it look like the menu
+  never opens at all when either select is used inside a `Modal`-based form (as the admin user
+  edit/create forms do for branch/chapter and province/city/district). Bump this again if a future
+  overlay ever needs to sit above `Modal` itself.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
   outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
@@ -880,6 +888,69 @@ below) when `isVerified === false`.
   attachment UI at all), and its `onSaved` updates `FeedItemCard`'s own local `content`
   state directly instead of calling `router.refresh()`, since a feed card lives inside a
   timeline list, not a page it owns.
+- `components/admin/*` + the `/master/users*` routes — the Super Admin User Management CRUD
+  panel (list, detail/read, create), gated by `MasterLayout` like every other `/master/*`
+  route (no extra per-page re-check needed, since that gate already requires literal
+  `Super Admin`, unlike the outer `/admin/[id]` pages' looser `can_manage_*` check).
+  `apis/users.ts#listUsers` (`users/list`, Super-Admin-only per its own README) backs
+  `/master/users` (`app/(admin)/admin/master/users/page.tsx`, a Server Component reading
+  `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
+  — search/status-filter/pagination are all URL state driven by `router.push`, the same
+  server-first pattern `NewsPage`/`SearchPage` use, not a client-fetched table. There's no
+  `users/detail`-by-id endpoint on the backend (only by `username`, and only `users/update`/
+  `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
+  same backend shape — the read page is keyed by **username**, not id:
+  `app/(admin)/admin/master/users/[username]/page.tsx` calls `getUserByUsername` and renders
+  `components/pages/AdminUserDetailPage.tsx`. A user who hasn't activated yet (`pending`, no
+  username) has no valid detail URL as a result; the list row's "Lihat Detail" action is
+  disabled for those rows (tooltip explains why) and offers "Edit Cepat" instead — a modal
+  (`components/forms/AdminUserQuickEditForm.tsx`) pre-filled straight from that row's own
+  `users/list` fields (full name/branch/chapter/role/status/verified — everything `UserListEntry`
+  already carries) rather than needing a fetch. The detail page's four section cards (Akun &
+  Peran / Data KTP & Kontak / Organisasi / Keanggotaan Lainnya) each open their own scoped edit
+  modal — `AdminEditUserAccountForm` / `AdminEditUserContactForm` / `AdminEditUserOrganizationForm`
+  / `AdminEditUserMembershipForm` in `components/forms/` — the same "one `Edit*Form.tsx` wrapping
+  a `Modal` + a mounted-only-while-open `*Fields` component" shape as the self-service
+  `EditProfileForm`/`EditOrganizationExperienceForm` etc. under "Activation flow" above. Unlike
+  those self-service ones, every admin edit form ultimately calls the same single
+  `users/update` (partial update, admin-scoped by `id`) — the backend has no admin-scoped way to
+  touch a target user's education/training/organization-experience/social-media rows (those
+  `create`/`update`/`delete` endpoints are hardcoded to the caller's own JWT, never take an
+  `id`/`username` in the body), so "editable per scope" here means *slicing `users/update`'s
+  own fields into sections*, not reaching the owner-only child-table endpoints. `role_id` has no
+  `roles/list` endpoint either; `lib/constants.ts#USER_ROLE_OPTIONS` hardcodes the three known
+  ids (`0` Super Admin, `1` Administrator, `2` General User) inferred from the `ordina` backend's
+  `RoleName*` consts + a repository comment confirming `role_id = 0` is a real, meaningful value
+  — update that constant if the backend ever publishes a real lookup. Branch→chapter and
+  province→city→district cascading selects (create/contact/organization forms) reuse the exact
+  `SearchableSelect` + debounced-search-Route-Handler pattern from `VerificationPage`, but can't
+  reuse the `www` route handlers directly — `admin.(example.com)` rewrites to `/admin`, a
+  different origin than `www.(example.com)` (see Domain routing above), so
+  `app/(admin)/admin/api/{branches,chapters,provinces,cities,districts}/search/route.ts` are thin
+  duplicates of their `app/(www)/www/api/.../search/route.ts` counterparts, not new logic.
+  `app/(admin)/admin/master/users/create/page.tsx` renders `components/pages/AdminUserCreatePage.tsx`,
+  a flat (non-modal, non-stepped) form covering the same four sections in one page, posting to
+  `users/create`; on success it hard-navigates to the new user's detail page if an admin-assigned
+  `username` was set, otherwise back to the list (a `users/create` response has no username
+  unless the admin typed one in — there's no self-service activation step here).
+  `components/labels/UserStatusLabel.tsx`/`UserRoleLabel.tsx` map their own enum/id to a
+  `{variant, text}` pair and render through `components/common/Label.tsx` — a generic
+  color-variant pill (same idea as the sibling `sevenpreneur` project's `AppBasedLabel`/
+  `components/labels/*`: one base component owns the palette, every domain label just maps onto
+  it instead of hardcoding colors per callsite; `green`/`orange`/`red` ride this app's own
+  primary/secondary/destructive tokens since they already read that way, the rest —
+  `purple`/`blue`/`yellow`/`gray`/`pink` — are hardcoded tints the same way `AppBasedLabel`
+  hardcodes the variants this app has no token for). `Label` itself lives in `components/common/`
+  (not `components/labels/`) since it's the generic base every domain label is built on, not a
+  label itself — reach for it before hand-rolling a new colored pill anywhere else in the app;
+  any future domain-specific label (e.g. a branch/chapter status pill) belongs next to these two
+  in `components/labels/`, not inline in whatever page needs it. `components/common/Pagination.tsx`
+  is the other shared piece: a numbered-pagination component with the same page-window/ellipsis
+  logic as the sibling `sevenpreneur` project's `AppNumberPagination`, ported to plain Tailwind +
+  this app's own `Button` instead of shadcn — including always rendering, even for a single page
+  (`Pagination`'s `totalPages <= 1` isn't special-cased into hiding the whole control, matching
+  `AppNumberPagination`'s own unconditional render), so page "1" and the disabled Prev/Next arrows
+  still show instead of the pagination silently disappearing.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

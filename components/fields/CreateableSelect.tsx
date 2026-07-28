@@ -188,7 +188,8 @@ export default function CreateableSelect({
               typeof document !== "undefined" ? document.body : undefined
             }
             styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 60 }),
+              // Above Modal's z-[100] so this menu doesn't paint behind it when used inside one.
+              menuPortal: (base) => ({ ...base, zIndex: 110 }),
             }}
             formatOptionLabel={(
               option: SearchableOption & { __isNew__?: boolean }
@@ -240,7 +241,7 @@ export default function CreateableSelect({
               indicatorSeparator: () => "hidden",
               dropdownIndicator: () => "cursor-pointer px-1",
               clearIndicator: () => "cursor-pointer px-1 hover:text-destructive",
-              menuPortal: () => "z-50",
+              menuPortal: () => "z-[110]",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
               menuList: () => "max-h-60 overflow-y-auto p-1",

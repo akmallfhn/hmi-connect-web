@@ -42,6 +42,142 @@ export type CheckUsernameResult = {
   is_available: boolean;
 };
 
+// Mirrors POST /api/v1/users/list's response — the summary shape shown in the admin user table (no KTP/contact/subscription fields, those only come back from users/detail).
+export type UserListEntry = {
+  id: string;
+  chapter_id?: string;
+  chapter_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  full_name: string;
+  username?: string;
+  email: string;
+  avatar?: string;
+  role_id: number;
+  role_name?: string;
+  status: UserStatusEnum;
+  is_verified: boolean;
+};
+
+export type ListUsersOptions = {
+  search?: string;
+  status?: UserStatusEnum;
+  page?: number;
+  pageSize?: number;
+};
+
+export type PagedListResult<T> = {
+  list: T[];
+  totalData: number;
+  totalPage: number;
+  currentPage: number;
+};
+
+// Requires Super Admin — only called from the /master/users admin panel, gated by MasterLayout.
+export async function listUsers(
+  options: ListUsersOptions = {}
+): Promise<PagedListResult<UserListEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+
+  const { search, status, page, pageSize } = options;
+  const result = await callApi<ListResponse<UserListEntry>>("/api/v1/users/list", {
+    method: "POST",
+    token: sessionToken,
+    body: {
+      ...(search ? { search } : {}),
+      ...(status ? { status } : {}),
+      page: page ?? 1,
+      page_size: pageSize ?? 20,
+    },
+  });
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listUsers] request failed:", result);
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  return {
+    list,
+    totalData: metapaging?.total_data ?? list.length,
+    totalPage: metapaging?.total_page ?? 1,
+    currentPage: metapaging?.current_page ?? page ?? 1,
+  };
+}
+
+export type CreateUserPayload = {
+  full_name: string;
+  email: string;
+  chapter_id?: string;
+  username?: string;
+  ktp_full_name?: string;
+  phone_number?: string;
+  member_card?: string;
+  avatar?: string;
+  headline?: string;
+  bio?: string;
+  role_id?: number;
+  status?: UserStatusEnum;
+  is_verified?: boolean;
+  date_of_birth?: string;
+  gender?: GenderEnum;
+  address_street?: string;
+  district_id?: number;
+  is_trainer?: boolean;
+  subscription_started_at?: string;
+  subscription_ended_at?: string;
+};
+
+export type CreateUserResult = {
+  id: string;
+  chapter_id?: string;
+  chapter_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  full_name: string;
+  username?: string;
+  email: string;
+  role_id: number;
+  role_name?: string;
+  status: UserStatusEnum;
+  is_verified: boolean;
+};
+
+export async function createUser(
+  payload: CreateUserPayload
+): Promise<ApiEnvelope<CreateUserResult>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<CreateUserResult>("/api/v1/users/create", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export async function deleteUser(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
 export async function checkUsernameAvailability(
   username: string
 ): Promise<ApiEnvelope<CheckUsernameResult>> {
@@ -190,6 +326,11 @@ export type UserProfile = {
   gender?: GenderEnum;
   address_street?: string;
   district_id?: number;
+  district_name?: string;
+  city_id?: number;
+  city_name?: string;
+  province_id?: number;
+  province_name?: string;
   is_trainer: boolean;
   is_subscribe: boolean;
   subscription_started_at?: string;
@@ -394,11 +535,26 @@ export async function listFollowRecommendations(
 
 export type UpdateUserPayload = {
   id: string;
+  chapter_id?: string;
   username?: string;
   full_name?: string;
+  ktp_full_name?: string;
+  email?: string;
+  phone_number?: string;
+  member_card?: string;
+  avatar?: string;
   headline?: string;
   bio?: string;
-  avatar?: string;
+  role_id?: number;
+  status?: UserStatusEnum;
+  is_verified?: boolean;
+  date_of_birth?: string;
+  gender?: GenderEnum;
+  address_street?: string;
+  district_id?: number;
+  is_trainer?: boolean;
+  subscription_started_at?: string;
+  subscription_ended_at?: string;
 };
 
 export type UpdateUserResult = {
