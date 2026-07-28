@@ -1,42 +1,36 @@
 "use client";
 
 import {
+  Building2,
   EllipsisVertical,
-  Eye,
   Pencil,
   PlusCircle,
   Search,
   Trash2,
-  Users,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { UserListEntry } from "@/apis/users";
-import { deleteUser } from "@/lib/actions";
+import type { BranchListEntry } from "@/apis/branches";
+import { deleteBranch } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
+import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import AdminUserQuickEditForm from "../forms/AdminUserQuickEditForm";
-import UserRoleLabel from "../labels/UserRoleLabel";
-import UserStatusLabel from "../labels/UserStatusLabel";
-import UserVerifiedLabel from "../labels/UserVerifiedLabel";
+import BranchFormSheet from "../forms/BranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
-  { label: "Pending", value: "pending" },
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
-interface AdminUserListPageProps {
-  users: UserListEntry[];
+interface AdminBranchListPageProps {
+  branches: BranchListEntry[];
   totalData: number;
   totalPage: number;
   currentPage: number;
@@ -45,15 +39,15 @@ interface AdminUserListPageProps {
   pageSize: number;
 }
 
-export default function AdminUserListPage({
-  users,
+export default function AdminBranchListPage({
+  branches,
   totalData,
   totalPage,
   currentPage,
   initialSearch,
   initialStatus,
   pageSize,
-}: AdminUserListPageProps) {
+}: AdminBranchListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -65,8 +59,12 @@ export default function AdminUserListPage({
     setSearchInput(initialSearch);
   }
 
-  const [editTarget, setEditTarget] = useState<UserListEntry | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<UserListEntry | null>(null);
+  const [sheetTarget, setSheetTarget] = useState<
+    BranchListEntry | null | "create"
+  >(null);
+  const [deleteTarget, setDeleteTarget] = useState<BranchListEntry | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   function pushParams(next: Record<string, string>) {
@@ -92,17 +90,17 @@ export default function AdminUserListPage({
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      const result = await deleteUser(deleteTarget.id);
+      const result = await deleteBranch(deleteTarget.id);
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menghapus user.");
+        toast.error(result.message ?? "Gagal menghapus cabang.");
         return;
       }
-      toast.success("User berhasil dihapus.");
+      toast.success("Cabang berhasil dihapus.");
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
-      console.error("[AdminUserListPage] deleteUser threw:", err);
-      toast.error("Gagal menghapus user.");
+      console.error("[AdminBranchListPage] deleteBranch threw:", err);
+      toast.error("Gagal menghapus cabang.");
     } finally {
       setIsDeleting(false);
     }
@@ -113,25 +111,27 @@ export default function AdminUserListPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
-            User Management
+            Cabang
           </h1>
           <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Kelola akun dan hak akses user HMI Connect.
+            Kelola data Cabang HMI.
           </p>
         </div>
-        <Link href="/master/users/create" className="w-fit">
-          <Button variant="primary">
-            <PlusCircle className="size-4" />
-            Tambah User
-          </Button>
-        </Link>
+        <Button
+          variant="primary"
+          onClick={() => setSheetTarget("create")}
+          className="w-fit"
+        >
+          <PlusCircle className="size-4" />
+          Tambah Cabang
+        </Button>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-xs">
           <Input
-            inputId="user-search"
-            placeholder="Cari nama, username, atau email..."
+            inputId="branch-search"
+            placeholder="Cari nama cabang..."
             icon={<Search className="size-4" />}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -139,7 +139,7 @@ export default function AdminUserListPage({
         </div>
         <div className="w-full sm:max-w-52">
           <Select
-            selectId="user-status-filter"
+            selectId="branch-status-filter"
             placeholder="Semua Status"
             value={initialStatus}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
@@ -149,11 +149,11 @@ export default function AdminUserListPage({
       </div>
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-        {users.length === 0 ? (
+        {branches.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <Users className="size-8 text-[#5f6573]" />
+            <Building2 className="size-8 text-[#5f6573]" />
             <p className="text-sm font-medium text-[#172033]">
-              Tidak ada user ditemukan.
+              Tidak ada cabang ditemukan.
             </p>
             {(initialSearch || initialStatus) && (
               <p className="text-xs text-[#5f6573]">
@@ -166,65 +166,51 @@ export default function AdminUserListPage({
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
-                  <th className="px-4 py-3">User</th>
-                  <th className="px-4 py-3">Cabang / Komisariat</th>
-                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Nama Cabang</th>
+                  <th className="px-4 py-3">Tipe</th>
+                  <th className="px-4 py-3">Jumlah Kader</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Terverifikasi</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {users.map((user) => (
-                  <tr key={user.id} className="align-middle">
+                {branches.map((branch) => (
+                  <tr key={branch.id} className="align-middle">
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/master/users/${encodeURIComponent(user.username)}`}
-                        className="group flex items-center gap-3"
+                      <button
+                        type="button"
+                        onClick={() => setSheetTarget(branch)}
+                        className="cursor-pointer text-left"
                       >
-                        <Avatar
-                          src={user.avatar}
-                          name={user.full_name}
-                          size={36}
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
-                            {user.full_name}
-                          </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            @{user.username}
-                          </p>
-                        </div>
-                      </Link>
+                        <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
+                          {branch.name}
+                        </p>
+                        <p className="truncate text-[13px] text-[#5f6573]">
+                          {branch.coordinating_body_name ?? "—"}
+                        </p>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Label variant={branch.type === "full" ? "blue" : "yellow"}>
+                        {branch.type === "full"
+                          ? "Status: Penuh"
+                          : "Status: Persiapan"}
+                      </Label>
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
-                      {user.chapter_name ? (
-                        <div className="min-w-0">
-                          <p className="truncate">{user.chapter_name}</p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            Cabang {user.branch_name}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-[#5f6573]">—</span>
-                      )}
+                      {branch.user_count ?? "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <UserRoleLabel
-                        roleId={user.role_id}
-                        roleName={user.role_name}
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <UserStatusLabel status={user.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <UserVerifiedLabel isVerified={user.is_verified} />
+                      <Label
+                        variant={branch.status === "active" ? "green" : "red"}
+                      >
+                        {branch.status === "active" ? "Aktif" : "Tidak Aktif"}
+                      </Label>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
                         <Dropdown
-                          panelClassName="w-48"
+                          panelClassName="w-44"
                           trigger={({ toggle }) => (
                             <Button
                               variant="ghost"
@@ -236,25 +222,17 @@ export default function AdminUserListPage({
                             </Button>
                           )}
                         >
-                          <Link
-                            href={`/master/users/${encodeURIComponent(user.username)}`}
-                          >
-                            <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
-                              <Eye className="size-4 text-[#5f6573]" />
-                              Lihat Detail
-                            </div>
-                          </Link>
                           <button
                             type="button"
-                            onClick={() => setEditTarget(user)}
+                            onClick={() => setSheetTarget(branch)}
                             className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                           >
                             <Pencil className="size-4 text-[#5f6573]" />
-                            Edit Cepat
+                            Edit
                           </button>
                           <button
                             type="button"
-                            onClick={() => setDeleteTarget(user)}
+                            onClick={() => setDeleteTarget(branch)}
                             className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
                           >
                             <Trash2 className="size-4" />
@@ -271,32 +249,33 @@ export default function AdminUserListPage({
         )}
       </div>
 
-      {users.length > 0 && (
+      {branches.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
           <p className="text-center text-sm text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
-            {(currentPage - 1) * pageSize + users.length} dari {totalData} user
+            {(currentPage - 1) * pageSize + branches.length} dari {totalData}{" "}
+            cabang
           </p>
         </div>
       )}
 
-      <AdminUserQuickEditForm
-        open={editTarget !== null}
-        onClose={() => setEditTarget(null)}
+      <BranchFormSheet
+        open={sheetTarget !== null}
+        onClose={() => setSheetTarget(null)}
         onSaved={() => {
-          setEditTarget(null);
+          setSheetTarget(null);
           router.refresh();
         }}
-        user={editTarget}
+        branch={sheetTarget === "create" ? null : sheetTarget}
       />
 
       <AlertConfirmation
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Hapus user ini?"
-        message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.full_name}? Tindakan ini tidak dapat dibatalkan.`}
+        title="Hapus cabang ini?"
+        message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`}
         confirmLabel="Hapus"
         loading={isDeleting}
       />

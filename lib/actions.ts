@@ -1,6 +1,14 @@
 "use server";
 
 import {
+  createBranch as createBranchApi,
+  deleteBranch as deleteBranchApi,
+  getBranchDetail as getBranchDetailApi,
+  updateBranch as updateBranchApi,
+  type CreateBranchPayload,
+  type UpdateBranchPayload,
+} from "@/apis/branches";
+import {
   createInstitution as createInstitutionApi,
   type Institution,
 } from "@/apis/institutions";
@@ -108,6 +116,23 @@ export async function createUser(payload: CreateUserPayload) {
 
 export async function deleteUser(id: string) {
   return deleteUserApi(id);
+}
+
+// Super Admin/Administrator-only admin panel (/master/branches) — gated by MasterLayout, not re-checked here.
+export async function getBranchDetail(id: string) {
+  return getBranchDetailApi(id);
+}
+
+export async function createBranch(payload: CreateBranchPayload) {
+  return createBranchApi(payload);
+}
+
+export async function updateBranch(payload: UpdateBranchPayload) {
+  return updateBranchApi(payload);
+}
+
+export async function deleteBranch(id: string) {
+  return deleteBranchApi(id);
 }
 
 export async function followUser(userId: string) {

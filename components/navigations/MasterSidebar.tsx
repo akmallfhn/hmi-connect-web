@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
@@ -170,19 +171,20 @@ export default function MasterSidebar({
               <LogoHmiConnectHorizontal className="h-7 w-auto" />
             </Link>
           )}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsCollapsed((prev) => !prev)}
             aria-label={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
             title={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+            className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
           >
             {isCollapsed ? (
               <PanelLeftOpen className="size-4" />
             ) : (
               <PanelLeftClose className="size-4" />
             )}
-          </button>
+          </Button>
         </div>
         <div className="mt-4 -mx-4 border-t border-[#e6e9ef]" />
         <div className="mt-6 flex-1">

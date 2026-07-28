@@ -89,8 +89,9 @@ picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin`
 `/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
 `[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
-real dashboard, and `/master/users` has the real User Management CRUD panel (see Component
-conventions below).
+real dashboard, `/master/users` has the real User Management CRUD panel, and `/master/branches`
+has the real Cabang CRUD panel (see Component conventions below). `/master/chapters` and
+`/master/coordinating-bodies` are still `MasterPlaceholderPage`.
 
 ## Auth & session flow
 
@@ -132,7 +133,7 @@ conventions below).
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
+   (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
    not independent resources), `social-media-platforms.ts`, `users.ts`, `session.ts`,
    `news.ts` (categories + articles — grouped together like locations.ts, since
@@ -981,14 +982,40 @@ below) when `isVerified === false`.
   hardcodes the variants this app has no token for). `Label` itself lives in `components/common/`
   (not `components/labels/`) since it's the generic base every domain label is built on, not a
   label itself — reach for it before hand-rolling a new colored pill anywhere else in the app;
-  any future domain-specific label (e.g. a branch/chapter status pill) belongs next to these two
-  in `components/labels/`, not inline in whatever page needs it. `components/common/Pagination.tsx`
+  a domain label used in more than one place belongs next to `UserStatusLabel`/`UserRoleLabel` in
+  `components/labels/`, but a one-off (e.g. the branch table's active/inactive pill, see below)
+  is fine calling `Label` directly inline. `components/common/Pagination.tsx`
   is the other shared piece: a numbered-pagination component with the same page-window/ellipsis
   logic as the sibling `sevenpreneur` project's `AppNumberPagination`, ported to plain Tailwind +
   this app's own `Button` instead of shadcn — including always rendering, even for a single page
   (`Pagination`'s `totalPages <= 1` isn't special-cased into hiding the whole control, matching
   `AppNumberPagination`'s own unconditional render), so page "1" and the disabled Prev/Next arrows
   still show instead of the pagination silently disappearing.
+- `/master/branches` (`app/(admin)/admin/master/branches/page.tsx` → `components/pages/AdminBranchListPage.tsx`)
+  is the Cabang CRUD panel — same server-first list/search/status-filter/pagination shape as
+  `/master/users`, backed by `apis/branches.ts#listBranchesAdmin` (`branches/list` with
+  `include_aggregates: true`, scoped by `ORGANIZATION_ID`) — the list table itself shows Nama Cabang
+  (with the Badko name as a subtitle underneath, not its own column), Tipe, Jumlah Kader
+  (`user_count`, only populated when `include_aggregates` is requested), and Status. Unlike User
+  Management, create/edit here don't get their own route or a centered `Modal` — the whole point of
+  asking for this one to use a sheet was a lighter-weight CRUD panel, so
+  `components/forms/BranchFormSheet.tsx` opens in `components/modals/Sheet.tsx`, a right-anchored
+  slide-over (same chrome mechanics as `Modal.tsx` — portaled to `document.body`,
+  body-scroll-locked, Escape-to-close — `absolute inset-y-0 right-0`/`border-l` instead of centered;
+  explicit `absolute` positioning rather than `flex justify-end`, so which edge it's pinned to isn't
+  at the mercy of flexbox). One `BranchFormSheet` handles both create (`branch` prop `null`) and edit
+  (`branch` prop set from the clicked row) — small enough (name/Badko/type/status) not to need
+  per-section modals like Users got. `branches/list` already returns `type`/`coordinating_body_name`
+  alongside `name`/`status`, so editing seeds the form straight from the clicked `BranchListEntry`
+  row — no `branches/detail` fetch-on-open needed. The Badko field is a `SearchableSelect` backed by
+  the new `apis/coordinating-bodies.ts#searchCoordinatingBodies` (`coordinating-bodies/list`, same
+  `{id, name}` picker shape as `searchBranches`/`searchChapters`) through
+  `app/(admin)/admin/api/coordinating-bodies/search/route.ts` — another
+  `admin.(example.com)`-is-a-separate-origin duplicate, same reasoning as the branches/chapters/
+  locations search routes above. `coordinating-bodies/*` now has full CRUD on the backend too
+  (list/detail/create/update/delete, mirroring branches/chapters) but only `list` is wired up on
+  this side so far — there's no Badko admin panel yet, this was added specifically to unblock the
+  Cabang form's picker.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its
