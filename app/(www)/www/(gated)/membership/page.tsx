@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import MembershipPage from "@/components/pages/MembershipPage";
 import { getSession } from "@/apis/session";
 import { getMembershipDetail } from "@/apis/users";
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
 
 export default async function Membership() {
   const { sessionToken, user } = await getSession();
+
+  if (!user?.is_verified) redirect("/verification");
+
   const membership = sessionToken ? await getMembershipDetail(sessionToken) : null;
 
   return (
