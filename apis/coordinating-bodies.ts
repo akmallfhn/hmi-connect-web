@@ -96,6 +96,8 @@ export type CoordinatingBodyListEntry = {
   status: StatusEnum;
   // Only present when include_aggregates is requested — active kader count under this Badko via its branches/chapters.
   user_count?: number;
+  // Only present when include_aggregates is requested — branch count under this Badko.
+  branch_count?: number;
 };
 
 export type ListCoordinatingBodiesOptions = {

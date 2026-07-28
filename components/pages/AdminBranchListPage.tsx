@@ -194,11 +194,12 @@ export default function AdminBranchListPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[840px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
                   <th className="px-4 py-3">Nama Cabang</th>
                   <th className="px-4 py-3">Tipe</th>
+                  <th className="px-4 py-3">Jumlah Komisariat</th>
                   <th className="px-4 py-3">Jumlah Kader</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
@@ -229,6 +230,9 @@ export default function AdminBranchListPage({
                           ? "Status: Penuh"
                           : "Status: Persiapan"}
                       </Label>
+                    </td>
+                    <td className="px-4 py-3 text-[#172033]">
+                      {branch.chapter_count ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
                       {branch.user_count ?? "—"}

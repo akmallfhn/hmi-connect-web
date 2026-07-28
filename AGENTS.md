@@ -1001,8 +1001,9 @@ below) when `isVerified === false`.
   `include_aggregates: true`, scoped by `ORGANIZATION_ID`) — the list table itself shows Nama Cabang
   (with "Badko {coordinating_body_name}" as a subtitle underneath, not its own column), Tipe (rendered as a `Label`
   pill too — blue "Status: Penuh"/yellow "Status: Persiapan", inline in the page rather than its
-  own file in `components/labels/`, per the one-off-vs-shared rule below), Jumlah Kader
-  (`user_count`, only populated when `include_aggregates` is requested), and Status. The filter row
+  own file in `components/labels/`, per the one-off-vs-shared rule below), Jumlah Komisariat
+  (`chapter_count`) and Jumlah Kader (`user_count`) — both only populated when `include_aggregates`
+  is requested — and Status. The filter row
   also has an optional Badko `SearchableSelect` (`coordinating_body_id`, backed by
   `apis/coordinating-bodies.ts#searchCoordinatingBodies` through
   `app/(admin)/admin/api/coordinating-bodies/search/route.ts`) alongside search/status — `branches/list`
@@ -1051,7 +1052,8 @@ below) when `isVerified === false`.
   — there's nothing above a Badko to filter by. `coordinating-bodies/list` does return an
   `organization_name` per row, but it's deliberately left off `CoordinatingBodyListEntry` and the
   table entirely — this app only has one organization, so every row would repeat the same value.
-  The table is just Nama Badko, Jumlah Kader (`user_count`, `include_aggregates: true`), and Status.
+  The table is Nama Badko, Jumlah Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from
+  `include_aggregates: true` — and Status.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
 - `components/common/*` — small primitives reused across more than one of the folders

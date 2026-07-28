@@ -80,6 +80,8 @@ export type BranchListEntry = {
   status: StatusEnum;
   // Only present when include_aggregates is requested — active kader count under this branch.
   user_count?: number;
+  // Only present when include_aggregates is requested — chapter count under this branch.
+  chapter_count?: number;
 };
 
 export type ListBranchesOptions = {

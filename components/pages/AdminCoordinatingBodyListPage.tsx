@@ -156,10 +156,11 @@ export default function AdminCoordinatingBodyListPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
+            <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
                   <th className="px-4 py-3">Nama Badko</th>
+                  <th className="px-4 py-3">Jumlah Cabang</th>
                   <th className="px-4 py-3">Jumlah Kader</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
@@ -178,6 +179,9 @@ export default function AdminCoordinatingBodyListPage({
                           {coordinatingBody.name}
                         </p>
                       </button>
+                    </td>
+                    <td className="px-4 py-3 text-[#172033]">
+                      {coordinatingBody.branch_count ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
                       {coordinatingBody.user_count ?? "—"}
