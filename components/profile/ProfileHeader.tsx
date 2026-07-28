@@ -1,5 +1,9 @@
 "use client";
 
+import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
+import type { SocialMediaAccountEntry } from "@/apis/users";
+import { followUser, unfollowUser } from "@/lib/actions";
+import { isSuccessStatus } from "@/lib/types";
 import {
   Building2,
   Calendar,
@@ -7,7 +11,6 @@ import {
   ExternalLink,
   Pencil,
   Plus,
-  Sparkles,
   TriangleAlert,
   UserCheck,
   UserPlus,
@@ -16,10 +19,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
-import type { SocialMediaAccountEntry } from "@/apis/users";
-import { followUser, unfollowUser } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import VerifiedBadge from "../common/VerifiedBadge";
@@ -70,7 +69,11 @@ function SocialLinks({
     if (!isOwnProfile) return null;
 
     return (
-      <div className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}>
+      <div
+        className={["flex flex-wrap gap-2", className]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <button
           type="button"
           onClick={onAdd}
@@ -84,7 +87,9 @@ function SocialLinks({
   }
 
   return (
-    <div className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}>
+    <div
+      className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}
+    >
       {accounts.map((account) => (
         <a
           key={account.id}
@@ -107,7 +112,9 @@ function SocialLinks({
               {account.platform_name.slice(0, 1)}
             </span>
           )}
-          <span className="max-w-[140px] truncate">{account.platform_name}</span>
+          <span className="max-w-[140px] truncate">
+            {account.platform_name}
+          </span>
           <ExternalLink className="size-3 text-current/70" />
         </a>
       ))}
@@ -141,9 +148,9 @@ export default function ProfileHeader({
   const [followLoading, setFollowLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
-  const [followListType, setFollowListType] = useState<"following" | "followers" | null>(
-    null
-  );
+  const [followListType, setFollowListType] = useState<
+    "following" | "followers" | null
+  >(null);
   const displayName = fullName ?? "Kader";
   const affiliation = [
     chapterName ? `HMI ${chapterName}` : null,
@@ -153,9 +160,10 @@ export default function ProfileHeader({
     .join(" • ");
   const hasAffiliation = Boolean(affiliation);
   const joinedLabel = createdAt
-    ? new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(
-        new Date(createdAt)
-      )
+    ? new Intl.DateTimeFormat("id-ID", {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(createdAt))
     : null;
 
   async function handleFollowToggle() {
@@ -267,7 +275,6 @@ export default function ProfileHeader({
             )}
             {isSubscribe && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary-soft px-2 py-0.5 text-xs font-semibold text-secondary">
-                <Sparkles className="size-3" />
                 HMI Connect+
               </span>
             )}
@@ -275,11 +282,15 @@ export default function ProfileHeader({
 
           {username && <p className="text-sm text-[#5f6573]">@{username}</p>}
 
-          {headline && <p className="mt-3 text-sm text-[#172033]">{headline}</p>}
+          {headline && (
+            <p className="mt-3 text-sm text-[#172033]">{headline}</p>
+          )}
 
           <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573]">
             <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
-            <span>{hasAffiliation ? affiliation : "Belum tergabung cabang"}</span>
+            <span>
+              {hasAffiliation ? affiliation : "Belum tergabung cabang"}
+            </span>
           </p>
 
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -302,7 +313,9 @@ export default function ProfileHeader({
               onClick={() => setFollowListType("following")}
               className="cursor-pointer hover:underline"
             >
-              <span className="font-bold text-[#172033]">{followingCount ?? 0}</span>{" "}
+              <span className="font-bold text-[#172033]">
+                {followingCount ?? 0}
+              </span>{" "}
               <span className="text-[#5f6573]">Mengikuti</span>
             </button>
             <button
