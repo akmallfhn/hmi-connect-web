@@ -39,7 +39,6 @@ interface AdminChapterListPageProps {
   initialStatus: string;
   pageSize: number;
   selectedBranch: { id: string; name: string } | null;
-  branchNameById: Record<string, string>;
 }
 
 export default function AdminChapterListPage({
@@ -51,7 +50,6 @@ export default function AdminChapterListPage({
   initialStatus,
   pageSize,
   selectedBranch,
-  branchNameById,
 }: AdminChapterListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -218,11 +216,9 @@ export default function AdminChapterListPage({
                         <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
                           {chapter.name}
                         </p>
-                        {!selectedBranch && (
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            {branchNameById[chapter.branch_id] ?? "—"}
-                          </p>
-                        )}
+                        <p className="truncate text-[13px] text-[#5f6573]">
+                          {chapter.branch_name}
+                        </p>
                       </button>
                     </td>
                     <td className="px-4 py-3">

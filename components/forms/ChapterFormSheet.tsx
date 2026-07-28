@@ -74,10 +74,16 @@ function ChapterFields({
   const [name, setName] = useState(chapter?.name ?? "");
   const [type, setType] = useState<BranchTypeEnum>(chapter?.type ?? "full");
   const [status, setStatus] = useState<StatusEnum>(chapter?.status ?? "active");
-  const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
+  const [branch, setBranch] = useState<SearchableOption | null>(
+    chapter ? { label: chapter.branch_name, value: chapter.branch_id } : defaultBranch
+  );
   const [isSaving, setIsSaving] = useState(false);
 
-  const branchDefaultOptions: SearchableOption[] = defaultBranch ? [defaultBranch] : [];
+  const branchDefaultOptions: SearchableOption[] = chapter
+    ? [{ label: chapter.branch_name, value: chapter.branch_id }]
+    : defaultBranch
+      ? [defaultBranch]
+      : [];
 
   async function loadBranchOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });

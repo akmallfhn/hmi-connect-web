@@ -1030,20 +1030,18 @@ below) when `isVerified === false`.
   the page's filter row has search, an optional Cabang `SearchableSelect` (backed by the existing
   `apis/branches.ts#searchBranches` through the same `app/(admin)/admin/api/branches/search/route.ts`
   the Cabang form already uses) driving a `branch_id` URL param, and status — table/pagination render
-  unconditionally, there's no "pick a branch first" gate. `chapters/list` still doesn't return a
-  `branch_name` per row the way `branches/list` returns `coordinating_body_name`, which only matters
-  when browsing unfiltered: `app/(admin)/admin/master/chapters/page.tsx` resolves that case itself —
-  when `branch_id` is omitted, it collects the unique `branch_id`s in the current page of results and
-  resolves each one's name via parallel `getBranchDetail` calls, passed down as a `branchNameById`
-  map for the table's subtitle row; once a Cabang filter is active every row already shares that one
-  branch, so the map isn't needed and the subtitle is skipped entirely. `apis/chapters.ts` gained the
-  same `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts`
-  has (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/`BranchDetail`), and
+  unconditionally, there's no "pick a branch first" gate. `chapters/list` now also returns
+  `branch_name` per row (mirroring `branches/list`'s `coordinating_body_name`), so the table shows it
+  as a subtitle under the chapter name unconditionally, same as Cabang's Badko subtitle — no
+  extra per-row lookup needed. `apis/chapters.ts` gained the same
+  `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts` has
+  (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/`BranchDetail`), and
   `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx` field-for-field with Cabang
-  standing in for Badko — seeded from the list page's own selected `branch_id`/name (passed down as
-  `defaultBranch`, optional here too) for both create and edit when a filter is active, otherwise
-  starts empty and the admin picks a Cabang in the sheet itself (`branch_id` is still required by
-  `chapters/create`/`update`, only `list` relaxed it).
+  standing in for Badko — editing seeds the Cabang field straight from the clicked row's own
+  `branch_id`/`branch_name` (not the list page's filter context, which may differ or be absent when
+  browsing unfiltered); only creating falls back to the filter's selected branch via the sheet's
+  optional `defaultBranch` prop, same reasoning as `BranchFormSheet`'s `defaultCoordinatingBody`.
+  `branch_id` is still required by `chapters/create`/`update`, only `list` relaxed it.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

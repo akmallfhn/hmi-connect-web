@@ -61,10 +61,11 @@ export async function searchChapters(
   return { list, hasMore };
 }
 
-// Mirrors POST /api/v1/chapters/list's response — the admin table shape (/master/chapters). Unlike branches/list, chapters/list has no name field for its parent (branch_name), so the admin list page resolves it separately when browsing unfiltered.
+// Mirrors POST /api/v1/chapters/list's response — the admin table shape (/master/chapters).
 export type ChapterListEntry = {
   id: string;
   branch_id: string;
+  branch_name: string;
   name: string;
   type: BranchTypeEnum;
   status: StatusEnum;
