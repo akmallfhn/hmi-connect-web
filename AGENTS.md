@@ -984,15 +984,93 @@ below) when `isVerified === false`.
   the resulting URL is just kept in local state (`avatars/admin-create-<timestamp>.<ext>`, not
   `avatars/<userId>-...`, since there's no user id yet) and only sent along with the rest of the
   form on submit, rather than persisted immediately on change like the self-service form does.
-  `MasterSidebar.tsx` — desktop-only collapse (`isCollapsed`, persisted to `localStorage` under
-  `master_sidebar_collapsed`, read after mount like the sibling `ailene-os` project's
-  `SidebarContext` to avoid a hydration mismatch) shrinks the `aside` from `w-64` to `w-20` and
-  drops every label down to icon-only (`title` attributes pick up the slack for a11y/hover
-  tooltips); the mobile drawer has no separate collapse concept, it's just open or closed. Each
-  `NAV_ITEMS` entry now also carries an optional `exact` flag — `NavList`'s active-route check is
-  `pathname.startsWith(href)` by default so "User Management" stays lit on `/master/users/[username]`
-  and `/master/users/create` too, but "Dashboard" (`href: "/master"`) opts into exact matching
-  since every other item's href would otherwise also start with `/master`.
+  `components/navigations/AdminSidebar.tsx` is the reusable shell behind every admin sidebar —
+  desktop-only collapse (`isCollapsed`, persisted to `localStorage` under a caller-supplied
+  `storageKey` so sibling sidebars don't clobber each other's state, read after mount like the
+  sibling `ailene-os` project's `SidebarContext` to avoid a hydration mismatch) shrinks the
+  `aside` from `w-64` to `w-20` and drops every label down to icon-only (`title` attributes pick
+  up the slack for a11y/hover tooltips); the mobile drawer has no separate collapse concept,
+  it's just open or closed. The top row (`renderHeader(collapsed)` output + the collapse toggle
+  button) switches from a horizontal `justify-between` row to a `flex-col` stack when collapsed —
+  cramming both into one row at `w-20` doesn't leave enough width for a non-empty header (unlike
+  Master's, which renders nothing there when collapsed), so a caller whose header stays visible
+  while collapsed (e.g. `BranchSidebar`) would otherwise get it silently clipped. It owns the
+  collapse/mobile-drawer chrome, `NavList`, and `ProfileBlock` (avatar/name/role + logout) — the
+  only things a caller supplies are `navItems: AdminNavEntry[]` and `renderHeader(collapsed)` (a
+  render prop for the top-left header content — a logo, or an entity's own icon/name/status —
+  since that's the one piece that genuinely differs per admin area). `AdminNavEntry` is
+  `AdminNavItem | AdminNavGroup` — a plain item (`label`/`href`/`icon`/optional `exact`, same as
+  before — `NavList`'s active-route check is `pathname.startsWith(href)` by default, e.g. so
+  "User Management" stays lit on `/master/users/[username]`/`/master/users/create` too, but a
+  Dashboard-style item whose `href` is a prefix of every sibling route opts into exact matching
+  instead) or a named group (`{ groupName, items }`) rendered by `NavGroup` — a collapsible
+  section (uppercase tracking-wide label + chevron, defaults open, `useState` not persisted)
+  styled after the sibling `sevenpreneur` project's `AppSidebarGroupMenu`/`AppSidebarMenuItem`;
+  when the whole sidebar is icon-only, `NavGroup` drops its header entirely and just stacks the
+  group's items, matching that same reference's collapsed behavior. `components/navigations/
+  MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, the same fixed
+  flat `NAV_ITEMS` array as before (Dashboard/User Management/Badko/Cabang/Komisariat — no groups),
+  and a `renderHeader` that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing
+  when collapsed (matching the original pre-extraction behavior).
+  `components/navigations/BranchSidebar.tsx` is the Cabang-scoped sibling, rendered by
+  `app/(admin)/admin/branches/[branch_id]/layout.tsx` (a new nested layout — the `[id]` pages
+  under `/admin/branches`, `/admin/chapters`, `/admin/coordinating-bodies` previously had no
+  layout/sidebar of their own, just a bare centered placeholder directly under the outer
+  `/admin/layout.tsx` gate). That layout does the same `isSuperAdmin`/`can_manage_branch`-and-
+  matching-own-`branch_id` check the old single-page version did (`PageState` forbidden on
+  failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
+  not_found if the id doesn't resolve) — since this layout is now the authoritative gate for
+  everything under `/admin/branches/[branch_id]/*`, the nested pages don't re-check access
+  themselves, unlike the standalone-page convention described in Domain routing above.
+  `BranchSidebar`'s `renderHeader` shows the `LogoHmi` SVG emblem (not a lucide icon) in a square
+  `rounded-lg` badge (deliberately not `rounded-full`, unlike `Avatar`/`ProfileBlock`'s circular
+  badges elsewhere in this file) — kept visible even when the whole sidebar is collapsed (just the
+  badge, linking back to the branch's own dashboard), which is what motivated `AdminSidebar`'s
+  collapsed-header stacking fix above. When expanded it also shows the branch name and, instead of
+  the `Label` pill the Cabang/Komisariat admin tables use for the same `type` field (see
+  `/master/branches` above), a plain-text "Status: Penuh"/"Status: Persiapan" line next to a small
+  blinking status dot (two stacked `absolute`/`relative` spans, the outer one `animate-ping`) —
+  blue for `full`, amber for `provisional` — no pill background/border/padding here, by design,
+  distinct from the table's own styling. Its nav items route to a top-level Dashboard
+  (`/branches/{id}`, exact-matched, still `MasterPlaceholderPage`), then two `AdminNavGroup`s —
+  "Organisasi" (Kelola Komisariat at `/branches/{id}/chapters`, still a placeholder; Daftar Kader
+  at `/branches/{id}/members`, real — see below) and "Program" (Latihan Kader 2 at
+  `/branches/{id}/lk2`, Konfercab at `/branches/{id}/konfercab`, both still placeholders).
+  Komisariat/Badko admin areas (`/admin/chapters/[chapter_id]`,
+  `/admin/coordinating-bodies/[coordinating_body_id]`) still render the old bare placeholder with
+  no layout/sidebar; `AdminSidebar` is generic enough for a future `ChapterSidebar`/
+  `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
+  yet. Daftar Kader (`app/(admin)/admin/branches/[branch_id]/members/`) is a **read-only** roster —
+  no create/edit/delete, unlike `/master/users` — reusing the same `apis/users.ts#listUsers`/
+  `getUserByUsername` the master User Management panel uses: `listUsers` gained an optional
+  `branchId` option (`branch_id` in the `users/list` request body, per its own README — narrows to
+  users in any chapter under that branch) that this route's `page.tsx` always passes, so there's no
+  separate branch picker, it's implicit from the URL. `components/pages/BranchMemberListPage.tsx`
+  is styled identically to `AdminUserListPage.tsx` (same header/search/status-filter/table/
+  pagination look, matching the "front-end style samain kayak di master" ask this was built to) but
+  drops the "Tambah User" button and the row-level "..." dropdown (Edit Cepat/Hapus) entirely, and
+  swaps the "Cabang / Komisariat" column for a bare "Komisariat" one — showing the branch name on
+  every row would just repeat the one branch this whole page is already scoped to, same reasoning
+  `/master/coordinating-bodies` uses to drop `organization_name` (see below). Its row links go to
+  `/branches/{id}/members/{username}` instead of `/master/users/{username}`.
+  `app/(admin)/admin/branches/[branch_id]/members/[username]/page.tsx` mirrors
+  `/master/users/[username]/page.tsx` (keyed by `username`, not id, same `users/detail`-has-no-
+  lookup-by-id reasoning) but additionally 404s if the fetched user's own `branch_id` doesn't match
+  the URL's `branch_id` — a user outside this branch isn't a valid resource under this branch's own
+  roster, regardless of who's viewing. `components/pages/BranchMemberDetailPage.tsx` mirrors
+  `AdminUserDetailPage.tsx`'s section-card layout (Akun & Peran / Data KTP & Kontak / Organisasi /
+  Informasi Lainnya, same stat pills up top) but every `SectionCard` drops its "Edit" button (no
+  `onEdit` prop at all, unlike the master version) and none of the four `AdminEditUser*Form` modals
+  or the bottom "Hapus User" button are rendered — this page has no mutation path, only `Field`/
+  `StatPill`/`SectionCard`/`formatDate`/`GENDER_LABEL`/`STATUS_DOT_CLASSNAME` copied in verbatim as
+  local helpers, same copy-adapt-per-page convention this file already uses for `WorkExperienceCard`/
+  `PublicationCard`/`HonorAwardCard` above rather than a new shared abstraction. `listUsers`'s
+  `users/list` call (Super Admin/Administrator only per its own README) is stricter than this
+  layout's own `can_manage_branch`-matching-own-`branch_id` gate — a branch-scoped
+  `can_manage_branch` admin who isn't literally `Super Admin`/`Administrator` can reach this page
+  past the layout gate but would still get a `FORBIDDEN` from the backend on the list/detail calls
+  themselves; this is the same pre-existing `Administrator`-role gap already noted under Domain
+  routing above, not something new this feature introduces.
   `components/labels/UserStatusLabel.tsx`/`UserRoleLabel.tsx` map their own enum/id to a
   `{variant, text}` pair and render through `components/common/Label.tsx` — a generic
   color-variant pill (same idea as the sibling `sevenpreneur` project's `AppBasedLabel`/

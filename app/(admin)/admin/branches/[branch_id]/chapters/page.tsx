@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import MasterPlaceholderPage from "@/components/pages/MasterPlaceholderPage";
 
 export const metadata: Metadata = {
-  title: "Dashboard Cabang",
+  title: "Kelola Komisariat",
   robots: {
     index: false,
     follow: false,
   },
 };
 
-export default function BranchDashboardPage() {
+export default function BranchChaptersPage() {
   return (
     <MasterPlaceholderPage
-      title="Dashboard Cabang"
-      description="Ringkasan data Cabang akan segera hadir di sini."
+      title="Kelola Komisariat"
+      description="Daftar dan pengaturan Komisariat di bawah Cabang ini akan segera hadir di sini."
     />
   );
 }

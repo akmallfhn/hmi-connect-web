@@ -62,6 +62,8 @@ export type UserListEntry = {
 export type ListUsersOptions = {
   search?: string;
   status?: UserStatusEnum;
+  // Narrows the list to users in any chapter under this one branch.
+  branchId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -73,7 +75,7 @@ export type PagedListResult<T> = {
   currentPage: number;
 };
 
-// Requires Super Admin — only called from the /master/users admin panel, gated by MasterLayout.
+// Requires Super Admin/Administrator — used by /master/users and the /branches/[branch_id]/members read-only roster.
 export async function listUsers(
   options: ListUsersOptions = {}
 ): Promise<PagedListResult<UserListEntry>> {
@@ -81,13 +83,14 @@ export async function listUsers(
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { search, status, page, pageSize } = options;
+  const { search, status, branchId, page, pageSize } = options;
   const result = await callApi<ListResponse<UserListEntry>>("/api/v1/users/list", {
     method: "POST",
     token: sessionToken,
     body: {
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),
+      ...(branchId ? { branch_id: branchId } : {}),
       page: page ?? 1,
       page_size: pageSize ?? 20,
     },
