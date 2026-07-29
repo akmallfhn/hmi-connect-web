@@ -69,6 +69,10 @@ export type ChapterListEntry = {
   name: string;
   type: BranchTypeEnum;
   status: StatusEnum;
+  // Derived from institution_id, null until it's set on the chapter.
+  institution_id: number | null;
+  institution_name: string | null;
+  institution_avatar: string | null;
   // Only present when include_aggregates is requested — active kader count directly in this chapter.
   user_count?: number;
 };
@@ -143,6 +147,9 @@ export type ChapterDetail = {
   name: string;
   type: BranchTypeEnum;
   status: StatusEnum;
+  institution_id: number | null;
+  institution_name: string | null;
+  institution_avatar: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -152,6 +159,8 @@ export type CreateChapterPayload = {
   name: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
+  // Must match an existing lookup_institutions row.
+  institution_id?: number;
 };
 
 export async function createChapter(
@@ -176,6 +185,8 @@ export type UpdateChapterPayload = {
   name?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
+  // Must match an existing lookup_institutions row.
+  institution_id?: number;
 };
 
 export async function updateChapter(

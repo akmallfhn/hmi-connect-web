@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import type { ChapterListEntry } from "@/apis/chapters";
-import { createChapter, updateChapter } from "@/lib/actions";
+import type { Institution } from "@/apis/institutions";
+import { createChapter, createInstitution, updateChapter } from "@/lib/actions";
 import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
+import CreateableSelect, {
+  type SearchableOption as CreateableOption,
+} from "../fields/CreateableSelect";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
@@ -77,7 +81,44 @@ function ChapterFields({
   const [branch, setBranch] = useState<SearchableOption | null>(
     chapter ? { label: chapter.branch_name, value: chapter.branch_id } : defaultBranch
   );
+  const [institution, setInstitution] = useState<CreateableOption | null>(
+    chapter?.institution_id
+      ? {
+          label: chapter.institution_name ?? "",
+          value: chapter.institution_id,
+          image: chapter.institution_avatar,
+        }
+      : null
+  );
   const [isSaving, setIsSaving] = useState(false);
+
+  const institutionDefaultOptions: CreateableOption[] = institution
+    ? [institution]
+    : [];
+
+  async function loadInstitutionOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+    const response = await fetch(`/api/institutions/search?${params}`);
+    const json = await response.json();
+    const results: Institution[] = json.data ?? [];
+    return {
+      options: results.map((item) => ({
+        label: item.name,
+        value: item.id,
+        image: item.image_url,
+      })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
+  async function createInstitutionOption(
+    name: string
+  ): Promise<CreateableOption | null> {
+    const created = await createInstitution(name);
+    if (!created) return null;
+    return { label: created.name, value: created.id, image: created.image_url };
+  }
 
   const branchDefaultOptions: SearchableOption[] = chapter
     ? [{ label: chapter.branch_name, value: chapter.branch_id }]
@@ -116,12 +157,14 @@ function ChapterFields({
             type,
             status,
             branch_id: String(branch.value),
+            ...(institution ? { institution_id: Number(institution.value) } : {}),
           })
         : await createChapter({
             name,
             type,
             status,
             branch_id: String(branch.value),
+            ...(institution ? { institution_id: Number(institution.value) } : {}),
           });
 
       if (!isSuccessStatus(result.status)) {
@@ -160,6 +203,16 @@ function ChapterFields({
         loadOptions={loadBranchOptions}
         defaultOptions={branchDefaultOptions}
         required
+      />
+      <CreateableSelect
+        selectId="chapter-institution"
+        label="Asal Universitas"
+        placeholder="Cari universitas..."
+        value={institution}
+        onChange={setInstitution}
+        loadOptions={loadInstitutionOptions}
+        defaultOptions={institutionDefaultOptions}
+        onCreateOption={createInstitutionOption}
       />
       <Select
         selectId="chapter-type"

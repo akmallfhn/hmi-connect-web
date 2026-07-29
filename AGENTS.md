@@ -1059,7 +1059,17 @@ below) when `isVerified === false`.
   `branch_id`/`branch_name` (not the list page's filter context, which may differ or be absent when
   browsing unfiltered); only creating falls back to the filter's selected branch via the sheet's
   optional `defaultBranch` prop, same reasoning as `BranchFormSheet`'s `defaultCoordinatingBody`.
-  `branch_id` is still required by `chapters/create`/`update`, only `list` relaxed it.
+  `branch_id` is still required by `chapters/create`/`update`, only `list` relaxed it. A chapter also
+  optionally links to a university via `institution_id` (`institution_name`/`institution_avatar` are
+  derived, `null` until it's set — see `internal/organization/README.md` in the `ordina` backend repo).
+  The table's "Asal Universitas" column and `ChapterFormSheet`'s matching field render/pick it the
+  same logo-or-`University`-icon-fallback way the activation flow's institution field does
+  (`CreateableSelect`'s `image` option support, see Activation flow above) — search is backed by the
+  same `apis/institutions.ts#searchInstitutions` the activation flow uses, through a duplicate
+  `app/(admin)/admin/api/institutions/search/route.ts` (same cross-origin reasoning as the
+  branches/chapters/provinces/cities/districts search route duplicates above), and picking "Tambah"
+  on a new name calls the existing `createInstitution` action. It's optional on both `create` and
+  `update`, unlike activation's LK1-style hard requirement.
 - `/master/coordinating-bodies` (`app/(admin)/admin/master/coordinating-bodies/page.tsx` →
   `components/pages/AdminCoordinatingBodyListPage.tsx`) is the Badko CRUD panel, the simplest of
   the three org-hierarchy panels since a coordinating body sits at the top — no `type` field

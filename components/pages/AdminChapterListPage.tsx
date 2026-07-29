@@ -7,7 +7,9 @@ import {
   PlusCircle,
   Search,
   Trash2,
+  University,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +22,9 @@ import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import ChapterFormSheet from "../forms/ChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 
@@ -194,10 +198,11 @@ export default function AdminChapterListPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[880px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
                   <th className="px-4 py-3">Nama Komisariat</th>
+                  <th className="px-4 py-3">Asal Universitas</th>
                   <th className="px-4 py-3">Tipe</th>
                   <th className="px-4 py-3">Jumlah Kader</th>
                   <th className="px-4 py-3">Status</th>
@@ -220,6 +225,30 @@ export default function AdminChapterListPage({
                           Cabang {chapter.branch_name}
                         </p>
                       </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      {chapter.institution_name ? (
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 p-0.5 shrink-0 items-center justify-center border border-[#e6e9ef] overflow-hidden rounded-full bg-[#f5f7fb]">
+                            {chapter.institution_avatar ? (
+                              <Image
+                                className="h-full w-full object-cover"
+                                src={chapter.institution_avatar}
+                                alt={chapter.institution_name}
+                                width={24}
+                                height={24}
+                              />
+                            ) : (
+                              <University className="size-3.5 text-[#5f6573]" />
+                            )}
+                          </span>
+                          <span className="truncate text-[#172033]">
+                            {chapter.institution_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[#5f6573]">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <Label
@@ -287,8 +316,8 @@ export default function AdminChapterListPage({
           <Pagination currentPage={currentPage} totalPages={totalPage} />
           <p className="text-center text-sm text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
-            {(currentPage - 1) * pageSize + chapters.length} dari{" "}
-            {totalData} komisariat
+            {(currentPage - 1) * pageSize + chapters.length} dari {totalData}{" "}
+            komisariat
           </p>
         </div>
       )}
