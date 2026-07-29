@@ -10,7 +10,7 @@ export default async function NewsCard() {
 
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
-      <div className="flex items-center gap-2 text-sm font-semibold text-[#172033]">
+      <div className="flex items-center gap-2 text-sm font-semibold text-[#172033] xl:text-[15px]">
         <TrendingUp className="size-4 text-primary" />
         Kabar Trending
       </div>
@@ -39,10 +39,12 @@ export default async function NewsCard() {
               )}
             </div>
             <div className="min-w-0">
-              <p className="line-clamp-2 text-sm font-medium text-[#172033]">
+              <p className="line-clamp-2 text-sm font-medium text-[#172033] xl:text-[15px]">
                 {article.title}
               </p>
-              <p className="text-xs text-[#5f6573]">{article.source_name}</p>
+              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                {article.source_name}
+              </p>
             </div>
           </a>
         ))}
@@ -50,7 +52,7 @@ export default async function NewsCard() {
 
       <Link
         href="/news"
-        className="mt-3 flex items-center justify-between border-t border-[#e6e9ef] pt-3 text-sm font-medium text-primary"
+        className="mt-3 flex items-center justify-between border-t border-[#e6e9ef] pt-3 text-sm font-medium text-primary xl:text-[15px]"
       >
         Lihat Semua Berita
         <ChevronRight className="size-4" />

@@ -57,17 +57,25 @@ export default function ProfileSidebar({
               <span>{displayName}</span>
               {isVerified && <VerifiedBadge size={16} />}
             </p>
-            {username && <p className="text-sm text-[#5f6573]">@{username}</p>}
-            {headline && <p className="text-sm text-[#5f6573]">{headline}</p>}
+            {username && (
+              <p className="text-sm text-[#5f6573] xl:text-[15px]">
+                @{username}
+              </p>
+            )}
+            {headline && (
+              <p className="text-sm text-[#5f6573] xl:text-[15px]">
+                {headline}
+              </p>
+            )}
             {latestEducation && (
-              <p className="truncate text-sm text-[#5f6573]">
+              <p className="truncate text-sm text-[#5f6573] xl:text-[15px]">
                 {latestEducation.institution_name}
               </p>
             )}
           </div>
         </Link>
 
-        <div className="mt-4 flex items-center justify-center gap-3 text-sm">
+        <div className="mt-4 flex items-center justify-center gap-3 text-sm xl:text-[15px]">
           <button
             type="button"
             onClick={() => setFollowListType("following")}

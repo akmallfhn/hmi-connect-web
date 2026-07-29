@@ -352,7 +352,7 @@ export default function FeedItemCard({
   return (
     <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       {repostedBy && (
-        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573]">
+        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573] xl:text-[13px]">
           <Repeat2 className="size-3.5" />
           <Avatar
             src={repostedBy.avatar}
@@ -376,7 +376,7 @@ export default function FeedItemCard({
             <p className="font-semibold text-[#172033]">
               {feed.creator_full_name}
             </p>
-            <p className="text-xs text-[#5f6573]">
+            <p className="text-xs text-[#5f6573] xl:text-[13px]">
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
             </p>
@@ -399,7 +399,7 @@ export default function FeedItemCard({
           <div className="flex flex-col py-1">
             <Link
               href={`/feeds/${feed.id}`}
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
             >
               <Eye className="size-4 text-[#5f6573]" />
               Lihat post
@@ -409,7 +409,7 @@ export default function FeedItemCard({
                 <button
                   type="button"
                   onClick={() => setShowEditForm(true)}
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
                 >
                   <Pencil className="size-4 text-[#5f6573]" />
                   Edit post
@@ -417,7 +417,7 @@ export default function FeedItemCard({
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft xl:text-[15px]"
                 >
                   <Trash2 className="size-4" />
                   Delete post
@@ -428,7 +428,7 @@ export default function FeedItemCard({
         </Dropdown>
       </div>
 
-      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033]">
+      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033] xl:text-[15px]">
         {content}
       </p>
 
@@ -449,7 +449,7 @@ export default function FeedItemCard({
         <button
           type="button"
           onClick={() => setShowReactorsModal(true)}
-          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-[#5f6573]"
+          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-[#5f6573] xl:text-[13px]"
         >
           <span className="flex items-center -space-x-1">
             {(reaction.reactionEmojis.length > 0
@@ -474,7 +474,7 @@ export default function FeedItemCard({
             variant="ghost"
             onClick={handleReactionButtonClick}
             disabled={reaction.reacting}
-            className={`w-full gap-1.5 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+            className={`w-full gap-1.5 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] xl:text-[15px] ${
               reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
             }`}
           >
@@ -499,7 +499,7 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={handleToggleComments}
-          className="gap-1.5 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
+          className="gap-1.5 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
         >
           <MessageCircle className="size-4" />
           {totalCommentCount > 0 && totalCommentCount}
@@ -511,7 +511,7 @@ export default function FeedItemCard({
               variant="ghost"
               onClick={toggle}
               disabled={reposting}
-              className={`w-full rounded-lg py-2 text-sm hover:bg-[#f5f7fb] ${
+              className={`w-full rounded-lg py-2 text-sm hover:bg-[#f5f7fb] xl:text-[15px] ${
                 reposted ? "text-secondary" : "text-[#5f6573]"
               }`}
             >
@@ -527,7 +527,7 @@ export default function FeedItemCard({
               title={
                 isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined
               }
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1]"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1] xl:text-[15px]"
             >
               <Repeat2 className="size-4 text-[#5f6573]" />
               {reposted ? "Batalkan Repost" : "Repost"}
@@ -535,7 +535,7 @@ export default function FeedItemCard({
             <button
               type="button"
               onClick={handleQuoteRepost}
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
             >
               <Quote className="size-4 text-[#5f6573]" />
               Quote Repost
@@ -545,7 +545,7 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={() => setShowShareModal(true)}
-          className="rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
+          className="rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
         >
           <Share2 className="size-4" />
         </Button>
@@ -565,7 +565,7 @@ export default function FeedItemCard({
             <button
               type="button"
               onClick={handleToggleComments}
-              className="mt-2 pl-3 text-xs font-semibold text-[#5f6573] hover:underline"
+              className="mt-2 pl-3 text-xs font-semibold text-[#5f6573] hover:underline xl:text-[13px]"
             >
               Lihat {commentCount - 1} komentar lainnya
             </button>
@@ -576,10 +576,12 @@ export default function FeedItemCard({
       {showComments && (
         <div className="mt-3 flex flex-col gap-3 border-t border-[#e6e9ef] pt-3">
           {loadingComments && (
-            <p className="text-xs text-[#5f6573]">Memuat komentar...</p>
+            <p className="text-xs text-[#5f6573] xl:text-[13px]">
+              Memuat komentar...
+            </p>
           )}
           {!loadingComments && commentsLoaded && comments.length === 0 && (
-            <p className="py-4 text-center text-xs text-[#5f6573]">
+            <p className="py-4 text-center text-xs text-[#5f6573] xl:text-[13px]">
               Jadilah yang pertama berkomentar!
             </p>
           )}
@@ -606,7 +608,7 @@ export default function FeedItemCard({
               disabled={postingComment}
             />
           ) : (
-            <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-[#f8fafc] px-4 py-3 text-sm text-[#5f6573]">
+            <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-[#f8fafc] px-4 py-3 text-sm text-[#5f6573] xl:text-[15px]">
               <Link
                 href="/auth/login"
                 className="font-semibold text-primary hover:underline"

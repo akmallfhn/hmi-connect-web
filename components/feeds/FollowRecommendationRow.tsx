@@ -60,11 +60,15 @@ export default function FollowRecommendationRow({
       <div className="min-w-0 flex-1">
         <Link
           href={profileHref}
-          className="block truncate text-sm font-medium text-[#172033] hover:underline"
+          className="block truncate text-sm font-medium text-[#172033] hover:underline xl:text-[15px]"
         >
           {connection.full_name}
         </Link>
-        {subtitle && <p className="truncate text-xs text-[#5f6573]">{subtitle}</p>}
+        {subtitle && (
+          <p className="truncate text-xs text-[#5f6573] xl:text-[13px]">
+            {subtitle}
+          </p>
+        )}
       </div>
       <Button
         variant={isFollowing ? "outline" : "primary"}

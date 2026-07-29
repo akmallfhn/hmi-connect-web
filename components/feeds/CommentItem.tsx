@@ -153,12 +153,18 @@ export default function CommentItem({
       </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-xl bg-[#f5f7fb] px-3 py-2">
-          <p className="text-xs font-semibold text-[#172033]">{comment.full_name}</p>
-          <p className="text-sm text-[#172033]">{comment.message}</p>
+          <p className="text-xs font-semibold text-[#172033] xl:text-[13px]">
+            {comment.full_name}
+          </p>
+          <p className="text-sm text-[#172033] xl:text-[15px]">
+            {comment.message}
+          </p>
         </div>
 
-        <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-[#5f6573]">
-          <span className="text-[11px]">{formatRelativeTime(comment.created_at)}</span>
+        <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-[#5f6573] xl:text-[13px]">
+          <span className="text-[11px] xl:text-xs">
+            {formatRelativeTime(comment.created_at)}
+          </span>
 
           <span className="relative flex items-center gap-0.5">
             <button
@@ -171,7 +177,9 @@ export default function CommentItem({
               }`}
             >
               {reaction.activeReactionInfo ? (
-                <span className="text-sm leading-none">{reaction.activeReactionInfo.emoji}</span>
+                <span className="text-sm leading-none xl:text-[15px]">
+                  {reaction.activeReactionInfo.emoji}
+                </span>
               ) : (
                 <Heart className="size-3.5" />
               )}
@@ -225,7 +233,11 @@ export default function CommentItem({
 
         {!isReply && expanded && (
           <div className="mt-2 flex flex-col gap-2 pl-3">
-            {loadingReplies && <p className="text-xs text-[#5f6573]">Memuat balasan...</p>}
+            {loadingReplies && (
+              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                Memuat balasan...
+              </p>
+            )}
             {replies.map((reply) => (
               <CommentItem
                 key={reply.id}
@@ -251,7 +263,7 @@ export default function CommentItem({
                 disabled={postingReply}
               />
             ) : (
-              <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-white px-3 py-2 text-xs text-[#5f6573]">
+              <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-white px-3 py-2 text-xs text-[#5f6573] xl:text-[13px]">
                 <Link
                   href="/auth/login"
                   className="font-semibold text-primary hover:underline"
