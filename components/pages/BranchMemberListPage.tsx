@@ -6,10 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { UserListEntry } from "@/apis/users";
 import Avatar from "../common/Avatar";
+import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 
@@ -158,10 +158,13 @@ export default function BranchMemberListPage({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <UserRoleLabel
-                        roleId={user.role_id}
-                        roleName={user.role_name}
-                      />
+                      <Label
+                        variant={user.can_manage_branch ? "purple" : "gray"}
+                      >
+                        {user.can_manage_branch
+                          ? "Administrator Cabang"
+                          : "Kader Anggota"}
+                      </Label>
                     </td>
                     <td className="px-4 py-3">
                       <UserStatusLabel status={user.status} />

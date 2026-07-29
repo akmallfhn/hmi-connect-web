@@ -1033,14 +1033,32 @@ below) when `isVerified === false`.
   blue for `full`, amber for `provisional` — no pill background/border/padding here, by design,
   distinct from the table's own styling. Its nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, still `MasterPlaceholderPage`), then two `AdminNavGroup`s —
-  "Organisasi" (Kelola Komisariat at `/branches/{id}/chapters`, still a placeholder; Daftar Kader
-  at `/branches/{id}/members`, real — see below) and "Program" (Latihan Kader 2 at
+  "Organisasi" (Kelola Komisariat at `/branches/{id}/chapters`, real — see below; Daftar Kader at
+  `/branches/{id}/members`, real — see further below) and "Program" (Latihan Kader 2 at
   `/branches/{id}/lk2`, Konfercab at `/branches/{id}/konfercab`, both still placeholders).
-  Komisariat/Badko admin areas (`/admin/chapters/[chapter_id]`,
-  `/admin/coordinating-bodies/[coordinating_body_id]`) still render the old bare placeholder with
-  no layout/sidebar; `AdminSidebar` is generic enough for a future `ChapterSidebar`/
+  Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
+  placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
-  yet. Daftar Kader (`app/(admin)/admin/branches/[branch_id]/members/`) is a **read-only** roster —
+  yet. `/admin/chapters/[chapter_id]` (a Komisariat managing itself) also still renders the old bare
+  placeholder — the branch-scoped Kelola Komisariat page below is a Cabang managing its *own*
+  Komisariat rows, a different scope from that still-unbuilt page.
+  Kelola Komisariat (`app/(admin)/admin/branches/[branch_id]/chapters/`) is **create/edit only, no
+  delete** (deliberately narrower than `/master/chapters`, which has all three) — it reuses
+  `apis/chapters.ts#listChaptersAdmin`/`createChapter`/`updateChapter` but not `deleteChapter`.
+  `listChaptersAdmin`'s existing optional `branchId` (already there for `/master/chapters`' own
+  Cabang filter, see below) is always passed by this route's `page.tsx`, so chapters outside this
+  branch never show up. `components/pages/BranchChapterListPage.tsx` is `AdminChapterListPage.tsx`'s
+  table/filter/pagination look reused verbatim, minus the (now redundant, single-branch-scoped)
+  Cabang `SearchableSelect` filter and the "Cabang {branch_name}" subtitle under each row's name —
+  same "already scoped, don't repeat it per row" reasoning as Daftar Kader's own column trim below —
+  and minus the master version's Dropdown/`AlertConfirmation` delete flow entirely: the Aksi column
+  is just a single ghost icon `Button` (`Pencil`) that opens the same edit sheet the row's own name
+  already opens by clicking it. `components/forms/BranchChapterFormSheet.tsx` mirrors
+  `ChapterFormSheet.tsx` field-for-field (Nama Komisariat, Asal Universitas via the same institution
+  `CreateableSelect`, Tipe, Status) but drops the Cabang picker entirely — `branchId` is a fixed prop
+  threaded straight into `createChapter`'s `branch_id`, never sent on `updateChapter` (a chapter
+  can't be moved to another branch from this scoped screen). Daftar Kader
+  (`app/(admin)/admin/branches/[branch_id]/members/`) is a **read-only** roster —
   no create/edit/delete, unlike `/master/users` — reusing the same `apis/users.ts#listUsers`/
   `getUserByUsername` the master User Management panel uses: `listUsers` gained an optional
   `branchId` option (`branch_id` in the `users/list` request body, per its own README — narrows to
@@ -1052,7 +1070,12 @@ below) when `isVerified === false`.
   swaps the "Cabang / Komisariat" column for a bare "Komisariat" one — showing the branch name on
   every row would just repeat the one branch this whole page is already scoped to, same reasoning
   `/master/coordinating-bodies` uses to drop `organization_name` (see below). Its row links go to
-  `/branches/{id}/members/{username}` instead of `/master/users/{username}`.
+  `/branches/{id}/members/{username}` instead of `/master/users/{username}`. Its "Role" column also
+  diverges from `/master/users`' own `UserRoleLabel` (which reads `role_id`/`role_name`) — this one
+  reads the row's own `can_manage_branch` boolean instead (now added to `UserListEntry`, present on
+  every `users/list` row per its own README) and renders a plain inline `Label` (`"Admin Tingkat
+  Cabang"` purple when `true`, `"User"` gray otherwise) rather than a shared `UserRoleLabel`-style
+  component, since this mapping is local to this one page.
   `app/(admin)/admin/branches/[branch_id]/members/[username]/page.tsx` mirrors
   `/master/users/[username]/page.tsx` (keyed by `username`, not id, same `users/detail`-has-no-
   lookup-by-id reasoning) but additionally 404s if the fetched user's own `branch_id` doesn't match

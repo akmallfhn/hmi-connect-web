@@ -57,6 +57,7 @@ export type UserListEntry = {
   role_name?: string;
   status: UserStatusEnum;
   is_verified: boolean;
+  can_manage_branch: boolean;
 };
 
 export type ListUsersOptions = {
