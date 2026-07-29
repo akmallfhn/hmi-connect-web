@@ -12,6 +12,7 @@ import {
   listSocialMediaAccounts,
   listTrainingHistories,
   listUserActivity,
+  listWorkExperiences,
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
 
@@ -75,6 +76,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     { list: educationHistories },
     { list: trainingHistories },
     { list: organizationExperiences },
+    { list: workExperiences },
     { list: honorAwards },
     { list: publications },
     { list: socialMediaAccounts },
@@ -86,6 +88,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     listEducationHistories(username),
     listTrainingHistories(username),
     listOrganizationExperiences(username),
+    listWorkExperiences(username),
     listHonorAwards(username),
     listPublications(username),
     listSocialMediaAccounts(profile.id),
@@ -119,6 +122,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         isFollowedByMe: profile.is_followed_by_me,
         educationHistories,
         organizationExperiences,
+        workExperiences,
         socialMediaAccounts,
         trainingHistories,
         publications,

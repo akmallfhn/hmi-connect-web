@@ -675,23 +675,28 @@ below) when `isVerified === false`.
   `components/navigations/*` above) to keep the bell/tab live without polling. Not a
   `postgres_changes` subscription — see the note under `Header`'s bell above for why.
 - `components/profile/*` — the `/profile/[username]` page's sections (`ProfileHeader`,
-  `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`, `PublicationCard`,
-  `HonorAwardCard`, `ActivityCard`). The route is keyed by `username`, not the user's id —
-  `users/detail`, `education-histories/list`, `training-histories/list`,
-  `organization-experiences/list`, `publications/list`, and `honor-awards/list` all take
-  `{ username }` now (`apis/users.ts#getUserByUsername` + the matching `list*` functions);
-  `social-media-accounts/list` is the one holdout still keyed by `{ id }`. `PublicationCard`
+  `AboutCard`, `WorkExperienceCard`, `OrganizationExperienceCard`, `EducationCard`,
+  `TrainingCard`, `PublicationCard`, `HonorAwardCard`, `ActivityCard`). The route is keyed by
+  `username`, not the user's id — `users/detail`, `education-histories/list`,
+  `training-histories/list`, `organization-experiences/list`, `work-experiences/list`,
+  `publications/list`, and `honor-awards/list` all take `{ username }` now
+  (`apis/users.ts#getUserByUsername` + the matching `list*` functions);
+  `social-media-accounts/list` is the one holdout still keyed by `{ id }`. `WorkExperienceCard`
+  sits directly above `OrganizationExperienceCard` ("Pengalaman Organisasi"), `PublicationCard`
   sits directly below `TrainingCard` ("Riwayat Kaderisasi") and directly above `HonorAwardCard`
-  in `ProfilePage.tsx`'s section order, and both it and `HonorAwardCard` are otherwise a
-  straight copy of `OrganizationExperienceCard`'s shape — same batch-draft `Edit*Form`
-  (`EditPublicationForm.tsx`/`EditHonorAwardForm.tsx`, add/edit/remove several rows in one
-  Modal, submitted together via `Promise.all`, same `userId`-not-actually-in-the-payload guard
-  the sibling forms keep for consistency), same "hide the whole card if empty and not your own
-  profile" rule. `HonorAwardCard`'s four fields (`title`, `issuer`, `year`, optional
-  `description`) and `PublicationCard`'s five (`title`, `publisher`, `year`, optional `url`,
-  optional `description`) mirror `organization-experiences`' shape closely enough that no new
-  field primitives were needed — `PublicationCard` renders `title` as a link out to `url` when
-  present, plain text otherwise. Feed (`creator_username`), comment/reply (`username`), and reactor
+  in `ProfilePage.tsx`'s section order, and all three of `WorkExperienceCard`/`PublicationCard`/
+  `HonorAwardCard` are otherwise a straight copy of `OrganizationExperienceCard`'s shape — same
+  batch-draft `Edit*Form` (`EditWorkExperienceForm.tsx`/`EditPublicationForm.tsx`/
+  `EditHonorAwardForm.tsx`, add/edit/remove several rows in one Modal, submitted together via
+  `Promise.all`, same `userId`-not-actually-in-the-payload guard the sibling forms keep for
+  consistency), same "hide the whole card if empty and not your own profile" rule.
+  `WorkExperienceCard`'s fields (`company_name`, `position_title`, `start_year`, optional
+  `end_year`, optional `description`) are `organization-experiences`' shape verbatim with
+  `company_name` standing in for `organization_name`; `HonorAwardCard`'s four fields (`title`,
+  `issuer`, `year`, optional `description`) and `PublicationCard`'s five (`title`, `publisher`,
+  `year`, optional `url`, optional `description`) mirror it closely enough too that no new
+  field primitives were needed anywhere — `PublicationCard` renders `title` as a link out to
+  `url` when present, plain text otherwise. Feed (`creator_username`), comment/reply (`username`), and reactor
   (`reactions/list`'s `username`) responses also carry a username alongside their `id`/
   `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
   route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
@@ -887,13 +892,14 @@ below) when `isVerified === false`.
   title/message/confirm/cancel dialog for destructive actions (currently just feed
   delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
-  `EditAvatarForm`, `EditOrganizationExperienceForm`, `EditEducationForm`,
-  `EditTrainingForm`, `EditPublicationForm`, `EditHonorAwardForm`), each wraps `<Modal>` around
-  an inner `*Fields` component that's only mounted while `open` is true (so its `useState`
-  seeds fresh from props every open — don't "fix" this with a `useEffect` + `setState`,
-  that's the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,
-  `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`, `PublicationCard`,
-  `HonorAwardCard`) owns the `open` boolean itself via local `useState` and
+  `EditAvatarForm`, `EditOrganizationExperienceForm`, `EditWorkExperienceForm`,
+  `EditEducationForm`, `EditTrainingForm`, `EditPublicationForm`, `EditHonorAwardForm`), each
+  wraps `<Modal>` around an inner `*Fields` component that's only mounted while `open` is true
+  (so its `useState` seeds fresh from props every open — don't "fix" this with a `useEffect` +
+  `setState`, that's the anti-pattern this sidesteps). The card that triggers one
+  (`ProfileHeader`, `WorkExperienceCard`, `OrganizationExperienceCard`, `EducationCard`,
+  `TrainingCard`, `PublicationCard`, `HonorAwardCard`) owns the `open` boolean itself via
+  local `useState` and
   calls `router.refresh()` in `onSaved` — there's no shared modal context; each card is
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateUser` directly) rather than batching into the profile form's own "Simpan" button,

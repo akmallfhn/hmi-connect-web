@@ -36,6 +36,7 @@ import {
   createSocialMediaAccount as createSocialMediaAccountApi,
   createTrainingHistory as createTrainingHistoryApi,
   createUser as createUserApi,
+  createWorkExperience as createWorkExperienceApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteHonorAward as deleteHonorAwardApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
@@ -43,6 +44,7 @@ import {
   deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
   deleteUser as deleteUserApi,
+  deleteWorkExperience as deleteWorkExperienceApi,
   followUser as followUserApi,
   listFollowers as listFollowersApi,
   listFollowing as listFollowingApi,
@@ -55,6 +57,7 @@ import {
   updateSocialMediaAccount as updateSocialMediaAccountApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
+  updateWorkExperience as updateWorkExperienceApi,
   unfollowUser as unfollowUserApi,
   verifyUser as verifyUserApi,
   type ActivationPayload,
@@ -65,6 +68,7 @@ import {
   type CreateSocialMediaAccountPayload,
   type CreateTrainingHistoryPayload,
   type CreateUserPayload,
+  type CreateWorkExperiencePayload,
   type ListUsersOptions,
   type UpdateEducationHistoryPayload,
   type UpdateHonorAwardPayload,
@@ -73,6 +77,7 @@ import {
   type UpdateSocialMediaAccountPayload,
   type UpdateTrainingHistoryPayload,
   type UpdateUserPayload,
+  type UpdateWorkExperiencePayload,
   type VerificationPayload,
 } from "@/apis/users";
 import {
@@ -249,6 +254,18 @@ export async function updateOrganizationExperience(
 
 export async function deleteOrganizationExperience(id: string) {
   return deleteOrganizationExperienceApi(id);
+}
+
+export async function createWorkExperience(payload: CreateWorkExperiencePayload) {
+  return createWorkExperienceApi(payload);
+}
+
+export async function updateWorkExperience(payload: UpdateWorkExperiencePayload) {
+  return updateWorkExperienceApi(payload);
+}
+
+export async function deleteWorkExperience(id: string) {
+  return deleteWorkExperienceApi(id);
 }
 
 export async function createHonorAward(payload: CreateHonorAwardPayload) {

@@ -8,6 +8,7 @@ import type {
   PublicationEntry,
   SocialMediaAccountEntry,
   TrainingHistoryEntry,
+  WorkExperienceEntry,
 } from "@/apis/users";
 import PageMargin from "../common/PageMargin";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
@@ -21,6 +22,7 @@ import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
 import ProfileHeader from "../profile/ProfileHeader";
 import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
+import WorkExperienceCard from "../profile/WorkExperienceCard";
 
 interface ViewerProps {
   fullName?: string;
@@ -47,6 +49,7 @@ interface ProfileProps extends ViewerProps {
   isFollowedByMe?: boolean;
   educationHistories: EducationHistoryEntry[];
   organizationExperiences: OrganizationExperienceEntry[];
+  workExperiences: WorkExperienceEntry[];
   socialMediaAccounts: SocialMediaAccountEntry[];
   trainingHistories: TrainingHistoryEntry[];
   publications: PublicationEntry[];
@@ -105,6 +108,11 @@ export default function ProfilePage({
               socialMediaPlatforms={socialMediaPlatforms}
             />
             <AboutCard bio={profile.bio} />
+            <WorkExperienceCard
+              userId={profile.userId}
+              entries={profile.workExperiences}
+              isOwnProfile={isOwnProfile}
+            />
             <OrganizationExperienceCard
               userId={profile.userId}
               entries={profile.organizationExperiences}

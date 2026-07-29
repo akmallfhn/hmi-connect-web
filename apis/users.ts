@@ -285,6 +285,15 @@ export type OrganizationExperienceEntry = {
   description?: string;
 };
 
+export type WorkExperienceEntry = {
+  id: string;
+  company_name: string;
+  position_title: string;
+  start_year: number;
+  end_year?: number;
+  description?: string;
+};
+
 export type SocialMediaAccountEntry = {
   id: string;
   platform_id: number;
@@ -761,6 +770,39 @@ export async function listHonorAwards(
   return { list, hasMore };
 }
 
+export async function listWorkExperiences(
+  username: string,
+  options: ListOptions = {}
+): Promise<ListResult<WorkExperienceEntry>> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<WorkExperienceEntry>>(
+    "/api/v1/users/work-experiences/list",
+    {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        username,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listWorkExperiences] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
 export async function listPublications(
   username: string,
   options: ListOptions = {}
@@ -1055,6 +1097,69 @@ export async function deleteOrganizationExperience(id: string): Promise<ApiEnvel
   }
 
   return callApi("/api/v1/users/organization-experiences/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
+export type CreateWorkExperiencePayload = {
+  company_name: string;
+  position_title: string;
+  start_year: number;
+  end_year?: number;
+  description?: string;
+};
+
+export async function createWorkExperience(
+  payload: CreateWorkExperiencePayload
+): Promise<ApiEnvelope<WorkExperienceEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<WorkExperienceEntry>("/api/v1/users/work-experiences/create", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export type UpdateWorkExperiencePayload = {
+  id: string;
+  company_name?: string;
+  position_title?: string;
+  start_year?: number;
+  end_year?: number;
+  description?: string;
+};
+
+export async function updateWorkExperience(
+  payload: UpdateWorkExperiencePayload
+): Promise<ApiEnvelope<WorkExperienceEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<WorkExperienceEntry>("/api/v1/users/work-experiences/update", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export async function deleteWorkExperience(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/work-experiences/delete", {
     method: "POST",
     token: sessionToken,
     body: { id },
