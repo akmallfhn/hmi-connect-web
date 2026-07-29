@@ -229,7 +229,7 @@ export default function AdminChapterListPage({
                     <td className="px-4 py-3">
                       {chapter.institution_name ? (
                         <div className="flex items-center gap-2">
-                          <span className="flex size-7 p-0.5 shrink-0 items-center justify-center border border-[#e6e9ef] overflow-hidden rounded-full bg-[#f5f7fb]">
+                          <span className="flex size-7 p-0.75 shrink-0 items-center justify-center border border-[#e6e9ef] overflow-hidden rounded-full bg-[#f5f7fb]">
                             {chapter.institution_avatar ? (
                               <Image
                                 className="h-full w-full object-cover"
