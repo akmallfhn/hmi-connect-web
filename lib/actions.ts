@@ -1,6 +1,14 @@
 "use server";
 
 import {
+  grantBranchAdmin as grantBranchAdminApi,
+  grantChapterAdmin as grantChapterAdminApi,
+  grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
+  revokeBranchAdmin as revokeBranchAdminApi,
+  revokeChapterAdmin as revokeChapterAdminApi,
+  revokeCoordinatingBodyAdmin as revokeCoordinatingBodyAdminApi,
+} from "@/apis/access";
+import {
   createBranch as createBranchApi,
   deleteBranch as deleteBranchApi,
   getBranchDetail as getBranchDetailApi,
@@ -145,6 +153,31 @@ export async function createUser(payload: CreateUserPayload) {
 
 export async function deleteUser(id: string) {
   return deleteUserApi(id);
+}
+
+// Super Admin-only — see apis/access.ts.
+export async function grantBranchAdmin(id: string) {
+  return grantBranchAdminApi(id);
+}
+
+export async function grantChapterAdmin(id: string) {
+  return grantChapterAdminApi(id);
+}
+
+export async function grantCoordinatingBodyAdmin(id: string) {
+  return grantCoordinatingBodyAdminApi(id);
+}
+
+export async function revokeBranchAdmin(id: string) {
+  return revokeBranchAdminApi(id);
+}
+
+export async function revokeChapterAdmin(id: string) {
+  return revokeChapterAdminApi(id);
+}
+
+export async function revokeCoordinatingBodyAdmin(id: string) {
+  return revokeCoordinatingBodyAdminApi(id);
 }
 
 // Super Admin/Administrator-only admin panel (/master/branches) — gated by MasterLayout, not re-checked here.

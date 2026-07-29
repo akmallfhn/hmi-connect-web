@@ -968,7 +968,25 @@ below) when `isVerified === false`.
   `roles/list` endpoint either; `lib/constants.ts#USER_ROLE_OPTIONS` hardcodes the three known
   ids (`0` Super Admin, `1` Administrator, `2` General User) inferred from the `ordina` backend's
   `RoleName*` consts + a repository comment confirming `role_id = 0` is a real, meaningful value
-  — update that constant if the backend ever publishes a real lookup. Branch→chapter and
+  — update that constant if the backend ever publishes a real lookup. The Organisasi card also
+  renders three `Switch` toggles (`components/buttons/Switch.tsx`, same as the account card's own
+  "Terverifikasi" field) — Admin Badko/Admin Cabang/Admin Komisariat, reading
+  `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_chapter` off `UserProfile` — but
+  **only when `user.role_name === "Administrator"`**, since the backend's grant endpoints 409 for
+  anyone else (see below). These aren't part of `AdminEditUserOrganizationForm`'s modal at all —
+  they sit directly in the card, below the Field grid, and flipping one doesn't apply immediately:
+  it opens a second `AlertConfirmation` (`confirmVariant="primary"` for granting, `"destructive"`
+  for revoking) and only calls the actual endpoint on confirm, so the switch snaps back to its
+  real value if the admin cancels. They're backed by a new `apis/access.ts` — six thin wrappers
+  (`grant`/`revoke` × `branch-admin`/`chapter-admin`/`coordinating-body-admin`) over the
+  `/api/v1/access/grant/*` and `/api/v1/access/revoke/*` endpoints, which live under `/access`
+  rather than `/users` since they're access-control actions, not profile CRUD (see `internal/user/
+  README.md`'s "Access control endpoints" section) — all six require literal `Super Admin` on the
+  backend (stricter than `users/update`'s Super Admin/Administrator), take just `{ id }`, and
+  return the full updated `users/detail` shape; a grant 409s unless the target's `role_id` is
+  already `Administrator`, and revoking someone's last remaining scope resets their `role_id` back
+  to `General User` server-side, which is why this page just `router.refresh()`s on success rather
+  than patching local state. Branch→chapter and
   province→city→district cascading selects (create/contact/organization forms) reuse the exact
   `SearchableSelect` + debounced-search-Route-Handler pattern from `VerificationPage`, but can't
   reuse the `www` route handlers directly — `admin.(example.com)` rewrites to `/admin`, a

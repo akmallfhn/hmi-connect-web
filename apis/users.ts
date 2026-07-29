@@ -361,6 +361,9 @@ export type UserProfile = {
   province_id?: number;
   province_name?: string;
   is_subscribe: boolean;
+  can_manage_chapter: boolean;
+  can_manage_branch: boolean;
+  can_manage_coordinating_body: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
   created_at: string;
