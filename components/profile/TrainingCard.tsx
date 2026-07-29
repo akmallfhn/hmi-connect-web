@@ -33,7 +33,7 @@ export default function TrainingCard({
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#172033]">
+        <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
           Riwayat Kaderisasi
         </h2>
         {isOwnProfile && (
@@ -51,13 +51,15 @@ export default function TrainingCard({
               <Award className="size-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#172033]">
+              <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
                 Latihan Kader {entry.level.replace("LK", "")} ({entry.level})
               </p>
-              <p className="text-sm text-[#5f6573]">
+              <p className="text-sm text-[#5f6573] xl:text-[15px]">
                 {entry.organizer_name} • {RESULT_LABELS[entry.result]}
               </p>
-              <p className="text-xs text-[#5f6573]">{entry.year}</p>
+              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                {entry.year}
+              </p>
             </div>
           </div>
         ))}

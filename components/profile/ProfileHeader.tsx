@@ -280,13 +280,17 @@ export default function ProfileHeader({
             )}
           </div>
 
-          {username && <p className="text-sm text-[#5f6573]">@{username}</p>}
-
-          {headline && (
-            <p className="mt-3 text-sm text-[#172033]">{headline}</p>
+          {username && (
+            <p className="text-sm text-[#5f6573] xl:text-[15px]">@{username}</p>
           )}
 
-          <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573]">
+          {headline && (
+            <p className="mt-3 text-sm text-[#172033] xl:text-[15px]">
+              {headline}
+            </p>
+          )}
+
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
             <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
             <span>
               {hasAffiliation ? affiliation : "Belum tergabung cabang"}
@@ -300,7 +304,7 @@ export default function ProfileHeader({
               onAdd={() => setIsEditOpen(true)}
             />
             {joinedLabel && (
-              <span className="flex items-center gap-1.5 text-sm text-[#5f6573]">
+              <span className="flex items-center gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
                 <Calendar className="size-3.5" />
                 Bergabung {joinedLabel}
               </span>

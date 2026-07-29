@@ -31,7 +31,9 @@ export default function EducationCard({
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#172033]">Pendidikan</h2>
+        <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+          Pendidikan
+        </h2>
         {isOwnProfile && (
           <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
             <Pencil className="size-3.5" />
@@ -57,13 +59,13 @@ export default function EducationCard({
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#172033]">
+              <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
                 {entry.institution_name}
               </p>
-              <p className="text-sm text-[#5f6573]">
+              <p className="text-sm text-[#5f6573] xl:text-[15px]">
                 {DEGREE_LABELS[entry.degree]} • {entry.major}
               </p>
-              <p className="text-xs text-[#5f6573]">
+              <p className="text-xs text-[#5f6573] xl:text-[13px]">
                 {entry.start_year} – {entry.end_year ?? "Sekarang"}
               </p>
             </div>

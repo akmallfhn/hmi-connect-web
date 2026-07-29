@@ -10,11 +10,13 @@ interface ActivityCardProps {
 export default function ActivityCard({ username, entries }: ActivityCardProps) {
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
-      <h2 className="text-sm font-semibold text-[#172033]">Aktivitas</h2>
+      <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+        Aktivitas
+      </h2>
 
       <div className="mt-3 flex flex-col gap-4">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573]">
+          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573] xl:text-[15px]">
             Belum ada aktivitas.
           </p>
         ) : (
@@ -32,7 +34,7 @@ export default function ActivityCard({ username, entries }: ActivityCardProps) {
       {username && entries.length > 0 && (
         <Link
           href={`/profile/${username}/activities`}
-          className="mt-4 block border-t border-[#e6e9ef] pt-3 text-center text-xs font-semibold text-primary hover:underline"
+          className="mt-4 block border-t border-[#e6e9ef] pt-3 text-center text-xs font-semibold text-primary hover:underline xl:text-sm"
         >
           Lihat semua
         </Link>

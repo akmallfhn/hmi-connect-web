@@ -26,7 +26,7 @@ export default function HonorAwardCard({
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#172033]">
+        <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
           Honor & Penghargaan
         </h2>
         {isOwnProfile && (
@@ -39,7 +39,7 @@ export default function HonorAwardCard({
 
       <div className="mt-3 flex flex-col gap-4">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573]">
+          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573] xl:text-[15px]">
             Belum ada honor atau penghargaan yang ditambahkan.
           </p>
         ) : (
@@ -49,13 +49,17 @@ export default function HonorAwardCard({
                 <Trophy className="size-5" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#172033]">
+                <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
                   {entry.title}
                 </p>
-                <p className="text-sm text-[#5f6573]">{entry.issuer}</p>
-                <p className="text-xs text-[#5f6573]">{entry.year}</p>
+                <p className="text-sm text-[#5f6573] xl:text-[15px]">
+                  {entry.issuer}
+                </p>
+                <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                  {entry.year}
+                </p>
                 {entry.description && (
-                  <p className="mt-1 text-sm leading-relaxed text-[#5f6573]">
+                  <p className="mt-1 text-sm leading-relaxed text-[#5f6573] xl:text-[15px]">
                     {entry.description}
                   </p>
                 )}

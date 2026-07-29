@@ -26,7 +26,9 @@ export default function PublicationCard({
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#172033]">Publikasi</h2>
+        <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+          Publikasi
+        </h2>
         {isOwnProfile && (
           <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
             <Pencil className="size-3.5" />
@@ -37,7 +39,7 @@ export default function PublicationCard({
 
       <div className="mt-3 flex flex-col gap-4">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573]">
+          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573] xl:text-[15px]">
             Belum ada publikasi yang ditambahkan.
           </p>
         ) : (
@@ -52,17 +54,23 @@ export default function PublicationCard({
                     href={entry.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-semibold text-[#172033] hover:text-primary hover:underline"
+                    className="text-sm font-semibold text-[#172033] hover:text-primary hover:underline xl:text-[15px]"
                   >
                     {entry.title}
                   </a>
                 ) : (
-                  <p className="text-sm font-semibold text-[#172033]">{entry.title}</p>
+                  <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+                    {entry.title}
+                  </p>
                 )}
-                <p className="text-sm text-[#5f6573]">{entry.publisher}</p>
-                <p className="text-xs text-[#5f6573]">{entry.year}</p>
+                <p className="text-sm text-[#5f6573] xl:text-[15px]">
+                  {entry.publisher}
+                </p>
+                <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                  {entry.year}
+                </p>
                 {entry.description && (
-                  <p className="mt-1 text-sm leading-relaxed text-[#5f6573]">
+                  <p className="mt-1 text-sm leading-relaxed text-[#5f6573] xl:text-[15px]">
                     {entry.description}
                   </p>
                 )}
