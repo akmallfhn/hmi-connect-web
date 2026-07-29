@@ -2,6 +2,8 @@
 
 import {
   Award,
+  BookText,
+  FileCheck2,
   GraduationCap,
   LayoutDashboard,
   Users,
@@ -28,6 +30,8 @@ function getNavItems(branchId: string): AdminNavEntry[] {
     {
       groupName: "Organisasi",
       items: [
+        { label: "Penerbitan SK", href: `${base}/sk`, icon: FileCheck2 },
+        { label: "AD ART", href: `${base}/ad-art`, icon: BookText },
         {
           label: "Kelola Komisariat",
           href: `${base}/chapters`,

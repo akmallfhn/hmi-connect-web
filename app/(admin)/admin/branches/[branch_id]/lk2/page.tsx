@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import MasterPlaceholderPage from "@/components/pages/MasterPlaceholderPage";
+import BranchLk2Page from "@/components/pages/BranchLk2Page";
 
 export const metadata: Metadata = {
   title: "Latihan Kader 2",
@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BranchLk2Page() {
-  return (
-    <MasterPlaceholderPage
-      title="Latihan Kader 2"
-      description="Data penyelenggaraan Latihan Kader 2 (LK2) Cabang ini akan segera hadir di sini."
-    />
-  );
+interface BranchLk2RouteProps {
+  params: Promise<{ branch_id: string }>;
+}
+
+export default async function BranchLk2Route({ params }: BranchLk2RouteProps) {
+  const { branch_id } = await params;
+  return <BranchLk2Page branchId={branch_id} />;
 }

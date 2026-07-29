@@ -26,8 +26,6 @@ const googleSans = Google_Sans({
   adjustFontFallback: false,
 });
 
-// Purpose-built for Quranic Arabic (correct tashkeel/diacritic placement), not a general
-// Arabic UI font — used only for text_arabic/name_arabic in the Quran pages (see globals.css).
 const amiriQuran = Amiri_Quran({
   variable: "--font-amiri-quran",
   subsets: ["arabic"],
@@ -44,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${amiriQuran.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${amiriQuran.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col scroll-smooth">
         <ScrollToTop />
