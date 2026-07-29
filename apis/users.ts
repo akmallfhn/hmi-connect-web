@@ -301,6 +301,15 @@ export type HonorAwardEntry = {
   description?: string;
 };
 
+export type PublicationEntry = {
+  id: string;
+  title: string;
+  publisher: string;
+  year: number;
+  url?: string;
+  description?: string;
+};
+
 // Mirrors POST /api/v1/users/detail's response 1:1 — some fields here are PII, opt in per field rather than spreading this whole object into UI.
 export type UserProfile = {
   id: string;
@@ -752,6 +761,39 @@ export async function listHonorAwards(
   return { list, hasMore };
 }
 
+export async function listPublications(
+  username: string,
+  options: ListOptions = {}
+): Promise<ListResult<PublicationEntry>> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<PublicationEntry>>(
+    "/api/v1/users/publications/list",
+    {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        username,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listPublications] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  return { list, hasMore };
+}
+
 export async function listSocialMediaAccounts(
   id: string,
   options: ListOptions = {}
@@ -1074,6 +1116,69 @@ export async function deleteHonorAward(id: string): Promise<ApiEnvelope> {
   }
 
   return callApi("/api/v1/users/honor-awards/delete", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
+export type CreatePublicationPayload = {
+  title: string;
+  publisher: string;
+  year: number;
+  url?: string;
+  description?: string;
+};
+
+export async function createPublication(
+  payload: CreatePublicationPayload
+): Promise<ApiEnvelope<PublicationEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<PublicationEntry>("/api/v1/users/publications/create", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export type UpdatePublicationPayload = {
+  id: string;
+  title?: string;
+  publisher?: string;
+  year?: number;
+  url?: string;
+  description?: string;
+};
+
+export async function updatePublication(
+  payload: UpdatePublicationPayload
+): Promise<ApiEnvelope<PublicationEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi<PublicationEntry>("/api/v1/users/publications/update", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export async function deletePublication(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/publications/delete", {
     method: "POST",
     token: sessionToken,
     body: { id },

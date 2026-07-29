@@ -32,12 +32,14 @@ import {
   createEducationHistory as createEducationHistoryApi,
   createHonorAward as createHonorAwardApi,
   createOrganizationExperience as createOrganizationExperienceApi,
+  createPublication as createPublicationApi,
   createSocialMediaAccount as createSocialMediaAccountApi,
   createTrainingHistory as createTrainingHistoryApi,
   createUser as createUserApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteHonorAward as deleteHonorAwardApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
+  deletePublication as deletePublicationApi,
   deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
   deleteUser as deleteUserApi,
@@ -49,6 +51,7 @@ import {
   updateEducationHistory as updateEducationHistoryApi,
   updateHonorAward as updateHonorAwardApi,
   updateOrganizationExperience as updateOrganizationExperienceApi,
+  updatePublication as updatePublicationApi,
   updateSocialMediaAccount as updateSocialMediaAccountApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
@@ -58,6 +61,7 @@ import {
   type CreateEducationHistoryPayload,
   type CreateHonorAwardPayload,
   type CreateOrganizationExperiencePayload,
+  type CreatePublicationPayload,
   type CreateSocialMediaAccountPayload,
   type CreateTrainingHistoryPayload,
   type CreateUserPayload,
@@ -65,6 +69,7 @@ import {
   type UpdateEducationHistoryPayload,
   type UpdateHonorAwardPayload,
   type UpdateOrganizationExperiencePayload,
+  type UpdatePublicationPayload,
   type UpdateSocialMediaAccountPayload,
   type UpdateTrainingHistoryPayload,
   type UpdateUserPayload,
@@ -256,6 +261,18 @@ export async function updateHonorAward(payload: UpdateHonorAwardPayload) {
 
 export async function deleteHonorAward(id: string) {
   return deleteHonorAwardApi(id);
+}
+
+export async function createPublication(payload: CreatePublicationPayload) {
+  return createPublicationApi(payload);
+}
+
+export async function updatePublication(payload: UpdatePublicationPayload) {
+  return updatePublicationApi(payload);
+}
+
+export async function deletePublication(id: string) {
+  return deletePublicationApi(id);
 }
 
 export async function createSocialMediaAccount(

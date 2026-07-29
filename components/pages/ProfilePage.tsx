@@ -5,6 +5,7 @@ import type {
   EducationHistoryEntry,
   HonorAwardEntry,
   OrganizationExperienceEntry,
+  PublicationEntry,
   SocialMediaAccountEntry,
   TrainingHistoryEntry,
 } from "@/apis/users";
@@ -18,6 +19,7 @@ import EducationCard from "../profile/EducationCard";
 import HonorAwardCard from "../profile/HonorAwardCard";
 import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
 import ProfileHeader from "../profile/ProfileHeader";
+import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
 
 interface ViewerProps {
@@ -47,6 +49,7 @@ interface ProfileProps extends ViewerProps {
   organizationExperiences: OrganizationExperienceEntry[];
   socialMediaAccounts: SocialMediaAccountEntry[];
   trainingHistories: TrainingHistoryEntry[];
+  publications: PublicationEntry[];
   honorAwards: HonorAwardEntry[];
   activities: ActivityEntry[];
 }
@@ -116,6 +119,11 @@ export default function ProfilePage({
             <TrainingCard
               userId={profile.userId}
               entries={profile.trainingHistories}
+              isOwnProfile={isOwnProfile}
+            />
+            <PublicationCard
+              userId={profile.userId}
+              entries={profile.publications}
               isOwnProfile={isOwnProfile}
             />
             <HonorAwardCard
