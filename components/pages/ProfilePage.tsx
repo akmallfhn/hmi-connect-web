@@ -3,6 +3,7 @@ import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
   ActivityEntry,
   EducationHistoryEntry,
+  HonorAwardEntry,
   OrganizationExperienceEntry,
   SocialMediaAccountEntry,
   TrainingHistoryEntry,
@@ -14,6 +15,7 @@ import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
 import ActivityCard from "../profile/ActivityCard";
 import EducationCard from "../profile/EducationCard";
+import HonorAwardCard from "../profile/HonorAwardCard";
 import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
 import ProfileHeader from "../profile/ProfileHeader";
 import TrainingCard from "../profile/TrainingCard";
@@ -45,6 +47,7 @@ interface ProfileProps extends ViewerProps {
   organizationExperiences: OrganizationExperienceEntry[];
   socialMediaAccounts: SocialMediaAccountEntry[];
   trainingHistories: TrainingHistoryEntry[];
+  honorAwards: HonorAwardEntry[];
   activities: ActivityEntry[];
 }
 
@@ -113,6 +116,11 @@ export default function ProfilePage({
             <TrainingCard
               userId={profile.userId}
               entries={profile.trainingHistories}
+              isOwnProfile={isOwnProfile}
+            />
+            <HonorAwardCard
+              userId={profile.userId}
+              entries={profile.honorAwards}
               isOwnProfile={isOwnProfile}
             />
             <ActivityCard username={profile.username} entries={profile.activities} />

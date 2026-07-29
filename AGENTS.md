@@ -675,12 +675,19 @@ below) when `isVerified === false`.
   `components/navigations/*` above) to keep the bell/tab live without polling. Not a
   `postgres_changes` subscription — see the note under `Header`'s bell above for why.
 - `components/profile/*` — the `/profile/[username]` page's sections (`ProfileHeader`,
-  `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`,
+  `AboutCard`, `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`, `HonorAwardCard`,
   `ActivityCard`). The route is keyed by `username`, not the user's id — `users/detail`,
-  `education-histories/list`, `training-histories/list`, and
-  `organization-experiences/list` all take `{ username }` now (`apis/users.ts#getUserByUsername`
+  `education-histories/list`, `training-histories/list`, `organization-experiences/list`, and
+  `honor-awards/list` all take `{ username }` now (`apis/users.ts#getUserByUsername`
   + the matching `list*` functions); `social-media-accounts/list` is the one holdout still
-  keyed by `{ id }`. Feed (`creator_username`), comment/reply (`username`), and reactor
+  keyed by `{ id }`. `HonorAwardCard` sits directly below `TrainingCard` ("Riwayat Kaderisasi")
+  in `ProfilePage.tsx`'s section order, and is otherwise a straight copy of
+  `OrganizationExperienceCard`'s shape — same batch-draft `Edit*Form` (`EditHonorAwardForm.tsx`,
+  add/edit/remove several rows in one Modal, submitted together via `Promise.all`, same
+  `userId`-not-actually-in-the-payload guard the sibling forms keep for consistency), same
+  "hide the whole card if empty and not your own profile" rule. Its four fields (`title`,
+  `issuer`, `year`, optional `description`) mirror `organization-experiences`' shape closely
+  enough that no new field primitives were needed. Feed (`creator_username`), comment/reply (`username`), and reactor
   (`reactions/list`'s `username`) responses also carry a username alongside their `id`/
   `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
   route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
@@ -877,12 +884,12 @@ below) when `isVerified === false`.
   delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
   `EditAvatarForm`, `EditOrganizationExperienceForm`, `EditEducationForm`,
-  `EditTrainingForm`), each wraps `<Modal>` around
+  `EditTrainingForm`, `EditHonorAwardForm`), each wraps `<Modal>` around
   an inner `*Fields` component that's only mounted while `open` is true (so its `useState`
   seeds fresh from props every open — don't "fix" this with a `useEffect` + `setState`,
   that's the anti-pattern this sidesteps). The card that triggers one (`ProfileHeader`,
-  `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`) owns the `open` boolean
-  itself via local `useState` and
+  `OrganizationExperienceCard`, `EducationCard`, `TrainingCard`, `HonorAwardCard`) owns the
+  `open` boolean itself via local `useState` and
   calls `router.refresh()` in `onSaved` — there's no shared modal context; each card is
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateUser` directly) rather than batching into the profile form's own "Simpan" button,

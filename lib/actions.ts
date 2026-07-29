@@ -30,11 +30,13 @@ import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
   activateUser as activateUserApi,
   createEducationHistory as createEducationHistoryApi,
+  createHonorAward as createHonorAwardApi,
   createOrganizationExperience as createOrganizationExperienceApi,
   createSocialMediaAccount as createSocialMediaAccountApi,
   createTrainingHistory as createTrainingHistoryApi,
   createUser as createUserApi,
   deleteEducationHistory as deleteEducationHistoryApi,
+  deleteHonorAward as deleteHonorAwardApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
   deleteSocialMediaAccount as deleteSocialMediaAccountApi,
   deleteTrainingHistory as deleteTrainingHistoryApi,
@@ -45,6 +47,7 @@ import {
   listUserActivity as listUserActivityApi,
   listUsers as listUsersApi,
   updateEducationHistory as updateEducationHistoryApi,
+  updateHonorAward as updateHonorAwardApi,
   updateOrganizationExperience as updateOrganizationExperienceApi,
   updateSocialMediaAccount as updateSocialMediaAccountApi,
   updateTrainingHistory as updateTrainingHistoryApi,
@@ -53,12 +56,14 @@ import {
   verifyUser as verifyUserApi,
   type ActivationPayload,
   type CreateEducationHistoryPayload,
+  type CreateHonorAwardPayload,
   type CreateOrganizationExperiencePayload,
   type CreateSocialMediaAccountPayload,
   type CreateTrainingHistoryPayload,
   type CreateUserPayload,
   type ListUsersOptions,
   type UpdateEducationHistoryPayload,
+  type UpdateHonorAwardPayload,
   type UpdateOrganizationExperiencePayload,
   type UpdateSocialMediaAccountPayload,
   type UpdateTrainingHistoryPayload,
@@ -239,6 +244,18 @@ export async function updateOrganizationExperience(
 
 export async function deleteOrganizationExperience(id: string) {
   return deleteOrganizationExperienceApi(id);
+}
+
+export async function createHonorAward(payload: CreateHonorAwardPayload) {
+  return createHonorAwardApi(payload);
+}
+
+export async function updateHonorAward(payload: UpdateHonorAwardPayload) {
+  return updateHonorAwardApi(payload);
+}
+
+export async function deleteHonorAward(id: string) {
+  return deleteHonorAwardApi(id);
 }
 
 export async function createSocialMediaAccount(

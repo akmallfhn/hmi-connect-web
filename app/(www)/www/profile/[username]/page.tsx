@@ -6,6 +6,7 @@ import { getSocialMediaPlatforms } from "@/apis/social-media-platforms";
 import {
   getUserByUsername,
   listEducationHistories,
+  listHonorAwards,
   listOrganizationExperiences,
   listSocialMediaAccounts,
   listTrainingHistories,
@@ -68,12 +69,12 @@ export default async function Profile({ params }: ProfileRouteProps) {
 
   const isOwnProfile = Boolean(viewer?.id && viewer.id === profile.id);
 
-  // education/training/organization-experiences list are client-secret gated (like
-  // getUserByUsername), so these work for anonymous visitors too.
+  // These list* calls are client-secret gated (like getUserByUsername), so they work for anonymous visitors too.
   const [
     { list: educationHistories },
     { list: trainingHistories },
     { list: organizationExperiences },
+    { list: honorAwards },
     { list: socialMediaAccounts },
     { list: activities },
     institutions,
@@ -83,6 +84,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     listEducationHistories(username),
     listTrainingHistories(username),
     listOrganizationExperiences(username),
+    listHonorAwards(username),
     listSocialMediaAccounts(profile.id),
     listUserActivity(username, { pageSize: 3 }),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
@@ -116,6 +118,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         organizationExperiences,
         socialMediaAccounts,
         trainingHistories,
+        honorAwards,
         activities,
         userId: profile.id,
         username,
