@@ -638,6 +638,41 @@ export async function updateUser(
   });
 }
 
+// Self-service subset of UpdateUserPayload — no id (the caller from the JWT is always the target) and no admin-only fields (role_id/status/verification_status/member_card/chapter_id/ktp_full_name/subscription dates).
+export type UpdateMyProfilePayload = {
+  full_name?: string;
+  username?: string;
+  phone_number?: string;
+  avatar?: string;
+  headline?: string;
+  bio?: string;
+  gender?: GenderEnum;
+  address_street?: string;
+  date_of_birth?: string;
+  district_id?: number;
+};
+
+// Requires only an authenticated JWT (any status, including unverified/pending) — used by EditProfileForm/EditAvatarForm since users/update is now Super Admin-only.
+export async function updateMyProfile(
+  payload: UpdateMyProfilePayload
+): Promise<ApiEnvelope<UserProfile>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<UserProfile>("/api/v1/users/update-my-profile", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
 type ListOptions = {
   search?: string;
   page?: number;

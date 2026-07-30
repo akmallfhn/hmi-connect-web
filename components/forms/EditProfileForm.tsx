@@ -8,8 +8,8 @@ import type { SocialMediaAccountEntry } from "@/apis/users";
 import {
   createSocialMediaAccount,
   deleteSocialMediaAccount,
+  updateMyProfile,
   updateSocialMediaAccount,
-  updateUser,
 } from "@/lib/actions";
 import { isSuccessStatus, type StatusName } from "@/lib/types";
 import {
@@ -290,8 +290,7 @@ function ProfileFields({
 
     setIsSaving(true);
     try {
-      const profileResult = await updateUser({
-        id: userId,
+      const profileResult = await updateMyProfile({
         ...(usernameChanged ? { username: normalizedUsername } : {}),
         full_name: form.fullName,
         headline: form.headline,

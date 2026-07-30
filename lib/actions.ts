@@ -68,6 +68,7 @@ import {
   updateSocialMediaAccount as updateSocialMediaAccountApi,
   updateTrainingHistory as updateTrainingHistoryApi,
   updateUser as updateUserApi,
+  updateMyProfile as updateMyProfileApi,
   updateWorkExperience as updateWorkExperienceApi,
   unfollowUser as unfollowUserApi,
   verifyUser as verifyUserApi,
@@ -83,6 +84,7 @@ import {
   type ListUsersOptions,
   type UpdateEducationHistoryPayload,
   type UpdateHonorAwardPayload,
+  type UpdateMyProfilePayload,
   type UpdateOrganizationExperiencePayload,
   type UpdatePublicationPayload,
   type UpdateSocialMediaAccountPayload,
@@ -143,6 +145,10 @@ export async function verifyUser(payload: VerificationPayload) {
 
 export async function updateUser(payload: UpdateUserPayload) {
   return updateUserApi(payload);
+}
+
+export async function updateMyProfile(payload: UpdateMyProfilePayload) {
+  return updateMyProfileApi(payload);
 }
 
 // Super Admin-only admin panel (/master/users) — gated by MasterLayout, not re-checked here.

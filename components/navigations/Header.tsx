@@ -245,8 +245,8 @@ export default function Header({
       )}
 
       {userId && verificationStatus === "pending" && (
-        <div className="border-t border-secondary/20 bg-secondary-soft">
-          <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-secondary">
+        <div className="border-t border-[#ECCF80]/40 bg-[#FFF6E0]">
+          <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-[#8A6300]">
             <TriangleAlert className="size-4 shrink-0" />
             <span>Verifikasi akun kamu sedang ditinjau admin.</span>
           </PageMargin>

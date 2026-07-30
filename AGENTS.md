@@ -917,8 +917,26 @@ no link when `"pending"` — and only renders the verified badge next to the acc
   local `useState` and
   calls `router.refresh()` in `onSaved` — there's no shared modal context; each card is
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
-  `updateUser` directly) rather than batching into the profile form's own "Simpan" button,
-  since it's opened from a separate trigger (clicking the avatar itself). `EditProfileForm`
+  `updateMyProfile` directly) rather than batching into the profile form's own "Simpan"
+  button, since it's opened from a separate trigger (clicking the avatar itself).
+  `EditProfileForm`/`EditAvatarForm` both call `apis/users.ts#updateMyProfile`
+  (`users/update-my-profile`) rather than `updateUser` (`users/update`) — the backend split
+  self-service profile editing out from the admin-scoped endpoint, and `users/update` is now
+  `Super Admin`-only, so a general user hitting it would 403. `update-my-profile` takes no
+  `id` (the caller from the JWT is always the target) and only accepts a safe-fields subset
+  (`full_name`/`username`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/`address_street`/
+  `date_of_birth`/`district_id` — modeled as `UpdateMyProfilePayload`) — there's no way to
+  change `role_id`/`status`/`verification_status`/`member_card`/`chapter_id`/`ktp_full_name`/
+  subscription dates through it, those stay `Super Admin`-only via `users/update` or
+  `access/*`. It has no verification requirement — `verification_status` being `unverified`
+  or `pending` doesn't block a user from editing their own name/avatar/bio/etc., only from
+  submitting a *new* verification request (see `users/verification`'s own `pending`/`verified`
+  conflict rule above); don't add a verification gate to either edit form. The five admin
+  forms below (`AdminEditUserAccountForm`, `AdminEditUserContactForm`,
+  `AdminEditUserMembershipForm`, `AdminEditUserOrganizationForm`, `AdminUserQuickEditForm`,
+  all part of the Super Admin User Management CRUD panel) correctly keep calling
+  `updateUser`/`users/update` with an explicit `id` — they're Super-Admin-only surfaces gated
+  by `MasterLayout`/`BranchLayout`, exactly what that endpoint is still for. `EditProfileForm`
   also manages linked social media accounts using `users/social-media-accounts/*` and the
   `social-media-platforms/list` lookup.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the

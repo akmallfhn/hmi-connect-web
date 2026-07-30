@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import Button from "../buttons/Button";
 import { getInitials } from "../common/Avatar";
 import Modal from "../modals/Modal";
-import { updateUser } from "@/lib/actions";
+import { updateMyProfile } from "@/lib/actions";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus } from "@/lib/types";
 
@@ -77,7 +77,7 @@ function AvatarFields({
 
     setIsSaving(true);
     try {
-      const result = await updateUser({ id: userId, avatar: url });
+      const result = await updateMyProfile({ avatar: url });
 
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? "Gagal menyimpan foto profil.");
@@ -91,7 +91,7 @@ function AvatarFields({
       );
       onSaved();
     } catch (err) {
-      console.error("[EditAvatarForm] updateUser threw:", err);
+      console.error("[EditAvatarForm] updateMyProfile threw:", err);
       toast.error("Gagal menyimpan foto profil.");
     } finally {
       setIsSaving(false);
