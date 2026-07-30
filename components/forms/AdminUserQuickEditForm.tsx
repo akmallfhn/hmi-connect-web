@@ -5,7 +5,11 @@ import { toast } from "sonner";
 import type { UserListEntry } from "@/apis/users";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
 import { updateUser } from "@/lib/actions";
-import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -16,6 +20,12 @@ const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Pending", value: "pending" },
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
+];
+
+const VERIFICATION_STATUS_OPTIONS: { label: string; value: VerificationStatusEnum }[] = [
+  { label: "Belum Verifikasi", value: "unverified" },
+  { label: "Menunggu Review", value: "pending" },
+  { label: "Terverifikasi", value: "verified" },
 ];
 
 interface AdminUserQuickEditFormProps {
@@ -52,7 +62,9 @@ function QuickEditFields({ user, onClose, onSaved }: QuickEditFieldsProps) {
   const [fullName, setFullName] = useState(user.full_name);
   const [roleId, setRoleId] = useState<number>(user.role_id);
   const [status, setStatus] = useState<UserStatusEnum>(user.status);
-  const [isVerified, setIsVerified] = useState(user.is_verified);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatusEnum>(
+    user.verification_status,
+  );
   const [branch, setBranch] = useState<SearchableOption | null>(
     user.branch_id && user.branch_name
       ? { label: user.branch_name, value: user.branch_id }
@@ -106,7 +118,7 @@ function QuickEditFields({ user, onClose, onSaved }: QuickEditFieldsProps) {
         full_name: fullName,
         role_id: roleId,
         status,
-        is_verified: isVerified,
+        verification_status: verificationStatus,
         ...(chapter ? { chapter_id: String(chapter.value) } : {}),
       });
 
@@ -178,15 +190,15 @@ function QuickEditFields({ user, onClose, onSaved }: QuickEditFieldsProps) {
         />
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2 pl-1 text-sm font-medium text-[#172033]">
-        <input
-          type="checkbox"
-          checked={isVerified}
-          onChange={(e) => setIsVerified(e.target.checked)}
-          className="size-4 accent-primary"
-        />
-        Terverifikasi (KTP)
-      </label>
+      <Select
+        selectId="quick-edit-verification-status"
+        label="Status Verifikasi"
+        placeholder="Pilih status verifikasi"
+        value={verificationStatus}
+        onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
+        options={VERIFICATION_STATUS_OPTIONS}
+        required
+      />
 
       <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>

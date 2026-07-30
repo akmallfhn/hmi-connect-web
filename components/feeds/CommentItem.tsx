@@ -19,11 +19,11 @@ import {
   listCommentReplies,
 } from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
-import { isSuccessStatus } from "@/lib/types";
+import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 
 interface CommentItemProps {
   comment: FeedComment;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
@@ -33,7 +33,7 @@ interface CommentItemProps {
 
 export default function CommentItem({
   comment,
-  isVerified,
+  verificationStatus,
   currentUserId,
   currentUserName,
   currentUserAvatar,
@@ -65,7 +65,7 @@ export default function CommentItem({
       router.push("/auth/login");
       return false;
     }
-    if (isVerified) return true;
+    if (verificationStatus === "verified") return true;
     router.push("/verification");
     return false;
   }
@@ -242,7 +242,7 @@ export default function CommentItem({
               <CommentItem
                 key={reply.id}
                 comment={reply}
-                isVerified={isVerified}
+                verificationStatus={verificationStatus}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 currentUserAvatar={currentUserAvatar}

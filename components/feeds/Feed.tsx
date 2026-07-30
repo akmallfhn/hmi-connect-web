@@ -1,4 +1,5 @@
 import { listFeeds } from "@/apis/feeds";
+import type { VerificationStatusEnum } from "@/lib/types";
 import FeedTimeline from "./FeedTimeline";
 import MobileQuickMenu from "./MobileQuickMenu";
 import NewsCard from "./NewsCard";
@@ -8,14 +9,14 @@ interface FeedProps {
   fullName?: string;
   avatar?: string;
   currentUserId?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 export default async function Feed({
   fullName,
   avatar,
   currentUserId,
-  isVerified,
+  verificationStatus,
 }: FeedProps) {
   const { list, hasMore } = await listFeeds({ page: 1, pageSize: 20 });
 
@@ -27,7 +28,7 @@ export default async function Feed({
         currentUserId={currentUserId}
         currentUserName={fullName}
         currentUserAvatar={avatar}
-        isVerified={isVerified}
+        verificationStatus={verificationStatus}
         newsCard={<NewsCard />}
         suggestedConnectionsCard={<SuggestedConnectionsCard />}
         quickMenu={<MobileQuickMenu />}

@@ -113,7 +113,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         branchName: profile.branch_name,
         coordinatingBodyName: profile.coordinating_body_name,
         organizationName: profile.organization_name,
-        isVerified: profile.is_verified,
+        verificationStatus: profile.verification_status,
         isSubscribe: profile.is_subscribe,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
@@ -137,7 +137,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         email: viewerProfile?.email,
         userId: viewer?.id,
         username: viewer?.username,
-        isVerified: viewer?.is_verified,
+        verificationStatus: viewer?.verification_status,
       }}
       isOwnProfile={isOwnProfile}
       institutions={institutions}

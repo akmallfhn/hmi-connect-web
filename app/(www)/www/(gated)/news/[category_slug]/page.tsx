@@ -45,7 +45,7 @@ export default async function NewsCategory({ params }: NewsCategoryPageProps) {
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
       categories={categories.list}
       activeCategorySlug={category_slug}

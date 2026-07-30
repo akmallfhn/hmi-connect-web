@@ -8,14 +8,17 @@ import type { UserProfile } from "@/apis/users";
 import { updateUser } from "@/lib/actions";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 import {
   isUsernameFormatValid,
   USERNAME_ERROR,
   USERNAME_PATTERN,
 } from "@/lib/username";
 import Button from "../buttons/Button";
-import Switch from "../buttons/Switch";
 import { getInitials } from "../common/Avatar";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -29,6 +32,12 @@ const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Pending", value: "pending" },
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
+];
+
+const VERIFICATION_STATUS_OPTIONS: { label: string; value: VerificationStatusEnum }[] = [
+  { label: "Belum Verifikasi", value: "unverified" },
+  { label: "Menunggu Review", value: "pending" },
+  { label: "Terverifikasi", value: "verified" },
 ];
 
 interface AdminEditUserAccountFormProps {
@@ -69,7 +78,9 @@ function AccountFields({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [roleId, setRoleId] = useState<number>(user.role_id);
   const [status, setStatus] = useState<UserStatusEnum>(user.status);
-  const [isVerified, setIsVerified] = useState(user.is_verified);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatusEnum>(
+    user.verification_status,
+  );
   const [usernameError, setUsernameError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -149,7 +160,7 @@ function AccountFields({
         avatar,
         role_id: roleId,
         status,
-        is_verified: isVerified,
+        verification_status: verificationStatus,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -278,11 +289,14 @@ function AccountFields({
         />
       </div>
 
-      <Switch
-        switchId="admin-account-is-verified"
-        label="Terverifikasi"
-        checked={isVerified}
-        onChange={setIsVerified}
+      <Select
+        selectId="admin-account-verification-status"
+        label="Status Verifikasi"
+        placeholder="Pilih status verifikasi"
+        value={verificationStatus}
+        onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
+        options={VERIFICATION_STATUS_OPTIONS}
+        required
       />
 
       <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">

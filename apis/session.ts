@@ -3,7 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
+import { isSuccessStatus, type UserStatusEnum, type VerificationStatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
 
 export type SessionUser = {
@@ -25,7 +25,7 @@ export type SessionUser = {
   role_id?: number;
   role_name?: string;
   status?: UserStatusEnum;
-  is_verified?: boolean;
+  verification_status?: VerificationStatusEnum;
   is_subscribe?: boolean;
   access_token?: string;
 };

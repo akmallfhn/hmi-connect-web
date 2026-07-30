@@ -1,4 +1,5 @@
 import Label from "../common/Label";
+import type { VerificationStatusEnum } from "@/lib/types";
 
 // Filled blue seal + white checkmark — lucide's BadgeCheck can't do a two-tone fill/stroke split, so this is a custom SVG instead.
 function VerifiedCheckIcon({ className }: { className?: string }) {
@@ -25,14 +26,22 @@ function VerifiedCheckIcon({ className }: { className?: string }) {
   );
 }
 
-export default function UserVerifiedLabel({ isVerified }: { isVerified: boolean }) {
-  if (isVerified) {
+export default function UserVerifiedLabel({
+  status,
+}: {
+  status: VerificationStatusEnum;
+}) {
+  if (status === "verified") {
     return (
       <Label variant="blue">
         <VerifiedCheckIcon className="size-3.5 shrink-0" />
         Terverifikasi
       </Label>
     );
+  }
+
+  if (status === "pending") {
+    return <Label variant="yellow">Menunggu Review</Label>;
   }
 
   return <Label variant="gray">Belum Verifikasi</Label>;

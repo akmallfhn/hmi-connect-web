@@ -6,6 +6,7 @@ import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
 import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_URL_KEY } from "@/lib/constants";
+import type { VerificationStatusEnum } from "@/lib/types";
 
 interface FeedTimelineProps {
   initialItems: FeedTimelineItem[];
@@ -13,7 +14,7 @@ interface FeedTimelineProps {
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   newsCard?: ReactNode;
   suggestedConnectionsCard?: ReactNode;
   quickMenu?: ReactNode;
@@ -30,7 +31,7 @@ export default function FeedTimeline({
   currentUserId,
   currentUserName,
   currentUserAvatar,
-  isVerified,
+  verificationStatus,
   newsCard,
   suggestedConnectionsCard,
   quickMenu,
@@ -146,7 +147,7 @@ export default function FeedTimeline({
               currentUserId={currentUserId}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}
-              isVerified={isVerified}
+              verificationStatus={verificationStatus}
               initialReposted={repostedFeedIds.has(item.feed.id)}
               repostedBy={
                 item.type === "repost"

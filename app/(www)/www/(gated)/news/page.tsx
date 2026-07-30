@@ -57,7 +57,7 @@ export default async function News() {
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
       categories={categories.list}
       initialItems={articles.list}

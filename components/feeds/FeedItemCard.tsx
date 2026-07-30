@@ -40,14 +40,14 @@ import {
   unrepostFeed,
 } from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
-import { isSuccessStatus } from "@/lib/types";
+import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 
 interface FeedItemCardProps {
   feed: Feed;
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   initialComments?: FeedComment[];
   defaultShowComments?: boolean;
   initialReposted?: boolean;
@@ -196,7 +196,7 @@ export default function FeedItemCard({
   currentUserId,
   currentUserName,
   currentUserAvatar,
-  isVerified,
+  verificationStatus,
   initialComments,
   defaultShowComments = false,
   initialReposted,
@@ -253,7 +253,7 @@ export default function FeedItemCard({
       router.push("/auth/login");
       return false;
     }
-    if (isVerified) return true;
+    if (verificationStatus === "verified") return true;
     router.push("/verification");
     return false;
   }
@@ -555,7 +555,7 @@ export default function FeedItemCard({
         <div className="mt-3 border-t border-[#e6e9ef] pt-3">
           <CommentItem
             comment={feed.top_comment}
-            isVerified={isVerified}
+            verificationStatus={verificationStatus}
             currentUserId={currentUserId}
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
@@ -589,7 +589,7 @@ export default function FeedItemCard({
             <CommentItem
               key={comment.id}
               comment={comment}
-              isVerified={isVerified}
+              verificationStatus={verificationStatus}
               currentUserId={currentUserId}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}

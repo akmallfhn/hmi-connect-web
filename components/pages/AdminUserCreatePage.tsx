@@ -8,14 +8,18 @@ import { toast } from "sonner";
 import { createUser } from "@/lib/actions";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import { isSuccessStatus, type GenderEnum, type UserStatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type GenderEnum,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 import {
   isUsernameFormatValid,
   USERNAME_ERROR,
   USERNAME_PATTERN,
 } from "@/lib/username";
 import Button from "../buttons/Button";
-import Switch from "../buttons/Switch";
 import { getInitials } from "../common/Avatar";
 import Input from "../fields/Input";
 import RadioButton from "../fields/RadioButton";
@@ -27,6 +31,12 @@ const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Pending", value: "pending" },
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
+];
+
+const VERIFICATION_STATUS_OPTIONS: { label: string; value: VerificationStatusEnum }[] = [
+  { label: "Belum Verifikasi", value: "unverified" },
+  { label: "Menunggu Review", value: "pending" },
+  { label: "Terverifikasi", value: "verified" },
 ];
 
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
@@ -57,7 +67,8 @@ export default function AdminUserCreatePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [roleId, setRoleId] = useState<number>(2);
   const [status, setStatus] = useState<UserStatusEnum>("pending");
-  const [isVerified, setIsVerified] = useState(false);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatusEnum>("unverified");
 
   const [ktpFullName, setKtpFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -223,7 +234,7 @@ export default function AdminUserCreatePage() {
         ...(avatar ? { avatar } : {}),
         role_id: roleId,
         status,
-        is_verified: isVerified,
+        verification_status: verificationStatus,
         ...(ktpFullName ? { ktp_full_name: ktpFullName } : {}),
         ...(phoneNumber ? { phone_number: phoneNumber } : {}),
         ...(dateOfBirth ? { date_of_birth: dateOfBirth } : {}),
@@ -393,11 +404,14 @@ export default function AdminUserCreatePage() {
               required
             />
           </div>
-          <Switch
-            switchId="create-is-verified"
-            label="Terverifikasi"
-            checked={isVerified}
-            onChange={setIsVerified}
+          <Select
+            selectId="create-verification-status"
+            label="Status Verifikasi"
+            placeholder="Pilih status verifikasi"
+            value={verificationStatus}
+            onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
+            options={VERIFICATION_STATUS_OPTIONS}
+            required
           />
         </SectionCard>
 

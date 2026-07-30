@@ -7,6 +7,7 @@ import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import type { EducationHistoryEntry } from "@/apis/users";
+import type { VerificationStatusEnum } from "@/lib/types";
 
 interface FeedPageProps {
   fullName?: string;
@@ -15,7 +16,7 @@ interface FeedPageProps {
   headline?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   followingCount?: number;
   followersCount?: number;
   educationHistories?: EducationHistoryEntry[];
@@ -28,7 +29,7 @@ export default function FeedPage({
   headline,
   userId,
   username,
-  isVerified,
+  verificationStatus,
   followingCount,
   followersCount,
   educationHistories,
@@ -41,7 +42,7 @@ export default function FeedPage({
         email={email}
         userId={userId}
         username={username}
-        isVerified={isVerified}
+        verificationStatus={verificationStatus}
       />
 
       {userId && (
@@ -65,7 +66,7 @@ export default function FeedPage({
               avatar={avatar}
               headline={headline}
               username={username}
-              isVerified={isVerified}
+              verificationStatus={verificationStatus}
               followingCount={followingCount}
               followersCount={followersCount}
               educationHistories={educationHistories}
@@ -82,7 +83,7 @@ export default function FeedPage({
             fullName={fullName}
             avatar={avatar}
             currentUserId={userId}
-            isVerified={isVerified}
+            verificationStatus={verificationStatus}
           />
         </main>
 

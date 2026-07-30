@@ -234,7 +234,7 @@ export default function VerificationPage({
         return;
       }
 
-      toast.success("Verifikasi berhasil! Akun kamu sudah terverifikasi.");
+      toast.success("Data verifikasi berhasil dikirim! Menunggu review admin.");
       setTimeout(() => {
         window.location.href = "/";
       }, 1000);

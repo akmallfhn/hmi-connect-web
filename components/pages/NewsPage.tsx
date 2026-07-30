@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Newspaper } from "lucide-react";
 import type { NewsArticle, NewsCategory } from "@/apis/news";
 import { loadMoreNewsArticles } from "@/lib/actions";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import NewsArticleCard from "../news/NewsArticleCard";
 import NewsCategoryPreview from "../news/NewsCategoryPreview";
@@ -17,7 +18,7 @@ interface ViewerProps {
   email?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface CategoryPreviewData {
@@ -141,7 +142,7 @@ export default function NewsPage({
         email={viewer.email}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
         mobileBackTitle="HMI News"
         desktopFilterBar={
           <>

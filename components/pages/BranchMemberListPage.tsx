@@ -170,7 +170,7 @@ export default function BranchMemberListPage({
                       <UserStatusLabel status={user.status} />
                     </td>
                     <td className="px-4 py-3">
-                      <UserVerifiedLabel isVerified={user.is_verified} />
+                      <UserVerifiedLabel status={user.verification_status} />
                     </td>
                   </tr>
                 ))}

@@ -21,7 +21,7 @@ export default async function ChatsLayout({ children }: { children: ReactNode })
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
     >
       {children}

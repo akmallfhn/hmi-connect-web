@@ -192,6 +192,9 @@ should be typed here, not left as `string`. Currently mirrors these Postgres enu
 
 - `StatusEnum` — `active | inactive`
 - `UserStatusEnum` — `pending | active | inactive` (drives all the gating above)
+- `VerificationStatusEnum` — `unverified | pending | verified` (see Verification flow below)
+- `VerificationRequestStatusEnum` — `pending | approved | rejected` (the `verification_requests`
+  review row's own status, distinct from `VerificationStatusEnum` above)
 - `GenderEnum` — `male | female`
 - `BranchTypeEnum` — `full | provisional`
 - `TrainingStatusEnum` — `LK1 | LK2 | LK3`
@@ -228,13 +231,24 @@ an unactivated account, check `status === "pending"`, not username presence/abse
 
 ## Verification flow (`components/pages/VerificationPage.tsx`)
 
-Three-step KTP (Indonesian ID card) identity check, submitted via the `verifyUser` Server
-Action → `POST /api/v1/users/verification`, which flips `is_verified` → `true`. Unlike
-activation this is **not** gated/mandatory — `app/(www)/www/verification/page.tsx` only
-redirects away pending users (to `/activation`) and already-verified users (to `/`);
-anyone else can reach it any time, and the page itself offers a "Nanti saja" (skip) link
-back to `/`. `Header` links to it from the red "belum diverifikasi" banner (see
-below) when `isVerified === false`.
+`User.verification_status` (`VerificationStatusEnum` in `lib/types.ts`: `unverified` |
+`pending` | `verified`) replaced the old `is_verified` boolean — verification is a
+Super-Admin/branch-admin-reviewed workflow, not an instant flip. Three-step KTP
+(Indonesian ID card) identity check, submitted via the `verifyUser` Server Action →
+`POST /api/v1/users/verification`, which now just creates a `pending` `verification_requests`
+row (a separate reviewable entity, `VerificationRequestStatusEnum`: `pending` | `approved` |
+`rejected`) and bumps `User.verification_status` to `"pending"` — it no longer sets
+`verification_status` to `"verified"` directly; that only happens once an admin approves the
+request (there's no admin review UI for that yet in this app, see the `apis/users.ts`/
+`VerificationResult` type for the reshaped response). Unlike activation this is **not**
+gated/mandatory — `app/(www)/www/verification/page.tsx` redirects away pending-activation
+users (to `/activation`) and anyone whose `verification_status` is already `"pending"` or
+`"verified"` (to `/`, since the backend 409s on resubmission for either state); anyone else
+(`"unverified"`) can reach it any time, and the page itself offers a "Nanti saja" (skip) link
+back to `/`. `Header` shows two distinct banners keyed off `verificationStatus` — a red one
+linking to `/verification` when `"unverified"`, and a yellow "sedang ditinjau admin" one with
+no link when `"pending"` — and only renders the verified badge next to the account name when
+`"verified"`.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
    Google), 16-digit `nik`, phone number, date of birth, gender.
@@ -286,7 +300,7 @@ below) when `isVerified === false`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
   checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
-  checkbox (e.g. the admin user "Terverifikasi" field, see below).
+  checkbox (e.g. the admin user detail page's `can_manage_*` scope toggle chips, see below).
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
   `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil).
   `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
@@ -296,8 +310,9 @@ below) when `isVerified === false`.
   ChevronDown, Search, ...), not the custom bulk/outline `ChatIcon` (that one's reserved for
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
   how the bell/avatar triggers next to it also don't. The
-  "belum diverifikasi" banner is a sibling of that row (not nested inside it), so it still
-  shows on mobile when `isVerified === false`. The outer `<header>`'s own
+  "belum diverifikasi"/"sedang ditinjau admin" banners are siblings of that row (not nested
+  inside it), so one still shows on mobile whenever `verificationStatus` is `"unverified"` or
+  `"pending"`. The outer `<header>`'s own
   `border-b`/`bg-white/90`/`backdrop-blur` are pushed behind `lg:` too — without that,
   they'd render as a bare 1px border strip on mobile on pages with no banner, since the row
   being `hidden` doesn't stop the header element itself from painting its own border/background.
@@ -888,7 +903,7 @@ below) when `isVerified === false`.
   endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.
   `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
-  does not require `isVerified`. `AlertConfirmation.tsx` is the generic
+  does not require `verificationStatus === "verified"`. `AlertConfirmation.tsx` is the generic
   title/message/confirm/cancel dialog for destructive actions (currently just feed
   delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,
@@ -951,8 +966,9 @@ below) when `isVerified === false`.
   `username` is typed as a required `string`, not optional, on that guarantee. The list row's
   "..." menu still offers "Edit Cepat" alongside "Lihat Detail" — a modal
   (`components/forms/AdminUserQuickEditForm.tsx`) pre-filled straight from that row's own
-  `users/list` fields (full name/branch/chapter/role/status/verified — everything `UserListEntry`
-  already carries) rather than needing a fetch, useful as a faster inline edit even though
+  `users/list` fields (full name/branch/chapter/role/status/verification status — everything
+  `UserListEntry` already carries) rather than needing a fetch, useful as a faster inline edit
+  even though
   every row can now also reach the full detail page. The detail page's four section cards (Akun
   & Peran / Data KTP & Kontak / Organisasi / Informasi Lainnya) each open their own scoped edit
   modal — `AdminEditUserAccountForm` / `AdminEditUserContactForm` / `AdminEditUserOrganizationForm`
@@ -968,9 +984,12 @@ below) when `isVerified === false`.
   `roles/list` endpoint either; `lib/constants.ts#USER_ROLE_OPTIONS` hardcodes the three known
   ids (`0` Super Admin, `1` Administrator, `2` General User) inferred from the `ordina` backend's
   `RoleName*` consts + a repository comment confirming `role_id = 0` is a real, meaningful value
-  — update that constant if the backend ever publishes a real lookup. The Organisasi card also
-  renders three `Switch` toggles (`components/buttons/Switch.tsx`, same as the account card's own
-  "Terverifikasi" field) — Admin Badko/Admin Cabang/Admin Komisariat, reading
+  — update that constant if the backend ever publishes a real lookup. The account card's
+  "Status Verifikasi" field is a 3-state `Select` (`VerificationStatusEnum`: `unverified` |
+  `pending` | `verified`, see the Verification flow section above) rather than a boolean
+  `Switch`, since the backend replaced `is_verified` with a reviewed-workflow enum. The
+  Organisasi card also renders three `Switch` toggles (`components/buttons/Switch.tsx`) —
+  Admin Badko/Admin Cabang/Admin Komisariat, reading
   `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_chapter` off `UserProfile` — but
   **only when `user.role_name === "Administrator"`**, since the backend's grant endpoints 409 for
   anyone else (see below). These aren't part of `AdminEditUserOrganizationForm`'s modal at all —

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { EducationHistoryEntry } from "@/apis/users";
 import type { SearchPersonResult, SearchPostingResult } from "@/apis/search";
 import { loadMoreSearchPeople, loadMoreSearchPostings } from "@/lib/actions";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import BottomNav from "../navigations/BottomNav";
@@ -18,7 +19,7 @@ interface ViewerProps {
   avatar?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface ProfileSummary {
@@ -26,7 +27,7 @@ interface ProfileSummary {
   fullName?: string;
   avatar?: string;
   headline?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   followingCount?: number;
   followersCount?: number;
   educationHistories: EducationHistoryEntry[];
@@ -146,7 +147,7 @@ export default function SearchPage({
         avatar={viewer.avatar}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
@@ -158,7 +159,7 @@ export default function SearchPage({
               avatar={profile.avatar}
               headline={profile.headline}
               username={viewer.username}
-              isVerified={profile.isVerified}
+              verificationStatus={profile.verificationStatus}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
               educationHistories={profile.educationHistories}

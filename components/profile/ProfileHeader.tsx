@@ -3,7 +3,7 @@
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type { SocialMediaAccountEntry } from "@/apis/users";
 import { followUser, unfollowUser } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
+import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 import {
   Building2,
   Calendar,
@@ -37,7 +37,7 @@ interface ProfileHeaderProps {
   bio?: string;
   chapterName?: string;
   branchName?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   isSubscribe?: boolean;
   followingCount?: number;
   followersCount?: number;
@@ -132,7 +132,7 @@ export default function ProfileHeader({
   bio,
   chapterName,
   branchName,
-  isVerified,
+  verificationStatus,
   isSubscribe,
   followingCount,
   followersCount,
@@ -265,7 +265,7 @@ export default function ProfileHeader({
             <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
               {displayName}
             </h1>
-            {isVerified ? (
+            {verificationStatus === "verified" ? (
               <VerifiedBadge size={20} />
             ) : (
               <TriangleAlert

@@ -27,7 +27,7 @@ export default async function Quran() {
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
       surahs={surahs}
       juz={juz}

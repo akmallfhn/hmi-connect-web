@@ -79,7 +79,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
         email={viewerProfile?.email}
         userId={user?.id}
         username={user?.username}
-        isVerified={user?.is_verified}
+        verificationStatus={user?.verification_status}
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
@@ -98,7 +98,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
                 avatar={user?.avatar}
                 headline={viewerProfile?.headline}
                 username={user?.username}
-                isVerified={user?.is_verified}
+                verificationStatus={user?.verification_status}
                 followingCount={viewerProfile?.following_count}
                 followersCount={viewerProfile?.followers_count}
                 educationHistories={educationHistories.list}
@@ -112,7 +112,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
               currentUserId={user?.id}
               currentUserName={user?.full_name}
               currentUserAvatar={user?.avatar}
-              isVerified={user?.is_verified}
+              verificationStatus={user?.verification_status}
               initialComments={comments}
               defaultShowComments
             />

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import type { VerificationStatusEnum } from "@/lib/types";
 import { ChatConversationsProvider } from "../chats/ChatConversationsContext";
 import ConversationList from "../chats/ConversationList";
 import PageMargin from "../common/PageMargin";
@@ -14,7 +15,7 @@ interface ChatsPageViewer {
   email?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface ChatsPageProps {
@@ -42,7 +43,7 @@ export default function ChatsPage({ viewer, children }: ChatsPageProps) {
             email={viewer.email}
             userId={viewer.userId}
             username={viewer.username}
-            isVerified={viewer.isVerified}
+            verificationStatus={viewer.verificationStatus}
           />
         </div>
 

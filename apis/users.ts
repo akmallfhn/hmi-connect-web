@@ -12,6 +12,8 @@ import {
   type TrainingResultEnum,
   type TrainingStatusEnum,
   type UserStatusEnum,
+  type VerificationRequestStatusEnum,
+  type VerificationStatusEnum,
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
@@ -56,7 +58,7 @@ export type UserListEntry = {
   role_id: number;
   role_name?: string;
   status: UserStatusEnum;
-  is_verified: boolean;
+  verification_status: VerificationStatusEnum;
   can_manage_branch: boolean;
 };
 
@@ -125,7 +127,7 @@ export type CreateUserPayload = {
   bio?: string;
   role_id?: number;
   status?: UserStatusEnum;
-  is_verified?: boolean;
+  verification_status?: VerificationStatusEnum;
   date_of_birth?: string;
   gender?: GenderEnum;
   address_street?: string;
@@ -146,7 +148,7 @@ export type CreateUserResult = {
   role_id: number;
   role_name?: string;
   status: UserStatusEnum;
-  is_verified: boolean;
+  verification_status: VerificationStatusEnum;
 };
 
 export async function createUser(
@@ -232,13 +234,18 @@ export type VerificationPayload = {
   district_id: number;
 };
 
+// Mirrors POST /api/v1/users/verification's response — a pending verification_requests row, not an immediate verification.
 export type VerificationResult = {
+  id: string;
   user_id: string;
   chapter_id: string;
   ktp_full_name: string;
+  phone_number: string;
+  date_of_birth: string;
+  gender: GenderEnum;
+  address_street: string;
   district_id: number;
-  is_verified: boolean;
-  member_card: string;
+  status: VerificationRequestStatusEnum;
 };
 
 export async function verifyUser(
@@ -350,7 +357,7 @@ export type UserProfile = {
   role_id: number;
   role_name?: string;
   status: UserStatusEnum;
-  is_verified: boolean;
+  verification_status: VerificationStatusEnum;
   date_of_birth?: string;
   gender?: GenderEnum;
   address_street?: string;
@@ -578,7 +585,7 @@ export type UpdateUserPayload = {
   bio?: string;
   role_id?: number;
   status?: UserStatusEnum;
-  is_verified?: boolean;
+  verification_status?: VerificationStatusEnum;
   date_of_birth?: string;
   gender?: GenderEnum;
   address_street?: string;
@@ -595,7 +602,7 @@ export type UpdateUserResult = {
   role_id: number;
   role_name?: string;
   status: UserStatusEnum;
-  is_verified: boolean;
+  verification_status: VerificationStatusEnum;
   is_subscribe: boolean;
   created_at: string;
   updated_at: string;

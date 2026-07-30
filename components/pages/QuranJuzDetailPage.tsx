@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuzDetail, QuranJuzVerse, QuranSurah } from "@/apis/quran";
 import { readingMinutesLabel } from "@/lib/quranReadingTime";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
@@ -22,7 +23,7 @@ interface ViewerProps {
   avatar?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface QuranJuzDetailPageProps {
@@ -99,7 +100,7 @@ export default function QuranJuzDetailPage({
         avatar={viewer.avatar}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
         mobileBackTitle={`Juz ${juz.number}`}
       />
 

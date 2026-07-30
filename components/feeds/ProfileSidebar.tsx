@@ -1,6 +1,7 @@
 "use client";
 
 import type { EducationHistoryEntry } from "@/apis/users";
+import type { VerificationStatusEnum } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
 import Avatar from "../common/Avatar";
@@ -13,7 +14,7 @@ interface ProfileSidebarProps {
   avatar?: string;
   headline?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   followingCount?: number;
   followersCount?: number;
   educationHistories?: EducationHistoryEntry[];
@@ -33,7 +34,7 @@ export default function ProfileSidebar({
   avatar,
   headline,
   username,
-  isVerified,
+  verificationStatus,
   followingCount,
   followersCount,
   educationHistories = [],
@@ -55,7 +56,7 @@ export default function ProfileSidebar({
           <div className="flex flex-col items-center">
             <p className="flex items-center justify-center gap-1 font-bold text-[#172033]">
               <span>{displayName}</span>
-              {isVerified && <VerifiedBadge size={16} />}
+              {verificationStatus === "verified" && <VerifiedBadge size={16} />}
             </p>
             {username && (
               <p className="text-sm text-[#5f6573] xl:text-[15px]">

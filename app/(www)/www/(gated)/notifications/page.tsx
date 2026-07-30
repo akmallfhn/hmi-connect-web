@@ -34,7 +34,7 @@ export default async function Notifications() {
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
       initialItems={notifications.list}
       initialHasMore={notifications.hasMore}
@@ -43,7 +43,7 @@ export default async function Notifications() {
         fullName: user?.full_name,
         avatar: user?.avatar,
         headline: profile?.headline,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
         followingCount: profile?.following_count,
         followersCount: profile?.followers_count,
         educationHistories: educationHistories.list,

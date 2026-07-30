@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function Membership() {
   const { sessionToken, user } = await getSession();
 
-  if (!user?.is_verified) redirect("/verification");
+  if (user?.verification_status !== "verified") redirect("/verification");
 
   const membership = sessionToken ? await getMembershipDetail(sessionToken) : null;
 
@@ -26,7 +26,7 @@ export default async function Membership() {
       avatar={user?.avatar}
       userId={user?.id}
       username={user?.username}
-      isVerified={user?.is_verified}
+      verificationStatus={user?.verification_status}
       membership={membership}
     />
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import type { QuranSurahDetail } from "@/apis/quran";
+import type { VerificationStatusEnum } from "@/lib/types";
 import { faKaaba, faMosque } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { BookOpen, Pause, Play } from "lucide-react";
@@ -22,7 +23,7 @@ interface ViewerProps {
   avatar?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface QuranSurahDetailPageProps {
@@ -75,7 +76,7 @@ export default function QuranSurahDetailPage({
         avatar={viewer.avatar}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
         mobileBackTitle={surah.name_latin}
       />
 

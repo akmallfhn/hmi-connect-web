@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActivityEntry, EducationHistoryEntry } from "@/apis/users";
 import { loadMoreUserActivity } from "@/lib/actions";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import ActivityEntryCard from "../profile/ActivityEntryCard";
 import ProfileSidebar from "../feeds/ProfileSidebar";
@@ -14,7 +15,7 @@ interface ViewerProps {
   avatar?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface ProfileSummary {
@@ -22,7 +23,7 @@ interface ProfileSummary {
   fullName: string;
   avatar?: string;
   headline?: string;
-  isVerified: boolean;
+  verificationStatus: VerificationStatusEnum;
   followingCount: number;
   followersCount: number;
   educationHistories: EducationHistoryEntry[];
@@ -91,7 +92,7 @@ export default function ProfileActivitiesPage({
         avatar={viewer.avatar}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
@@ -103,7 +104,7 @@ export default function ProfileActivitiesPage({
               avatar={profile.avatar}
               headline={profile.headline}
               username={username}
-              isVerified={profile.isVerified}
+              verificationStatus={profile.verificationStatus}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
               educationHistories={profile.educationHistories}

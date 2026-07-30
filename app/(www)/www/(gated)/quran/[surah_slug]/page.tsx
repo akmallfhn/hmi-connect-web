@@ -48,7 +48,7 @@ export default async function QuranSurah({ params }: QuranSurahRouteProps) {
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
-        isVerified: user?.is_verified,
+        verificationStatus: user?.verification_status,
       }}
       surah={surah}
     />

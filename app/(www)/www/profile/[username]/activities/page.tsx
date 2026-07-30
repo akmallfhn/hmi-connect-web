@@ -49,7 +49,7 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
         fullName: profile.full_name,
         avatar: profile.avatar,
         headline: profile.headline,
-        isVerified: profile.is_verified,
+        verificationStatus: profile.verification_status,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
         educationHistories,
@@ -59,7 +59,7 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
         avatar: viewer?.avatar,
         userId: viewer?.id,
         username: viewer?.username,
-        isVerified: viewer?.is_verified,
+        verificationStatus: viewer?.verification_status,
       }}
     />
   );

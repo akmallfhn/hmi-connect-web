@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
+import type { VerificationStatusEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
@@ -33,13 +34,11 @@ interface HeaderProps {
   email?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   loading?: boolean;
   mobileBackTitle?: string;
   mobileMenu?: ReactNode;
   mobileMenuLabel?: string;
-  /** Renders as a colored strip below the banner, desktop-only — for page-level filters
-   *  (e.g. news categories) that should live in the sticky navbar rather than the page body. */
   desktopFilterBar?: ReactNode;
 }
 
@@ -49,7 +48,7 @@ export default function Header({
   email,
   userId,
   username,
-  isVerified,
+  verificationStatus,
   loading,
   mobileBackTitle,
   mobileMenu,
@@ -179,7 +178,9 @@ export default function Header({
                   <div className="min-w-0">
                     <p className="flex items-center gap-1 truncate text-sm font-semibold text-[#172033]">
                       <span className="truncate">{displayName}</span>
-                      {isVerified && <VerifiedBadge size={14} />}
+                      {verificationStatus === "verified" && (
+                        <VerifiedBadge size={14} />
+                      )}
                     </p>
                     <p className="truncate text-xs text-[#5f6573]">{email}</p>
                   </div>
@@ -228,7 +229,7 @@ export default function Header({
         </div>
       </PageMargin>
 
-      {userId && isVerified === false && (
+      {userId && verificationStatus === "unverified" && (
         <div className="border-t border-destructive/20 bg-destructive-soft">
           <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-destructive">
             <TriangleAlert className="size-4 shrink-0" />
@@ -239,6 +240,15 @@ export default function Header({
             >
               Verifikasi sekarang
             </Link>
+          </PageMargin>
+        </div>
+      )}
+
+      {userId && verificationStatus === "pending" && (
+        <div className="border-t border-secondary/20 bg-secondary-soft">
+          <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-secondary">
+            <TriangleAlert className="size-4 shrink-0" />
+            <span>Verifikasi akun kamu sedang ditinjau admin.</span>
           </PageMargin>
         </div>
       )}

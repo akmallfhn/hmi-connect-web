@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import type { MembershipDetail } from "@/apis/users";
+import type { VerificationStatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import MembershipCard from "../membership/MembershipCard";
@@ -14,7 +15,7 @@ interface MembershipPageProps {
   email?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   membership: MembershipDetail | null;
 }
 
@@ -24,7 +25,7 @@ export default function MembershipPage({
   email,
   userId,
   username,
-  isVerified,
+  verificationStatus,
   membership,
 }: MembershipPageProps) {
   return (
@@ -35,7 +36,7 @@ export default function MembershipPage({
         email={email}
         userId={userId}
         username={username}
-        isVerified={isVerified}
+        verificationStatus={verificationStatus}
         mobileBackTitle="E-KTA"
       />
 

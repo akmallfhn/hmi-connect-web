@@ -31,7 +31,9 @@ export default async function Verification() {
   if (!sessionToken) redirect("/api/auth/clear-session");
 
   if (user?.status === "pending") redirect("/activation");
-  if (user?.is_verified) redirect("/");
+  if (user?.verification_status === "verified" || user?.verification_status === "pending") {
+    redirect("/");
+  }
 
   const [{ list: provinces }, branches] = await Promise.all([
     searchProvinces(),

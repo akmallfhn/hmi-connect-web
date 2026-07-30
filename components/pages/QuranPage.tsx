@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuz, QuranSurah } from "@/apis/quran";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
@@ -20,7 +21,7 @@ interface ViewerProps {
   avatar?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface QuranPageProps {
@@ -53,12 +54,6 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
   );
   const requestIdRef = useRef(0);
 
-  // Surah search hits the backend (its regex normalizes punctuation, e.g. "yasin" still
-  // matches "Ya-Sin") — debounced + guarded by requestIdRef so a slow earlier response can't
-  // clobber a faster later one. Juz has no name to search (just a number), so filtering it
-  // stays client-side over the already-fetched full list. Every setState is deferred into the
-  // setTimeout callback (0ms for the empty-query case) rather than called synchronously in the
-  // effect body — same reason SearchableSelect defers its own immediate load.
   useEffect(() => {
     const trimmed = query.trim();
     const requestId = ++requestIdRef.current;
@@ -129,7 +124,7 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
         avatar={viewer.avatar}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
         mobileBackTitle="Al-Qur'an"
       />
 

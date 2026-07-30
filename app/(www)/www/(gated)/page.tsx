@@ -41,7 +41,7 @@ export default async function HomePage() {
       headline={profile?.headline}
       userId={user?.id}
       username={user?.username}
-      isVerified={user?.is_verified}
+      verificationStatus={user?.verification_status}
       followingCount={profile?.following_count}
       followersCount={profile?.followers_count}
       educationHistories={educationHistories.list}

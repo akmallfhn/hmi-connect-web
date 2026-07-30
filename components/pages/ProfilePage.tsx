@@ -10,6 +10,7 @@ import type {
   TrainingHistoryEntry,
   WorkExperienceEntry,
 } from "@/apis/users";
+import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
 import BottomNav from "../navigations/BottomNav";
@@ -30,7 +31,7 @@ interface ViewerProps {
   email?: string;
   userId?: string;
   username?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
 }
 
 interface ProfileProps extends ViewerProps {
@@ -40,7 +41,7 @@ interface ProfileProps extends ViewerProps {
   branchName?: string;
   coordinatingBodyName?: string;
   organizationName?: string;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatusEnum;
   isSubscribe?: boolean;
   followingCount?: number;
   followersCount?: number;
@@ -80,7 +81,7 @@ export default function ProfilePage({
         email={viewer.email}
         userId={viewer.userId}
         username={viewer.username}
-        isVerified={viewer.isVerified}
+        verificationStatus={viewer.verificationStatus}
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:py-6">
@@ -97,7 +98,7 @@ export default function ProfilePage({
               bio={profile.bio}
               chapterName={profile.chapterName}
               branchName={profile.branchName}
-              isVerified={profile.isVerified}
+              verificationStatus={profile.verificationStatus}
               isSubscribe={profile.isSubscribe}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}

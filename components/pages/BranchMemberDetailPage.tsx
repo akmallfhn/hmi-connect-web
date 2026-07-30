@@ -147,7 +147,7 @@ export default function BranchMemberDetailPage({
           />
           <Field
             label="Terverifikasi"
-            value={<UserVerifiedLabel isVerified={user.is_verified} />}
+            value={<UserVerifiedLabel status={user.verification_status} />}
           />
         </SectionCard>
 

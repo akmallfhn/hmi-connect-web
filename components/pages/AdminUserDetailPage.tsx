@@ -305,7 +305,7 @@ export default function AdminUserDetailPage({
           />
           <Field
             label="Terverifikasi"
-            value={<UserVerifiedLabel isVerified={user.is_verified} />}
+            value={<UserVerifiedLabel status={user.verification_status} />}
           />
         </SectionCard>
 
