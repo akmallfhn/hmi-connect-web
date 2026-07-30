@@ -224,7 +224,7 @@ export default function AdminUserListPage({
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
                         <Dropdown
-                          panelClassName="w-48"
+                          panelClassName="w-48 rounded-xl"
                           trigger={({ toggle }) => (
                             <Button
                               variant="ghost"

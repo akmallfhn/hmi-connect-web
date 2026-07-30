@@ -272,7 +272,7 @@ export default function AdminChapterListPage({
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
                         <Dropdown
-                          panelClassName="w-44"
+                          panelClassName="w-44 rounded-xl"
                           trigger={({ toggle }) => (
                             <Button
                               variant="ghost"
