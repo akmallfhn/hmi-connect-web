@@ -1248,37 +1248,58 @@ no link when `"pending"` — and only renders the verified badge next to the acc
   past the layout gate but would still get a `FORBIDDEN` from the backend on the list/detail calls
   themselves; this is the same pre-existing `Administrator`-role gap already noted under Domain
   routing above, not something new this feature introduces.
-  Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/`) is the review UI
-  for the `verification_requests` workflow the Verification flow section above describes — the
-  admin-facing half that section explicitly scoped out until now. Backed by a new `apis/access.ts`
-  surface (`listVerificationRequests`/`getVerificationRequestDetail`/`approveVerificationRequest`/
+  Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, single
+  route — there's no separate detail page) is the review UI for the `verification_requests`
+  workflow the Verification flow section above describes — the admin-facing half that section
+  explicitly scoped out until now. Backed by a new `apis/access.ts` surface
+  (`listVerificationRequests`/`getVerificationRequestDetail`/`approveVerificationRequest`/
   `rejectVerificationRequest`, alongside the existing grant/revoke wrappers there, since
   `verification-requests/*` also lives under `/access` per `internal/user/README.md`'s Access
   control endpoints section, not `/users`). Unlike Daftar Kader's `branchId` option, the backend has
   no `branch_id` filter param for `verification-requests/list` at all — scoping is entirely implicit
-  in the caller's own JWT (a `Super Admin` sees every pending request org-wide, a branch admin only
-  sees requests whose `chapter_id` falls under their own branch), so this route's `page.tsx` calls
+  in the caller's own JWT (a `Super Admin` sees every request org-wide, a branch admin only sees
+  requests whose `chapter_id` falls under their own branch), so this route's `page.tsx` calls
   `listVerificationRequests` with no branch-scoping param even though it's nested under
   `/branches/{id}` — for the branch-admin caller this is the intended screen actually reaches, this
   is a non-issue; a `Super Admin` opening the same URL sees the same org-wide list any other branch's
   `/verification` page would show them, a quirk of the backend's design rather than a frontend bug.
-  `components/pages/BranchVerificationListPage.tsx` mirrors `BranchMemberListPage.tsx`'s table/
-  pagination shape but has only a status filter (`pending`/`approved`/`rejected`, defaulting to
-  `pending`) — no search box, since `verification-requests/list` doesn't take one — and no
-  "Semua Status" option, since the backend has no cross-status query, only one of the three at a
-  time. Row clicks go to `/branches/{id}/verification/{id}` (the request's own id, not the user's
-  username). `components/pages/BranchVerificationDetailPage.tsx` is a read-mostly section-card page
-  (Akun / Data KTP & Kontak / Alamat & Organisasi) showing every field `verification-requests/detail`
-  returns, including the plaintext `nik` — the only endpoint in this app that ever exposes one,
-  per the backend's own README. `district_id` is shown as a raw numeric id rather than a resolved
-  district name, since `apis/locations.ts` only supports listing districts by parent `city_id`, not
-  a lookup by `district_id` alone. Approve/Reject actions render only while `status === "pending"`
-  (the backend 409s on re-review otherwise): "Setujui" opens a plain `AlertConfirmation`
-  (`confirmVariant="primary"`) since approval takes no input beyond the id; "Tolak" opens a `Modal`
-  wrapping a mounted-only-while-open `RejectFields` (same shape as `Edit*Form.tsx`'s `*Fields`
-  components) with an optional `TextArea` for `rejection_reason` — both call their respective
-  `lib/actions.ts` Server Action on confirm and `router.refresh()` on success, which re-fetches the
-  request server-side and hides the actions once its status has moved off `pending`.
+  The backend also has no "all statuses" value for `verification-requests/list` (only one of
+  `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
+  filter here is "Semua Status", so `page.tsx` fakes it: when `status` isn't set, it fires all three
+  status queries in parallel (`page: 1`, `page_size: 100` each — `ALL_STATUS_FETCH_SIZE`, generous
+  since this is a review queue, not a full archive), merges, and sorts by `created_at` descending;
+  picking an explicit status still goes through normal single-status server-side pagination.
+  `verification-requests/list` also takes a `search` param (substring match against the applicant's
+  `full_name` only, not username/chapter) — `page.tsx` forwards `?search=` to it, and passes the
+  same `search` into all three parallel calls when in "all statuses" mode.
+  `components/pages/BranchVerificationListPage.tsx` mirrors `AdminUserListPage.tsx`'s debounced
+  search-as-you-type-into-`?search=` pattern (the "adjust state during render" resync when the
+  server hands back a new `initialSearch`, same as that page) rather than `BranchMemberListPage`'s
+  client-side filtering, since this endpoint's `search` is real. Aksi is a 3-button column instead of
+  a "..." dropdown: an outlined `Eye` "Lihat Detail" button (always shown, opens a `Modal` populated
+  on demand via the `getVerificationRequestDetail` Server Action), plus `X`/`Check` reject/approve
+  icon buttons that only render when `status === "pending"` (the backend 409s on re-review
+  otherwise). The detail modal's `Field` rows each carry a small icon badge (`bg-primary-soft
+  text-primary` circle, same treatment as `BranchMemberDetailPage`'s `StatPill`) for Email/Nama
+  Sesuai KTP/NIK — the only place in this app that ever shows a plaintext one/Nomor HP/Tanggal
+  Lahir/Jenis Kelamin/Komisariat, plus a header row above the grid with the applicant's real
+  `Avatar` (not just initials) and `@username`. Alamat Lengkap is deliberately one `Field` with one
+  `MapPin` icon, not four separate Kecamatan/Kota/Provinsi rows each with their own icon — its value
+  is `[address_street, district_name, city_name, province_name].filter(Boolean).join(", ")`, one
+  flowing address string. `verification-requests/detail` returns `email` and the resolved
+  `district_name`/`city_id`/`city_name`/`province_id`/`province_name` chain directly (mirrors
+  `users/detail`'s own district→city→province resolution); `verification-requests/list`/`/detail`/
+  `/approve`/`/reject` all now also return `avatar` on their shared base shape, so
+  `VerificationRequestListEntry.avatar` covers every one of them — earlier revisions of this feature
+  had to cross-call `getUserByUsername` for email/avatar and show a raw `district_id`; don't
+  reintroduce either workaround, `apis/access.ts#getVerificationRequestDetail` just returns the
+  response as-is, and the list table's own `Avatar` reads `request.avatar` directly too, no more
+  initials-only fallback there. "Setujui" opens a plain `AlertConfirmation` (`confirmVariant="primary"`)
+  since approval takes no input beyond the id; "Tolak" opens a `Modal` wrapping a
+  mounted-only-while-open `RejectFields` (same shape as `Edit*Form.tsx`'s `*Fields` components) with
+  an optional `TextArea` for `rejection_reason` — both call their respective `lib/actions.ts` Server
+  Action on confirm and `router.refresh()` on success, which re-fetches the list server-side and
+  hides the actions once a row's status has moved off `pending`.
   `components/labels/VerificationRequestStatusLabel.tsx` maps `VerificationRequestStatusEnum` to a
   `Label` pill (orange `pending`, green `approved`, red `rejected`) — a new, separate label from
   `UserVerifiedLabel`, since a request's own review status and a user's `verification_status` are

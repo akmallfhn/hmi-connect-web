@@ -18,7 +18,10 @@ async function callAccessEndpoint(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<UserProfile>(path, {
@@ -49,7 +52,10 @@ export async function revokeChapterAdmin(id: string) {
 }
 
 export async function revokeCoordinatingBodyAdmin(id: string) {
-  return callAccessEndpoint("/api/v1/access/revoke/coordinating-body-admin", id);
+  return callAccessEndpoint(
+    "/api/v1/access/revoke/coordinating-body-admin",
+    id
+  );
 }
 
 // Mirrors verification-requests/list's row shape — Super Admin sees every request, a branch admin only sees requests under their own branch (scoped implicitly via the caller's JWT, not a request param).
@@ -58,6 +64,7 @@ export type VerificationRequestListEntry = {
   user_id: string;
   full_name: string;
   username: string;
+  avatar?: string;
   chapter_id: string;
   chapter_name?: string;
   status: VerificationRequestStatusEnum;
@@ -66,6 +73,7 @@ export type VerificationRequestListEntry = {
 
 // verification-requests/detail's shape — the only endpoint that ever returns a plaintext nik.
 export type VerificationRequestDetail = VerificationRequestListEntry & {
+  email?: string;
   ktp_full_name: string;
   nik: string;
   phone_number: string;
@@ -73,6 +81,11 @@ export type VerificationRequestDetail = VerificationRequestListEntry & {
   gender: GenderEnum;
   address_street: string;
   district_id: number;
+  district_name?: string;
+  city_id?: number;
+  city_name?: string;
+  province_id?: number;
+  province_name?: string;
   updated_at: string;
 };
 
@@ -94,6 +107,7 @@ type ListResponse<T> = {
 
 export type ListVerificationRequestsOptions = {
   status?: VerificationRequestStatusEnum;
+  search?: string;
   page?: number;
   pageSize?: number;
 };
@@ -104,9 +118,10 @@ export async function listVerificationRequests(
 ): Promise<PagedListResult<VerificationRequestListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  if (!sessionToken)
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { status, page, pageSize } = options;
+  const { status, search, page, pageSize } = options;
   const result = await callApi<ListResponse<VerificationRequestListEntry>>(
     "/api/v1/access/verification-requests/list",
     {
@@ -114,6 +129,7 @@ export async function listVerificationRequests(
       token: sessionToken,
       body: {
         status: status ?? "pending",
+        ...(search ? { search } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },
@@ -157,7 +173,10 @@ export async function approveVerificationRequest(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<VerificationRequestReviewResult>(
@@ -173,7 +192,10 @@ export async function rejectVerificationRequest(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<VerificationRequestReviewResult>(
@@ -183,7 +205,9 @@ export async function rejectVerificationRequest(
       token: sessionToken,
       body: {
         id,
-        ...(rejectionReason?.trim() ? { rejection_reason: rejectionReason.trim() } : {}),
+        ...(rejectionReason?.trim()
+          ? { rejection_reason: rejectionReason.trim() }
+          : {}),
       },
     }
   );

@@ -2,6 +2,7 @@
 
 import {
   approveVerificationRequest as approveVerificationRequestApi,
+  getVerificationRequestDetail as getVerificationRequestDetailApi,
   grantBranchAdmin as grantBranchAdminApi,
   grantChapterAdmin as grantChapterAdminApi,
   grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
@@ -189,6 +190,10 @@ export async function approveVerificationRequest(id: string) {
 
 export async function rejectVerificationRequest(id: string, rejectionReason?: string) {
   return rejectVerificationRequestApi(id, rejectionReason);
+}
+
+export async function getVerificationRequestDetail(id: string) {
+  return getVerificationRequestDetailApi(id);
 }
 
 // Super Admin/Administrator-only admin panel (/master/branches) — gated by MasterLayout, not re-checked here.
