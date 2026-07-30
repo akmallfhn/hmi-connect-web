@@ -6,6 +6,7 @@ import {
   FileCheck2,
   GraduationCap,
   LayoutDashboard,
+  ShieldCheck,
   Users,
   Vote,
 } from "lucide-react";
@@ -38,6 +39,11 @@ function getNavItems(branchId: string): AdminNavEntry[] {
           icon: GraduationCap,
         },
         { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+        {
+          label: "Permintaan Verifikasi",
+          href: `${base}/verification`,
+          icon: ShieldCheck,
+        },
       ],
     },
     {

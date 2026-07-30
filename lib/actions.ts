@@ -1,9 +1,11 @@
 "use server";
 
 import {
+  approveVerificationRequest as approveVerificationRequestApi,
   grantBranchAdmin as grantBranchAdminApi,
   grantChapterAdmin as grantChapterAdminApi,
   grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
+  rejectVerificationRequest as rejectVerificationRequestApi,
   revokeBranchAdmin as revokeBranchAdminApi,
   revokeChapterAdmin as revokeChapterAdminApi,
   revokeCoordinatingBodyAdmin as revokeCoordinatingBodyAdminApi,
@@ -178,6 +180,15 @@ export async function revokeChapterAdmin(id: string) {
 
 export async function revokeCoordinatingBodyAdmin(id: string) {
   return revokeCoordinatingBodyAdminApi(id);
+}
+
+// Super Admin, or Administrator with can_manage_branch — see apis/access.ts.
+export async function approveVerificationRequest(id: string) {
+  return approveVerificationRequestApi(id);
+}
+
+export async function rejectVerificationRequest(id: string, rejectionReason?: string) {
+  return rejectVerificationRequestApi(id, rejectionReason);
 }
 
 // Super Admin/Administrator-only admin panel (/master/branches) — gated by MasterLayout, not re-checked here.

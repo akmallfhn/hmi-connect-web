@@ -44,7 +44,7 @@ export type CheckUsernameResult = {
   is_available: boolean;
 };
 
-// Mirrors POST /api/v1/users/list's response — the summary shape shown in the admin user table (no KTP/contact/subscription fields, those only come back from users/detail).
+// Mirrors POST /api/v1/users/list's response — the summary shape shown in the admin user table (no KTP/contact fields, those only come back from users/detail).
 export type UserListEntry = {
   id: string;
   chapter_id?: string;
@@ -59,14 +59,21 @@ export type UserListEntry = {
   role_name?: string;
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
+  is_subscribe: boolean;
+  can_manage_chapter: boolean;
   can_manage_branch: boolean;
+  can_manage_coordinating_body: boolean;
 };
 
 export type ListUsersOptions = {
   search?: string;
   status?: UserStatusEnum;
+  // Narrows the list to users in this one chapter.
+  chapterId?: string;
   // Narrows the list to users in any chapter under this one branch.
   branchId?: string;
+  // Narrows the list to users in any chapter under this one coordinating body (BADKO).
+  coordinatingBodyId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -86,14 +93,16 @@ export async function listUsers(
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { search, status, branchId, page, pageSize } = options;
+  const { search, status, chapterId, branchId, coordinatingBodyId, page, pageSize } = options;
   const result = await callApi<ListResponse<UserListEntry>>("/api/v1/users/list", {
     method: "POST",
     token: sessionToken,
     body: {
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),
+      ...(chapterId ? { chapter_id: chapterId } : {}),
       ...(branchId ? { branch_id: branchId } : {}),
+      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
       page: page ?? 1,
       page_size: pageSize ?? 20,
     },
@@ -149,6 +158,7 @@ export type CreateUserResult = {
   role_name?: string;
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
+  is_subscribe: boolean;
 };
 
 export async function createUser(
