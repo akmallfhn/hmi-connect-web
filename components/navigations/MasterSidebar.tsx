@@ -2,7 +2,7 @@
 
 import { Building2, GraduationCap, LayoutDashboard, Network, Users } from "lucide-react";
 import Link from "next/link";
-import AdminSidebar, { type AdminNavItem } from "./AdminSidebar";
+import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
 interface MasterSidebarProps {
@@ -11,12 +11,20 @@ interface MasterSidebarProps {
   roleName?: string;
 }
 
-const NAV_ITEMS: AdminNavItem[] = [
+const NAV_ITEMS: AdminNavEntry[] = [
   { label: "Dashboard", href: "/master", icon: LayoutDashboard, exact: true },
-  { label: "User Management", href: "/master/users", icon: Users },
-  { label: "Badko", href: "/master/coordinating-bodies", icon: Network },
-  { label: "Cabang", href: "/master/branches", icon: Building2 },
-  { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
+  {
+    groupName: "Administrasi",
+    items: [{ label: "User Management", href: "/master/users", icon: Users }],
+  },
+  {
+    groupName: "Organisasi",
+    items: [
+      { label: "Badko", href: "/master/coordinating-bodies", icon: Network },
+      { label: "Cabang", href: "/master/branches", icon: Building2 },
+      { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
+    ],
+  },
 ];
 
 export default function MasterSidebar({

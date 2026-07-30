@@ -1026,10 +1026,12 @@ below) when `isVerified === false`.
   styled after the sibling `sevenpreneur` project's `AppSidebarGroupMenu`/`AppSidebarMenuItem`;
   when the whole sidebar is icon-only, `NavGroup` drops its header entirely and just stacks the
   group's items, matching that same reference's collapsed behavior. `components/navigations/
-  MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, the same fixed
-  flat `NAV_ITEMS` array as before (Dashboard/User Management/Badko/Cabang/Komisariat — no groups),
-  and a `renderHeader` that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing
-  when collapsed (matching the original pre-extraction behavior).
+  MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, a `renderHeader`
+  that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing when collapsed
+  (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
+  (exact-matched) followed by two `AdminNavGroup`s: "Administrasi" (User Management) and
+  "Organisasi" (Badko/Cabang/Komisariat) — mirroring the same group-naming convention
+  `BranchSidebar`'s own "Organisasi"/"Program" groups use below.
   `components/navigations/BranchSidebar.tsx` is the Cabang-scoped sibling, rendered by
   `app/(admin)/admin/branches/[branch_id]/layout.tsx` (a new nested layout — the `[id]` pages
   under `/admin/branches`, `/admin/chapters`, `/admin/coordinating-bodies` previously had no
