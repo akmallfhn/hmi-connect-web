@@ -28,6 +28,7 @@ import AchievementTrophyIllustration from "../illustrations/AchievementTrophyIll
 import InstructionalGoalsIllustration from "../illustrations/InstructionalGoalsIllustration";
 import OrganizationGearIllustration from "../illustrations/OrganizationGearIllustration";
 import TargetFlagIllustration from "../illustrations/TargetFlagIllustration";
+import { COLOR_STYLES, type ColorName } from "../lk2/colorStyles";
 import {
   LK2_ASSESSMENT,
   LK2_CERTIFICATION,
@@ -44,25 +45,6 @@ import {
 interface BranchLk2GuidelinePageProps {
   branchId: string;
 }
-
-type ColorName =
-  | "green"
-  | "orange"
-  | "red"
-  | "purple"
-  | "blue"
-  | "yellow"
-  | "pink";
-
-const COLOR_STYLES: Record<ColorName, { bg: string; text: string }> = {
-  green: { bg: "bg-primary-soft", text: "text-primary" },
-  orange: { bg: "bg-secondary-soft", text: "text-secondary" },
-  red: { bg: "bg-destructive-soft", text: "text-destructive" },
-  purple: { bg: "bg-[#EFEDF9]", text: "text-[#42359B]" },
-  blue: { bg: "bg-[#E2F0FF]", text: "text-[#164EA6]" },
-  yellow: { bg: "bg-[#FFF6E0]", text: "text-[#8A6300]" },
-  pink: { bg: "bg-[#FDE7EE]", text: "text-[#BE2B5D]" },
-};
 
 const SECTION_META: Record<
   string,
@@ -283,7 +265,8 @@ export default function BranchLk2GuidelinePage({
               </p>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {LK2_OVERVIEW.goals.map((goal, index) => {
-                  const Illustration = GOAL_ILLUSTRATIONS[index % GOAL_ILLUSTRATIONS.length];
+                  const Illustration =
+                    GOAL_ILLUSTRATIONS[index % GOAL_ILLUSTRATIONS.length];
                   return (
                     <div
                       key={goal}

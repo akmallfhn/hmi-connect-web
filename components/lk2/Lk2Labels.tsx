@@ -1,5 +1,5 @@
 import Label from "../common/Label";
-import type { Lk2BatchStatus, Lk2ParticipantStatus } from "./mockData";
+import type { Lk2BatchStatus, Lk2MaterialStatus, Lk2ParticipantStatus } from "./mockData";
 
 const BATCH_STATUS_TEXT: Record<Lk2BatchStatus, string> = {
   upcoming: "Akan Datang",
@@ -29,4 +29,15 @@ export function Lk2ParticipantStatusLabel({ status }: { status: Lk2ParticipantSt
           ? "red"
           : "gray";
   return <Label variant={variant}>{PARTICIPANT_STATUS_TEXT[status]}</Label>;
+}
+
+const MATERIAL_STATUS_TEXT: Record<Lk2MaterialStatus, string> = {
+  completed: "Selesai",
+  ongoing: "Berjalan",
+  not_started: "Belum Mulai",
+};
+
+export function Lk2MaterialStatusLabel({ status }: { status: Lk2MaterialStatus }) {
+  const variant = status === "completed" ? "green" : status === "ongoing" ? "blue" : "gray";
+  return <Label variant={variant}>{MATERIAL_STATUS_TEXT[status]}</Label>;
 }

@@ -1117,18 +1117,57 @@ below) when `isVerified === false`.
   low-contrast. Font sizes here run a notch above this app's usual `text-sm`/`text-[13px]` — body
   copy is `text-base` (16px) and captions are `text-[15px]`, bumped up twice from an initial
   `text-sm` pass specifically for this page's own readability, not a site-wide token change.
-  `components/pages/
-  BranchLk2DetailPage.tsx` (batch looked up by id server-side in the route's `page.tsx`,
-  `notFound()` if it doesn't match `LK2_BATCHES`) shows the batch's materi table, peserta table
-  (`Lk2ParticipantStatusLabel` — Lulus/Lulus Bersyarat/Tidak Lulus/Sedang Mengikuti), and stat
-  pills. "Generate Sertifikat" (per passed/conditional_pass participant) and "Generate SK
-  Kelulusan" (bulk) open `GenerateCertificateModal`/`GenerateSkModal` — a certificate/SK-letterhead
+  `components/pages/BranchLk2DetailPage.tsx` (batch looked up by id server-side in the route's
+  `page.tsx`, `notFound()` if it doesn't match `LK2_BATCHES`) is a 3-tab dashboard — Ringkasan /
+  Materi / Daftar Peserta, in that order (an underline-style tab bar, plain local `useState`, not
+  a shared Tabs component) — built to match a Figma-style mockup the user supplied. Each tab is its own file
+  under `components/lk2/`: `Lk2SummaryTab.tsx`, `Lk2ParticipantsTab.tsx`, `Lk2MaterialsTab.tsx`.
+  Only the Ringkasan tab renders `Lk2BatchSidePanel.tsx` alongside it (cover card with
+  `Lk2BatchStatusLabel`/dates/location/MOT/batch code/copy-to-clipboard/created-by/at, a "Quick
+  Action" button list, and a "Dokumen Batch" file list) — the other two tabs go full-width, no
+  side panel, matching the mockup exactly. `Lk2SummaryTab` reuses this app's existing `/master`
+  dashboard chart components (`components/charts/StatusDonut.tsx`, called twice — Progress
+  Kelulusan and Distribusi Nilai — with score-derived segments) plus a new one-off
+  `components/lk2/Lk2ScoreTrendChart.tsx` (a `recharts` `AreaChart`, same shape as
+  `components/charts/KaderGrowthLineChart.tsx`, plotting `batch.scoreTrend` mock data) — kept
+  local to `components/lk2/` rather than promoted to `components/charts/` since it's LK2-specific,
+  not reusable. `Lk2ParticipantsTab`/`Lk2MaterialsTab` do real client-side search/filter/sort over
+  the batch's mock `participants`/`materials` arrays (no backend, but the filtering itself is
+  real, unlike everything else in this feature). A shared `components/lk2/colorStyles.ts`
+  (`ColorName`/`COLOR_STYLES`) backs the icon badges across all of `components/lk2/*` and
+  `BranchLk2GuidelinePage.tsx` — extracted out of the guideline page once a second file needed the
+  same palette. `Lk2Material` (in `mockData.ts`, per-batch curriculum — distinct from
+  `guidelineContent.ts`'s `Lk2MaterialDetail`, the static reference doc's own separate type) now
+  also carries `understandingPercent`/`status` for the Performa Materi progress bars and Materi
+  tab's status badges; `Lk2Batch` gained `quota`/`batchCode`/`createdBy`/`createdAt`/
+  `scoreDeltaFromPreviousBatch`/`documents`/`activities`/`scoreTrend` to back the side panel and
+  Ringkasan tab — none of it wired to anything real. "Generate Sertifikat" (per passed/
+  conditional_pass participant) and "Generate SK Kelulusan" (bulk, from the side panel's Quick
+  Action) still open `GenerateCertificateModal`/`GenerateSkModal` — a certificate/SK-letterhead
   preview with an "Unduh (PDF)" button that only `toast.info`s ("Prototipe — ... belum tersambung
-  ke backend"), no real PDF generation. `Lk2BatchFormSheet` ("Tambah Batch LK2") is the same
-  pattern — a fully laid-out form whose "Simpan" just toasts and closes instead of persisting
-  anything. If this ever becomes a real feature, all of `components/lk2/mockData.ts`'s types
-  (`Lk2Batch`/`Lk2Participant`/`Lk2Material`) need a real `apis/lk2.ts` counterpart and every one
-  of these toast-only actions needs wiring to an actual endpoint.
+  ke backend"), no real PDF generation. Daftar Peserta's own primary row action is "Beri
+  Penilaian" (`components/lk2/Lk2AssessmentModal.tsx`) — unlike the other actions on this page,
+  its scoring math is real (client-side only): a weighted rubric split into a "Nilai per Materi"
+  section (one `NumberInput` per `batch.materials` entry, each weighted
+  `MATERIALS_POOL_WEIGHT / materials.length`, i.e. 60% split evenly across however many materials
+  the batch has) and an "Aspek Lainnya" section (`ASSESSMENT_ASPECTS` — Kedisiplinan 15%,
+  Ketepatan Waktu 10%, Partisipasi & Keaktifan 10%, Etika & Sopan Santun 5%, summing to the
+  remaining 40%) — a live-computed "Nilai Akhir" plus its derived `Lk2ParticipantStatusLabel`
+  (same ≥80/60-79/<60 thresholds as `guidelineContent.ts#LK2_ASSESSMENT.criteria`) update as the
+  admin types. "Simpan Penilaian" still only toasts and closes though — none of these per-material/
+  per-aspect scores get written back to `batch.participants`, since `Lk2Participant` only has one
+  flat `score` field; a real version would need the backend to actually store this rubric
+  breakdown, not just a final number. Every other action on this page (Export Rekap Peserta,
+  Cetak Sertifikat Massal, Kirim Pengumuman, document downloads, "Lihat Detail" on a participant,
+  Edit/Hapus Materi, "Tambah Materi", drag-and-drop reordering) is the same toast-only stub, or
+  purely decorative (the `GripVertical` drag handle doesn't actually reorder anything).
+  `Lk2BatchFormSheet` ("Tambah Batch LK2", reachable only from the list page — this detail page
+  deliberately dropped its own "Kembali"/"Buat Batch Baru" header buttons, since the standalone
+  "Kembali ke daftar batch" link above the title already covers going back, and creating a batch
+  from inside another batch's own dashboard read as out of place) is the same toast-only-submit
+  pattern. If this ever becomes a real feature, all of `components/lk2/mockData.ts`'s
+  types need a real `apis/lk2.ts` counterpart and every one of these toast-only/decorative actions
+  needs wiring to an actual endpoint.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
