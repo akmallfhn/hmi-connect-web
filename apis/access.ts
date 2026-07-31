@@ -1,14 +1,17 @@
 import "server-only";
 
+import { render } from "@react-email/components";
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
 import type { PagedListResult, UserProfile } from "./users";
+import { VerificationApprovedEmail } from "@/components/emails/VerificationApprovedEmail";
 import {
   isSuccessStatus,
   type GenderEnum,
   type VerificationRequestStatusEnum,
 } from "@/lib/types";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { SESSION_COOKIE_NAME, getMainSiteOrigin } from "@/lib/constants";
+import { sendEmail } from "@/lib/mailtrap";
 
 // Grant/revoke endpoints for the can_manage_* management scopes — Super Admin-only, mounted under /access rather than /users (see internal/user/README.md's Access control endpoints section).
 async function callAccessEndpoint(
@@ -64,6 +67,7 @@ export type VerificationRequestListEntry = {
   user_id: string;
   full_name: string;
   username: string;
+  email?: string;
   avatar?: string;
   chapter_id: string;
   chapter_name?: string;
@@ -73,7 +77,6 @@ export type VerificationRequestListEntry = {
 
 // verification-requests/detail's shape — the only endpoint that ever returns a plaintext nik.
 export type VerificationRequestDetail = VerificationRequestListEntry & {
-  email?: string;
   ktp_full_name: string;
   nik: string;
   phone_number: string;
@@ -179,10 +182,37 @@ export async function approveVerificationRequest(
     };
   }
 
-  return callApi<VerificationRequestReviewResult>(
+  const result = await callApi<VerificationRequestReviewResult>(
     "/api/v1/access/verification-requests/approve",
     { method: "POST", token: sessionToken, body: { id } }
   );
+
+  if (isSuccessStatus(result.status) && result.data) {
+    sendVerificationApprovedEmail(result.data).catch((err) => {
+      console.error("[approveVerificationRequest] sendVerificationApprovedEmail threw:", err);
+    });
+  }
+
+  return result;
+}
+
+// Fire-and-forget — a failed send must never fail the approval itself.
+async function sendVerificationApprovedEmail(request: VerificationRequestListEntry) {
+  if (!request.email) return;
+
+  const html = await render(
+    VerificationApprovedEmail({
+      fullName: request.full_name,
+      username: request.username,
+      siteUrl: getMainSiteOrigin(),
+    })
+  );
+
+  await sendEmail({
+    mailRecipients: [request.email],
+    mailSubject: "Akun kamu sudah terverifikasi di HMI Connect 🎉",
+    mailHtml: html,
+  });
 }
 
 export async function rejectVerificationRequest(

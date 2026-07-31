@@ -12,7 +12,8 @@ fix the rule, not just the code.
 - **Tailwind CSS v4** (`app/globals.css`, `@theme inline` tokens — brand colors are
   `--primary` (tosca) and `--secondary` (orange)).
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
-  `@react-oauth/google` for Google sign-in, `lucide-react` for icons.
+  `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
+  `@react-email/components` for transactional email (see Transactional email below).
 - No ORM/DB in this repo — this app is a pure frontend/BFF in front of a separate Go
   backend. All real data lives behind `BASE_URL`.
 
@@ -38,6 +39,8 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. |
 | `NEXT_PUBLIC_BASE_URL` | client-side code that needs the public origin | |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres *is* this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
+| `MAILTRAP_API_TOKEN` | `lib/mailtrap.ts` | Server-side Mailtrap API token for `sendEmail()` (see Transactional email below). |
+| `MAILTRAP_WEBHOOK_SECRET` | — | Present in `.env` for a future Mailtrap delivery-event webhook (bounces/opens); not consumed by any code yet — don't assume a webhook route exists until one is actually added. |
 
 ## Domain routing
 
@@ -267,6 +270,46 @@ no link when `"pending"` — and only renders the verified badge next to the acc
    pick with no Cabang context wouldn't make sense in this flow); only `chapter_id` is submitted
    to `users/verification`, branch/coordinating body and organization are derived server-side
    from the chapter.
+
+## Transactional email
+
+`lib/mailtrap.ts` (`import "server-only"`) wraps the `mailtrap` npm package's `MailtrapClient` —
+one shared client, sender fixed to `{ name: "HMI Connect", email: "no-reply@sevenpreneur.com" }`
+(temporary — `hmiconnect.com` isn't yet added/DNS-verified under this Mailtrap account's Sending
+Domains, `sevenpreneur.com` already is; swap the sender email back once `hmiconnect.com` is
+verified there, don't reintroduce it before then or every send times out against Mailtrap's
+production `send.api.mailtrap.io`), one `sendEmail({ mailRecipients, mailSubject, mailBody?,
+mailHtml? })` function. Same shape as the
+sibling `sevenpreneur` project's own `lib/mailtrap.ts`, minus its Prisma-backed `LogError` call
+(this repo has no DB access, so send failures here are just `console.error`'d by the caller).
+`components/emails/*` holds the actual templates as `@react-email/components` JSX (`Html`/`Body`/
+`Container`/`Section`/`Row`/`Column`/`Text`/`Link`/`Img`/`Hr`), styled with plain
+`React.CSSProperties` objects, not Tailwind — email clients don't run a stylesheet, so every style
+has to already be inline, which is what `@react-email/components`' own primitives produce. Colors
+are hardcoded hex (`#159fa2` primary/`#ff5c53` secondary/etc., copied from `app/globals.css`'s
+`--primary`/`--secondary` tokens), not CSS variables, for the same reason. A template takes every
+piece of dynamic data as props (name, links, ...) — it never fetches or reads `process.env`
+itself, so it stays trivially testable via `render()` and reusable from any caller. Convert a
+template's rendered output to a string with `@react-email/components`' own `render()` (async) —
+`sendEmail`'s `mailHtml` wants a string, not the JSX element — then hand that string to
+`sendEmail`. `components/emails/VerificationApprovedEmail.tsx` is the first template: sent when a
+branch admin approves a `verification_requests` row (see `apis/access.ts#approveVerificationRequest`
+below), welcoming the newly-verified kader and pointing out what verified membership unlocks
+(berjejaring/follow, posting & diskusi, E-KTA). Its header renders the real HMI Connect logo — a
+hardcoded `LOGO_URL` pointing at the public `hmi-connect` Supabase bucket
+(`.../hmi-connect/logo-hmi-connect.png`), via `Img`, not a wordmark/SVG component, since email
+clients need a real hosted raster image. `approveVerificationRequest` fires this fire-and-forget
+(`.catch()`, not awaited into the response) from a private `sendVerificationApprovedEmail` helper
+in the same file — a failed send is only `console.error`'d, it must never fail the approval
+itself. `verification-requests/list`/`/detail`/`/approve`/`/reject` all now return `email` on
+their shared base shape (`VerificationRequestListEntry.email`), so the helper reads
+`request.email` straight off the approve response — no extra lookup call needed; earlier
+revisions of this feature had to resolve it via a second `getUserByUsername` call before the
+backend added the field, don't reintroduce that. The CTA link is built from `getMainSiteOrigin()`
+(`lib/constants.ts`) plus `/profile/{username}`, the same per-`DOMAIN_MODE` origin helper the
+`/admin` layout already uses for its own login/forbidden redirects — reused here since a
+transactional email needs an absolute URL, unlike everything else in this app which can just use
+relative `<Link>`s.
 
 ## Component conventions
 
