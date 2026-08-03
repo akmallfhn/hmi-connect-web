@@ -1163,6 +1163,18 @@ relative `<Link>`s.
   dashboard components have been removed; do not reintroduce them without matching backend
   support. The separate `/trainings/guideline` route remains static reference content backed by
   `lib/trainings/guideline-content.ts`.
+  The main-site training catalog is public, outside `(gated)`, like profile pages:
+  `/trainings` lists every level with API-backed name/level/organizer filters and pagination,
+  `/trainings/{training_id}` renders the public event detail, and
+  `/trainings/{training_id}/register` is the session-gated registration form. The `/trainings`
+  prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
+  the register Server Component performs its own session check and redirects anonymous visitors
+  to `/auth/login?redirectTo=/trainings/{training_id}/register`. `apis/trainings.ts#listTrainings` and
+  `getTrainingDetail` prefer the server-only `CLIENT_SECRET` so anonymous requests can use the
+  backend's auth-or-client-secret read endpoints; training/material admin writes and participant
+  reads remain session-cookie-backed. `registerTraining` is exposed through `lib/actions.ts` and
+  always requires the caller's session JWT. Signed-in visitors can submit an optional
+  `paper_url`, matching `trainings/register`.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built

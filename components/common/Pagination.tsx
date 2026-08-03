@@ -53,7 +53,7 @@ export default function Pagination({
         disabled={currentPage <= 1}
       >
         <ChevronLeft className="size-4" />
-        Sebelumnya
+        <span className="hidden sm:inline">Sebelumnya</span>
       </Button>
 
       {getPageNumbers().map((page, index) =>
@@ -82,7 +82,7 @@ export default function Pagination({
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage >= totalPages}
       >
-        Selanjutnya
+        <span className="hidden sm:inline">Selanjutnya</span>
         <ChevronRight className="size-4" />
       </Button>
     </div>

@@ -1,4 +1,7 @@
-import type { TrainingResultEnum } from "@/lib/types";
+import type {
+  TrainingResultEnum,
+  TrainingStatusEnum,
+} from "@/lib/types";
 import Label from "../common/Label";
 import {
   getTrainingDisplayStatus,
@@ -23,6 +26,19 @@ export function TrainingStatusLabel({
 }) {
   const content = STATUS_CONTENT[getTrainingDisplayStatus(startDate, endDate)];
   return <Label variant={content.variant}>{content.label}</Label>;
+}
+
+const LEVEL_VARIANTS: Record<
+  TrainingStatusEnum,
+  "green" | "orange" | "purple"
+> = {
+  LK1: "green",
+  LK2: "orange",
+  LK3: "purple",
+};
+
+export function TrainingLevelLabel({ level }: { level: TrainingStatusEnum }) {
+  return <Label variant={LEVEL_VARIANTS[level]}>{level}</Label>;
 }
 
 const RESULT_CONTENT: Record<

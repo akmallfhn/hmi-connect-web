@@ -47,6 +47,7 @@ export type TrainingParticipant = {
   user_username: string;
   user_email: string;
   user_avatar?: string;
+  paper_url?: string;
   result?: TrainingResultEnum;
   created_at: string;
   updated_at: string;
@@ -72,6 +73,10 @@ type ListResponse<T> = {
 async function getSessionToken() {
   const cookieStore = await cookies();
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
+}
+
+async function getTrainingReadToken() {
+  return process.env.CLIENT_SECRET ?? (await getSessionToken());
 }
 
 function emptyPage<T>(page = 1): PagedTrainingResult<T> {
@@ -103,15 +108,15 @@ export type ListTrainingsOptions = {
 export async function listTrainings(
   options: ListTrainingsOptions = {}
 ): Promise<PagedTrainingResult<TrainingListEntry>> {
-  const sessionToken = await getSessionToken();
+  const authToken = await getTrainingReadToken();
   const page = options.page ?? 1;
-  if (!sessionToken) return emptyPage(page);
+  if (!authToken) return emptyPage(page);
 
   const result = await callApi<ListResponse<TrainingListEntry>>(
     "/api/v1/trainings/list",
     {
       method: "POST",
-      token: sessionToken,
+      token: authToken,
       body: {
         ...(options.search ? { search: options.search } : {}),
         ...(options.level ? { level: options.level } : {}),
@@ -135,16 +140,39 @@ export async function listTrainings(
 export async function getTrainingDetail(
   id: string
 ): Promise<TrainingDetail | null> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken) return null;
+  const authToken = await getTrainingReadToken();
+  if (!authToken) return null;
 
   const result = await callApi<TrainingDetail>("/api/v1/trainings/detail", {
     method: "POST",
-    token: sessionToken,
+    token: authToken,
     body: { id },
   });
   if (!isSuccessStatus(result.status) || !result.data) return null;
   return result.data;
+}
+
+export type RegisterTrainingPayload = {
+  training_id: string;
+  paper_url?: string;
+};
+
+export async function registerTraining(
+  payload: RegisterTrainingPayload
+): Promise<ApiEnvelope<TrainingParticipant>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Silakan masuk untuk mendaftar training.",
+    };
+  }
+
+  return callApi<TrainingParticipant>("/api/v1/trainings/register", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
 }
 
 export type CreateTrainingPayload = {
