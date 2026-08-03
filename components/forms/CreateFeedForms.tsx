@@ -41,10 +41,7 @@ interface CreateFeedFormsProps {
   avatar?: string;
   userId?: string;
   onCreated?: (feed: Feed) => void;
-  /** Bump this (e.g. from a counter) to force the composer open from outside — see BottomNav. */
   forceOpenSignal?: number;
-  /** Paired with forceOpenSignal — when set, the composer opens straight into the URL
-   *  attachment mode with this value pre-filled — see RepostToFeedButton. */
   forceOpenUrl?: string;
 }
 
@@ -135,16 +132,8 @@ async function uploadFeedMedia(
 ) {
   const extension = getExtension(file);
   const fileName = `${kind}-${Date.now()}-${randomId()}.${extension}`;
-  const primaryPath = `feed_media/${userId ?? "anonymous"}/${fileName}`;
-
-  try {
-    return await uploadPublicStorageFile(primaryPath, file);
-  } catch (error) {
-    if (!isStoragePolicyError(error)) throw error;
-
-    const fallbackPath = `avatars/feed_media/${userId ?? "anonymous"}/${fileName}`;
-    return uploadPublicStorageFile(fallbackPath, file);
-  }
+  const filePath = `feed_media/${userId ?? "anonymous"}/${fileName}`;
+  return uploadPublicStorageFile(filePath, file);
 }
 
 export default function CreateFeedForms({
@@ -236,16 +225,12 @@ interface FeedComposerModalProps {
   avatar?: string;
   userId?: string;
   initialMode?: FeedMediaTypeEnum | null;
-  /** Pre-fills the URL attachment field — see RepostToFeedButton. */
   initialUrl?: string;
-  /** When set, the composer becomes a quote-repost of this feed: no attachment UI, and the
-   *  quoted feed renders read-only below the textarea (see QuotedFeed). */
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
 
-// Exported so FeedItemCard's "Quote Repost" action can open this same modal externally,
-// controlled by its own open state, without rendering CreateFeedForms's trigger card.
+// Exported so FeedItemCard's "Quote Repost" action can open this same modal externally.
 export function FeedComposerModal({
   open,
   onClose,

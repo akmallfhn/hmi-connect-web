@@ -555,9 +555,8 @@ relative `<Link>`s.
   as `CreateFeedForms` — including a click-outside listener to close the picker, the same
   pattern `Dropdown.tsx` already uses — and a real image attachment upload straight to the
   public `hmi-connect` bucket's `chat_media/` folder, same direct-to-storage convention as
-  `feed_media`, right down to the `avatars/chat_media/` fallback path for when the primary
-  path 403s on a row-level-security error — unlike a mock feature, a real message needs a
-  real, shareable URL, not a same-tab-only blob URL). The composer's send button is
+  `feed_media` — unlike a mock feature, a real message needs a real, shareable URL, not a
+  same-tab-only blob URL). The composer's send button is
   always the same button, just `disabled` while there's nothing to send or a send is in
   flight — there's no separate quick-heart button (that was the reaction feature, disabled).
   `MessageBubble.tsx` caps each bubble at `w-fit max-w-[min(75%,480px)]` (a percentage that
@@ -987,8 +986,7 @@ relative `<Link>`s.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
-  to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs;
-  while storage policy is catching up, it falls back to `hmi-connect/avatars/feed_media`.
+  to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
   run through `lib/compressImage.ts` — a plain Canvas API resize/re-encode (max 1920px
   edge, JPEG, quality stepped down from 0.8 to a 0.5 floor) — before they're staged or

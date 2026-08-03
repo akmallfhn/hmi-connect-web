@@ -1,8 +1,18 @@
 "use client";
 
-import EmojiPicker, { EmojiClickData, EmojiStyle, Theme } from "emoji-picker-react";
+import EmojiPicker, {
+  EmojiClickData,
+  EmojiStyle,
+  Theme,
+} from "emoji-picker-react";
 import { ImageIcon, Send, SmilePlus, X } from "lucide-react";
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -24,7 +34,10 @@ function isStoragePolicyError(error: unknown) {
   );
 }
 
-async function uploadPublicStorageFile(filePath: string, file: File): Promise<string> {
+async function uploadPublicStorageFile(
+  filePath: string,
+  file: File
+): Promise<string> {
   const { error } = await supabase.storage
     .from("hmi-connect")
     .upload(filePath, file, { cacheControl: "3600", upsert: false });
@@ -36,22 +49,15 @@ async function uploadPublicStorageFile(filePath: string, file: File): Promise<st
   return data.publicUrl;
 }
 
-// Direct-to-storage upload, same convention as CreateFeedForms' feed_media — its own folder
-// under the shared public hmi-connect bucket since chat attachments are their own resource.
-// Falls back under avatars/ while storage policy is catching up, same reason feed_media does.
-async function uploadChatAttachment(file: File, userId: string | undefined): Promise<string> {
+// Direct-to-storage upload, same convention as CreateFeedForms' feed_media.
+async function uploadChatAttachment(
+  file: File,
+  userId: string | undefined
+): Promise<string> {
   const extension = getExtension(file);
   const fileName = `${Date.now()}-${randomId()}.${extension}`;
-  const primaryPath = `chat_media/${userId ?? "anonymous"}/${fileName}`;
-
-  try {
-    return await uploadPublicStorageFile(primaryPath, file);
-  } catch (error) {
-    if (!isStoragePolicyError(error)) throw error;
-
-    const fallbackPath = `avatars/chat_media/${userId ?? "anonymous"}/${fileName}`;
-    return uploadPublicStorageFile(fallbackPath, file);
-  }
+  const filePath = `chat_media/${userId ?? "anonymous"}/${fileName}`;
+  return uploadPublicStorageFile(filePath, file);
 }
 
 interface MessageComposerProps {
@@ -59,7 +65,10 @@ interface MessageComposerProps {
   onSend: (content: string, attachmentUrl?: string) => Promise<void>;
 }
 
-export default function MessageComposer({ userId, onSend }: MessageComposerProps) {
+export default function MessageComposer({
+  userId,
+  onSend,
+}: MessageComposerProps) {
   const [text, setText] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -172,7 +181,11 @@ export default function MessageComposer({ userId, onSend }: MessageComposerProps
       {imagePreviewUrl && (
         <div className="relative mb-2 inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not an optimizable remote asset */}
-          <img src={imagePreviewUrl} alt="Pratinjau" className="h-24 w-24 rounded-xl object-cover" />
+          <img
+            src={imagePreviewUrl}
+            alt="Pratinjau"
+            className="h-24 w-24 rounded-xl object-cover"
+          />
           <button
             type="button"
             onClick={removeImage}
