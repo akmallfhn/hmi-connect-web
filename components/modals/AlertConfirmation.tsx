@@ -28,7 +28,7 @@ export default function AlertConfirmation({
 }: AlertConfirmationProps) {
   return (
     <Modal open={open} onClose={onClose} title={title}>
-      <p className="text-sm text-[#5f6573]">{message}</p>
+      <p className="text-sm text-[#5f6573] xl:text-[15px]">{message}</p>
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} disabled={loading}>
           {cancelLabel}

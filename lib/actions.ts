@@ -48,6 +48,7 @@ import {
   createTrainingHistory as createTrainingHistoryApi,
   createUser as createUserApi,
   createWorkExperience as createWorkExperienceApi,
+  deactivateUser as deactivateUserApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteHonorAward as deleteHonorAwardApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
@@ -160,8 +161,12 @@ export async function createUser(payload: CreateUserPayload) {
   return createUserApi(payload);
 }
 
-export async function deleteUser(id: string) {
-  return deleteUserApi(id);
+export async function deactivateUser(id: string) {
+  return deactivateUserApi(id);
+}
+
+export async function deleteUser(id: string, username: string) {
+  return deleteUserApi(id, username);
 }
 
 // Super Admin-only — see apis/access.ts.

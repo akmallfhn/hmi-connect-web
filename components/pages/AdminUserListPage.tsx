@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Ban,
   EllipsisVertical,
   Eye,
   Pencil,
@@ -14,7 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { UserListEntry } from "@/apis/users";
-import { deleteUser } from "@/lib/actions";
+import { deactivateUser, deleteUser } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
@@ -27,6 +28,7 @@ import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import ConfirmDeleteUserModal from "../modals/ConfirmDeleteUserModal";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -68,6 +70,9 @@ export default function AdminUserListPage({
   const [editTarget, setEditTarget] = useState<UserListEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserListEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deactivateTarget, setDeactivateTarget] =
+    useState<UserListEntry | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   function pushParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -92,12 +97,12 @@ export default function AdminUserListPage({
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      const result = await deleteUser(deleteTarget.id);
+      const result = await deleteUser(deleteTarget.id, deleteTarget.username);
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? "Gagal menghapus user.");
         return;
       }
-      toast.success("User berhasil dihapus.");
+      toast.success("User berhasil dihapus permanen.");
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
@@ -105,6 +110,26 @@ export default function AdminUserListPage({
       toast.error("Gagal menghapus user.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleDeactivate() {
+    if (!deactivateTarget) return;
+    setIsDeactivating(true);
+    try {
+      const result = await deactivateUser(deactivateTarget.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal menonaktifkan user.");
+        return;
+      }
+      toast.success("User berhasil dinonaktifkan.");
+      setDeactivateTarget(null);
+      router.refresh();
+    } catch (err) {
+      console.error("[AdminUserListPage] deactivateUser threw:", err);
+      toast.error("Gagal menonaktifkan user.");
+    } finally {
+      setIsDeactivating(false);
     }
   }
 
@@ -254,11 +279,19 @@ export default function AdminUserListPage({
                           </button>
                           <button
                             type="button"
+                            onClick={() => setDeactivateTarget(user)}
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+                          >
+                            <Ban className="size-4" />
+                            Nonaktifkan
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setDeleteTarget(user)}
                             className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
                           >
                             <Trash2 className="size-4" />
-                            Hapus
+                            Hapus Permanen
                           </button>
                         </Dropdown>
                       </div>
@@ -292,12 +325,21 @@ export default function AdminUserListPage({
       />
 
       <AlertConfirmation
+        open={deactivateTarget !== null}
+        onClose={() => setDeactivateTarget(null)}
+        onConfirm={handleDeactivate}
+        title="Nonaktifkan akun ini?"
+        message={`Apakah kamu yakin ingin menonaktifkan ${deactivateTarget?.full_name}? Akun akan disoftdelete dan tidak bisa login, tapi datanya tetap tersimpan — email, username, dan nomor kartu anggotanya tetap dicadangkan.`}
+        confirmLabel="Nonaktifkan"
+        loading={isDeactivating}
+      />
+
+      <ConfirmDeleteUserModal
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Hapus user ini?"
-        message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.full_name}? Tindakan ini tidak dapat dibatalkan.`}
-        confirmLabel="Hapus"
+        fullName={deleteTarget?.full_name ?? ""}
+        username={deleteTarget?.username ?? ""}
         loading={isDeleting}
       />
     </div>

@@ -178,7 +178,24 @@ export async function createUser(
   });
 }
 
-export async function deleteUser(id: string): Promise<ApiEnvelope> {
+// Soft-deletes: sets deleted_at + status to inactive, but reserves email/username/member_card/nik_hash so they can't be reused.
+export async function deactivateUser(id: string): Promise<ApiEnvelope> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+
+  return callApi("/api/v1/users/deactivate", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}
+
+// Permanently deletes the user row and everything referencing it. `username` must exactly match the target's stored username — a confirmation guard the backend enforces, not just a lookup key.
+export async function deleteUser(id: string, username: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -189,7 +206,7 @@ export async function deleteUser(id: string): Promise<ApiEnvelope> {
   return callApi("/api/v1/users/delete", {
     method: "POST",
     token: sessionToken,
-    body: { id },
+    body: { id, username },
   });
 }
 

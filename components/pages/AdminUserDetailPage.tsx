@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  Ban,
   CalendarDays,
   FileText,
   Pencil,
@@ -16,6 +17,7 @@ import { ReactNode, useState } from "react";
 import { toast } from "sonner";
 import type { UserProfile } from "@/apis/users";
 import {
+  deactivateUser,
   deleteUser,
   grantBranchAdmin,
   grantChapterAdmin,
@@ -36,6 +38,7 @@ import AdminEditUserContactForm from "../forms/AdminEditUserContactForm";
 import AdminEditUserMembershipForm from "../forms/AdminEditUserMembershipForm";
 import AdminEditUserOrganizationForm from "../forms/AdminEditUserOrganizationForm";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import ConfirmDeleteUserModal from "../modals/ConfirmDeleteUserModal";
 
 const STATUS_DOT_CLASSNAME: Record<UserStatusEnum, string> = {
   active: "bg-primary",
@@ -184,6 +187,8 @@ export default function AdminUserDetailPage({
   >(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
   const [pendingScope, setPendingScope] = useState<{
     scope: ManagementScope;
     nextValue: boolean;
@@ -224,18 +229,36 @@ export default function AdminUserDetailPage({
   async function handleDelete() {
     setIsDeleting(true);
     try {
-      const result = await deleteUser(user.id);
+      const result = await deleteUser(user.id, user.username);
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? "Gagal menghapus user.");
         return;
       }
-      toast.success("User berhasil dihapus.");
+      toast.success("User berhasil dihapus permanen.");
       router.push("/master/users");
     } catch (err) {
       console.error("[AdminUserDetailPage] deleteUser threw:", err);
       toast.error("Gagal menghapus user.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleDeactivate() {
+    setIsDeactivating(true);
+    try {
+      const result = await deactivateUser(user.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal menonaktifkan user.");
+        return;
+      }
+      toast.success("User berhasil dinonaktifkan.");
+      router.push("/master/users");
+    } catch (err) {
+      console.error("[AdminUserDetailPage] deactivateUser threw:", err);
+      toast.error("Gagal menonaktifkan user.");
+    } finally {
+      setIsDeactivating(false);
     }
   }
 
@@ -381,14 +404,22 @@ export default function AdminUserDetailPage({
         </SectionCard>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setShowDeactivateConfirm(true)}
+          className="w-fit text-destructive"
+        >
+          <Ban className="size-3.5" />
+          Nonaktifkan Akun
+        </Button>
         <Button
           variant="destructive"
           onClick={() => setShowDeleteConfirm(true)}
           className="w-fit"
         >
           <Trash2 className="size-3.5" />
-          Hapus User
+          Hapus User Permanen
         </Button>
       </div>
 
@@ -418,12 +449,21 @@ export default function AdminUserDetailPage({
       />
 
       <AlertConfirmation
+        open={showDeactivateConfirm}
+        onClose={() => setShowDeactivateConfirm(false)}
+        onConfirm={handleDeactivate}
+        title="Nonaktifkan akun ini?"
+        message={`Apakah kamu yakin ingin menonaktifkan ${user.full_name}? Akun akan disoftdelete dan tidak bisa login, tapi datanya tetap tersimpan — email, username, dan nomor kartu anggotanya tetap dicadangkan.`}
+        confirmLabel="Nonaktifkan"
+        loading={isDeactivating}
+      />
+
+      <ConfirmDeleteUserModal
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDelete}
-        title="Hapus user ini?"
-        message={`Apakah kamu yakin ingin menghapus ${user.full_name}? Tindakan ini tidak dapat dibatalkan.`}
-        confirmLabel="Hapus"
+        fullName={user.full_name}
+        username={user.username}
         loading={isDeleting}
       />
 
