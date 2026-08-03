@@ -139,7 +139,8 @@ Three layers, each with one job. Don't blend them.
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
    (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
-   not independent resources), `social-media-platforms.ts`, `users.ts`, `session.ts`,
+   not independent resources), `social-media-platforms.ts`, `users.ts`, `trainings.ts`
+   (training events + materials + participants, distinct from user training histories), `session.ts`,
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
@@ -202,6 +203,7 @@ should be typed here, not left as `string`. Currently mirrors these Postgres enu
 - `BranchTypeEnum` — `full | provisional`
 - `TrainingStatusEnum` — `LK1 | LK2 | LK3`
 - `TrainingResultEnum` — `passed | conditional_pass | failed`
+- `TrainingOrganizerTypeEnum` — `chapter | branch | coordinating_body | organization`
 - `Degree` — education degree levels (not a DB enum name 1:1, but same idea)
 
 When the backend adds a new Postgres enum you need to model, add it here — don't
@@ -1137,120 +1139,28 @@ relative `<Link>`s.
   still placeholders; Kelola Komisariat at `/branches/{id}/chapters`, real — see below; Daftar
   Kader at `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
   `/branches/{id}/verification`, real — see further below) and "Program" (Latihan Kader 2 at
-  `/branches/{id}/lk2`, a **frontend-only prototype** — see below; Konfercab at
+  `/branches/{id}/lk2`, real and backed by the training API described below; Konfercab at
   `/branches/{id}/konfercab`, still a placeholder).
   Latihan Kader 2 (`/branches/{id}/lk2` + `/branches/{id}/lk2/{batch_id}` +
-  `/branches/{id}/lk2/guideline`) is deliberately a visual-only prototype, not a real feature —
-  there's no `apis/lk2.ts` and no backend endpoint backing any of it. `components/lk2/mockData.ts`
-  holds only the per-batch data (`LK2_BATCHES` — status/dates/location/MOT/materials/participants,
-  same "hardcoded array, no API" convention as `components/feeds/mockData.ts#UPCOMING_EVENTS`).
-  Reference documentation (syarat peserta, alur pendaftaran, peraturan kelas, MOT spec, instruktur,
-  per-materi kurikulum detail, sistem penilaian, sertifikasi) lives in a **separate** file,
-  `components/lk2/guidelineContent.ts` — kept apart from `mockData.ts` on purpose, since this
-  content must never look tied to any one batch instance. `components/pages/BranchLk2Page.tsx` is
-  just the "Daftar Batch" card grid (links to `/branches/{id}/lk2/{batch_id}`) plus a "Guideline &
-  Kurikulum" button that navigates to its own route rather than a `useState` tab — that page used
-  to be a two-tab toggle, but a JS-state-switched tab means the guideline half only exists as
-  "currently active tab" instead of content you can link to or that renders without client state,
-  so it was split into `/branches/{id}/lk2/guideline` →
-  `components/pages/BranchLk2GuidelinePage.tsx` instead. That page has no `"use client"` at all —
-  it's pure static markup — styled like a docs site (Tailwind/tRPC/Upstash-style): a sticky left
-  sidebar of anchor links (`LK2_DOC_SECTIONS`) down the left, with "Kurikulum & Materi" expanding
-  into a nested sub-list (one anchor per `LK2_MATERIALS` entry), and a long-form content column on
-  the right built from plain `<section id="...">` blocks (`scroll-mt-6` so the anchor jump doesn't
-  land flush under nothing) — no scroll-spy/active-link-highlighting JS, just anchor navigation.
-  Anchor jumps need `scroll-behavior: smooth` on the actual scrolling box, which in this app's
-  `app/layout.tsx` is the `<html>` element, not `<body>` — `<body>` already had a `scroll-smooth`
-  class from before, but that alone doesn't smooth-scroll `#anchor` navigation since the
-  browser's real scrolling element is `document.documentElement` (`<html>`) whenever `<html>` has
-  an explicit height (it does here, `h-full`); `<html>` now carries `scroll-smooth` too. Every
-  section is wrapped by a local `DocSection` (`rounded-xl border border-[#e6e9ef] bg-white p-5
-  sm:p-6` + heading) rather than floating unbounded on the page's `bg-[#f5f7fb]` background;
-  sub-blocks that used to be their own bordered-white boxes nested inside a section (Peraturan
-  Kelas's 3 columns, MOT's 2 columns, each Kurikulum material card) switched from
-  `border border-[#e6e9ef]` to a plain `bg-[#f5f7fb]` fill instead, since two nested white/
-  bordered boxes read flat — the tables (`TableShell`) keep their own border, that nests fine
-  since its header is shaded, not white. Every section, sidebar link, Peraturan Kelas/MOT
-  sub-card, Kurikulum material, and Instruktur table row also gets a small colored circular
-  `IconBadge` (a shared local helper — icon + one of 7 `COLOR_STYLES`, the same bg-soft/text pairs
-  `components/common/Label.tsx`'s variants already use, just as a circle instead of a pill) keyed
-  by a `SECTION_META`/`MATERIAL_META`/`INSTRUCTOR_META` lookup — deliberately varied per section/
-  material rather than one repeated color, since the ask here was specifically "playful, varied
-  colors" (referencing a design-token docs site as the visual cue), not just adding icons.
-  `DocSection` also renders a one-line description under each heading (from `SECTION_META`) so a
-  reader can skim what a section covers before reading it — this and the icons are both aimed at
-  the "alur informasinya enak dibaca" (readable information flow) part of the same ask, not just
-  decoration. The page embeds a YouTube video (a real, publicly
-  findable HMI kaderisasi training video, picked via web search — not a fabricated URL) inside
-  the **Pendahuluan** section specifically, between the overview paragraph and the "Tujuan
-  Instruksional" list — not as a standalone block above the sidebar/content layout like the first
-  draft had it. The "Tujuan Instruksional" goals aren't a plain checklist either — each of the 4
-  goals gets its own `bg-[#f5f7fb]` card with its own illustration, in a `GOAL_ILLUSTRATIONS`
-  array indexed against `LK2_OVERVIEW.goals` (`InstructionalGoalsIllustration` for the NDP goal,
-  `OrganizationGearIllustration` for the leadership/org-management goal, `TargetFlagIllustration`
-  for the social-awareness goal, `AchievementTrophyIllustration` for the structural-role goal) —
-  all four are one-off illustrations converted from SVGs the user supplied directly (see
-  `components/illustrations/*` above), picked per-goal by content, not just one shared graphic for
-  the whole list. Each of the 7
-  curriculum materials gets its own detail block (objective, pokok
-  bahasan, metode, evaluasi), not just a title/hours/instructor row like the old version. Body
-  copy across the page reads `text-[#172033]` (the app's default dark text color) rather than the
-  muted `text-[#5f6573]` gray used for UI captions/labels elsewhere — this page treats `#5f6573`
-  as reserved for secondary captions/microcopy only, since using it for actual prose read as
-  low-contrast. Font sizes here run a notch above this app's usual `text-sm`/`text-[13px]` — body
-  copy is `text-base` (16px) and captions are `text-[15px]`, bumped up twice from an initial
-  `text-sm` pass specifically for this page's own readability, not a site-wide token change.
-  `components/pages/BranchLk2DetailPage.tsx` (batch looked up by id server-side in the route's
-  `page.tsx`, `notFound()` if it doesn't match `LK2_BATCHES`) is a 3-tab dashboard — Ringkasan /
-  Materi / Daftar Peserta, in that order (an underline-style tab bar, plain local `useState`, not
-  a shared Tabs component) — built to match a Figma-style mockup the user supplied. Each tab is its own file
-  under `components/lk2/`: `Lk2SummaryTab.tsx`, `Lk2ParticipantsTab.tsx`, `Lk2MaterialsTab.tsx`.
-  Only the Ringkasan tab renders `Lk2BatchSidePanel.tsx` alongside it (cover card with
-  `Lk2BatchStatusLabel`/dates/location/MOT/batch code/copy-to-clipboard/created-by/at, a "Quick
-  Action" button list, and a "Dokumen Batch" file list) — the other two tabs go full-width, no
-  side panel, matching the mockup exactly. `Lk2SummaryTab` reuses this app's existing `/master`
-  dashboard chart components (`components/charts/StatusDonut.tsx`, called twice — Progress
-  Kelulusan and Distribusi Nilai — with score-derived segments) plus a new one-off
-  `components/lk2/Lk2ScoreTrendChart.tsx` (a `recharts` `AreaChart`, same shape as
-  `components/charts/KaderGrowthLineChart.tsx`, plotting `batch.scoreTrend` mock data) — kept
-  local to `components/lk2/` rather than promoted to `components/charts/` since it's LK2-specific,
-  not reusable. `Lk2ParticipantsTab`/`Lk2MaterialsTab` do real client-side search/filter/sort over
-  the batch's mock `participants`/`materials` arrays (no backend, but the filtering itself is
-  real, unlike everything else in this feature). A shared `components/lk2/colorStyles.ts`
-  (`ColorName`/`COLOR_STYLES`) backs the icon badges across all of `components/lk2/*` and
-  `BranchLk2GuidelinePage.tsx` — extracted out of the guideline page once a second file needed the
-  same palette. `Lk2Material` (in `mockData.ts`, per-batch curriculum — distinct from
-  `guidelineContent.ts`'s `Lk2MaterialDetail`, the static reference doc's own separate type) now
-  also carries `understandingPercent`/`status` for the Performa Materi progress bars and Materi
-  tab's status badges; `Lk2Batch` gained `quota`/`batchCode`/`createdBy`/`createdAt`/
-  `scoreDeltaFromPreviousBatch`/`documents`/`activities`/`scoreTrend` to back the side panel and
-  Ringkasan tab — none of it wired to anything real. "Generate Sertifikat" (per passed/
-  conditional_pass participant) and "Generate SK Kelulusan" (bulk, from the side panel's Quick
-  Action) still open `GenerateCertificateModal`/`GenerateSkModal` — a certificate/SK-letterhead
-  preview with an "Unduh (PDF)" button that only `toast.info`s ("Prototipe — ... belum tersambung
-  ke backend"), no real PDF generation. Daftar Peserta's own primary row action is "Beri
-  Penilaian" (`components/lk2/Lk2AssessmentModal.tsx`) — unlike the other actions on this page,
-  its scoring math is real (client-side only): a weighted rubric split into a "Nilai per Materi"
-  section (one `NumberInput` per `batch.materials` entry, each weighted
-  `MATERIALS_POOL_WEIGHT / materials.length`, i.e. 60% split evenly across however many materials
-  the batch has) and an "Aspek Lainnya" section (`ASSESSMENT_ASPECTS` — Kedisiplinan 15%,
-  Ketepatan Waktu 10%, Partisipasi & Keaktifan 10%, Etika & Sopan Santun 5%, summing to the
-  remaining 40%) — a live-computed "Nilai Akhir" plus its derived `Lk2ParticipantStatusLabel`
-  (same ≥80/60-79/<60 thresholds as `guidelineContent.ts#LK2_ASSESSMENT.criteria`) update as the
-  admin types. "Simpan Penilaian" still only toasts and closes though — none of these per-material/
-  per-aspect scores get written back to `batch.participants`, since `Lk2Participant` only has one
-  flat `score` field; a real version would need the backend to actually store this rubric
-  breakdown, not just a final number. Every other action on this page (Export Rekap Peserta,
-  Cetak Sertifikat Massal, Kirim Pengumuman, document downloads, "Lihat Detail" on a participant,
-  Edit/Hapus Materi, "Tambah Materi", drag-and-drop reordering) is the same toast-only stub, or
-  purely decorative (the `GripVertical` drag handle doesn't actually reorder anything).
-  `Lk2BatchFormSheet` ("Tambah Batch LK2", reachable only from the list page — this detail page
-  deliberately dropped its own "Kembali"/"Buat Batch Baru" header buttons, since the standalone
-  "Kembali ke daftar batch" link above the title already covers going back, and creating a batch
-  from inside another batch's own dashboard read as out of place) is the same toast-only-submit
-  pattern. If this ever becomes a real feature, all of `components/lk2/mockData.ts`'s
-  types need a real `apis/lk2.ts` counterpart and every one of these toast-only/decorative actions
-  needs wiring to an actual endpoint.
+  `/branches/{id}/lk2/guideline`) uses `apis/trainings.ts`, which wraps all backend
+  `trainings/*`, `trainings/materials/*`, and read-only `trainings/participants/*` endpoints.
+  The branch list route always filters `level: "LK2"`, `organizer_type: "branch"`, and the
+  current `branch_id`; the detail route repeats that ownership/level check and calls `notFound()`
+  for a training outside the current branch. Both routes read search/pagination from URL params
+  and fetch in Server Components before rendering the client page state machines.
+  `components/pages/BranchLk2Page.tsx` renders the API-backed searchable/paginated batch grid.
+  `components/pages/BranchLk2DetailPage.tsx` exposes Ringkasan, Materi, and Daftar Peserta tabs:
+  Ringkasan derives display status from the date range and shows real aggregate counts; Materi
+  supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is
+  searchable and read-only because the backend currently exposes participant list/detail only.
+  Training and material writes are only shown when `role_name` is `Super Admin` or
+  `Administrator`, matching the backend middleware even though the outer branch layout also
+  permits a branch-scoped manager to browse. The former mock-only evaluation, certificate, SK,
+  quota, numeric score, and activity controls are intentionally absent because no endpoint in
+  `internal/training` persists those concepts yet. `components/lk2/mockData.ts` and its old
+  prototype dashboard components remain in the tree only as unused legacy files; do not wire new
+  work to them. The separate `/lk2/guideline` route remains static reference content backed by
+  `components/lk2/guidelineContent.ts`.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built

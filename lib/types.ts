@@ -6,6 +6,11 @@ export type GenderEnum = "male" | "female";
 export type BranchTypeEnum = "full" | "provisional";
 export type TrainingStatusEnum = "LK1" | "LK2" | "LK3";
 export type TrainingResultEnum = "passed" | "conditional_pass" | "failed";
+export type TrainingOrganizerTypeEnum =
+  | "chapter"
+  | "branch"
+  | "coordinating_body"
+  | "organization";
 export type Degree =
   | "diploma_ahli_pratama"
   | "diploma_ahli_muda"

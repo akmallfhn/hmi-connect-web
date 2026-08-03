@@ -134,6 +134,18 @@ import {
   updateChatMessage as updateChatMessageApi,
   type SendMessagePayload,
 } from "@/apis/chats";
+import {
+  createTraining as createTrainingApi,
+  createTrainingMaterial as createTrainingMaterialApi,
+  deleteTraining as deleteTrainingApi,
+  deleteTrainingMaterial as deleteTrainingMaterialApi,
+  updateTraining as updateTrainingApi,
+  updateTrainingMaterial as updateTrainingMaterialApi,
+  type CreateTrainingMaterialPayload,
+  type CreateTrainingPayload,
+  type UpdateTrainingMaterialPayload,
+  type UpdateTrainingPayload,
+} from "@/apis/trainings";
 import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
@@ -246,6 +258,34 @@ export async function updateCoordinatingBody(payload: UpdateCoordinatingBodyPayl
 
 export async function deleteCoordinatingBody(id: string) {
   return deleteCoordinatingBodyApi(id);
+}
+
+export async function createTraining(payload: CreateTrainingPayload) {
+  return createTrainingApi(payload);
+}
+
+export async function updateTraining(payload: UpdateTrainingPayload) {
+  return updateTrainingApi(payload);
+}
+
+export async function deleteTraining(id: string) {
+  return deleteTrainingApi(id);
+}
+
+export async function createTrainingMaterial(
+  payload: CreateTrainingMaterialPayload
+) {
+  return createTrainingMaterialApi(payload);
+}
+
+export async function updateTrainingMaterial(
+  payload: UpdateTrainingMaterialPayload
+) {
+  return updateTrainingMaterialApi(payload);
+}
+
+export async function deleteTrainingMaterial(id: string) {
+  return deleteTrainingMaterialApi(id);
 }
 
 export async function followUser(userId: string) {

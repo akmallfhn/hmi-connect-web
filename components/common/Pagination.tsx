@@ -7,17 +7,22 @@ import Button from "../buttons/Button";
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  queryKey?: string;
 }
 
 // Numbered pagination driving ?page=, same page-window/ellipsis logic as sevenpreneur's AppNumberPagination, ported to plain Tailwind.
-export default function Pagination({ currentPage, totalPages }: PaginationProps) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  queryKey = "page",
+}: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   function goToPage(page: number) {
     if (page === currentPage || page < 1 || page > totalPages) return;
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
+    params.set(queryKey, String(page));
     router.push(`?${params.toString()}`);
   }
 

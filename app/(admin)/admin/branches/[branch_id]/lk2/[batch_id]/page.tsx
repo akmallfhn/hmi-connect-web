@@ -1,30 +1,90 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import BranchLk2DetailPage from "@/components/pages/BranchLk2DetailPage";
-import { LK2_BATCHES } from "@/components/lk2/mockData";
+import { getSession } from "@/apis/session";
+import {
+  getTrainingDetail,
+  listTrainingMaterials,
+  listTrainingParticipants,
+} from "@/apis/trainings";
+import BranchLk2DetailPage, {
+  type TrainingDetailTab,
+} from "@/components/pages/BranchLk2DetailPage";
+
+export const metadata: Metadata = {
+  title: "Detail Latihan Kader 2",
+  robots: { index: false, follow: false },
+};
+
+const PAGE_SIZE = 20;
 
 interface BranchLk2DetailRouteProps {
   params: Promise<{ branch_id: string; batch_id: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    material_search?: string;
+    material_page?: string;
+    participant_search?: string;
+    participant_page?: string;
+  }>;
 }
 
-export async function generateMetadata({
-  params,
-}: BranchLk2DetailRouteProps): Promise<Metadata> {
-  const { batch_id } = await params;
-  const batch = LK2_BATCHES.find((item) => item.id === batch_id);
-  return {
-    title: batch ? batch.name : "Latihan Kader 2",
-    robots: { index: false, follow: false },
-  };
+function parseTab(value?: string): TrainingDetailTab {
+  if (value === "materi" || value === "peserta") return value;
+  return "ringkasan";
+}
+
+function parsePage(value?: string) {
+  return Math.max(1, Number(value ?? "1") || 1);
 }
 
 export default async function BranchLk2DetailRoute({
   params,
+  searchParams,
 }: BranchLk2DetailRouteProps) {
-  const { branch_id, batch_id } = await params;
-  const batch = LK2_BATCHES.find((item) => item.id === batch_id);
+  const [{ branch_id, batch_id }, query] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const training = await getTrainingDetail(batch_id);
 
-  if (!batch) notFound();
+  if (
+    !training ||
+    training.level !== "LK2" ||
+    training.organizer_type !== "branch" ||
+    training.organizer_id !== branch_id
+  ) {
+    notFound();
+  }
 
-  return <BranchLk2DetailPage branchId={branch_id} batch={batch} />;
+  const materialSearch = query.material_search?.trim() ?? "";
+  const participantSearch = query.participant_search?.trim() ?? "";
+  const [materials, participants, { user }] = await Promise.all([
+    listTrainingMaterials(training.id, {
+      search: materialSearch || undefined,
+      page: parsePage(query.material_page),
+      pageSize: PAGE_SIZE,
+    }),
+    listTrainingParticipants(training.id, {
+      search: participantSearch || undefined,
+      page: parsePage(query.participant_page),
+      pageSize: PAGE_SIZE,
+    }),
+    getSession(),
+  ]);
+  const canManageTrainings =
+    user?.role_name === "Super Admin" || user?.role_name === "Administrator";
+
+  return (
+    <BranchLk2DetailPage
+      branchId={branch_id}
+      training={training}
+      materials={materials}
+      participants={participants}
+      initialTab={parseTab(query.tab)}
+      initialMaterialSearch={materialSearch}
+      initialParticipantSearch={participantSearch}
+      pageSize={PAGE_SIZE}
+      canManageTrainings={canManageTrainings}
+    />
+  );
 }
