@@ -78,7 +78,7 @@ export default function BranchLk2Page({
           </p>
         </div>
         <div className="flex w-fit shrink-0 flex-wrap gap-2">
-          <Link href={`/branches/${branchId}/lk2/guideline`}>
+          <Link href={`/branches/${branchId}/trainings/guideline`}>
             <Button variant="outline">
               <BookOpen className="size-4" />
               Guideline & Kurikulum
@@ -120,7 +120,7 @@ export default function BranchLk2Page({
           {trainings.map((training) => (
             <Link
               key={training.id}
-              href={`/branches/${branchId}/lk2/${training.id}`}
+              href={`/branches/${branchId}/trainings/${training.id}`}
               className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/50 hover:shadow-sm"
             >
               <div className="flex items-start justify-between gap-3">

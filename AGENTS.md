@@ -1139,10 +1139,11 @@ relative `<Link>`s.
   still placeholders; Kelola Komisariat at `/branches/{id}/chapters`, real — see below; Daftar
   Kader at `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
   `/branches/{id}/verification`, real — see further below) and "Program" (Latihan Kader 2 at
-  `/branches/{id}/lk2`, real and backed by the training API described below; Konfercab at
+  `/branches/{id}/trainings`, real and backed by the training API described below; Konfercab at
   `/branches/{id}/konfercab`, still a placeholder).
-  Latihan Kader 2 (`/branches/{id}/lk2` + `/branches/{id}/lk2/{batch_id}` +
-  `/branches/{id}/lk2/guideline`) uses `apis/trainings.ts`, which wraps all backend
+  Latihan Kader 2 (`/branches/{id}/trainings` +
+  `/branches/{id}/trainings/{training_id}` + `/branches/{id}/trainings/guideline`) uses
+  `apis/trainings.ts`, which wraps all backend
   `trainings/*`, `trainings/materials/*`, and read-only `trainings/participants/*` endpoints.
   The branch list route always filters `level: "LK2"`, `organizer_type: "branch"`, and the
   current `branch_id`; the detail route repeats that ownership/level check and calls `notFound()`
@@ -1159,8 +1160,8 @@ relative `<Link>`s.
   quota, numeric score, and activity controls are intentionally absent because no endpoint in
   `internal/training` persists those concepts yet. `components/lk2/mockData.ts` and its old
   prototype dashboard components remain in the tree only as unused legacy files; do not wire new
-  work to them. The separate `/lk2/guideline` route remains static reference content backed by
-  `components/lk2/guidelineContent.ts`.
+  work to them. The separate `/trainings/guideline` route remains static reference content
+  backed by `components/lk2/guidelineContent.ts`.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built

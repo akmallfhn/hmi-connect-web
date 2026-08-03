@@ -192,7 +192,10 @@ export default function BranchLk2GuidelinePage({
 }: BranchLk2GuidelinePageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href={`/branches/${branchId}/lk2`} className="inline-block w-fit">
+      <Link
+        href={`/branches/${branchId}/trainings`}
+        className="inline-block w-fit"
+      >
         <Button variant="ghost">
           <ArrowLeft className="size-4" />
           Kembali ke daftar batch

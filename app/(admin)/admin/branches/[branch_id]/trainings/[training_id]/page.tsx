@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const PAGE_SIZE = 20;
 
 interface BranchLk2DetailRouteProps {
-  params: Promise<{ branch_id: string; batch_id: string }>;
+  params: Promise<{ branch_id: string; training_id: string }>;
   searchParams: Promise<{
     tab?: string;
     material_search?: string;
@@ -41,11 +41,11 @@ export default async function BranchLk2DetailRoute({
   params,
   searchParams,
 }: BranchLk2DetailRouteProps) {
-  const [{ branch_id, batch_id }, query] = await Promise.all([
+  const [{ branch_id, training_id }, query] = await Promise.all([
     params,
     searchParams,
   ]);
-  const training = await getTrainingDetail(batch_id);
+  const training = await getTrainingDetail(training_id);
 
   if (
     !training ||

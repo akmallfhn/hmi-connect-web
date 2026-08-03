@@ -49,7 +49,7 @@ function getNavItems(branchId: string): AdminNavEntry[] {
     {
       groupName: "Program",
       items: [
-        { label: "Latihan Kader 2", href: `${base}/lk2`, icon: Award },
+        { label: "Latihan Kader 2", href: `${base}/trainings`, icon: Award },
         { label: "Konfercab", href: `${base}/konfercab`, icon: Vote },
       ],
     },

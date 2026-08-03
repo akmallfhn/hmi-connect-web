@@ -81,7 +81,7 @@ export default function BranchLk2DetailPage({
         return;
       }
       toast.success("Batch LK2 berhasil dihapus.");
-      router.push(`/branches/${branchId}/lk2`);
+      router.push(`/branches/${branchId}/trainings`);
       router.refresh();
     } catch (error) {
       console.error("[BranchLk2DetailPage] delete threw:", error);
@@ -93,7 +93,10 @@ export default function BranchLk2DetailPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href={`/branches/${branchId}/lk2`} className="inline-block w-fit">
+      <Link
+        href={`/branches/${branchId}/trainings`}
+        className="inline-block w-fit"
+      >
         <Button variant="ghost">
           <ArrowLeft className="size-4" />
           Kembali ke daftar batch
