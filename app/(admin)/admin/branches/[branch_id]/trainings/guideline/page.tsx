@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import BranchLk2GuidelinePage from "@/components/pages/BranchLk2GuidelinePage";
+import TrainingLK2GuidelinePage from "@/components/pages/TrainingLK2GuidelinePage";
 
 export const metadata: Metadata = {
   title: "Guideline & Kurikulum LK2",
@@ -9,13 +9,13 @@ export const metadata: Metadata = {
   },
 };
 
-interface BranchLk2GuidelineRouteProps {
+interface TrainingLK2GuidelineRouteProps {
   params: Promise<{ branch_id: string }>;
 }
 
-export default async function BranchLk2GuidelineRoute({
+export default async function TrainingLK2GuidelineRoute({
   params,
-}: BranchLk2GuidelineRouteProps) {
+}: TrainingLK2GuidelineRouteProps) {
   const { branch_id } = await params;
-  return <BranchLk2GuidelinePage branchId={branch_id} />;
+  return <TrainingLK2GuidelinePage branchId={branch_id} />;
 }

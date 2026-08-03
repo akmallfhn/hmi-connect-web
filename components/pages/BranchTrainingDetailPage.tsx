@@ -16,14 +16,14 @@ import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
-import { TrainingStatusLabel } from "../training/TrainingLabels";
-import TrainingMaterialsTab from "../training/TrainingMaterialsTab";
-import TrainingParticipantsTab from "../training/TrainingParticipantsTab";
-import TrainingSummaryTab from "../training/TrainingSummaryTab";
+import { TrainingStatusLabel } from "../trainings/TrainingLabels";
+import TrainingMaterialsTab from "../trainings/TrainingMaterialsTab";
+import TrainingParticipantsTab from "../trainings/TrainingParticipantsTab";
+import TrainingSummaryTab from "../trainings/TrainingSummaryTab";
 
 export type TrainingDetailTab = "ringkasan" | "materi" | "peserta";
 
-interface BranchLk2DetailPageProps {
+interface BranchTrainingDetailPageProps {
   branchId: string;
   training: TrainingDetail;
   materials: PagedTrainingResult<TrainingMaterial>;
@@ -41,7 +41,7 @@ const TABS: { id: TrainingDetailTab; label: string }[] = [
   { id: "peserta", label: "Daftar Peserta" },
 ];
 
-export default function BranchLk2DetailPage({
+export default function BranchTrainingDetailPage({
   branchId,
   training,
   materials,
@@ -51,7 +51,7 @@ export default function BranchLk2DetailPage({
   initialParticipantSearch,
   pageSize,
   canManageTrainings,
-}: BranchLk2DetailPageProps) {
+}: BranchTrainingDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [seenTab, setSeenTab] = useState(initialTab);
@@ -84,7 +84,7 @@ export default function BranchLk2DetailPage({
       router.push(`/branches/${branchId}/trainings`);
       router.refresh();
     } catch (error) {
-      console.error("[BranchLk2DetailPage] delete threw:", error);
+      console.error("[BranchTrainingDetailPage] delete threw:", error);
       toast.error("Gagal menghapus batch LK2.");
     } finally {
       setIsDeleting(false);

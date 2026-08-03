@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { listTrainings } from "@/apis/trainings";
 import { getSession } from "@/apis/session";
-import BranchLk2Page from "@/components/pages/BranchLk2Page";
+import BranchTrainingListPage from "@/components/pages/BranchTrainingListPage";
 
 export const metadata: Metadata = {
   title: "Latihan Kader 2",
@@ -11,17 +11,17 @@ export const metadata: Metadata = {
   },
 };
 
-interface BranchLk2RouteProps {
+interface BranchTrainingListRouteProps {
   params: Promise<{ branch_id: string }>;
   searchParams: Promise<{ search?: string; page?: string }>;
 }
 
 const PAGE_SIZE = 12;
 
-export default async function BranchLk2Route({
+export default async function BranchTrainingListRoute({
   params,
   searchParams,
-}: BranchLk2RouteProps) {
+}: BranchTrainingListRouteProps) {
   const { branch_id } = await params;
   const query = await searchParams;
   const search = query.search?.trim() ?? "";
@@ -41,7 +41,7 @@ export default async function BranchLk2Route({
     user?.role_name === "Super Admin" || user?.role_name === "Administrator";
 
   return (
-    <BranchLk2Page
+    <BranchTrainingListPage
       branchId={branch_id}
       trainings={result.list}
       totalData={result.totalData}

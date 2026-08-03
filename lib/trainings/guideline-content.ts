@@ -1,4 +1,4 @@
-// Prototype-only — static reference documentation, deliberately separate from mockData.ts's per-batch data (LK2_BATCHES). Nothing here should ever depend on a specific batch instance.
+// Static reference documentation for the LK2 guideline page.
 
 export interface Lk2MaterialDetail {
   id: string;

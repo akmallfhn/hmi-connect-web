@@ -4,6 +4,7 @@ import { getSession } from "@/apis/session";
 import { getMainSiteOrigin } from "@/lib/constants";
 import BranchSidebar from "@/components/navigations/BranchSidebar";
 import PageState from "@/components/states/PageState";
+import { BranchProvider } from "@/hooks/useBranch";
 
 interface BranchLayoutProps {
   children: ReactNode;
@@ -37,16 +38,18 @@ export default async function BranchLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      <BranchSidebar
-        branchId={branch.id}
-        branchName={branch.name}
-        branchType={branch.type}
-        fullName={user?.full_name}
-        avatar={user?.avatar}
-        roleName={user?.role_name}
-      />
-      <main className="min-h-screen flex-1 bg-[#f5f7fb]">{children}</main>
-    </div>
+    <BranchProvider branchId={branch.id} branchName={branch.name}>
+      <div className="flex min-h-screen">
+        <BranchSidebar
+          branchId={branch.id}
+          branchName={branch.name}
+          branchType={branch.type}
+          fullName={user?.full_name}
+          avatar={user?.avatar}
+          roleName={user?.role_name}
+        />
+        <main className="min-h-screen flex-1 bg-[#f5f7fb]">{children}</main>
+      </div>
+    </BranchProvider>
   );
 }

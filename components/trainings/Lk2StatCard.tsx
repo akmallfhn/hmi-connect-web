@@ -1,6 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { COLOR_STYLES, type ColorName } from "./colorStyles";
+import {
+  COLOR_STYLES,
+  type ColorName,
+} from "@/lib/trainings/color-styles";
 
 interface Lk2StatCardProps {
   icon: LucideIcon;

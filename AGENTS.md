@@ -1123,7 +1123,10 @@ relative `<Link>`s.
   failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
   not_found if the id doesn't resolve) — since this layout is now the authoritative gate for
   everything under `/admin/branches/[branch_id]/*`, the nested pages don't re-check access
-  themselves, unlike the standalone-page convention described in Domain routing above.
+  themselves, unlike the standalone-page convention described in Domain routing above. The same
+  resolved branch is passed through `hooks/useBranch.tsx#BranchProvider`, so
+  client pages/forms can read `branchName` with `useBranch()` for Cabang-specific descriptions
+  without issuing another branch-detail request in every nested route.
   `BranchSidebar`'s `renderHeader` shows the `LogoHmi` SVG emblem (not a lucide icon) in a square
   `rounded-lg` badge (deliberately not `rounded-full`, unlike `Avatar`/`ProfileBlock`'s circular
   badges elsewhere in this file) — kept visible even when the whole sidebar is collapsed (just the
@@ -1149,8 +1152,8 @@ relative `<Link>`s.
   current `branch_id`; the detail route repeats that ownership/level check and calls `notFound()`
   for a training outside the current branch. Both routes read search/pagination from URL params
   and fetch in Server Components before rendering the client page state machines.
-  `components/pages/BranchLk2Page.tsx` renders the API-backed searchable/paginated batch grid.
-  `components/pages/BranchLk2DetailPage.tsx` exposes Ringkasan, Materi, and Daftar Peserta tabs:
+  `components/pages/BranchTrainingListPage.tsx` renders the API-backed searchable/paginated batch grid.
+  `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, and Daftar Peserta tabs:
   Ringkasan derives display status from the date range and shows real aggregate counts; Materi
   supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is
   searchable and read-only because the backend currently exposes participant list/detail only.
@@ -1158,10 +1161,10 @@ relative `<Link>`s.
   `Administrator`, matching the backend middleware even though the outer branch layout also
   permits a branch-scoped manager to browse. The former mock-only evaluation, certificate, SK,
   quota, numeric score, and activity controls are intentionally absent because no endpoint in
-  `internal/training` persists those concepts yet. `components/lk2/mockData.ts` and its old
-  prototype dashboard components remain in the tree only as unused legacy files; do not wire new
-  work to them. The separate `/trainings/guideline` route remains static reference content
-  backed by `components/lk2/guidelineContent.ts`.
+  `internal/training` persists those concepts yet. The obsolete mock dataset and its prototype
+  dashboard components have been removed; do not reintroduce them without matching backend
+  support. The separate `/trainings/guideline` route remains static reference content backed by
+  `lib/trainings/guideline-content.ts`.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built

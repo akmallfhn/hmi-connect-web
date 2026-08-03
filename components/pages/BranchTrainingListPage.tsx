@@ -3,10 +3,12 @@
 import {
   BookOpen,
   CalendarDays,
+  ImageOff,
   MapPin,
   PlusCircle,
   Search,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,10 +17,11 @@ import Button from "../buttons/Button";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
-import { TrainingStatusLabel } from "../training/TrainingLabels";
-import { formatTrainingDateRange } from "../training/trainingUi";
+import { TrainingStatusLabel } from "../trainings/TrainingLabels";
+import { formatTrainingDateRange } from "@/lib/trainings/training-ui";
+import { useBranch } from "@/hooks/useBranch";
 
-interface BranchLk2PageProps {
+interface BranchTrainingListPageProps {
   branchId: string;
   trainings: TrainingListEntry[];
   totalData: number;
@@ -29,7 +32,7 @@ interface BranchLk2PageProps {
   canManageTrainings: boolean;
 }
 
-export default function BranchLk2Page({
+export default function BranchTrainingListPage({
   branchId,
   trainings,
   totalData,
@@ -38,9 +41,10 @@ export default function BranchLk2Page({
   initialSearch,
   pageSize,
   canManageTrainings,
-}: BranchLk2PageProps) {
+}: BranchTrainingListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { branchName } = useBranch();
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [seenSearch, setSeenSearch] = useState(initialSearch);
   const [searchInput, setSearchInput] = useState(initialSearch);
@@ -74,7 +78,7 @@ export default function BranchLk2Page({
             Latihan Kader 2
           </h1>
           <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Kelola pelaksanaan, materi, dan peserta LK2 di bawah Cabang ini.
+            Kelola pelaksanaan, materi, dan peserta LK2 di Cabang {branchName}.
           </p>
         </div>
         <div className="flex w-fit shrink-0 flex-wrap gap-2">
@@ -121,34 +125,51 @@ export default function BranchLk2Page({
             <Link
               key={training.id}
               href={`/branches/${branchId}/trainings/${training.id}`}
-              className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/50 hover:shadow-sm"
+              className="flex gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/50 hover:shadow-sm"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-base font-semibold text-[#172033]">
-                    {training.name}
-                  </p>
-                  <p className="mt-1 text-xs text-[#5f6573]">
-                    {training.organizer_name ?? "Cabang"}
-                  </p>
-                </div>
-                <TrainingStatusLabel
-                  startDate={training.start_date}
-                  endDate={training.end_date}
-                />
+              <div className="aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-[#f5f7fb]">
+                {training.image_url ? (
+                  <Image
+                    src={training.image_url}
+                    alt={training.name}
+                    width={80}
+                    height={100}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-[#5f6573]">
+                    <ImageOff className="size-5" />
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col gap-2 text-sm text-[#5f6573]">
-                <span className="flex items-center gap-2">
-                  <CalendarDays className="size-4 shrink-0" />
-                  {formatTrainingDateRange(
-                    training.start_date,
-                    training.end_date
-                  )}
-                </span>
-                <span className="flex items-center gap-2">
-                  <MapPin className="size-4 shrink-0" />
-                  {training.location_name || "Lokasi belum ditentukan"}
-                </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-[#172033]">
+                      {training.name}
+                    </p>
+                    <p className="mt-1 text-sm text-[#5f6573]">
+                      HMI Cabang {training.organizer_name ?? "Cabang"}
+                    </p>
+                  </div>
+                  <TrainingStatusLabel
+                    startDate={training.start_date}
+                    endDate={training.end_date}
+                  />
+                </div>
+                <div className="flex flex-col gap-2 text-sm text-[#5f6573]">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="size-4 shrink-0" />
+                    {formatTrainingDateRange(
+                      training.start_date,
+                      training.end_date
+                    )}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <MapPin className="size-4 shrink-0" />
+                    {training.location_name || "Lokasi belum ditentukan"}
+                  </span>
+                </div>
               </div>
             </Link>
           ))}
@@ -160,7 +181,8 @@ export default function BranchLk2Page({
           <Pagination currentPage={currentPage} totalPages={totalPage} />
           <p className="text-center text-sm text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
-            {(currentPage - 1) * pageSize + trainings.length} dari {totalData} batch
+            {(currentPage - 1) * pageSize + trainings.length} dari {totalData}{" "}
+            batch
           </p>
         </div>
       )}

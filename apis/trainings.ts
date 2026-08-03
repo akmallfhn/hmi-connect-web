@@ -20,6 +20,7 @@ export type TrainingListEntry = {
   start_date: string;
   end_date: string;
   location_name?: string;
+  image_url?: string;
   created_at: string;
 };
 
@@ -117,9 +118,7 @@ export async function listTrainings(
         ...(options.organizerType
           ? { organizer_type: options.organizerType }
           : {}),
-        ...(options.organizerId
-          ? { organizer_id: options.organizerId }
-          : {}),
+        ...(options.organizerId ? { organizer_id: options.organizerId } : {}),
         page,
         page_size: options.pageSize ?? 20,
       },
@@ -158,6 +157,7 @@ export type CreateTrainingPayload = {
   end_date: string;
   location_name?: string;
   location_url?: string;
+  image_url?: string;
 };
 
 export async function createTraining(
@@ -165,7 +165,10 @@ export async function createTraining(
 ): Promise<ApiEnvelope<TrainingDetail>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi<TrainingDetail>("/api/v1/trainings/create", {
     method: "POST",
@@ -185,6 +188,7 @@ export type UpdateTrainingPayload = {
   end_date?: string;
   location_name?: string;
   location_url?: string;
+  image_url?: string;
 };
 
 export async function updateTraining(
@@ -192,7 +196,10 @@ export async function updateTraining(
 ): Promise<ApiEnvelope<TrainingDetail>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi<TrainingDetail>("/api/v1/trainings/update", {
     method: "POST",
@@ -204,7 +211,10 @@ export async function updateTraining(
 export async function deleteTraining(id: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi("/api/v1/trainings/delete", {
     method: "POST",
@@ -273,7 +283,10 @@ export async function createTrainingMaterial(
 ): Promise<ApiEnvelope<TrainingMaterial>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi<TrainingMaterial>("/api/v1/trainings/materials/create", {
     method: "POST",
@@ -295,7 +308,10 @@ export async function updateTrainingMaterial(
 ): Promise<ApiEnvelope<TrainingMaterial>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi<TrainingMaterial>("/api/v1/trainings/materials/update", {
     method: "POST",
@@ -307,7 +323,10 @@ export async function updateTrainingMaterial(
 export async function deleteTrainingMaterial(id: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Sesi berakhir. Silakan masuk kembali." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
   }
   return callApi("/api/v1/trainings/materials/delete", {
     method: "POST",

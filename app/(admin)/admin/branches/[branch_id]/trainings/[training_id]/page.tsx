@@ -6,9 +6,9 @@ import {
   listTrainingMaterials,
   listTrainingParticipants,
 } from "@/apis/trainings";
-import BranchLk2DetailPage, {
+import BranchTrainingDetailPage, {
   type TrainingDetailTab,
-} from "@/components/pages/BranchLk2DetailPage";
+} from "@/components/pages/BranchTrainingDetailPage";
 
 export const metadata: Metadata = {
   title: "Detail Latihan Kader 2",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
-interface BranchLk2DetailRouteProps {
+interface BranchTrainingDetailRouteProps {
   params: Promise<{ branch_id: string; training_id: string }>;
   searchParams: Promise<{
     tab?: string;
@@ -37,10 +37,10 @@ function parsePage(value?: string) {
   return Math.max(1, Number(value ?? "1") || 1);
 }
 
-export default async function BranchLk2DetailRoute({
+export default async function BranchTrainingDetailRoute({
   params,
   searchParams,
-}: BranchLk2DetailRouteProps) {
+}: BranchTrainingDetailRouteProps) {
   const [{ branch_id, training_id }, query] = await Promise.all([
     params,
     searchParams,
@@ -75,7 +75,7 @@ export default async function BranchLk2DetailRoute({
     user?.role_name === "Super Admin" || user?.role_name === "Administrator";
 
   return (
-    <BranchLk2DetailPage
+    <BranchTrainingDetailPage
       branchId={branch_id}
       training={training}
       materials={materials}

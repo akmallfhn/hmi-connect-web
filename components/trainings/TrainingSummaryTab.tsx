@@ -7,12 +7,12 @@ import {
   Users,
 } from "lucide-react";
 import type { TrainingDetail } from "@/apis/trainings";
-import Lk2StatCard from "../lk2/Lk2StatCard";
+import Lk2StatCard from "./Lk2StatCard";
 import {
   formatTrainingDate,
   formatTrainingDateRange,
   getTrainingDisplayStatus,
-} from "./trainingUi";
+} from "@/lib/trainings/training-ui";
 
 interface TrainingSummaryTabProps {
   training: TrainingDetail;

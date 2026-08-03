@@ -12,6 +12,7 @@ import Input from "../fields/Input";
 import Select from "../fields/Select";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
+import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -44,6 +45,7 @@ export default function BranchMemberListPage({
 }: BranchMemberListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { branchName } = useBranch();
 
   // "Adjust state during render" (not a useEffect) when the server hands back a new initialSearch, same pattern as SearchPage.
   const [seenSearch, setSeenSearch] = useState(initialSearch);
@@ -79,7 +81,7 @@ export default function BranchMemberListPage({
           Daftar Kader
         </h1>
         <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-          Daftar kader di bawah Cabang ini.
+          Daftar kader di Cabang {branchName}.
         </p>
       </div>
 

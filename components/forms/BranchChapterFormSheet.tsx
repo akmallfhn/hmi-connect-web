@@ -13,6 +13,7 @@ import CreateableSelect, {
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import Sheet from "../modals/Sheet";
+import { useBranch } from "@/hooks/useBranch";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -39,6 +40,8 @@ export default function BranchChapterFormSheet({
   chapter,
   branchId,
 }: BranchChapterFormSheetProps) {
+  const { branchName } = useBranch();
+
   return (
     <Sheet
       open={open}
@@ -47,7 +50,7 @@ export default function BranchChapterFormSheet({
       description={
         chapter
           ? "Perbarui data komisariat ini."
-          : "Buat komisariat (Komisariat HMI) baru di bawah Cabang ini."
+          : `Buat komisariat (Komisariat HMI) baru di Cabang ${branchName}.`
       }
     >
       {open && (

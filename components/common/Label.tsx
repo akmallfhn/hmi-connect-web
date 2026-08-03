@@ -2,14 +2,7 @@ import { ReactNode } from "react";
 
 // Color-variant pill, same idea as sevenpreneur's AppBasedLabel — domain labels map onto this instead of hardcoding colors.
 export type LabelVariant =
-  | "green"
-  | "orange"
-  | "red"
-  | "purple"
-  | "blue"
-  | "yellow"
-  | "gray"
-  | "pink";
+  "green" | "orange" | "red" | "purple" | "blue" | "yellow" | "gray" | "pink";
 
 const VARIANT_CLASSNAME: Record<LabelVariant, string> = {
   // This app's own brand tokens (see app/globals.css) already read as "green"/"orange"/"red".
@@ -31,11 +24,16 @@ interface LabelProps {
   className?: string;
 }
 
-export default function Label({ variant, icon, children, className }: LabelProps) {
+export default function Label({
+  variant,
+  icon,
+  children,
+  className,
+}: LabelProps) {
   return (
     <span
       className={[
-        "inline-flex w-fit items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs font-semibold",
+        "inline-flex w-fit items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0",
         VARIANT_CLASSNAME[variant],
         className,
       ]

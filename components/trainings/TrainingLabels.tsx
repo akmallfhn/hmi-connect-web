@@ -3,7 +3,7 @@ import Label from "../common/Label";
 import {
   getTrainingDisplayStatus,
   type TrainingDisplayStatus,
-} from "./trainingUi";
+} from "@/lib/trainings/training-ui";
 
 const STATUS_CONTENT: Record<
   TrainingDisplayStatus,

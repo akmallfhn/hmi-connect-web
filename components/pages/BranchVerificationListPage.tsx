@@ -37,6 +37,7 @@ import TextArea from "../fields/TextArea";
 import VerificationRequestStatusLabel from "../labels/VerificationRequestStatusLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import Modal from "../modals/Modal";
+import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -162,6 +163,7 @@ export default function BranchVerificationListPage({
 }: BranchVerificationListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { branchName } = useBranch();
 
   // "Adjust state during render" (not a useEffect) when the server hands back a new initialSearch, same pattern as AdminUserListPage.
   const [seenSearch, setSeenSearch] = useState(initialSearch);
@@ -249,7 +251,7 @@ export default function BranchVerificationListPage({
           Permintaan Verifikasi
         </h1>
         <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-          Tinjau pengajuan verifikasi identitas kader di bawah Cabang ini.
+          Tinjau pengajuan verifikasi identitas kader di Cabang {branchName}.
         </p>
       </div>
 

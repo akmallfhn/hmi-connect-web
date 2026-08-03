@@ -28,7 +28,10 @@ import AchievementTrophyIllustration from "../illustrations/AchievementTrophyIll
 import InstructionalGoalsIllustration from "../illustrations/InstructionalGoalsIllustration";
 import OrganizationGearIllustration from "../illustrations/OrganizationGearIllustration";
 import TargetFlagIllustration from "../illustrations/TargetFlagIllustration";
-import { COLOR_STYLES, type ColorName } from "../lk2/colorStyles";
+import {
+  COLOR_STYLES,
+  type ColorName,
+} from "@/lib/trainings/color-styles";
 import {
   LK2_ASSESSMENT,
   LK2_CERTIFICATION,
@@ -40,9 +43,9 @@ import {
   LK2_OVERVIEW,
   LK2_PARTICIPANT_REQUIREMENTS,
   LK2_REGISTRATION_FLOW,
-} from "../lk2/guidelineContent";
+} from "@/lib/trainings/guideline-content";
 
-interface BranchLk2GuidelinePageProps {
+interface TrainingLK2GuidelinePageProps {
   branchId: string;
 }
 
@@ -186,10 +189,10 @@ function DocSection({
   );
 }
 
-// Static documentation page — no client state, no batch-specific data. See components/lk2/guidelineContent.ts.
-export default function BranchLk2GuidelinePage({
+// Static documentation page — no client state or batch-specific data.
+export default function TrainingLK2GuidelinePage({
   branchId,
-}: BranchLk2GuidelinePageProps) {
+}: TrainingLK2GuidelinePageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <Link
