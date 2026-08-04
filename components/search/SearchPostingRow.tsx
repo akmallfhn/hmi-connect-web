@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { SearchPostingResult } from "@/apis/search";
 import Avatar from "../common/Avatar";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 
 export default function SearchPostingRow({ posting }: { posting: SearchPostingResult }) {
   return (

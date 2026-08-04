@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ConversationSummary } from "@/apis/chats";
-import { formatCompactTime } from "@/lib/formatCompactTime";
+import { formatCompactTime } from "@/lib/time-manipulation";
 import Avatar from "../common/Avatar";
 
 function previewText(

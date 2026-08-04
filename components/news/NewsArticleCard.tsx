@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Newspaper } from "lucide-react";
 import type { ReactNode } from "react";
 import type { NewsArticle } from "@/apis/news";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 import RepostToFeedButton from "./RepostToFeedButton";
 
 type NewsArticleCardVariant =

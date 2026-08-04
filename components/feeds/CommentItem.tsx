@@ -18,7 +18,7 @@ import {
   deleteCommentReply,
   listCommentReplies,
 } from "@/lib/actions";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 
 interface CommentItemProps {

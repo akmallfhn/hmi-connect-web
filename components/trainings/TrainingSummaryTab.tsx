@@ -7,12 +7,9 @@ import {
   Users,
 } from "lucide-react";
 import type { TrainingDetail } from "@/apis/trainings";
+import { formatDate, formatDateRange } from "@/lib/time-manipulation";
+import { getTrainingDisplayStatus } from "@/lib/trainings/training-ui";
 import Lk2StatCard from "./Lk2StatCard";
-import {
-  formatTrainingDate,
-  formatTrainingDateRange,
-  getTrainingDisplayStatus,
-} from "@/lib/trainings/training-ui";
 
 interface TrainingSummaryTabProps {
   training: TrainingDetail;
@@ -89,7 +86,7 @@ export default function TrainingSummaryTab({
               Tanggal
             </dt>
             <dd className="mt-1 text-sm text-[#172033]">
-              {formatTrainingDateRange(training.start_date, training.end_date)}
+              {formatDateRange(training.start_date, training.end_date)}
             </dd>
           </div>
           <div>
@@ -136,7 +133,7 @@ export default function TrainingSummaryTab({
           {training.description || "Belum ada deskripsi untuk pelaksanaan ini."}
         </p>
         <p className="mt-4 text-xs text-[#5f6573]">
-          Dibuat pada {formatTrainingDate(training.created_at.slice(0, 10))}
+          Dibuat pada {formatDate(training.created_at.slice(0, 10))}
         </p>
       </section>
     </div>

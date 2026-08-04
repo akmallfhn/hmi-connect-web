@@ -2,8 +2,8 @@ import { CalendarDays, ImageOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { TrainingListEntry } from "@/apis/trainings";
+import { formatDate } from "@/lib/time-manipulation";
 import type { TrainingOrganizerTypeEnum } from "@/lib/types";
-import { formatTrainingDate } from "@/lib/trainings/training-ui";
 import { TrainingLevelLabel, TrainingStatusLabel } from "./TrainingLabels";
 
 interface PublicTrainingCardProps {
@@ -70,7 +70,7 @@ export default function PublicTrainingCard({
         <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#5f6573] lg:text-sm">
           <CalendarDays className="size-4 shrink-0 text-secondary" />
           <span className="truncate">
-            {formatTrainingDate(training.start_date)}
+            {formatDate(training.start_date)}
             {training.location_name ? ` • ${training.location_name}` : ""}
           </span>
         </div>

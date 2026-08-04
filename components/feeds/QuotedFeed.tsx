@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Avatar from "../common/Avatar";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 import type { Feed } from "@/apis/feeds";
 
 // The read-only preview of an original feed embedded in a quote repost — used both when

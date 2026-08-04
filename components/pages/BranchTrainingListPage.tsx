@@ -18,7 +18,7 @@ import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
 import { TrainingStatusLabel } from "../trainings/TrainingLabels";
-import { formatTrainingDateRange } from "@/lib/trainings/training-ui";
+import { formatDateRange } from "@/lib/time-manipulation";
 import { useBranch } from "@/hooks/useBranch";
 
 interface BranchTrainingListPageProps {
@@ -160,7 +160,7 @@ export default function BranchTrainingListPage({
                 <div className="flex flex-col gap-2 text-sm text-[#5f6573]">
                   <span className="flex items-center gap-2">
                     <CalendarDays className="size-4 shrink-0" />
-                    {formatTrainingDateRange(
+                    {formatDateRange(
                       training.start_date,
                       training.end_date
                     )}

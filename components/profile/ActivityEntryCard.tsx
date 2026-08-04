@@ -10,7 +10,7 @@ import type { ActivityEntry } from "@/apis/users";
 import type { ActivityTypeEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import QuotedFeed from "../feeds/QuotedFeed";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 
 const TYPE_LABEL: Record<ActivityTypeEnum, string> = {
   post: "Memposting",

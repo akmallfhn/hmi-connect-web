@@ -15,7 +15,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { TrainingDetail } from "@/apis/trainings";
 import { registerTraining } from "@/lib/actions";
-import { formatTrainingDateRange } from "@/lib/trainings/training-ui";
+import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
@@ -201,7 +201,7 @@ export default function TrainingRegistrationPage({
                 <div className="flex gap-3 text-[#41474e]">
                   <CalendarDays className="mt-0.5 size-4 shrink-0 text-secondary" />
                   <span>
-                    {formatTrainingDateRange(
+                    {formatDateRange(
                       training.start_date,
                       training.end_date
                     )}

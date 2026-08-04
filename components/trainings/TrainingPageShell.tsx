@@ -16,6 +16,7 @@ interface TrainingPageShellProps {
   viewer: TrainingViewer;
   mobileBackTitle?: string;
   bgClassName?: string;
+  hideBottomNav?: boolean;
   children: ReactNode;
 }
 
@@ -23,10 +24,13 @@ export default function TrainingPageShell({
   viewer,
   mobileBackTitle,
   bgClassName = "bg-[#f5f7fb]",
+  hideBottomNav = false,
   children,
 }: TrainingPageShellProps) {
   return (
-    <div className={`min-h-screen ${bgClassName} pb-16 lg:pb-0`}>
+    <div
+      className={`min-h-screen ${bgClassName} ${hideBottomNav ? "pb-0" : "pb-16"} lg:pb-0`}
+    >
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -36,7 +40,9 @@ export default function TrainingPageShell({
         mobileBackTitle={mobileBackTitle}
       />
       {children}
-      <BottomNav userId={viewer.userId} username={viewer.username} />
+      {!hideBottomNav && (
+        <BottomNav userId={viewer.userId} username={viewer.username} />
+      )}
     </div>
   );
 }

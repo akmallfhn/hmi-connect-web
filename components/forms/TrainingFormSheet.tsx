@@ -11,6 +11,9 @@ import { supabase } from "@/lib/supabase";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import { useBranch } from "@/hooks/useBranch";
@@ -102,6 +105,37 @@ function TrainingFields({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [contactPerson, setContactPerson] = useState<SearchableOption | null>(
+    training?.contact_person_id && training?.contact_person_name
+      ? {
+          label: training.contact_person_name,
+          value: training.contact_person_id,
+        }
+      : null
+  );
+  const contactPersonDefaultOptions: SearchableOption[] =
+    training?.contact_person_id && training?.contact_person_name
+      ? [{ label: training.contact_person_name, value: training.contact_person_id }]
+      : [];
+
+  async function loadContactPersonOptions(inputValue: string, page: number) {
+    if (!inputValue.trim()) return { options: [], hasMore: false };
+    const params = new URLSearchParams({
+      q: inputValue,
+      page: String(page),
+    });
+    const response = await fetch(`/api/users/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; full_name: string; username: string }[] =
+      json.data ?? [];
+    return {
+      options: results.map((item) => ({
+        label: `${item.full_name} (@${item.username})`,
+        value: item.id,
+      })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
 
   function handleImagePickClick() {
     imageInputRef.current?.click();
@@ -149,6 +183,10 @@ function TrainingFields({
       toast.error("Nama dan tanggal pelaksanaan wajib diisi.");
       return;
     }
+    if (!contactPerson) {
+      toast.error("Contact person wajib dipilih.");
+      return;
+    }
     if (endDate < startDate) {
       toast.error("Tanggal selesai tidak boleh sebelum tanggal mulai.");
       return;
@@ -165,6 +203,7 @@ function TrainingFields({
             id: training.id,
             name: name.trim(),
             description: description.trim(),
+            contact_person_id: String(contactPerson.value),
             start_date: startDate,
             end_date: endDate,
             location_name: locationName.trim(),
@@ -177,6 +216,7 @@ function TrainingFields({
             level: "LK2",
             organizer_type: "branch",
             organizer_id: branchId,
+            contact_person_id: String(contactPerson.value),
             start_date: startDate,
             end_date: endDate,
             ...(locationName.trim()
@@ -272,6 +312,17 @@ function TrainingFields({
         placeholder="Contoh: LK2 HMI Cabang Banda Aceh 2026"
         value={name}
         onChange={(event) => setName(event.target.value)}
+        required
+      />
+      <SearchableSelect
+        selectId="training-contact-person"
+        label="Contact Person"
+        placeholder="Cari nama atau username..."
+        value={contactPerson}
+        onChange={setContactPerson}
+        loadOptions={loadContactPersonOptions}
+        defaultOptions={contactPersonDefaultOptions}
+        debounceMs={300}
         required
       />
       <TextArea

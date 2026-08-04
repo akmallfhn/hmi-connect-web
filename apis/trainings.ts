@@ -26,6 +26,10 @@ export type TrainingListEntry = {
 
 export type TrainingDetail = TrainingListEntry & {
   description?: string;
+  contact_person_id?: string;
+  contact_person_name?: string;
+  contact_person_avatar?: string;
+  contact_person_phone_number?: string;
   location_url?: string;
   updated_at: string;
 };
@@ -181,6 +185,7 @@ export type CreateTrainingPayload = {
   level: TrainingStatusEnum;
   organizer_type: TrainingOrganizerTypeEnum;
   organizer_id: string;
+  contact_person_id: string;
   start_date: string;
   end_date: string;
   location_name?: string;
@@ -212,6 +217,7 @@ export type UpdateTrainingPayload = {
   level?: TrainingStatusEnum;
   organizer_type?: TrainingOrganizerTypeEnum;
   organizer_id?: string;
+  contact_person_id?: string;
   start_date?: string;
   end_date?: string;
   location_name?: string;

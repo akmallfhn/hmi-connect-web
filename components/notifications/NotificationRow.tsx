@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Heart, MessageCircle, Reply, UserPlus } from "lucide-react";
 import type { Notification } from "@/apis/notifications";
 import Avatar from "../common/Avatar";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { formatRelativeTime } from "@/lib/time-manipulation";
 
 const TYPE_ICON: Record<Notification["type"], typeof Heart> = {
   like: Heart,
