@@ -201,7 +201,7 @@ export default function TrainingCatalogPage({
               </div>
 
               {result.list.length === 0 ? (
-                <div className="flex min-h-72 flex-col items-center justify-center gap-3 border-y border-dashed border-[#cfd5df] bg-white px-5 text-center lg:rounded-xl lg:border">
+                <div className="flex min-h-72 flex-col items-center justify-center gap-3 bg-white px-5 text-center lg:rounded-xl lg:border lg:border-dashed lg:border-[#cfd5df]">
                   <CalendarRange className="size-10 text-[#a0a6b2]" />
                   <div>
                     <p className="font-semibold text-[#172033]">
