@@ -75,7 +75,7 @@ export default function Select({
           "relative flex w-full items-center rounded-lg border p-2 text-base transition",
           isOpen ? "border-primary ring-2 ring-primary/15" : "border-[#dbe3ef]",
           disabled
-            ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]"
+            ? "cursor-not-allowed border-[#e0e3e8] bg-[#f3f4f6] text-[#8a909d] opacity-100"
             : "cursor-pointer bg-white",
           icon ? "pl-10" : "",
         ]

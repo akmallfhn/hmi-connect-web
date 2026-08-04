@@ -262,7 +262,7 @@ export default function Header({
       )}
 
       {(mobileBackTitle || mobileMenu) && (
-        <div className="border-t border-[#e6e9ef] bg-white lg:hidden">
+        <div className="border-y border-[#e6e9ef] bg-white lg:hidden">
           <PageMargin className="flex h-12 items-center gap-3">
             <Button
               variant="ghost"

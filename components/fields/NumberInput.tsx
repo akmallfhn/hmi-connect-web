@@ -81,7 +81,11 @@ export default function NumberInput({
 
       <div className="relative">
         {icon && (
-          <div className="pointer-events-none absolute left-0 flex h-full items-center pl-3 text-[#5f6573]">
+          <div
+            className={`pointer-events-none absolute left-0 flex h-full items-center pl-3 ${
+              disabled ? "text-[#9aa0ab]" : "text-[#5f6573]"
+            }`}
+          >
             {icon}
           </div>
         )}
@@ -101,7 +105,9 @@ export default function NumberInput({
             computedError
               ? "border-destructive focus:ring-destructive/20"
               : "border-[#dbe3ef] focus:border-primary focus:ring-primary/15",
-            disabled ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]" : "bg-white",
+            disabled
+              ? "cursor-not-allowed disabled:border-[#e0e3e8] disabled:bg-[#f3f4f6] disabled:text-[#8a909d] disabled:opacity-100 disabled:[-webkit-text-fill-color:#8a909d]"
+              : "bg-white",
             icon ? "pl-10" : "",
             className,
           ]

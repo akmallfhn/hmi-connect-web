@@ -1173,8 +1173,14 @@ relative `<Link>`s.
   `getTrainingDetail` prefer the server-only `CLIENT_SECRET` so anonymous requests can use the
   backend's auth-or-client-secret read endpoints; training/material admin writes and participant
   reads remain session-cookie-backed. `registerTraining` is exposed through `lib/actions.ts` and
-  always requires the caller's session JWT. Signed-in visitors can submit an optional
-  `paper_url`, matching `trainings/register`.
+  always requires the caller's session JWT. The register route reads the caller's full profile and
+  training histories before rendering. Its Google-Forms-style page updates editable `full_name`/
+  `phone_number` through `updateMyProfile`, lets the user create/update/delete their training
+  histories while enforcing the required levels (LK1 for an LK2 registration; LK1 and LK2 for
+  LK3), uploads an optional PDF/DOC/DOCX paper directly to
+  Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
+  public `paper_url` to `trainings/register`. The submit button remains disabled when
+  `is_registration_open` is false.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
