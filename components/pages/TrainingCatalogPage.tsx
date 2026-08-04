@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  CalendarRange,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { CalendarRange, RotateCcw, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { PagedTrainingResult, TrainingListEntry } from "@/apis/trainings";
-import type {
-  TrainingOrganizerTypeEnum,
-  TrainingStatusEnum,
-} from "@/lib/types";
-import Button from "../buttons/Button";
+import type { TrainingStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
-import Select from "../fields/Select";
 import PublicTrainingCard from "../trainings/PublicTrainingCard";
 import TrainingPageShell, {
   type TrainingViewer,
@@ -28,7 +17,6 @@ interface TrainingCatalogPageProps {
   result: PagedTrainingResult<TrainingListEntry>;
   initialSearch: string;
   initialLevel?: TrainingStatusEnum;
-  initialOrganizerType?: TrainingOrganizerTypeEnum;
 }
 
 const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
@@ -38,20 +26,11 @@ const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
   { label: "LK3", value: "LK3" },
 ];
 
-const ORGANIZER_OPTIONS = [
-  { label: "Semua penyelenggara", value: null },
-  { label: "Komisariat", value: "chapter" },
-  { label: "Cabang", value: "branch" },
-  { label: "Badko", value: "coordinating_body" },
-  { label: "Organisasi", value: "organization" },
-];
-
 export default function TrainingCatalogPage({
   viewer,
   result,
   initialSearch,
   initialLevel,
-  initialOrganizerType,
 }: TrainingCatalogPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -79,9 +58,7 @@ export default function TrainingCatalogPage({
     navigateWith({ search: search.trim() || undefined });
   }
 
-  const hasFilters = Boolean(
-    initialSearch || initialLevel || initialOrganizerType
-  );
+  const hasFilters = Boolean(initialSearch || initialLevel);
 
   return (
     <TrainingPageShell
@@ -155,128 +132,104 @@ export default function TrainingCatalogPage({
           </p>
         </div>
 
-        {/* Desktop-only: original title + inline search/filters layout. */}
-        <div className="hidden border-b border-[#e1e5ec] bg-white lg:block">
-          <PageMargin className="py-7 lg:py-9">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <CalendarRange className="size-6" />
+        <PageMargin className="pt-2 lg:py-8" noMobilePadding>
+          <div className="lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start lg:gap-8">
+            {/* Desktop-only: e-commerce-style filter sidebar (search + level). */}
+            <aside className="hidden lg:sticky lg:top-24 lg:block">
+              <div className="rounded-xl border border-[#e1e5ec] bg-white p-5">
+                <h2 className="text-sm font-semibold text-[#172033]">
+                  Cari Training
+                </h2>
+                <form onSubmit={handleSearch} className="mt-3">
+                  <label className="relative block">
+                    <span className="sr-only">Cari training</span>
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Cari nama training..."
+                      className="h-10 w-full rounded-lg border border-[#dbe3ef] bg-white pl-10 pr-3 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    />
+                  </label>
+                </form>
+
+                <div className="mt-6">
+                  <p className="text-xs font-semibold uppercase text-[#7b8190]">
+                    Tingkat
+                  </p>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {LEVELS.map((level) => {
+                      const active = initialLevel === level.value;
+                      return (
+                        <button
+                          key={level.label}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => navigateWith({ level: level.value })}
+                          className={`flex h-9 w-full cursor-pointer items-center rounded-lg px-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                            active
+                              ? "bg-primary-soft text-primary"
+                              : "text-[#41474e] hover:bg-[#f5f7fb]"
+                          }`}
+                        >
+                          {level.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/trainings")}
+                    className="mt-6 flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#dbe3ef] text-sm font-semibold text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    Reset Filter
+                  </button>
+                )}
               </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
-                  Training HMI
-                </h1>
-                <p className="mt-1 text-sm text-[#5f6573] sm:text-base">
-                  Agenda Latihan Kader dari berbagai tingkat penyelenggara.
+            </aside>
+
+            <div>
+              <div className="mb-4 hidden items-center justify-between gap-3 lg:flex">
+                <p className="text-sm font-medium text-[#5f6573]">
+                  {result.totalData} training ditemukan
                 </p>
               </div>
-            </div>
 
-            <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
-              <form onSubmit={handleSearch} className="flex min-w-0 gap-2">
-                <label className="relative min-w-0 flex-1">
-                  <span className="sr-only">Cari training</span>
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Cari nama training..."
-                    className="h-11 w-full rounded-lg border border-[#dbe3ef] bg-white pl-10 pr-3 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:ring-2 focus:ring-primary/15"
+              {result.list.length === 0 ? (
+                <div className="flex min-h-72 flex-col items-center justify-center gap-3 border-y border-dashed border-[#cfd5df] bg-white px-5 text-center lg:rounded-xl lg:border">
+                  <CalendarRange className="size-10 text-[#a0a6b2]" />
+                  <div>
+                    <p className="font-semibold text-[#172033]">
+                      Training tidak ditemukan
+                    </p>
+                    <p className="mt-1 text-sm text-[#5f6573]">
+                      Ubah kata kunci atau filter yang dipilih.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-5">
+                  {result.list.map((training) => (
+                    <PublicTrainingCard key={training.id} training={training} />
+                  ))}
+                </div>
+              )}
+
+              {result.totalPage > 1 && (
+                <div className="mt-8 flex flex-col items-center gap-3 px-4 lg:px-0">
+                  <Pagination
+                    currentPage={result.currentPage}
+                    totalPages={result.totalPage}
                   />
-                </label>
-                <Button type="submit" className="h-11 shrink-0 px-4">
-                  <Search className="size-4" />
-                  <span className="hidden sm:inline">Cari</span>
-                </Button>
-              </form>
-
-              <Select
-                selectId="training-organizer-filter"
-                icon={<SlidersHorizontal className="size-4" />}
-                placeholder="Semua penyelenggara"
-                value={initialOrganizerType ?? null}
-                options={ORGANIZER_OPTIONS}
-                onChange={(value) =>
-                  navigateWith({
-                    organizer_type:
-                      typeof value === "string" ? value : undefined,
-                  })
-                }
-              />
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-xs font-semibold uppercase text-[#7b8190]">
-                Tingkat
-              </span>
-              {LEVELS.map((level) => {
-                const active = initialLevel === level.value;
-                return (
-                  <button
-                    key={level.label}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => navigateWith({ level: level.value })}
-                    className={`h-8 cursor-pointer rounded-full border px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                      active
-                        ? "border-primary bg-primary text-white"
-                        : "border-[#dbe3ef] bg-white text-[#41474e] hover:border-primary/50 hover:text-primary"
-                    }`}
-                  >
-                    {level.label}
-                  </button>
-                );
-              })}
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={() => router.push("/trainings")}
-                  className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
-                >
-                  <RotateCcw className="size-3.5" />
-                  Reset
-                </button>
+                </div>
               )}
             </div>
-          </PageMargin>
-        </div>
-
-        <PageMargin className="pt-2 lg:py-8" noMobilePadding>
-          <div className="mb-4 hidden items-center justify-between gap-3 lg:flex">
-            <p className="text-sm font-medium text-[#5f6573]">
-              {result.totalData} training ditemukan
-            </p>
           </div>
-
-          {result.list.length === 0 ? (
-            <div className="flex min-h-72 flex-col items-center justify-center gap-3 border-y border-dashed border-[#cfd5df] bg-white px-5 text-center">
-              <CalendarRange className="size-10 text-[#a0a6b2]" />
-              <div>
-                <p className="font-semibold text-[#172033]">
-                  Training tidak ditemukan
-                </p>
-                <p className="mt-1 text-sm text-[#5f6573]">
-                  Ubah kata kunci atau filter yang dipilih.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-5 xl:grid-cols-3">
-              {result.list.map((training) => (
-                <PublicTrainingCard key={training.id} training={training} />
-              ))}
-            </div>
-          )}
-
-          {result.totalPage > 1 && (
-            <div className="mt-8 flex flex-col items-center gap-3 px-4 lg:px-0">
-              <Pagination
-                currentPage={result.currentPage}
-                totalPages={result.totalPage}
-              />
-            </div>
-          )}
         </PageMargin>
       </main>
     </TrainingPageShell>

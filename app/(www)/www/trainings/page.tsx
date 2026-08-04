@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
 import { listTrainings } from "@/apis/trainings";
 import TrainingCatalogPage from "@/components/pages/TrainingCatalogPage";
-import type {
-  TrainingOrganizerTypeEnum,
-  TrainingStatusEnum,
-} from "@/lib/types";
+import type { TrainingStatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Training HMI",
@@ -22,7 +19,6 @@ interface TrainingsRouteProps {
   searchParams: Promise<{
     search?: string;
     level?: string;
-    organizer_type?: string;
     page?: string;
   }>;
 }
@@ -34,34 +30,18 @@ function parseLevel(value?: string): TrainingStatusEnum | undefined {
   return undefined;
 }
 
-function parseOrganizerType(
-  value?: string
-): TrainingOrganizerTypeEnum | undefined {
-  if (
-    value === "chapter" ||
-    value === "branch" ||
-    value === "coordinating_body" ||
-    value === "organization"
-  ) {
-    return value;
-  }
-  return undefined;
-}
-
 export default async function TrainingsRoute({
   searchParams,
 }: TrainingsRouteProps) {
   const query = await searchParams;
   const search = query.search?.trim() ?? "";
   const level = parseLevel(query.level);
-  const organizerType = parseOrganizerType(query.organizer_type);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
 
   const [result, { user }] = await Promise.all([
     listTrainings({
       search: search || undefined,
       level,
-      organizerType,
       page,
       pageSize: PAGE_SIZE,
     }),
@@ -81,7 +61,6 @@ export default async function TrainingsRoute({
       result={result}
       initialSearch={search}
       initialLevel={level}
-      initialOrganizerType={organizerType}
     />
   );
 }
