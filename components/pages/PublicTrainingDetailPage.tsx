@@ -20,7 +20,7 @@ import PageMargin from "../common/PageMargin";
 import LogoHmi from "../svg/LogoHmi";
 import {
   TrainingLevelLabel,
-  TrainingStatusLabel,
+  TrainingRegistrationLabel,
 } from "../trainings/TrainingLabels";
 import TrainingPageShell, {
   type TrainingViewer,
@@ -170,9 +170,8 @@ export default function PublicTrainingDetailPage({
               </h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <TrainingLevelLabel level={training.level} />
-                <TrainingStatusLabel
-                  startDate={training.start_date}
-                  endDate={training.end_date}
+                <TrainingRegistrationLabel
+                  isOpen={training.is_registration_open}
                 />
               </div>
             </div>
@@ -245,16 +244,28 @@ export default function PublicTrainingDetailPage({
               paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
             }}
           >
-            <Link href={`/trainings/${training.id}/register`}>
+            {training.is_registration_open ? (
+              <Link href={`/trainings/${training.id}/register`}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full rounded-full"
+                >
+                  <UserPlus className="size-5" />
+                  Daftar Training
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="primary"
                 size="lg"
                 className="w-full rounded-full"
+                disabled
               >
                 <UserPlus className="size-5" />
                 Daftar Training
               </Button>
-            </Link>
+            )}
           </div>
         </div>
 
@@ -297,19 +308,30 @@ export default function PublicTrainingDetailPage({
                   )}
                 </div>
 
-                <Link
-                  href={`/trainings/${training.id}/register`}
-                  className="mx-auto mt-6 block w-full max-w-[340px]"
-                >
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="w-full rounded-full"
-                  >
-                    <UserPlus className="size-5" />
-                    Daftar Training
-                  </Button>
-                </Link>
+                <div className="mx-auto mt-6 w-full max-w-[340px]">
+                  {training.is_registration_open ? (
+                    <Link href={`/trainings/${training.id}/register`}>
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full rounded-full"
+                      >
+                        <UserPlus className="size-5" />
+                        Daftar Training
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full rounded-full"
+                      disabled
+                    >
+                      <UserPlus className="size-5" />
+                      Daftar Training
+                    </Button>
+                  )}
+                </div>
               </aside>
 
               <article className="min-w-0 self-start rounded-lg bg-white/95 p-6 backdrop-blur-sm xl:p-8">
@@ -322,9 +344,8 @@ export default function PublicTrainingDetailPage({
                     level={training.level}
                     className="xl:text-[13px]"
                   />
-                  <TrainingStatusLabel
-                    startDate={training.start_date}
-                    endDate={training.end_date}
+                  <TrainingRegistrationLabel
+                    isOpen={training.is_registration_open}
                     className="xl:text-[13px]"
                   />
                 </div>

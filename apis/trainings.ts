@@ -19,6 +19,7 @@ export type TrainingListEntry = {
   organizer_name?: string;
   start_date: string;
   end_date: string;
+  is_registration_open: boolean;
   location_name?: string;
   image_url?: string;
   created_at: string;

@@ -4,7 +4,10 @@ import Link from "next/link";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { formatDate } from "@/lib/time-manipulation";
 import type { TrainingOrganizerTypeEnum } from "@/lib/types";
-import { TrainingLevelLabel, TrainingStatusLabel } from "./TrainingLabels";
+import {
+  TrainingLevelLabel,
+  TrainingRegistrationLabel,
+} from "./TrainingLabels";
 
 interface PublicTrainingCardProps {
   training: TrainingListEntry;
@@ -53,9 +56,8 @@ export default function PublicTrainingCard({
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <div className="flex flex-wrap items-center gap-1.5 lg:gap-2">
           <TrainingLevelLabel level={training.level} />
-          <TrainingStatusLabel
-            startDate={training.start_date}
-            endDate={training.end_date}
+          <TrainingRegistrationLabel
+            isOpen={training.is_registration_open}
           />
         </div>
 

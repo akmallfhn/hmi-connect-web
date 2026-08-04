@@ -34,6 +34,20 @@ export function TrainingStatusLabel({
   );
 }
 
+export function TrainingRegistrationLabel({
+  isOpen,
+  className,
+}: {
+  isOpen: boolean;
+  className?: string;
+}) {
+  return (
+    <Label variant={isOpen ? "green" : "red"} className={className}>
+      {isOpen ? "Pendaftaran Dibuka" : "Pendaftaran Ditutup"}
+    </Label>
+  );
+}
+
 const LEVEL_VARIANTS: Record<
   TrainingStatusEnum,
   "green" | "orange" | "purple"
