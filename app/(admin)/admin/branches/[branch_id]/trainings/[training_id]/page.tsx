@@ -29,7 +29,9 @@ interface BranchTrainingDetailRouteProps {
 }
 
 function parseTab(value?: string): TrainingDetailTab {
-  if (value === "materi" || value === "peserta") return value;
+  if (value === "materi" || value === "peserta" || value === "penilaian") {
+    return value;
+  }
   return "ringkasan";
 }
 

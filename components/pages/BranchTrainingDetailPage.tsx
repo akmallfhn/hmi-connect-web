@@ -1,27 +1,35 @@
 "use client";
 
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ClipboardCheck,
+  LayoutDashboard,
+  Pencil,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import type {
   PagedTrainingResult,
   TrainingDetail,
   TrainingMaterial,
   TrainingParticipant,
 } from "@/apis/trainings";
-import { deleteTraining } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
-import AlertConfirmation from "../modals/AlertConfirmation";
-import { TrainingStatusLabel } from "../trainings/TrainingLabels";
+import TrainingEvaluationTab from "../trainings/TrainingEvaluationTab";
 import TrainingMaterialsTab from "../trainings/TrainingMaterialsTab";
 import TrainingParticipantsTab from "../trainings/TrainingParticipantsTab";
 import TrainingSummaryTab from "../trainings/TrainingSummaryTab";
 
-export type TrainingDetailTab = "ringkasan" | "materi" | "peserta";
+export type TrainingDetailTab =
+  | "ringkasan"
+  | "materi"
+  | "peserta"
+  | "penilaian";
 
 interface BranchTrainingDetailPageProps {
   branchId: string;
@@ -35,10 +43,11 @@ interface BranchTrainingDetailPageProps {
   canManageTrainings: boolean;
 }
 
-const TABS: { id: TrainingDetailTab; label: string }[] = [
-  { id: "ringkasan", label: "Ringkasan" },
-  { id: "materi", label: "Materi" },
-  { id: "peserta", label: "Daftar Peserta" },
+const TABS: { id: TrainingDetailTab; label: string; icon: LucideIcon }[] = [
+  { id: "ringkasan", label: "Ringkasan", icon: LayoutDashboard },
+  { id: "materi", label: "Materi", icon: BookOpen },
+  { id: "peserta", label: "Peserta", icon: Users },
+  { id: "penilaian", label: "Penilaian", icon: ClipboardCheck },
 ];
 
 export default function BranchTrainingDetailPage({
@@ -61,8 +70,6 @@ export default function BranchTrainingDetailPage({
     setActiveTab(initialTab);
   }
   const [showEditSheet, setShowEditSheet] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   function selectTab(tab: TrainingDetailTab) {
     setActiveTab(tab);
@@ -70,25 +77,6 @@ export default function BranchTrainingDetailPage({
     if (tab === "ringkasan") params.delete("tab");
     else params.set("tab", tab);
     router.replace(`?${params.toString()}`, { scroll: false });
-  }
-
-  async function handleDelete() {
-    setIsDeleting(true);
-    try {
-      const result = await deleteTraining(training.id);
-      if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menghapus batch LK2.");
-        return;
-      }
-      toast.success("Batch LK2 berhasil dihapus.");
-      router.push(`/branches/${branchId}/trainings`);
-      router.refresh();
-    } catch (error) {
-      console.error("[BranchTrainingDetailPage] delete threw:", error);
-      toast.error("Gagal menghapus batch LK2.");
-    } finally {
-      setIsDeleting(false);
-    }
   }
 
   return (
@@ -104,49 +92,46 @@ export default function BranchTrainingDetailPage({
       </Link>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
-              {training.name}
-            </h1>
-            <TrainingStatusLabel
-              startDate={training.start_date}
-              endDate={training.end_date}
-            />
-          </div>
-          <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Latihan Kader 2 oleh {training.organizer_name ?? "Cabang"}.
-          </p>
-        </div>
+        <h1 className="min-w-0 text-2xl font-bold text-[#172033] sm:text-3xl">
+          {training.name}
+        </h1>
         {canManageTrainings && (
-          <div className="flex shrink-0 gap-2">
-            <Button variant="outline" onClick={() => setShowEditSheet(true)}>
-              <Pencil className="size-4" />
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={() => setShowDeleteModal(true)}>
-              <Trash2 className="size-4" />
-              Hapus
-            </Button>
-          </div>
+          <Button onClick={() => setShowEditSheet(true)} className="shrink-0">
+            <Pencil className="size-4" />
+            Edit Detail
+          </Button>
         )}
       </div>
 
-      <div className="mt-6 flex gap-6 overflow-x-auto border-b border-[#e6e9ef]">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => selectTab(tab.id)}
-            className={`shrink-0 cursor-pointer border-b-2 pb-3 text-sm font-medium whitespace-nowrap transition ${
-              activeTab === tab.id
-                ? "border-primary text-primary"
-                : "border-transparent text-[#5f6573] hover:text-[#172033]"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="mt-6">
+        <div
+          role="tablist"
+          aria-label="Detail training"
+          className="grid w-full grid-cols-4 gap-1 rounded-lg border border-[#e6e9ef] bg-white p-1 sm:max-w-2xl"
+        >
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => selectTab(tab.id)}
+                className={`flex h-14 min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 sm:h-10 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm ${
+                  isActive
+                    ? "bg-secondary text-white shadow-sm"
+                    : "text-[#69707d] hover:bg-secondary-soft hover:text-secondary"
+                }`}
+              >
+                <Icon className="size-4 shrink-0" />
+                <span className="truncate">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-6">
@@ -179,6 +164,7 @@ export default function BranchTrainingDetailPage({
             pageSize={pageSize}
           />
         )}
+        {activeTab === "penilaian" && <TrainingEvaluationTab />}
       </div>
 
       <TrainingFormSheet
@@ -190,15 +176,6 @@ export default function BranchTrainingDetailPage({
         }}
         branchId={branchId}
         training={training}
-      />
-      <AlertConfirmation
-        open={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="Hapus batch LK2 ini?"
-        message={`${training.name} beserta materi terkait akan dihapus permanen.`}
-        confirmLabel="Hapus"
-        loading={isDeleting}
       />
     </div>
   );

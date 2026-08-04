@@ -22,7 +22,7 @@ export default function Lk2StatCard({ icon: Icon, color, label, value, hint }: L
           <Icon className={`size-5 ${style.text}`} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm text-[#5f6573]">{label}</p>
+          <p className="text-sm leading-5 text-[#5f6573]">{label}</p>
           <p className="truncate text-xl font-bold text-[#172033]">{value}</p>
         </div>
       </div>

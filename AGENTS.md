@@ -1156,8 +1156,13 @@ relative `<Link>`s.
   `status: "active"` and rejects branch managers requesting another branch, while the handler's
   unscoped path keeps using the global people search for its other callers. Contact-person options
   opt into `SearchableSelect`'s avatar rendering, which falls back to a `UserRound` icon.
-  `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, and Daftar Peserta tabs:
-  Ringkasan derives display status from the date range and shows real aggregate counts; Materi
+  `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, Peserta, and Penilaian tabs:
+  Ringkasan uses a left column containing the desktop poster and contact-person details without a
+  WhatsApp action; colored-icon execution metadata, a horizontal Total Sesi Materi/Total Peserta
+  Terdaftar scorecard row, and the description sit in the right column, with organizer names formatted through
+  `lib/organizer.ts`. The old status/duration cards and heading status label are intentionally absent.
+  The Penilaian tab currently renders an honest empty state because the backend does not expose its
+  evaluation tables yet. The detail header exposes Edit only, not the training delete action. Materi
   supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is
   searchable and read-only because the backend currently exposes participant list/detail only.
   Training and material writes are only shown when `role_name` is `Super Admin` or
