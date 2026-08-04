@@ -10,6 +10,7 @@ import { compressImage } from "@/lib/compressImage";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
+import Switch from "../buttons/Switch";
 import Input from "../fields/Input";
 import SearchableSelect, {
   type SearchableOption,
@@ -97,6 +98,9 @@ function TrainingFields({
   const [description, setDescription] = useState(training?.description ?? "");
   const [startDate, setStartDate] = useState(training?.start_date ?? "");
   const [endDate, setEndDate] = useState(training?.end_date ?? "");
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(
+    training?.is_registration_open ?? true
+  );
   const [locationName, setLocationName] = useState(
     training?.location_name ?? ""
   );
@@ -107,31 +111,42 @@ function TrainingFields({
   const [isSaving, setIsSaving] = useState(false);
   const [contactPerson, setContactPerson] = useState<SearchableOption | null>(
     training?.contact_person_id && training?.contact_person_name
-      ? {
+        ? {
           label: training.contact_person_name,
           value: training.contact_person_id,
+          image: training.contact_person_avatar,
         }
       : null
   );
   const contactPersonDefaultOptions: SearchableOption[] =
     training?.contact_person_id && training?.contact_person_name
-      ? [{ label: training.contact_person_name, value: training.contact_person_id }]
+      ? [
+          {
+            label: training.contact_person_name,
+            value: training.contact_person_id,
+            image: training.contact_person_avatar,
+          },
+        ]
       : [];
 
   async function loadContactPersonOptions(inputValue: string, page: number) {
-    if (!inputValue.trim()) return { options: [], hasMore: false };
     const params = new URLSearchParams({
       q: inputValue,
       page: String(page),
+      branch_id: branchId,
     });
     const response = await fetch(`/api/users/search?${params}`);
     const json = await response.json();
-    const results: { id: string; full_name: string; username: string }[] =
-      json.data ?? [];
+    const results: {
+      id: string;
+      full_name: string;
+      avatar?: string;
+    }[] = json.data ?? [];
     return {
       options: results.map((item) => ({
-        label: `${item.full_name} (@${item.username})`,
+        label: item.full_name,
         value: item.id,
+        image: item.avatar,
       })),
       hasMore: Boolean(json.hasMore),
     };
@@ -206,6 +221,7 @@ function TrainingFields({
             contact_person_id: String(contactPerson.value),
             start_date: startDate,
             end_date: endDate,
+            is_registration_open: isRegistrationOpen,
             location_name: locationName.trim(),
             location_url: locationUrl.trim(),
             image_url: imageUrl,
@@ -219,6 +235,7 @@ function TrainingFields({
             contact_person_id: String(contactPerson.value),
             start_date: startDate,
             end_date: endDate,
+            is_registration_open: isRegistrationOpen,
             ...(locationName.trim()
               ? { location_name: locationName.trim() }
               : {}),
@@ -323,6 +340,7 @@ function TrainingFields({
         loadOptions={loadContactPersonOptions}
         defaultOptions={contactPersonDefaultOptions}
         debounceMs={300}
+        showOptionAvatar
         required
       />
       <TextArea
@@ -350,6 +368,15 @@ function TrainingFields({
           value={endDate}
           onChange={(event) => setEndDate(event.target.value)}
           required
+        />
+      </div>
+      <div className="rounded-lg border border-[#e6e9ef] bg-[#f8f9fb] p-3">
+        <Switch
+          switchId="training-registration-open"
+          label="Pendaftaran dibuka"
+          checked={isRegistrationOpen}
+          onChange={setIsRegistrationOpen}
+          disabled={isSaving}
         />
       </div>
       <Input

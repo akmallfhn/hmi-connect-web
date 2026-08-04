@@ -1151,6 +1151,11 @@ relative `<Link>`s.
   for a training outside the current branch. Both routes read search/pagination from URL params
   and fetch in Server Components before rendering the client page state machines.
   `components/pages/BranchTrainingListPage.tsx` renders the API-backed searchable/paginated batch grid.
+  `TrainingFormSheet`'s contact-person `SearchableSelect` sends the current `branch_id` to the
+  admin `/api/users/search` handler; that scoped path delegates to `users/list` with
+  `status: "active"` and rejects branch managers requesting another branch, while the handler's
+  unscoped path keeps using the global people search for its other callers. Contact-person options
+  opt into `SearchableSelect`'s avatar rendering, which falls back to a `UserRound` icon.
   `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, and Daftar Peserta tabs:
   Ringkasan derives display status from the date range and shows real aggregate counts; Materi
   supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is

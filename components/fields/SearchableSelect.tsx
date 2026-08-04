@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, UserRound } from "lucide-react";
+import Image from "next/image";
 import {
   createContext,
   ReactNode,
@@ -18,6 +19,7 @@ import ReactSelect, {
 export interface SearchableOption {
   label: string;
   value: string | number;
+  image?: string;
 }
 
 export interface LoadOptionsResult {
@@ -59,6 +61,7 @@ interface SearchableSelectProps {
   disabled?: boolean;
   noOptionsMessage?: string;
   menuPlacement?: MenuPlacement;
+  showOptionAvatar?: boolean;
 }
 
 export default function SearchableSelect({
@@ -75,6 +78,7 @@ export default function SearchableSelect({
   disabled,
   noOptionsMessage = "Tidak ditemukan.",
   menuPlacement = "auto",
+  showOptionAvatar = false,
 }: SearchableSelectProps) {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<SearchableOption[]>(defaultOptions);
@@ -158,6 +162,7 @@ export default function SearchableSelect({
           <ReactSelect<SearchableOption, false>
             inputId={selectId}
             instanceId={selectId}
+            className="font-google-sans"
             isDisabled={disabled}
             value={value}
             inputValue={inputValue}
@@ -171,6 +176,28 @@ export default function SearchableSelect({
             placeholder={placeholder}
             loadingMessage={() => "Mencari..."}
             noOptionsMessage={() => noOptionsMessage}
+            formatOptionLabel={(option) =>
+              showOptionAvatar ? (
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#edf1f6] text-[#7b8190]">
+                    {option.image ? (
+                      <Image
+                        src={option.image}
+                        alt=""
+                        fill
+                        sizes="24px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <UserRound className="size-3.5" />
+                    )}
+                  </span>
+                  <span className="min-w-0 truncate">{option.label}</span>
+                </div>
+              ) : (
+                option.label
+              )
+            }
             menuPlacement={menuPlacement}
             maxMenuHeight={160}
             menuPortalTarget={
@@ -199,7 +226,7 @@ export default function SearchableSelect({
               dropdownIndicator: () => "cursor-pointer px-1",
               clearIndicator: () =>
                 "cursor-pointer px-1 hover:text-destructive",
-              menuPortal: () => "z-[110]",
+              menuPortal: () => "z-[110] font-google-sans",
               menu: () =>
                 "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
               menuList: () => "max-h-40 overflow-y-auto p-1",

@@ -17,7 +17,10 @@ import Button from "../buttons/Button";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
-import { TrainingStatusLabel } from "../trainings/TrainingLabels";
+import {
+  TrainingRegistrationLabel,
+  TrainingStatusLabel,
+} from "../trainings/TrainingLabels";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { useBranch } from "@/hooks/useBranch";
 
@@ -142,28 +145,28 @@ export default function BranchTrainingListPage({
                   </div>
                 )}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold text-[#172033]">
-                      {training.name}
-                    </p>
-                    <p className="mt-1 text-sm text-[#5f6573]">
-                      HMI Cabang {training.organizer_name ?? "Cabang"}
-                    </p>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="min-w-0 flex flex-col gap-2">
+                  <p className="text-base font-semibold text-[#172033]">
+                    {training.name}
+                  </p>
+                  <p className="text-sm text-[#5f6573]">
+                    HMI Cabang {training.organizer_name ?? "Cabang"}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TrainingRegistrationLabel
+                      isOpen={training.is_registration_open}
+                    />
+                    <TrainingStatusLabel
+                      startDate={training.start_date}
+                      endDate={training.end_date}
+                    />
                   </div>
-                  <TrainingStatusLabel
-                    startDate={training.start_date}
-                    endDate={training.end_date}
-                  />
                 </div>
                 <div className="flex flex-col gap-2 text-sm text-[#5f6573]">
                   <span className="flex items-center gap-2">
                     <CalendarDays className="size-4 shrink-0" />
-                    {formatDateRange(
-                      training.start_date,
-                      training.end_date
-                    )}
+                    {formatDateRange(training.start_date, training.end_date)}
                   </span>
                   <span className="flex items-center gap-2">
                     <MapPin className="size-4 shrink-0" />

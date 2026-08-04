@@ -189,6 +189,7 @@ export type CreateTrainingPayload = {
   contact_person_id: string;
   start_date: string;
   end_date: string;
+  is_registration_open?: boolean;
   location_name?: string;
   location_url?: string;
   image_url?: string;
@@ -221,6 +222,7 @@ export type UpdateTrainingPayload = {
   contact_person_id?: string;
   start_date?: string;
   end_date?: string;
+  is_registration_open?: boolean;
   location_name?: string;
   location_url?: string;
   image_url?: string;
