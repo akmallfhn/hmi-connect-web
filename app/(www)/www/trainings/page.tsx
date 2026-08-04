@@ -82,7 +82,6 @@ export default async function TrainingsRoute({
       initialSearch={search}
       initialLevel={level}
       initialOrganizerType={organizerType}
-      pageSize={PAGE_SIZE}
     />
   );
 }

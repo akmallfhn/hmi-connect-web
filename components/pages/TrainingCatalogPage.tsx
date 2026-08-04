@@ -1,12 +1,15 @@
 "use client";
 
-import { CalendarRange, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import {
+  CalendarRange,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type {
-  PagedTrainingResult,
-  TrainingListEntry,
-} from "@/apis/trainings";
+import type { PagedTrainingResult, TrainingListEntry } from "@/apis/trainings";
 import type {
   TrainingOrganizerTypeEnum,
   TrainingStatusEnum,
@@ -26,7 +29,6 @@ interface TrainingCatalogPageProps {
   initialSearch: string;
   initialLevel?: TrainingStatusEnum;
   initialOrganizerType?: TrainingOrganizerTypeEnum;
-  pageSize: number;
 }
 
 const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
@@ -50,7 +52,6 @@ export default function TrainingCatalogPage({
   initialSearch,
   initialLevel,
   initialOrganizerType,
-  pageSize,
 }: TrainingCatalogPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -78,16 +79,84 @@ export default function TrainingCatalogPage({
     navigateWith({ search: search.trim() || undefined });
   }
 
-  const firstItem = (result.currentPage - 1) * pageSize + 1;
-  const lastItem = firstItem + result.list.length - 1;
   const hasFilters = Boolean(
     initialSearch || initialLevel || initialOrganizerType
   );
 
   return (
-    <TrainingPageShell viewer={viewer}>
+    <TrainingPageShell
+      viewer={viewer}
+      mobileBackTitle="Training"
+      bgClassName="bg-white lg:bg-[#f5f7fb]"
+    >
       <main>
-        <div className="border-b border-[#e1e5ec] bg-white">
+        {/* Mobile-only: search + LK level filter below Header's back+title row. */}
+        <div className="border-y border-[#e1e5ec] bg-white px-4 py-3 lg:hidden">
+          <form onSubmit={handleSearch} className="min-w-0">
+            <label className="relative block">
+              <span className="sr-only">Cari training</span>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Cari nama training..."
+                className="h-11 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-9 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    navigateWith({ search: undefined });
+                  }}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-[#dbe3ef] text-[#5f6573] transition hover:bg-[#c9d1de]"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </label>
+          </form>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {LEVELS.map((level) => {
+              const active = initialLevel === level.value;
+              return (
+                <button
+                  key={level.label}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => navigateWith({ level: level.value })}
+                  className={`h-8 cursor-pointer rounded-full border px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                    active
+                      ? "border-primary bg-primary text-white"
+                      : "border-[#dbe3ef] bg-white text-[#41474e] hover:border-primary/50 hover:text-primary"
+                  }`}
+                >
+                  {level.label}
+                </button>
+              );
+            })}
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={() => router.push("/trainings")}
+                className="ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+              >
+                <RotateCcw className="size-3.5" />
+                Reset
+              </button>
+            )}
+          </div>
+
+          <p className="mt-3 text-sm font-medium text-[#5f6573]">
+            {result.totalData} Latihan Kader ditemukan
+          </p>
+        </div>
+
+        {/* Desktop-only: original title + inline search/filters layout. */}
+        <div className="hidden border-b border-[#e1e5ec] bg-white lg:block">
           <PageMargin className="py-7 lg:py-9">
             <div className="flex items-center gap-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
@@ -173,8 +242,8 @@ export default function TrainingCatalogPage({
           </PageMargin>
         </div>
 
-        <PageMargin className="py-6 lg:py-8">
-          <div className="mb-4 flex items-center justify-between gap-3">
+        <PageMargin className="pt-2 lg:py-8" noMobilePadding>
+          <div className="mb-4 hidden items-center justify-between gap-3 lg:flex">
             <p className="text-sm font-medium text-[#5f6573]">
               {result.totalData} training ditemukan
             </p>
@@ -193,24 +262,19 @@ export default function TrainingCatalogPage({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-5 xl:grid-cols-3">
               {result.list.map((training) => (
                 <PublicTrainingCard key={training.id} training={training} />
               ))}
             </div>
           )}
 
-          {result.list.length > 0 && (
-            <div className="mt-8 flex flex-col items-center gap-3">
-              {result.totalPage > 1 && (
-                <Pagination
-                  currentPage={result.currentPage}
-                  totalPages={result.totalPage}
-                />
-              )}
-              <p className="text-center text-sm text-[#5f6573]">
-                Menampilkan {firstItem}-{lastItem} dari {result.totalData} training
-              </p>
+          {result.totalPage > 1 && (
+            <div className="mt-8 flex flex-col items-center gap-3 px-4 lg:px-0">
+              <Pagination
+                currentPage={result.currentPage}
+                totalPages={result.totalPage}
+              />
             </div>
           )}
         </PageMargin>

@@ -15,16 +15,18 @@ export interface TrainingViewer {
 interface TrainingPageShellProps {
   viewer: TrainingViewer;
   mobileBackTitle?: string;
+  bgClassName?: string;
   children: ReactNode;
 }
 
 export default function TrainingPageShell({
   viewer,
   mobileBackTitle,
+  bgClassName = "bg-[#f5f7fb]",
   children,
 }: TrainingPageShellProps) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className={`min-h-screen ${bgClassName} pb-16 lg:pb-0`}>
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
