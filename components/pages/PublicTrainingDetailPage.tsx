@@ -6,7 +6,6 @@ import type { TrainingDetail } from "@/apis/trainings";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRange } from "@/lib/time-manipulation";
 import {
-  ArrowLeft,
   Calendar,
   CalendarDays,
   ExternalLink,
@@ -55,6 +54,60 @@ function getInitials(value: string) {
     .map((word) => word[0])
     .join("")
     .toUpperCase();
+}
+
+function ContactPersonSection({
+  training,
+  className,
+}: {
+  training: TrainingDetail;
+  className?: string;
+}) {
+  if (!training.contact_person_name) return null;
+
+  return (
+    <section className={className}>
+      <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
+        Contact Person
+      </h2>
+      <div className="mt-3 flex items-center gap-3 rounded-lg border border-[#e4e8ef] bg-[#f8f9fb] p-3">
+        <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-white xl:text-[13px]">
+          {training.contact_person_avatar ? (
+            <Image
+              src={training.contact_person_avatar}
+              alt={training.contact_person_name}
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
+          ) : (
+            getInitials(training.contact_person_name)
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold text-[#172033]">
+            {training.contact_person_name}
+          </p>
+          {training.contact_person_phone_number && (
+            <p className="truncate text-sm text-[#7b8190] xl:text-[15px]">
+              {training.contact_person_phone_number}
+            </p>
+          )}
+        </div>
+        {training.contact_person_phone_number && (
+          <a
+            href={buildWhatsAppUrl(training.contact_person_phone_number)}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Hubungi ${training.contact_person_name} via WhatsApp`}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
+          >
+            <FontAwesomeIcon icon={faWhatsapp} />
+          </a>
+        )}
+      </div>
+    </section>
+  );
 }
 
 export default function PublicTrainingDetailPage({
@@ -134,51 +187,7 @@ export default function PublicTrainingDetailPage({
               {training.location_name ?? "Lokasi belum ditentukan"}
             </p>
 
-            {training.contact_person_name && (
-              <div className="mt-3">
-                <h2 className="text-sm font-semibold text-[#7b8190]">
-                  Contact Person
-                </h2>
-                <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#edf0f4] p-3">
-                  <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-white">
-                    {training.contact_person_avatar ? (
-                      <Image
-                        src={training.contact_person_avatar}
-                        alt={training.contact_person_name}
-                        fill
-                        sizes="36px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      getInitials(training.contact_person_name)
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-[#172033]">
-                      {training.contact_person_name}
-                    </p>
-                    {training.contact_person_phone_number && (
-                      <p className="truncate text-sm text-[#7b8190]">
-                        {training.contact_person_phone_number}
-                      </p>
-                    )}
-                  </div>
-                  {training.contact_person_phone_number && (
-                    <a
-                      href={buildWhatsAppUrl(
-                        training.contact_person_phone_number
-                      )}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Hubungi ${training.contact_person_name} via WhatsApp`}
-                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
-                    >
-                      <FontAwesomeIcon icon={faWhatsapp} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
+            <ContactPersonSection training={training} className="mt-3" />
 
             <section className="mt-6 border-t border-[#edf0f4] pt-5">
               <h2 className="text-sm font-semibold text-[#7b8190]">
@@ -249,9 +258,9 @@ export default function PublicTrainingDetailPage({
           </div>
         </div>
 
-        {/* Desktop-only: original hero + poster sidebar layout. */}
+        {/* Desktop-only: fixed blur band with a sticky poster column. */}
         <div className="hidden min-h-[calc(100vh-4rem)] bg-white lg:block">
-          <div className="relative h-80 overflow-hidden bg-[#dce7e8]">
+          <div className="relative h-[280px] overflow-hidden bg-[#dce7e8] xl:h-[320px]">
             {training.image_url && (
               <Image
                 src={training.image_url}
@@ -260,27 +269,15 @@ export default function PublicTrainingDetailPage({
                 priority
                 aria-hidden="true"
                 sizes="100vw"
-                className="scale-110 object-cover opacity-50 blur-2xl"
+                className="scale-110 object-cover opacity-50 blur-lg"
               />
             )}
-            <div className="absolute inset-0 bg-white/30 backdrop-blur-sm" />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-white" />
-
-            <PageMargin className="relative pt-7">
-              <Link
-                href="/trainings"
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/70 bg-white/90 px-4 text-sm font-semibold text-[#172033] shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              >
-                <ArrowLeft className="size-4" />
-                Kembali
-              </Link>
-            </PageMargin>
           </div>
 
-          <PageMargin className="relative -mt-40 pb-16">
-            <div className="mx-auto grid max-w-[980px] items-start gap-12 lg:grid-cols-[340px_minmax(0,1fr)]">
-              <aside className="min-w-0">
-                <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-lg border border-white/80 bg-[#edf1f6] shadow-[0_18px_50px_rgba(23,32,51,0.18)]">
+          <PageMargin className="relative -mt-52 pb-16 xl:-mt-60">
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] xl:gap-8">
+              <aside className="sticky top-24 min-w-0 self-start">
+                <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-lg bg-[#edf1f6] shadow-[0_18px_50px_rgba(23,32,51,0.18)]">
                   {training.image_url ? (
                     <Image
                       src={training.image_url}
@@ -293,7 +290,7 @@ export default function PublicTrainingDetailPage({
                   ) : (
                     <div className="flex size-full flex-col items-center justify-center gap-3 text-[#7b8190]">
                       <ImageOff className="size-11" />
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium xl:text-[15px]">
                         Poster belum tersedia
                       </span>
                     </div>
@@ -302,10 +299,10 @@ export default function PublicTrainingDetailPage({
 
                 <Link
                   href={`/trainings/${training.id}/register`}
-                  className="mx-auto mt-4 block w-full max-w-[340px]"
+                  className="mx-auto mt-6 block w-full max-w-[340px]"
                 >
                   <Button
-                    variant="dark"
+                    variant="primary"
                     size="lg"
                     className="w-full rounded-full"
                   >
@@ -315,44 +312,38 @@ export default function PublicTrainingDetailPage({
                 </Link>
               </aside>
 
-              <article className="min-w-0 bg-white pt-36">
-                <div className="flex flex-wrap items-center gap-2">
-                  <TrainingLevelLabel level={training.level} />
-                  <TrainingStatusLabel
-                    startDate={training.start_date}
-                    endDate={training.end_date}
-                  />
-                </div>
-
-                <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-primary">
-                  <CalendarDays className="size-4 shrink-0" />
-                  {formatDateRange(training.start_date, training.end_date)}
-                </p>
-
-                <h1 className="mt-2 text-4xl font-bold leading-tight text-[#172033]">
+              <article className="min-w-0 self-start rounded-lg bg-white/95 p-6 backdrop-blur-sm xl:p-8">
+                <h1 className="text-4xl font-bold leading-tight text-[#172033]">
                   {training.name}
                 </h1>
 
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#5f6573]">
-                  <span>{ORGANIZER_LABEL[training.organizer_type]}</span>
-                  <span
-                    aria-hidden="true"
-                    className="size-1 rounded-full bg-[#b7bdc8]"
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <TrainingLevelLabel
+                    level={training.level}
+                    className="xl:text-[13px]"
                   />
-                  <span>{organizerName}</span>
-                  {training.location_name && (
-                    <>
-                      <span
-                        aria-hidden="true"
-                        className="size-1 rounded-full bg-[#b7bdc8]"
-                      />
-                      <span>{training.location_name}</span>
-                    </>
-                  )}
+                  <TrainingStatusLabel
+                    startDate={training.start_date}
+                    endDate={training.end_date}
+                    className="xl:text-[13px]"
+                  />
                 </div>
 
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#41474e] xl:text-[15px]">
+                  <p className="flex items-center gap-2">
+                    <CalendarDays className="size-4 shrink-0" />
+                    {formatDateRange(training.start_date, training.end_date)}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MapPin className="size-4 shrink-0" />
+                    {training.location_name ?? "Lokasi belum ditentukan"}
+                  </p>
+                </div>
+
+                <ContactPersonSection training={training} className="mt-6" />
+
                 <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190]">
+                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
                     Deskripsi
                   </h2>
                   <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#41474e]">
@@ -362,18 +353,18 @@ export default function PublicTrainingDetailPage({
                 </section>
 
                 <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190]">
+                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
                     Penyelenggara
                   </h2>
                   <div className="mt-4 flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white xl:text-[15px]">
                       {getInitials(organizerName)}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-bold text-[#172033]">
                         {organizerName}
                       </p>
-                      <p className="mt-0.5 text-sm text-[#7b8190]">
+                      <p className="mt-0.5 text-sm text-[#7b8190] xl:text-[15px]">
                         {ORGANIZER_LABEL[training.organizer_type]}
                       </p>
                     </div>
@@ -381,7 +372,7 @@ export default function PublicTrainingDetailPage({
                 </section>
 
                 <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190]">
+                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
                     Lokasi
                   </h2>
                   <div className="mt-4 flex items-start gap-3">
@@ -397,7 +388,7 @@ export default function PublicTrainingDetailPage({
                           href={training.location_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                          className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline xl:text-[15px]"
                         >
                           Buka lokasi
                           <ExternalLink className="size-3.5" />

@@ -20,12 +20,18 @@ const STATUS_CONTENT: Record<
 export function TrainingStatusLabel({
   startDate,
   endDate,
+  className,
 }: {
   startDate: string;
   endDate: string;
+  className?: string;
 }) {
   const content = STATUS_CONTENT[getTrainingDisplayStatus(startDate, endDate)];
-  return <Label variant={content.variant}>{content.label}</Label>;
+  return (
+    <Label variant={content.variant} className={className}>
+      {content.label}
+    </Label>
+  );
 }
 
 const LEVEL_VARIANTS: Record<
@@ -37,8 +43,18 @@ const LEVEL_VARIANTS: Record<
   LK3: "purple",
 };
 
-export function TrainingLevelLabel({ level }: { level: TrainingStatusEnum }) {
-  return <Label variant={LEVEL_VARIANTS[level]}>{level}</Label>;
+export function TrainingLevelLabel({
+  level,
+  className,
+}: {
+  level: TrainingStatusEnum;
+  className?: string;
+}) {
+  return (
+    <Label variant={LEVEL_VARIANTS[level]} className={className}>
+      {level}
+    </Label>
+  );
 }
 
 const RESULT_CONTENT: Record<
