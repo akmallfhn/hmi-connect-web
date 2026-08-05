@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Lock, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,11 +8,17 @@ import type {
   TrainingEvaluationEntry,
   TrainingEvaluationMatrix,
 } from "@/apis/trainings";
-import { updateTrainingEvaluation } from "@/lib/actions";
+import {
+  lockTrainingEvaluations,
+  updateTrainingEvaluation,
+} from "@/lib/actions";
 import { isSuccessStatus, type TrainingResultEnum } from "@/lib/types";
+import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
+import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
+import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
 import { TrainingResultLabel } from "./TrainingLabels";
 
@@ -22,6 +28,7 @@ interface TrainingEvaluationTabProps {
   initialSearch: string;
   pageSize: number;
   canManage: boolean;
+  isLocked: boolean;
 }
 
 const AFFECTIVE_ASPECTS = [
@@ -51,7 +58,11 @@ const PSIKOMOTORIK_BODY_BG = "bg-[#FDE7EE]/50";
 
 const RESULT_LEGEND = [
   { label: "Lulus", range: "Nilai Akhir ≥ 65", dot: "bg-primary" },
-  { label: "Lulus Bersyarat", range: "Nilai Akhir 50 – 64", dot: "bg-[#FACC15]" },
+  {
+    label: "Lulus Bersyarat",
+    range: "Nilai Akhir 50 – 64",
+    dot: "bg-[#FACC15]",
+  },
   { label: "Tidak Lulus", range: "Nilai Akhir < 50", dot: "bg-destructive" },
 ] as const;
 
@@ -139,6 +150,7 @@ export default function TrainingEvaluationTab({
   initialSearch,
   pageSize,
   canManage,
+  isLocked,
 }: TrainingEvaluationTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -148,6 +160,9 @@ export default function TrainingEvaluationTab({
     setSeenSearch(initialSearch);
     setSearchInput(initialSearch);
   }
+
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
+  const [isLocking, setIsLocking] = useState(false);
 
   const [seenMatrix, setSeenMatrix] = useState(matrix);
   const [list, setList] = useState(matrix.list);
@@ -208,11 +223,27 @@ export default function TrainingEvaluationTab({
     );
   }
 
+  async function handleLock() {
+    setIsLocking(true);
+    try {
+      const result = await lockTrainingEvaluations(trainingId);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal mengunci penilaian.");
+        return;
+      }
+      toast.success("Penilaian berhasil dikunci.");
+      setShowLockConfirm(false);
+      router.refresh();
+    } finally {
+      setIsLocking(false);
+    }
+  }
+
   const { materials, totalData, totalPage, currentPage } = matrix;
 
   return (
     <div className="rounded-xl border border-[#e6e9ef] bg-white">
-      <div className="border-b border-[#e6e9ef] p-5">
+      <div className="flex flex-col gap-3 border-b border-[#e6e9ef] p-5 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-sm">
           <Input
             inputId="training-evaluation-search"
@@ -222,6 +253,25 @@ export default function TrainingEvaluationTab({
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
+        {canManage &&
+          (isLocked ? (
+            <Label
+              variant="gray"
+              icon={<Lock className="size-3.5" />}
+              className="sm:ml-auto"
+            >
+              Penilaian Terkunci
+            </Label>
+          ) : (
+            <Button
+              variant="secondary"
+              className="w-fit sm:ml-auto"
+              onClick={() => setShowLockConfirm(true)}
+            >
+              <Lock className="size-4" />
+              Tetapkan Penilaian
+            </Button>
+          ))}
       </div>
 
       {list.length === 0 ? (
@@ -317,7 +367,7 @@ export default function TrainingEvaluationTab({
                           value={materialScoreByMaterialId.get(
                             material.training_material_id
                           )}
-                          disabled={!canManage}
+                          disabled={!canManage || isLocked}
                           onCommit={(score) =>
                             commitScore(
                               entry,
@@ -338,7 +388,7 @@ export default function TrainingEvaluationTab({
                       >
                         <ScoreCell
                           value={entry[aspect.key]}
-                          disabled={!canManage}
+                          disabled={!canManage || isLocked}
                           onCommit={(score) =>
                             commitScore(
                               entry,
@@ -356,7 +406,7 @@ export default function TrainingEvaluationTab({
                       >
                         <ScoreCell
                           value={entry[aspect.key]}
-                          disabled={!canManage}
+                          disabled={!canManage || isLocked}
                           onCommit={(score) =>
                             commitScore(
                               entry,
@@ -398,7 +448,9 @@ export default function TrainingEvaluationTab({
                   key={item.label}
                   className="flex items-center gap-1.5 text-xs text-[#41474E]"
                 >
-                  <span className={`size-2.5 shrink-0 rounded-full ${item.dot}`} />
+                  <span
+                    className={`size-2.5 shrink-0 rounded-full ${item.dot}`}
+                  />
                   <span className="font-medium">{item.label}</span>
                   <span className="text-[#8a909d]">({item.range})</span>
                 </div>
@@ -415,7 +467,9 @@ export default function TrainingEvaluationTab({
                   key={item.label}
                   className="flex items-center gap-1.5 text-xs text-[#41474E]"
                 >
-                  <span className={`size-2.5 shrink-0 rounded-full ${item.dot}`} />
+                  <span
+                    className={`size-2.5 shrink-0 rounded-full ${item.dot}`}
+                  />
                   <span className="font-medium">{item.label}</span>
                 </div>
               ))}
@@ -433,10 +487,22 @@ export default function TrainingEvaluationTab({
           />
           <p className="text-center text-sm text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
-            {(currentPage - 1) * pageSize + list.length} dari {totalData} peserta
+            {(currentPage - 1) * pageSize + list.length} dari {totalData}{" "}
+            peserta
           </p>
         </div>
       )}
+
+      <AlertConfirmation
+        open={showLockConfirm}
+        onClose={() => setShowLockConfirm(false)}
+        onConfirm={handleLock}
+        title="Tetapkan penilaian training ini?"
+        message="Setelah ditetapkan, materi, peserta terdaftar, dan nilai tidak dapat diubah lagi. Tindakan ini permanen dan tidak dapat dibatalkan."
+        confirmLabel="Tetapkan Penilaian"
+        confirmVariant="destructive"
+        loading={isLocking}
+      />
     </div>
   );
 }

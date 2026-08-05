@@ -1213,7 +1213,17 @@ relative `<Link>`s.
   header label. The "Peserta" column is `sticky left-0` (an opaque background so scrolled columns
   don't show through, `z-20` on the header cell/`z-10` on body cells so it stays above sibling
   cells sliding underneath it) so participant identity stays visible while scrolling the rest of
-  the matrix horizontally. The matrix table's own `overflow-x-auto` wrapper is the only horizontal-scroll
+  the matrix horizontally. A "Kunci Penilaian" button sits `sm:ml-auto` in the same row as the
+  search input (only rendered for `canManage`) and opens an `AlertConfirmation` before calling the
+  new `trainings/evaluations/lock` endpoint (`apis/trainings.ts#lockTrainingEvaluations`) — a
+  permanent action that finalizes every participant's `passed`/`conditional_pass`/`failed` result
+  from their weighted final score and then blocks any further material/participant/evaluation
+  writes on the backend side. Once `training.is_evaluation_locked` is `true`, that button is
+  replaced by a gray "Penilaian Terkunci" `Label`, every `ScoreCell` is disabled in addition to the
+  existing `canManage` gate, and — back on the Materi tab — `BranchTrainingDetailPage` ANDs
+  `is_evaluation_locked` into the `canManage` prop it passes to `TrainingMaterialsTab`, so "Tambah
+  Materi" and the Aksi column disappear there too, matching the backend's own lock rule for
+  materials. The matrix table's own `overflow-x-auto` wrapper is the only horizontal-scroll
   boundary — `app/(admin)/admin/branches/[branch_id]/layout.tsx`'s flex `<main>` needs `min-w-0`
   for that containment to actually hold, since a bare `flex-1` child's default `min-width: auto`
   otherwise lets a wide `min-w-[...]` table push the whole flex row wider than the viewport and

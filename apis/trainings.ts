@@ -20,6 +20,7 @@ export type TrainingListEntry = {
   start_date: string;
   end_date: string;
   is_registration_open: boolean;
+  is_evaluation_locked: boolean;
   location_name?: string;
   image_url?: string;
   created_at: string;
@@ -560,4 +561,33 @@ export async function updateTrainingEvaluation(
     token: sessionToken,
     body: payload,
   });
+}
+
+export type TrainingEvaluationLockResult = {
+  training_id: string;
+  is_evaluation_locked: boolean;
+  total_participants: number;
+  passed_total: number;
+  conditional_pass_total: number;
+  failed_total: number;
+};
+
+export async function lockTrainingEvaluations(
+  trainingId: string
+): Promise<ApiEnvelope<TrainingEvaluationLockResult>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
+  }
+  return callApi<TrainingEvaluationLockResult>(
+    "/api/v1/trainings/evaluations/lock",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { training_id: trainingId },
+    }
+  );
 }

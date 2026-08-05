@@ -28,10 +28,7 @@ import TrainingParticipantsTab from "../trainings/TrainingParticipantsTab";
 import TrainingSummaryTab from "../trainings/TrainingSummaryTab";
 
 export type TrainingDetailTab =
-  | "ringkasan"
-  | "materi"
-  | "peserta"
-  | "penilaian";
+  "ringkasan" | "materi" | "peserta" | "penilaian";
 
 interface BranchTrainingDetailPageProps {
   branchId: string;
@@ -106,7 +103,7 @@ export default function BranchTrainingDetailPage({
         {canManageTrainings && (
           <Button onClick={() => setShowEditSheet(true)} className="shrink-0">
             <Pencil className="size-4" />
-            Edit Detail
+            Edit Informasi LK
           </Button>
         )}
       </div>
@@ -159,7 +156,7 @@ export default function BranchTrainingDetailPage({
             currentPage={materials.currentPage}
             initialSearch={initialMaterialSearch}
             pageSize={pageSize}
-            canManage={canManageTrainings}
+            canManage={canManageTrainings && !training.is_evaluation_locked}
           />
         )}
         {activeTab === "peserta" && (
@@ -180,6 +177,7 @@ export default function BranchTrainingDetailPage({
               initialSearch={initialEvaluationSearch}
               pageSize={pageSize}
               canManage={canManageEvaluations}
+              isLocked={training.is_evaluation_locked}
             />
           ) : (
             <EmptyState

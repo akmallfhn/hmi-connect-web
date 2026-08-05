@@ -139,6 +139,7 @@ import {
   createTrainingMaterial as createTrainingMaterialApi,
   deleteTraining as deleteTrainingApi,
   deleteTrainingMaterial as deleteTrainingMaterialApi,
+  lockTrainingEvaluations as lockTrainingEvaluationsApi,
   registerTraining as registerTrainingApi,
   updateTraining as updateTrainingApi,
   updateTrainingEvaluation as updateTrainingEvaluationApi,
@@ -300,6 +301,10 @@ export async function updateTrainingEvaluation(
   payload: UpdateTrainingEvaluationPayload
 ) {
   return updateTrainingEvaluationApi(payload);
+}
+
+export async function lockTrainingEvaluations(trainingId: string) {
+  return lockTrainingEvaluationsApi(trainingId);
 }
 
 export async function followUser(userId: string) {

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  EllipsisVertical,
-  ExternalLink,
-  Pencil,
-  PlusCircle,
-  Search,
-  Trash2,
-} from "lucide-react";
+import { ExternalLink, Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,7 +8,6 @@ import type { TrainingMaterial } from "@/apis/trainings";
 import { deleteTrainingMaterial } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import Dropdown from "../common/Dropdown";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingMaterialFormSheet from "../forms/TrainingMaterialFormSheet";
@@ -55,7 +47,9 @@ export default function TrainingMaterialsTab({
   const [sheetTarget, setSheetTarget] = useState<
     TrainingMaterial | null | "create"
   >(null);
-  const [deleteTarget, setDeleteTarget] = useState<TrainingMaterial | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TrainingMaterial | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   function pushSearch(value: string) {
@@ -122,9 +116,7 @@ export default function TrainingMaterialsTab({
 
       {materials.length === 0 ? (
         <EmptyState
-          title={
-            initialSearch ? "Materi tidak ditemukan" : "Belum ada materi"
-          }
+          title={initialSearch ? "Materi tidak ditemukan" : "Belum ada materi"}
           description={
             initialSearch
               ? "Coba ubah kata kunci pencarian."
@@ -164,37 +156,23 @@ export default function TrainingMaterialsTab({
                   </td>
                   {canManage && (
                     <td className="px-4 py-3">
-                      <div className="flex justify-end">
-                        <Dropdown
-                          panelClassName="w-44 rounded-xl"
-                          trigger={({ toggle }) => (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={toggle}
-                              aria-label={`Aksi materi ${material.title}`}
-                            >
-                              <EllipsisVertical className="size-4" />
-                            </Button>
-                          )}
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          onClick={() => setSheetTarget(material)}
+                          aria-label={`Edit materi ${material.title}`}
                         >
-                          <button
-                            type="button"
-                            onClick={() => setSheetTarget(material)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] hover:bg-[#f5f7fb]"
-                          >
-                            <Pencil className="size-4 text-[#5f6573]" />
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(material)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive-soft"
-                          >
-                            <Trash2 className="size-4" />
-                            Hapus
-                          </button>
-                        </Dropdown>
+                          <Pencil className="size-4" /> Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeleteTarget(material)}
+                          aria-label={`Hapus materi ${material.title}`}
+                        >
+                          <Trash2 className="size-4" /> Hapus
+                        </Button>
                       </div>
                     </td>
                   )}
@@ -214,7 +192,8 @@ export default function TrainingMaterialsTab({
           />
           <p className="text-center text-sm text-[#5f6573]">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
-            {(currentPage - 1) * pageSize + materials.length} dari {totalData} materi
+            {(currentPage - 1) * pageSize + materials.length} dari {totalData}{" "}
+            materi
           </p>
         </div>
       )}
