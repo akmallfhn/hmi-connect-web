@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import Input from "../fields/Input";
 import Select from "../fields/Select";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
+import EmptyState from "../states/EmptyState";
 import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
@@ -108,17 +109,18 @@ export default function BranchMemberListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {users.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <Users className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada kader ditemukan.
-            </p>
-            {(initialSearch || initialStatus) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter status.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus
+                ? "Kader tidak ditemukan"
+                : "Belum ada kader"
+            }
+            description={
+              initialSearch || initialStatus
+                ? "Coba ubah kata kunci pencarian atau filter status."
+                : "Kader yang terdaftar akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">

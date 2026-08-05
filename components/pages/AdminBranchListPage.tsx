@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Building2,
   EllipsisVertical,
   Pencil,
   PlusCircle,
@@ -23,6 +22,7 @@ import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import BranchFormSheet from "../forms/BranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import EmptyState from "../states/EmptyState";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -181,17 +181,18 @@ export default function AdminBranchListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {branches.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <Building2 className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada cabang ditemukan.
-            </p>
-            {(initialSearch || initialStatus || selectedCoordinatingBody) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus || selectedCoordinatingBody
+                ? "Cabang tidak ditemukan"
+                : "Belum ada cabang"
+            }
+            description={
+              initialSearch || initialStatus || selectedCoordinatingBody
+                ? "Coba ubah kata kunci pencarian atau filter."
+                : "Cabang yang ditambahkan akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[840px] text-left text-sm">

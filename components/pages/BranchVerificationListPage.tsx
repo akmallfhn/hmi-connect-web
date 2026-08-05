@@ -11,7 +11,6 @@ import {
   Mail,
   Phone,
   Search,
-  ShieldCheck,
   VenusAndMars,
   X as XIcon,
 } from "lucide-react";
@@ -37,6 +36,7 @@ import TextArea from "../fields/TextArea";
 import VerificationRequestStatusLabel from "../labels/VerificationRequestStatusLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import Modal from "../modals/Modal";
+import EmptyState from "../states/EmptyState";
 import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
@@ -278,12 +278,18 @@ export default function BranchVerificationListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {requests.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <ShieldCheck className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada permintaan verifikasi ditemukan.
-            </p>
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus
+                ? "Permintaan verifikasi tidak ditemukan"
+                : "Belum ada permintaan verifikasi"
+            }
+            description={
+              initialSearch || initialStatus
+                ? "Coba ubah kata kunci pencarian atau filter status."
+                : "Permintaan verifikasi kader akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">

@@ -2,7 +2,6 @@
 
 import {
   EllipsisVertical,
-  GraduationCap,
   Pencil,
   PlusCircle,
   Search,
@@ -27,6 +26,7 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import ChapterFormSheet from "../forms/ChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import EmptyState from "../states/EmptyState";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -185,17 +185,18 @@ export default function AdminChapterListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {chapters.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <GraduationCap className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada komisariat ditemukan.
-            </p>
-            {(initialSearch || initialStatus || selectedBranch) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus || selectedBranch
+                ? "Komisariat tidak ditemukan"
+                : "Belum ada komisariat"
+            }
+            description={
+              initialSearch || initialStatus || selectedBranch
+                ? "Coba ubah kata kunci pencarian atau filter."
+                : "Komisariat yang ditambahkan akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-sm">

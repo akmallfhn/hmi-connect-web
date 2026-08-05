@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BookOpen,
   EllipsisVertical,
   ExternalLink,
   Pencil,
@@ -21,6 +20,7 @@ import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingMaterialFormSheet from "../forms/TrainingMaterialFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import EmptyState from "../states/EmptyState";
 
 interface TrainingMaterialsTabProps {
   trainingId: string;
@@ -126,17 +126,16 @@ export default function TrainingMaterialsTab({
       </div>
 
       {materials.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-          <BookOpen className="size-8 text-[#5f6573]" />
-          <p className="text-sm font-medium text-[#172033]">
-            Tidak ada materi ditemukan.
-          </p>
-          {initialSearch && (
-            <p className="text-xs text-[#5f6573]">
-              Coba ubah kata kunci pencarian.
-            </p>
-          )}
-        </div>
+        <EmptyState
+          title={
+            initialSearch ? "Materi tidak ditemukan" : "Belum ada materi"
+          }
+          description={
+            initialSearch
+              ? "Coba ubah kata kunci pencarian."
+              : "Materi yang ditambahkan akan ditampilkan di sini."
+          }
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-left text-sm">

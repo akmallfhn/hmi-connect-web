@@ -318,6 +318,9 @@ relative `<Link>`s.
 - `components/pages/*` — one Client Component per route, holds the page's state machine;
   the `app/.../page.tsx` Server Component fetches data (`getSession`,
   `getInstitutions`, ...) and passes it down as props.
+- `components/states/EmptyState.tsx` — the shared empty-result presentation for every admin
+  list: the larger `EmptyStateIllustration`, a `text-base` title, and a `text-sm` description.
+  List pages pass different copy for a genuinely empty collection versus an empty search/filter.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
   `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`). `CreateableSelect`/
   `SearchableSelect` take `loadOptions(inputValue, page)` + `defaultOptions` and handle
@@ -1014,7 +1017,8 @@ relative `<Link>`s.
   `/master/users` (`app/(admin)/admin/master/users/page.tsx`, a Server Component reading
   `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
   — search/status-filter/pagination are all URL state driven by `router.push`, the same
-  server-first pattern `NewsPage`/`SearchPage` use, not a client-fetched table. There's no
+  server-first pattern `NewsPage`/`SearchPage` use, not a client-fetched table; its empty results
+  use the shared `components/states/EmptyState.tsx`. There's no
   `users/detail`-by-id endpoint on the backend (only by `username`, and only `users/update`/
   `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
   same backend shape — the read page is keyed by **username**, not id:
@@ -1150,7 +1154,9 @@ relative `<Link>`s.
   current `branch_id`; the detail route repeats that ownership/level check and calls `notFound()`
   for a training outside the current branch. Both routes read search/pagination from URL params
   and fetch in Server Components before rendering the client page state machines.
-  `components/pages/BranchTrainingListPage.tsx` renders the API-backed searchable/paginated batch grid.
+  `components/pages/BranchTrainingListPage.tsx` renders the API-backed searchable/paginated batch grid;
+  an empty result uses the shared `components/states/EmptyState.tsx`, which owns the larger
+  `EmptyStateIllustration`, title, and description layout while preserving search-specific copy.
   `TrainingFormSheet`'s contact-person `SearchableSelect` sends the current `branch_id` to the
   admin `/api/users/search` handler; that scoped path delegates to `users/list` with
   `status: "active"` and rejects branch managers requesting another branch, while the handler's
@@ -1161,7 +1167,8 @@ relative `<Link>`s.
   WhatsApp action; colored-icon execution metadata, a horizontal Total Sesi Materi/Total Peserta
   Terdaftar scorecard row, and the description sit in the right column, with organizer names formatted through
   `lib/organizer.ts`. The old status/duration cards and heading status label are intentionally absent.
-  The Penilaian tab currently renders an honest empty state because the backend does not expose its
+  The Materi, Peserta, and Penilaian tabs reuse that same `EmptyState` when their lists are empty.
+  Penilaian currently always renders that honest empty state because the backend does not expose its
   evaluation tables yet. The detail header exposes Edit only, not the training delete action. Materi
   supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is
   searchable and read-only because the backend currently exposes participant list/detail only.
@@ -1204,7 +1211,8 @@ relative `<Link>`s.
   Cabang filter, see below) is always passed by this route's `page.tsx`, so chapters outside this
   branch never show up. `components/pages/BranchChapterListPage.tsx` is `AdminChapterListPage.tsx`'s
   table/filter/pagination look reused verbatim, minus the (now redundant, single-branch-scoped)
-  Cabang `SearchableSelect` filter and the "Cabang {branch_name}" subtitle under each row's name —
+  Cabang `SearchableSelect` filter and the "Cabang {branch_name}" subtitle under each row's name;
+  its empty results use the same shared `EmptyState` as the training and user lists —
   same "already scoped, don't repeat it per row" reasoning as Daftar Kader's own column trim below —
   and minus the master version's Dropdown/`AlertConfirmation` delete flow entirely: the Aksi column
   is just a single ghost icon `Button` (`Pencil`) that opens the same edit sheet the row's own name

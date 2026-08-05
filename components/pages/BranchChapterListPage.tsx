@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChapterListEntry } from "@/apis/chapters";
-import { GraduationCap, PlusCircle, Search, University } from "lucide-react";
+import { PlusCircle, Search, University } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import BranchChapterFormSheet from "../forms/BranchChapterFormSheet";
+import EmptyState from "../states/EmptyState";
 import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
@@ -120,17 +121,18 @@ export default function BranchChapterListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {chapters.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <GraduationCap className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada komisariat ditemukan.
-            </p>
-            {(initialSearch || initialStatus) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus
+                ? "Komisariat tidak ditemukan"
+                : "Belum ada komisariat"
+            }
+            description={
+              initialSearch || initialStatus
+                ? "Coba ubah kata kunci pencarian atau filter."
+                : "Komisariat yang ditambahkan akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-sm">

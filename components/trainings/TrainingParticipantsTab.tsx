@@ -1,12 +1,13 @@
 "use client";
 
-import { Search, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { TrainingParticipant } from "@/apis/trainings";
 import Avatar from "../common/Avatar";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
+import EmptyState from "../states/EmptyState";
 import { TrainingResultLabel } from "./TrainingLabels";
 
 interface TrainingParticipantsTabProps {
@@ -68,17 +69,16 @@ export default function TrainingParticipantsTab({
       </div>
 
       {participants.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-          <Users className="size-8 text-[#5f6573]" />
-          <p className="text-sm font-medium text-[#172033]">
-            Tidak ada peserta ditemukan.
-          </p>
-          {initialSearch && (
-            <p className="text-xs text-[#5f6573]">
-              Coba ubah kata kunci pencarian.
-            </p>
-          )}
-        </div>
+        <EmptyState
+          title={
+            initialSearch ? "Peserta tidak ditemukan" : "Belum ada peserta"
+          }
+          description={
+            initialSearch
+              ? "Coba ubah kata kunci pencarian."
+              : "Peserta yang mendaftar akan ditampilkan di sini."
+          }
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">

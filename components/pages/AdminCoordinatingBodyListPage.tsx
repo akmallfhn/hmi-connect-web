@@ -1,6 +1,6 @@
 "use client";
 
-import { EllipsisVertical, Network, Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
+import { EllipsisVertical, Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import Input from "../fields/Input";
 import Select from "../fields/Select";
 import CoordinatingBodyFormSheet from "../forms/CoordinatingBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import EmptyState from "../states/EmptyState";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -143,17 +144,18 @@ export default function AdminCoordinatingBodyListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {coordinatingBodies.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <Network className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada Badko ditemukan.
-            </p>
-            {(initialSearch || initialStatus) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter status.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus
+                ? "Badko tidak ditemukan"
+                : "Belum ada Badko"
+            }
+            description={
+              initialSearch || initialStatus
+                ? "Coba ubah kata kunci pencarian atau filter status."
+                : "Badko yang ditambahkan akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-sm">

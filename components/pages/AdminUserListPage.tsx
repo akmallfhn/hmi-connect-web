@@ -8,7 +8,6 @@ import {
   PlusCircle,
   Search,
   Trash2,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -29,6 +28,7 @@ import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ConfirmDeleteUserModal from "../modals/ConfirmDeleteUserModal";
+import EmptyState from "../states/EmptyState";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -175,17 +175,18 @@ export default function AdminUserListPage({
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {users.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-            <Users className="size-8 text-[#5f6573]" />
-            <p className="text-sm font-medium text-[#172033]">
-              Tidak ada user ditemukan.
-            </p>
-            {(initialSearch || initialStatus) && (
-              <p className="text-xs text-[#5f6573]">
-                Coba ubah kata kunci pencarian atau filter status.
-              </p>
-            )}
-          </div>
+          <EmptyState
+            title={
+              initialSearch || initialStatus
+                ? "User tidak ditemukan"
+                : "Belum ada user"
+            }
+            description={
+              initialSearch || initialStatus
+                ? "Coba ubah kata kunci pencarian atau filter status."
+                : "User yang ditambahkan akan ditampilkan di sini."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">

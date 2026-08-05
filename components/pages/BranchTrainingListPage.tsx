@@ -17,6 +17,7 @@ import Button from "../buttons/Button";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
+import EmptyState from "../states/EmptyState";
 import {
   TrainingRegistrationLabel,
   TrainingStatusLabel,
@@ -111,16 +112,19 @@ export default function BranchTrainingListPage({
       </div>
 
       {trainings.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-[#e6e9ef] bg-white px-4 py-16 text-center">
-          <CalendarDays className="size-9 text-[#5f6573]" />
-          <p className="text-sm font-medium text-[#172033]">
-            Tidak ada batch LK2 ditemukan.
-          </p>
-          {initialSearch && (
-            <p className="text-xs text-[#5f6573]">
-              Coba ubah kata kunci pencarian.
-            </p>
-          )}
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <EmptyState
+            title={
+              initialSearch
+                ? "Batch LK2 tidak ditemukan"
+                : "Belum ada batch LK2"
+            }
+            description={
+              initialSearch
+                ? "Coba ubah kata kunci pencarian."
+                : "Batch LK2 yang dibuat akan ditampilkan di sini."
+            }
+          />
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
