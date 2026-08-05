@@ -15,11 +15,13 @@ import { useState } from "react";
 import type {
   PagedTrainingResult,
   TrainingDetail,
+  TrainingEvaluationMatrix,
   TrainingMaterial,
   TrainingParticipant,
 } from "@/apis/trainings";
 import Button from "../buttons/Button";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
+import EmptyState from "../states/EmptyState";
 import TrainingEvaluationTab from "../trainings/TrainingEvaluationTab";
 import TrainingMaterialsTab from "../trainings/TrainingMaterialsTab";
 import TrainingParticipantsTab from "../trainings/TrainingParticipantsTab";
@@ -36,11 +38,14 @@ interface BranchTrainingDetailPageProps {
   training: TrainingDetail;
   materials: PagedTrainingResult<TrainingMaterial>;
   participants: PagedTrainingResult<TrainingParticipant>;
+  evaluationMatrix: TrainingEvaluationMatrix | null;
   initialTab: TrainingDetailTab;
   initialMaterialSearch: string;
   initialParticipantSearch: string;
+  initialEvaluationSearch: string;
   pageSize: number;
   canManageTrainings: boolean;
+  canManageEvaluations: boolean;
 }
 
 const TABS: { id: TrainingDetailTab; label: string; icon: LucideIcon }[] = [
@@ -55,11 +60,14 @@ export default function BranchTrainingDetailPage({
   training,
   materials,
   participants,
+  evaluationMatrix,
   initialTab,
   initialMaterialSearch,
   initialParticipantSearch,
+  initialEvaluationSearch,
   pageSize,
   canManageTrainings,
+  canManageEvaluations,
 }: BranchTrainingDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -164,7 +172,21 @@ export default function BranchTrainingDetailPage({
             pageSize={pageSize}
           />
         )}
-        {activeTab === "penilaian" && <TrainingEvaluationTab />}
+        {activeTab === "penilaian" &&
+          (evaluationMatrix ? (
+            <TrainingEvaluationTab
+              trainingId={training.id}
+              matrix={evaluationMatrix}
+              initialSearch={initialEvaluationSearch}
+              pageSize={pageSize}
+              canManage={canManageEvaluations}
+            />
+          ) : (
+            <EmptyState
+              title="Belum ada penilaian"
+              description="Data penilaian untuk training ini belum tersedia."
+            />
+          ))}
       </div>
 
       <TrainingFormSheet

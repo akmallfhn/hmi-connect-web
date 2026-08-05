@@ -48,7 +48,9 @@ export default async function BranchLayout({
           avatar={user?.avatar}
           roleName={user?.role_name}
         />
-        <main className="min-h-screen flex-1 bg-[#f5f7fb]">{children}</main>
+        <main className="min-h-screen min-w-0 flex-1 bg-[#f5f7fb]">
+          {children}
+        </main>
       </div>
     </BranchProvider>
   );

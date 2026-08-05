@@ -10,7 +10,6 @@ import {
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
-import NumberInput from "../fields/NumberInput";
 import Sheet from "../modals/Sheet";
 
 interface TrainingMaterialFormSheetProps {
@@ -19,7 +18,6 @@ interface TrainingMaterialFormSheetProps {
   onSaved: () => void;
   trainingId: string;
   material: TrainingMaterial | null;
-  nextIndex: number;
 }
 
 function isValidHttpUrl(value: string) {
@@ -37,20 +35,18 @@ export default function TrainingMaterialFormSheet({
   onSaved,
   trainingId,
   material,
-  nextIndex,
 }: TrainingMaterialFormSheetProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title={material ? "Edit Materi" : "Tambah Materi"}
-      description="Atur judul, urutan, dan tautan bahan pembelajaran."
+      description="Atur judul dan tautan bahan pembelajaran."
     >
       {open && (
         <MaterialFields
           trainingId={trainingId}
           material={material}
-          nextIndex={nextIndex}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -62,19 +58,16 @@ export default function TrainingMaterialFormSheet({
 function MaterialFields({
   trainingId,
   material,
-  nextIndex,
   onClose,
   onSaved,
 }: Omit<TrainingMaterialFormSheetProps, "open">) {
   const [title, setTitle] = useState(material?.title ?? "");
   const [materialUrl, setMaterialUrl] = useState(material?.material_url ?? "");
-  const [index, setIndex] = useState(String(material?.index ?? nextIndex));
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    const numericIndex = Number(index);
-    if (!title.trim() || !Number.isInteger(numericIndex) || numericIndex < 1) {
-      toast.error("Judul dan urutan materi yang valid wajib diisi.");
+    if (!title.trim()) {
+      toast.error("Judul materi wajib diisi.");
       return;
     }
     if (materialUrl.trim() && !isValidHttpUrl(materialUrl.trim())) {
@@ -89,12 +82,10 @@ function MaterialFields({
             id: material.id,
             title: title.trim(),
             material_url: materialUrl.trim(),
-            index: numericIndex,
           })
         : await createTrainingMaterial({
             training_id: trainingId,
             title: title.trim(),
-            index: numericIndex,
             ...(materialUrl.trim()
               ? { material_url: materialUrl.trim() }
               : {}),
@@ -124,13 +115,6 @@ function MaterialFields({
         placeholder="Contoh: Konstitusi HMI"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        required
-      />
-      <NumberInput
-        inputId="training-material-index"
-        label="Urutan"
-        value={index}
-        onValueChange={setIndex}
         required
       />
       <Input

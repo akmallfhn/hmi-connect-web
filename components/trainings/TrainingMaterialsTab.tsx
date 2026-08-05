@@ -96,11 +96,6 @@ export default function TrainingMaterialsTab({
     }
   }
 
-  const nextIndex = Math.max(
-    totalData + 1,
-    ...materials.map((material) => material.index + 1)
-  );
-
   return (
     <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
       <div className="flex flex-col gap-3 border-b border-[#e6e9ef] p-5 sm:flex-row sm:items-center">
@@ -141,7 +136,6 @@ export default function TrainingMaterialsTab({
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase text-[#5f6573]">
               <tr>
-                <th className="w-20 px-4 py-3">Urutan</th>
                 <th className="px-4 py-3">Judul Materi</th>
                 <th className="px-4 py-3">Tautan</th>
                 {canManage && <th className="px-4 py-3 text-right">Aksi</th>}
@@ -150,9 +144,6 @@ export default function TrainingMaterialsTab({
             <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
               {materials.map((material) => (
                 <tr key={material.id}>
-                  <td className="px-4 py-3 font-semibold text-[#5f6573]">
-                    {String(material.index).padStart(2, "0")}
-                  </td>
                   <td className="px-4 py-3 font-semibold text-[#172033]">
                     {material.title}
                   </td>
@@ -237,7 +228,6 @@ export default function TrainingMaterialsTab({
         }}
         trainingId={trainingId}
         material={sheetTarget === "create" ? null : sheetTarget}
-        nextIndex={nextIndex}
       />
       <AlertConfirmation
         open={deleteTarget !== null}

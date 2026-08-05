@@ -141,10 +141,12 @@ import {
   deleteTrainingMaterial as deleteTrainingMaterialApi,
   registerTraining as registerTrainingApi,
   updateTraining as updateTrainingApi,
+  updateTrainingEvaluation as updateTrainingEvaluationApi,
   updateTrainingMaterial as updateTrainingMaterialApi,
   type CreateTrainingMaterialPayload,
   type CreateTrainingPayload,
   type RegisterTrainingPayload,
+  type UpdateTrainingEvaluationPayload,
   type UpdateTrainingMaterialPayload,
   type UpdateTrainingPayload,
 } from "@/apis/trainings";
@@ -292,6 +294,12 @@ export async function updateTrainingMaterial(
 
 export async function deleteTrainingMaterial(id: string) {
   return deleteTrainingMaterialApi(id);
+}
+
+export async function updateTrainingEvaluation(
+  payload: UpdateTrainingEvaluationPayload
+) {
+  return updateTrainingEvaluationApi(payload);
 }
 
 export async function followUser(userId: string) {

@@ -205,9 +205,9 @@ export const LK2_ASSESSMENT = {
     { label: "Sikap & Etika", weight: 20 },
   ],
   criteria: [
-    { range: "≥ 80", status: "Lulus" },
-    { range: "70 – 79", status: "Lulus Bersyarat (wajib bimbingan lanjutan)" },
-    { range: "< 70", status: "Tidak Lulus" },
+    { range: "≥ 65", status: "Lulus" },
+    { range: "50 – 64", status: "Lulus Bersyarat (wajib bimbingan lanjutan)" },
+    { range: "< 50", status: "Tidak Lulus" },
   ],
 };
 

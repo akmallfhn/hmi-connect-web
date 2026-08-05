@@ -1168,17 +1168,59 @@ relative `<Link>`s.
   Terdaftar scorecard row, and the description sit in the right column, with organizer names formatted through
   `lib/organizer.ts`. The old status/duration cards and heading status label are intentionally absent.
   The Materi, Peserta, and Penilaian tabs reuse that same `EmptyState` when their lists are empty.
-  Penilaian currently always renders that honest empty state because the backend does not expose its
-  evaluation tables yet. The detail header exposes Edit only, not the training delete action. Materi
-  supports backend create/update/delete via `TrainingMaterialFormSheet`; Daftar Peserta is
-  searchable and read-only because the backend currently exposes participant list/detail only.
-  Training and material writes are only shown when `role_name` is `Super Admin` or
-  `Administrator`, matching the backend middleware even though the outer branch layout also
-  permits a branch-scoped manager to browse. The former mock-only evaluation, certificate, SK,
-  quota, numeric score, and activity controls are intentionally absent because no endpoint in
-  `internal/training` persists those concepts yet. The obsolete mock dataset and its prototype
-  dashboard components have been removed; do not reintroduce them without matching backend
-  support. The separate `/trainings/guideline` route remains static reference content backed by
+  The detail header exposes Edit only, not the training delete action. Materi supports backend
+  create/update/delete via `TrainingMaterialFormSheet` — materials no longer carry an `index`;
+  `trainings/materials/list` returns them in creation order, so the form has no "Urutan" field and
+  the table has no order column. Daftar Peserta is searchable and read-only because the backend
+  currently exposes participant list/detail only. Training and material writes are only shown when
+  `role_name` is `Super Admin` or `Administrator`, matching the backend middleware even though the
+  outer branch layout also permits a branch-scoped manager to browse. Penilaian is a real
+  cognitive/affective/psychomotor evaluation matrix backed by `trainings/evaluations/list`/`update`
+  (`apis/trainings.ts#listTrainingEvaluations`/`updateTrainingEvaluation`) — rows are participants
+  (avatar + name), columns are grouped into Materi (Kognitif) (one sub-column per training material,
+  scored 1-100), Afektif (Kedisiplinan dan Keteraturan/Etika dan Sopan Santun/Motivasi Belajar/Kerja
+  Sama Tim), and Psikomotorik (Kemampuan Berbicara di Depan Umum/Kepemimpinan dalam Diskusi/
+  Kemampuan Menulis Laporan/Simulasi Peran dan Praktik) — each score is its own inline `<input>`
+  directly in the table cell (`TrainingEvaluationTab.tsx`'s local `ScoreCell`), not a separate
+  form: `onBlur` fires a single-field `updateTrainingEvaluation` call immediately (only that one
+  material/aspect in the payload, relying on the backend's partial-upsert semantics to leave every
+  other field untouched) and the response's fresh `final_score`/`is_complete` replace that row's
+  local state in place, so there's no explicit "Simpan"/save step and no separate sheet. There are
+  no per-group average sub-columns anymore, only the overall weighted Nilai Akhir and a Hasil
+  column reusing the existing `TrainingResultLabel` (same component `TrainingParticipantsTab`'s
+  own Hasil column uses) — `TrainingEvaluationTab.tsx#evaluationResult` classifies `final_score`
+  into `passed`/`conditional_pass`/`failed` at the same ≥65/50-64/<50 thresholds documented in
+  `lib/trainings/guideline-content.ts#LK2_ASSESSMENT.criteria`, but only once `is_complete` is
+  true; an incomplete row passes `undefined`, which renders `TrainingResultLabel`'s own gray
+  "Belum Dinilai" fallback instead of a possibly-misleading Tidak Lulus. The weights
+  (`affective_weight`/`cognitive_weight`/
+  `psychomotor_weight`) still come from the same response and vary by level (LK1 50/30/20, LK2
+  30/40/30, LK3 30/30/40 per the backend), just no longer surfaced as their own columns. Header
+  text is title case, not `uppercase`-transformed, since the fuller aspect names read worse
+  all-caps. `canManageEvaluations` (Super Admin/Administrator, or the training's own
+  `contact_person_id` matching the caller) disables every `ScoreCell` for anyone else instead of
+  hiding a column. The header has no separate "Materi (Kognitif)"/"Afektif"/"Psikomotorik"
+  group-label row anymore — instead every header/body cell in a group carries that group's own
+  background tint (leaf green for Materi/Kognitif, purple for Afektif, pink for Psikomotorik — picked
+  distinct from the Hasil column's own green/yellow/red so the two color systems don't collide),
+  which communicates the grouping without repeating the text, and two side-by-side dot-legend
+  blocks render below the table on wider screens (one mapping the Hasil label colors to their score
+  ranges, one mapping the three category tint colors to `Penilaian ...`-prefixed names); each
+  block keeps its own items vertically stacked. The
+  Lulus Bersyarat result dot uses bright
+  warning yellow rather than the yellow label's darker text tone so it stays visually distinct. The
+  color coding therefore stays legible without a
+  header label. The "Peserta" column is `sticky left-0` (an opaque background so scrolled columns
+  don't show through, `z-20` on the header cell/`z-10` on body cells so it stays above sibling
+  cells sliding underneath it) so participant identity stays visible while scrolling the rest of
+  the matrix horizontally. The matrix table's own `overflow-x-auto` wrapper is the only horizontal-scroll
+  boundary — `app/(admin)/admin/branches/[branch_id]/layout.tsx`'s flex `<main>` needs `min-w-0`
+  for that containment to actually hold, since a bare `flex-1` child's default `min-width: auto`
+  otherwise lets a wide `min-w-[...]` table push the whole flex row wider than the viewport and
+  scroll the page instead of just the table. The obsolete mock-only certificate, SK, quota, and
+  activity controls remain absent
+  because no endpoint in `internal/training` persists those concepts. The separate
+  `/trainings/guideline` route remains static reference content backed by
   `lib/trainings/guideline-content.ts`.
   The main-site training catalog is public, outside `(gated)`, like profile pages:
   `/trainings` lists every level with API-backed name/level/organizer filters and pagination,

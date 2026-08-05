@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/apis/session";
 import {
   getTrainingDetail,
+  listTrainingEvaluations,
   listTrainingMaterials,
   listTrainingParticipants,
 } from "@/apis/trainings";
@@ -25,6 +26,8 @@ interface BranchTrainingDetailRouteProps {
     material_page?: string;
     participant_search?: string;
     participant_page?: string;
+    evaluation_search?: string;
+    evaluation_page?: string;
   }>;
 }
 
@@ -60,21 +63,30 @@ export default async function BranchTrainingDetailRoute({
 
   const materialSearch = query.material_search?.trim() ?? "";
   const participantSearch = query.participant_search?.trim() ?? "";
-  const [materials, participants, { user }] = await Promise.all([
-    listTrainingMaterials(training.id, {
-      search: materialSearch || undefined,
-      page: parsePage(query.material_page),
-      pageSize: PAGE_SIZE,
-    }),
-    listTrainingParticipants(training.id, {
-      search: participantSearch || undefined,
-      page: parsePage(query.participant_page),
-      pageSize: PAGE_SIZE,
-    }),
-    getSession(),
-  ]);
+  const evaluationSearch = query.evaluation_search?.trim() ?? "";
+  const [materials, participants, evaluationMatrix, { user }] =
+    await Promise.all([
+      listTrainingMaterials(training.id, {
+        search: materialSearch || undefined,
+        page: parsePage(query.material_page),
+        pageSize: PAGE_SIZE,
+      }),
+      listTrainingParticipants(training.id, {
+        search: participantSearch || undefined,
+        page: parsePage(query.participant_page),
+        pageSize: PAGE_SIZE,
+      }),
+      listTrainingEvaluations(training.id, {
+        search: evaluationSearch || undefined,
+        page: parsePage(query.evaluation_page),
+        pageSize: PAGE_SIZE,
+      }),
+      getSession(),
+    ]);
   const canManageTrainings =
     user?.role_name === "Super Admin" || user?.role_name === "Administrator";
+  const canManageEvaluations =
+    canManageTrainings || user?.id === training.contact_person_id;
 
   return (
     <BranchTrainingDetailPage
@@ -82,11 +94,14 @@ export default async function BranchTrainingDetailRoute({
       training={training}
       materials={materials}
       participants={participants}
+      evaluationMatrix={evaluationMatrix}
       initialTab={parseTab(query.tab)}
       initialMaterialSearch={materialSearch}
       initialParticipantSearch={participantSearch}
+      initialEvaluationSearch={evaluationSearch}
       pageSize={PAGE_SIZE}
       canManageTrainings={canManageTrainings}
+      canManageEvaluations={canManageEvaluations}
     />
   );
 }

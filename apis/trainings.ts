@@ -40,7 +40,6 @@ export type TrainingMaterial = {
   training_id: string;
   title: string;
   material_url?: string;
-  index: number;
   created_at: string;
   updated_at: string;
 };
@@ -312,7 +311,6 @@ export type CreateTrainingMaterialPayload = {
   training_id: string;
   title: string;
   material_url?: string;
-  index: number;
 };
 
 export async function createTrainingMaterial(
@@ -337,7 +335,6 @@ export type UpdateTrainingMaterialPayload = {
   training_id?: string;
   title?: string;
   material_url?: string;
-  index?: number;
 };
 
 export async function updateTrainingMaterial(
@@ -423,4 +420,144 @@ export async function getTrainingParticipantDetail(
   );
   if (!isSuccessStatus(result.status) || !result.data) return null;
   return result.data;
+}
+
+export type TrainingEvaluationMaterialScore = {
+  training_material_id: string;
+  score: number;
+};
+
+export type TrainingEvaluationMaterial = {
+  training_material_id: string;
+  title: string;
+};
+
+export type TrainingEvaluationEntry = {
+  user_id: string;
+  user_full_name: string;
+  user_username: string;
+  user_email: string;
+  user_avatar?: string;
+  material_scores: TrainingEvaluationMaterialScore[];
+  aff_discipline?: number;
+  aff_ethics?: number;
+  aff_motivation?: number;
+  aff_teamwork?: number;
+  psym_public_speaking?: number;
+  psym_discussion_leadership?: number;
+  psym_report_writing?: number;
+  psym_role_simulation?: number;
+  cognitive_average: number;
+  affective_average: number;
+  psychomotor_average: number;
+  final_score: number;
+  is_complete: boolean;
+};
+
+export type TrainingEvaluationMatrix = {
+  trainingId: string;
+  level: TrainingStatusEnum;
+  affectiveWeight: number;
+  cognitiveWeight: number;
+  psychomotorWeight: number;
+  materials: TrainingEvaluationMaterial[];
+  list: TrainingEvaluationEntry[];
+  totalData: number;
+  totalPage: number;
+  currentPage: number;
+};
+
+type TrainingEvaluationMatrixResponse = {
+  training_id: string;
+  level: TrainingStatusEnum;
+  affective_weight: number;
+  cognitive_weight: number;
+  psychomotor_weight: number;
+  materials: TrainingEvaluationMaterial[];
+  list: TrainingEvaluationEntry[];
+  metapaging?: {
+    total_data: number;
+    total_page: number;
+    current_page: number;
+    page_size: number;
+  };
+};
+
+export type ListTrainingEvaluationsOptions = {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function listTrainingEvaluations(
+  trainingId: string,
+  options: ListTrainingEvaluationsOptions = {}
+): Promise<TrainingEvaluationMatrix | null> {
+  const sessionToken = await getSessionToken();
+  const page = options.page ?? 1;
+  if (!sessionToken) return null;
+
+  const result = await callApi<TrainingEvaluationMatrixResponse>(
+    "/api/v1/trainings/evaluations/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        training_id: trainingId,
+        ...(options.search ? { search: options.search } : {}),
+        page,
+        page_size: options.pageSize ?? 20,
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status) || !result.data) {
+    console.error("[listTrainingEvaluations] request failed:", result);
+    return null;
+  }
+
+  const data = result.data;
+  return {
+    trainingId: data.training_id,
+    level: data.level,
+    affectiveWeight: data.affective_weight,
+    cognitiveWeight: data.cognitive_weight,
+    psychomotorWeight: data.psychomotor_weight,
+    materials: data.materials ?? [],
+    list: data.list ?? [],
+    totalData: data.metapaging?.total_data ?? data.list?.length ?? 0,
+    totalPage: data.metapaging?.total_page ?? 1,
+    currentPage: data.metapaging?.current_page ?? page,
+  };
+}
+
+export type UpdateTrainingEvaluationPayload = {
+  training_id: string;
+  user_id: string;
+  material_scores?: TrainingEvaluationMaterialScore[];
+  aff_discipline?: number;
+  aff_ethics?: number;
+  aff_motivation?: number;
+  aff_teamwork?: number;
+  psym_public_speaking?: number;
+  psym_discussion_leadership?: number;
+  psym_report_writing?: number;
+  psym_role_simulation?: number;
+};
+
+export async function updateTrainingEvaluation(
+  payload: UpdateTrainingEvaluationPayload
+): Promise<ApiEnvelope<TrainingEvaluationEntry>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Sesi berakhir. Silakan masuk kembali.",
+    };
+  }
+  return callApi<TrainingEvaluationEntry>("/api/v1/trainings/evaluations/update", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
 }
