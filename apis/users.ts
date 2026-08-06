@@ -371,6 +371,7 @@ export type UserProfile = {
   full_name: string;
   username: string;
   ktp_full_name?: string;
+  has_nik?: boolean;
   email: string;
   phone_number?: string;
   member_card?: string;
@@ -659,6 +660,7 @@ export async function updateUser(
 export type UpdateMyProfilePayload = {
   full_name?: string;
   username?: string;
+  nik?: string;
   phone_number?: string;
   avatar?: string;
   headline?: string;

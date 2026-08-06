@@ -343,8 +343,9 @@ relative `<Link>`s.
   takes an optional `menuPlacement` prop (default `"auto"`) to opt a specific field back into
   always-downward — `AdminEditUserOrganizationForm`'s Cabang/Komisariat pair sets `"bottom"` since
   flipping upward read as disorienting for a cascading pair the user reads top-to-bottom.
-- `components/buttons/Button.tsx` — variants: `primary | secondary | light | dark |
-  outline | ghost | destructive`; sizes: `sm | default | lg | pill | icon`.
+- `components/buttons/Button.tsx` — variants: `primary | secondary | tertiary | light | dark |
+  outline | soft | ghost | destructive`; sizes: `sm | default | lg | pill | pillSm | icon |
+  iconSm`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
   checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
@@ -971,7 +972,7 @@ relative `<Link>`s.
   self-service profile editing out from the admin-scoped endpoint, and `users/update` is now
   `Super Admin`-only, so a general user hitting it would 403. `update-my-profile` takes no
   `id` (the caller from the JWT is always the target) and only accepts a safe-fields subset
-  (`full_name`/`username`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/`address_street`/
+  (`full_name`/`username`/`nik`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/`address_street`/
   `date_of_birth`/`district_id` — modeled as `UpdateMyProfilePayload`) — there's no way to
   change `role_id`/`status`/`verification_status`/`member_card`/`chapter_id`/`ktp_full_name`/
   subscription dates through it, those stay `Super Admin`-only via `users/update` or
@@ -1242,14 +1243,19 @@ relative `<Link>`s.
   `getTrainingDetail` prefer the server-only `CLIENT_SECRET` so anonymous requests can use the
   backend's auth-or-client-secret read endpoints; training/material admin writes and participant
   reads remain session-cookie-backed. `registerTraining` is exposed through `lib/actions.ts` and
-  always requires the caller's session JWT. The register route reads the caller's full profile and
-  training histories before rendering. Its Google-Forms-style page updates editable `full_name`/
-  `phone_number` through `updateMyProfile`, lets the user create/update/delete their training
-  histories while enforcing the required levels (LK1 for an LK2 registration; LK1 and LK2 for
-  LK3), uploads an optional PDF/DOC/DOCX paper directly to
+  always requires the caller's session JWT. The register route reads the caller's full profile,
+  education histories, and training histories before rendering. Its Google-Forms-style page
+  updates editable `full_name`/`phone_number` through `updateMyProfile`; conditionally requires
+  and persists `nik` (when `has_nik` is false), `date_of_birth`, `gender`, and the
+  `address_street`/`district_id` address whenever each datum is still missing from `users/detail`;
+  and always requires at least one fully completed education history, which the user can
+  create/update/delete inline. It lets the user create/update/delete their training histories
+  while enforcing the required levels (LK1 for an LK2 registration; LK1 and LK2 for LK3), but
+  hides and skips that section entirely when the event itself is LK1. It uploads an optional
+  PDF/DOC/DOCX paper directly to
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
-  public `paper_url` to `trainings/register`. The submit button remains disabled when
-  `is_registration_open` is false.
+  public `paper_url` to `trainings/register`. The submit button remains disabled until every
+  visible required field is complete and valid, or whenever `is_registration_open` is false.
   Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
   placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
   `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
