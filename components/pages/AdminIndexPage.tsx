@@ -17,6 +17,26 @@ type MenuItem = {
 
 const MENU_ITEMS: MenuItem[] = [
   {
+    title: "Dashboard Super Admin",
+    description: "Akses penuh ke seluruh pengaturan dan data platform.",
+    getHref: () => "/master",
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_29_46%20PM.webp",
+    visible: (isSuperAdmin) => isSuperAdmin,
+  },
+  {
+    title: "Kelola Badko",
+    description: "Kelola data Badan Koordinasi (Badko) tingkat wilayah.",
+    getHref: (user) =>
+      user?.coordinating_body_id
+        ? `/coordinating-bodies/${user.coordinating_body_id}`
+        : "/coordinating-bodies",
+    illustration:
+      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_11%20PM.webp",
+    visible: (isSuperAdmin, user) =>
+      isSuperAdmin || Boolean(user?.can_manage_coordinating_body),
+  },
+  {
     title: "Kelola Cabang",
     description: "Kelola data dan status Cabang HMI di seluruh wilayah.",
     getHref: (user) =>
@@ -35,26 +55,6 @@ const MENU_ITEMS: MenuItem[] = [
       "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_00%20PM.webp",
     visible: (isSuperAdmin, user) =>
       isSuperAdmin || Boolean(user?.can_manage_chapter),
-  },
-  {
-    title: "Kelola Badko",
-    description: "Kelola data Badan Koordinasi (Badko) tingkat wilayah.",
-    getHref: (user) =>
-      user?.coordinating_body_id
-        ? `/coordinating-bodies/${user.coordinating_body_id}`
-        : "/coordinating-bodies",
-    illustration:
-      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_28_11%20PM.webp",
-    visible: (isSuperAdmin, user) =>
-      isSuperAdmin || Boolean(user?.can_manage_coordinating_body),
-  },
-  {
-    title: "Dashboard Super Admin",
-    description: "Akses penuh ke seluruh pengaturan dan data platform.",
-    getHref: () => "/master",
-    illustration:
-      "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/ChatGPT%20Image%20Jul%2025,%202026,%2002_29_46%20PM.webp",
-    visible: (isSuperAdmin) => isSuperAdmin,
   },
 ];
 

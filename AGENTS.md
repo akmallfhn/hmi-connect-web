@@ -83,7 +83,8 @@ admin UI. `app/(admin)/admin/page.tsx` delegates straight to
 `components/pages/AdminIndexPage.tsx`, which filters its menu cards by that same
 `isSuperAdmin`/`can_manage_*` split — a `Super Admin` sees every card (including the
 "Dashboard Super Admin" card, which is otherwise hidden), everyone else only sees the cards for
-whichever of Cabang/Komisariat/Badko they can manage. Each of those three cards links straight
+whichever of Badko/Cabang/Komisariat they can manage — in that order (Dashboard Super Admin,
+Badko, Cabang, Komisariat, top to bottom). Each of those three cards links straight
 to the viewer's own entity — `/branches/{user.branch_id}`, `/chapters/{user.chapter_id}`,
 `/coordinating-bodies/{user.coordinating_body_id}` — falling back to the bare (pageless) list
 route if that id is missing (a `Super Admin` isn't necessarily affiliated with one), not to a
