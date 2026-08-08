@@ -312,7 +312,18 @@ backend added the field, don't reintroduce that. The CTA link is built from `get
 (`lib/constants.ts`) plus `/profile/{username}`, the same per-`DOMAIN_MODE` origin helper the
 `/admin` layout already uses for its own login/forbidden redirects — reused here since a
 transactional email needs an absolute URL, unlike everything else in this app which can just use
-relative `<Link>`s.
+relative `<Link>`s. `components/emails/TrainingResultEmail.tsx` is the participant graduation
+announcement sent after `apis/trainings.ts#lockTrainingEvaluations` succeeds: `passed` and
+`conditional_pass` get distinct congratulatory copy (the conditional variant also points the
+participant back to the committee for remaining requirements), while `failed` is presented as
+"Belum Lulus" with encouraging copy that thanks them for joining and makes clear they can take
+Latihan Kader again elsewhere. The lock response only contains aggregate result counts, so the
+post-response job uses Next's `after()` to fetch the training detail plus every page of
+`trainings/participants/list` (`page_size: 100`), whose rows carry the finalized `result`,
+`user_email`, and `user_full_name`; it then renders and sends one personalized email per participant
+in bounded batches. A missing participant result/email is skipped, and page/send failures are
+`console.error`'d without changing the already-successful permanent lock. Its CTA also uses
+`getMainSiteOrigin()`, pointing to the public `/trainings/{training_id}` detail page.
 
 ## Component conventions
 

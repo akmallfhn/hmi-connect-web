@@ -1,7 +1,11 @@
 import "server-only";
 
+import { render } from "@react-email/components";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { after } from "next/server";
+import { TrainingResultEmail } from "@/components/emails/TrainingResultEmail";
+import { getMainSiteOrigin, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { sendEmail } from "@/lib/mailtrap";
 import {
   isSuccessStatus,
   type TrainingOrganizerTypeEnum,
@@ -572,6 +576,147 @@ export type TrainingEvaluationLockResult = {
   failed_total: number;
 };
 
+const TRAINING_EMAIL_PAGE_SIZE = 100;
+const TRAINING_EMAIL_BATCH_SIZE = 5;
+
+async function getTrainingParticipantEmailPage(
+  trainingId: string,
+  sessionToken: string,
+  page: number
+): Promise<ApiEnvelope<ListResponse<TrainingParticipant>>> {
+  return callApi<ListResponse<TrainingParticipant>>(
+    "/api/v1/trainings/participants/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        training_id: trainingId,
+        page,
+        page_size: TRAINING_EMAIL_PAGE_SIZE,
+      },
+    }
+  );
+}
+
+function getTrainingResultEmailSubject(
+  result: TrainingResultEnum,
+  trainingName: string
+) {
+  if (result === "passed") return `Selamat! Kamu Lulus ${trainingName}`;
+  if (result === "conditional_pass") {
+    return `Selamat! Kamu Lulus Bersyarat ${trainingName}`;
+  }
+  return `Pengumuman Hasil ${trainingName}`;
+}
+
+async function sendTrainingResultEmail(
+  participant: TrainingParticipant,
+  training: TrainingDetail
+) {
+  if (!participant.user_email || !participant.result) return;
+
+  const html = await render(
+    TrainingResultEmail({
+      fullName: participant.user_full_name,
+      trainingName: training.name,
+      trainingUrl: `${getMainSiteOrigin()}/trainings/${training.id}`,
+      result: participant.result,
+    })
+  );
+
+  await sendEmail({
+    mailRecipients: [participant.user_email],
+    mailSubject: getTrainingResultEmailSubject(
+      participant.result,
+      training.name
+    ),
+    mailHtml: html,
+  });
+}
+
+async function sendTrainingResultEmails(
+  trainingId: string,
+  sessionToken: string
+) {
+  const [trainingResult, firstPageResult] = await Promise.all([
+    callApi<TrainingDetail>("/api/v1/trainings/detail", {
+      method: "POST",
+      token: sessionToken,
+      body: { id: trainingId },
+    }),
+    getTrainingParticipantEmailPage(trainingId, sessionToken, 1),
+  ]);
+
+  if (!isSuccessStatus(trainingResult.status) || !trainingResult.data) {
+    console.error(
+      "[lockTrainingEvaluations] failed to load training for result emails:",
+      trainingResult
+    );
+    return;
+  }
+  if (!isSuccessStatus(firstPageResult.status) || !firstPageResult.data) {
+    console.error(
+      "[lockTrainingEvaluations] failed to load participants for result emails:",
+      firstPageResult
+    );
+    return;
+  }
+
+  const training = trainingResult.data;
+  const totalPages = firstPageResult.data.metapaging?.total_page ?? 1;
+  const remainingPageResults = await Promise.allSettled(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      getTrainingParticipantEmailPage(trainingId, sessionToken, index + 2)
+    )
+  );
+  const participants = [...firstPageResult.data.list];
+
+  remainingPageResults.forEach((pageResult, index) => {
+    if (pageResult.status === "rejected") {
+      console.error(
+        `[lockTrainingEvaluations] failed to load participant email page ${index + 2}:`,
+        pageResult.reason
+      );
+      return;
+    }
+    if (
+      !isSuccessStatus(pageResult.value.status) ||
+      !pageResult.value.data
+    ) {
+      console.error(
+        `[lockTrainingEvaluations] failed to load participant email page ${index + 2}:`,
+        pageResult.value
+      );
+      return;
+    }
+    participants.push(...pageResult.value.data.list);
+  });
+
+  const recipients = participants.filter(
+    (participant) => participant.user_email && participant.result
+  );
+  for (
+    let index = 0;
+    index < recipients.length;
+    index += TRAINING_EMAIL_BATCH_SIZE
+  ) {
+    const batch = recipients.slice(index, index + TRAINING_EMAIL_BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((participant) =>
+        sendTrainingResultEmail(participant, training)
+      )
+    );
+    results.forEach((emailResult, resultIndex) => {
+      if (emailResult.status === "rejected") {
+        console.error(
+          `[lockTrainingEvaluations] failed to send result email for participant ${batch[resultIndex].user_id}:`,
+          emailResult.reason
+        );
+      }
+    });
+  }
+}
+
 export async function lockTrainingEvaluations(
   trainingId: string
 ): Promise<ApiEnvelope<TrainingEvaluationLockResult>> {
@@ -582,7 +727,7 @@ export async function lockTrainingEvaluations(
       message: "Sesi berakhir. Silakan masuk kembali.",
     };
   }
-  return callApi<TrainingEvaluationLockResult>(
+  const result = await callApi<TrainingEvaluationLockResult>(
     "/api/v1/trainings/evaluations/lock",
     {
       method: "POST",
@@ -590,4 +735,19 @@ export async function lockTrainingEvaluations(
       body: { training_id: trainingId },
     }
   );
+
+  if (isSuccessStatus(result.status)) {
+    after(async () => {
+      try {
+        await sendTrainingResultEmails(trainingId, sessionToken);
+      } catch (error) {
+        console.error(
+          "[lockTrainingEvaluations] result email job threw:",
+          error
+        );
+      }
+    });
+  }
+
+  return result;
 }
