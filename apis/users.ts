@@ -656,10 +656,11 @@ export async function updateUser(
   });
 }
 
-// Self-service subset of UpdateUserPayload — no id (the caller from the JWT is always the target) and no admin-only fields (role_id/status/verification_status/member_card/chapter_id/ktp_full_name/subscription dates).
+// Self-service subset of UpdateUserPayload — no id (the caller from the JWT is always the target) and no admin-only fields (role_id/status/verification_status/member_card/chapter_id/subscription dates).
 export type UpdateMyProfilePayload = {
   full_name?: string;
   username?: string;
+  ktp_full_name?: string;
   nik?: string;
   phone_number?: string;
   avatar?: string;

@@ -70,6 +70,7 @@ import TrainingPageShell, {
 export interface TrainingRegistrant {
   id: string;
   fullName: string;
+  ktpFullName?: string;
   email: string;
   phoneNumber?: string;
   branchName?: string;
@@ -337,6 +338,7 @@ export default function TrainingRegistrationPage({
   provinces,
   trainingHistories,
 }: TrainingRegistrationPageProps) {
+  const needsKtpFullName = !registrant.ktpFullName?.trim();
   const needsNik = !registrant.hasNik;
   const needsDateOfBirth = !registrant.dateOfBirth;
   const needsGender = !registrant.gender;
@@ -623,6 +625,7 @@ export default function TrainingRegistrationPage({
     try {
       const profileResult = await updateMyProfile({
         full_name: fullName.trim(),
+        ...(needsKtpFullName ? { ktp_full_name: fullName.trim() } : {}),
         phone_number: phoneNumber.trim(),
         ...(needsNik ? { nik } : {}),
         ...(needsDateOfBirth ? { date_of_birth: dateOfBirth } : {}),

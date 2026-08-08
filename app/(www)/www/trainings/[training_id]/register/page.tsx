@@ -59,6 +59,7 @@ export default async function TrainingRegistrationRoute({
       registrant={{
         id: profile.id,
         fullName: profile.full_name,
+        ktpFullName: profile.ktp_full_name,
         email: profile.email,
         phoneNumber: profile.phone_number,
         branchName: profile.branch_name,

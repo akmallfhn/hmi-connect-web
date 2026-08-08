@@ -972,11 +972,15 @@ relative `<Link>`s.
   self-service profile editing out from the admin-scoped endpoint, and `users/update` is now
   `Super Admin`-only, so a general user hitting it would 403. `update-my-profile` takes no
   `id` (the caller from the JWT is always the target) and only accepts a safe-fields subset
-  (`full_name`/`username`/`nik`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/`address_street`/
-  `date_of_birth`/`district_id` — modeled as `UpdateMyProfilePayload`) — there's no way to
-  change `role_id`/`status`/`verification_status`/`member_card`/`chapter_id`/`ktp_full_name`/
+  (`full_name`/`username`/`ktp_full_name`/`nik`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/
+  `address_street`/`date_of_birth`/`district_id` — modeled as `UpdateMyProfilePayload`) — there's
+  no way to change `role_id`/`status`/`verification_status`/`member_card`/`chapter_id`/
   subscription dates through it, those stay `Super Admin`-only via `users/update` or
-  `access/*`. It has no verification requirement — `verification_status` being `unverified`
+  `access/*`. `TrainingRegistrationPage` is the one caller that sends `ktp_full_name`
+  today — when `registrant.ktpFullName` is empty it backfills the field from the `fullName`
+  state on submit (the register form has no dedicated KTP-name input of its own), since
+  `trainings/register` needs a legal name on file the same way `users/verification` does.
+  It has no verification requirement — `verification_status` being `unverified`
   or `pending` doesn't block a user from editing their own name/avatar/bio/etc., only from
   submitting a *new* verification request (see `users/verification`'s own `pending`/`verified`
   conflict rule above); don't add a verification gate to either edit form. The five admin
