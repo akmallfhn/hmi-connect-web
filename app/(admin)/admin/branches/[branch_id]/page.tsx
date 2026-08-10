@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import MasterPlaceholderPage from "@/components/pages/MasterPlaceholderPage";
+import {
+  getChapterDistribution,
+  getChapterStatus,
+  getMembershipStatus,
+  getStatSummary,
+  getUserGrowth,
+} from "@/apis/stat";
+import BranchDashboardPage from "@/components/pages/BranchDashboardPage";
 
 export const metadata: Metadata = {
   title: "Dashboard Cabang",
@@ -9,11 +16,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BranchDashboardPage() {
+interface BranchDashboardRouteProps {
+  params: Promise<{ branch_id: string }>;
+}
+
+export default async function BranchDashboardRoute({
+  params,
+}: BranchDashboardRouteProps) {
+  const { branch_id } = await params;
+  const [
+    summary,
+    chapterDistribution,
+    userGrowthDay,
+    userGrowthWeek,
+    userGrowthMonth,
+    membershipStatus,
+    chapterStatus,
+  ] = await Promise.all([
+    getStatSummary(branch_id),
+    getChapterDistribution(branch_id),
+    getUserGrowth("day", branch_id),
+    getUserGrowth("week", branch_id),
+    getUserGrowth("month", branch_id),
+    getMembershipStatus(branch_id),
+    getChapterStatus(branch_id),
+  ]);
+
   return (
-    <MasterPlaceholderPage
-      title="Dashboard Cabang"
-      description="Ringkasan data Cabang akan segera hadir di sini."
+    <BranchDashboardPage
+      summary={summary}
+      chapterDistribution={chapterDistribution}
+      userGrowthDay={userGrowthDay?.list ?? []}
+      userGrowthWeek={userGrowthWeek?.list ?? []}
+      userGrowthMonth={userGrowthMonth?.list ?? []}
+      membershipStatus={membershipStatus}
+      chapterStatus={chapterStatus}
     />
   );
 }

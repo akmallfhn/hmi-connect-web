@@ -1,14 +1,20 @@
 interface TopCabangListProps {
   entries: { name: string; value: number }[];
+  title?: string;
+  subtitle?: string;
 }
 
-export default function TopCabangList({ entries }: TopCabangListProps) {
+export default function TopCabangList({
+  entries,
+  title = "Cabang dengan Kader Terbanyak",
+  subtitle = "Top 5 cabang berdasarkan jumlah kader aktif",
+}: TopCabangListProps) {
   const max = entries[0]?.value ?? 0;
 
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-[#172033]">Cabang dengan Kader Terbanyak</p>
-      <p className="text-xs text-[#5f6573]">Top 5 cabang berdasarkan jumlah kader aktif</p>
+      <p className="text-sm font-bold text-[#172033]">{title}</p>
+      <p className="text-xs text-[#5f6573]">{subtitle}</p>
 
       {entries.length === 0 ? (
         <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>

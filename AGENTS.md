@@ -101,12 +101,13 @@ route if that id is missing (a `Super Admin` isn't necessarily affiliated with o
 picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin` or
 `can_manage_*` **and** the id matches the viewer's own) rather than trusting the outer
 `/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
-*this* id — otherwise a chapter-only admin could reach another branch's page by URL. All three
-`[id]` pages currently render a shared `MasterPlaceholderPage` placeholder; `/master` has its
-real dashboard, `/master/users` has the real User Management CRUD panel, and
+*this* id — otherwise a chapter-only admin could reach another branch's page by URL.
+`/branches/[branch_id]` has a real branch-scoped analytics dashboard; the Chapter and Badko
+`[id]` pages still render the shared `MasterPlaceholderPage` placeholder. `/master` has its
+real organization-wide dashboard, `/master/users` has the real User Management CRUD panel, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
-Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` itself is
-only still used by the three `[id]` pages above, not by anything under `/master`.
+Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
+by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything under `/master`.
 
 ## Auth & session flow
 
@@ -156,10 +157,12 @@ Three layers, each with one job. Don't blend them.
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
    by source), `stat.ts` (the `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
-   backing `/master`'s dashboard — summary totals, branch distribution, user growth,
-   membership/branch/coordinating-body status breakdowns; every function reads the session
-   cookie itself and returns `null` on a non-success status rather than throwing, since the
-   dashboard renders each widget's own empty state), plus the shared `api.ts`).
+   backing `/master`'s organization-wide dashboard and `/branches/[branch_id]`'s scoped
+   dashboard — summary totals, branch/chapter distribution, user growth, and membership/
+   branch/chapter/coordinating-body status breakdowns; the branch-capable functions accept an
+   optional `branchId` and send it as `branch_id`. Every function reads the session cookie itself
+   and returns `null` on a non-success status rather than throwing, since each dashboard renders
+   every widget's own empty state), plus the shared `api.ts`).
    Marked `import "server-only"`.
    Holds *every* operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
@@ -1176,7 +1179,9 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   blinking status dot (two stacked `absolute`/`relative` spans, the outer one `animate-ping`) —
   blue for `full`, amber for `provisional` — no pill background/border/padding here, by design,
   distinct from the table's own styling. Its nav items route to a top-level Dashboard
-  (`/branches/{id}`, exact-matched, still `MasterPlaceholderPage`), then two `AdminNavGroup`s —
+  (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
+  `stat/summary`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
+  calls), then two `AdminNavGroup`s —
   "Organisasi" (Penerbitan SK at `/branches/{id}/sk`, AD ART at `/branches/{id}/ad-art` — both
   still placeholders; Kelola Komisariat at `/branches/{id}/chapters`, real — see below; Daftar
   Kader at `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at

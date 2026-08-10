@@ -14,6 +14,9 @@ const OTHERS_COLOR = "#c3c2b7";
 interface CabangDistributionDonutProps {
   entries: { name: string; value: number }[];
   totalActiveKader: number;
+  title?: string;
+  subtitle?: string;
+  othersLabel?: string;
 }
 
 interface DonutTooltipProps {
@@ -41,6 +44,9 @@ function DonutTooltip({ active, payload, total }: DonutTooltipProps) {
 export default function CabangDistributionDonut({
   entries,
   totalActiveKader,
+  title = "Distribusi Kader per Cabang",
+  subtitle = "Berdasarkan jumlah kader aktif terdaftar",
+  othersLabel = "Cabang lainnya",
 }: CabangDistributionDonutProps) {
   const named: Datum[] = entries.map((entry, index) => ({
     name: entry.name,
@@ -51,14 +57,14 @@ export default function CabangDistributionDonut({
   const others = totalActiveKader - namedTotal;
   const data: Datum[] =
     others > 0
-      ? [...named, { name: "Cabang lainnya", value: others, color: OTHERS_COLOR }]
+      ? [...named, { name: othersLabel, value: others, color: OTHERS_COLOR }]
       : named;
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-[#172033]">Distribusi Kader per Cabang</p>
-      <p className="text-xs text-[#5f6573]">Berdasarkan jumlah kader aktif terdaftar</p>
+      <p className="text-sm font-bold text-[#172033]">{title}</p>
+      <p className="text-xs text-[#5f6573]">{subtitle}</p>
 
       {data.length === 0 ? (
         <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>

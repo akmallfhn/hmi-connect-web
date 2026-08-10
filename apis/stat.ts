@@ -7,9 +7,9 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type StatSummary = {
   total_active_kader: number;
-  total_branch: number;
   total_chapter: number;
-  total_coordinating_body: number;
+  total_branch?: number;
+  total_coordinating_body?: number;
 };
 
 export type BranchDistributionEntry = {
@@ -20,6 +20,17 @@ export type BranchDistributionEntry = {
 
 export type BranchDistribution = {
   list: BranchDistributionEntry[];
+  total_active_kader: number;
+};
+
+export type ChapterDistributionEntry = {
+  chapter_id: string;
+  chapter_name: string;
+  total: number;
+};
+
+export type ChapterDistribution = {
+  list: ChapterDistributionEntry[];
   total_active_kader: number;
 };
 
@@ -45,6 +56,11 @@ export type BranchStatus = {
   total_provisional: number;
 };
 
+export type ChapterStatus = {
+  total_full: number;
+  total_provisional: number;
+};
+
 export type CoordinatingBodyStatus = {
   total_active: number;
   total_inactive: number;
@@ -55,9 +71,14 @@ async function getSessionToken() {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
-export async function getStatSummary(): Promise<StatSummary | null> {
+export async function getStatSummary(
+  branchId?: string
+): Promise<StatSummary | null> {
   const token = await getSessionToken();
-  const result = await callApi<StatSummary>("/api/v1/stat/summary", { token });
+  const result = await callApi<StatSummary>("/api/v1/stat/summary", {
+    token,
+    body: branchId ? { branch_id: branchId } : undefined,
+  });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
@@ -70,22 +91,45 @@ export async function getBranchDistribution(): Promise<BranchDistribution | null
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
+export async function getChapterDistribution(
+  branchId?: string
+): Promise<ChapterDistribution | null> {
+  const token = await getSessionToken();
+  const result = await callApi<ChapterDistribution>(
+    "/api/v1/stat/chapter-distribution",
+    {
+      token,
+      body: branchId ? { branch_id: branchId } : undefined,
+    }
+  );
+  return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
 export async function getUserGrowth(
-  granularity: UserGrowthGranularity = "month"
+  granularity: UserGrowthGranularity = "month",
+  branchId?: string
 ): Promise<UserGrowth | null> {
   const token = await getSessionToken();
   const result = await callApi<UserGrowth>("/api/v1/stat/user-growth", {
     token,
-    body: { granularity },
+    body: {
+      granularity,
+      ...(branchId ? { branch_id: branchId } : {}),
+    },
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
-export async function getMembershipStatus(): Promise<MembershipStatus | null> {
+export async function getMembershipStatus(
+  branchId?: string
+): Promise<MembershipStatus | null> {
   const token = await getSessionToken();
   const result = await callApi<MembershipStatus>(
     "/api/v1/stat/membership-status",
-    { token }
+    {
+      token,
+      body: branchId ? { branch_id: branchId } : undefined,
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -94,6 +138,17 @@ export async function getBranchStatus(): Promise<BranchStatus | null> {
   const token = await getSessionToken();
   const result = await callApi<BranchStatus>("/api/v1/stat/branch-status", {
     token,
+  });
+  return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
+export async function getChapterStatus(
+  branchId?: string
+): Promise<ChapterStatus | null> {
+  const token = await getSessionToken();
+  const result = await callApi<ChapterStatus>("/api/v1/stat/chapter-status", {
+    token,
+    body: branchId ? { branch_id: branchId } : undefined,
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
