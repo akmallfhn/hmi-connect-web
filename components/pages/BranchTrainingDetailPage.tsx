@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import {
   ArrowLeft,
   BookOpen,
@@ -97,9 +98,9 @@ export default function BranchTrainingDetailPage({
       </Link>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <h1 className="min-w-0 text-2xl font-bold text-[#172033] sm:text-3xl">
+        <AdminPageTitle className="min-w-0">
           {training.name}
-        </h1>
+        </AdminPageTitle>
         {canManageTrainings && (
           <Button onClick={() => setShowEditSheet(true)} className="shrink-0">
             <Pencil className="size-4" />

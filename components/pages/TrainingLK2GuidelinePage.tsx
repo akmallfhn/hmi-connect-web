@@ -21,6 +21,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import AdminPageTitle from "../common/AdminPageTitle";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import Button from "../buttons/Button";
@@ -206,12 +207,9 @@ export default function TrainingLK2GuidelinePage({
       </Link>
 
       <div className="mt-4">
-        <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+        <AdminPageTitle description="Panduan resmi penyelenggaraan Latihan Kader 2 di tingkat Cabang.">
           Guideline & Kurikulum LK2
-        </h1>
-        <p className="mt-1.5 text-base text-[#5f6573]">
-          Panduan resmi penyelenggaraan Latihan Kader 2 di tingkat Cabang.
-        </p>
+        </AdminPageTitle>
       </div>
 
       <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start">

@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import { ArrowLeft, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -282,12 +283,9 @@ export default function AdminUserCreatePage() {
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+          <AdminPageTitle description="Buat akun user baru secara langsung dari panel admin.">
             Tambah User
-          </h1>
-          <p className="mt-1.5 text-sm text-[#5f6573]">
-            Buat akun user baru secara langsung dari panel admin.
-          </p>
+          </AdminPageTitle>
         </div>
         <Button
           variant="primary"

@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -78,12 +79,9 @@ export default function BranchMemberListPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div>
-        <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+        <AdminPageTitle description={`Daftar kader di Cabang ${branchName}.`}>
           Daftar Kader
-        </h1>
-        <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-          Daftar kader di Cabang {branchName}.
-        </p>
+        </AdminPageTitle>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">

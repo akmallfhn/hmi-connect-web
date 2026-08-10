@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import {
   ArrowLeft,
   Ban,
@@ -281,10 +282,12 @@ export default function AdminUserDetailPage({
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#172033]">
+            <AdminPageTitle
+              variant="compact"
+              description={`@${user.username}`}
+            >
               {user.full_name}
-            </h1>
-            <p className="mt-0.5 text-sm text-[#5f6573]">@{user.username}</p>
+            </AdminPageTitle>
           </div>
         </div>
 

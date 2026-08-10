@@ -1,13 +1,18 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { config as fontAwesomeConfig } from "@fortawesome/fontawesome-svg-core";
-import { Amiri_Quran, Geist, Geist_Mono, Google_Sans } from "next/font/google";
+import {
+  Amiri_Quran,
+  Geist,
+  Geist_Mono,
+  Google_Sans,
+  Stack_Sans_Headline,
+} from "next/font/google";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
 
-// Ship Font Awesome's CSS ourselves (imported above) instead of letting it inject a <style>
-// tag at runtime — the latter races with SSR/hydration and flashes oversized unstyled icons.
+// Ship Font Awesome's CSS ourselves (imported above) instead of a runtime-injected <style> tag that races SSR/hydration.
 fontAwesomeConfig.autoAddCss = false;
 
 const geistSans = Geist({
@@ -23,6 +28,13 @@ const geistMono = Geist_Mono({
 const googleSans = Google_Sans({
   variable: "--font-google-sans",
   subsets: ["latin"],
+  adjustFontFallback: false,
+});
+
+const stackSansHeadline = Stack_Sans_Headline({
+  variable: "--font-stack-sans-headline",
+  subsets: ["latin"],
+  weight: "variable",
   adjustFontFallback: false,
 });
 
@@ -42,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${amiriQuran.variable} h-full scroll-smooth antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col scroll-smooth">
         <ScrollToTop />

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { SessionUser } from "@/apis/session";
 import { getMainSiteOrigin } from "@/lib/constants";
+import AdminPageTitle from "../common/AdminPageTitle";
 import PageMargin from "../common/PageMargin";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import AdminUserMenu from "../buttons/AdminUserMenu";
@@ -75,12 +76,9 @@ export default function AdminIndexPage({ user }: AdminIndexPageProps) {
       <PageMargin className="py-8 lg:py-12">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+            <AdminPageTitle description="Kelola data dan pengaturan HMI dengan mudah dan efisien.">
               Selamat datang, {firstName} 👋
-            </h1>
-            <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-              Kelola data dan pengaturan HMI dengan mudah dan efisien.
-            </p>
+            </AdminPageTitle>
           </div>
           <AdminUserMenu
             fullName={user?.full_name}

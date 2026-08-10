@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import {
   Cake,
   Check,
@@ -247,12 +248,11 @@ export default function BranchVerificationListPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div>
-        <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+        <AdminPageTitle
+          description={`Tinjau pengajuan verifikasi identitas kader di Cabang ${branchName}.`}
+        >
           Permintaan Verifikasi
-        </h1>
-        <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-          Tinjau pengajuan verifikasi identitas kader di Cabang {branchName}.
-        </p>
+        </AdminPageTitle>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">

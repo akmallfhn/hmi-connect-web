@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import { ArrowLeft, CalendarDays, FileText, UserCheck, Users as UsersIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -103,10 +104,12 @@ export default function BranchMemberDetailPage({
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#172033]">
+            <AdminPageTitle
+              variant="compact"
+              description={`@${user.username}`}
+            >
               {user.full_name}
-            </h1>
-            <p className="mt-0.5 text-sm text-[#5f6573]">@{user.username}</p>
+            </AdminPageTitle>
           </div>
         </div>
 

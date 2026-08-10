@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import {
   BookOpen,
   CalendarDays,
@@ -78,12 +79,11 @@ export default function BranchTrainingListPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+          <AdminPageTitle
+            description={`Kelola pelaksanaan, materi, dan peserta LK2 di Cabang ${branchName}.`}
+          >
             Latihan Kader 2
-          </h1>
-          <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Kelola pelaksanaan, materi, dan peserta LK2 di Cabang {branchName}.
-          </p>
+          </AdminPageTitle>
         </div>
         <div className="flex w-fit shrink-0 flex-wrap gap-2">
           <Link href={`/branches/${branchId}/trainings/guideline`}>

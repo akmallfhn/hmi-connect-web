@@ -92,7 +92,7 @@ function BranchHeader({
     >
       {icon}
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-[#172033]">
+        <p className="font-stack-sans-headline truncate text-sm font-semibold text-[#172033]">
           Cabang {branchName}
         </p>
         <div className="mt-0.5 flex items-center gap-1.5">

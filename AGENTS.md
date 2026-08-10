@@ -14,6 +14,13 @@ fix the rule, not just the code.
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
   `@react-email/components` for transactional email (see Transactional email below).
+- Fonts come from `next/font/google`: Google Sans remains the general UI face, while
+  Stack Sans Headline is exposed as `font-stack-sans-headline` and reserved for admin
+  page titles plus the Cabang name in `BranchSidebar`. Every admin page title renders via
+  `components/common/AdminPageTitle.tsx`, which owns the semantic `<h1>`, optional
+  `description` paragraph (also Stack Sans Headline), shared font/color/weight/spacing, and its
+  `default | compact | placeholder` sizing variants; update that component instead of
+  duplicating title/description styles or adding a broad descendant selector.
 - No ORM/DB in this repo — this app is a pure frontend/BFF in front of a separate Go
   backend. All real data lives behind `BASE_URL`.
 

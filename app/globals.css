@@ -38,6 +38,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-google-sans: var(--font-google-sans);
+  --font-stack-sans-headline: var(--font-stack-sans-headline);
   --font-arabic-quran: var(--font-amiri-quran);
 
   --breakpoint-3xl: 120rem;

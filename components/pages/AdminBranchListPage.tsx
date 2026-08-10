@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPageTitle from "../common/AdminPageTitle";
 import {
   EllipsisVertical,
   Pencil,
@@ -129,12 +130,9 @@ export default function AdminBranchListPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">
+          <AdminPageTitle description="Kelola data Cabang HMI.">
             Cabang
-          </h1>
-          <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-            Kelola data Cabang HMI.
-          </p>
+          </AdminPageTitle>
         </div>
         <Button
           variant="primary"

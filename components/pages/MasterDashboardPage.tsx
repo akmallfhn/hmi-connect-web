@@ -1,4 +1,5 @@
 import { Building2, GraduationCap, Network, Users } from "lucide-react";
+import AdminPageTitle from "../common/AdminPageTitle";
 import type {
   BranchDistribution,
   BranchStatus,
@@ -72,10 +73,9 @@ export default function MasterDashboardPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-[#172033] sm:text-3xl">Dashboard</h1>
-      <p className="mt-1.5 text-sm text-[#5f6573] sm:text-base">
-        Ringkasan data keanggotaan dan struktur organisasi HMI.
-      </p>
+      <AdminPageTitle description="Ringkasan data keanggotaan dan struktur organisasi HMI.">
+        Dashboard
+      </AdminPageTitle>
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
