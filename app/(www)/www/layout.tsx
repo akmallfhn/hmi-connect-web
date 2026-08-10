@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getSession } from "@/apis/session";
+import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
+import { getAdminSiteOrigin } from "@/lib/constants";
 
 const siteDescription =
   "HMI Connect adalah ruang digital kader HMI untuk terhubung, berbagi kabar, dan mengelola data keanggotaan.";
@@ -46,6 +49,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WwwLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+export default async function WwwLayout({ children }: { children: ReactNode }) {
+  const { user } = await getSession();
+  const adminAccess = user
+    ? {
+        adminOrigin: getAdminSiteOrigin(),
+        roleName: user.role_name,
+        coordinatingBodyId: user.coordinating_body_id,
+        coordinatingBodyName: user.coordinating_body_name,
+        canManageCoordinatingBody: Boolean(user.can_manage_coordinating_body),
+        branchId: user.branch_id,
+        branchName: user.branch_name,
+        canManageBranch: Boolean(user.can_manage_branch),
+        chapterId: user.chapter_id,
+        chapterName: user.chapter_name,
+        canManageChapter: Boolean(user.can_manage_chapter),
+      }
+    : null;
+
+  return (
+    <HeaderAdminAccessProvider value={adminAccess}>
+      {children}
+    </HeaderAdminAccessProvider>
+  );
 }

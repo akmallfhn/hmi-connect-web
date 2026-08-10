@@ -14,6 +14,13 @@ export function getMainSiteOrigin(): string {
     : "https://hmi-connect-web.vercel.app";
 }
 
+// Admin site origin per DOMAIN_MODE — swap the placeholder domain once the real domain is live.
+export function getAdminSiteOrigin(): string {
+  return process.env.DOMAIN_MODE === "local"
+    ? "https://admin.example.com:3000"
+    : "https://admin.example.com";
+}
+
 // sessionStorage key + window event name the bottom navbar's compose button uses to open the composer after navigating.
 export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 

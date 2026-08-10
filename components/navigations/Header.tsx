@@ -4,11 +4,15 @@ import { logoutUser } from "@/lib/actions";
 import {
   ArrowLeft,
   Bell,
+  Building2,
   ChevronDown,
   CreditCard,
   EllipsisVertical,
+  GraduationCap,
+  LayoutDashboard,
   LogOut,
   MessageCircleMore,
+  Network,
   Search,
   Settings,
   TriangleAlert,
@@ -27,6 +31,7 @@ import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
 import NotificationsDropdownPanel from "../notifications/NotificationsDropdownPanel";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
+import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 
 interface HeaderProps {
   fullName?: string;
@@ -59,9 +64,56 @@ export default function Header({
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const adminAccess = useHeaderAdminAccess();
   const { notifications, unreadCount, handleRead, handleMarkAllRead } =
     useNotificationsBell(userId);
   const unreadChatCount = useUnreadChatCount(userId);
+  const adminMenuItems = adminAccess
+    ? [
+        ...(adminAccess.canManageChapter
+          ? [
+              {
+                label: adminAccess.chapterName
+                  ? `Kelola ${adminAccess.chapterName}`
+                  : "Kelola Komisariat",
+                href: `${adminAccess.adminOrigin}/chapters${adminAccess.chapterId ? `/${adminAccess.chapterId}` : ""}`,
+                icon: GraduationCap,
+              },
+            ]
+          : []),
+        ...(adminAccess.canManageBranch
+          ? [
+              {
+                label: adminAccess.branchName
+                  ? `Kelola Cabang ${adminAccess.branchName}`
+                  : "Kelola Cabang",
+                href: `${adminAccess.adminOrigin}/branches${adminAccess.branchId ? `/${adminAccess.branchId}` : ""}`,
+                icon: Building2,
+              },
+            ]
+          : []),
+        ...(adminAccess.canManageCoordinatingBody
+          ? [
+              {
+                label: adminAccess.coordinatingBodyName
+                  ? `Kelola Badko ${adminAccess.coordinatingBodyName}`
+                  : "Kelola Badko",
+                href: `${adminAccess.adminOrigin}/coordinating-bodies${adminAccess.coordinatingBodyId ? `/${adminAccess.coordinatingBodyId}` : ""}`,
+                icon: Network,
+              },
+            ]
+          : []),
+        ...(adminAccess.roleName === "Super Admin"
+          ? [
+              {
+                label: "Kelola Organisasi",
+                href: adminAccess.adminOrigin,
+                icon: LayoutDashboard,
+              },
+            ]
+          : []),
+      ]
+    : [];
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
@@ -208,6 +260,22 @@ export default function Header({
                     Pengaturan
                   </a>
                 </div>
+                {adminMenuItems.length > 0 && (
+                  <div className="flex flex-col border-t border-[#e6e9ef] py-1">
+                    {adminMenuItems.map(({ label, href, icon: Icon }) => (
+                      <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                      >
+                        <Icon className="size-4 text-[#5f6573]" />
+                        {label}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 <div className="border-t border-[#e6e9ef] py-1">
                   <button
                     type="button"

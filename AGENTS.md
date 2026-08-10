@@ -66,7 +66,10 @@ never be reached. `app/(admin)/admin/layout.tsx` gets the main site's origin via
 `lib/constants.ts#getMainSiteOrigin`, a static per-environment switch driven by `DOMAIN_MODE`
 (same convention as `getSessionCookieDomain`) — `"local"` returns `https://www.example.com:3000`,
 anything else returns `https://hmi-connect-web.vercel.app` (swap for the real domain once one
-is live in production) — for its own defense-in-depth session re-check, its `/auth/login`
+is live in production). The matching `getAdminSiteOrigin` returns
+`https://admin.example.com:3000` locally and the placeholder `https://admin.example.com`
+otherwise; the desktop profile dropdown uses it for its cross-subdomain admin links. The main
+site origin is used by the admin layout for its own defense-in-depth session re-check, its `/auth/login`
 bounce when there's no session, and the "Akses Ditolak" back-link (via
 `<PageState variant="forbidden">`, see `components/states/PageState.tsx` below). Access itself
 is gated on `SessionUser.role_name === "Super Admin"` (note the space — matches the backend's
@@ -370,7 +373,18 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   the left of the bell — deliberately a lucide glyph like every other icon in that row (Bell,
   ChevronDown, Search, ...), not the custom bulk/outline `ChatIcon` (that one's reserved for
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
-  how the bell/avatar triggers next to it also don't. The
+  how the bell/avatar triggers next to it also don't. The avatar dropdown gets admin scope
+  from `HeaderAdminAccessContext`, populated once by `app/(www)/www/layout.tsx` from
+  `getSession()`: each true `can_manage_chapter`/`can_manage_branch`/
+  `can_manage_coordinating_body` flag adds a cross-subdomain link to the viewer's own
+  Komisariat/Cabang/Badko admin page. Those labels include the session's entity name
+  (`Kelola {chapter_name}`, `Kelola Cabang {branch_name}`, and `Kelola Badko
+  {coordinating_body_name}`), falling back to the generic entity label when the name is
+  missing. `role_name === "Super Admin"` adds `Kelola Organisasi` linking straight to the
+  admin subdomain root. The absolute admin origin comes from
+  `lib/constants.ts#getAdminSiteOrigin`, so these links perform the required full
+  cross-origin navigation instead of resolving against the `www` host. Every `Kelola ...`
+  link opens in a new tab with `target="_blank"` and `rel="noopener noreferrer"`. The
   "belum diverifikasi"/"sedang ditinjau admin" banners are siblings of that row (not nested
   inside it), so one still shows on mobile whenever `verificationStatus` is `"unverified"` or
   `"pending"`. The outer `<header>`'s own
@@ -736,9 +750,8 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   nav-bar active-state icons, just static menu glyphs) converted 1:1 from designer-provided
   SVGs; `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset as a module-level
   `PATTERN_DATA_URI` constant rather than a `public/` file, since nothing else needed it
-  optimized or reused. Berita (`/news`), E-KTA (`/membership`), and Al-Qur'an (`/quran`, see
-  `QuranPage` below) route through `Link`; Event has no page yet, so it's still a plain
-  `href="#"` `<a>` tag per the ground rule on placeholder links below.
+  optimized or reused. Berita (`/news`), E-KTA (`/membership`), Latihan Kader
+  (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage` below) all route through `Link`.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
