@@ -75,10 +75,9 @@ export type VerificationRequestListEntry = {
   created_at: string;
 };
 
-// verification-requests/detail's shape — the only endpoint that ever returns a plaintext nik.
+// Mirrors verification-requests/detail's response shape.
 export type VerificationRequestDetail = VerificationRequestListEntry & {
   ktp_full_name: string;
-  nik: string;
   phone_number: string;
   date_of_birth: string;
   gender: GenderEnum;

@@ -270,7 +270,7 @@ no link when `"pending"` — and only renders the verified badge next to the acc
 `"verified"`.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
-   Google), 16-digit `nik`, phone number, date of birth, gender.
+   Google), phone number, date of birth, gender.
 2. **Alamat** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
    backed by `/www/api/provinces/search`, `/www/api/cities/search`,
    `/www/api/districts/search`), plus street address. City/District `SearchableSelect`s
@@ -1007,7 +1007,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   self-service profile editing out from the admin-scoped endpoint, and `users/update` is now
   `Super Admin`-only, so a general user hitting it would 403. `update-my-profile` takes no
   `id` (the caller from the JWT is always the target) and only accepts a safe-fields subset
-  (`full_name`/`username`/`ktp_full_name`/`nik`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/
+  (`full_name`/`username`/`ktp_full_name`/`phone_number`/`avatar`/`headline`/`bio`/`gender`/
   `address_street`/`date_of_birth`/`district_id` — modeled as `UpdateMyProfilePayload`) — there's
   no way to change `role_id`/`status`/`verification_status`/`member_card`/`chapter_id`/
   subscription dates through it, those stay `Super Admin`-only via `users/update` or
@@ -1287,7 +1287,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   always requires the caller's session JWT. The register route reads the caller's full profile,
   education histories, and training histories before rendering. Its Google-Forms-style page
   updates editable `full_name`/`phone_number` through `updateMyProfile`; conditionally requires
-  and persists `nik` (when `has_nik` is false), `date_of_birth`, `gender`, and the
+  and persists `date_of_birth`, `gender`, and the
   `address_street`/`district_id` address whenever each datum is still missing from `users/detail`;
   and always requires at least one fully completed education history, which the user can
   create/update/delete inline. It lets the user create/update/delete their training histories
@@ -1389,7 +1389,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   icon buttons that only render when `status === "pending"` (the backend 409s on re-review
   otherwise). The detail modal's `Field` rows each carry a small icon badge (`bg-primary-soft
   text-primary` circle, same treatment as `BranchMemberDetailPage`'s `StatPill`) for Email/Nama
-  Sesuai KTP/NIK — the only place in this app that ever shows a plaintext one/Nomor HP/Tanggal
+  Sesuai KTP/Nomor HP/Tanggal
   Lahir/Jenis Kelamin/Komisariat, plus a header row above the grid with the applicant's real
   `Avatar` (not just initials) and `@username`. Alamat Lengkap is deliberately one `Field` with one
   `MapPin` icon, not four separate Kecamatan/Kota/Provinsi rows each with their own icon — its value

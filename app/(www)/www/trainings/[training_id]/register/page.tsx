@@ -63,7 +63,6 @@ export default async function TrainingRegistrationRoute({
         email: profile.email,
         phoneNumber: profile.phone_number,
         branchName: profile.branch_name,
-        hasNik: profile.has_nik ?? false,
         dateOfBirth: profile.date_of_birth,
         gender: profile.gender,
         addressStreet: profile.address_street,

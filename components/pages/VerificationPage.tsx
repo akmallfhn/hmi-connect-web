@@ -22,7 +22,6 @@ const STEPS = ["Data KTP", "Alamat", "Cabang & Komisariat"];
 
 type FormData = {
   ktpFullName: string;
-  nik: string;
   phoneNumber: string;
   dateOfBirth: string;
   gender: GenderEnum | null;
@@ -37,7 +36,6 @@ type FormData = {
 function emptyFormData(): FormData {
   return {
     ktpFullName: "",
-    nik: "",
     phoneNumber: "",
     dateOfBirth: "",
     gender: null,
@@ -186,7 +184,6 @@ export default function VerificationPage({
 
   const isStep0Valid =
     formData.ktpFullName.trim() !== "" &&
-    formData.nik.length === 16 &&
     formData.phoneNumber.trim() !== "" &&
     formData.dateOfBirth.trim() !== "" &&
     formData.gender !== null;
@@ -214,7 +211,6 @@ export default function VerificationPage({
       const result = await verifyUser({
         chapter_id: String(formData.chapter?.value ?? ""),
         ktp_full_name: formData.ktpFullName,
-        nik: formData.nik,
         phone_number: formData.phoneNumber,
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender as GenderEnum,
@@ -224,10 +220,7 @@ export default function VerificationPage({
 
       if (!isSuccessStatus(result.status)) {
         console.error("[VerificationPage] verifyUser rejected:", result);
-        const message =
-          result.status === "CONFLICT"
-            ? "NIK ini sudah terverifikasi di akun lain. Hubungi admin HMI Connect jika ini keliru."
-            : (result.message ?? "Verifikasi gagal. Coba lagi.");
+        const message = result.message ?? "Verifikasi gagal. Coba lagi.";
         setErrorMessage(message);
         setStatus("error");
         toast.error(message);
@@ -313,16 +306,6 @@ export default function VerificationPage({
                   onChange={(e) =>
                     updateFormData("ktpFullName", e.target.value)
                   }
-                  required
-                />
-                <NumberInput
-                  inputId="nik"
-                  label="NIK"
-                  placeholder="16 digit NIK"
-                  mode="numeric"
-                  characterLength={16}
-                  value={formData.nik}
-                  onValueChange={(value) => updateFormData("nik", value)}
                   required
                 />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

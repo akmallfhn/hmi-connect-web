@@ -5,7 +5,6 @@ import {
   Cake,
   Check,
   Eye,
-  Fingerprint,
   GraduationCap,
   IdCard,
   MapPin,
@@ -415,7 +414,6 @@ export default function BranchVerificationListPage({
                 label="Nama Sesuai KTP"
                 value={detailData.ktp_full_name}
               />
-              <Field icon={Fingerprint} label="NIK" value={detailData.nik} />
               <Field
                 icon={Phone}
                 label="Nomor HP"

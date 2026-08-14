@@ -178,7 +178,7 @@ export async function createUser(
   });
 }
 
-// Soft-deletes: sets deleted_at + status to inactive, but reserves email/username/member_card/nik_hash so they can't be reused.
+// Soft-deletes: sets deleted_at + status to inactive, but reserves email/username/member_card so they can't be reused.
 export async function deactivateUser(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -253,7 +253,6 @@ export async function activateUser(
 export type VerificationPayload = {
   chapter_id: string;
   ktp_full_name: string;
-  nik: string;
   phone_number: string;
   date_of_birth: string;
   gender: GenderEnum;
@@ -371,7 +370,6 @@ export type UserProfile = {
   full_name: string;
   username: string;
   ktp_full_name?: string;
-  has_nik?: boolean;
   email: string;
   phone_number?: string;
   member_card?: string;
@@ -661,7 +659,6 @@ export type UpdateMyProfilePayload = {
   full_name?: string;
   username?: string;
   ktp_full_name?: string;
-  nik?: string;
   phone_number?: string;
   avatar?: string;
   headline?: string;

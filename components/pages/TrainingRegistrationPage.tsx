@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FileText,
   GraduationCap,
-  IdCard,
   ImageOff,
   Loader2,
   Mail,
@@ -74,7 +73,6 @@ export interface TrainingRegistrant {
   email: string;
   phoneNumber?: string;
   branchName?: string;
-  hasNik: boolean;
   dateOfBirth?: string;
   gender?: GenderEnum;
   addressStreet?: string;
@@ -339,17 +337,15 @@ export default function TrainingRegistrationPage({
   trainingHistories,
 }: TrainingRegistrationPageProps) {
   const needsKtpFullName = !registrant.ktpFullName?.trim();
-  const needsNik = !registrant.hasNik;
   const needsDateOfBirth = !registrant.dateOfBirth;
   const needsGender = !registrant.gender;
   const needsAddress =
     !registrant.addressStreet?.trim() || !registrant.districtId;
   const hasMissingProfileData =
-    needsNik || needsDateOfBirth || needsGender || needsAddress;
+    needsDateOfBirth || needsGender || needsAddress;
 
   const [fullName, setFullName] = useState(registrant.fullName);
   const [phoneNumber, setPhoneNumber] = useState(registrant.phoneNumber ?? "");
-  const [nik, setNik] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(registrant.dateOfBirth ?? "");
   const [gender, setGender] = useState<GenderEnum | null>(
     registrant.gender ?? null
@@ -547,9 +543,6 @@ export default function TrainingRegistrationPage({
       return "Nama lengkap dan nomor HP wajib diisi.";
     }
 
-    if (needsNik && !/^\d{16}$/.test(nik)) {
-      return "NIK wajib terdiri dari tepat 16 digit angka.";
-    }
     if (needsDateOfBirth && !dateOfBirth) {
       return "Tanggal lahir wajib diisi.";
     }
@@ -627,7 +620,6 @@ export default function TrainingRegistrationPage({
         full_name: fullName.trim(),
         ...(needsKtpFullName ? { ktp_full_name: fullName.trim() } : {}),
         phone_number: phoneNumber.trim(),
-        ...(needsNik ? { nik } : {}),
         ...(needsDateOfBirth ? { date_of_birth: dateOfBirth } : {}),
         ...(needsGender && gender ? { gender } : {}),
         ...(needsAddress
@@ -843,20 +835,6 @@ export default function TrainingRegistrationPage({
                       </p>
 
                       <div className="mt-5 flex flex-col gap-5">
-                        {needsNik && (
-                          <NumberInput
-                            inputId="training-registration-nik"
-                            label="NIK"
-                            icon={<IdCard className="size-4" />}
-                            placeholder="16 digit NIK"
-                            value={nik}
-                            onValueChange={setNik}
-                            characterLength={16}
-                            disabled={submitting}
-                            required
-                          />
-                        )}
-
                         {needsDateOfBirth && (
                           <Input
                             inputId="training-registration-dob"
