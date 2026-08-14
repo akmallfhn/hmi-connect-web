@@ -47,11 +47,9 @@ export default async function OrganizationLayout({
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <EntitySidebar
-        storageKey="organization_sidebar_collapsed"
-        href={`/organizations/${organization_id}`}
-        entityLabel="Organisasi"
+        scope="organization"
+        entityId={organization_id}
         entityName={organizationName}
-        membersHref={`/organizations/${organization_id}/members`}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

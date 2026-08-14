@@ -42,11 +42,10 @@ export default async function CoordinatingChapterLayout({
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <EntitySidebar
-        storageKey="coordinating_chapter_sidebar_collapsed"
-        href={`/coordinating-chapters/${coordinatingChapter.id}`}
-        entityLabel="Koordinator Komisariat (Korkom)"
+        scope="coordinating_chapter"
+        entityId={coordinatingChapter.id}
         entityName={coordinatingChapter.name}
-        membersHref={`/coordinating-chapters/${coordinatingChapter.id}/members`}
+        parentName={coordinatingChapter.branch_name}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

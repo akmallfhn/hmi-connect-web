@@ -39,11 +39,10 @@ export default async function ChapterLayout({
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <EntitySidebar
-        storageKey="chapter_sidebar_collapsed"
-        href={`/chapters/${chapter.id}`}
-        entityLabel="Komisariat"
+        scope="chapter"
+        entityId={chapter.id}
         entityName={chapter.name}
-        membersHref={`/chapters/${chapter.id}/members`}
+        entityType={chapter.type}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

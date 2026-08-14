@@ -16,7 +16,7 @@ fix the rule, not just the code.
   `@react-email/components` for transactional email (see Transactional email below).
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
   Stack Sans Headline is exposed as `font-stack-sans-headline` and reserved for admin
-  page titles plus all admin sidebar chrome (including the Cabang name in `BranchSidebar`).
+  page titles plus all admin sidebar chrome (including scoped entity names in `EntitySidebar`).
   Every admin page title renders via
   `components/common/AdminPageTitle.tsx`, which owns the semantic `<h1>`, optional
   `description` paragraph (also Stack Sans Headline), shared font/color/weight/spacing, and its
@@ -109,9 +109,10 @@ if their id is missing, not to a picker. Each of those five `[id]` layouts re-ch
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
-All four render the shared `EntitySidebar` shell (entity name above, session user below) with one
-read-only `Daftar Kader` item; their index page bodies remain empty. `/branches/[branch_id]`
-retains its real branch-scoped analytics dashboard and populated `BranchSidebar`. `/master` has its
+All five render the shared `EntitySidebar` shell (entity name above, session user below). Badko,
+Korkom, Komisariat, and Organization get one read-only `Daftar Kader` item and empty index page
+bodies; the Cabang variant retains its populated navigation and real branch-scoped analytics
+dashboard. `/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
 Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
@@ -1147,7 +1148,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   button) switches from a horizontal `justify-between` row to a `flex-col` stack when collapsed —
   cramming both into one row at `w-20` doesn't leave enough width for a non-empty header (unlike
   Master's, which renders nothing there when collapsed), so a caller whose header stays visible
-  while collapsed (e.g. `BranchSidebar`) would otherwise get it silently clipped. It owns the
+  while collapsed (e.g. `EntitySidebar`) would otherwise get it silently clipped. It owns the
   collapse/mobile-drawer chrome, `NavList`, and `ProfileBlock` (avatar/name/role + logout) — the
   only things a caller supplies are `navItems: AdminNavEntry[]` and `renderHeader(collapsed)` (a
   render prop for the top-left header content — a logo, or an entity's own icon/name/status —
@@ -1179,9 +1180,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
   (exact-matched) followed by two `AdminNavGroup`s: "Administrasi" (User Management) and
   "Organisasi" (Badko/Cabang/Komisariat) — mirroring the same group-naming convention
-  `BranchSidebar`'s own "Organisasi"/"Program" groups use below.
-  `components/navigations/BranchSidebar.tsx` is the Cabang-scoped sibling, rendered by
-  `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout does the same
+  `EntitySidebar`'s Cabang-scoped "Organisasi"/"Program" groups use below.
+  `components/navigations/EntitySidebar.tsx` is the single scoped-entity sidebar rendered by all
+  five entity layouts, including `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout
+  does the same
   `isSuperAdmin`/`can_manage_branch`-and-
   matching-own-`branch_id` check the old single-page version did (`PageState` forbidden on
   failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
@@ -1191,16 +1193,19 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   resolved branch is passed through `hooks/useBranch.tsx#BranchProvider`, so
   client pages/forms can read `branchName` with `useBranch()` for Cabang-specific descriptions
   without issuing another branch-detail request in every nested route.
-  `BranchSidebar`'s `renderHeader` shows the `LogoHmi` SVG emblem (not a lucide icon) in a square
+  `EntitySidebar`'s `renderHeader` shows the `LogoHmi` SVG emblem (not a lucide icon) in a square
   `rounded-lg` badge (deliberately not `rounded-full`, unlike `Avatar`/`ProfileBlock`'s circular
   badges elsewhere in this file) — kept visible even when the whole sidebar is collapsed (just the
-  badge, linking back to the branch's own dashboard), which is what motivated `AdminSidebar`'s
-  collapsed-header stacking fix above. When expanded it also shows the branch name and, instead of
-  the `Label` pill the Cabang/Komisariat admin tables use for the same `type` field (see
-  `/master/branches` above), a plain-text "Status: Penuh"/"Status: Persiapan" line next to a small
-  blinking status dot (two stacked `absolute`/`relative` spans, the outer one `animate-ping`) —
-  blue for `full`, amber for `provisional` — no pill background/border/padding here, by design,
-  distinct from the table's own styling. Its nav items route to a top-level Dashboard
+  badge, linking back to the entity's own root), which is what motivated `AdminSidebar`'s
+  collapsed-header stacking fix above. Expanded headers use the prefixes `Cabang`, `Komisariat`,
+  `Korkom`, and `Badko`; Korkom shows `Cabang {branch_name}` underneath, while Badko shows its
+  organization name (from the session, falling back to `HMI` because the detail response only has
+  `organization_id`). Cabang and Komisariat use their shared `BranchTypeEnum` to show a plain-text
+  "Status: Penuh"/"Status: Persiapan" line next to a small blinking status dot (two stacked
+  `absolute`/`relative` spans, the outer one `animate-ping`) — `primary` for `full`, `secondary`
+  for `provisional` — instead of the `Label` pill used in admin tables. Truncated header names and
+  subtitles retain their complete text through native `title` hover tooltips; header links also
+  carry `aria-label`. The Cabang scope's nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
   `stat/summary`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
   calls), then two `AdminNavGroup`s —
@@ -1319,14 +1324,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  `components/navigations/EntitySidebar.tsx` is the scoped sibling shared by
-  `/admin/organizations/[organization_id]`, `/admin/coordinating-bodies/[coordinating_body_id]`,
-  `/admin/coordinating-chapters/[coordinating_chapter_id]`, and
-  `/admin/chapters/[chapter_id]`. It shows the resolved entity name/type next to `LogoHmi` in the
-  header, passes one `Daftar Kader` item to `AdminSidebar`, and retains the standard session
-  profile/logout block at the bottom. Each route owns an access-checking nested layout and an
-  intentionally empty index page; its `/members` child holds the read-only roster described below.
-  The branch-scoped
+  The non-Cabang scopes of `EntitySidebar` pass one `Daftar Kader` item to `AdminSidebar` and
+  retain the standard session profile/logout block at the bottom. Each route owns an
+  access-checking nested layout and an intentionally empty index page; its `/members` child holds
+  the read-only roster described below. The branch-scoped
   Kelola Komisariat page below is a Cabang managing its *own* Komisariat rows, a different scope
   from the Komisariat self-management shell.
   Kelola Komisariat (`app/(admin)/admin/branches/[branch_id]/chapters/`) is **create/edit only, no

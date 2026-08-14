@@ -241,7 +241,7 @@ function ProfileBlock({
   );
 }
 
-// Shared shell (collapse/mobile-drawer chrome, nav list, profile block) behind every admin sidebar — MasterSidebar/BranchSidebar/etc only supply their own header content and nav items.
+// Shared shell (collapse/mobile-drawer chrome, nav list, profile block) behind every admin sidebar — MasterSidebar/EntitySidebar/etc only supply their own header content and nav items.
 export default function AdminSidebar({
   storageKey,
   navItems,

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { getBranchDetail } from "@/apis/branches";
 import { getSession } from "@/apis/session";
 import { getMainSiteOrigin } from "@/lib/constants";
-import BranchSidebar from "@/components/navigations/BranchSidebar";
+import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
 import { BranchProvider } from "@/hooks/useBranch";
 
@@ -40,10 +40,11 @@ export default async function BranchLayout({
   return (
     <BranchProvider branchId={branch.id} branchName={branch.name}>
       <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
-        <BranchSidebar
-          branchId={branch.id}
-          branchName={branch.name}
-          branchType={branch.type}
+        <EntitySidebar
+          scope="branch"
+          entityId={branch.id}
+          entityName={branch.name}
+          entityType={branch.type}
           fullName={user?.full_name}
           avatar={user?.avatar}
           roleName={user?.role_name}

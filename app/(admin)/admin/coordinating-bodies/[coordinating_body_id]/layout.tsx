@@ -41,11 +41,10 @@ export default async function CoordinatingBodyLayout({
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <EntitySidebar
-        storageKey="coordinating_body_sidebar_collapsed"
-        href={`/coordinating-bodies/${coordinatingBody.id}`}
-        entityLabel="Badan Koordinasi (Badko)"
+        scope="coordinating_body"
+        entityId={coordinatingBody.id}
         entityName={coordinatingBody.name}
-        membersHref={`/coordinating-bodies/${coordinatingBody.id}/members`}
+        parentName={user?.organization_name ?? "HMI"}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}
