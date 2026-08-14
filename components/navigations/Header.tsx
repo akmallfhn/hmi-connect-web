@@ -81,6 +81,17 @@ export default function Header({
               },
             ]
           : []),
+        ...(adminAccess.canManageCoordinatingChapter
+          ? [
+              {
+                label: adminAccess.coordinatingChapterName
+                  ? `Kelola Korkom ${adminAccess.coordinatingChapterName}`
+                  : "Kelola Korkom",
+                href: `${adminAccess.adminOrigin}/coordinating-chapters${adminAccess.coordinatingChapterId ? `/${adminAccess.coordinatingChapterId}` : ""}`,
+                icon: Network,
+              },
+            ]
+          : []),
         ...(adminAccess.canManageBranch
           ? [
               {
@@ -100,6 +111,18 @@ export default function Header({
                   : "Kelola Badko",
                 href: `${adminAccess.adminOrigin}/coordinating-bodies${adminAccess.coordinatingBodyId ? `/${adminAccess.coordinatingBodyId}` : ""}`,
                 icon: Network,
+              },
+            ]
+          : []),
+        ...(adminAccess.canManageOrganization &&
+        adminAccess.roleName !== "Super Admin"
+          ? [
+              {
+                label: adminAccess.organizationName
+                  ? `Kelola ${adminAccess.organizationName}`
+                  : "Kelola Organisasi",
+                href: `${adminAccess.adminOrigin}/organizations${adminAccess.organizationId ? `/${adminAccess.organizationId}` : ""}`,
+                icon: LayoutDashboard,
               },
             ]
           : []),

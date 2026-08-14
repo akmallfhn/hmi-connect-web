@@ -1,0 +1,58 @@
+import type { ReactNode } from "react";
+import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { getSession } from "@/apis/session";
+import { getMainSiteOrigin } from "@/lib/constants";
+import EntitySidebar from "@/components/navigations/EntitySidebar";
+import PageState from "@/components/states/PageState";
+
+interface CoordinatingChapterLayoutProps {
+  children: ReactNode;
+  params: Promise<{ coordinating_chapter_id: string }>;
+}
+
+export default async function CoordinatingChapterLayout({
+  children,
+  params,
+}: CoordinatingChapterLayoutProps) {
+  const { coordinating_chapter_id } = await params;
+  const { user } = await getSession();
+
+  const isSuperAdmin = user?.role_name === "Super Admin";
+  const canManageThisCoordinatingChapter =
+    Boolean(user?.can_manage_coordinating_chapter) &&
+    user?.coordinating_chapter_id === coordinating_chapter_id;
+
+  if (!isSuperAdmin && !canManageThisCoordinatingChapter) {
+    return (
+      <PageState
+        variant="forbidden"
+        backHref={getMainSiteOrigin()}
+        message="Kamu tidak memiliki akses untuk mengelola Korkom ini."
+      />
+    );
+  }
+
+  const coordinatingChapter = await getCoordinatingChapterDetail(
+    coordinating_chapter_id
+  );
+  if (!coordinatingChapter) {
+    return <PageState variant="not_found" backHref={getMainSiteOrigin()} />;
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
+      <EntitySidebar
+        storageKey="coordinating_chapter_sidebar_collapsed"
+        href={`/coordinating-chapters/${coordinatingChapter.id}`}
+        entityLabel="Koordinator Komisariat (Korkom)"
+        entityName={coordinatingChapter.name}
+        fullName={user?.full_name}
+        avatar={user?.avatar}
+        roleName={user?.role_name}
+      />
+      <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
+        {children}
+      </main>
+    </div>
+  );
+}

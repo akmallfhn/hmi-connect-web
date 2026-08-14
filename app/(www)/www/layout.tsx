@@ -55,12 +55,20 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
     ? {
         adminOrigin: getAdminSiteOrigin(),
         roleName: user.role_name,
+        organizationId: user.organization_id,
+        organizationName: user.organization_name,
+        canManageOrganization: Boolean(user.can_manage_organization),
         coordinatingBodyId: user.coordinating_body_id,
         coordinatingBodyName: user.coordinating_body_name,
         canManageCoordinatingBody: Boolean(user.can_manage_coordinating_body),
         branchId: user.branch_id,
         branchName: user.branch_name,
         canManageBranch: Boolean(user.can_manage_branch),
+        coordinatingChapterId: user.coordinating_chapter_id,
+        coordinatingChapterName: user.coordinating_chapter_name,
+        canManageCoordinatingChapter: Boolean(
+          user.can_manage_coordinating_chapter
+        ),
         chapterId: user.chapter_id,
         chapterName: user.chapter_name,
         canManageChapter: Boolean(user.can_manage_chapter),

@@ -12,12 +12,16 @@ export type SessionUser = {
   organization_name?: string;
   coordinating_body_id?: string;
   coordinating_body_name?: string;
-  can_manage_coordinating_body?: boolean;
   branch_id?: string;
   branch_name?: string;
-  can_manage_branch?: boolean;
+  coordinating_chapter_id?: string;
+  coordinating_chapter_name?: string;
   chapter_id?: string;
   chapter_name?: string;
+  can_manage_organization?: boolean;
+  can_manage_coordinating_body?: boolean;
+  can_manage_branch?: boolean;
+  can_manage_coordinating_chapter?: boolean;
   can_manage_chapter?: boolean;
   full_name?: string;
   username: string; // backend auto-generates a placeholder at sign-up, never null — see internal/user/README.md

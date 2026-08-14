@@ -12,5 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   const { user } = await getSession();
-  return <AdminIndexPage user={user} />;
+  return (
+    <AdminIndexPage user={user} organizationId={process.env.ORGANIZATION_ID} />
+  );
 }

@@ -82,8 +82,9 @@ bounce when there's no session, and the "Akses Ditolak" back-link (via
 `<PageState variant="forbidden">`, see `components/states/PageState.tsx` below). Access itself
 is gated on `SessionUser.role_name === "Super Admin"` (note the space — matches the backend's
 `RoleNameSuperAdmin` constant in `internal/shared/entity/role.go`, not the `SuperAdmin` you'd
-guess from camelCase) or any of `can_manage_branch`/`can_manage_chapter`/
-`can_manage_coordinating_body` being true (mirrors the backend's `check-session` response, see
+guess from camelCase) or any of `can_manage_organization`/`can_manage_coordinating_body`/
+`can_manage_branch`/`can_manage_coordinating_chapter`/`can_manage_chapter` being true (mirrors
+the backend's `check-session` response, see
 `internal/auth/README.md` in the `ordina` backend repo) — there's no fixed `role_name` union in
 `lib/types.ts` yet because this backend hasn't published its full role list. The backend also
 has a broader `"Administrator"` role (see `AUTH.md` in `ordina`) that most other admin write
@@ -94,17 +95,23 @@ admin UI. `app/(admin)/admin/page.tsx` delegates straight to
 `components/pages/AdminIndexPage.tsx`, which filters its menu cards by that same
 `isSuperAdmin`/`can_manage_*` split — a `Super Admin` sees every card (including the
 "Dashboard Super Admin" card, which is otherwise hidden), everyone else only sees the cards for
-whichever of Badko/Cabang/Komisariat they can manage — in that order (Dashboard Super Admin,
-Badko, Cabang, Komisariat, top to bottom). Each of those three cards links straight
-to the viewer's own entity — `/branches/{user.branch_id}`, `/chapters/{user.chapter_id}`,
-`/coordinating-bodies/{user.coordinating_body_id}` — falling back to the bare (pageless) list
-route if that id is missing (a `Super Admin` isn't necessarily affiliated with one), not to a
-picker. Each of those three `[id]` pages re-checks access itself (`isSuperAdmin` or
+whichever of Organisasi/Badko/Cabang/Korkom/Komisariat they can manage — in that order
+(Dashboard Super Admin, Organisasi, Badko, Cabang, Korkom, Komisariat, top to bottom). Each of
+those five cards links straight to the viewer's own entity —
+`/organizations/{user.organization_id}`, `/coordinating-bodies/{user.coordinating_body_id}`,
+`/branches/{user.branch_id}`, `/coordinating-chapters/{user.coordinating_chapter_id}`, or
+`/chapters/{user.chapter_id}`. The Organization card can use the server-side `ORGANIZATION_ID`
+when the Super Admin isn't affiliated with a chapter; the others fall back to the bare list route
+if their id is missing, not to a picker. Each of those five `[id]` layouts re-checks access itself
+(`isSuperAdmin` or
 `can_manage_*` **and** the id matches the viewer's own) rather than trusting the outer
 `/admin` gate, since that gate only proves *some* `can_manage_*` is true, not that it's for
-*this* id — otherwise a chapter-only admin could reach another branch's page by URL.
-`/branches/[branch_id]` has a real branch-scoped analytics dashboard; the Chapter and Badko
-`[id]` pages still render the shared `MasterPlaceholderPage` placeholder. `/master` has its
+*this* id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
+Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
+Organization layout uses the session name because the backend has no organization-detail route.
+All four render the shared empty `EntitySidebar` shell (entity name above, session user below,
+no navigation items yet) and leave the page body empty. `/branches/[branch_id]` retains its real
+branch-scoped analytics dashboard and populated `BranchSidebar`. `/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
 Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
@@ -150,7 +157,8 @@ by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `chapters.ts`, `locations.ts`
+   (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `coordinating-chapters.ts`,
+   `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
    not independent resources), `social-media-platforms.ts`, `users.ts`, `trainings.ts`
    (training events + materials + participants, distinct from user training histories), `session.ts`,
@@ -386,12 +394,14 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
   how the bell/avatar triggers next to it also don't. The avatar dropdown gets admin scope
   from `HeaderAdminAccessContext`, populated once by `app/(www)/www/layout.tsx` from
-  `getSession()`: each true `can_manage_chapter`/`can_manage_branch`/
-  `can_manage_coordinating_body` flag adds a cross-subdomain link to the viewer's own
-  Komisariat/Cabang/Badko admin page. Those labels include the session's entity name
-  (`Kelola {chapter_name}`, `Kelola Cabang {branch_name}`, and `Kelola Badko
-  {coordinating_body_name}`), falling back to the generic entity label when the name is
-  missing. `role_name === "Super Admin"` adds `Kelola Organisasi` linking straight to the
+  `getSession()`: each true `can_manage_chapter`/`can_manage_coordinating_chapter`/
+  `can_manage_branch`/`can_manage_coordinating_body`/`can_manage_organization` flag adds a
+  cross-subdomain link to the viewer's own Komisariat/Korkom/Cabang/Badko/Organisasi admin page.
+  Those labels include the session's entity name (`Kelola {chapter_name}`, `Kelola Korkom
+  {coordinating_chapter_name}`, `Kelola Cabang {branch_name}`, `Kelola Badko
+  {coordinating_body_name}`, and `Kelola {organization_name}`), falling back to the generic
+  entity label when the name is missing. `role_name === "Super Admin"` adds `Kelola Organisasi`
+  linking straight to the
   admin subdomain root. The absolute admin origin comes from
   `lib/constants.ts#getAdminSiteOrigin`, so these links perform the required full
   cross-origin navigation instead of resolving against the `www` host. Every `Kelola ...`
@@ -1152,7 +1162,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   its outer wrapper owns a `bg-linear-to-b` white-to-`primary-light` (`#bfe6e7`) gradient, while its
   transparent inner wrapper owns
   `bg-admin-geo-pattern`, so every admin area gets the same background without painting the
-  sidebar. The `/master` and `/branches/[branch_id]` nested layouts lock their desktop shell to
+  sidebar. The `/master` and all five scoped entity nested layouts lock their desktop shell to
   `h-screen`/`overflow-hidden` and make only `<main>` scroll (`lg:overflow-y-auto`), keeping the
   sidebar pinned; mobile retains normal document scrolling. `AdminNavEntry` is
   `AdminNavItem | AdminNavGroup` — a plain item (`label`/`href`/`icon`/optional `exact`, same as
@@ -1171,10 +1181,8 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   "Organisasi" (Badko/Cabang/Komisariat) — mirroring the same group-naming convention
   `BranchSidebar`'s own "Organisasi"/"Program" groups use below.
   `components/navigations/BranchSidebar.tsx` is the Cabang-scoped sibling, rendered by
-  `app/(admin)/admin/branches/[branch_id]/layout.tsx` (a new nested layout — the `[id]` pages
-  under `/admin/branches`, `/admin/chapters`, `/admin/coordinating-bodies` previously had no
-  layout/sidebar of their own, just a bare centered placeholder directly under the outer
-  `/admin/layout.tsx` gate). That layout does the same `isSuperAdmin`/`can_manage_branch`-and-
+  `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout does the same
+  `isSuperAdmin`/`can_manage_branch`-and-
   matching-own-`branch_id` check the old single-page version did (`PageState` forbidden on
   failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
   not_found if the id doesn't resolve) — since this layout is now the authoritative gate for
@@ -1311,12 +1319,15 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  Badko admin area (`/admin/coordinating-bodies/[coordinating_body_id]`) still renders the old bare
-  placeholder with no layout/sidebar; `AdminSidebar` is generic enough for a future
-  `CoordinatingBodySidebar` to reuse the same way `BranchSidebar` does, but that hasn't been built
-  yet. `/admin/chapters/[chapter_id]` (a Komisariat managing itself) also still renders the old bare
-  placeholder — the branch-scoped Kelola Komisariat page below is a Cabang managing its *own*
-  Komisariat rows, a different scope from that still-unbuilt page.
+  `components/navigations/EntitySidebar.tsx` is the empty-navigation scoped sibling shared by
+  `/admin/organizations/[organization_id]`, `/admin/coordinating-bodies/[coordinating_body_id]`,
+  `/admin/coordinating-chapters/[coordinating_chapter_id]`, and
+  `/admin/chapters/[chapter_id]`. It passes `navItems={[]}` to `AdminSidebar`, shows the resolved
+  entity name/type next to `LogoHmi` in the header, and retains the standard session profile/logout
+  block at the bottom. Each route owns an access-checking nested layout and an intentionally empty
+  index page so future menus/content can be added without changing the shell. The branch-scoped
+  Kelola Komisariat page below is a Cabang managing its *own* Komisariat rows, a different scope
+  from the Komisariat self-management shell.
   Kelola Komisariat (`app/(admin)/admin/branches/[branch_id]/chapters/`) is **create/edit only, no
   delete** (deliberately narrower than `/master/chapters`, which has all three) — it reuses
   `apis/chapters.ts#listChaptersAdmin`/`createChapter`/`updateChapter` but not `deleteChapter`.

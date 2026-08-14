@@ -17,9 +17,11 @@ export default async function AdminLayout({
   const isSuperAdmin = user?.role_name === "Super Admin";
   const hasAdminAccess =
     isSuperAdmin ||
+    user?.can_manage_organization ||
+    user?.can_manage_coordinating_body ||
     user?.can_manage_branch ||
-    user?.can_manage_chapter ||
-    user?.can_manage_coordinating_body;
+    user?.can_manage_coordinating_chapter ||
+    user?.can_manage_chapter;
 
   if (!hasAdminAccess) {
     return (

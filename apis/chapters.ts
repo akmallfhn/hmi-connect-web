@@ -144,6 +144,8 @@ export type ChapterDetail = {
   id: string;
   branch_id: string;
   branch_name?: string;
+  coordinating_chapter_id: string | null;
+  coordinating_chapter_name: string | null;
   name: string;
   type: BranchTypeEnum;
   status: StatusEnum;
@@ -153,6 +155,21 @@ export type ChapterDetail = {
   created_at: string;
   updated_at: string;
 };
+
+export async function getChapterDetail(id: string): Promise<ChapterDetail | null> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return null;
+
+  const result = await callApi<ChapterDetail>("/api/v1/chapters/detail", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+
+  if (!isSuccessStatus(result.status) || !result.data) return null;
+  return result.data;
+}
 
 export type CreateChapterPayload = {
   branch_id: string;
