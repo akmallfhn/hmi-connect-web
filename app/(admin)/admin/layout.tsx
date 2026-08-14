@@ -31,5 +31,9 @@ export default async function AdminLayout({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-linear-to-b from-white to-primary-light">
+      <div className="bg-admin-geo-pattern min-h-screen">{children}</div>
+    </div>
+  );
 }

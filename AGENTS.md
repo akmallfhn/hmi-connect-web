@@ -16,7 +16,8 @@ fix the rule, not just the code.
   `@react-email/components` for transactional email (see Transactional email below).
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
   Stack Sans Headline is exposed as `font-stack-sans-headline` and reserved for admin
-  page titles plus the Cabang name in `BranchSidebar`. Every admin page title renders via
+  page titles plus all admin sidebar chrome (including the Cabang name in `BranchSidebar`).
+  Every admin page title renders via
   `components/common/AdminPageTitle.tsx`, which owns the semantic `<h1>`, optional
   `description` paragraph (also Stack Sans Headline), shared font/color/weight/spacing, and its
   `default | compact | placeholder` sizing variants; update that component instead of
@@ -1140,7 +1141,20 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   collapse/mobile-drawer chrome, `NavList`, and `ProfileBlock` (avatar/name/role + logout) — the
   only things a caller supplies are `navItems: AdminNavEntry[]` and `renderHeader(collapsed)` (a
   render prop for the top-left header content — a logo, or an entity's own icon/name/status —
-  since that's the one piece that genuinely differs per admin area). `AdminNavEntry` is
+  since that's the one piece that genuinely differs per admin area). Its desktop rail, mobile
+  header, and mobile drawer all use `font-stack-sans-headline` plus the solid deep-slate
+  `bg-admin-sidebar` (`#172033`, via
+  `--admin-sidebar`) from `app/globals.css`; there is deliberately no custom surface class,
+  pseudo-element, gradient, or geometric texture on the sidebar. Navigation follows the sibling
+  `ailene-os` `SidebarOS` treatment — muted white idle labels, a `primary`-tinted left-to-right
+  gradient with a `primary` icon for the active route, and a translucent profile footer.
+  Gradient and geometry belong to the root `app/(admin)/admin/layout.tsx` instead:
+  its outer wrapper owns a `bg-linear-to-b` white-to-`primary-light` (`#bfe6e7`) gradient, while its
+  transparent inner wrapper owns
+  `bg-admin-geo-pattern`, so every admin area gets the same background without painting the
+  sidebar. The `/master` and `/branches/[branch_id]` nested layouts lock their desktop shell to
+  `h-screen`/`overflow-hidden` and make only `<main>` scroll (`lg:overflow-y-auto`), keeping the
+  sidebar pinned; mobile retains normal document scrolling. `AdminNavEntry` is
   `AdminNavItem | AdminNavGroup` — a plain item (`label`/`href`/`icon`/optional `exact`, same as
   before — `NavList`'s active-route check is `pathname.startsWith(href)` by default, e.g. so
   "User Management" stays lit on `/master/users/[username]`/`/master/users/create` too, but a

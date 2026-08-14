@@ -39,7 +39,7 @@ export default async function BranchLayout({
 
   return (
     <BranchProvider branchId={branch.id} branchName={branch.name}>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
         <BranchSidebar
           branchId={branch.id}
           branchName={branch.name}
@@ -48,7 +48,7 @@ export default async function BranchLayout({
           avatar={user?.avatar}
           roleName={user?.role_name}
         />
-        <main className="min-h-screen min-w-0 flex-1 bg-[#f5f7fb]">
+        <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
           {children}
         </main>
       </div>

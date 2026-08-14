@@ -1,6 +1,12 @@
 "use client";
 
-import { Building2, GraduationCap, LayoutDashboard, Network, Users } from "lucide-react";
+import {
+  Building2,
+  GraduationCap,
+  LayoutDashboard,
+  Network,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
@@ -38,7 +44,7 @@ export default function MasterSidebar({
       navItems={NAV_ITEMS}
       renderHeader={(collapsed) =>
         !collapsed ? (
-          <Link href="/master">
+          <Link href="/master" className="flex items-center">
             <LogoHmiConnectHorizontal className="h-7 w-auto" />
           </Link>
         ) : null

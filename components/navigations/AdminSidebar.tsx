@@ -61,16 +61,21 @@ function NavLink({
     <Link
       href={href}
       title={collapsed ? label : undefined}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+      aria-current={isActive ? "page" : undefined}
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
         collapsed ? "justify-center" : ""
       } ${
         isActive
-          ? "bg-primary-soft text-primary"
-          : "text-[#5f6573] hover:bg-[#f5f7fb]"
+          ? "bg-linear-to-r from-primary/40 via-primary/15 to-transparent text-white font-medium"
+          : "text-white/65 hover:bg-linear-to-r hover:from-white/10 hover:to-transparent hover:text-white"
       }`}
     >
-      <Icon className="size-5 shrink-0" />
-      {!collapsed && label}
+      <Icon
+        className={`size-5 shrink-0 transition-colors ${
+          isActive ? "text-primary" : "text-white/50 group-hover:text-white/85"
+        }`}
+      />
+      {!collapsed && <span className="truncate">{label}</span>}
     </Link>
   );
 }
@@ -104,13 +109,13 @@ function NavGroup({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-left transition hover:bg-[#f5f7fb]"
+        className="flex cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-left transition hover:bg-white/5"
       >
-        <span className="text-[11px] font-semibold tracking-widest text-[#9aa1ac] uppercase">
+        <span className="text-[11px] font-medium tracking-widest text-white/35 uppercase">
           {groupName}
         </span>
         <ChevronDown
-          className={`size-3.5 shrink-0 text-[#9aa1ac] transition-transform duration-300 ${
+          className={`size-3.5 shrink-0 text-white/35 transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -188,15 +193,20 @@ function ProfileBlock({
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-[#e6e9ef] p-2">
-        <Avatar src={avatar} name={displayName} size={36} />
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2 backdrop-blur-sm">
+        <Avatar
+          src={avatar}
+          name={displayName}
+          size={36}
+          className="ring-2 ring-white/15"
+        />
         <button
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
           aria-label="Keluar"
           title="Keluar"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-secondary transition hover:bg-secondary/15 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LogOut className="size-4" />
         </button>
@@ -205,14 +215,17 @@ function ProfileBlock({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] p-3">
-      <Avatar src={avatar} name={displayName} size={40} />
+    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+      <Avatar
+        src={avatar}
+        name={displayName}
+        size={40}
+        className="ring-2 ring-white/15"
+      />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#172033]">
-          {displayName}
-        </p>
+        <p className="truncate text-sm font-medium text-white">{displayName}</p>
         {roleName && (
-          <p className="truncate text-xs text-[#5f6573]">{roleName}</p>
+          <p className="truncate text-xs text-white/50">{roleName}</p>
         )}
       </div>
       <button
@@ -220,7 +233,7 @@ function ProfileBlock({
         onClick={handleLogout}
         disabled={loggingOut}
         aria-label="Keluar"
-        className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-secondary transition hover:bg-secondary/15 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <LogOut className="size-5" />
       </button>
@@ -255,7 +268,7 @@ export default function AdminSidebar({
   return (
     <>
       <aside
-        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[#e6e9ef] bg-white py-6 transition-[width] duration-150 lg:flex ${
+        className={`font-stack-sans-headline sticky top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-admin-sidebar py-6 transition-[width] duration-150 lg:flex ${
           isCollapsed ? "w-20 px-3" : "w-64 px-4"
         }`}
       >
@@ -270,17 +283,17 @@ export default function AdminSidebar({
             onClick={() => setIsCollapsed((prev) => !prev)}
             aria-label={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
             title={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-            className="shrink-0"
+            className="shrink-0 text-white/65 hover:bg-white/10 hover:text-white focus-visible:ring-secondary/50"
           >
             {isCollapsed ? (
-              <PanelLeftOpen className="size-4.5 text-[#5f6573] hover:bg-[#f5f7fb]" />
+              <PanelLeftOpen className="size-4.5" />
             ) : (
-              <PanelLeftClose className="size-4.5 text-[#5f6573] hover:bg-[#f5f7fb]" />
+              <PanelLeftClose className="size-4.5" />
             )}
           </Button>
         </div>
-        <div className="mt-4 -mx-4 border-t border-[#e6e9ef]" />
-        <div className="mt-6 flex-1">
+        <div className="mt-4 -mx-4 border-t border-white/10" />
+        <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
           <NavList
             navItems={navItems}
             pathname={pathname}
@@ -295,13 +308,13 @@ export default function AdminSidebar({
         />
       </aside>
 
-      <div className="flex h-14 items-center justify-between border-b border-[#e6e9ef] bg-white px-4 lg:hidden">
+      <div className="font-stack-sans-headline sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-white/10 bg-admin-sidebar px-4 lg:hidden">
         {renderHeader(false)}
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Buka menu"
-          className="flex size-9 items-center justify-center rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+          className="flex size-9 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
         >
           <Menu className="size-5" />
         </button>
@@ -310,23 +323,26 @@ export default function AdminSidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-admin-sidebar/50 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="absolute top-0 left-0 flex h-full w-72 flex-col bg-white px-4 py-6 shadow-xl">
+          <div className="font-stack-sans-headline absolute top-0 left-0 flex h-full w-72 flex-col border-r border-white/10 bg-admin-sidebar px-4 py-6 shadow-2xl">
             <div className="flex items-center justify-between px-1">
               {renderHeader(false)}
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Tutup menu"
-                className="flex size-9 items-center justify-center rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+                className="flex size-9 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
               >
                 <X className="size-5" />
               </button>
             </div>
-            <div className="mt-4 -mx-4 border-t border-[#e6e9ef]" />
-            <div className="mt-6 flex-1" onClick={() => setMobileOpen(false)}>
+            <div className="mt-4 -mx-4 border-t border-white/10" />
+            <div
+              className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4"
+              onClick={() => setMobileOpen(false)}
+            >
               <NavList navItems={navItems} pathname={pathname} />
             </div>
             <ProfileBlock

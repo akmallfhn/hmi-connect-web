@@ -72,7 +72,7 @@ export default function AdminIndexPage({ user }: AdminIndexPageProps) {
   const mainSiteOrigin = getMainSiteOrigin();
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16">
+    <div className="min-h-screen pb-16">
       <PageMargin className="py-8 lg:py-12">
         <div className="flex items-center justify-between gap-4">
           <div>

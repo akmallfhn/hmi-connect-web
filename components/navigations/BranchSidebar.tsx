@@ -68,7 +68,7 @@ function BranchHeader({
   collapsed: boolean;
 }) {
   const icon = (
-    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15 ring-inset">
       <LogoHmi className="h-7 w-auto" />
     </span>
   );
@@ -92,7 +92,7 @@ function BranchHeader({
     >
       {icon}
       <div className="min-w-0">
-        <p className="font-stack-sans-headline truncate text-sm font-semibold text-[#172033]">
+        <p className="font-stack-sans-headline truncate text-sm font-semibold text-white">
           Cabang {branchName}
         </p>
         <div className="mt-0.5 flex items-center gap-1.5">
@@ -104,7 +104,7 @@ function BranchHeader({
               className={`relative inline-flex size-1.5 rounded-full ${dotColor}`}
             />
           </span>
-          <span className="truncate text-xs text-[#5f6573]">{statusText}</span>
+          <span className="truncate text-xs text-white/50">{statusText}</span>
         </div>
       </div>
     </Link>
