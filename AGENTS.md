@@ -109,10 +109,11 @@ if their id is missing, not to a picker. Each of those five `[id]` layouts re-ch
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
-All five render the shared `EntitySidebar` shell (entity name above, session user below). Badko,
-Korkom, Komisariat, and Organization get one read-only `Daftar Kader` item and empty index page
-bodies; the Cabang variant retains its populated navigation and real branch-scoped analytics
-dashboard. `/master` has its
+All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
+exact-matched Dashboard item first. Badko, Korkom, and Komisariat retain empty Dashboard/index
+page bodies. Organization reuses `MasterDashboardPage` with the same unscoped `stat/*` calls as
+`/master`, while the Cabang variant retains its populated navigation and real branch-scoped
+analytics dashboard. `/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel,
 `/master/verification` has the organization-wide verification review queue, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
@@ -168,11 +169,16 @@ Three layers, each with one job. Don't blend them.
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
-   by source), `stat.ts` (the `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
+   by source), `access.ts` (grant/revoke wrappers for entity-admin permissions),
+   `verification-requests.ts` (the standalone `verification-requests/*` review resource,
+   including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
+   `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
    backing `/master`'s organization-wide dashboard and `/branches/[branch_id]`'s scoped
    dashboard — summary totals, branch/chapter distribution, user growth, and membership/
    branch/chapter/coordinating-body status breakdowns; the branch-capable functions accept an
-   optional `branchId` and send it as `branch_id`. Every function reads the session cookie itself
+   optional `branchId` and send it as `branch_id`. Unscoped stat POSTs explicitly send `body: {}`
+   rather than omitting the body because these backend handlers bind a JSON object and an absent
+   body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders
    every widget's own empty state), plus the shared `api.ts`).
    Marked `import "server-only"`.
@@ -321,7 +327,8 @@ itself, so it stays trivially testable via `render()` and reusable from any call
 template's rendered output to a string with `@react-email/components`' own `render()` (async) —
 `sendEmail`'s `mailHtml` wants a string, not the JSX element — then hand that string to
 `sendEmail`. `components/emails/VerificationApprovedEmail.tsx` is the first template: sent when a
-branch admin approves a `verification_requests` row (see `apis/access.ts#approveVerificationRequest`
+branch admin approves a `verification_requests` row (see
+`apis/verification-requests.ts#approveVerificationRequest`
 below), welcoming the newly-verified kader and pointing out what verified membership unlocks
 (berjejaring/follow, posting & diskusi, E-KTA). Its header renders the real HMI Connect logo — a
 hardcoded `LOGO_URL` pointing at the public `hmi-connect` Supabase bucket
@@ -1332,9 +1339,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  The Badko/Korkom/Komisariat scopes of `EntitySidebar` pass one flat `Daftar Kader` item to
-  `AdminSidebar`; Organization instead groups `Daftar Kader` and `Permintaan Verifikasi` under a
-  `Keanggotaan` `AdminNavGroup`, same grouping the Cabang/Master sidebars use. All retain the
+  After their top-level Dashboard item, the Badko/Korkom/Komisariat scopes of `EntitySidebar` pass
+  one flat `Daftar Kader` item to `AdminSidebar`; Organization instead groups `Daftar Kader` and
+  `Permintaan Verifikasi` under a `Keanggotaan` `AdminNavGroup`, same grouping the Cabang/Master
+  sidebars use. All retain the
   standard session profile/logout block at the bottom. Each route owns an
   access-checking nested layout and an intentionally empty index page; its `/members` child holds
   the read-only roster described below. The branch-scoped
@@ -1392,12 +1400,13 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `/organizations/[organization_id]/verification`, with no separate detail pages) is the UI for the
   `verification_requests`
   workflow the Verification flow section above describes — the admin-facing half that section
-  explicitly scoped out until now. Backed by a new `apis/access.ts` surface
+  explicitly scoped out until now. It is backed by `apis/verification-requests.ts`
   (`listVerificationRequests`/`getVerificationRequestDetail`/`approveVerificationRequest`/
-  `rejectVerificationRequest`, alongside the existing grant/revoke wrappers there, since
-  `verification-requests/*` also lives under `/access` per `internal/user/README.md`'s Access
-  control endpoints section, not `/users`). `verification-requests/list` accepts `branch_id`;
-  `apis/access.ts#listVerificationRequests` exposes it as `branchId` and sends the snake-case field.
+  `rejectVerificationRequest`), matching the backend's standalone
+  `/api/v1/verification-requests/*` resource. Entity-admin grant/revoke wrappers remain isolated
+  in `apis/access.ts`. `verification-requests/list` accepts `branch_id`;
+  `apis/verification-requests.ts#listVerificationRequests` exposes it as `branchId` and sends the
+  snake-case field.
   The Cabang route always supplies its route id, while the Master and Organization pages omit it by
   default to show requests from every Cabang and send it only when the viewer chooses the
   searchable Cabang filter. List rows now include `branch_id`/`branch_name` from the backend, so
@@ -1406,7 +1415,8 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   The backend also has no "all statuses" value for `verification-requests/list` (only one of
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
   filter on all three pages is "Semua Status", so
-  `apis/access.ts#listVerificationRequestsForReview` composes it in one place: when `status` isn't
+  `apis/verification-requests.ts#listVerificationRequestsForReview` composes it in one place: when
+  `status` isn't
   set, it fires all three
   status queries in parallel (`page: 1`, `page_size: 100` each — `ALL_STATUS_FETCH_SIZE`, generous
   since this is a review queue, not a full archive), merges, and sorts by `created_at` descending;
@@ -1439,8 +1449,8 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `/approve`/`/reject` all now also return `avatar` on their shared base shape, so
   `VerificationRequestListEntry.avatar` covers every one of them — earlier revisions of this feature
   had to cross-call `getUserByUsername` for email/avatar and show a raw `district_id`; don't
-  reintroduce either workaround, `apis/access.ts#getVerificationRequestDetail` just returns the
-  response as-is, and the list table's own `Avatar` reads `request.avatar` directly too, no more
+  reintroduce either workaround, `apis/verification-requests.ts#getVerificationRequestDetail` just
+  returns the response as-is, and the list table's own `Avatar` reads `request.avatar` directly too, no more
   initials-only fallback there. "Setujui" opens a plain `AlertConfirmation` (`confirmVariant="primary"`)
   since approval takes no input beyond the id; "Tolak" opens a `Modal` wrapping a
   mounted-only-while-open `RejectFields` (same shape as `Edit*Form.tsx`'s `*Fields` components) with

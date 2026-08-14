@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import type {
   VerificationRequestDetail,
   VerificationRequestListEntry,
-} from "@/apis/access";
+} from "@/apis/verification-requests";
 import {
   approveVerificationRequest,
   getVerificationRequestDetail,

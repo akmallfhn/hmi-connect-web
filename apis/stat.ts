@@ -77,7 +77,7 @@ export async function getStatSummary(
   const token = await getSessionToken();
   const result = await callApi<StatSummary>("/api/v1/stat/summary", {
     token,
-    body: branchId ? { branch_id: branchId } : undefined,
+    body: branchId ? { branch_id: branchId } : {},
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -86,7 +86,7 @@ export async function getBranchDistribution(): Promise<BranchDistribution | null
   const token = await getSessionToken();
   const result = await callApi<BranchDistribution>(
     "/api/v1/stat/branch-distribution",
-    { token }
+    { token, body: {} }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -99,7 +99,7 @@ export async function getChapterDistribution(
     "/api/v1/stat/chapter-distribution",
     {
       token,
-      body: branchId ? { branch_id: branchId } : undefined,
+      body: branchId ? { branch_id: branchId } : {},
     }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
@@ -128,7 +128,7 @@ export async function getMembershipStatus(
     "/api/v1/stat/membership-status",
     {
       token,
-      body: branchId ? { branch_id: branchId } : undefined,
+      body: branchId ? { branch_id: branchId } : {},
     }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
@@ -138,6 +138,7 @@ export async function getBranchStatus(): Promise<BranchStatus | null> {
   const token = await getSessionToken();
   const result = await callApi<BranchStatus>("/api/v1/stat/branch-status", {
     token,
+    body: {},
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -148,7 +149,7 @@ export async function getChapterStatus(
   const token = await getSessionToken();
   const result = await callApi<ChapterStatus>("/api/v1/stat/chapter-status", {
     token,
-    body: branchId ? { branch_id: branchId } : undefined,
+    body: branchId ? { branch_id: branchId } : {},
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -157,7 +158,7 @@ export async function getCoordinatingBodyStatus(): Promise<CoordinatingBodyStatu
   const token = await getSessionToken();
   const result = await callApi<CoordinatingBodyStatus>(
     "/api/v1/stat/coordinating-body-status",
-    { token }
+    { token, body: {} }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }

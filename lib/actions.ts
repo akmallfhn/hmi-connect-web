@@ -1,16 +1,18 @@
 "use server";
 
 import {
-  approveVerificationRequest as approveVerificationRequestApi,
-  getVerificationRequestDetail as getVerificationRequestDetailApi,
   grantBranchAdmin as grantBranchAdminApi,
   grantChapterAdmin as grantChapterAdminApi,
   grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
-  rejectVerificationRequest as rejectVerificationRequestApi,
   revokeBranchAdmin as revokeBranchAdminApi,
   revokeChapterAdmin as revokeChapterAdminApi,
   revokeCoordinatingBodyAdmin as revokeCoordinatingBodyAdminApi,
 } from "@/apis/access";
+import {
+  approveVerificationRequest as approveVerificationRequestApi,
+  getVerificationRequestDetail as getVerificationRequestDetailApi,
+  rejectVerificationRequest as rejectVerificationRequestApi,
+} from "@/apis/verification-requests";
 import {
   createBranch as createBranchApi,
   deleteBranch as deleteBranchApi,
@@ -211,7 +213,7 @@ export async function revokeCoordinatingBodyAdmin(id: string) {
   return revokeCoordinatingBodyAdminApi(id);
 }
 
-// Super Admin, or Administrator with can_manage_branch — see apis/access.ts.
+// Super Admin, or Administrator with can_manage_branch — see apis/verification-requests.ts.
 export async function approveVerificationRequest(id: string) {
   return approveVerificationRequestApi(id);
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { listVerificationRequestsForReview } from "@/apis/access";
+import { listVerificationRequestsForReview } from "@/apis/verification-requests";
 import { getBranchDetail } from "@/apis/branches";
 import { VerificationRequestListPage } from "@/components/pages/BranchVerificationListPage";
 import type { VerificationRequestStatusEnum } from "@/lib/types";

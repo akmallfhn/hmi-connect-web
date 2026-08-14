@@ -48,9 +48,16 @@ function getNavItems(
   entityId: string
 ): AdminNavEntry[] {
   const base = getBaseHref(scope, entityId);
+  const dashboardItem: AdminNavEntry = {
+    label: "Dashboard",
+    href: base,
+    icon: LayoutDashboard,
+    exact: true,
+  };
 
   if (scope === "organization") {
     return [
+      dashboardItem,
       {
         groupName: "Keanggotaan",
         items: [
@@ -66,11 +73,14 @@ function getNavItems(
   }
 
   if (scope !== "branch") {
-    return [{ label: "Daftar Kader", href: `${base}/members`, icon: Users }];
+    return [
+      dashboardItem,
+      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+    ];
   }
 
   return [
-    { label: "Dashboard", href: base, icon: LayoutDashboard, exact: true },
+    dashboardItem,
     {
       groupName: "Organisasi",
       items: [
