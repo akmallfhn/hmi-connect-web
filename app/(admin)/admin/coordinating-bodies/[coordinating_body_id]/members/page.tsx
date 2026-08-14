@@ -39,7 +39,7 @@ export default async function CoordinatingBodyMembersPage({
   return (
     <AdminMemberListPage
       basePath={`/coordinating-bodies/${coordinating_body_id}`}
-      scopeName={`Badko ${coordinatingBody?.name ?? "ini"}`}
+      scopeName={`HMI Badko ${coordinatingBody?.name ?? "ini"}`}
       managementScope="coordinating_body"
       users={result.list}
       totalData={result.totalData}

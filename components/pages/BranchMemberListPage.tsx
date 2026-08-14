@@ -19,7 +19,7 @@ export default function BranchMemberListPage({
     <AdminMemberListPage
       {...props}
       basePath={`/branches/${branchId}`}
-      scopeName={`Cabang ${branchName}`}
+      scopeName={`HMI Cabang ${branchName}`}
       managementScope="branch"
     />
   );

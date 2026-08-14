@@ -1355,7 +1355,11 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
   with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only
   thin compatibility wrappers that supply the Cabang base path/name to those shared components.
-  The table keeps a single Komisariat column because each route is already scoped; row links use the
+  Every Komisariat value in the table is prefixed with `Komisariat`. Organization and Badko span
+  multiple Cabang, so their `Cabang / Komisariat` cells also show `Cabang {branch_name}` beneath
+  the Komisariat, matching `/master/users`; the narrower Cabang/Korkom/Komisariat scopes keep only
+  the Komisariat line. Page descriptions name their full scope (`Pengurus Besar HMI`, `HMI Badko
+  {name}`, `HMI Cabang {name}`, `HMI Korkom {name}`, or `HMI Komisariat {name}`). Row links use the
   current scoped base path plus `/members/{username}`. Its Role label is also scope-aware: it reads
   the matching `can_manage_organization`/`can_manage_coordinating_body`/`can_manage_branch`/
   `can_manage_coordinating_chapter`/`can_manage_chapter` flag from `UserListEntry`, showing the

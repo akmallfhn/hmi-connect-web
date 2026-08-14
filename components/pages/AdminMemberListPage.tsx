@@ -86,6 +86,9 @@ export default function AdminMemberListPage({
 }: AdminMemberListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const showBranchContext =
+    managementScope === "organization" ||
+    managementScope === "coordinating_body";
 
   // Adjust state during render when the server hands back a new search value, same pattern as SearchPage.
   const [seenSearch, setSeenSearch] = useState(initialSearch);
@@ -161,7 +164,9 @@ export default function AdminMemberListPage({
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
                 <tr>
                   <th className="px-4 py-3">User</th>
-                  <th className="px-4 py-3">Komisariat</th>
+                  <th className="px-4 py-3">
+                    {showBranchContext ? "Cabang / Komisariat" : "Komisariat"}
+                  </th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Terverifikasi</th>
@@ -193,7 +198,18 @@ export default function AdminMemberListPage({
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-[#172033]">
-                        {user.chapter_name ?? (
+                        {user.chapter_name ? (
+                          <div className="min-w-0">
+                            <p className="truncate">
+                              Komisariat {user.chapter_name}
+                            </p>
+                            {showBranchContext && user.branch_name && (
+                              <p className="truncate text-[13px] text-[#5f6573]">
+                                Cabang {user.branch_name}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
                           <span className="text-[#5f6573]">—</span>
                         )}
                       </td>

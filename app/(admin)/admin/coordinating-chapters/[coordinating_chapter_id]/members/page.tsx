@@ -39,7 +39,7 @@ export default async function CoordinatingChapterMembersPage({
   return (
     <AdminMemberListPage
       basePath={`/coordinating-chapters/${coordinating_chapter_id}`}
-      scopeName={coordinatingChapter?.name ?? "Korkom ini"}
+      scopeName={`HMI Korkom ${coordinatingChapter?.name ?? "ini"}`}
       managementScope="coordinating_chapter"
       users={result.list}
       totalData={result.totalData}

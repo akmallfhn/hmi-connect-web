@@ -39,7 +39,7 @@ export default async function ChapterMembersPage({
   return (
     <AdminMemberListPage
       basePath={`/chapters/${chapter_id}`}
-      scopeName={chapter?.name ?? "Komisariat ini"}
+      scopeName={`HMI Komisariat ${chapter?.name ?? "ini"}`}
       managementScope="chapter"
       users={result.list}
       totalData={result.totalData}
