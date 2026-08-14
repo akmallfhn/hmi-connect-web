@@ -111,8 +111,8 @@ export default function BranchChapterListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId="branch-chapter-status-filter"
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />

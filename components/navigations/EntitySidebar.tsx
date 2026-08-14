@@ -51,11 +51,16 @@ function getNavItems(
 
   if (scope === "organization") {
     return [
-      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
       {
-        label: "Permintaan Verifikasi",
-        href: `${base}/verification`,
-        icon: ShieldCheck,
+        groupName: "Keanggotaan",
+        items: [
+          { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+          {
+            label: "Permintaan Verifikasi",
+            href: `${base}/verification`,
+            icon: ShieldCheck,
+          },
+        ],
       },
     ];
   }

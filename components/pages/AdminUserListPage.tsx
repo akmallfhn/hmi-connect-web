@@ -163,8 +163,8 @@ export default function AdminUserListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId="user-status-filter"
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />

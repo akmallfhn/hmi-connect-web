@@ -358,6 +358,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
 - `components/states/EmptyState.tsx` — the shared empty-result presentation for every admin
   list: the larger `EmptyStateIllustration`, a `text-base` title, and a `text-sm` description.
   List pages pass different copy for a genuinely empty collection versus an empty search/filter.
+  Admin list filter controls use action-oriented placeholders (`Filter Status`, `Filter Cabang`,
+  `Filter Badko`, etc.), never state-like placeholders such as `Semua ...`. Status filters pass
+  `null` to `Select` while the URL status is empty so the placeholder remains visible; the
+  `Semua Status` empty-value option stays in the dropdown as the explicit way to clear a selection.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
   `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`). `CreateableSelect`/
   `SearchableSelect` take `loadOptions(inputValue, page)` + `defaultOptions` and handle
@@ -1328,8 +1332,9 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  The Badko/Korkom/Komisariat scopes of `EntitySidebar` pass one `Daftar Kader` item to
-  `AdminSidebar`; Organization also adds a read-only `Permintaan Verifikasi` item. All retain the
+  The Badko/Korkom/Komisariat scopes of `EntitySidebar` pass one flat `Daftar Kader` item to
+  `AdminSidebar`; Organization instead groups `Daftar Kader` and `Permintaan Verifikasi` under a
+  `Keanggotaan` `AdminNavGroup`, same grouping the Cabang/Master sidebars use. All retain the
   standard session profile/logout block at the bottom. Each route owns an
   access-checking nested layout and an intentionally empty index page; its `/members` child holds
   the read-only roster described below. The branch-scoped
@@ -1356,7 +1361,8 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `/coordinating-bodies/{id}/members`, `/branches/{id}/members`,
   `/coordinating-chapters/{id}/members`, and `/chapters/{id}/members`. All five reuse
   `components/pages/AdminMemberListPage.tsx` (URL-driven search/status/pagination, the same table
-  look as `/master/users`, but no create/edit/delete/dropdown controls) and
+  look as `/master/users`, but no create/edit/delete/dropdown controls; its `Aksi` column has one
+  outlined `Eye` + `Lihat Detail` button that navigates to the scoped member detail route) and
   `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
   with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only
   thin compatibility wrappers that supply the Cabang base path/name to those shared components.

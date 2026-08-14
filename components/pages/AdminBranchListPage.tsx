@@ -157,7 +157,7 @@ export default function AdminBranchListPage({
         <div className="w-full sm:max-w-xs">
           <SearchableSelect
             selectId="branch-coordinating-body-filter"
-            placeholder="Semua Badko"
+            placeholder="Filter Badko"
             value={coordinatingBodyOption}
             onChange={(option) =>
               pushParams({ coordinating_body_id: option ? String(option.value) : "" })
@@ -169,8 +169,8 @@ export default function AdminBranchListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId="branch-status-filter"
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />

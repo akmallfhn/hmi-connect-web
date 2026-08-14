@@ -1,10 +1,11 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { UserListEntry } from "@/apis/users";
+import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
 import Label from "../common/Label";
@@ -136,8 +137,8 @@ export default function AdminMemberListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId={`${managementScope}-member-status-filter`}
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />
@@ -160,7 +161,7 @@ export default function AdminMemberListPage({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
                 <tr>
                   <th className="px-4 py-3">User</th>
@@ -170,6 +171,7 @@ export default function AdminMemberListPage({
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Terverifikasi</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
@@ -225,6 +227,23 @@ export default function AdminMemberListPage({
                       </td>
                       <td className="px-4 py-3">
                         <UserVerifiedLabel status={user.verification_status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `${basePath}/members/${encodeURIComponent(user.username)}`
+                              )
+                            }
+                            aria-label={`Lihat detail ${user.full_name}`}
+                          >
+                            <Eye className="size-4" />
+                            Lihat Detail
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -292,7 +292,7 @@ export function VerificationRequestListPage({
           <div className="w-full sm:max-w-xs">
             <SearchableSelect
               selectId="master-verification-branch-filter"
-              placeholder="Semua Cabang"
+              placeholder="Filter Cabang"
               value={branchOption}
               onChange={(option) =>
                 pushParams({
@@ -307,8 +307,8 @@ export function VerificationRequestListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId={`${showBranchFilter ? "master" : "branch"}-verification-status-filter`}
-            placeholder="Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />

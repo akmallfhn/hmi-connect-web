@@ -161,7 +161,7 @@ export default function AdminChapterListPage({
         <div className="w-full sm:max-w-xs">
           <SearchableSelect
             selectId="chapter-branch-filter"
-            placeholder="Semua Cabang"
+            placeholder="Filter Cabang"
             value={branchOption}
             onChange={(option) =>
               pushParams({ branch_id: option ? String(option.value) : "" })
@@ -173,8 +173,8 @@ export default function AdminChapterListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId="chapter-status-filter"
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />

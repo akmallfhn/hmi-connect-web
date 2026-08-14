@@ -132,8 +132,8 @@ export default function AdminCoordinatingBodyListPage({
         <div className="w-full sm:max-w-52">
           <Select
             selectId="coordinating-body-status-filter"
-            placeholder="Semua Status"
-            value={initialStatus}
+            placeholder="Filter Status"
+            value={initialStatus || null}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
             options={STATUS_FILTER_OPTIONS}
           />
