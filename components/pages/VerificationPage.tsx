@@ -158,7 +158,10 @@ export default function VerificationPage({
     const results: { id: string; name: string }[] = json.data ?? [];
 
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
+      options: results.map((item) => ({
+        label: `Cabang ${item.name}`,
+        value: item.id,
+      })),
       hasMore: Boolean(json.hasMore),
     };
   }
@@ -177,7 +180,10 @@ export default function VerificationPage({
     const results: { id: string; name: string }[] = json.data ?? [];
 
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
+      options: results.map((item) => ({
+        label: `Komisariat ${item.name}`,
+        value: item.id,
+      })),
       hasMore: Boolean(json.hasMore),
     };
   }

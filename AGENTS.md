@@ -814,7 +814,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   style single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
   button top-right, then name+badge/`@username`/headline/affiliation/social links+joined-date/
   stats flowing below) — deliberately doesn't show `coordinatingBodyName`/`organizationName`
-  or a `feedCount` stat; affiliation renders as `"HMI {chapterName} • Cabang {branchName}"`.
+  or a `feedCount` stat; affiliation renders as `"HMI Komisariat {chapterName} • Cabang {branchName}"`.
   It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
   `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
   counts open `FollowListModal`. When viewing someone else's profile while logged in

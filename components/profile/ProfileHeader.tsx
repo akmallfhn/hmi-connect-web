@@ -153,7 +153,7 @@ export default function ProfileHeader({
   >(null);
   const displayName = fullName ?? "Kader";
   const affiliation = [
-    chapterName ? `HMI ${chapterName}` : null,
+    chapterName ? `HMI Komisariat ${chapterName}` : null,
     branchName ? `Cabang ${branchName}` : null,
   ]
     .filter(Boolean)
