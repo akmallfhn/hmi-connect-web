@@ -5,6 +5,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Network,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,8 +21,15 @@ interface MasterSidebarProps {
 const NAV_ITEMS: AdminNavEntry[] = [
   { label: "Dashboard", href: "/master", icon: LayoutDashboard, exact: true },
   {
-    groupName: "Administrasi",
-    items: [{ label: "User Management", href: "/master/users", icon: Users }],
+    groupName: "Keanggotaan",
+    items: [
+      { label: "User Management", href: "/master/users", icon: Users },
+      {
+        label: "Permintaan Verifikasi",
+        href: "/master/verification",
+        icon: ShieldCheck,
+      },
+    ],
   },
   {
     groupName: "Organisasi",

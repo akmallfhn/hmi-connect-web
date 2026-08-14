@@ -61,7 +61,7 @@ export async function revokeCoordinatingBodyAdmin(id: string) {
   );
 }
 
-// Mirrors verification-requests/list's row shape — Super Admin sees every request, a branch admin only sees requests under their own branch (scoped implicitly via the caller's JWT, not a request param).
+// Mirrors verification-requests/list's row shape — Super Admin sees every request, while branch_id can narrow the result to one Cabang.
 export type VerificationRequestListEntry = {
   id: string;
   user_id: string;
@@ -71,6 +71,8 @@ export type VerificationRequestListEntry = {
   avatar?: string;
   chapter_id: string;
   chapter_name?: string;
+  branch_id?: string;
+  branch_name?: string;
   status: VerificationRequestStatusEnum;
   created_at: string;
 };
@@ -108,13 +110,14 @@ type ListResponse<T> = {
 };
 
 export type ListVerificationRequestsOptions = {
+  branchId?: string;
   status?: VerificationRequestStatusEnum;
   search?: string;
   page?: number;
   pageSize?: number;
 };
 
-// Requires Super Admin, or Administrator with can_manage_branch — used by /branches/[branch_id]/verification.
+// Requires an admin session authorized by the backend for the requested review scope.
 export async function listVerificationRequests(
   options: ListVerificationRequestsOptions = {}
 ): Promise<PagedListResult<VerificationRequestListEntry>> {
@@ -123,7 +126,7 @@ export async function listVerificationRequests(
   if (!sessionToken)
     return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { status, search, page, pageSize } = options;
+  const { branchId, status, search, page, pageSize } = options;
   const result = await callApi<ListResponse<VerificationRequestListEntry>>(
     "/api/v1/access/verification-requests/list",
     {
@@ -131,6 +134,7 @@ export async function listVerificationRequests(
       token: sessionToken,
       body: {
         status: status ?? "pending",
+        ...(branchId ? { branch_id: branchId } : {}),
         ...(search ? { search } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
@@ -150,6 +154,41 @@ export async function listVerificationRequests(
     totalData: metapaging?.total_data ?? list.length,
     totalPage: metapaging?.total_page ?? 1,
     currentPage: metapaging?.current_page ?? page ?? 1,
+  };
+}
+
+const ALL_VERIFICATION_REQUEST_STATUSES: VerificationRequestStatusEnum[] = [
+  "pending",
+  "approved",
+  "rejected",
+];
+const ALL_STATUS_FETCH_SIZE = 100;
+
+// Composes the "Semua Status" option (the backend accepts only one status per request) for every review screen.
+export async function listVerificationRequestsForReview(
+  options: ListVerificationRequestsOptions = {}
+): Promise<PagedListResult<VerificationRequestListEntry>> {
+  if (options.status) return listVerificationRequests(options);
+
+  const results = await Promise.all(
+    ALL_VERIFICATION_REQUEST_STATUSES.map((status) =>
+      listVerificationRequests({
+        ...options,
+        status,
+        page: 1,
+        pageSize: ALL_STATUS_FETCH_SIZE,
+      })
+    )
+  );
+  const list = results
+    .flatMap((result) => result.list)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+
+  return {
+    list,
+    totalData: list.length,
+    totalPage: 1,
+    currentPage: 1,
   };
 }
 

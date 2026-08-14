@@ -4,12 +4,10 @@ import type { BranchTypeEnum } from "@/lib/types";
 import {
   Award,
   BookText,
-  FileCheck2,
   GraduationCap,
   LayoutDashboard,
   ShieldCheck,
   Users,
-  Vote,
 } from "lucide-react";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
@@ -51,6 +49,17 @@ function getNavItems(
 ): AdminNavEntry[] {
   const base = getBaseHref(scope, entityId);
 
+  if (scope === "organization") {
+    return [
+      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      {
+        label: "Permintaan Verifikasi",
+        href: `${base}/verification`,
+        icon: ShieldCheck,
+      },
+    ];
+  }
+
   if (scope !== "branch") {
     return [{ label: "Daftar Kader", href: `${base}/members`, icon: Users }];
   }
@@ -60,13 +69,17 @@ function getNavItems(
     {
       groupName: "Organisasi",
       items: [
-        { label: "Penerbitan SK", href: `${base}/sk`, icon: FileCheck2 },
         { label: "AD ART", href: `${base}/ad-art`, icon: BookText },
         {
           label: "Kelola Komisariat",
           href: `${base}/chapters`,
           icon: GraduationCap,
         },
+      ],
+    },
+    {
+      groupName: "Keanggotaan",
+      items: [
         { label: "Daftar Kader", href: `${base}/members`, icon: Users },
         {
           label: "Permintaan Verifikasi",
@@ -79,7 +92,6 @@ function getNavItems(
       groupName: "Program",
       items: [
         { label: "Latihan Kader 2", href: `${base}/trainings`, icon: Award },
-        { label: "Konfercab", href: `${base}/konfercab`, icon: Vote },
       ],
     },
   ];

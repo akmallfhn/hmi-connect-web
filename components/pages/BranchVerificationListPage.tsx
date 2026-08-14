@@ -2,6 +2,7 @@
 
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
+  Building2,
   Cake,
   Check,
   Eye,
@@ -32,6 +33,9 @@ import Pagination from "../common/Pagination";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import VerificationRequestStatusLabel from "../labels/VerificationRequestStatusLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -110,7 +114,7 @@ function RejectFields({
       onClose();
     } catch (err) {
       console.error(
-        "[BranchVerificationListPage] rejectVerificationRequest threw:",
+        "[VerificationRequestListPage] rejectVerificationRequest threw:",
         err
       );
       toast.error("Gagal menolak permintaan verifikasi.");
@@ -144,26 +148,36 @@ function RejectFields({
   );
 }
 
-interface BranchVerificationListPageProps {
+export interface VerificationRequestListPageProps {
   requests: VerificationRequestListEntry[];
   totalData: number;
   totalPage: number;
   currentPage: number;
   initialStatus: string;
   initialSearch: string;
+  description: string;
+  showBranchFilter?: boolean;
+  selectedBranch?: { id: string; name: string } | null;
+  allowReviewActions?: boolean;
 }
 
-export default function BranchVerificationListPage({
+export function VerificationRequestListPage({
   requests,
   totalData,
   totalPage,
   currentPage,
   initialStatus,
   initialSearch,
-}: BranchVerificationListPageProps) {
+  description,
+  showBranchFilter = false,
+  selectedBranch = null,
+  allowReviewActions = true,
+}: VerificationRequestListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { branchName } = useBranch();
+  const branchOption: SearchableOption | null = selectedBranch
+    ? { label: selectedBranch.name, value: selectedBranch.id }
+    : null;
 
   // "Adjust state during render" (not a useEffect) when the server hands back a new initialSearch, same pattern as AdminUserListPage.
   const [seenSearch, setSeenSearch] = useState(initialSearch);
@@ -196,6 +210,18 @@ export default function BranchVerificationListPage({
     router.push(`?${params.toString()}`);
   }
 
+  async function loadBranchOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+    const response = await fetch(`/api/branches/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchInput === initialSearch) return;
@@ -215,7 +241,7 @@ export default function BranchVerificationListPage({
       if (!detail) toast.error("Gagal memuat detail permintaan verifikasi.");
     } catch (err) {
       console.error(
-        "[BranchVerificationListPage] getVerificationRequestDetail threw:",
+        "[VerificationRequestListPage] getVerificationRequestDetail threw:",
         err
       );
       toast.error("Gagal memuat detail permintaan verifikasi.");
@@ -247,9 +273,7 @@ export default function BranchVerificationListPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div>
-        <AdminPageTitle
-          description={`Tinjau pengajuan verifikasi identitas kader di Cabang ${branchName}.`}
-        >
+        <AdminPageTitle description={description}>
           Permintaan Verifikasi
         </AdminPageTitle>
       </div>
@@ -257,16 +281,32 @@ export default function BranchVerificationListPage({
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-xs">
           <Input
-            inputId="branch-verification-search"
+            inputId={`${showBranchFilter ? "master" : "branch"}-verification-search`}
             placeholder="Cari nama..."
             icon={<Search className="size-4" />}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
+        {showBranchFilter && (
+          <div className="w-full sm:max-w-xs">
+            <SearchableSelect
+              selectId="master-verification-branch-filter"
+              placeholder="Semua Cabang"
+              value={branchOption}
+              onChange={(option) =>
+                pushParams({
+                  branch_id: option ? String(option.value) : "",
+                })
+              }
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOption ? [branchOption] : []}
+            />
+          </div>
+        )}
         <div className="w-full sm:max-w-52">
           <Select
-            selectId="branch-verification-status-filter"
+            selectId={`${showBranchFilter ? "master" : "branch"}-verification-status-filter`}
             placeholder="Status"
             value={initialStatus}
             onChange={(value) => pushParams({ status: String(value ?? "") })}
@@ -279,12 +319,12 @@ export default function BranchVerificationListPage({
         {requests.length === 0 ? (
           <EmptyState
             title={
-              initialSearch || initialStatus
+              initialSearch || initialStatus || selectedBranch
                 ? "Permintaan verifikasi tidak ditemukan"
                 : "Belum ada permintaan verifikasi"
             }
             description={
-              initialSearch || initialStatus
+              initialSearch || initialStatus || selectedBranch
                 ? "Coba ubah kata kunci pencarian atau filter status."
                 : "Permintaan verifikasi kader akan ditampilkan di sini."
             }
@@ -295,7 +335,9 @@ export default function BranchVerificationListPage({
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
                   <th className="px-4 py-3">Kader</th>
-                  <th className="px-4 py-3">Komisariat</th>
+                  <th className="px-4 py-3">
+                    {showBranchFilter ? "Cabang / Komisariat" : "Komisariat"}
+                  </th>
                   <th className="px-4 py-3">Diajukan</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
@@ -322,7 +364,18 @@ export default function BranchVerificationListPage({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
-                      {request.chapter_name ?? (
+                      {request.chapter_name ? (
+                        <div className="min-w-0">
+                          <p className="truncate">
+                            Komisariat {request.chapter_name}
+                          </p>
+                          {showBranchFilter && (
+                            <p className="truncate text-[13px] text-[#5f6573]">
+                              Cabang {request.branch_name ?? selectedBranch?.name ?? "—"}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
                         <span className="text-[#5f6573]">—</span>
                       )}
                     </td>
@@ -342,7 +395,7 @@ export default function BranchVerificationListPage({
                         >
                           <Eye className="size-4" /> Lihat Detail
                         </Button>
-                        {request.status === "pending" && (
+                        {allowReviewActions && request.status === "pending" && (
                           <>
                             <Button
                               variant="destructive"
@@ -438,6 +491,17 @@ export default function BranchVerificationListPage({
                 label="Komisariat"
                 value={detailData.chapter_name}
               />
+              {showBranchFilter && (
+                <Field
+                  icon={Building2}
+                  label="Cabang"
+                  value={
+                    detailData.branch_name ??
+                    detailTarget?.branch_name ??
+                    selectedBranch?.name
+                  }
+                />
+              )}
               <div className="sm:col-span-2">
                 <Field
                   icon={MapPin}
@@ -461,30 +525,52 @@ export default function BranchVerificationListPage({
         )}
       </Modal>
 
-      <AlertConfirmation
-        open={approveTarget !== null}
-        onClose={() => setApproveTarget(null)}
-        onConfirm={handleApprove}
-        title="Setujui Permintaan Verifikasi?"
-        message="Kader akan mendapatkan status terverifikasi, kartu anggota, dan langganan aktif selama satu tahun."
-        confirmLabel="Setujui"
-        confirmVariant="primary"
-        loading={approving}
-      />
-
-      <Modal
-        open={rejectTarget !== null}
-        onClose={() => setRejectTarget(null)}
-        title="Tolak Permintaan Verifikasi"
-      >
-        {rejectTarget && (
-          <RejectFields
-            requestId={rejectTarget.id}
-            onClose={() => setRejectTarget(null)}
-            onRejected={() => router.refresh()}
+      {allowReviewActions && (
+        <>
+          <AlertConfirmation
+            open={approveTarget !== null}
+            onClose={() => setApproveTarget(null)}
+            onConfirm={handleApprove}
+            title="Setujui Permintaan Verifikasi?"
+            message="Kader akan mendapatkan status terverifikasi, kartu anggota, dan langganan aktif selama satu tahun."
+            confirmLabel="Setujui"
+            confirmVariant="primary"
+            loading={approving}
           />
-        )}
-      </Modal>
+
+          <Modal
+            open={rejectTarget !== null}
+            onClose={() => setRejectTarget(null)}
+            title="Tolak Permintaan Verifikasi"
+          >
+            {rejectTarget && (
+              <RejectFields
+                requestId={rejectTarget.id}
+                onClose={() => setRejectTarget(null)}
+                onRejected={() => router.refresh()}
+              />
+            )}
+          </Modal>
+        </>
+      )}
     </div>
+  );
+}
+
+type BranchVerificationListPageProps = Omit<
+  VerificationRequestListPageProps,
+  "description" | "showBranchFilter" | "selectedBranch"
+>;
+
+export default function BranchVerificationListPage(
+  props: BranchVerificationListPageProps
+) {
+  const { branchName } = useBranch();
+
+  return (
+    <VerificationRequestListPage
+      {...props}
+      description={`Tinjau pengajuan verifikasi identitas kader di Cabang ${branchName}.`}
+    />
   );
 }

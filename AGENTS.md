@@ -113,10 +113,12 @@ All five render the shared `EntitySidebar` shell (entity name above, session use
 Korkom, Komisariat, and Organization get one read-only `Daftar Kader` item and empty index page
 bodies; the Cabang variant retains its populated navigation and real branch-scoped analytics
 dashboard. `/master` has its
-real organization-wide dashboard, `/master/users` has the real User Management CRUD panel, and
+real organization-wide dashboard, `/master/users` has the real User Management CRUD panel,
+`/master/verification` has the organization-wide verification review queue, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
 Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
-by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything under `/master`.
+by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything under `/master`;
+the SK and Konfercab routes are currently hidden from the Cabang sidebar.
 
 ## Auth & session flow
 
@@ -1178,9 +1180,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, a `renderHeader`
   that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing when collapsed
   (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
-  (exact-matched) followed by two `AdminNavGroup`s: "Administrasi" (User Management) and
+  (exact-matched) followed by two `AdminNavGroup`s: "Keanggotaan" (User Management and the
+  organization-wide Permintaan Verifikasi review queue) and
   "Organisasi" (Badko/Cabang/Komisariat) — mirroring the same group-naming convention
-  `EntitySidebar`'s Cabang-scoped "Organisasi"/"Program" groups use below.
+  `EntitySidebar`'s Cabang-scoped "Organisasi"/"Keanggotaan"/"Program" groups use below.
   `components/navigations/EntitySidebar.tsx` is the single scoped-entity sidebar rendered by all
   five entity layouts, including `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout
   does the same
@@ -1208,13 +1211,14 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   carry `aria-label`. The Cabang scope's nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
   `stat/summary`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
-  calls), then two `AdminNavGroup`s —
-  "Organisasi" (Penerbitan SK at `/branches/{id}/sk`, AD ART at `/branches/{id}/ad-art` — both
-  still placeholders; Kelola Komisariat at `/branches/{id}/chapters`, real — see below; Daftar
-  Kader at `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
-  `/branches/{id}/verification`, real — see further below) and "Program" (Latihan Kader 2 at
-  `/branches/{id}/trainings`, real and backed by the training API described below; Konfercab at
-  `/branches/{id}/konfercab`, still a placeholder).
+  calls), then three `AdminNavGroup`s —
+  "Organisasi" (AD ART at `/branches/{id}/ad-art`, still a placeholder; Kelola Komisariat at
+  `/branches/{id}/chapters`, real — see below), "Keanggotaan" (Daftar Kader at
+  `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
+  `/branches/{id}/verification`, real — see further below), and "Program" (Latihan Kader 2 at
+  `/branches/{id}/trainings`, real and backed by the training API described below). The existing
+  `/branches/{id}/sk` and `/branches/{id}/konfercab` placeholder routes are not linked in the
+  sidebar.
   Latihan Kader 2 (`/branches/{id}/trainings` +
   `/branches/{id}/trainings/{training_id}` + `/branches/{id}/trainings/guideline`) uses
   `apis/trainings.ts`, which wraps all backend
@@ -1324,8 +1328,9 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  The non-Cabang scopes of `EntitySidebar` pass one `Daftar Kader` item to `AdminSidebar` and
-  retain the standard session profile/logout block at the bottom. Each route owns an
+  The Badko/Korkom/Komisariat scopes of `EntitySidebar` pass one `Daftar Kader` item to
+  `AdminSidebar`; Organization also adds a read-only `Permintaan Verifikasi` item. All retain the
+  standard session profile/logout block at the bottom. Each route owns an
   access-checking nested layout and an intentionally empty index page; its `/members` child holds
   the read-only roster described below. The branch-scoped
   Kelola Komisariat page below is a Cabang managing its *own* Komisariat rows, a different scope
@@ -1376,38 +1381,46 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   single-organization roster; Badko/Cabang/Korkom/Komisariat checks are strict. `users/list` itself
   still requires the backend `Super Admin` or `Administrator` role in addition to the frontend
   layout's matching `can_manage_*` gate, the same role/flag split noted under Domain routing.
-  Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, single
-  route — there's no separate detail page) is the review UI for the `verification_requests`
+  Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, the
+  Super Admin-only `/master/verification`, and the read-only
+  `/organizations/[organization_id]/verification`, with no separate detail pages) is the UI for the
+  `verification_requests`
   workflow the Verification flow section above describes — the admin-facing half that section
   explicitly scoped out until now. Backed by a new `apis/access.ts` surface
   (`listVerificationRequests`/`getVerificationRequestDetail`/`approveVerificationRequest`/
   `rejectVerificationRequest`, alongside the existing grant/revoke wrappers there, since
   `verification-requests/*` also lives under `/access` per `internal/user/README.md`'s Access
-  control endpoints section, not `/users`). Unlike Daftar Kader's `branchId` option, the backend has
-  no `branch_id` filter param for `verification-requests/list` at all — scoping is entirely implicit
-  in the caller's own JWT (a `Super Admin` sees every request org-wide, a branch admin only sees
-  requests whose `chapter_id` falls under their own branch), so this route's `page.tsx` calls
-  `listVerificationRequests` with no branch-scoping param even though it's nested under
-  `/branches/{id}` — for the branch-admin caller this is the intended screen actually reaches, this
-  is a non-issue; a `Super Admin` opening the same URL sees the same org-wide list any other branch's
-  `/verification` page would show them, a quirk of the backend's design rather than a frontend bug.
+  control endpoints section, not `/users`). `verification-requests/list` accepts `branch_id`;
+  `apis/access.ts#listVerificationRequests` exposes it as `branchId` and sends the snake-case field.
+  The Cabang route always supplies its route id, while the Master and Organization pages omit it by
+  default to show requests from every Cabang and send it only when the viewer chooses the
+  searchable Cabang filter. List rows now include `branch_id`/`branch_name` from the backend, so
+  those two broad-scope tables render `Cabang {branch_name}` beneath the prefixed `Komisariat
+  {chapter_name}` value.
   The backend also has no "all statuses" value for `verification-requests/list` (only one of
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
-  filter here is "Semua Status", so `page.tsx` fakes it: when `status` isn't set, it fires all three
+  filter on all three pages is "Semua Status", so
+  `apis/access.ts#listVerificationRequestsForReview` composes it in one place: when `status` isn't
+  set, it fires all three
   status queries in parallel (`page: 1`, `page_size: 100` each — `ALL_STATUS_FETCH_SIZE`, generous
   since this is a review queue, not a full archive), merges, and sorts by `created_at` descending;
   picking an explicit status still goes through normal single-status server-side pagination.
   `verification-requests/list` also takes a `search` param (substring match against the applicant's
   `full_name` only, not username/chapter) — `page.tsx` forwards `?search=` to it, and passes the
   same `search` into all three parallel calls when in "all statuses" mode.
-  `components/pages/BranchVerificationListPage.tsx` mirrors `AdminUserListPage.tsx`'s debounced
+  `components/pages/BranchVerificationListPage.tsx` exports the shared
+  `VerificationRequestListPage` used by all three scopes plus a thin default Cabang wrapper that reads
+  `useBranch()` for its description. The shared page mirrors `AdminUserListPage.tsx`'s debounced
   search-as-you-type-into-`?search=` pattern (the "adjust state during render" resync when the
   server hands back a new `initialSearch`, also shared by `AdminMemberListPage`) because this
   endpoint's `search` is real. Aksi is a 3-button column instead of
   a "..." dropdown: an outlined `Eye` "Lihat Detail" button (always shown, opens a `Modal` populated
   on demand via the `getVerificationRequestDetail` Server Action), plus `X`/`Check` reject/approve
   icon buttons that only render when `status === "pending"` (the backend 409s on re-review
-  otherwise). The detail modal's `Field` rows each carry a small icon badge (`bg-primary-soft
+  otherwise), so Super Admin can perform the same review actions from the Master queue. The
+  Organization page passes `allowReviewActions={false}`, which omits those buttons and their
+  confirmation modals entirely while keeping detail viewing available. The detail
+  modal's `Field` rows each carry a small icon badge (`bg-primary-soft
   text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) for Email/Nama
   Sesuai KTP/Nomor HP/Tanggal
   Lahir/Jenis Kelamin/Komisariat, plus a header row above the grid with the applicant's real
