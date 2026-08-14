@@ -46,6 +46,7 @@ export default async function CoordinatingChapterLayout({
         href={`/coordinating-chapters/${coordinatingChapter.id}`}
         entityLabel="Koordinator Komisariat (Korkom)"
         entityName={coordinatingChapter.name}
+        membersHref={`/coordinating-chapters/${coordinatingChapter.id}/members`}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

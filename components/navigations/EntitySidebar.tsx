@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Users } from "lucide-react";
 import LogoHmi from "../svg/LogoHmi";
 import AdminSidebar from "./AdminSidebar";
 
@@ -9,6 +10,7 @@ interface EntitySidebarProps {
   href: string;
   entityLabel: string;
   entityName: string;
+  membersHref: string;
   fullName?: string;
   avatar?: string;
   roleName?: string;
@@ -54,6 +56,7 @@ export default function EntitySidebar({
   href,
   entityLabel,
   entityName,
+  membersHref,
   fullName,
   avatar,
   roleName,
@@ -61,7 +64,7 @@ export default function EntitySidebar({
   return (
     <AdminSidebar
       storageKey={storageKey}
-      navItems={[]}
+      navItems={[{ label: "Daftar Kader", href: membersHref, icon: Users }]}
       renderHeader={(collapsed) => (
         <EntityHeader
           href={href}

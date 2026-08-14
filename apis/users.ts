@@ -60,9 +60,11 @@ export type UserListEntry = {
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
   is_subscribe: boolean;
-  can_manage_chapter: boolean;
-  can_manage_branch: boolean;
+  can_manage_organization: boolean;
   can_manage_coordinating_body: boolean;
+  can_manage_branch: boolean;
+  can_manage_coordinating_chapter: boolean;
+  can_manage_chapter: boolean;
 };
 
 export type ListUsersOptions = {
@@ -72,6 +74,8 @@ export type ListUsersOptions = {
   chapterId?: string;
   // Narrows the list to users in any chapter under this one branch.
   branchId?: string;
+  // Narrows the list to users in any chapter under this one coordinating chapter (Korkom).
+  coordinatingChapterId?: string;
   // Narrows the list to users in any chapter under this one coordinating body (BADKO).
   coordinatingBodyId?: string;
   page?: number;
@@ -85,7 +89,7 @@ export type PagedListResult<T> = {
   currentPage: number;
 };
 
-// Requires Super Admin/Administrator — used by /master/users and the /branches/[branch_id]/members read-only roster.
+// Requires Super Admin/Administrator — used by /master/users and every scoped read-only member roster.
 export async function listUsers(
   options: ListUsersOptions = {}
 ): Promise<PagedListResult<UserListEntry>> {
@@ -93,7 +97,16 @@ export async function listUsers(
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { search, status, chapterId, branchId, coordinatingBodyId, page, pageSize } = options;
+  const {
+    search,
+    status,
+    chapterId,
+    branchId,
+    coordinatingChapterId,
+    coordinatingBodyId,
+    page,
+    pageSize,
+  } = options;
   const result = await callApi<ListResponse<UserListEntry>>("/api/v1/users/list", {
     method: "POST",
     token: sessionToken,
@@ -102,6 +115,9 @@ export async function listUsers(
       ...(status ? { status } : {}),
       ...(chapterId ? { chapter_id: chapterId } : {}),
       ...(branchId ? { branch_id: branchId } : {}),
+      ...(coordinatingChapterId
+        ? { coordinating_chapter_id: coordinatingChapterId }
+        : {}),
       ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
       page: page ?? 1,
       page_size: pageSize ?? 20,
@@ -363,10 +379,12 @@ export type UserProfile = {
   organization_name?: string;
   coordinating_body_id?: string;
   coordinating_body_name?: string;
-  chapter_id?: string;
-  chapter_name?: string;
   branch_id?: string;
   branch_name?: string;
+  coordinating_chapter_id?: string;
+  coordinating_chapter_name?: string;
+  chapter_id?: string;
+  chapter_name?: string;
   full_name: string;
   username: string;
   ktp_full_name?: string;
@@ -394,9 +412,11 @@ export type UserProfile = {
   province_id?: number;
   province_name?: string;
   is_subscribe: boolean;
-  can_manage_chapter: boolean;
-  can_manage_branch: boolean;
+  can_manage_organization: boolean;
   can_manage_coordinating_body: boolean;
+  can_manage_branch: boolean;
+  can_manage_coordinating_chapter: boolean;
+  can_manage_chapter: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
   created_at: string;

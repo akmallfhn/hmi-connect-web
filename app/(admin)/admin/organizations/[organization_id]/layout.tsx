@@ -51,6 +51,7 @@ export default async function OrganizationLayout({
         href={`/organizations/${organization_id}`}
         entityLabel="Organisasi"
         entityName={organizationName}
+        membersHref={`/organizations/${organization_id}/members`}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

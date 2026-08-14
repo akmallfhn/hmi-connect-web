@@ -43,6 +43,7 @@ export default async function ChapterLayout({
         href={`/chapters/${chapter.id}`}
         entityLabel="Komisariat"
         entityName={chapter.name}
+        membersHref={`/chapters/${chapter.id}/members`}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

@@ -109,9 +109,9 @@ if their id is missing, not to a picker. Each of those five `[id]` layouts re-ch
 *this* id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
-All four render the shared empty `EntitySidebar` shell (entity name above, session user below,
-no navigation items yet) and leave the page body empty. `/branches/[branch_id]` retains its real
-branch-scoped analytics dashboard and populated `BranchSidebar`. `/master` has its
+All four render the shared `EntitySidebar` shell (entity name above, session user below) with one
+read-only `Daftar Kader` item; their index page bodies remain empty. `/branches/[branch_id]`
+retains its real branch-scoped analytics dashboard and populated `BranchSidebar`. `/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
 Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
@@ -1064,7 +1064,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   panel (list, detail/read, create), gated by `MasterLayout` like every other `/master/*`
   route (no extra per-page re-check needed, since that gate already requires literal
   `Super Admin`, unlike the outer `/admin/[id]` pages' looser `can_manage_*` check).
-  `apis/users.ts#listUsers` (`users/list`, Super-Admin-only per its own README) backs
+  `apis/users.ts#listUsers` (`users/list`, Super Admin/Administrator per its own README) backs
   `/master/users` (`app/(admin)/admin/master/users/page.tsx`, a Server Component reading
   `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
   — search/status-filter/pagination are all URL state driven by `router.push`, the same
@@ -1319,13 +1319,14 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
   public `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
-  `components/navigations/EntitySidebar.tsx` is the empty-navigation scoped sibling shared by
+  `components/navigations/EntitySidebar.tsx` is the scoped sibling shared by
   `/admin/organizations/[organization_id]`, `/admin/coordinating-bodies/[coordinating_body_id]`,
   `/admin/coordinating-chapters/[coordinating_chapter_id]`, and
-  `/admin/chapters/[chapter_id]`. It passes `navItems={[]}` to `AdminSidebar`, shows the resolved
-  entity name/type next to `LogoHmi` in the header, and retains the standard session profile/logout
-  block at the bottom. Each route owns an access-checking nested layout and an intentionally empty
-  index page so future menus/content can be added without changing the shell. The branch-scoped
+  `/admin/chapters/[chapter_id]`. It shows the resolved entity name/type next to `LogoHmi` in the
+  header, passes one `Daftar Kader` item to `AdminSidebar`, and retains the standard session
+  profile/logout block at the bottom. Each route owns an access-checking nested layout and an
+  intentionally empty index page; its `/members` child holds the read-only roster described below.
+  The branch-scoped
   Kelola Komisariat page below is a Cabang managing its *own* Komisariat rows, a different scope
   from the Komisariat self-management shell.
   Kelola Komisariat (`app/(admin)/admin/branches/[branch_id]/chapters/`) is **create/edit only, no
@@ -1344,43 +1345,32 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   `ChapterFormSheet.tsx` field-for-field (Nama Komisariat, Asal Universitas via the same institution
   `CreateableSelect`, Tipe, Status) but drops the Cabang picker entirely — `branchId` is a fixed prop
   threaded straight into `createChapter`'s `branch_id`, never sent on `updateChapter` (a chapter
-  can't be moved to another branch from this scoped screen). Daftar Kader
-  (`app/(admin)/admin/branches/[branch_id]/members/`) is a **read-only** roster —
-  no create/edit/delete, unlike `/master/users` — reusing the same `apis/users.ts#listUsers`/
-  `getUserByUsername` the master User Management panel uses: `listUsers` gained an optional
-  `branchId` option (`branch_id` in the `users/list` request body, per its own README — narrows to
-  users in any chapter under that branch) that this route's `page.tsx` always passes, so there's no
-  separate branch picker, it's implicit from the URL. `components/pages/BranchMemberListPage.tsx`
-  is styled identically to `AdminUserListPage.tsx` (same header/search/status-filter/table/
-  pagination look, matching the "front-end style samain kayak di master" ask this was built to) but
-  drops the "Tambah User" button and the row-level "..." dropdown (Edit Cepat/Hapus) entirely, and
-  swaps the "Cabang / Komisariat" column for a bare "Komisariat" one — showing the branch name on
-  every row would just repeat the one branch this whole page is already scoped to, same reasoning
-  `/master/coordinating-bodies` uses to drop `organization_name` (see below). Its row links go to
-  `/branches/{id}/members/{username}` instead of `/master/users/{username}`. Its "Role" column also
-  diverges from `/master/users`' own `UserRoleLabel` (which reads `role_id`/`role_name`) — this one
-  reads the row's own `can_manage_branch` boolean instead (now added to `UserListEntry`, present on
-  every `users/list` row per its own README) and renders a plain inline `Label` (`"Admin Tingkat
-  Cabang"` purple when `true`, `"User"` gray otherwise) rather than a shared `UserRoleLabel`-style
-  component, since this mapping is local to this one page.
-  `app/(admin)/admin/branches/[branch_id]/members/[username]/page.tsx` mirrors
-  `/master/users/[username]/page.tsx` (keyed by `username`, not id, same `users/detail`-has-no-
-  lookup-by-id reasoning) but additionally 404s if the fetched user's own `branch_id` doesn't match
-  the URL's `branch_id` — a user outside this branch isn't a valid resource under this branch's own
-  roster, regardless of who's viewing. `components/pages/BranchMemberDetailPage.tsx` mirrors
-  `AdminUserDetailPage.tsx`'s section-card layout (Akun & Peran / Data KTP & Kontak / Organisasi /
-  Informasi Lainnya, same stat pills up top) but every `SectionCard` drops its "Edit" button (no
-  `onEdit` prop at all, unlike the master version) and none of the four `AdminEditUser*Form` modals
-  or the bottom "Hapus User" button are rendered — this page has no mutation path, only `Field`/
-  `StatPill`/`SectionCard`/`formatDate`/`GENDER_LABEL`/`STATUS_DOT_CLASSNAME` copied in verbatim as
-  local helpers, same copy-adapt-per-page convention this file already uses for `WorkExperienceCard`/
-  `PublicationCard`/`HonorAwardCard` above rather than a new shared abstraction. `listUsers`'s
-  `users/list` call (Super Admin/Administrator only per its own README) is stricter than this
-  layout's own `can_manage_branch`-matching-own-`branch_id` gate — a branch-scoped
-  `can_manage_branch` admin who isn't literally `Super Admin`/`Administrator` can reach this page
-  past the layout gate but would still get a `FORBIDDEN` from the backend on the list/detail calls
-  themselves; this is the same pre-existing `Administrator`-role gap already noted under Domain
-  routing above, not something new this feature introduces.
+  can't be moved to another branch from this scoped screen). Daftar Kader is a **read-only** roster
+  under every scoped admin shell: `/organizations/{id}/members`,
+  `/coordinating-bodies/{id}/members`, `/branches/{id}/members`,
+  `/coordinating-chapters/{id}/members`, and `/chapters/{id}/members`. All five reuse
+  `components/pages/AdminMemberListPage.tsx` (URL-driven search/status/pagination, the same table
+  look as `/master/users`, but no create/edit/delete/dropdown controls) and
+  `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
+  with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only
+  thin compatibility wrappers that supply the Cabang base path/name to those shared components.
+  The table keeps a single Komisariat column because each route is already scoped; row links use the
+  current scoped base path plus `/members/{username}`. Its Role label is also scope-aware: it reads
+  the matching `can_manage_organization`/`can_manage_coordinating_body`/`can_manage_branch`/
+  `can_manage_coordinating_chapter`/`can_manage_chapter` flag from `UserListEntry`, showing the
+  corresponding purple Administrator label or gray `Kader Anggota`.
+  `apis/users.ts#listUsers` exposes the backend's direct `chapterId`, `branchId`,
+  `coordinatingChapterId`, and `coordinatingBodyId` filters. The Korkom roster always passes
+  `coordinatingChapterId` as `coordinating_chapter_id`, so backend pagination/search/status remain
+  authoritative without including kader from another Korkom in the same Cabang. The organization
+  roster deliberately sends no structural filter because this frontend/backend deployment manages
+  the one `ORGANIZATION_ID`; that also preserves pending users who have not selected a chapter yet.
+  Every detail route is keyed by username (the backend has no detail-by-id) and rejects a fetched
+  user whose own organization chain does not match the route id. The organization check permits a
+  missing `organization_id` only for pending/pre-affiliation users already present in this app's
+  single-organization roster; Badko/Cabang/Korkom/Komisariat checks are strict. `users/list` itself
+  still requires the backend `Super Admin` or `Administrator` role in addition to the frontend
+  layout's matching `can_manage_*` gate, the same role/flag split noted under Domain routing.
   Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, single
   route — there's no separate detail page) is the review UI for the `verification_requests`
   workflow the Verification flow section above describes — the admin-facing half that section
@@ -1407,13 +1397,13 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   same `search` into all three parallel calls when in "all statuses" mode.
   `components/pages/BranchVerificationListPage.tsx` mirrors `AdminUserListPage.tsx`'s debounced
   search-as-you-type-into-`?search=` pattern (the "adjust state during render" resync when the
-  server hands back a new `initialSearch`, same as that page) rather than `BranchMemberListPage`'s
-  client-side filtering, since this endpoint's `search` is real. Aksi is a 3-button column instead of
+  server hands back a new `initialSearch`, also shared by `AdminMemberListPage`) because this
+  endpoint's `search` is real. Aksi is a 3-button column instead of
   a "..." dropdown: an outlined `Eye` "Lihat Detail" button (always shown, opens a `Modal` populated
   on demand via the `getVerificationRequestDetail` Server Action), plus `X`/`Check` reject/approve
   icon buttons that only render when `status === "pending"` (the backend 409s on re-review
   otherwise). The detail modal's `Field` rows each carry a small icon badge (`bg-primary-soft
-  text-primary` circle, same treatment as `BranchMemberDetailPage`'s `StatPill`) for Email/Nama
+  text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) for Email/Nama
   Sesuai KTP/Nomor HP/Tanggal
   Lahir/Jenis Kelamin/Komisariat, plus a header row above the grid with the applicant's real
   `Avatar` (not just initials) and `@username`. Alamat Lengkap is deliberately one `Field` with one

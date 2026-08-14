@@ -45,6 +45,7 @@ export default async function CoordinatingBodyLayout({
         href={`/coordinating-bodies/${coordinatingBody.id}`}
         entityLabel="Badan Koordinasi (Badko)"
         entityName={coordinatingBody.name}
+        membersHref={`/coordinating-bodies/${coordinatingBody.id}/members`}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}
