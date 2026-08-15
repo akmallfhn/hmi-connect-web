@@ -111,9 +111,28 @@ Badko/Korkom/Komisariat layouts resolve their own names through their detail end
 Organization layout uses the session name because the backend has no organization-detail route.
 All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
 exact-matched Dashboard item first. Badko, Korkom, and Komisariat retain empty Dashboard/index
-page bodies. Organization reuses `MasterDashboardPage` with the same unscoped `stat/*` calls as
-`/master`, while the Cabang variant retains its populated navigation and real branch-scoped
-analytics dashboard. `/master` has its
+page bodies. Organization reuses `MasterDashboardPage` with the same unscoped summary, Cabang
+distribution, kader-growth, Cabang-status, and Komisariat-status calls as `/master`; the Master route alone enables
+the shared `AdminDashboardBanner` above its statistic cards plus the client-side
+`IndonesiaBranchMap` analytics card below them. Its map geometry lives in
+`components/svg/MapSquare.tsx`, converted from the former `Map Square.svg`: the original 5,217
+colored rectangles are consolidated into two lightweight paths using `currentColor` (rendered as
+`text-primary`) plus a 45%-opacity primary layer. `IndonesiaBranchMap` overlays
+keyboard-focusable/hoverable sample Cabang points; each tooltip exposes the Cabang name, total
+active kader, and total verified kader, and the card is explicitly labeled as sample data until a
+real geographic endpoint replaces its constants. Master also enables `MasterAttentionLists`, a
+sample-data-only two-column grid with: provisional Cabang as pengkaderan priorities; an accessible
+Cabang/Badko suspended tab switcher whose tab labels include their totals; Cabang with fewer than
+10 Komisariat sorted ascending (including zero); and Cabang sorted by their lowest active-kader
+counts. Its card headers are text-only; every Cabang row uses the same `Building2` icon in a
+`rounded-lg` primary-soft square instead of numeric rank badges (Badko rows use `Network` in the
+same square treatment). Organization does not enable either sample analytics component. The Master/Organization
+dashboard no longer renders the Top 5 Cabang, membership-verification status, or Badko-status
+widgets. Its Cabang/Komisariat status pair sits directly above the Master-only attention lists;
+their routes do not fetch the other unused datasets. Analytics-card headers consistently use
+`text-base` titles and `text-sm` descriptions with no added top margin on the description. The
+Cabang variant retains its
+populated navigation and real branch-scoped analytics dashboard. `/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel,
 `/master/verification` has the organization-wide verification review queue, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/

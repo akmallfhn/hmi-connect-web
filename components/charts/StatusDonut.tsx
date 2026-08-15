@@ -48,8 +48,8 @@ export default function StatusDonut({
 
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-[#172033]">{title}</p>
-      <p className="text-xs text-[#5f6573]">{subtitle}</p>
+      <p className="text-base font-bold text-[#172033]">{title}</p>
+      <p className="text-sm text-[#5f6573]">{subtitle}</p>
 
       {total === 0 ? (
         <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>

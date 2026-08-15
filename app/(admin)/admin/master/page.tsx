@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import {
   getBranchDistribution,
   getBranchStatus,
-  getCoordinatingBodyStatus,
-  getMembershipStatus,
+  getChapterStatus,
   getStatSummary,
   getUserGrowth,
 } from "@/apis/stat";
@@ -24,18 +23,16 @@ export default async function MasterPage() {
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
-    membershipStatus,
     branchStatus,
-    coordinatingBodyStatus,
+    chapterStatus,
   ] = await Promise.all([
     getStatSummary(),
     getBranchDistribution(),
     getUserGrowth("day"),
     getUserGrowth("week"),
     getUserGrowth("month"),
-    getMembershipStatus(),
     getBranchStatus(),
-    getCoordinatingBodyStatus(),
+    getChapterStatus(),
   ]);
 
   return (
@@ -45,9 +42,11 @@ export default async function MasterPage() {
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
-      membershipStatus={membershipStatus}
       branchStatus={branchStatus}
-      coordinatingBodyStatus={coordinatingBodyStatus}
+      chapterStatus={chapterStatus}
+      showAttentionLists
+      showBanner
+      showIndonesiaMap
     />
   );
 }

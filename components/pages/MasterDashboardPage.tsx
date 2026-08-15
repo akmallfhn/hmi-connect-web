@@ -3,16 +3,17 @@ import AdminPageTitle from "../common/AdminPageTitle";
 import type {
   BranchDistribution,
   BranchStatus,
-  CoordinatingBodyStatus,
-  MembershipStatus,
+  ChapterStatus,
   StatSummary,
   UserGrowthEntry,
 } from "@/apis/stat";
+import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
+import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
+import MasterAttentionLists from "../charts/MasterAttentionLists";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
-import TopCabangList from "../charts/TopCabangList";
 
 interface MasterDashboardPageProps {
   summary: StatSummary | null;
@@ -20,9 +21,11 @@ interface MasterDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
-  membershipStatus: MembershipStatus | null;
   branchStatus: BranchStatus | null;
-  coordinatingBodyStatus: CoordinatingBodyStatus | null;
+  chapterStatus: ChapterStatus | null;
+  showBanner?: boolean;
+  showIndonesiaMap?: boolean;
+  showAttentionLists?: boolean;
 }
 
 export default function MasterDashboardPage({
@@ -31,9 +34,11 @@ export default function MasterDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
-  membershipStatus,
   branchStatus,
-  coordinatingBodyStatus,
+  chapterStatus,
+  showBanner = false,
+  showIndonesiaMap = false,
+  showAttentionLists = false,
 }: MasterDashboardPageProps) {
   const stats = [
     {
@@ -77,11 +82,23 @@ export default function MasterDashboardPage({
         Dashboard
       </AdminPageTitle>
 
+      {showBanner && (
+        <div className="mt-6">
+          <AdminDashboardBanner />
+        </div>
+      )}
+
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
+
+      {showIndonesiaMap && (
+        <div className="mt-4">
+          <IndonesiaBranchMap />
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CabangDistributionDonut
@@ -92,27 +109,6 @@ export default function MasterDashboardPage({
           day={userGrowthDay}
           week={userGrowthWeek}
           month={userGrowthMonth}
-        />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <TopCabangList entries={branchEntries} />
-        <StatusDonut
-          title="Status Verifikasi Kader"
-          subtitle="Perbandingan kader yang sudah dan belum verifikasi KTP"
-          centerLabel="Terverifikasi"
-          segments={[
-            {
-              name: "Terverifikasi",
-              value: membershipStatus?.total_verified ?? 0,
-              color: "#0ca30c",
-            },
-            {
-              name: "Belum Verifikasi",
-              value: membershipStatus?.total_unverified ?? 0,
-              color: "#c3c2b7",
-            },
-          ]}
         />
       </div>
 
@@ -135,23 +131,29 @@ export default function MasterDashboardPage({
           ]}
         />
         <StatusDonut
-          title="Status Badko"
-          subtitle="Perbandingan Badko aktif dan tidak aktif"
-          centerLabel="Aktif"
+          title="Status Komisariat"
+          subtitle="Perbandingan Komisariat penuh dan persiapan"
+          centerLabel="Penuh"
           segments={[
             {
-              name: "Aktif",
-              value: coordinatingBodyStatus?.total_active ?? 0,
-              color: "#0ca30c",
+              name: "Komisariat Penuh",
+              value: chapterStatus?.total_full ?? 0,
+              color: "#159fa2",
             },
             {
-              name: "Tidak Aktif",
-              value: coordinatingBodyStatus?.total_inactive ?? 0,
+              name: "Komisariat Persiapan",
+              value: chapterStatus?.total_provisional ?? 0,
               color: "#c3c2b7",
             },
           ]}
         />
       </div>
+
+      {showAttentionLists && (
+        <div className="mt-6">
+          <MasterAttentionLists />
+        </div>
+      )}
     </div>
   );
 }

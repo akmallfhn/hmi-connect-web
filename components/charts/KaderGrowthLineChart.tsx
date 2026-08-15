@@ -134,8 +134,8 @@ export default function KaderGrowthLineChart({
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold text-[#172033]">Pertumbuhan Kader Baru</p>
-          <p className="text-xs text-[#5f6573]">
+          <p className="text-base font-bold text-[#172033]">Pertumbuhan Kader Baru</p>
+          <p className="text-sm text-[#5f6573]">
             Penambahan kader dalam {WINDOW_LABEL[granularity]}
           </p>
         </div>
