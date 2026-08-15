@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import {
   getChapterDistribution,
+  getChapterStatus,
   getCoordinatingChapterSummary,
   getUserGrowth,
 } from "@/apis/stat";
@@ -30,6 +31,7 @@ export default async function CoordinatingChapterDetailPage({
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
+    chapterStatus,
   ] = await Promise.all([
     getCoordinatingChapterDetail(coordinating_chapter_id),
     getCoordinatingChapterSummary(coordinating_chapter_id),
@@ -48,6 +50,9 @@ export default async function CoordinatingChapterDetailPage({
       granularity: "month",
       coordinatingChapterId: coordinating_chapter_id,
     }),
+    getChapterStatus({
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
   ]);
   return (
     <CoordinatingChapterDashboardPage
@@ -57,6 +62,7 @@ export default async function CoordinatingChapterDetailPage({
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
+      chapterStatus={chapterStatus}
     />
   );
 }

@@ -14,7 +14,6 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
-import TopCabangList from "../charts/TopCabangList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface BranchDashboardPageProps {
@@ -110,12 +109,7 @@ export default function BranchDashboardPage({
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-        <TopCabangList
-          entries={chapterEntries}
-          title="Komisariat dengan Kader Terbanyak"
-          subtitle="Top 5 Komisariat berdasarkan jumlah kader aktif"
-        />
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <StatusDonut
           title="Status Verifikasi Kader"
           subtitle="Perbandingan kader yang sudah dan belum verifikasi KTP"
@@ -124,7 +118,7 @@ export default function BranchDashboardPage({
             {
               name: "Terverifikasi",
               value: membershipStatus?.total_verified ?? 0,
-              color: "#0ca30c",
+              color: "#1baf7a",
             },
             {
               name: "Belum Verifikasi",
@@ -141,7 +135,7 @@ export default function BranchDashboardPage({
             {
               name: "Komisariat Penuh",
               value: chapterStatus?.total_full ?? 0,
-              color: "#159fa2",
+              color: "#eda100",
             },
             {
               name: "Komisariat Persiapan",

@@ -130,10 +130,38 @@ export type BranchStatus = {
   total_provisional: number;
 };
 
+export type GetBranchStatusOptions = {
+  coordinatingBodyId?: string;
+};
+
 export type ChapterStatus = {
   total_full: number;
   total_provisional: number;
 };
+
+type ChapterStatusScope =
+  | {
+      coordinatingBodyId: string;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId: string;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId: string;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    };
+
+export type GetChapterStatusOptions = ChapterStatusScope;
 
 export type CoordinatingBodyStatus = {
   total_active: number;
@@ -301,22 +329,36 @@ export async function getMembershipStatus(
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
-export async function getBranchStatus(): Promise<BranchStatus | null> {
+export async function getBranchStatus(
+  options: GetBranchStatusOptions = {}
+): Promise<BranchStatus | null> {
   const token = await getSessionToken();
+  const { coordinatingBodyId } = options;
   const result = await callApi<BranchStatus>("/api/v1/stat/branch-status", {
     token,
-    body: {},
+    body: coordinatingBodyId
+      ? { coordinating_body_id: coordinatingBodyId }
+      : {},
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getChapterStatus(
-  branchId?: string
+  options: GetChapterStatusOptions = {}
 ): Promise<ChapterStatus | null> {
   const token = await getSessionToken();
+  const { coordinatingBodyId, branchId, coordinatingChapterId } = options;
   const result = await callApi<ChapterStatus>("/api/v1/stat/chapter-status", {
     token,
-    body: branchId ? { branch_id: branchId } : {},
+    body: {
+      ...(coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {}),
+      ...(branchId ? { branch_id: branchId } : {}),
+      ...(coordinatingChapterId
+        ? { coordinating_chapter_id: coordinatingChapterId }
+        : {}),
+    },
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }

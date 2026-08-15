@@ -2,6 +2,8 @@ import { BadgeCheck, Building2, Factory, Network } from "lucide-react";
 import type {
   BranchDistribution,
   BranchMapEntry,
+  BranchStatus,
+  ChapterStatus,
   CoordinatingBodySummary,
   UserGrowthEntry,
 } from "@/apis/stat";
@@ -10,6 +12,7 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
+import StatusDonut from "../charts/StatusDonut";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface CoordinatingBodyDashboardPageProps {
@@ -21,6 +24,8 @@ interface CoordinatingBodyDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
+  branchStatus: BranchStatus | null;
+  chapterStatus: ChapterStatus | null;
 }
 
 export default function CoordinatingBodyDashboardPage({
@@ -32,6 +37,8 @@ export default function CoordinatingBodyDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
+  branchStatus,
+  chapterStatus,
 }: CoordinatingBodyDashboardPageProps) {
   const stats = [
     {
@@ -102,6 +109,43 @@ export default function CoordinatingBodyDashboardPage({
           day={userGrowthDay}
           week={userGrowthWeek}
           month={userGrowthMonth}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <StatusDonut
+          title="Status Cabang"
+          subtitle="Perbandingan Cabang penuh dan persiapan"
+          centerLabel="Penuh"
+          segments={[
+            {
+              name: "Cabang Penuh",
+              value: branchStatus?.total_full ?? 0,
+              color: "#159fa2",
+            },
+            {
+              name: "Cabang Persiapan",
+              value: branchStatus?.total_provisional ?? 0,
+              color: "#c3c2b7",
+            },
+          ]}
+        />
+        <StatusDonut
+          title="Status Komisariat"
+          subtitle="Perbandingan Komisariat penuh dan persiapan"
+          centerLabel="Penuh"
+          segments={[
+            {
+              name: "Komisariat Penuh",
+              value: chapterStatus?.total_full ?? 0,
+              color: "#eda100",
+            },
+            {
+              name: "Komisariat Persiapan",
+              value: chapterStatus?.total_provisional ?? 0,
+              color: "#c3c2b7",
+            },
+          ]}
         />
       </div>
     </div>

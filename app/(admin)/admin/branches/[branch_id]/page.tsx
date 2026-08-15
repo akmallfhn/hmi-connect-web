@@ -39,7 +39,7 @@ export default async function BranchDashboardRoute({
     getUserGrowth({ granularity: "week", branchId: branch_id }),
     getUserGrowth({ granularity: "month", branchId: branch_id }),
     getMembershipStatus(branch_id),
-    getChapterStatus(branch_id),
+    getChapterStatus({ branchId: branch_id }),
   ]);
 
   return (

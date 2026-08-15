@@ -1,6 +1,7 @@
 import { BadgeCheck, Factory } from "lucide-react";
 import type {
   ChapterDistribution,
+  ChapterStatus,
   CoordinatingChapterSummary,
   UserGrowthEntry,
 } from "@/apis/stat";
@@ -8,6 +9,7 @@ import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
+import StatusDonut from "../charts/StatusDonut";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface CoordinatingChapterDashboardPageProps {
@@ -17,6 +19,7 @@ interface CoordinatingChapterDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
+  chapterStatus: ChapterStatus | null;
 }
 
 export default function CoordinatingChapterDashboardPage({
@@ -26,6 +29,7 @@ export default function CoordinatingChapterDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
+  chapterStatus,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
     {
@@ -78,6 +82,26 @@ export default function CoordinatingChapterDashboardPage({
           day={userGrowthDay}
           week={userGrowthWeek}
           month={userGrowthMonth}
+        />
+      </div>
+
+      <div className="mt-4">
+        <StatusDonut
+          title="Status Komisariat"
+          subtitle="Perbandingan Komisariat penuh dan persiapan"
+          centerLabel="Penuh"
+          segments={[
+            {
+              name: "Komisariat Penuh",
+              value: chapterStatus?.total_full ?? 0,
+              color: "#eda100",
+            },
+            {
+              name: "Komisariat Persiapan",
+              value: chapterStatus?.total_provisional ?? 0,
+              color: "#c3c2b7",
+            },
+          ]}
         />
       </div>
     </div>

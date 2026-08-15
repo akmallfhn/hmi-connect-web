@@ -3,6 +3,8 @@ import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import {
   getBranchDistribution,
   getBranchMap,
+  getBranchStatus,
+  getChapterStatus,
   getCoordinatingBodySummary,
   getUserGrowth,
 } from "@/apis/stat";
@@ -32,6 +34,8 @@ export default async function CoordinatingBodyDetailPage({
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
+    branchStatus,
+    chapterStatus,
   ] = await Promise.all([
     getCoordinatingBodyDetail(coordinating_body_id),
     getCoordinatingBodySummary(coordinating_body_id),
@@ -52,6 +56,8 @@ export default async function CoordinatingBodyDetailPage({
       granularity: "month",
       coordinatingBodyId: coordinating_body_id,
     }),
+    getBranchStatus({ coordinatingBodyId: coordinating_body_id }),
+    getChapterStatus({ coordinatingBodyId: coordinating_body_id }),
   ]);
   return (
     <CoordinatingBodyDashboardPage
@@ -63,6 +69,8 @@ export default async function CoordinatingBodyDetailPage({
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
+      branchStatus={branchStatus}
+      chapterStatus={chapterStatus}
     />
   );
 }

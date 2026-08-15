@@ -118,12 +118,14 @@ the five matching summary endpoints: `summary/organization` (shared by Master an
 `summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat additionally
 renders its scoped kader-growth chart below those cards. Korkom renders a Komisariat distribution
 donut from `chapter-distribution`, always filtered by its `coordinating_chapter_id`, with its scoped
-kader-growth chart immediately to the right on `xl`. Badko additionally renders the shared `IndonesiaBranchMap` from
+kader-growth chart immediately to the right on `xl`; a scoped Komisariat-status donut follows
+that pair. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
 immediately below that map and uses the same fixed `coordinating_body_id`; Badko's scoped
-kader-growth chart sits to its right on `xl`. Each scoped route fetches its own
+kader-growth chart sits to its right on `xl`, followed by side-by-side Cabang/Komisariat status
+donuts using that same Badko scope. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
 `getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
 passes fetched data into `CoordinatingBodyDashboardPage`, `CoordinatingChapterDashboardPage`, or
@@ -160,7 +162,10 @@ dashboard no longer renders the Top 5 Cabang, membership-verification status, or
 widgets. Its Cabang/Komisariat status pair sits directly above the Master-only attention lists;
 their routes do not fetch the other unused datasets. Analytics-card headers consistently use
 `text-base` titles and `text-sm` descriptions with no added top margin on the description. The
-Cabang variant retains its
+full segment in every Komisariat-status donut uses yellow `#eda100`. The Cabang dashboard no
+longer renders its "Komisariat dengan Kader Terbanyak" list; its verification-status verified
+segment uses green `#1baf7a`, leaving the verification and Komisariat-status donuts side by side.
+The Cabang variant retains its
 populated navigation and real branch-scoped analytics dashboard (`BranchDashboardPage`, which now
 also renders `AdminDashboardBanner` under its title, same as every other scoped dashboard).
 `/master` has its
@@ -230,8 +235,10 @@ Three layers, each with one job. Don't blend them.
    `getCoordinatingChapterSummary`, and `getChapterSummary` each post the required entity id to
    their matching `stat/summary/*` endpoint. `getBranchDistribution` optionally sends
    `coordinating_body_id`; `getChapterDistribution` independently accepts `branchId` and
-   `coordinatingChapterId`, sending the corresponding snake-case filters. The remaining
-   branch-capable aggregate functions accept an optional `branchId` and send it as `branch_id`;
+   `coordinatingChapterId`, sending the corresponding snake-case filters. `getBranchStatus`
+   optionally scopes by `coordinating_body_id`, while `getChapterStatus` accepts at most one of
+   `coordinatingBodyId`, `branchId`, or `coordinatingChapterId`. Other branch-only aggregate
+   functions accept an optional `branchId` and send it as `branch_id`;
    `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
    mandatory Badko scope as `coordinating_body_id`. `getUserGrowth` takes an options object and
    sends at most one of `coordinating_body_id`, `branch_id`, `coordinating_chapter_id`, or

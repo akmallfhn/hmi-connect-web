@@ -141,7 +141,7 @@ export default function MasterDashboardPage({
             {
               name: "Komisariat Penuh",
               value: chapterStatus?.total_full ?? 0,
-              color: "#159fa2",
+              color: "#eda100",
             },
             {
               name: "Komisariat Persiapan",
