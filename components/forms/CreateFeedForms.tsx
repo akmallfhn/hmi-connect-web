@@ -31,7 +31,7 @@ import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
 import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
-import { compressImage } from "@/lib/compressImage";
+import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus, type FeedMediaTypeEnum } from "@/lib/types";
 import type { Feed } from "@/apis/feeds";

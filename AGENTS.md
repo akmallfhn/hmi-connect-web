@@ -1098,7 +1098,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
   to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
-  run through `lib/compressImage.ts` — a plain Canvas API resize/re-encode (max 1920px
+  run through `lib/compress-image.ts` — a plain Canvas API resize/re-encode (max 1920px
   edge, JPEG, quality stepped down from 0.8 to a 0.5 floor) — before they're staged or
   uploaded, targeting ~500KB per photo. `MAX_PHOTO_BYTES` (5MB) is checked *after*
   compression, not before — the whole point of the client-side pass is to shrink what

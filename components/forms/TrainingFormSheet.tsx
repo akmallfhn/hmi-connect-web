@@ -6,7 +6,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import type { TrainingDetail } from "@/apis/trainings";
 import { createTraining, updateTraining } from "@/lib/actions";
-import { compressImage } from "@/lib/compressImage";
+import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";

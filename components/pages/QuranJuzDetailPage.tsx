@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuzDetail, QuranJuzVerse, QuranSurah } from "@/apis/quran";
-import { readingMinutesLabel } from "@/lib/quranReadingTime";
+import { readingMinutesLabel } from "@/lib/quran-reading-time";
 import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";

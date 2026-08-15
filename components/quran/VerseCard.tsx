@@ -3,7 +3,7 @@
 import { BookText, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 import type { QuranVerse } from "@/apis/quran";
-import { toArabicNumerals } from "@/lib/arabicNumerals";
+import { toArabicNumerals } from "@/lib/arabic-numerals";
 import Button from "../buttons/Button";
 
 interface VerseCardProps {

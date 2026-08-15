@@ -4,8 +4,8 @@ import { Pause, Play } from "lucide-react";
 import Link from "next/link";
 import type { MouseEvent } from "react";
 import type { QuranSurah } from "@/apis/quran";
-import { toArabicNumerals } from "@/lib/arabicNumerals";
-import { readingMinutesLabel } from "@/lib/quranReadingTime";
+import { toArabicNumerals } from "@/lib/arabic-numerals";
+import { readingMinutesLabel } from "@/lib/quran-reading-time";
 import Button from "../buttons/Button";
 
 interface SurahRowProps {

@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { QuranJuz } from "@/apis/quran";
-import { toArabicNumerals } from "@/lib/arabicNumerals";
-import { readingMinutesLabel } from "@/lib/quranReadingTime";
+import { toArabicNumerals } from "@/lib/arabic-numerals";
+import { readingMinutesLabel } from "@/lib/quran-reading-time";
 
 interface JuzRowProps {
   juz: QuranJuz;
