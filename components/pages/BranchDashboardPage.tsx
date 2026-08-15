@@ -9,6 +9,7 @@ import type {
   UserGrowthEntry,
 } from "@/apis/stat";
 import { useBranch } from "@/hooks/useBranch";
+import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
@@ -64,6 +65,10 @@ export default function BranchDashboardPage({
       >
         Dashboard Cabang
       </AdminPageTitle>
+
+      <div className="mt-6">
+        <AdminDashboardBanner />
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {stats.map((stat) => (

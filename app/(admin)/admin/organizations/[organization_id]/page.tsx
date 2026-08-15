@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  getBranchMap,
   getBranchDistribution,
   getBranchStatus,
   getChapterStatus,
@@ -25,6 +26,7 @@ export default async function OrganizationDetailPage() {
     userGrowthMonth,
     branchStatus,
     chapterStatus,
+    branchMap,
   ] = await Promise.all([
     getStatSummary(),
     getBranchDistribution(),
@@ -33,6 +35,7 @@ export default async function OrganizationDetailPage() {
     getUserGrowth("month"),
     getBranchStatus(),
     getChapterStatus(),
+    getBranchMap({ coverage: "nationwide" }),
   ]);
 
   return (
@@ -44,6 +47,9 @@ export default async function OrganizationDetailPage() {
       userGrowthMonth={userGrowthMonth?.list ?? []}
       branchStatus={branchStatus}
       chapterStatus={chapterStatus}
+      branchMapEntries={branchMap?.list ?? []}
+      showBanner
+      showIndonesiaMap
     />
   );
 }

@@ -2,7 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi } from "./api";
-import { isSuccessStatus } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type BranchTypeEnum,
+  type StatusEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type StatSummary = {
@@ -64,6 +68,31 @@ export type ChapterStatus = {
 export type CoordinatingBodyStatus = {
   total_active: number;
   total_inactive: number;
+};
+
+export type BranchMapCoverage = "nationwide" | "international";
+
+export type BranchMapEntry = {
+  id: string;
+  name: string;
+  type: BranchTypeEnum;
+  status: StatusEnum;
+  latitude: number | null;
+  longitude: number | null;
+  coordinating_body_id: string;
+  coordinating_body_name: string;
+  verified_member_count: number;
+  chapter_count: number;
+};
+
+export type BranchMap = {
+  list: BranchMapEntry[];
+};
+
+export type GetBranchMapOptions = {
+  coverage?: BranchMapCoverage;
+  coordinatingBodyId?: string;
+  search?: string;
 };
 
 async function getSessionToken() {
@@ -160,5 +189,24 @@ export async function getCoordinatingBodyStatus(): Promise<CoordinatingBodyStatu
     "/api/v1/stat/coordinating-body-status",
     { token, body: {} }
   );
+  return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
+export async function getBranchMap(
+  options: GetBranchMapOptions = {}
+): Promise<BranchMap | null> {
+  const token = await getSessionToken();
+  const { coverage = "nationwide", coordinatingBodyId, search } = options;
+  const normalizedSearch = search?.trim();
+  const result = await callApi<BranchMap>("/api/v1/stat/branch-map", {
+    token,
+    body: {
+      coverage,
+      ...(coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {}),
+      ...(normalizedSearch ? { search: normalizedSearch } : {}),
+    },
+  });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }

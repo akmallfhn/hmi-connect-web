@@ -4,7 +4,7 @@ import LogoHmiOutline from "../svg/LogoHmiOutline";
 export default function AdminDashboardBanner() {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-[#222222] to-black">
-      <div className="relative z-10 px-6 py-6 sm:px-10 sm:py-7 md:px-12 md:py-16">
+      <div className="relative z-10 px-6 py-6 sm:px-10 sm:py-7 md:px-12 md:py-10">
         <div className="flex max-w-xl flex-col items-start gap-5 md:flex-row md:items-center xl:max-w-3xl">
           <div className="flex shrink-0 items-center gap-3">
             <LogoHmiOutline className="h-10 w-auto sm:h-16" />
@@ -31,7 +31,7 @@ export default function AdminDashboardBanner() {
         loop
         muted
         playsInline
-        className="pointer-events-none absolute -right-8 -bottom-8 size-48 object-contain sm:-right-14 sm:-bottom-18 sm:size-72"
+        className="pointer-events-none absolute -right-8 -bottom-8 size-48 object-contain sm:-right-9 sm:-bottom-18 sm:size-60"
       />
     </div>
   );

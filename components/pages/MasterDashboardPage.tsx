@@ -2,6 +2,7 @@ import { Building2, GraduationCap, Network, Users } from "lucide-react";
 import AdminPageTitle from "../common/AdminPageTitle";
 import type {
   BranchDistribution,
+  BranchMapEntry,
   BranchStatus,
   ChapterStatus,
   StatSummary,
@@ -23,6 +24,7 @@ interface MasterDashboardPageProps {
   userGrowthMonth: UserGrowthEntry[];
   branchStatus: BranchStatus | null;
   chapterStatus: ChapterStatus | null;
+  branchMapEntries?: BranchMapEntry[];
   showBanner?: boolean;
   showIndonesiaMap?: boolean;
   showAttentionLists?: boolean;
@@ -36,6 +38,7 @@ export default function MasterDashboardPage({
   userGrowthMonth,
   branchStatus,
   chapterStatus,
+  branchMapEntries = [],
   showBanner = false,
   showIndonesiaMap = false,
   showAttentionLists = false,
@@ -96,7 +99,7 @@ export default function MasterDashboardPage({
 
       {showIndonesiaMap && (
         <div className="mt-4">
-          <IndonesiaBranchMap />
+          <IndonesiaBranchMap initialBranches={branchMapEntries} />
         </div>
       )}
 

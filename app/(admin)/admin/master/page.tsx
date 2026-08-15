@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  getBranchMap,
   getBranchDistribution,
   getBranchStatus,
   getChapterStatus,
@@ -25,6 +26,7 @@ export default async function MasterPage() {
     userGrowthMonth,
     branchStatus,
     chapterStatus,
+    branchMap,
   ] = await Promise.all([
     getStatSummary(),
     getBranchDistribution(),
@@ -33,6 +35,7 @@ export default async function MasterPage() {
     getUserGrowth("month"),
     getBranchStatus(),
     getChapterStatus(),
+    getBranchMap({ coverage: "nationwide" }),
   ]);
 
   return (
@@ -44,6 +47,7 @@ export default async function MasterPage() {
       userGrowthMonth={userGrowthMonth?.list ?? []}
       branchStatus={branchStatus}
       chapterStatus={chapterStatus}
+      branchMapEntries={branchMap?.list ?? []}
       showAttentionLists
       showBanner
       showIndonesiaMap

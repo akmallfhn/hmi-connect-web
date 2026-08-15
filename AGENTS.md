@@ -110,17 +110,36 @@ if their id is missing, not to a picker. Each of those five `[id]` layouts re-ch
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
 All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
-exact-matched Dashboard item first. Badko, Korkom, and Komisariat retain empty Dashboard/index
-page bodies. Organization reuses `MasterDashboardPage` with the same unscoped summary, Cabang
-distribution, kader-growth, Cabang-status, and Komisariat-status calls as `/master`; the Master route alone enables
-the shared `AdminDashboardBanner` above its statistic cards plus the client-side
-`IndonesiaBranchMap` analytics card below them. Its map geometry lives in
+exact-matched Dashboard item first, and every one of the five Dashboard bodies now renders an
+`AdminPageTitle` (naming the entity in its description) plus the shared `AdminDashboardBanner`
+below it. Korkom/Komisariat stop there — the backend's aggregate `stat/*` endpoints do not yet
+accept `coordinating_chapter_id`/`chapter_id`, so those two routes have no scoped analytics to
+render. Badko additionally renders the shared `IndonesiaBranchMap` from
+`components/charts/IndonesiaBranchMap.tsx`; its initial server request
+and every client-side search request must send the route's `coordinating_body_id`, matching the
+backend requirement for coordinating-body administrators. Each scoped route fetches its own
+entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
+`getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, since
+there's no shared context exposing it to the page body the way `useBranch()` does for Cabang.
+Organization reuses `MasterDashboardPage` with the same unscoped summary, Cabang distribution,
+kader-growth, Cabang-status, and Komisariat-status calls as `/master`, with both `showBanner` and
+`showIndonesiaMap` enabled. Master and Organization request `stat/branch-map` with nationwide
+coverage and no coordinating-body filter. The map geometry lives in
 `components/svg/MapSquare.tsx`, converted from the former `Map Square.svg`: the original 5,217
 colored rectangles are consolidated into two lightweight paths using `currentColor` (rendered as
-`text-primary`) plus a 45%-opacity primary layer. `IndonesiaBranchMap` overlays
-keyboard-focusable/hoverable sample Cabang points; each tooltip exposes the Cabang name, total
-active kader, and total verified kader, and the card is explicitly labeled as sample data until a
-real geographic endpoint replaces its constants. Master also enables `MasterAttentionLists`, a
+`text-primary`) plus a 45%-opacity primary layer. `IndonesiaBranchMap` accepts the endpoint's
+`BranchMapEntry[]`; `lib/branch-map-coordinates.ts#projectBranchMapPosition` projects each row's real
+latitude/longitude into the SVG's 0-100 percentage space using compact per-island geographic and
+artwork bounds (there is deliberately no duplicate city/Cabang coordinate lookup). Rows with null or
+out-of-Indonesia coordinates are omitted from the plotted-point count instead of being guessed.
+Each point's tooltip shows label-value rows for its Badko, translated Cabang type
+(`Penuh`/`Persiapan`), `verified_member_count`, and `chapter_count`; tooltip copy is never smaller
+than 13px and every value uses the shared near-black text color. A Cabang search input sits at the right side of the map
+card header and debounces through `/admin/api/stat/branch-map`; that Route Handler delegates to
+`apis/stat.ts#getBranchMap`, while the Badko variant always includes its fixed
+`coordinating_body_id`. The map and point layer deliberately keep overflow visible so edge points
+and their hover/focus tooltips are not clipped; provisional Cabang use pink pins while full Cabang
+retain the secondary-color pins. Master also enables `MasterAttentionLists`, a
 sample-data-only two-column grid with: provisional Cabang as pengkaderan priorities; an accessible
 Cabang/Badko suspended tab switcher whose tab labels include their totals; Cabang with fewer than
 10 Komisariat sorted ascending (including zero); and Cabang sorted by their lowest active-kader
@@ -132,7 +151,9 @@ widgets. Its Cabang/Komisariat status pair sits directly above the Master-only a
 their routes do not fetch the other unused datasets. Analytics-card headers consistently use
 `text-base` titles and `text-sm` descriptions with no added top margin on the description. The
 Cabang variant retains its
-populated navigation and real branch-scoped analytics dashboard. `/master` has its
+populated navigation and real branch-scoped analytics dashboard (`BranchDashboardPage`, which now
+also renders `AdminDashboardBanner` under its title, same as every other scoped dashboard).
+`/master` has its
 real organization-wide dashboard, `/master/users` has the real User Management CRUD panel,
 `/master/verification` has the organization-wide verification review queue, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
@@ -193,9 +214,11 @@ Three layers, each with one job. Don't blend them.
    including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
    `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
    backing `/master`'s organization-wide dashboard and `/branches/[branch_id]`'s scoped
-   dashboard — summary totals, branch/chapter distribution, user growth, and membership/
-   branch/chapter/coordinating-body status breakdowns; the branch-capable functions accept an
-   optional `branchId` and send it as `branch_id`. Unscoped stat POSTs explicitly send `body: {}`
+   dashboard — summary totals, branch/chapter distribution, user growth, membership/
+   branch/chapter/coordinating-body status breakdowns, and the Indonesia Cabang map. The
+   branch-capable aggregate functions accept an optional `branchId` and send it as `branch_id`;
+   `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
+   mandatory Badko scope as `coordinating_body_id`. Unscoped aggregate stat POSTs explicitly send `body: {}`
    rather than omitting the body because these backend handlers bind a JSON object and an absent
    body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders
