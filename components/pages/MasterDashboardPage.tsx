@@ -1,11 +1,11 @@
-import { Building2, GraduationCap, Network, Users } from "lucide-react";
+import { BadgeCheck, Building2, Factory, Network } from "lucide-react";
 import AdminPageTitle from "../common/AdminPageTitle";
 import type {
   BranchDistribution,
   BranchMapEntry,
   BranchStatus,
   ChapterStatus,
-  StatSummary,
+  OrganizationSummary,
   UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
@@ -17,7 +17,7 @@ import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
 
 interface MasterDashboardPageProps {
-  summary: StatSummary | null;
+  summary: OrganizationSummary | null;
   branchDistribution: BranchDistribution | null;
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
@@ -45,29 +45,29 @@ export default function MasterDashboardPage({
 }: MasterDashboardPageProps) {
   const stats = [
     {
-      label: "Total Kader Aktif",
-      value: (summary?.total_active_kader ?? 0).toLocaleString("id-ID"),
-      icon: Users,
+      label: "Kader Terverifikasi",
+      value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
+      icon: BadgeCheck,
       iconBg: "bg-primary-soft",
       iconColor: "text-primary",
     },
     {
       label: "Total Cabang",
-      value: (summary?.total_branch ?? 0).toLocaleString("id-ID"),
+      value: (summary?.branch_count ?? 0).toLocaleString("id-ID"),
       icon: Building2,
       iconBg: "bg-secondary-soft",
       iconColor: "text-secondary",
     },
     {
       label: "Total Komisariat",
-      value: (summary?.total_chapter ?? 0).toLocaleString("id-ID"),
-      icon: GraduationCap,
+      value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
+      icon: Factory,
       iconBg: "bg-tertiary/10",
       iconColor: "text-tertiary",
     },
     {
       label: "Total Badko",
-      value: (summary?.total_coordinating_body ?? 0).toLocaleString("id-ID"),
+      value: (summary?.coordinating_body_count ?? 0).toLocaleString("id-ID"),
       icon: Network,
       iconBg: "bg-primary-soft",
       iconColor: "text-primary",

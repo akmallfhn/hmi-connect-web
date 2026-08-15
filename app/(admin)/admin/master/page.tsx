@@ -4,7 +4,7 @@ import {
   getBranchDistribution,
   getBranchStatus,
   getChapterStatus,
-  getStatSummary,
+  getOrganizationSummary,
   getUserGrowth,
 } from "@/apis/stat";
 import MasterDashboardPage from "@/components/pages/MasterDashboardPage";
@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MasterPage() {
+  const organizationId = process.env.ORGANIZATION_ID;
   const [
     summary,
     branchDistribution,
@@ -28,7 +29,7 @@ export default async function MasterPage() {
     chapterStatus,
     branchMap,
   ] = await Promise.all([
-    getStatSummary(),
+    organizationId ? getOrganizationSummary(organizationId) : null,
     getBranchDistribution(),
     getUserGrowth("day"),
     getUserGrowth("week"),

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import {
+  getBranchSummary,
   getChapterDistribution,
   getChapterStatus,
   getMembershipStatus,
-  getStatSummary,
   getUserGrowth,
 } from "@/apis/stat";
 import BranchDashboardPage from "@/components/pages/BranchDashboardPage";
@@ -33,7 +33,7 @@ export default async function BranchDashboardRoute({
     membershipStatus,
     chapterStatus,
   ] = await Promise.all([
-    getStatSummary(branch_id),
+    getBranchSummary(branch_id),
     getChapterDistribution(branch_id),
     getUserGrowth("day", branch_id),
     getUserGrowth("week", branch_id),

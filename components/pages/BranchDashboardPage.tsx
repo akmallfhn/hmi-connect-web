@@ -1,11 +1,11 @@
 "use client";
 
-import { GraduationCap, Users } from "lucide-react";
+import { BadgeCheck, Clock3, Factory, Percent } from "lucide-react";
 import type {
+  BranchSummary,
   ChapterDistribution,
   ChapterStatus,
   MembershipStatus,
-  StatSummary,
   UserGrowthEntry,
 } from "@/apis/stat";
 import { useBranch } from "@/hooks/useBranch";
@@ -18,7 +18,7 @@ import TopCabangList from "../charts/TopCabangList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface BranchDashboardPageProps {
-  summary: StatSummary | null;
+  summary: BranchSummary | null;
   chapterDistribution: ChapterDistribution | null;
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
@@ -39,18 +39,37 @@ export default function BranchDashboardPage({
   const { branchName } = useBranch();
   const stats = [
     {
-      label: "Total Kader Aktif",
-      value: (summary?.total_active_kader ?? 0).toLocaleString("id-ID"),
-      icon: Users,
+      label: "Kader Terverifikasi",
+      value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
+      icon: BadgeCheck,
       iconBg: "bg-primary-soft",
       iconColor: "text-primary",
     },
     {
       label: "Total Komisariat",
-      value: (summary?.total_chapter ?? 0).toLocaleString("id-ID"),
-      icon: GraduationCap,
+      value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
+      icon: Factory,
       iconBg: "bg-secondary-soft",
       iconColor: "text-secondary",
+    },
+    {
+      label: "Permintaan Verifikasi",
+      value: (summary?.pending_verification_request_count ?? 0).toLocaleString(
+        "id-ID"
+      ),
+      icon: Clock3,
+      iconBg: "bg-tertiary/10",
+      iconColor: "text-tertiary",
+    },
+    {
+      label: "Persentase Terverifikasi",
+      value: `${(summary?.verified_member_percentage ?? 0).toLocaleString(
+        "id-ID",
+        { maximumFractionDigits: 2 }
+      )}%`,
+      icon: Percent,
+      iconBg: "bg-primary-soft",
+      iconColor: "text-primary",
     },
   ];
   const chapterEntries = (chapterDistribution?.list ?? []).map((entry) => ({
@@ -70,7 +89,7 @@ export default function BranchDashboardPage({
         <AdminDashboardBanner />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}

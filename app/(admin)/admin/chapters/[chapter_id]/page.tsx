@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getChapterDetail } from "@/apis/chapters";
-import AdminDashboardBanner from "@/components/banners/AdminDashboardBanner";
-import AdminPageTitle from "@/components/common/AdminPageTitle";
+import { getChapterSummary } from "@/apis/stat";
+import ChapterDashboardPage from "@/components/pages/ChapterDashboardPage";
 
 export const metadata: Metadata = {
   title: "Dashboard Komisariat",
@@ -19,19 +19,14 @@ export default async function ChapterDetailPage({
   params,
 }: ChapterDetailPageProps) {
   const { chapter_id } = await params;
-  const chapter = await getChapterDetail(chapter_id);
-
+  const [chapter, summary] = await Promise.all([
+    getChapterDetail(chapter_id),
+    getChapterSummary(chapter_id),
+  ]);
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <AdminPageTitle
-        description={`Ringkasan data kader di Komisariat ${chapter?.name ?? "ini"}.`}
-      >
-        Dashboard Komisariat
-      </AdminPageTitle>
-
-      <div className="mt-6">
-        <AdminDashboardBanner />
-      </div>
-    </div>
+    <ChapterDashboardPage
+      chapterName={chapter?.name ?? "ini"}
+      summary={summary}
+    />
   );
 }

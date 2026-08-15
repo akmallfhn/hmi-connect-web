@@ -9,11 +9,36 @@ import {
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
-export type StatSummary = {
-  total_active_kader: number;
-  total_chapter: number;
-  total_branch?: number;
-  total_coordinating_body?: number;
+export type OrganizationSummary = {
+  verified_member_count: number;
+  coordinating_body_count: number;
+  branch_count: number;
+  chapter_count: number;
+};
+
+export type CoordinatingBodySummary = {
+  verified_member_count: number;
+  branch_count: number;
+  coordinating_chapter_count: number;
+  chapter_count: number;
+};
+
+export type BranchSummary = {
+  verified_member_count: number;
+  chapter_count: number;
+  pending_verification_request_count: number;
+  verified_member_percentage: number;
+};
+
+export type CoordinatingChapterSummary = {
+  verified_member_count: number;
+  chapter_count: number;
+};
+
+export type ChapterSummary = {
+  verified_member_count: number;
+  member_growth_percentage_last_month: number;
+  new_member_count_last_month: number;
 };
 
 export type BranchDistributionEntry = {
@@ -100,15 +125,56 @@ async function getSessionToken() {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
-export async function getStatSummary(
-  branchId?: string
-): Promise<StatSummary | null> {
+async function getEntitySummary<T>(
+  endpoint: string,
+  body: Record<string, string>
+): Promise<T | null> {
   const token = await getSessionToken();
-  const result = await callApi<StatSummary>("/api/v1/stat/summary", {
-    token,
-    body: branchId ? { branch_id: branchId } : {},
-  });
+  const result = await callApi<T>(endpoint, { token, body });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
+export async function getOrganizationSummary(
+  organizationId: string
+): Promise<OrganizationSummary | null> {
+  return getEntitySummary<OrganizationSummary>(
+    "/api/v1/stat/summary/organization",
+    { organization_id: organizationId }
+  );
+}
+
+export async function getCoordinatingBodySummary(
+  coordinatingBodyId: string
+): Promise<CoordinatingBodySummary | null> {
+  return getEntitySummary<CoordinatingBodySummary>(
+    "/api/v1/stat/summary/coordinating-body",
+    { coordinating_body_id: coordinatingBodyId }
+  );
+}
+
+export async function getBranchSummary(
+  branchId: string
+): Promise<BranchSummary | null> {
+  return getEntitySummary<BranchSummary>("/api/v1/stat/summary/branch", {
+    branch_id: branchId,
+  });
+}
+
+export async function getCoordinatingChapterSummary(
+  coordinatingChapterId: string
+): Promise<CoordinatingChapterSummary | null> {
+  return getEntitySummary<CoordinatingChapterSummary>(
+    "/api/v1/stat/summary/coordinating-chapter",
+    { coordinating_chapter_id: coordinatingChapterId }
+  );
+}
+
+export async function getChapterSummary(
+  chapterId: string
+): Promise<ChapterSummary | null> {
+  return getEntitySummary<ChapterSummary>("/api/v1/stat/summary/chapter", {
+    chapter_id: chapterId,
+  });
 }
 
 export async function getBranchDistribution(): Promise<BranchDistribution | null> {

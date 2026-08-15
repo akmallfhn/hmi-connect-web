@@ -112,18 +112,24 @@ Organization layout uses the session name because the backend has no organizatio
 All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
 exact-matched Dashboard item first, and every one of the five Dashboard bodies now renders an
 `AdminPageTitle` (naming the entity in its description) plus the shared `AdminDashboardBanner`
-below it. Korkom/Komisariat stop there — the backend's aggregate `stat/*` endpoints do not yet
-accept `coordinating_chapter_id`/`chapter_id`, so those two routes have no scoped analytics to
-render. Badko additionally renders the shared `IndonesiaBranchMap` from
+below it, followed immediately by entity-specific `StatCard`s. Each scope calls exactly one of
+the five matching summary endpoints: `summary/organization` (shared by Master and Organization),
+`summary/coordinating-body` (Badko), `summary/branch` (Cabang),
+`summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Korkom and Komisariat
+currently stop after those summary cards. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
-`getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, since
-there's no shared context exposing it to the page body the way `useBranch()` does for Cabang.
-Organization reuses `MasterDashboardPage` with the same unscoped summary, Cabang distribution,
-kader-growth, Cabang-status, and Komisariat-status calls as `/master`, with both `showBanner` and
-`showIndonesiaMap` enabled. Master and Organization request `stat/branch-map` with nationwide
+`getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
+passes fetched data into `CoordinatingBodyDashboardPage`, `CoordinatingChapterDashboardPage`, or
+`ChapterDashboardPage`; the route files do not duplicate dashboard presentation. This explicit
+prop handoff is needed because there's no shared context exposing those entities to the page body
+the way `useBranch()` does for Cabang.
+Organization reuses `MasterDashboardPage` with the same Organization-summary cards, Cabang
+distribution, kader-growth, Cabang-status, and Komisariat-status calls as `/master`, with both
+`showBanner` and `showIndonesiaMap` enabled. Its summary uses the route's `organization_id`, while
+Master uses the configured `ORGANIZATION_ID`. Master and Organization request `stat/branch-map` with nationwide
 coverage and no coordinating-body filter. The map geometry lives in
 `components/svg/MapSquare.tsx`, converted from the former `Map Square.svg`: the original 5,217
 colored rectangles are consolidated into two lightweight paths using `currentColor` (rendered as
@@ -214,8 +220,11 @@ Three layers, each with one job. Don't blend them.
    including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
    `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
    backing `/master`'s organization-wide dashboard and `/branches/[branch_id]`'s scoped
-   dashboard — summary totals, branch/chapter distribution, user growth, membership/
-   branch/chapter/coordinating-body status breakdowns, and the Indonesia Cabang map. The
+   dashboard — five entity-specific summary endpoints, branch/chapter distribution, user growth,
+   membership/branch/chapter/coordinating-body status breakdowns, and the Indonesia Cabang map.
+   `getOrganizationSummary`, `getCoordinatingBodySummary`, `getBranchSummary`,
+   `getCoordinatingChapterSummary`, and `getChapterSummary` each post the required entity id to
+   their matching `stat/summary/*` endpoint. The
    branch-capable aggregate functions accept an optional `branchId` and send it as `branch_id`;
    `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
    mandatory Badko scope as `coordinating_body_id`. Unscoped aggregate stat POSTs explicitly send `body: {}`
@@ -401,9 +410,9 @@ in bounded batches. A missing participant result/email is skipped, and page/send
 
 ## Component conventions
 
-- `components/pages/*` — one Client Component per route, holds the page's state machine;
-  the `app/.../page.tsx` Server Component fetches data (`getSession`,
-  `getInstitutions`, ...) and passes it down as props.
+- `components/pages/*` — one page-level presentation component per route; it is a Client Component
+  only when it needs client state/hooks. The `app/.../page.tsx` Server Component fetches data
+  (`getSession`, `getInstitutions`, ...) and passes it down as props.
 - `components/states/EmptyState.tsx` — the shared empty-result presentation for every admin
   list: the larger `EmptyStateIllustration`, a `text-base` title, and a `text-sm` description.
   List pages pass different copy for a genuinely empty collection versus an empty search/filter.
@@ -1263,7 +1272,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   subtitles retain their complete text through native `title` hover tooltips; header links also
   carry `aria-label`. The Cabang scope's nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
-  `stat/summary`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
+  `stat/summary/branch`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
   calls), then three `AdminNavGroup`s —
   "Organisasi" (AD ART at `/branches/{id}/ad-art`, still a placeholder; Kelola Komisariat at
   `/branches/{id}/chapters`, real — see below), "Keanggotaan" (Daftar Kader at
