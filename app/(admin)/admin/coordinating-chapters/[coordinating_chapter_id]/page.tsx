@@ -3,6 +3,7 @@ import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import {
   getChapterDistribution,
   getCoordinatingChapterSummary,
+  getUserGrowth,
 } from "@/apis/stat";
 import CoordinatingChapterDashboardPage from "@/components/pages/CoordinatingChapterDashboardPage";
 
@@ -22,10 +23,29 @@ export default async function CoordinatingChapterDetailPage({
   params,
 }: CoordinatingChapterDetailPageProps) {
   const { coordinating_chapter_id } = await params;
-  const [coordinatingChapter, summary, chapterDistribution] = await Promise.all([
+  const [
+    coordinatingChapter,
+    summary,
+    chapterDistribution,
+    userGrowthDay,
+    userGrowthWeek,
+    userGrowthMonth,
+  ] = await Promise.all([
     getCoordinatingChapterDetail(coordinating_chapter_id),
     getCoordinatingChapterSummary(coordinating_chapter_id),
     getChapterDistribution({
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
+    getUserGrowth({
+      granularity: "day",
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
+    getUserGrowth({
+      granularity: "week",
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
+    getUserGrowth({
+      granularity: "month",
       coordinatingChapterId: coordinating_chapter_id,
     }),
   ]);
@@ -34,6 +54,9 @@ export default async function CoordinatingChapterDetailPage({
       coordinatingChapterName={coordinatingChapter?.name ?? "ini"}
       summary={summary}
       chapterDistribution={chapterDistribution}
+      userGrowthDay={userGrowthDay?.list ?? []}
+      userGrowthWeek={userGrowthWeek?.list ?? []}
+      userGrowthMonth={userGrowthMonth?.list ?? []}
     />
   );
 }

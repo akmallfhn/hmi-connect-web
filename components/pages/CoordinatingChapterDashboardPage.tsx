@@ -2,9 +2,11 @@ import { BadgeCheck, Factory } from "lucide-react";
 import type {
   ChapterDistribution,
   CoordinatingChapterSummary,
+  UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
+import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import AdminPageTitle from "../common/AdminPageTitle";
 
@@ -12,12 +14,18 @@ interface CoordinatingChapterDashboardPageProps {
   coordinatingChapterName: string;
   summary: CoordinatingChapterSummary | null;
   chapterDistribution: ChapterDistribution | null;
+  userGrowthDay: UserGrowthEntry[];
+  userGrowthWeek: UserGrowthEntry[];
+  userGrowthMonth: UserGrowthEntry[];
 }
 
 export default function CoordinatingChapterDashboardPage({
   coordinatingChapterName,
   summary,
   chapterDistribution,
+  userGrowthDay,
+  userGrowthWeek,
+  userGrowthMonth,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
     {
@@ -58,13 +66,18 @@ export default function CoordinatingChapterDashboardPage({
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CabangDistributionDonut
           entries={chapterEntries}
           totalActiveKader={chapterDistribution?.total_active_kader ?? 0}
           title="Distribusi Kader per Komisariat"
           subtitle="Berdasarkan jumlah kader aktif di setiap Komisariat"
           othersLabel="Komisariat lainnya"
+        />
+        <KaderGrowthLineChart
+          day={userGrowthDay}
+          week={userGrowthWeek}
+          month={userGrowthMonth}
         />
       </div>
     </div>

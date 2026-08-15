@@ -4,6 +4,7 @@ import {
   getBranchDistribution,
   getBranchMap,
   getCoordinatingBodySummary,
+  getUserGrowth,
 } from "@/apis/stat";
 import CoordinatingBodyDashboardPage from "@/components/pages/CoordinatingBodyDashboardPage";
 
@@ -23,16 +24,35 @@ export default async function CoordinatingBodyDetailPage({
   params,
 }: CoordinatingBodyDetailPageProps) {
   const { coordinating_body_id } = await params;
-  const [coordinatingBody, summary, branchMap, branchDistribution] =
-    await Promise.all([
-      getCoordinatingBodyDetail(coordinating_body_id),
-      getCoordinatingBodySummary(coordinating_body_id),
-      getBranchMap({
-        coverage: "nationwide",
-        coordinatingBodyId: coordinating_body_id,
-      }),
-      getBranchDistribution({ coordinatingBodyId: coordinating_body_id }),
-    ]);
+  const [
+    coordinatingBody,
+    summary,
+    branchMap,
+    branchDistribution,
+    userGrowthDay,
+    userGrowthWeek,
+    userGrowthMonth,
+  ] = await Promise.all([
+    getCoordinatingBodyDetail(coordinating_body_id),
+    getCoordinatingBodySummary(coordinating_body_id),
+    getBranchMap({
+      coverage: "nationwide",
+      coordinatingBodyId: coordinating_body_id,
+    }),
+    getBranchDistribution({ coordinatingBodyId: coordinating_body_id }),
+    getUserGrowth({
+      granularity: "day",
+      coordinatingBodyId: coordinating_body_id,
+    }),
+    getUserGrowth({
+      granularity: "week",
+      coordinatingBodyId: coordinating_body_id,
+    }),
+    getUserGrowth({
+      granularity: "month",
+      coordinatingBodyId: coordinating_body_id,
+    }),
+  ]);
   return (
     <CoordinatingBodyDashboardPage
       coordinatingBodyId={coordinating_body_id}
@@ -40,6 +60,9 @@ export default async function CoordinatingBodyDetailPage({
       summary={summary}
       branchMapEntries={branchMap?.list ?? []}
       branchDistribution={branchDistribution}
+      userGrowthDay={userGrowthDay?.list ?? []}
+      userGrowthWeek={userGrowthWeek?.list ?? []}
+      userGrowthMonth={userGrowthMonth?.list ?? []}
     />
   );
 }

@@ -3,10 +3,12 @@ import type {
   BranchDistribution,
   BranchMapEntry,
   CoordinatingBodySummary,
+  UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
+import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import AdminPageTitle from "../common/AdminPageTitle";
 
@@ -16,6 +18,9 @@ interface CoordinatingBodyDashboardPageProps {
   summary: CoordinatingBodySummary | null;
   branchMapEntries: BranchMapEntry[];
   branchDistribution: BranchDistribution | null;
+  userGrowthDay: UserGrowthEntry[];
+  userGrowthWeek: UserGrowthEntry[];
+  userGrowthMonth: UserGrowthEntry[];
 }
 
 export default function CoordinatingBodyDashboardPage({
@@ -24,6 +29,9 @@ export default function CoordinatingBodyDashboardPage({
   summary,
   branchMapEntries,
   branchDistribution,
+  userGrowthDay,
+  userGrowthWeek,
+  userGrowthMonth,
 }: CoordinatingBodyDashboardPageProps) {
   const stats = [
     {
@@ -85,10 +93,15 @@ export default function CoordinatingBodyDashboardPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <CabangDistributionDonut
           entries={branchEntries}
           totalActiveKader={branchDistribution?.total_active_kader ?? 0}
+        />
+        <KaderGrowthLineChart
+          day={userGrowthDay}
+          week={userGrowthWeek}
+          month={userGrowthMonth}
         />
       </div>
     </div>

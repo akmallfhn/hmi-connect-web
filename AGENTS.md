@@ -115,13 +115,15 @@ exact-matched Dashboard item first, and every one of the five Dashboard bodies n
 below it, followed immediately by entity-specific `StatCard`s. Each scope calls exactly one of
 the five matching summary endpoints: `summary/organization` (shared by Master and Organization),
 `summary/coordinating-body` (Badko), `summary/branch` (Cabang),
-`summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat currently
-stops after those summary cards. Korkom additionally renders a Komisariat distribution donut from
-`chapter-distribution`, always filtered by its `coordinating_chapter_id`. Badko additionally renders the shared `IndonesiaBranchMap` from
+`summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat additionally
+renders its scoped kader-growth chart below those cards. Korkom renders a Komisariat distribution
+donut from `chapter-distribution`, always filtered by its `coordinating_chapter_id`, with its scoped
+kader-growth chart immediately to the right on `xl`. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
-immediately below that map and uses the same fixed `coordinating_body_id`. Each scoped route fetches its own
+immediately below that map and uses the same fixed `coordinating_body_id`; Badko's scoped
+kader-growth chart sits to its right on `xl`. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
 `getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
 passes fetched data into `CoordinatingBodyDashboardPage`, `CoordinatingChapterDashboardPage`, or
@@ -231,7 +233,9 @@ Three layers, each with one job. Don't blend them.
    `coordinatingChapterId`, sending the corresponding snake-case filters. The remaining
    branch-capable aggregate functions accept an optional `branchId` and send it as `branch_id`;
    `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
-   mandatory Badko scope as `coordinating_body_id`. Unscoped aggregate stat POSTs explicitly send `body: {}`
+   mandatory Badko scope as `coordinating_body_id`. `getUserGrowth` takes an options object and
+   sends at most one of `coordinating_body_id`, `branch_id`, `coordinating_chapter_id`, or
+   `chapter_id`, matching the caller's dashboard scope. Unscoped aggregate stat POSTs explicitly send `body: {}`
    rather than omitting the body because these backend handlers bind a JSON object and an absent
    body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders

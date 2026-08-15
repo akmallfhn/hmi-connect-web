@@ -35,9 +35,9 @@ export default async function BranchDashboardRoute({
   ] = await Promise.all([
     getBranchSummary(branch_id),
     getChapterDistribution({ branchId: branch_id }),
-    getUserGrowth("day", branch_id),
-    getUserGrowth("week", branch_id),
-    getUserGrowth("month", branch_id),
+    getUserGrowth({ granularity: "day", branchId: branch_id }),
+    getUserGrowth({ granularity: "week", branchId: branch_id }),
+    getUserGrowth({ granularity: "month", branchId: branch_id }),
     getMembershipStatus(branch_id),
     getChapterStatus(branch_id),
   ]);

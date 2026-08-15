@@ -37,9 +37,9 @@ export default async function OrganizationDetailPage({
   ] = await Promise.all([
     getOrganizationSummary(organization_id),
     getBranchDistribution(),
-    getUserGrowth("day"),
-    getUserGrowth("week"),
-    getUserGrowth("month"),
+    getUserGrowth({ granularity: "day" }),
+    getUserGrowth({ granularity: "week" }),
+    getUserGrowth({ granularity: "month" }),
     getBranchStatus(),
     getChapterStatus(),
     getBranchMap({ coverage: "nationwide" }),

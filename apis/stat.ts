@@ -84,6 +84,42 @@ export type UserGrowth = {
   list: UserGrowthEntry[];
 };
 
+type UserGrowthScope =
+  | {
+      coordinatingBodyId: string;
+      branchId?: never;
+      coordinatingChapterId?: never;
+      chapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId: string;
+      coordinatingChapterId?: never;
+      chapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId: string;
+      chapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId?: never;
+      chapterId: string;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId?: never;
+      chapterId?: never;
+    };
+
+export type GetUserGrowthOptions = {
+  granularity?: UserGrowthGranularity;
+} & UserGrowthScope;
+
 export type MembershipStatus = {
   total_verified: number;
   total_unverified: number;
@@ -224,15 +260,28 @@ export async function getChapterDistribution(
 }
 
 export async function getUserGrowth(
-  granularity: UserGrowthGranularity = "month",
-  branchId?: string
+  options: GetUserGrowthOptions = {}
 ): Promise<UserGrowth | null> {
   const token = await getSessionToken();
+  const {
+    granularity = "month",
+    coordinatingBodyId,
+    branchId,
+    coordinatingChapterId,
+    chapterId,
+  } = options;
   const result = await callApi<UserGrowth>("/api/v1/stat/user-growth", {
     token,
     body: {
       granularity,
+      ...(coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {}),
       ...(branchId ? { branch_id: branchId } : {}),
+      ...(coordinatingChapterId
+        ? { coordinating_chapter_id: coordinatingChapterId }
+        : {}),
+      ...(chapterId ? { chapter_id: chapterId } : {}),
     },
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;

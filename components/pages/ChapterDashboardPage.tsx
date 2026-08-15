@@ -1,17 +1,24 @@
 import { BadgeCheck, TrendingUp, UserPlus } from "lucide-react";
-import type { ChapterSummary } from "@/apis/stat";
+import type { ChapterSummary, UserGrowthEntry } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface ChapterDashboardPageProps {
   chapterName: string;
   summary: ChapterSummary | null;
+  userGrowthDay: UserGrowthEntry[];
+  userGrowthWeek: UserGrowthEntry[];
+  userGrowthMonth: UserGrowthEntry[];
 }
 
 export default function ChapterDashboardPage({
   chapterName,
   summary,
+  userGrowthDay,
+  userGrowthWeek,
+  userGrowthMonth,
 }: ChapterDashboardPageProps) {
   const stats = [
     {
@@ -57,6 +64,14 @@ export default function ChapterDashboardPage({
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
+      </div>
+
+      <div className="mt-4">
+        <KaderGrowthLineChart
+          day={userGrowthDay}
+          week={userGrowthWeek}
+          month={userGrowthMonth}
+        />
       </div>
     </div>
   );
