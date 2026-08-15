@@ -5,8 +5,8 @@ import type {
   BranchSummary,
   ChapterDistribution,
   ChapterStatus,
-  MembershipStatus,
   UserGrowthEntry,
+  VerificationCount,
 } from "@/apis/stat";
 import { useBranch } from "@/hooks/useBranch";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
@@ -22,7 +22,7 @@ interface BranchDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
-  membershipStatus: MembershipStatus | null;
+  verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
 }
 
@@ -32,7 +32,7 @@ export default function BranchDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
-  membershipStatus,
+  verificationCount,
   chapterStatus,
 }: BranchDashboardPageProps) {
   const { branchName } = useBranch();
@@ -112,17 +112,22 @@ export default function BranchDashboardPage({
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <StatusDonut
           title="Status Verifikasi Kader"
-          subtitle="Perbandingan kader yang sudah dan belum verifikasi KTP"
+          subtitle="Perbandingan status verifikasi kader"
           centerLabel="Terverifikasi"
           segments={[
             {
               name: "Terverifikasi",
-              value: membershipStatus?.total_verified ?? 0,
+              value: verificationCount?.verified_count ?? 0,
               color: "#1baf7a",
             },
             {
-              name: "Belum Verifikasi",
-              value: membershipStatus?.total_unverified ?? 0,
+              name: "Dalam Proses Verifikasi",
+              value: verificationCount?.pending_count ?? 0,
+              color: "#eda100",
+            },
+            {
+              name: "Belum Terverifikasi",
+              value: verificationCount?.unverified_count ?? 0,
               color: "#c3c2b7",
             },
           ]}

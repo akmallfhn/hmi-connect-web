@@ -3,7 +3,7 @@ import {
   getBranchSummary,
   getChapterDistribution,
   getChapterStatus,
-  getMembershipStatus,
+  getVerificationCount,
   getUserGrowth,
 } from "@/apis/stat";
 import BranchDashboardPage from "@/components/pages/BranchDashboardPage";
@@ -30,7 +30,7 @@ export default async function BranchDashboardRoute({
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
-    membershipStatus,
+    verificationCount,
     chapterStatus,
   ] = await Promise.all([
     getBranchSummary(branch_id),
@@ -38,7 +38,7 @@ export default async function BranchDashboardRoute({
     getUserGrowth({ granularity: "day", branchId: branch_id }),
     getUserGrowth({ granularity: "week", branchId: branch_id }),
     getUserGrowth({ granularity: "month", branchId: branch_id }),
-    getMembershipStatus(branch_id),
+    getVerificationCount({ branchId: branch_id }),
     getChapterStatus({ branchId: branch_id }),
   ]);
 
@@ -49,7 +49,7 @@ export default async function BranchDashboardRoute({
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
-      membershipStatus={membershipStatus}
+      verificationCount={verificationCount}
       chapterStatus={chapterStatus}
     />
   );

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { getChapterDetail } from "@/apis/chapters";
-import { getChapterSummary, getUserGrowth } from "@/apis/stat";
+import {
+  getChapterSummary,
+  getUserGrowth,
+  getVerificationCount,
+} from "@/apis/stat";
 import ChapterDashboardPage from "@/components/pages/ChapterDashboardPage";
 
 export const metadata: Metadata = {
@@ -25,12 +29,14 @@ export default async function ChapterDetailPage({
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
+    verificationCount,
   ] = await Promise.all([
     getChapterDetail(chapter_id),
     getChapterSummary(chapter_id),
     getUserGrowth({ granularity: "day", chapterId: chapter_id }),
     getUserGrowth({ granularity: "week", chapterId: chapter_id }),
     getUserGrowth({ granularity: "month", chapterId: chapter_id }),
+    getVerificationCount({ chapterId: chapter_id }),
   ]);
   return (
     <ChapterDashboardPage
@@ -39,6 +45,7 @@ export default async function ChapterDetailPage({
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
+      verificationCount={verificationCount}
     />
   );
 }

@@ -5,6 +5,7 @@ import {
   getChapterStatus,
   getCoordinatingChapterSummary,
   getUserGrowth,
+  getVerificationCount,
 } from "@/apis/stat";
 import CoordinatingChapterDashboardPage from "@/components/pages/CoordinatingChapterDashboardPage";
 
@@ -31,6 +32,7 @@ export default async function CoordinatingChapterDetailPage({
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
+    verificationCount,
     chapterStatus,
   ] = await Promise.all([
     getCoordinatingChapterDetail(coordinating_chapter_id),
@@ -50,6 +52,9 @@ export default async function CoordinatingChapterDetailPage({
       granularity: "month",
       coordinatingChapterId: coordinating_chapter_id,
     }),
+    getVerificationCount({
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
     getChapterStatus({
       coordinatingChapterId: coordinating_chapter_id,
     }),
@@ -62,6 +67,7 @@ export default async function CoordinatingChapterDetailPage({
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
+      verificationCount={verificationCount}
       chapterStatus={chapterStatus}
     />
   );

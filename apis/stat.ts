@@ -120,10 +120,35 @@ export type GetUserGrowthOptions = {
   granularity?: UserGrowthGranularity;
 } & UserGrowthScope;
 
-export type MembershipStatus = {
-  total_verified: number;
-  total_unverified: number;
+export type VerificationCount = {
+  verified_count: number;
+  unverified_count: number;
+  pending_count: number;
 };
+
+type VerificationCountScope =
+  | {
+      branchId: string;
+      coordinatingChapterId?: never;
+      chapterId?: never;
+    }
+  | {
+      branchId?: never;
+      coordinatingChapterId: string;
+      chapterId?: never;
+    }
+  | {
+      branchId?: never;
+      coordinatingChapterId?: never;
+      chapterId: string;
+    }
+  | {
+      branchId?: never;
+      coordinatingChapterId?: never;
+      chapterId?: never;
+    };
+
+export type GetVerificationCountOptions = VerificationCountScope;
 
 export type BranchStatus = {
   total_full: number;
@@ -315,15 +340,22 @@ export async function getUserGrowth(
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
-export async function getMembershipStatus(
-  branchId?: string
-): Promise<MembershipStatus | null> {
+export async function getVerificationCount(
+  options: GetVerificationCountOptions = {}
+): Promise<VerificationCount | null> {
   const token = await getSessionToken();
-  const result = await callApi<MembershipStatus>(
-    "/api/v1/stat/membership-status",
+  const { branchId, coordinatingChapterId, chapterId } = options;
+  const result = await callApi<VerificationCount>(
+    "/api/v1/stat/verification-count",
     {
       token,
-      body: branchId ? { branch_id: branchId } : {},
+      body: {
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+        ...(chapterId ? { chapter_id: chapterId } : {}),
+      },
     }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;

@@ -4,6 +4,7 @@ import type {
   ChapterStatus,
   CoordinatingChapterSummary,
   UserGrowthEntry,
+  VerificationCount,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
@@ -19,6 +20,7 @@ interface CoordinatingChapterDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
+  verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
 }
 
@@ -29,6 +31,7 @@ export default function CoordinatingChapterDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
+  verificationCount,
   chapterStatus,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
@@ -85,7 +88,29 @@ export default function CoordinatingChapterDashboardPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <StatusDonut
+          title="Status Verifikasi Kader"
+          subtitle="Perbandingan status verifikasi kader"
+          centerLabel="Terverifikasi"
+          segments={[
+            {
+              name: "Terverifikasi",
+              value: verificationCount?.verified_count ?? 0,
+              color: "#1baf7a",
+            },
+            {
+              name: "Dalam Proses Verifikasi",
+              value: verificationCount?.pending_count ?? 0,
+              color: "#eda100",
+            },
+            {
+              name: "Belum Terverifikasi",
+              value: verificationCount?.unverified_count ?? 0,
+              color: "#c3c2b7",
+            },
+          ]}
+        />
         <StatusDonut
           title="Status Komisariat"
           subtitle="Perbandingan Komisariat penuh dan persiapan"

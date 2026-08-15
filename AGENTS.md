@@ -116,10 +116,11 @@ below it, followed immediately by entity-specific `StatCard`s. Each scope calls 
 the five matching summary endpoints: `summary/organization` (shared by Master and Organization),
 `summary/coordinating-body` (Badko), `summary/branch` (Cabang),
 `summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat additionally
-renders its scoped kader-growth chart below those cards. Korkom renders a Komisariat distribution
+renders its scoped kader-growth chart below those cards with its verification-count donut to the
+right on `xl`. Korkom renders a Komisariat distribution
 donut from `chapter-distribution`, always filtered by its `coordinating_chapter_id`, with its scoped
-kader-growth chart immediately to the right on `xl`; a scoped Komisariat-status donut follows
-that pair. Badko additionally renders the shared `IndonesiaBranchMap` from
+kader-growth chart immediately to the right on `xl`; scoped verification-count and
+Komisariat-status donuts follow that pair, in that order. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
@@ -242,7 +243,10 @@ Three layers, each with one job. Don't blend them.
    `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
    mandatory Badko scope as `coordinating_body_id`. `getUserGrowth` takes an options object and
    sends at most one of `coordinating_body_id`, `branch_id`, `coordinating_chapter_id`, or
-   `chapter_id`, matching the caller's dashboard scope. Unscoped aggregate stat POSTs explicitly send `body: {}`
+   `chapter_id`, matching the caller's dashboard scope. `getVerificationCount` replaces the old
+   two-bucket membership-status call and sends at most one of `branch_id`,
+   `coordinating_chapter_id`, or `chapter_id`; its response keeps verified, pending, and unverified
+   users as distinct buckets. Unscoped aggregate stat POSTs explicitly send `body: {}`
    rather than omitting the body because these backend handlers bind a JSON object and an absent
    body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders
@@ -1287,7 +1291,7 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   subtitles retain their complete text through native `title` hover tooltips; header links also
   carry `aria-label`. The Cabang scope's nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
-  `stat/summary/branch`, `chapter-distribution`, `user-growth`, `membership-status`, and `chapter-status`
+  `stat/summary/branch`, `chapter-distribution`, `user-growth`, `verification-count`, and `chapter-status`
   calls), then three `AdminNavGroup`s —
   "Organisasi" (AD ART at `/branches/{id}/ad-art`, still a placeholder; Kelola Komisariat at
   `/branches/{id}/chapters`, real — see below), "Keanggotaan" (Daftar Kader at

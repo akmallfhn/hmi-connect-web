@@ -1,8 +1,13 @@
 import { BadgeCheck, TrendingUp, UserPlus } from "lucide-react";
-import type { ChapterSummary, UserGrowthEntry } from "@/apis/stat";
+import type {
+  ChapterSummary,
+  UserGrowthEntry,
+  VerificationCount,
+} from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
+import StatusDonut from "../charts/StatusDonut";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface ChapterDashboardPageProps {
@@ -11,6 +16,7 @@ interface ChapterDashboardPageProps {
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
+  verificationCount: VerificationCount | null;
 }
 
 export default function ChapterDashboardPage({
@@ -19,6 +25,7 @@ export default function ChapterDashboardPage({
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
+  verificationCount,
 }: ChapterDashboardPageProps) {
   const stats = [
     {
@@ -66,11 +73,33 @@ export default function ChapterDashboardPage({
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <KaderGrowthLineChart
           day={userGrowthDay}
           week={userGrowthWeek}
           month={userGrowthMonth}
+        />
+        <StatusDonut
+          title="Status Verifikasi Kader"
+          subtitle="Perbandingan status verifikasi kader"
+          centerLabel="Terverifikasi"
+          segments={[
+            {
+              name: "Terverifikasi",
+              value: verificationCount?.verified_count ?? 0,
+              color: "#1baf7a",
+            },
+            {
+              name: "Dalam Proses Verifikasi",
+              value: verificationCount?.pending_count ?? 0,
+              color: "#eda100",
+            },
+            {
+              name: "Belum Terverifikasi",
+              value: verificationCount?.unverified_count ?? 0,
+              color: "#c3c2b7",
+            },
+          ]}
         />
       </div>
     </div>
