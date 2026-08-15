@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
-import { getBranchMap, getCoordinatingBodySummary } from "@/apis/stat";
+import {
+  getBranchDistribution,
+  getBranchMap,
+  getCoordinatingBodySummary,
+} from "@/apis/stat";
 import CoordinatingBodyDashboardPage from "@/components/pages/CoordinatingBodyDashboardPage";
 
 export const metadata: Metadata = {
@@ -19,20 +23,23 @@ export default async function CoordinatingBodyDetailPage({
   params,
 }: CoordinatingBodyDetailPageProps) {
   const { coordinating_body_id } = await params;
-  const [coordinatingBody, summary, branchMap] = await Promise.all([
-    getCoordinatingBodyDetail(coordinating_body_id),
-    getCoordinatingBodySummary(coordinating_body_id),
-    getBranchMap({
-      coverage: "nationwide",
-      coordinatingBodyId: coordinating_body_id,
-    }),
-  ]);
+  const [coordinatingBody, summary, branchMap, branchDistribution] =
+    await Promise.all([
+      getCoordinatingBodyDetail(coordinating_body_id),
+      getCoordinatingBodySummary(coordinating_body_id),
+      getBranchMap({
+        coverage: "nationwide",
+        coordinatingBodyId: coordinating_body_id,
+      }),
+      getBranchDistribution({ coordinatingBodyId: coordinating_body_id }),
+    ]);
   return (
     <CoordinatingBodyDashboardPage
       coordinatingBodyId={coordinating_body_id}
       coordinatingBodyName={coordinatingBody?.name ?? "ini"}
       summary={summary}
       branchMapEntries={branchMap?.list ?? []}
+      branchDistribution={branchDistribution}
     />
   );
 }

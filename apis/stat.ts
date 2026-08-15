@@ -52,6 +52,10 @@ export type BranchDistribution = {
   total_active_kader: number;
 };
 
+export type GetBranchDistributionOptions = {
+  coordinatingBodyId?: string;
+};
+
 export type ChapterDistributionEntry = {
   chapter_id: string;
   chapter_name: string;
@@ -61,6 +65,11 @@ export type ChapterDistributionEntry = {
 export type ChapterDistribution = {
   list: ChapterDistributionEntry[];
   total_active_kader: number;
+};
+
+export type GetChapterDistributionOptions = {
+  branchId?: string;
+  coordinatingChapterId?: string;
 };
 
 export type UserGrowthGranularity = "day" | "week" | "month";
@@ -177,24 +186,38 @@ export async function getChapterSummary(
   });
 }
 
-export async function getBranchDistribution(): Promise<BranchDistribution | null> {
+export async function getBranchDistribution(
+  options: GetBranchDistributionOptions = {}
+): Promise<BranchDistribution | null> {
   const token = await getSessionToken();
+  const { coordinatingBodyId } = options;
   const result = await callApi<BranchDistribution>(
     "/api/v1/stat/branch-distribution",
-    { token, body: {} }
+    {
+      token,
+      body: coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {},
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getChapterDistribution(
-  branchId?: string
+  options: GetChapterDistributionOptions = {}
 ): Promise<ChapterDistribution | null> {
   const token = await getSessionToken();
+  const { branchId, coordinatingChapterId } = options;
   const result = await callApi<ChapterDistribution>(
     "/api/v1/stat/chapter-distribution",
     {
       token,
-      body: branchId ? { branch_id: branchId } : {},
+      body: {
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+      },
     }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;

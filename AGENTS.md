@@ -115,11 +115,13 @@ exact-matched Dashboard item first, and every one of the five Dashboard bodies n
 below it, followed immediately by entity-specific `StatCard`s. Each scope calls exactly one of
 the five matching summary endpoints: `summary/organization` (shared by Master and Organization),
 `summary/coordinating-body` (Badko), `summary/branch` (Cabang),
-`summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Korkom and Komisariat
-currently stop after those summary cards. Badko additionally renders the shared `IndonesiaBranchMap` from
+`summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat currently
+stops after those summary cards. Korkom additionally renders a Komisariat distribution donut from
+`chapter-distribution`, always filtered by its `coordinating_chapter_id`. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
-backend requirement for coordinating-body administrators. Each scoped route fetches its own
+backend requirement for coordinating-body administrators. A Cabang distribution donut sits
+immediately below that map and uses the same fixed `coordinating_body_id`. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
 `getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
 passes fetched data into `CoordinatingBodyDashboardPage`, `CoordinatingChapterDashboardPage`, or
@@ -224,7 +226,9 @@ Three layers, each with one job. Don't blend them.
    membership/branch/chapter/coordinating-body status breakdowns, and the Indonesia Cabang map.
    `getOrganizationSummary`, `getCoordinatingBodySummary`, `getBranchSummary`,
    `getCoordinatingChapterSummary`, and `getChapterSummary` each post the required entity id to
-   their matching `stat/summary/*` endpoint. The
+   their matching `stat/summary/*` endpoint. `getBranchDistribution` optionally sends
+   `coordinating_body_id`; `getChapterDistribution` independently accepts `branchId` and
+   `coordinatingChapterId`, sending the corresponding snake-case filters. The remaining
    branch-capable aggregate functions accept an optional `branchId` and send it as `branch_id`;
    `getBranchMap` always sends `coverage`, optionally sends `search`, and optionally sends the
    mandatory Badko scope as `coordinating_body_id`. Unscoped aggregate stat POSTs explicitly send `body: {}`

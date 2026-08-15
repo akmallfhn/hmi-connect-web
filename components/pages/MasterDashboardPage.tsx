@@ -75,7 +75,7 @@ export default function MasterDashboardPage({
   ];
 
   const branchEntries = (branchDistribution?.list ?? []).map((entry) => ({
-    name: `Cabang ${entry.branch_name}`,
+    name: entry.branch_name,
     value: entry.total,
   }));
 

@@ -1,9 +1,11 @@
 import { BadgeCheck, Building2, Factory, Network } from "lucide-react";
 import type {
+  BranchDistribution,
   BranchMapEntry,
   CoordinatingBodySummary,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import StatCard from "../charts/StatCard";
 import AdminPageTitle from "../common/AdminPageTitle";
@@ -13,6 +15,7 @@ interface CoordinatingBodyDashboardPageProps {
   coordinatingBodyName: string;
   summary: CoordinatingBodySummary | null;
   branchMapEntries: BranchMapEntry[];
+  branchDistribution: BranchDistribution | null;
 }
 
 export default function CoordinatingBodyDashboardPage({
@@ -20,6 +23,7 @@ export default function CoordinatingBodyDashboardPage({
   coordinatingBodyName,
   summary,
   branchMapEntries,
+  branchDistribution,
 }: CoordinatingBodyDashboardPageProps) {
   const stats = [
     {
@@ -51,6 +55,10 @@ export default function CoordinatingBodyDashboardPage({
       iconColor: "text-primary",
     },
   ];
+  const branchEntries = (branchDistribution?.list ?? []).map((entry) => ({
+    name: entry.branch_name,
+    value: entry.total,
+  }));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -74,6 +82,13 @@ export default function CoordinatingBodyDashboardPage({
         <IndonesiaBranchMap
           initialBranches={branchMapEntries}
           coordinatingBodyId={coordinatingBodyId}
+        />
+      </div>
+
+      <div className="mt-4">
+        <CabangDistributionDonut
+          entries={branchEntries}
+          totalActiveKader={branchDistribution?.total_active_kader ?? 0}
         />
       </div>
     </div>

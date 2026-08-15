@@ -1,17 +1,23 @@
 import { BadgeCheck, Factory } from "lucide-react";
-import type { CoordinatingChapterSummary } from "@/apis/stat";
+import type {
+  ChapterDistribution,
+  CoordinatingChapterSummary,
+} from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import StatCard from "../charts/StatCard";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface CoordinatingChapterDashboardPageProps {
   coordinatingChapterName: string;
   summary: CoordinatingChapterSummary | null;
+  chapterDistribution: ChapterDistribution | null;
 }
 
 export default function CoordinatingChapterDashboardPage({
   coordinatingChapterName,
   summary,
+  chapterDistribution,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
     {
@@ -29,6 +35,10 @@ export default function CoordinatingChapterDashboardPage({
       iconColor: "text-secondary",
     },
   ];
+  const chapterEntries = (chapterDistribution?.list ?? []).map((entry) => ({
+    name: entry.chapter_name,
+    value: entry.total,
+  }));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -46,6 +56,16 @@ export default function CoordinatingChapterDashboardPage({
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
+      </div>
+
+      <div className="mt-4">
+        <CabangDistributionDonut
+          entries={chapterEntries}
+          totalActiveKader={chapterDistribution?.total_active_kader ?? 0}
+          title="Distribusi Kader per Komisariat"
+          subtitle="Berdasarkan jumlah kader aktif di setiap Komisariat"
+          othersLabel="Komisariat lainnya"
+        />
       </div>
     </div>
   );
