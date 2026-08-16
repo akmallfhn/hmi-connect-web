@@ -5,6 +5,7 @@ import type {
   BranchSummary,
   ChapterDistribution,
   ChapterStatus,
+  SuspendedEntities,
   TrainingPriorities,
   UserGrowthEntry,
   VerificationCount,
@@ -15,6 +16,7 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import SuspendedEntityList from "../charts/SuspendedEntityList";
 import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
@@ -28,6 +30,8 @@ interface BranchDashboardPageProps {
   verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
   trainingPriorities: TrainingPriorities | null;
+  suspendedCoordinatingChapters: SuspendedEntities | null;
+  suspendedChapters: SuspendedEntities | null;
 }
 
 export default function BranchDashboardPage({
@@ -40,6 +44,8 @@ export default function BranchDashboardPage({
   verificationCount,
   chapterStatus,
   trainingPriorities,
+  suspendedCoordinatingChapters,
+  suspendedChapters,
 }: BranchDashboardPageProps) {
   const { branchName } = useBranch();
   const stats = [
@@ -157,11 +163,26 @@ export default function BranchDashboardPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TrainingPriorityList
           entity="chapter"
           initialData={trainingPriorities}
           branchId={branchId}
+        />
+        <SuspendedEntityList
+          branchId={branchId}
+          tabs={[
+            {
+              entityType: "coordinating_chapter",
+              label: "Korkom",
+              initialData: suspendedCoordinatingChapters,
+            },
+            {
+              entityType: "chapter",
+              label: "Komisariat",
+              initialData: suspendedChapters,
+            },
+          ]}
         />
       </div>
     </div>

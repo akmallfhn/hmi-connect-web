@@ -3,6 +3,7 @@ import {
   getBranchSummary,
   getChapterDistribution,
   getChapterStatus,
+  getSuspendedEntities,
   getTrainingPriorities,
   getVerificationCount,
   getUserGrowth,
@@ -34,6 +35,8 @@ export default async function BranchDashboardRoute({
     verificationCount,
     chapterStatus,
     trainingPriorities,
+    suspendedCoordinatingChapters,
+    suspendedChapters,
   ] = await Promise.all([
     getBranchSummary(branch_id),
     getChapterDistribution({ branchId: branch_id }),
@@ -44,6 +47,18 @@ export default async function BranchDashboardRoute({
     getChapterStatus({ branchId: branch_id }),
     getTrainingPriorities({
       entity: "chapter",
+      branchId: branch_id,
+      page: 1,
+      pageSize: 5,
+    }),
+    getSuspendedEntities({
+      entityType: "coordinating_chapter",
+      branchId: branch_id,
+      page: 1,
+      pageSize: 5,
+    }),
+    getSuspendedEntities({
+      entityType: "chapter",
       branchId: branch_id,
       page: 1,
       pageSize: 5,
@@ -61,6 +76,8 @@ export default async function BranchDashboardRoute({
       verificationCount={verificationCount}
       chapterStatus={chapterStatus}
       trainingPriorities={trainingPriorities}
+      suspendedCoordinatingChapters={suspendedCoordinatingChapters}
+      suspendedChapters={suspendedChapters}
     />
   );
 }

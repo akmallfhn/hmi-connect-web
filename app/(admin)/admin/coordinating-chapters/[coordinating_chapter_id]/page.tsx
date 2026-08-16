@@ -4,6 +4,7 @@ import {
   getChapterDistribution,
   getChapterStatus,
   getCoordinatingChapterSummary,
+  getSuspendedEntities,
   getTrainingPriorities,
   getUserGrowth,
   getVerificationCount,
@@ -36,6 +37,7 @@ export default async function CoordinatingChapterDetailPage({
     verificationCount,
     chapterStatus,
     trainingPriorities,
+    suspendedChapters,
   ] = await Promise.all([
     getCoordinatingChapterDetail(coordinating_chapter_id),
     getCoordinatingChapterSummary(coordinating_chapter_id),
@@ -66,6 +68,12 @@ export default async function CoordinatingChapterDetailPage({
       page: 1,
       pageSize: 5,
     }),
+    getSuspendedEntities({
+      entityType: "chapter",
+      coordinatingChapterId: coordinating_chapter_id,
+      page: 1,
+      pageSize: 5,
+    }),
   ]);
   return (
     <CoordinatingChapterDashboardPage
@@ -79,6 +87,7 @@ export default async function CoordinatingChapterDetailPage({
       verificationCount={verificationCount}
       chapterStatus={chapterStatus}
       trainingPriorities={trainingPriorities}
+      suspendedChapters={suspendedChapters}
     />
   );
 }

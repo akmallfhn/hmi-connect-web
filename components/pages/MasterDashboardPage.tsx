@@ -6,6 +6,7 @@ import type {
   BranchStatus,
   ChapterStatus,
   OrganizationSummary,
+  SuspendedEntities,
   TrainingPriorities,
   UserGrowthEntry,
 } from "@/apis/stat";
@@ -27,6 +28,8 @@ interface MasterDashboardPageProps {
   chapterStatus: ChapterStatus | null;
   branchMapEntries?: BranchMapEntry[];
   trainingPriorities?: TrainingPriorities | null;
+  suspendedBranches?: SuspendedEntities | null;
+  suspendedCoordinatingBodies?: SuspendedEntities | null;
   showBanner?: boolean;
   showIndonesiaMap?: boolean;
   showAttentionLists?: boolean;
@@ -43,6 +46,8 @@ export default function MasterDashboardPage({
   chapterStatus,
   branchMapEntries = [],
   trainingPriorities = null,
+  suspendedBranches = null,
+  suspendedCoordinatingBodies = null,
   showBanner = false,
   showIndonesiaMap = false,
   showAttentionLists = false,
@@ -161,6 +166,8 @@ export default function MasterDashboardPage({
         <div className="mt-6">
           <MasterAttentionLists
             trainingPriorities={trainingPriorities}
+            suspendedBranches={suspendedBranches}
+            suspendedCoordinatingBodies={suspendedCoordinatingBodies}
             showSampleLists={showSampleAttentionLists}
           />
         </div>

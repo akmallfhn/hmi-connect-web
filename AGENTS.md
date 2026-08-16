@@ -121,14 +121,17 @@ right on `xl`. Korkom renders a Komisariat distribution
 donut from `chapter-distribution`, always filtered by its `coordinating_chapter_id`, with its scoped
 kader-growth chart immediately to the right on `xl`; scoped verification-count and
 Komisariat-status donuts follow that pair, in that order, then a five-row Prioritas Pengkaderan
-card for provisional Komisariat using `entity: "chapter"` and that same Korkom scope. Cabang renders
-the same Komisariat-priority card filtered by its own `branch_id`. Badko additionally renders the shared `IndonesiaBranchMap` from
+card for provisional Komisariat using `entity: "chapter"` and that same Korkom scope, paired with
+a paginated Komisariat Tidak Aktif card on the right. Cabang renders the same Komisariat-priority
+card filtered by its own `branch_id`, paired with a Korkom/Komisariat Tidak Aktif tab card using
+the same branch scope. Badko additionally renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
 immediately below that map and uses the same fixed `coordinating_body_id`; Badko's scoped
 kader-growth chart sits to its right on `xl`, followed by side-by-side Cabang/Komisariat status
-donuts and a five-row Prioritas Pengkaderan card using `entity: "branch"` and that same Badko scope. Each scoped route fetches its own
+donuts and a five-row Prioritas Pengkaderan card using `entity: "branch"` and that same Badko scope;
+a paginated Cabang Tidak Aktif card using the Badko scope sits to its right. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
 `getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
 passes fetched data into `CoordinatingBodyDashboardPage`, `CoordinatingChapterDashboardPage`, or
@@ -162,11 +165,17 @@ the backend's `metapaging`, five rows per page, and changes pages in place throu
 `/admin/api/stat/training-priorities`; every follow-up request preserves the card's original entity
 and Badko/Cabang/Korkom scope. Master additionally enables the remaining sample-only
 `MasterAttentionLists` cards in a two-column
-grid: an accessible Cabang/Badko suspended tab switcher whose tab labels include their totals;
-Cabang with fewer than 10 Komisariat sorted ascending (including zero); and Cabang sorted by their
+grid. Master and Organization both render a real Cabang/Badko Suspended card to the right of
+Prioritas Pengkaderan; its accessible tabs show the API totals in destructive circular badges.
+Each entity tab keeps its own backend pagination state and loads later pages through
+`/admin/api/stat/suspended-entities`. The suspended card is a full-height flex column so an empty
+tab fills the height inherited from
+its grid row and centers `Tidak ada {entitas} yang suspended.` in the remaining card body.
+Master alone additionally renders the two remaining
+sample cards: Cabang with fewer than 10 Komisariat sorted ascending (including zero), and Cabang sorted by their
 lowest active-kader counts. Those sample card headers are text-only; every Cabang row uses the same
-`Building2` icon in a `rounded-lg` primary-soft square instead of numeric rank badges (Badko rows
-use `Network` in the same square treatment). Organization shows only the real priority card. The Master/Organization
+`Building2` icon in a `rounded-lg` primary-soft square instead of numeric rank badges. Organization
+shows only the two real attention cards. The Master/Organization
 dashboard no longer renders the Top 5 Cabang, membership-verification status, or Badko-status
 widgets. Its Cabang/Komisariat status pair sits directly above the Master-only attention lists;
 their routes do not fetch the other unused datasets. Analytics-card headers consistently use
@@ -260,7 +269,12 @@ Three layers, each with one job. Don't blend them.
    provisional Komisariat with `entity: "chapter"`. It sends at most one of
    `coordinating_body_id`, `branch_id`, or `coordinating_chapter_id`, optionally sends `search`,
    and dashboard callers request the initial page with five rows before the card's scoped Route
-   Handler loads later pages. Unscoped aggregate stat POSTs explicitly send `body: {}`
+   Handler loads later pages. `getSuspendedEntities` similarly wraps the paginated
+   `suspended-entities/list` and sends its required `entity_type` plus at most one of
+   `coordinating_body_id`, `branch_id`, or `coordinating_chapter_id`. Master/Organization request
+   Cabang and Badko, Badko requests Cabang, Cabang requests Korkom and Komisariat, and Korkom
+   requests Komisariat; every initial request and `/admin/api/stat/suspended-entities` follow-up
+   uses five rows and preserves its dashboard scope. Unscoped aggregate stat POSTs explicitly send `body: {}`
    rather than omitting the body because these backend handlers bind a JSON object and an absent
    body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders

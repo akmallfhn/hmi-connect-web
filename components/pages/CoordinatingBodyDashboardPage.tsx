@@ -5,6 +5,7 @@ import type {
   BranchStatus,
   ChapterStatus,
   CoordinatingBodySummary,
+  SuspendedEntities,
   TrainingPriorities,
   UserGrowthEntry,
 } from "@/apis/stat";
@@ -14,6 +15,7 @@ import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import SuspendedEntityList from "../charts/SuspendedEntityList";
 import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
@@ -29,6 +31,7 @@ interface CoordinatingBodyDashboardPageProps {
   branchStatus: BranchStatus | null;
   chapterStatus: ChapterStatus | null;
   trainingPriorities: TrainingPriorities | null;
+  suspendedBranches: SuspendedEntities | null;
 }
 
 export default function CoordinatingBodyDashboardPage({
@@ -43,6 +46,7 @@ export default function CoordinatingBodyDashboardPage({
   branchStatus,
   chapterStatus,
   trainingPriorities,
+  suspendedBranches,
 }: CoordinatingBodyDashboardPageProps) {
   const stats = [
     {
@@ -153,11 +157,21 @@ export default function CoordinatingBodyDashboardPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TrainingPriorityList
           entity="branch"
           initialData={trainingPriorities}
           coordinatingBodyId={coordinatingBodyId}
+        />
+        <SuspendedEntityList
+          coordinatingBodyId={coordinatingBodyId}
+          tabs={[
+            {
+              entityType: "branch",
+              label: "Cabang",
+              initialData: suspendedBranches,
+            },
+          ]}
         />
       </div>
     </div>

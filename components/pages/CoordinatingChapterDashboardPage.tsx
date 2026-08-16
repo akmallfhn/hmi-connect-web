@@ -3,6 +3,7 @@ import type {
   ChapterDistribution,
   ChapterStatus,
   CoordinatingChapterSummary,
+  SuspendedEntities,
   TrainingPriorities,
   UserGrowthEntry,
   VerificationCount,
@@ -12,6 +13,7 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import SuspendedEntityList from "../charts/SuspendedEntityList";
 import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
@@ -26,6 +28,7 @@ interface CoordinatingChapterDashboardPageProps {
   verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
   trainingPriorities: TrainingPriorities | null;
+  suspendedChapters: SuspendedEntities | null;
 }
 
 export default function CoordinatingChapterDashboardPage({
@@ -39,6 +42,7 @@ export default function CoordinatingChapterDashboardPage({
   verificationCount,
   chapterStatus,
   trainingPriorities,
+  suspendedChapters,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
     {
@@ -136,11 +140,21 @@ export default function CoordinatingChapterDashboardPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TrainingPriorityList
           entity="chapter"
           initialData={trainingPriorities}
           coordinatingChapterId={coordinatingChapterId}
+        />
+        <SuspendedEntityList
+          coordinatingChapterId={coordinatingChapterId}
+          tabs={[
+            {
+              entityType: "chapter",
+              label: "Komisariat",
+              initialData: suspendedChapters,
+            },
+          ]}
         />
       </div>
     </div>

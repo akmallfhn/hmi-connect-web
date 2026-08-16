@@ -1,29 +1,7 @@
-"use client";
-
-import { useState } from "react";
-import { Building2, Network } from "lucide-react";
-import type { TrainingPriorities } from "@/apis/stat";
+import { Building2 } from "lucide-react";
+import type { SuspendedEntities, TrainingPriorities } from "@/apis/stat";
+import SuspendedEntityList from "./SuspendedEntityList";
 import TrainingPriorityList from "./TrainingPriorityList";
-
-type SuspendedEntity = {
-  name: string;
-  region: string;
-};
-
-type SuspendedScope = "branch" | "coordinating-body";
-
-const SUSPENDED_BRANCHES: SuspendedEntity[] = [
-  { name: "Cabang Sabang", region: "Badko Aceh" },
-  { name: "Cabang Palopo", region: "Badko Sulawesi Selatan dan Barat" },
-  { name: "Cabang Sorong", region: "Badko Papua Barat" },
-  { name: "Cabang Parepare", region: "Badko Sulawesi Selatan dan Barat" },
-];
-
-const SUSPENDED_COORDINATING_BODIES: SuspendedEntity[] = [
-  { name: "Badko Papua Barat", region: "Wilayah Papua Barat" },
-  { name: "Badko Maluku Utara", region: "Wilayah Maluku Utara" },
-  { name: "Badko Kepulauan Riau", region: "Wilayah Kepulauan Riau" },
-];
 
 const LOW_CHAPTER_BRANCHES = [
   { name: "Cabang Ternate", totalChapters: 4, totalActiveKader: 97 },
@@ -46,11 +24,6 @@ const LOWEST_KADER_BRANCHES = [
   { name: "Cabang Wamena", totalChapters: 1, totalActiveKader: 24 },
 ].sort((a, b) => a.totalActiveKader - b.totalActiveKader);
 
-const SUSPENDED_BY_SCOPE: Record<SuspendedScope, SuspendedEntity[]> = {
-  branch: SUSPENDED_BRANCHES,
-  "coordinating-body": SUSPENDED_COORDINATING_BODIES,
-};
-
 function formatNumber(value: number) {
   return value.toLocaleString("id-ID");
 }
@@ -69,106 +42,11 @@ function CardHeader({ title, description }: CardHeaderProps) {
   );
 }
 
-function EntityIcon({
-  type = "branch",
-}: {
-  type?: "branch" | "coordinating-body";
-}) {
+function EntityIcon() {
   return (
     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-      {type === "branch" ? (
-        <Building2 className="size-3.5" />
-      ) : (
-        <Network className="size-3.5" />
-      )}
+      <Building2 className="size-3.5" />
     </span>
-  );
-}
-
-function SuspendedEntityList() {
-  const [activeScope, setActiveScope] = useState<SuspendedScope>("branch");
-  const entries = SUSPENDED_BY_SCOPE[activeScope];
-
-  return (
-    <article className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <CardHeader
-        title="Cabang & Badko Suspended"
-        description="Entitas yang sedang berstatus tidak aktif"
-      />
-
-      <div
-        role="tablist"
-        aria-label="Jenis entitas suspended"
-        className="mt-4 inline-flex rounded-full bg-[#f5f7fb] p-1"
-      >
-        {(
-          [
-            {
-              value: "branch",
-              label: "Cabang",
-              total: SUSPENDED_BRANCHES.length,
-            },
-            {
-              value: "coordinating-body",
-              label: "Badko",
-              total: SUSPENDED_COORDINATING_BODIES.length,
-            },
-          ] satisfies { value: SuspendedScope; label: string; total: number }[]
-        ).map((tab) => {
-          const isActive = activeScope === tab.value;
-          return (
-            <button
-              key={tab.value}
-              id={`suspended-tab-${tab.value}`}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`suspended-panel-${tab.value}`}
-              onClick={() => setActiveScope(tab.value)}
-              className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                isActive
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-[#5f6573] hover:text-[#172033]"
-              }`}
-            >
-              {tab.label}
-              <span className="flex size-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
-                {tab.total}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        id={`suspended-panel-${activeScope}`}
-        role="tabpanel"
-        aria-labelledby={`suspended-tab-${activeScope}`}
-        className="mt-4 divide-y divide-[#eef0f4]"
-      >
-        {entries.map((entry) => (
-          <div
-            key={entry.name}
-            className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-          >
-            <EntityIcon
-              type={activeScope === "branch" ? "branch" : "coordinating-body"}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#172033]">
-                {entry.name}
-              </p>
-              <p className="mt-0.5 truncate text-xs text-[#5f6573]">
-                {entry.region}
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-destructive-soft px-2.5 py-1 text-[11px] font-semibold text-destructive">
-              Tidak Aktif
-            </span>
-          </div>
-        ))}
-      </div>
-    </article>
   );
 }
 
@@ -245,11 +123,15 @@ function LowestKaderList() {
 
 interface MasterAttentionListsProps {
   trainingPriorities: TrainingPriorities | null;
+  suspendedBranches: SuspendedEntities | null;
+  suspendedCoordinatingBodies: SuspendedEntities | null;
   showSampleLists?: boolean;
 }
 
 export default function MasterAttentionLists({
   trainingPriorities,
+  suspendedBranches,
+  suspendedCoordinatingBodies,
   showSampleLists = false,
 }: MasterAttentionListsProps) {
   return (
@@ -273,16 +155,27 @@ export default function MasterAttentionLists({
         )}
       </div>
 
-      <div
-        className={`grid grid-cols-1 gap-4 ${showSampleLists ? "xl:grid-cols-2" : ""}`}
-      >
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TrainingPriorityList
           entity="branch"
           initialData={trainingPriorities}
         />
+        <SuspendedEntityList
+          tabs={[
+            {
+              entityType: "branch",
+              label: "Cabang",
+              initialData: suspendedBranches,
+            },
+            {
+              entityType: "coordinating_body",
+              label: "Badko",
+              initialData: suspendedCoordinatingBodies,
+            },
+          ]}
+        />
         {showSampleLists && (
           <>
-            <SuspendedEntityList />
             <LowChapterList />
             <LowestKaderList />
           </>

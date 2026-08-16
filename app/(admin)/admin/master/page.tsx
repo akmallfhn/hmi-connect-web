@@ -5,6 +5,7 @@ import {
   getBranchStatus,
   getChapterStatus,
   getOrganizationSummary,
+  getSuspendedEntities,
   getTrainingPriorities,
   getUserGrowth,
 } from "@/apis/stat";
@@ -30,6 +31,8 @@ export default async function MasterPage() {
     chapterStatus,
     branchMap,
     trainingPriorities,
+    suspendedBranches,
+    suspendedCoordinatingBodies,
   ] = await Promise.all([
     organizationId ? getOrganizationSummary(organizationId) : null,
     getBranchDistribution(),
@@ -40,6 +43,12 @@ export default async function MasterPage() {
     getChapterStatus(),
     getBranchMap({ coverage: "nationwide" }),
     getTrainingPriorities({ entity: "branch", page: 1, pageSize: 5 }),
+    getSuspendedEntities({ entityType: "branch", page: 1, pageSize: 5 }),
+    getSuspendedEntities({
+      entityType: "coordinating_body",
+      page: 1,
+      pageSize: 5,
+    }),
   ]);
 
   return (
@@ -53,6 +62,8 @@ export default async function MasterPage() {
       chapterStatus={chapterStatus}
       branchMapEntries={branchMap?.list ?? []}
       trainingPriorities={trainingPriorities}
+      suspendedBranches={suspendedBranches}
+      suspendedCoordinatingBodies={suspendedCoordinatingBodies}
       showAttentionLists
       showSampleAttentionLists
       showBanner

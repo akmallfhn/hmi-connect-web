@@ -220,14 +220,16 @@ export type TrainingPriorityEntry = {
   type: BranchTypeEnum;
 };
 
+export type StatMetapaging = {
+  total_data: number;
+  total_page: number;
+  current_page: number;
+  page_size: number;
+};
+
 export type TrainingPriorities = {
   list: TrainingPriorityEntry[];
-  metapaging: {
-    total_data: number;
-    total_page: number;
-    current_page: number;
-    page_size: number;
-  };
+  metapaging: StatMetapaging;
 };
 
 type TrainingPriorityPaginationOptions = {
@@ -267,6 +269,66 @@ export type GetTrainingPrioritiesOptions = TrainingPriorityPaginationOptions &
         coordinatingChapterId?: never;
       }
     | ({ entity: "chapter" } & ChapterTrainingPriorityScope)
+  );
+
+export type SuspendedEntityType =
+  "coordinating_body" | "branch" | "coordinating_chapter" | "chapter";
+
+export type SuspendedEntityEntry = {
+  id: string;
+  name: string;
+  status: StatusEnum;
+  type?: BranchTypeEnum;
+  organization_id?: string;
+  organization_name?: string;
+  coordinating_body_id?: string;
+  coordinating_body_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  coordinating_chapter_id?: string;
+  coordinating_chapter_name?: string;
+};
+
+export type SuspendedEntities = {
+  list: SuspendedEntityEntry[];
+  metapaging: StatMetapaging;
+};
+
+type SuspendedEntityPaginationOptions = {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+type SuspendedCoordinatingChapterScope =
+  | {
+      coordinatingBodyId: string;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId: string;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    };
+
+export type GetSuspendedEntitiesOptions = SuspendedEntityPaginationOptions &
+  (
+    | {
+        entityType: "coordinating_body" | "branch";
+        coordinatingBodyId?: string;
+        branchId?: never;
+        coordinatingChapterId?: never;
+      }
+    | ({
+        entityType: "coordinating_chapter";
+      } & SuspendedCoordinatingChapterScope)
+    | ({ entityType: "chapter" } & ChapterTrainingPriorityScope)
   );
 
 export type GetBranchMapOptions = {
@@ -500,6 +562,42 @@ export async function getTrainingPriorities(
       token,
       body: {
         entity,
+        ...(coordinatingBodyId
+          ? { coordinating_body_id: coordinatingBodyId }
+          : {}),
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+        ...(normalizedSearch ? { search: normalizedSearch } : {}),
+        page,
+        page_size: pageSize,
+      },
+    },
+  );
+  return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
+export async function getSuspendedEntities(
+  options: GetSuspendedEntitiesOptions,
+): Promise<SuspendedEntities | null> {
+  const token = await getSessionToken();
+  const {
+    entityType,
+    coordinatingBodyId,
+    branchId,
+    coordinatingChapterId,
+    search,
+    page = 1,
+    pageSize = 20,
+  } = options;
+  const normalizedSearch = search?.trim();
+  const result = await callApi<SuspendedEntities>(
+    "/api/v1/stat/suspended-entities/list",
+    {
+      token,
+      body: {
+        entity_type: entityType,
         ...(coordinatingBodyId
           ? { coordinating_body_id: coordinatingBodyId }
           : {}),
