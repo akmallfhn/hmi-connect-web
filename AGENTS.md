@@ -132,9 +132,10 @@ the same branch scope. Badko additionally renders the shared `IndonesiaBranchMap
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
-immediately below that map and uses the same fixed `coordinating_body_id`; Badko's scoped
-kader-growth chart sits to its right on `xl`, followed by side-by-side Cabang/Komisariat status
-donuts and a five-row Prioritas Pengkaderan card using `entity: "branch"` and that same Badko scope;
+below Badko's full-width scoped kader-growth chart and uses the same fixed
+`coordinating_body_id`; the paginated Total Kader tiap Cabang card sits to the distribution's
+right on `xl`, followed by side-by-side Cabang/Komisariat status donuts and a five-row Prioritas
+Pengkaderan card using `entity: "branch"` and that same Badko scope;
 a paginated Cabang Tidak Aktif card using the Badko scope sits to its right. Each scoped route fetches its own
 entity name straight from its detail endpoint (`getCoordinatingBodyDetail`/
 `getCoordinatingChapterDetail`/`getChapterDetail`) the same way the layout already does, then
@@ -157,7 +158,8 @@ out-of-Indonesia coordinates are omitted from the plotted-point count instead of
 Each point's tooltip shows label-value rows for its Badko, translated Cabang type
 (`Penuh`/`Persiapan`), `verified_member_count`, and `chapter_count`; tooltip copy is never smaller
 than 13px and every value uses the shared near-black text color. A Cabang search input sits at the right side of the map
-card header and debounces through `/admin/api/stat/branch-map`; that Route Handler delegates to
+card header, uses the shared `components/fields/Input.tsx` primitive, and debounces through
+`/admin/api/stat/branch-map`; that Route Handler delegates to
 `apis/stat.ts#getBranchMap`, while the Badko variant always includes its fixed
 `coordinating_body_id`. The map and point layer deliberately keep overflow visible so edge points
 and their hover/focus tooltips are not clipped; provisional Cabang use pink pins while full Cabang
@@ -167,21 +169,24 @@ the backend already orders provisional Cabang by the lowest active-member and Ko
 Priority-row names are displayed with a scope-aware `Cabang` or `Komisariat` prefix. The card uses
 the backend's `metapaging`, five rows per page, and changes pages in place through
 `/admin/api/stat/training-priorities`; every follow-up request preserves the card's original entity
-and Badko/Cabang/Korkom scope. Master additionally enables the remaining sample-only
-`MasterAttentionLists` cards in a two-column
-grid. Master and Organization both render a real Cabang/Badko Suspended card to the right of
+and Badko/Cabang/Korkom scope. Master and Organization both render a real Cabang/Badko Suspended card to the right of
 Prioritas Pengkaderan; its accessible tabs show the API totals in destructive circular badges.
 Each entity tab keeps its own backend pagination state and loads later pages through
 `/admin/api/stat/suspended-entities`. The suspended card is a full-height flex column so an empty
 tab fills the height inherited from
 its grid row and centers `Tidak ada {entitas} yang suspended.` in the remaining card body.
-Master alone additionally renders the two remaining
-sample cards: Cabang with fewer than 10 Komisariat sorted ascending (including zero), and Cabang sorted by their
-lowest active-kader counts. Those sample card headers are text-only; every Cabang row uses the same
-`Building2` icon in a `rounded-lg` primary-soft square instead of numeric rank badges. Organization
-shows only the two real attention cards. The Master/Organization
+Master no longer renders the sample "Cabang dengan Komisariat Paling Sedikit" card. Master,
+Organization, and Badko instead fetch every applicable page of `branches/list` with
+`include_aggregates: true` through
+`apis/branches.ts#listAllBranchesAdmin` and render the paginated "Total Kader tiap Cabang" card,
+sorted by `user_count` ascending, to the right of Distribusi Kader per Cabang. Organization sends
+its route `organization_id`; Badko additionally sends its fixed `coordinating_body_id`. The card has a
+Cabang/Badko-name search field in its top-right corner and paginates three rows at a time. Its row
+metadata shows `chapter_count` (including a real zero); only when the aggregate is absent does it
+fall back to `Badko {coordinating_body_name}`. Pertumbuhan Kader Baru is a full-width card directly
+above that pair on all three dashboards. The Master/Organization
 dashboard no longer renders the Top 5 Cabang, membership-verification status, or Badko-status
-widgets. Its Cabang/Komisariat status pair sits directly above the Master-only attention lists;
+widgets. Its Cabang/Komisariat status pair sits directly above the attention lists;
 their routes do not fetch the other unused datasets. Analytics-card headers consistently use
 `text-base` titles and `text-sm` descriptions with no added top margin on the description. The
 full segment in every Komisariat-status donut uses yellow `#eda100`. The Cabang dashboard no

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listAllBranchesAdmin } from "@/apis/branches";
 import {
   getBranchMap,
   getBranchDistribution,
@@ -24,6 +25,7 @@ export default async function MasterPage() {
   const [
     summary,
     branchDistribution,
+    branchMemberCounts,
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
@@ -36,6 +38,7 @@ export default async function MasterPage() {
   ] = await Promise.all([
     organizationId ? getOrganizationSummary(organizationId) : null,
     getBranchDistribution(),
+    listAllBranchesAdmin(),
     getUserGrowth({ granularity: "day" }),
     getUserGrowth({ granularity: "week" }),
     getUserGrowth({ granularity: "month" }),
@@ -55,6 +58,7 @@ export default async function MasterPage() {
     <MasterDashboardPage
       summary={summary}
       branchDistribution={branchDistribution}
+      branchMemberCounts={branchMemberCounts}
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
@@ -65,7 +69,6 @@ export default async function MasterPage() {
       suspendedBranches={suspendedBranches}
       suspendedCoordinatingBodies={suspendedCoordinatingBodies}
       showAttentionLists
-      showSampleAttentionLists
       showBanner
       showIndonesiaMap
     />

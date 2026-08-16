@@ -1,4 +1,5 @@
 import { BadgeCheck, Building2, Factory, Network } from "lucide-react";
+import type { BranchListEntry } from "@/apis/branches";
 import type {
   BranchDistribution,
   BranchMapEntry,
@@ -10,6 +11,7 @@ import type {
   UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import BranchMemberCountList from "../charts/BranchMemberCountList";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
@@ -25,6 +27,7 @@ interface CoordinatingBodyDashboardPageProps {
   summary: CoordinatingBodySummary | null;
   branchMapEntries: BranchMapEntry[];
   branchDistribution: BranchDistribution | null;
+  branchMemberCounts: BranchListEntry[];
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
@@ -40,6 +43,7 @@ export default function CoordinatingBodyDashboardPage({
   summary,
   branchMapEntries,
   branchDistribution,
+  branchMemberCounts,
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
@@ -108,16 +112,20 @@ export default function CoordinatingBodyDashboardPage({
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <CabangDistributionDonut
-          entries={branchEntries}
-          totalActiveKader={branchDistribution?.total_active_kader ?? 0}
-        />
+      <div className="mt-4">
         <KaderGrowthLineChart
           day={userGrowthDay}
           week={userGrowthWeek}
           month={userGrowthMonth}
         />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <CabangDistributionDonut
+          entries={branchEntries}
+          totalActiveKader={branchDistribution?.total_active_kader ?? 0}
+        />
+        <BranchMemberCountList branches={branchMemberCounts} />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">

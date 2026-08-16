@@ -2,7 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type BranchTypeEnum,
+  type StatusEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Branch = {
@@ -32,7 +36,7 @@ export type GetBranchesResult = {
 };
 
 async function fetchBranches(
-  options: GetBranchesOptions = {}
+  options: GetBranchesOptions = {},
 ): Promise<GetBranchesResult> {
   const { search, page, pageSize } = options;
   const cookieStore = await cookies();
@@ -52,20 +56,22 @@ async function fetchBranches(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
 
   return { list, hasMore };
 }
 
 export async function getBranches(
-  options: GetBranchesOptions = {}
+  options: GetBranchesOptions = {},
 ): Promise<Branch[]> {
   const { list } = await fetchBranches(options);
   return list;
 }
 
 export async function searchBranches(
-  options: GetBranchesOptions = {}
+  options: GetBranchesOptions = {},
 ): Promise<GetBranchesResult> {
   return fetchBranches(options);
 }
@@ -85,6 +91,7 @@ export type BranchListEntry = {
 };
 
 export type ListBranchesOptions = {
+  organizationId?: string;
   coordinatingBodyId?: string;
   search?: string;
   status?: StatusEnum;
@@ -111,26 +118,33 @@ type BranchListAdminResponse = {
 
 // Requires Super Admin/Administrator — only called from the /master/branches admin panel, gated by MasterLayout.
 export async function listBranchesAdmin(
-  options: ListBranchesOptions = {}
+  options: ListBranchesOptions = {},
 ): Promise<PagedListResult<BranchListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  if (!sessionToken)
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { coordinatingBodyId, search, status, page, pageSize } = options;
-  const result = await callApi<BranchListAdminResponse>("/api/v1/branches/list", {
-    method: "POST",
-    token: sessionToken,
-    body: {
-      organization_id: process.env.ORGANIZATION_ID,
-      include_aggregates: true,
-      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
-      ...(search ? { search } : {}),
-      ...(status ? { status } : {}),
-      page: page ?? 1,
-      page_size: pageSize ?? 20,
+  const { organizationId, coordinatingBodyId, search, status, page, pageSize } =
+    options;
+  const result = await callApi<BranchListAdminResponse>(
+    "/api/v1/branches/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        organization_id: organizationId ?? process.env.ORGANIZATION_ID,
+        include_aggregates: true,
+        ...(coordinatingBodyId
+          ? { coordinating_body_id: coordinatingBodyId }
+          : {}),
+        ...(search ? { search } : {}),
+        ...(status ? { status } : {}),
+        page: page ?? 1,
+        page_size: pageSize ?? 20,
+      },
     },
-  });
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listBranchesAdmin] request failed:", result);
@@ -145,6 +159,23 @@ export async function listBranchesAdmin(
     totalPage: metapaging?.total_page ?? 1,
     currentPage: metapaging?.current_page ?? page ?? 1,
   };
+}
+
+export async function listAllBranchesAdmin(
+  options: Omit<ListBranchesOptions, "page" | "pageSize"> = {},
+): Promise<BranchListEntry[]> {
+  const pageSize = 100;
+  const firstPage = await listBranchesAdmin({ ...options, page: 1, pageSize });
+
+  if (firstPage.totalPage <= 1) return firstPage.list;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
+      listBranchesAdmin({ ...options, page: index + 2, pageSize }),
+    ),
+  );
+
+  return [firstPage.list, ...remainingPages.map((page) => page.list)].flat();
 }
 
 // Mirrors POST /api/v1/branches/detail's response.
@@ -164,7 +195,9 @@ export type BranchDetail = {
   };
 };
 
-export async function getBranchDetail(id: string): Promise<BranchDetail | null> {
+export async function getBranchDetail(
+  id: string,
+): Promise<BranchDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return null;
@@ -187,12 +220,15 @@ export type CreateBranchPayload = {
 };
 
 export async function createBranch(
-  payload: CreateBranchPayload
+  payload: CreateBranchPayload,
 ): Promise<ApiEnvelope<BranchDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<BranchDetail>("/api/v1/branches/create", {
@@ -211,12 +247,15 @@ export type UpdateBranchPayload = {
 };
 
 export async function updateBranch(
-  payload: UpdateBranchPayload
+  payload: UpdateBranchPayload,
 ): Promise<ApiEnvelope<BranchDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<BranchDetail>("/api/v1/branches/update", {
@@ -230,7 +269,10 @@ export async function deleteBranch(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/branches/delete", {

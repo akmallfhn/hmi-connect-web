@@ -1,5 +1,6 @@
 import { BadgeCheck, Building2, Factory, Network } from "lucide-react";
 import AdminPageTitle from "../common/AdminPageTitle";
+import type { BranchListEntry } from "@/apis/branches";
 import type {
   BranchDistribution,
   BranchMapEntry,
@@ -11,6 +12,7 @@ import type {
   UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
+import BranchMemberCountList from "../charts/BranchMemberCountList";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
@@ -21,6 +23,7 @@ import StatusDonut from "../charts/StatusDonut";
 interface MasterDashboardPageProps {
   summary: OrganizationSummary | null;
   branchDistribution: BranchDistribution | null;
+  branchMemberCounts?: BranchListEntry[] | null;
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
@@ -33,12 +36,12 @@ interface MasterDashboardPageProps {
   showBanner?: boolean;
   showIndonesiaMap?: boolean;
   showAttentionLists?: boolean;
-  showSampleAttentionLists?: boolean;
 }
 
 export default function MasterDashboardPage({
   summary,
   branchDistribution,
+  branchMemberCounts = null,
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
@@ -51,7 +54,6 @@ export default function MasterDashboardPage({
   showBanner = false,
   showIndonesiaMap = false,
   showAttentionLists = false,
-  showSampleAttentionLists = false,
 }: MasterDashboardPageProps) {
   const stats = [
     {
@@ -113,17 +115,36 @@ export default function MasterDashboardPage({
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <CabangDistributionDonut
-          entries={branchEntries}
-          totalActiveKader={branchDistribution?.total_active_kader ?? 0}
-        />
-        <KaderGrowthLineChart
-          day={userGrowthDay}
-          week={userGrowthWeek}
-          month={userGrowthMonth}
-        />
-      </div>
+      {branchMemberCounts ? (
+        <>
+          <div className="mt-4">
+            <KaderGrowthLineChart
+              day={userGrowthDay}
+              week={userGrowthWeek}
+              month={userGrowthMonth}
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <CabangDistributionDonut
+              entries={branchEntries}
+              totalActiveKader={branchDistribution?.total_active_kader ?? 0}
+            />
+            <BranchMemberCountList branches={branchMemberCounts} />
+          </div>
+        </>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <CabangDistributionDonut
+            entries={branchEntries}
+            totalActiveKader={branchDistribution?.total_active_kader ?? 0}
+          />
+          <KaderGrowthLineChart
+            day={userGrowthDay}
+            week={userGrowthWeek}
+            month={userGrowthMonth}
+          />
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <StatusDonut
@@ -168,7 +189,6 @@ export default function MasterDashboardPage({
             trainingPriorities={trainingPriorities}
             suspendedBranches={suspendedBranches}
             suspendedCoordinatingBodies={suspendedCoordinatingBodies}
-            showSampleLists={showSampleAttentionLists}
           />
         </div>
       )}

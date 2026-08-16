@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listAllBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import {
   getBranchDistribution,
@@ -33,6 +34,7 @@ export default async function CoordinatingBodyDetailPage({
     summary,
     branchMap,
     branchDistribution,
+    branchMemberCounts,
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
@@ -48,6 +50,7 @@ export default async function CoordinatingBodyDetailPage({
       coordinatingBodyId: coordinating_body_id,
     }),
     getBranchDistribution({ coordinatingBodyId: coordinating_body_id }),
+    listAllBranchesAdmin({ coordinatingBodyId: coordinating_body_id }),
     getUserGrowth({
       granularity: "day",
       coordinatingBodyId: coordinating_body_id,
@@ -82,6 +85,7 @@ export default async function CoordinatingBodyDetailPage({
       summary={summary}
       branchMapEntries={branchMap?.list ?? []}
       branchDistribution={branchDistribution}
+      branchMemberCounts={branchMemberCounts}
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}

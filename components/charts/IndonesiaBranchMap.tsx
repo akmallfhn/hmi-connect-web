@@ -11,6 +11,7 @@ import {
   Search,
 } from "lucide-react";
 import type { BranchMapEntry } from "@/apis/stat";
+import Input from "@/components/fields/Input";
 import MapSquare from "@/components/svg/MapSquare";
 import { projectBranchMapPosition } from "@/lib/branch-map-coordinates";
 
@@ -237,24 +238,22 @@ export default function IndonesiaBranchMap({
         </div>
 
         <div className="w-full sm:w-64">
-          <label htmlFor="branch-map-search" className="sr-only">
-            Cari Cabang pada peta
-          </label>
-          <div className="relative">
-            {isSearchPending ? (
-              <LoaderCircle className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 animate-spin text-primary" />
-            ) : (
-              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#7b8190]" />
-            )}
-            <input
-              id="branch-map-search"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari Cabang"
-              className="h-10 w-full rounded-xl border border-[#dbe3ef] bg-white pr-3 pl-10 text-sm text-[#172033] outline-none transition placeholder:text-[#9aa1ad] focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
-          </div>
+          <Input
+            inputId="branch-map-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Cari Cabang"
+            aria-label="Cari Cabang pada peta"
+            icon={
+              isSearchPending ? (
+                <LoaderCircle className="size-4 animate-spin text-primary" />
+              ) : (
+                <Search className="size-4" />
+              )
+            }
+            className="text-sm"
+          />
         </div>
       </div>
 
