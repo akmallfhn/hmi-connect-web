@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Clock3, Factory, Percent } from "lucide-react";
+import type { ChapterListEntry } from "@/apis/chapters";
 import type {
   BranchSummary,
   ChapterDistribution,
@@ -13,6 +14,7 @@ import type {
 import { useBranch } from "@/hooks/useBranch";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
+import ChapterMemberCountList from "../charts/ChapterMemberCountList";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
@@ -24,6 +26,7 @@ interface BranchDashboardPageProps {
   branchId: string;
   summary: BranchSummary | null;
   chapterDistribution: ChapterDistribution | null;
+  chapterMemberCounts: ChapterListEntry[];
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
@@ -38,6 +41,7 @@ export default function BranchDashboardPage({
   branchId,
   summary,
   chapterDistribution,
+  chapterMemberCounts,
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
@@ -114,6 +118,10 @@ export default function BranchDashboardPage({
           subtitle="Berdasarkan jumlah kader aktif di setiap Komisariat"
           othersLabel="Komisariat lainnya"
         />
+        <ChapterMemberCountList chapters={chapterMemberCounts} />
+      </div>
+
+      <div className="mt-4">
         <KaderGrowthLineChart
           day={userGrowthDay}
           week={userGrowthWeek}

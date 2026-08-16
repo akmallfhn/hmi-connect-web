@@ -121,14 +121,17 @@ the five matching summary endpoints: `summary/organization` (shared by Master an
 `summary/coordinating-body` (Badko), `summary/branch` (Cabang),
 `summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat additionally
 renders its scoped kader-growth chart below those cards with its verification-count donut to the
-right on `xl`. Korkom renders a Komisariat distribution
-donut from `chapter-distribution`, always filtered by its `coordinating_chapter_id`, with its scoped
-kader-growth chart immediately to the right on `xl`; scoped verification-count and
-Komisariat-status donuts follow that pair, in that order, then a five-row Prioritas Pengkaderan
-card for provisional Komisariat using `entity: "chapter"` and that same Korkom scope, paired with
-a paginated Komisariat Tidak Aktif card on the right. Cabang renders the same Komisariat-priority
-card filtered by its own `branch_id`, paired with a Korkom/Komisariat Tidak Aktif tab card using
-the same branch scope. Badko additionally renders the shared `IndonesiaBranchMap` from
+right on `xl`. Korkom and Cabang render a Komisariat distribution donut from
+`chapter-distribution` on the left and the paginated Total Kader tiap Komisariat card on the
+right, followed by their scoped kader-growth chart at full width. Both fetch every scoped `chapters/list` page with
+`include_aggregates: true`; Cabang sends `branch_id`, while Korkom sends
+`coordinating_chapter_id`. The shared card searches Komisariat, institution, Korkom, and Cabang
+names, sorts `user_count` ascending, and paginates three rows at a time. Scoped
+verification-count and Komisariat-status donuts follow that pair, in that order, then a five-row
+Prioritas Pengkaderan card for provisional Komisariat. Korkom uses its same scope and pairs that
+card with a paginated Komisariat Tidak Aktif card. Cabang uses its own `branch_id` and pairs it
+with a Korkom/Komisariat Tidak Aktif tab card using the same branch scope. Badko additionally
+renders the shared `IndonesiaBranchMap` from
 `components/charts/IndonesiaBranchMap.tsx`; its initial server request
 and every client-side search request must send the route's `coordinating_body_id`, matching the
 backend requirement for coordinating-body administrators. A Cabang distribution donut sits
@@ -1623,8 +1626,9 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   the page's filter row has search, an optional Cabang `SearchableSelect` (backed by the existing
   `apis/branches.ts#searchBranches` through the same `app/(admin)/admin/api/branches/search/route.ts`
   the Cabang form already uses) driving a `branch_id` URL param, and status — table/pagination render
-  unconditionally, there's no "pick a branch first" gate. `chapters/list` now also returns
-  `branch_name` per row (mirroring `branches/list`'s `coordinating_body_name`), so the table shows
+  unconditionally, there's no "pick a branch first" gate. `chapters/list` now also accepts an
+  optional `coordinating_chapter_id` that may be combined with `branch_id`, and returns
+  `coordinating_chapter_id`/`coordinating_chapter_name` plus `branch_name` per row. The table shows
   "Cabang {branch_name}" as a subtitle under the chapter name unconditionally, same as Cabang's
   "Badko {coordinating_body_name}" subtitle — no extra per-row lookup needed. `apis/chapters.ts` gained the same
   `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts` has

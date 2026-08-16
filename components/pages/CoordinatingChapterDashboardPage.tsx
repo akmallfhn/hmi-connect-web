@@ -1,4 +1,5 @@
 import { BadgeCheck, Factory } from "lucide-react";
+import type { ChapterListEntry } from "@/apis/chapters";
 import type {
   ChapterDistribution,
   ChapterStatus,
@@ -10,6 +11,7 @@ import type {
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
 import CabangDistributionDonut from "../charts/CabangDistributionDonut";
+import ChapterMemberCountList from "../charts/ChapterMemberCountList";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
@@ -22,6 +24,7 @@ interface CoordinatingChapterDashboardPageProps {
   coordinatingChapterName: string;
   summary: CoordinatingChapterSummary | null;
   chapterDistribution: ChapterDistribution | null;
+  chapterMemberCounts: ChapterListEntry[];
   userGrowthDay: UserGrowthEntry[];
   userGrowthWeek: UserGrowthEntry[];
   userGrowthMonth: UserGrowthEntry[];
@@ -36,6 +39,7 @@ export default function CoordinatingChapterDashboardPage({
   coordinatingChapterName,
   summary,
   chapterDistribution,
+  chapterMemberCounts,
   userGrowthDay,
   userGrowthWeek,
   userGrowthMonth,
@@ -91,6 +95,10 @@ export default function CoordinatingChapterDashboardPage({
           subtitle="Berdasarkan jumlah kader aktif di setiap Komisariat"
           othersLabel="Komisariat lainnya"
         />
+        <ChapterMemberCountList chapters={chapterMemberCounts} />
+      </div>
+
+      <div className="mt-4">
         <KaderGrowthLineChart
           day={userGrowthDay}
           week={userGrowthWeek}

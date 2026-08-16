@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import {
   getChapterDistribution,
@@ -31,6 +32,7 @@ export default async function CoordinatingChapterDetailPage({
     coordinatingChapter,
     summary,
     chapterDistribution,
+    chapterMemberCounts,
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
@@ -42,6 +44,9 @@ export default async function CoordinatingChapterDetailPage({
     getCoordinatingChapterDetail(coordinating_chapter_id),
     getCoordinatingChapterSummary(coordinating_chapter_id),
     getChapterDistribution({
+      coordinatingChapterId: coordinating_chapter_id,
+    }),
+    listAllChaptersAdmin({
       coordinatingChapterId: coordinating_chapter_id,
     }),
     getUserGrowth({
@@ -81,6 +86,7 @@ export default async function CoordinatingChapterDetailPage({
       coordinatingChapterName={coordinatingChapter?.name ?? "ini"}
       summary={summary}
       chapterDistribution={chapterDistribution}
+      chapterMemberCounts={chapterMemberCounts}
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}

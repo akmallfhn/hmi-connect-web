@@ -2,7 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type BranchTypeEnum,
+  type StatusEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Chapter = {
@@ -36,7 +40,7 @@ export type GetChaptersResult = {
 
 export async function searchChapters(
   branchId: string,
-  options: GetChaptersOptions = {}
+  options: GetChaptersOptions = {},
 ): Promise<GetChaptersResult> {
   const { search, page, pageSize } = options;
   const cookieStore = await cookies();
@@ -56,7 +60,9 @@ export async function searchChapters(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
 
   return { list, hasMore };
 }
@@ -66,6 +72,8 @@ export type ChapterListEntry = {
   id: string;
   branch_id: string;
   branch_name: string;
+  coordinating_chapter_id: string | null;
+  coordinating_chapter_name: string | null;
   name: string;
   type: BranchTypeEnum;
   status: StatusEnum;
@@ -79,6 +87,7 @@ export type ChapterListEntry = {
 
 export type ListChaptersOptions = {
   branchId?: string;
+  coordinatingChapterId?: string;
   search?: string;
   status?: StatusEnum;
   page?: number;
@@ -104,25 +113,33 @@ type ChapterListAdminResponse = {
 
 // Requires Super Admin/Administrator — only called from the /master/chapters admin panel, gated by MasterLayout.
 export async function listChaptersAdmin(
-  options: ListChaptersOptions = {}
+  options: ListChaptersOptions = {},
 ): Promise<PagedListResult<ChapterListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  if (!sessionToken)
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { branchId, search, status, page, pageSize } = options;
-  const result = await callApi<ChapterListAdminResponse>("/api/v1/chapters/list", {
-    method: "POST",
-    token: sessionToken,
-    body: {
-      ...(branchId ? { branch_id: branchId } : {}),
-      include_aggregates: true,
-      ...(search ? { search } : {}),
-      ...(status ? { status } : {}),
-      page: page ?? 1,
-      page_size: pageSize ?? 20,
+  const { branchId, coordinatingChapterId, search, status, page, pageSize } =
+    options;
+  const result = await callApi<ChapterListAdminResponse>(
+    "/api/v1/chapters/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+        include_aggregates: true,
+        ...(search ? { search } : {}),
+        ...(status ? { status } : {}),
+        page: page ?? 1,
+        page_size: pageSize ?? 20,
+      },
     },
-  });
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listChaptersAdmin] request failed:", result);
@@ -137,6 +154,23 @@ export async function listChaptersAdmin(
     totalPage: metapaging?.total_page ?? 1,
     currentPage: metapaging?.current_page ?? page ?? 1,
   };
+}
+
+export async function listAllChaptersAdmin(
+  options: Omit<ListChaptersOptions, "page" | "pageSize"> = {},
+): Promise<ChapterListEntry[]> {
+  const pageSize = 100;
+  const firstPage = await listChaptersAdmin({ ...options, page: 1, pageSize });
+
+  if (firstPage.totalPage <= 1) return firstPage.list;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
+      listChaptersAdmin({ ...options, page: index + 2, pageSize }),
+    ),
+  );
+
+  return [firstPage.list, ...remainingPages.map((page) => page.list)].flat();
 }
 
 // Mirrors POST /api/v1/chapters/create and /update's response.
@@ -156,7 +190,9 @@ export type ChapterDetail = {
   updated_at: string;
 };
 
-export async function getChapterDetail(id: string): Promise<ChapterDetail | null> {
+export async function getChapterDetail(
+  id: string,
+): Promise<ChapterDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) return null;
@@ -181,12 +217,15 @@ export type CreateChapterPayload = {
 };
 
 export async function createChapter(
-  payload: CreateChapterPayload
+  payload: CreateChapterPayload,
 ): Promise<ApiEnvelope<ChapterDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<ChapterDetail>("/api/v1/chapters/create", {
@@ -207,12 +246,15 @@ export type UpdateChapterPayload = {
 };
 
 export async function updateChapter(
-  payload: UpdateChapterPayload
+  payload: UpdateChapterPayload,
 ): Promise<ApiEnvelope<ChapterDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<ChapterDetail>("/api/v1/chapters/update", {
@@ -226,7 +268,10 @@ export async function deleteChapter(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/chapters/delete", {

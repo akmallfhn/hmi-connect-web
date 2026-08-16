@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listAllChaptersAdmin } from "@/apis/chapters";
 import {
   getBranchSummary,
   getChapterDistribution,
@@ -29,6 +30,7 @@ export default async function BranchDashboardRoute({
   const [
     summary,
     chapterDistribution,
+    chapterMemberCounts,
     userGrowthDay,
     userGrowthWeek,
     userGrowthMonth,
@@ -40,6 +42,7 @@ export default async function BranchDashboardRoute({
   ] = await Promise.all([
     getBranchSummary(branch_id),
     getChapterDistribution({ branchId: branch_id }),
+    listAllChaptersAdmin({ branchId: branch_id }),
     getUserGrowth({ granularity: "day", branchId: branch_id }),
     getUserGrowth({ granularity: "week", branchId: branch_id }),
     getUserGrowth({ granularity: "month", branchId: branch_id }),
@@ -70,6 +73,7 @@ export default async function BranchDashboardRoute({
       branchId={branch_id}
       summary={summary}
       chapterDistribution={chapterDistribution}
+      chapterMemberCounts={chapterMemberCounts}
       userGrowthDay={userGrowthDay?.list ?? []}
       userGrowthWeek={userGrowthWeek?.list ?? []}
       userGrowthMonth={userGrowthMonth?.list ?? []}
