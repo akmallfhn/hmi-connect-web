@@ -19,7 +19,7 @@ export type CoordinatingBodyDetail = {
 };
 
 export async function getCoordinatingBodyDetail(
-  id: string
+  id: string,
 ): Promise<CoordinatingBodyDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -31,7 +31,7 @@ export async function getCoordinatingBodyDetail(
       method: "POST",
       token: sessionToken,
       body: { id },
-    }
+    },
   );
 
   if (!isSuccessStatus(result.status) || !result.data) return null;
@@ -61,7 +61,7 @@ export type GetCoordinatingBodiesResult = {
 
 // Backs the Badko picker in the admin branch form — same shape/status-filter convention as searchBranches.
 export async function searchCoordinatingBodies(
-  options: GetCoordinatingBodiesOptions = {}
+  options: GetCoordinatingBodiesOptions = {},
 ): Promise<GetCoordinatingBodiesResult> {
   const { search, page, pageSize } = options;
   const cookieStore = await cookies();
@@ -79,12 +79,14 @@ export async function searchCoordinatingBodies(
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),
       },
-    }
+    },
   );
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
 
   return { list, hasMore };
 }
@@ -101,6 +103,7 @@ export type CoordinatingBodyListEntry = {
 };
 
 export type ListCoordinatingBodiesOptions = {
+  organizationId?: string;
   search?: string;
   status?: StatusEnum;
   page?: number;
@@ -124,29 +127,30 @@ type CoordinatingBodyListAdminResponse = {
   };
 };
 
-// Requires Super Admin/Administrator — only called from the /master/coordinating-bodies admin panel, gated by MasterLayout.
+// Requires the admin CRUD role; callers are gated by either the Master or Organization layout.
 export async function listCoordinatingBodiesAdmin(
-  options: ListCoordinatingBodiesOptions = {}
+  options: ListCoordinatingBodiesOptions = {},
 ): Promise<PagedListResult<CoordinatingBodyListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  if (!sessionToken)
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { search, status, page, pageSize } = options;
+  const { organizationId, search, status, page, pageSize } = options;
   const result = await callApi<CoordinatingBodyListAdminResponse>(
     "/api/v1/coordinating-bodies/list",
     {
       method: "POST",
       token: sessionToken,
       body: {
-        organization_id: process.env.ORGANIZATION_ID,
+        organization_id: organizationId ?? process.env.ORGANIZATION_ID,
         include_aggregates: true,
         ...(search ? { search } : {}),
         ...(status ? { status } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },
-    }
+    },
   );
 
   if (!isSuccessStatus(result.status)) {
@@ -171,12 +175,15 @@ export type CreateCoordinatingBodyPayload = {
 
 // organization_id is always this app's single ORGANIZATION_ID — never exposed as a caller-supplied field.
 export async function createCoordinatingBody(
-  payload: CreateCoordinatingBodyPayload
+  payload: CreateCoordinatingBodyPayload,
 ): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<CoordinatingBodyDetail>("/api/v1/coordinating-bodies/create", {
@@ -193,12 +200,15 @@ export type UpdateCoordinatingBodyPayload = {
 };
 
 export async function updateCoordinatingBody(
-  payload: UpdateCoordinatingBodyPayload
+  payload: UpdateCoordinatingBodyPayload,
 ): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<CoordinatingBodyDetail>("/api/v1/coordinating-bodies/update", {
@@ -212,7 +222,10 @@ export async function deleteCoordinatingBody(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/coordinating-bodies/delete", {

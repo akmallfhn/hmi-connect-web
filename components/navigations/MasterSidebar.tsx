@@ -21,6 +21,18 @@ interface MasterSidebarProps {
 const NAV_ITEMS: AdminNavEntry[] = [
   { label: "Dashboard", href: "/master", icon: LayoutDashboard, exact: true },
   {
+    groupName: "Organisasi",
+    items: [
+      {
+        label: "Kelola Badko",
+        href: "/master/coordinating-bodies",
+        icon: Network,
+      },
+      { label: "Cabang", href: "/master/branches", icon: Building2 },
+      { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
+    ],
+  },
+  {
     groupName: "Keanggotaan",
     items: [
       { label: "User Management", href: "/master/users", icon: Users },
@@ -29,14 +41,6 @@ const NAV_ITEMS: AdminNavEntry[] = [
         href: "/master/verification",
         icon: ShieldCheck,
       },
-    ],
-  },
-  {
-    groupName: "Organisasi",
-    items: [
-      { label: "Badko", href: "/master/coordinating-bodies", icon: Network },
-      { label: "Cabang", href: "/master/branches", icon: Building2 },
-      { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
     ],
   },
 ];

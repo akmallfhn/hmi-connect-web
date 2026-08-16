@@ -1454,7 +1454,9 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   After their top-level Dashboard item, the Badko/Korkom/Komisariat scopes of `EntitySidebar` pass
   one flat `Daftar Kader` item to `AdminSidebar`; Organization instead groups `Daftar Kader` and
   `Permintaan Verifikasi` under a `Keanggotaan` `AdminNavGroup`, same grouping the Cabang/Master
-  sidebars use. All retain the
+  sidebars use, and adds an `Organisasi` group with `Kelola Badko` linking to its scoped Badko CRUD
+  list. The matching Master sidebar item is also labeled `Kelola Badko`; Master's `Organisasi`
+  group appears above `Keanggotaan`. All retain the
   standard session profile/logout block at the bottom. Each route owns an
   access-checking nested layout and an intentionally empty index page; its `/members` child holds
   the read-only roster described below. The branch-scoped
@@ -1651,24 +1653,31 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   branches/chapters/provinces/cities/districts search route duplicates above), and picking "Tambah"
   on a new name calls the existing `createInstitution` action. It's optional on both `create` and
   `update`, unlike activation's LK1-style hard requirement.
-- `/master/coordinating-bodies` (`app/(admin)/admin/master/coordinating-bodies/page.tsx` →
-  `components/pages/AdminCoordinatingBodyListPage.tsx`) is the Badko CRUD panel, the simplest of
+- `/master/coordinating-bodies` and
+  `/organizations/[organization_id]/coordinating-bodies` both reuse
+  `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of
   the three org-hierarchy panels since a coordinating body sits at the top — no `type` field
   (unlike branch/chapter's full/provisional), no parent picker (this app only ever manages the one
-  `ORGANIZATION_ID`, injected server-side by `apis/coordinating-bodies.ts#createCoordinatingBody`/
-  `listCoordinatingBodiesAdmin`, never taken from the caller), and no filter row beyond search/status
+  configured `ORGANIZATION_ID`; Organization's list route explicitly passes its already-validated
+  route id to `listCoordinatingBodiesAdmin`, while create/update remain scoped server-side), and no filter row beyond search/status
   — there's nothing above a Badko to filter by. `coordinating-bodies/list` does return an
   `organization_name` per row, but it's deliberately left off `CoordinatingBodyListEntry` and the
   table entirely — this app only has one organization, so every row would repeat the same value.
-  The table is Nama Badko, Jumlah Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from
-  `include_aggregates: true` — and Status.
+  Table names always normalize to a single `Badko` prefix. Its columns are Nama Badko, Jumlah
+  Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from `include_aggregates: true` — and
+  Status. Master retains the edit/delete action dropdown; Organization deliberately omits delete
+  and renders one primary Edit button directly in every row.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its
   only caller is `app/layout.tsx` and there's no components-style folder for the root
-  layout to own a file in.
+  layout to own a file in. `Dropdown` portals its fixed-position panel to `document.body`, clamps
+  it to the viewport, flips above the trigger when needed, and repositions on ancestor scroll or
+  window resize. Keep action menus on this primitive: an absolute panel inside the admin tables'
+  `overflow-x-auto` wrapper becomes part of that scroll area's height or gets clipped on the last
+  rows.
 - `components/svg/*` — brand logo components (`LogoHmi`, `LogoHmiConnect`,
   `LogoSilaturahmi`).
 - `components/states/PageState.tsx` — single full-page 403/404 state component, `variant:

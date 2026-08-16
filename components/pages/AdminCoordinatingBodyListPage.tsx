@@ -1,7 +1,13 @@
 "use client";
 
 import AdminPageTitle from "../common/AdminPageTitle";
-import { EllipsisVertical, Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
+import {
+  EllipsisVertical,
+  Pencil,
+  PlusCircle,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -32,6 +38,12 @@ interface AdminCoordinatingBodyListPageProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
+  allowDelete?: boolean;
+}
+
+function formatCoordinatingBodyName(name: string) {
+  const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
+  return `Badko ${normalizedName || name}`;
 }
 
 export default function AdminCoordinatingBodyListPage({
@@ -42,6 +54,7 @@ export default function AdminCoordinatingBodyListPage({
   initialSearch,
   initialStatus,
   pageSize,
+  allowDelete = true,
 }: AdminCoordinatingBodyListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,9 +70,8 @@ export default function AdminCoordinatingBodyListPage({
   const [sheetTarget, setSheetTarget] = useState<
     CoordinatingBodyListEntry | null | "create"
   >(null);
-  const [deleteTarget, setDeleteTarget] = useState<CoordinatingBodyListEntry | null>(
-    null
-  );
+  const [deleteTarget, setDeleteTarget] =
+    useState<CoordinatingBodyListEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   function pushParams(next: Record<string, string>) {
@@ -82,7 +94,7 @@ export default function AdminCoordinatingBodyListPage({
   }, [searchInput]);
 
   async function handleDelete() {
-    if (!deleteTarget) return;
+    if (!allowDelete || !deleteTarget) return;
     setIsDeleting(true);
     try {
       const result = await deleteCoordinatingBody(deleteTarget.id);
@@ -94,7 +106,10 @@ export default function AdminCoordinatingBodyListPage({
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
-      console.error("[AdminCoordinatingBodyListPage] deleteCoordinatingBody threw:", err);
+      console.error(
+        "[AdminCoordinatingBodyListPage] deleteCoordinatingBody threw:",
+        err,
+      );
       toast.error("Gagal menghapus Badko.");
     } finally {
       setIsDeleting(false);
@@ -176,7 +191,7 @@ export default function AdminCoordinatingBodyListPage({
                         className="cursor-pointer text-left"
                       >
                         <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
-                          {coordinatingBody.name}
+                          {formatCoordinatingBodyName(coordinatingBody.name)}
                         </p>
                       </button>
                     </td>
@@ -188,43 +203,58 @@ export default function AdminCoordinatingBodyListPage({
                     </td>
                     <td className="px-4 py-3">
                       <Label
-                        variant={coordinatingBody.status === "active" ? "green" : "red"}
+                        variant={
+                          coordinatingBody.status === "active" ? "green" : "red"
+                        }
                       >
-                        {coordinatingBody.status === "active" ? "Aktif" : "Tidak Aktif"}
+                        {coordinatingBody.status === "active"
+                          ? "Aktif"
+                          : "Tidak Aktif"}
                       </Label>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
-                        <Dropdown
-                          panelClassName="w-44 rounded-xl"
-                          trigger={({ toggle }) => (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={toggle}
-                              aria-label="Aksi"
+                        {allowDelete ? (
+                          <Dropdown
+                            panelClassName="w-44 rounded-xl"
+                            trigger={({ toggle }) => (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggle}
+                                aria-label="Aksi"
+                              >
+                                <EllipsisVertical className="size-4" />
+                              </Button>
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setSheetTarget(coordinatingBody)}
+                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                             >
-                              <EllipsisVertical className="size-4" />
-                            </Button>
-                          )}
-                        >
-                          <button
-                            type="button"
+                              <Pencil className="size-4 text-[#5f6573]" />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(coordinatingBody)}
+                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+                            >
+                              <Trash2 className="size-4" />
+                              Hapus
+                            </button>
+                          </Dropdown>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => setSheetTarget(coordinatingBody)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                           >
-                            <Pencil className="size-4 text-[#5f6573]" />
+                            <Pencil className="size-4" />
                             Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(coordinatingBody)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-                          >
-                            <Trash2 className="size-4" />
-                            Hapus
-                          </button>
-                        </Dropdown>
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -256,15 +286,17 @@ export default function AdminCoordinatingBodyListPage({
         coordinatingBody={sheetTarget === "create" ? null : sheetTarget}
       />
 
-      <AlertConfirmation
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="Hapus Badko ini?"
-        message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`}
-        confirmLabel="Hapus"
-        loading={isDeleting}
-      />
+      {allowDelete && (
+        <AlertConfirmation
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleDelete}
+          title="Hapus Badko ini?"
+          message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`}
+          confirmLabel="Hapus"
+          loading={isDeleting}
+        />
+      )}
     </div>
   );
 }

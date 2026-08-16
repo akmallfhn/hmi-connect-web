@@ -6,6 +6,7 @@ import {
   BookText,
   GraduationCap,
   LayoutDashboard,
+  Network,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -45,7 +46,7 @@ function getBaseHref(scope: EntitySidebarScope, entityId: string) {
 
 function getNavItems(
   scope: EntitySidebarScope,
-  entityId: string
+  entityId: string,
 ): AdminNavEntry[] {
   const base = getBaseHref(scope, entityId);
   const dashboardItem: AdminNavEntry = {
@@ -58,6 +59,16 @@ function getNavItems(
   if (scope === "organization") {
     return [
       dashboardItem,
+      {
+        groupName: "Organisasi",
+        items: [
+          {
+            label: "Kelola Badko",
+            href: `${base}/coordinating-bodies`,
+            icon: Network,
+          },
+        ],
+      },
       {
         groupName: "Keanggotaan",
         items: [
@@ -159,9 +170,7 @@ function EntityHeader({
     entityType === "full" ? "Status: Penuh" : "Status: Persiapan";
   const dotColor = entityType === "full" ? "bg-primary" : "bg-secondary";
   const secondaryText = showsStatus ? statusText : subtitle;
-  const accessibleLabel = secondaryText
-    ? `${title}. ${secondaryText}`
-    : title;
+  const accessibleLabel = secondaryText ? `${title}. ${secondaryText}` : title;
   const icon = (
     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15 ring-inset">
       <LogoHmi className="h-7 w-auto" />
