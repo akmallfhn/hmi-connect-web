@@ -48,6 +48,7 @@ export default async function OrganizationCoordinatingBodiesPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       allowDelete={false}
+      detailBasePath={`/organizations/${organization_id}/coordinating-bodies`}
     />
   );
 }

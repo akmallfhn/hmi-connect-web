@@ -1666,7 +1666,21 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   Table names always normalize to a single `Badko` prefix. Its columns are Nama Badko, Jumlah
   Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from `include_aggregates: true` — and
   Status. Master retains the edit/delete action dropdown; Organization deliberately omits delete
-  and renders one primary Edit button directly in every row.
+  and renders one primary Edit button directly in every row. The prefixed Badko name links to a
+  shared read-only detail page under the current scope
+  (`/master/coordinating-bodies/[coordinating_body_id]` or
+  `/organizations/[organization_id]/coordinating-bodies/[coordinating_body_id]`). That page has
+  Profil, Struktur Kepengurusan, Cabang, and Latihan Kader tabs: Profil reads the expanded
+  `coordinating-bodies/detail` response, Cabang uses the full `branches/list` result filtered by
+  `coordinating_body_id`, and Latihan Kader filters `trainings/list` by the
+  `coordinating_body` organizer. There is no Badko-management-structure endpoint yet, so the
+  Struktur Kepengurusan tab deliberately renders an explicit unavailable empty state rather than
+  treating every Badko member as an office holder. The Organization detail route also verifies
+  that the fetched Badko's `organization_id` matches its already-validated route scope. Its tab
+  switcher uses a fully-rounded white bordered track with an orange active pill.
+  The Profil footer exposes the status mutation: an active Badko gets a destructive Suspend action,
+  an inactive one gets a primary Activate action, and both confirm through `AlertConfirmation`
+  before delegating to the existing `updateCoordinatingBody` Server Action.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
 - `components/common/*` — small primitives reused across more than one of the folders

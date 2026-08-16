@@ -16,6 +16,14 @@ export type CoordinatingBodyDetail = {
   organization_id: string;
   name: string;
   status: StatusEnum;
+  created_at: string;
+  updated_at: string;
+  organization?: {
+    id: string;
+    name: string;
+    slug: string;
+    status: StatusEnum;
+  };
 };
 
 export async function getCoordinatingBodyDetail(

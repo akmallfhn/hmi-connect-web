@@ -8,6 +8,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ interface AdminCoordinatingBodyListPageProps {
   initialStatus: string;
   pageSize: number;
   allowDelete?: boolean;
+  detailBasePath?: string;
 }
 
 function formatCoordinatingBodyName(name: string) {
@@ -55,6 +57,7 @@ export default function AdminCoordinatingBodyListPage({
   initialStatus,
   pageSize,
   allowDelete = true,
+  detailBasePath = "/master/coordinating-bodies",
 }: AdminCoordinatingBodyListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -185,15 +188,14 @@ export default function AdminCoordinatingBodyListPage({
                 {coordinatingBodies.map((coordinatingBody) => (
                   <tr key={coordinatingBody.id} className="align-middle">
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => setSheetTarget(coordinatingBody)}
-                        className="cursor-pointer text-left"
+                      <Link
+                        href={`${detailBasePath}/${coordinatingBody.id}`}
+                        className="block w-fit min-w-0"
                       >
                         <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
                           {formatCoordinatingBodyName(coordinatingBody.name)}
                         </p>
-                      </button>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
                       {coordinatingBody.branch_count ?? "—"}
