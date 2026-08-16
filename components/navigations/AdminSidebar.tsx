@@ -143,7 +143,7 @@ function NavList({
   collapsed?: boolean;
 }) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-2">
       {navItems.map((entry) =>
         isNavGroup(entry) ? (
           <NavGroup

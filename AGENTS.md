@@ -1282,7 +1282,9 @@ README.md`'s "Access control endpoints" section) — all six require literal `Su
   pseudo-element, gradient, or geometric texture on the sidebar. Navigation follows the sibling
   `ailene-os` `SidebarOS` treatment — muted white idle labels, a `primary`-tinted left-to-right
   gradient with a `primary` icon for the active route, and a translucent profile footer.
-  Gradient and geometry belong to the root `app/(admin)/admin/layout.tsx` instead:
+  `NavList` uses a larger gap between top-level links/groups in both expanded and collapsed modes,
+  while the links within each group retain their tighter spacing. Gradient and
+  geometry belong to the root `app/(admin)/admin/layout.tsx` instead:
   its outer wrapper owns a `bg-linear-to-b` white-to-`primary-light` (`#bfe6e7`) gradient, while its
   transparent inner wrapper owns
   `bg-admin-geo-pattern`, so every admin area gets the same background without painting the
