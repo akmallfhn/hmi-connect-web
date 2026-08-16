@@ -6,6 +6,7 @@ import {
   getBranchStatus,
   getChapterStatus,
   getCoordinatingBodySummary,
+  getTrainingPriorities,
   getUserGrowth,
 } from "@/apis/stat";
 import CoordinatingBodyDashboardPage from "@/components/pages/CoordinatingBodyDashboardPage";
@@ -36,6 +37,7 @@ export default async function CoordinatingBodyDetailPage({
     userGrowthMonth,
     branchStatus,
     chapterStatus,
+    trainingPriorities,
   ] = await Promise.all([
     getCoordinatingBodyDetail(coordinating_body_id),
     getCoordinatingBodySummary(coordinating_body_id),
@@ -58,6 +60,12 @@ export default async function CoordinatingBodyDetailPage({
     }),
     getBranchStatus({ coordinatingBodyId: coordinating_body_id }),
     getChapterStatus({ coordinatingBodyId: coordinating_body_id }),
+    getTrainingPriorities({
+      entity: "branch",
+      coordinatingBodyId: coordinating_body_id,
+      page: 1,
+      pageSize: 5,
+    }),
   ]);
   return (
     <CoordinatingBodyDashboardPage
@@ -71,6 +79,7 @@ export default async function CoordinatingBodyDetailPage({
       userGrowthMonth={userGrowthMonth?.list ?? []}
       branchStatus={branchStatus}
       chapterStatus={chapterStatus}
+      trainingPriorities={trainingPriorities}
     />
   );
 }

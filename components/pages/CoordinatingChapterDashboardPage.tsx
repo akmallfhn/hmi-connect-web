@@ -3,6 +3,7 @@ import type {
   ChapterDistribution,
   ChapterStatus,
   CoordinatingChapterSummary,
+  TrainingPriorities,
   UserGrowthEntry,
   VerificationCount,
 } from "@/apis/stat";
@@ -11,9 +12,11 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface CoordinatingChapterDashboardPageProps {
+  coordinatingChapterId: string;
   coordinatingChapterName: string;
   summary: CoordinatingChapterSummary | null;
   chapterDistribution: ChapterDistribution | null;
@@ -22,9 +25,11 @@ interface CoordinatingChapterDashboardPageProps {
   userGrowthMonth: UserGrowthEntry[];
   verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
+  trainingPriorities: TrainingPriorities | null;
 }
 
 export default function CoordinatingChapterDashboardPage({
+  coordinatingChapterId,
   coordinatingChapterName,
   summary,
   chapterDistribution,
@@ -33,6 +38,7 @@ export default function CoordinatingChapterDashboardPage({
   userGrowthMonth,
   verificationCount,
   chapterStatus,
+  trainingPriorities,
 }: CoordinatingChapterDashboardPageProps) {
   const stats = [
     {
@@ -127,6 +133,14 @@ export default function CoordinatingChapterDashboardPage({
               color: "#c3c2b7",
             },
           ]}
+        />
+      </div>
+
+      <div className="mt-4">
+        <TrainingPriorityList
+          entity="chapter"
+          initialData={trainingPriorities}
+          coordinatingChapterId={coordinatingChapterId}
         />
       </div>
     </div>

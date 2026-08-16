@@ -2,12 +2,8 @@
 
 import { useState } from "react";
 import { Building2, Network } from "lucide-react";
-
-type BranchOverview = {
-  name: string;
-  totalChapters: number;
-  totalActiveKader: number;
-};
+import type { TrainingPriorities } from "@/apis/stat";
+import TrainingPriorityList from "./TrainingPriorityList";
 
 type SuspendedEntity = {
   name: string;
@@ -15,14 +11,6 @@ type SuspendedEntity = {
 };
 
 type SuspendedScope = "branch" | "coordinating-body";
-
-const PROVISIONAL_BRANCHES: BranchOverview[] = [
-  { name: "Cabang Tanjung Selor", totalChapters: 2, totalActiveKader: 41 },
-  { name: "Cabang Wamena", totalChapters: 1, totalActiveKader: 24 },
-  { name: "Cabang Singkawang", totalChapters: 3, totalActiveKader: 58 },
-  { name: "Cabang Mamuju", totalChapters: 4, totalActiveKader: 83 },
-  { name: "Cabang Ternate", totalChapters: 5, totalActiveKader: 97 },
-];
 
 const SUSPENDED_BRANCHES: SuspendedEntity[] = [
   { name: "Cabang Sabang", region: "Badko Aceh" },
@@ -81,7 +69,11 @@ function CardHeader({ title, description }: CardHeaderProps) {
   );
 }
 
-function EntityIcon({ type = "branch" }: { type?: "branch" | "coordinating-body" }) {
+function EntityIcon({
+  type = "branch",
+}: {
+  type?: "branch" | "coordinating-body";
+}) {
   return (
     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
       {type === "branch" ? (
@@ -90,37 +82,6 @@ function EntityIcon({ type = "branch" }: { type?: "branch" | "coordinating-body"
         <Network className="size-3.5" />
       )}
     </span>
-  );
-}
-
-function PriorityTrainingList() {
-  return (
-    <article className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <CardHeader
-        title="Prioritas Pengkaderan"
-        description="Cabang berstatus persiapan yang perlu didorong pengembangannya"
-      />
-
-      <div className="mt-4 divide-y divide-[#eef0f4]">
-        {PROVISIONAL_BRANCHES.map((branch) => (
-          <div key={branch.name} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-            <EntityIcon />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#172033]">
-                {branch.name}
-              </p>
-              <p className="mt-0.5 text-xs text-[#5f6573]">
-                {formatNumber(branch.totalChapters)} Komisariat ·{" "}
-                {formatNumber(branch.totalActiveKader)} kader aktif
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-secondary-soft px-2.5 py-1 text-[11px] font-semibold text-secondary">
-              Persiapan
-            </span>
-          </div>
-        ))}
-      </div>
-    </article>
   );
 }
 
@@ -142,7 +103,11 @@ function SuspendedEntityList() {
       >
         {(
           [
-            { value: "branch", label: "Cabang", total: SUSPENDED_BRANCHES.length },
+            {
+              value: "branch",
+              label: "Cabang",
+              total: SUSPENDED_BRANCHES.length,
+            },
             {
               value: "coordinating-body",
               label: "Badko",
@@ -182,7 +147,10 @@ function SuspendedEntityList() {
         className="mt-4 divide-y divide-[#eef0f4]"
       >
         {entries.map((entry) => (
-          <div key={entry.name} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+          <div
+            key={entry.name}
+            className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+          >
             <EntityIcon
               type={activeScope === "branch" ? "branch" : "coordinating-body"}
             />
@@ -214,7 +182,10 @@ function LowChapterList() {
 
       <div className="mt-4 divide-y divide-[#eef0f4]">
         {LOW_CHAPTER_BRANCHES.map((branch) => (
-          <div key={branch.name} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+          <div
+            key={branch.name}
+            className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+          >
             <EntityIcon />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-[#172033]">
@@ -246,7 +217,10 @@ function LowestKaderList() {
 
       <div className="mt-4 divide-y divide-[#eef0f4]">
         {LOWEST_KADER_BRANCHES.map((branch) => (
-          <div key={branch.name} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+          <div
+            key={branch.name}
+            className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+          >
             <EntityIcon />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-[#172033]">
@@ -269,28 +243,50 @@ function LowestKaderList() {
   );
 }
 
-export default function MasterAttentionLists() {
+interface MasterAttentionListsProps {
+  trainingPriorities: TrainingPriorities | null;
+  showSampleLists?: boolean;
+}
+
+export default function MasterAttentionLists({
+  trainingPriorities,
+  showSampleLists = false,
+}: MasterAttentionListsProps) {
   return (
     <section aria-labelledby="master-attention-title">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="master-attention-title" className="text-base font-bold text-[#172033]">
+          <h2
+            id="master-attention-title"
+            className="text-base font-bold text-[#172033]"
+          >
             Data yang Perlu Perhatian
           </h2>
           <p className="mt-0.5 text-xs text-[#5f6573]">
             Ringkasan entitas yang membutuhkan pemantauan dan tindak lanjut
           </p>
         </div>
-        <span className="rounded-full bg-secondary-soft px-2.5 py-1 text-[11px] font-semibold text-secondary">
-          Data sample
-        </span>
+        {showSampleLists && (
+          <span className="rounded-full bg-secondary-soft px-2.5 py-1 text-[11px] font-semibold text-secondary">
+            Sebagian data sample
+          </span>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <PriorityTrainingList />
-        <SuspendedEntityList />
-        <LowChapterList />
-        <LowestKaderList />
+      <div
+        className={`grid grid-cols-1 gap-4 ${showSampleLists ? "xl:grid-cols-2" : ""}`}
+      >
+        <TrainingPriorityList
+          entity="branch"
+          initialData={trainingPriorities}
+        />
+        {showSampleLists && (
+          <>
+            <SuspendedEntityList />
+            <LowChapterList />
+            <LowestKaderList />
+          </>
+        )}
       </div>
     </section>
   );

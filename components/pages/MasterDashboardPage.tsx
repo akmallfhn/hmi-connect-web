@@ -6,6 +6,7 @@ import type {
   BranchStatus,
   ChapterStatus,
   OrganizationSummary,
+  TrainingPriorities,
   UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
@@ -25,9 +26,11 @@ interface MasterDashboardPageProps {
   branchStatus: BranchStatus | null;
   chapterStatus: ChapterStatus | null;
   branchMapEntries?: BranchMapEntry[];
+  trainingPriorities?: TrainingPriorities | null;
   showBanner?: boolean;
   showIndonesiaMap?: boolean;
   showAttentionLists?: boolean;
+  showSampleAttentionLists?: boolean;
 }
 
 export default function MasterDashboardPage({
@@ -39,9 +42,11 @@ export default function MasterDashboardPage({
   branchStatus,
   chapterStatus,
   branchMapEntries = [],
+  trainingPriorities = null,
   showBanner = false,
   showIndonesiaMap = false,
   showAttentionLists = false,
+  showSampleAttentionLists = false,
 }: MasterDashboardPageProps) {
   const stats = [
     {
@@ -154,7 +159,10 @@ export default function MasterDashboardPage({
 
       {showAttentionLists && (
         <div className="mt-6">
-          <MasterAttentionLists />
+          <MasterAttentionLists
+            trainingPriorities={trainingPriorities}
+            showSampleLists={showSampleAttentionLists}
+          />
         </div>
       )}
     </div>

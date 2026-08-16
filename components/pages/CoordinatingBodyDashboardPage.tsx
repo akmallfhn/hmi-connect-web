@@ -5,6 +5,7 @@ import type {
   BranchStatus,
   ChapterStatus,
   CoordinatingBodySummary,
+  TrainingPriorities,
   UserGrowthEntry,
 } from "@/apis/stat";
 import AdminDashboardBanner from "../banners/AdminDashboardBanner";
@@ -13,6 +14,7 @@ import IndonesiaBranchMap from "../charts/IndonesiaBranchMap";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface CoordinatingBodyDashboardPageProps {
@@ -26,6 +28,7 @@ interface CoordinatingBodyDashboardPageProps {
   userGrowthMonth: UserGrowthEntry[];
   branchStatus: BranchStatus | null;
   chapterStatus: ChapterStatus | null;
+  trainingPriorities: TrainingPriorities | null;
 }
 
 export default function CoordinatingBodyDashboardPage({
@@ -39,6 +42,7 @@ export default function CoordinatingBodyDashboardPage({
   userGrowthMonth,
   branchStatus,
   chapterStatus,
+  trainingPriorities,
 }: CoordinatingBodyDashboardPageProps) {
   const stats = [
     {
@@ -146,6 +150,14 @@ export default function CoordinatingBodyDashboardPage({
               color: "#c3c2b7",
             },
           ]}
+        />
+      </div>
+
+      <div className="mt-4">
+        <TrainingPriorityList
+          entity="branch"
+          initialData={trainingPriorities}
+          coordinatingBodyId={coordinatingBodyId}
         />
       </div>
     </div>

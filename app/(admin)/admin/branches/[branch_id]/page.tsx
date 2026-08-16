@@ -3,6 +3,7 @@ import {
   getBranchSummary,
   getChapterDistribution,
   getChapterStatus,
+  getTrainingPriorities,
   getVerificationCount,
   getUserGrowth,
 } from "@/apis/stat";
@@ -32,6 +33,7 @@ export default async function BranchDashboardRoute({
     userGrowthMonth,
     verificationCount,
     chapterStatus,
+    trainingPriorities,
   ] = await Promise.all([
     getBranchSummary(branch_id),
     getChapterDistribution({ branchId: branch_id }),
@@ -40,10 +42,17 @@ export default async function BranchDashboardRoute({
     getUserGrowth({ granularity: "month", branchId: branch_id }),
     getVerificationCount({ branchId: branch_id }),
     getChapterStatus({ branchId: branch_id }),
+    getTrainingPriorities({
+      entity: "chapter",
+      branchId: branch_id,
+      page: 1,
+      pageSize: 5,
+    }),
   ]);
 
   return (
     <BranchDashboardPage
+      branchId={branch_id}
       summary={summary}
       chapterDistribution={chapterDistribution}
       userGrowthDay={userGrowthDay?.list ?? []}
@@ -51,6 +60,7 @@ export default async function BranchDashboardRoute({
       userGrowthMonth={userGrowthMonth?.list ?? []}
       verificationCount={verificationCount}
       chapterStatus={chapterStatus}
+      trainingPriorities={trainingPriorities}
     />
   );
 }

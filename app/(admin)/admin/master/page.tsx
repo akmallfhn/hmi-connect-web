@@ -5,6 +5,7 @@ import {
   getBranchStatus,
   getChapterStatus,
   getOrganizationSummary,
+  getTrainingPriorities,
   getUserGrowth,
 } from "@/apis/stat";
 import MasterDashboardPage from "@/components/pages/MasterDashboardPage";
@@ -28,6 +29,7 @@ export default async function MasterPage() {
     branchStatus,
     chapterStatus,
     branchMap,
+    trainingPriorities,
   ] = await Promise.all([
     organizationId ? getOrganizationSummary(organizationId) : null,
     getBranchDistribution(),
@@ -37,6 +39,7 @@ export default async function MasterPage() {
     getBranchStatus(),
     getChapterStatus(),
     getBranchMap({ coverage: "nationwide" }),
+    getTrainingPriorities({ entity: "branch", page: 1, pageSize: 5 }),
   ]);
 
   return (
@@ -49,7 +52,9 @@ export default async function MasterPage() {
       branchStatus={branchStatus}
       chapterStatus={chapterStatus}
       branchMapEntries={branchMap?.list ?? []}
+      trainingPriorities={trainingPriorities}
       showAttentionLists
+      showSampleAttentionLists
       showBanner
       showIndonesiaMap
     />

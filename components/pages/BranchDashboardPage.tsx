@@ -5,6 +5,7 @@ import type {
   BranchSummary,
   ChapterDistribution,
   ChapterStatus,
+  TrainingPriorities,
   UserGrowthEntry,
   VerificationCount,
 } from "@/apis/stat";
@@ -14,9 +15,11 @@ import CabangDistributionDonut from "../charts/CabangDistributionDonut";
 import KaderGrowthLineChart from "../charts/KaderGrowthLineChart";
 import StatCard from "../charts/StatCard";
 import StatusDonut from "../charts/StatusDonut";
+import TrainingPriorityList from "../charts/TrainingPriorityList";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface BranchDashboardPageProps {
+  branchId: string;
   summary: BranchSummary | null;
   chapterDistribution: ChapterDistribution | null;
   userGrowthDay: UserGrowthEntry[];
@@ -24,9 +27,11 @@ interface BranchDashboardPageProps {
   userGrowthMonth: UserGrowthEntry[];
   verificationCount: VerificationCount | null;
   chapterStatus: ChapterStatus | null;
+  trainingPriorities: TrainingPriorities | null;
 }
 
 export default function BranchDashboardPage({
+  branchId,
   summary,
   chapterDistribution,
   userGrowthDay,
@@ -34,6 +39,7 @@ export default function BranchDashboardPage({
   userGrowthMonth,
   verificationCount,
   chapterStatus,
+  trainingPriorities,
 }: BranchDashboardPageProps) {
   const { branchName } = useBranch();
   const stats = [
@@ -54,7 +60,7 @@ export default function BranchDashboardPage({
     {
       label: "Permintaan Verifikasi",
       value: (summary?.pending_verification_request_count ?? 0).toLocaleString(
-        "id-ID"
+        "id-ID",
       ),
       icon: Clock3,
       iconBg: "bg-tertiary/10",
@@ -64,7 +70,7 @@ export default function BranchDashboardPage({
       label: "Persentase Terverifikasi",
       value: `${(summary?.verified_member_percentage ?? 0).toLocaleString(
         "id-ID",
-        { maximumFractionDigits: 2 }
+        { maximumFractionDigits: 2 },
       )}%`,
       icon: Percent,
       iconBg: "bg-primary-soft",
@@ -148,6 +154,14 @@ export default function BranchDashboardPage({
               color: "#c3c2b7",
             },
           ]}
+        />
+      </div>
+
+      <div className="mt-4">
+        <TrainingPriorityList
+          entity="chapter"
+          initialData={trainingPriorities}
+          branchId={branchId}
         />
       </div>
     </div>

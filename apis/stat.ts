@@ -212,6 +212,63 @@ export type BranchMap = {
   list: BranchMapEntry[];
 };
 
+export type TrainingPriorityEntry = {
+  id: string;
+  name: string;
+  count_members: number;
+  count_chapter?: number;
+  type: BranchTypeEnum;
+};
+
+export type TrainingPriorities = {
+  list: TrainingPriorityEntry[];
+  metapaging: {
+    total_data: number;
+    total_page: number;
+    current_page: number;
+    page_size: number;
+  };
+};
+
+type TrainingPriorityPaginationOptions = {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+type ChapterTrainingPriorityScope =
+  | {
+      coordinatingBodyId: string;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId: string;
+      coordinatingChapterId?: never;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId: string;
+    }
+  | {
+      coordinatingBodyId?: never;
+      branchId?: never;
+      coordinatingChapterId?: never;
+    };
+
+export type GetTrainingPrioritiesOptions = TrainingPriorityPaginationOptions &
+  (
+    | {
+        entity: "branch";
+        coordinatingBodyId?: string;
+        branchId?: never;
+        coordinatingChapterId?: never;
+      }
+    | ({ entity: "chapter" } & ChapterTrainingPriorityScope)
+  );
+
 export type GetBranchMapOptions = {
   coverage?: BranchMapCoverage;
   coordinatingBodyId?: string;
@@ -225,7 +282,7 @@ async function getSessionToken() {
 
 async function getEntitySummary<T>(
   endpoint: string,
-  body: Record<string, string>
+  body: Record<string, string>,
 ): Promise<T | null> {
   const token = await getSessionToken();
   const result = await callApi<T>(endpoint, { token, body });
@@ -233,25 +290,25 @@ async function getEntitySummary<T>(
 }
 
 export async function getOrganizationSummary(
-  organizationId: string
+  organizationId: string,
 ): Promise<OrganizationSummary | null> {
   return getEntitySummary<OrganizationSummary>(
     "/api/v1/stat/summary/organization",
-    { organization_id: organizationId }
+    { organization_id: organizationId },
   );
 }
 
 export async function getCoordinatingBodySummary(
-  coordinatingBodyId: string
+  coordinatingBodyId: string,
 ): Promise<CoordinatingBodySummary | null> {
   return getEntitySummary<CoordinatingBodySummary>(
     "/api/v1/stat/summary/coordinating-body",
-    { coordinating_body_id: coordinatingBodyId }
+    { coordinating_body_id: coordinatingBodyId },
   );
 }
 
 export async function getBranchSummary(
-  branchId: string
+  branchId: string,
 ): Promise<BranchSummary | null> {
   return getEntitySummary<BranchSummary>("/api/v1/stat/summary/branch", {
     branch_id: branchId,
@@ -259,16 +316,16 @@ export async function getBranchSummary(
 }
 
 export async function getCoordinatingChapterSummary(
-  coordinatingChapterId: string
+  coordinatingChapterId: string,
 ): Promise<CoordinatingChapterSummary | null> {
   return getEntitySummary<CoordinatingChapterSummary>(
     "/api/v1/stat/summary/coordinating-chapter",
-    { coordinating_chapter_id: coordinatingChapterId }
+    { coordinating_chapter_id: coordinatingChapterId },
   );
 }
 
 export async function getChapterSummary(
-  chapterId: string
+  chapterId: string,
 ): Promise<ChapterSummary | null> {
   return getEntitySummary<ChapterSummary>("/api/v1/stat/summary/chapter", {
     chapter_id: chapterId,
@@ -276,7 +333,7 @@ export async function getChapterSummary(
 }
 
 export async function getBranchDistribution(
-  options: GetBranchDistributionOptions = {}
+  options: GetBranchDistributionOptions = {},
 ): Promise<BranchDistribution | null> {
   const token = await getSessionToken();
   const { coordinatingBodyId } = options;
@@ -287,13 +344,13 @@ export async function getBranchDistribution(
       body: coordinatingBodyId
         ? { coordinating_body_id: coordinatingBodyId }
         : {},
-    }
+    },
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getChapterDistribution(
-  options: GetChapterDistributionOptions = {}
+  options: GetChapterDistributionOptions = {},
 ): Promise<ChapterDistribution | null> {
   const token = await getSessionToken();
   const { branchId, coordinatingChapterId } = options;
@@ -307,13 +364,13 @@ export async function getChapterDistribution(
           ? { coordinating_chapter_id: coordinatingChapterId }
           : {}),
       },
-    }
+    },
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getUserGrowth(
-  options: GetUserGrowthOptions = {}
+  options: GetUserGrowthOptions = {},
 ): Promise<UserGrowth | null> {
   const token = await getSessionToken();
   const {
@@ -341,7 +398,7 @@ export async function getUserGrowth(
 }
 
 export async function getVerificationCount(
-  options: GetVerificationCountOptions = {}
+  options: GetVerificationCountOptions = {},
 ): Promise<VerificationCount | null> {
   const token = await getSessionToken();
   const { branchId, coordinatingChapterId, chapterId } = options;
@@ -356,13 +413,13 @@ export async function getVerificationCount(
           : {}),
         ...(chapterId ? { chapter_id: chapterId } : {}),
       },
-    }
+    },
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getBranchStatus(
-  options: GetBranchStatusOptions = {}
+  options: GetBranchStatusOptions = {},
 ): Promise<BranchStatus | null> {
   const token = await getSessionToken();
   const { coordinatingBodyId } = options;
@@ -376,7 +433,7 @@ export async function getBranchStatus(
 }
 
 export async function getChapterStatus(
-  options: GetChapterStatusOptions = {}
+  options: GetChapterStatusOptions = {},
 ): Promise<ChapterStatus | null> {
   const token = await getSessionToken();
   const { coordinatingBodyId, branchId, coordinatingChapterId } = options;
@@ -399,13 +456,13 @@ export async function getCoordinatingBodyStatus(): Promise<CoordinatingBodyStatu
   const token = await getSessionToken();
   const result = await callApi<CoordinatingBodyStatus>(
     "/api/v1/stat/coordinating-body-status",
-    { token, body: {} }
+    { token, body: {} },
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getBranchMap(
-  options: GetBranchMapOptions = {}
+  options: GetBranchMapOptions = {},
 ): Promise<BranchMap | null> {
   const token = await getSessionToken();
   const { coverage = "nationwide", coordinatingBodyId, search } = options;
@@ -420,5 +477,41 @@ export async function getBranchMap(
       ...(normalizedSearch ? { search: normalizedSearch } : {}),
     },
   });
+  return isSuccessStatus(result.status) ? (result.data ?? null) : null;
+}
+
+export async function getTrainingPriorities(
+  options: GetTrainingPrioritiesOptions,
+): Promise<TrainingPriorities | null> {
+  const token = await getSessionToken();
+  const {
+    entity,
+    coordinatingBodyId,
+    branchId,
+    coordinatingChapterId,
+    search,
+    page = 1,
+    pageSize = 20,
+  } = options;
+  const normalizedSearch = search?.trim();
+  const result = await callApi<TrainingPriorities>(
+    "/api/v1/stat/training-priorities/list",
+    {
+      token,
+      body: {
+        entity,
+        ...(coordinatingBodyId
+          ? { coordinating_body_id: coordinatingBodyId }
+          : {}),
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+        ...(normalizedSearch ? { search: normalizedSearch } : {}),
+        page,
+        page_size: pageSize,
+      },
+    },
+  );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
