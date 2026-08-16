@@ -36,6 +36,16 @@ export default async function ChapterLayout({
     return <PageState variant="not_found" backHref={getMainSiteOrigin()} />;
   }
 
+  if (chapter.status === "inactive") {
+    return (
+      <PageState
+        variant="forbidden"
+        backHref={getMainSiteOrigin()}
+        message="Komisariat ini sedang tidak aktif dan tidak dapat dikelola."
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <EntitySidebar

@@ -109,6 +109,10 @@ if their id is missing, not to a picker. Each of those five `[id]` layouts re-ch
 _this_ id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
+After a successful detail lookup, the Badko, Cabang, Korkom, and Komisariat layouts return the
+shared forbidden `PageState` whenever that entity's own `status` is `inactive`, including for
+Super Admin; reactivation remains available from the Master CRUD pages rather than the suspended
+entity dashboard. This layout-level check protects every nested route under the entity.
 All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
 exact-matched Dashboard item first, and every one of the five Dashboard bodies now renders an
 `AdminPageTitle` (naming the entity in its description) plus the shared `AdminDashboardBanner`

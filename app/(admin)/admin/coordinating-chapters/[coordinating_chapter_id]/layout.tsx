@@ -33,10 +33,20 @@ export default async function CoordinatingChapterLayout({
   }
 
   const coordinatingChapter = await getCoordinatingChapterDetail(
-    coordinating_chapter_id
+    coordinating_chapter_id,
   );
   if (!coordinatingChapter) {
     return <PageState variant="not_found" backHref={getMainSiteOrigin()} />;
+  }
+
+  if (coordinatingChapter.status === "inactive") {
+    return (
+      <PageState
+        variant="forbidden"
+        backHref={getMainSiteOrigin()}
+        message="Korkom ini sedang tidak aktif dan tidak dapat dikelola."
+      />
+    );
   }
 
   return (
