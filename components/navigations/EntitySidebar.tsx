@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
 import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
@@ -27,6 +28,8 @@ interface EntitySidebarProps {
   entityName: string;
   parentName?: string;
   entityType?: BranchTypeEnum;
+  // Entity's own logo/image (e.g. coordinating_body.image_url) — falls back to the LogoHmi emblem when unset.
+  imageUrl?: string | null;
   fullName?: string;
   avatar?: string;
   roleName?: string;
@@ -151,10 +154,11 @@ function EntityHeader({
   entityName,
   parentName,
   entityType,
+  imageUrl,
   collapsed,
 }: Pick<
   EntitySidebarProps,
-  "scope" | "entityId" | "entityName" | "parentName" | "entityType"
+  "scope" | "entityId" | "entityName" | "parentName" | "entityType" | "imageUrl"
 > & {
   collapsed: boolean;
 }) {
@@ -172,8 +176,18 @@ function EntityHeader({
   const secondaryText = showsStatus ? statusText : subtitle;
   const accessibleLabel = secondaryText ? `${title}. ${secondaryText}` : title;
   const icon = (
-    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15 ring-inset">
-      <LogoHmi className="h-7 w-auto" />
+    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/15 ring-inset">
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={title}
+          width={40}
+          height={40}
+          className="size-full object-cover"
+        />
+      ) : (
+        <LogoHmi className="h-7 w-auto" />
+      )}
     </span>
   );
 
@@ -233,6 +247,7 @@ export default function EntitySidebar({
   entityName,
   parentName,
   entityType,
+  imageUrl,
   fullName,
   avatar,
   roleName,
@@ -248,6 +263,7 @@ export default function EntitySidebar({
           entityName={entityName}
           parentName={parentName}
           entityType={entityType}
+          imageUrl={imageUrl}
           collapsed={collapsed}
         />
       )}

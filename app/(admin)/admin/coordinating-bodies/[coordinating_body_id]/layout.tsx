@@ -55,6 +55,7 @@ export default async function CoordinatingBodyLayout({
         entityId={coordinatingBody.id}
         entityName={coordinatingBody.name}
         parentName={user?.organization_name ?? "HMI"}
+        imageUrl={coordinatingBody.image_url}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}
