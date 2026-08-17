@@ -3,11 +3,15 @@
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
   EllipsisVertical,
+  Eye,
+  LayoutGrid,
   Pencil,
   PlusCircle,
   Search,
+  Table2,
   Trash2,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,15 +25,21 @@ import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import CoordinatingBodyFormSheet from "../forms/CoordinatingBodyFormSheet";
+import CreateCoordinatingBodyFormSheet from "../forms/CreateCoordinatingBodyFormSheet";
+import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
+import LogoHmi from "../svg/LogoHmi";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
 ];
+
+type ViewMode = "table" | "card";
+
+const VIEW_MODE_STORAGE_KEY = "coordinating_body_view_mode";
 
 interface AdminCoordinatingBodyListPageProps {
   coordinatingBodies: CoordinatingBodyListEntry[];
@@ -46,6 +56,37 @@ interface AdminCoordinatingBodyListPageProps {
 function formatCoordinatingBodyName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
   return `Badko ${normalizedName || name}`;
+}
+
+// Square, rounded-lg badge — falls back to the LogoHmi emblem (same treatment as EntitySidebar's header badge) when image_url is unset.
+function CoordinatingBodyLogo({
+  imageUrl,
+  name,
+  containerClassName,
+  logoClassName,
+}: {
+  imageUrl: string | null;
+  name: string;
+  containerClassName: string;
+  logoClassName: string;
+}) {
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb] ${containerClassName}`}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          width={64}
+          height={64}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <LogoHmi className={logoClassName} />
+      )}
+    </span>
+  );
 }
 
 export default function AdminCoordinatingBodyListPage({
@@ -70,9 +111,23 @@ export default function AdminCoordinatingBodyListPage({
     setSearchInput(initialSearch);
   }
 
-  const [sheetTarget, setSheetTarget] = useState<
-    CoordinatingBodyListEntry | null | "create"
-  >(null);
+  // Always start on table view so the client's first render matches the server's (no localStorage access there).
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  useEffect(() => {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored === "table" || stored === "card") setViewMode(stored);
+  }, []);
+
+  // Persisted from the click handler itself (not a reactive effect on viewMode) so the read-on-mount above never races a write that clobbers it right back.
+  function handleViewModeChange(mode: ViewMode) {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  }
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editTarget, setEditTarget] =
+    useState<CoordinatingBodyListEntry | null>(null);
   const [deleteTarget, setDeleteTarget] =
     useState<CoordinatingBodyListEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -119,6 +174,90 @@ export default function AdminCoordinatingBodyListPage({
     }
   }
 
+  function renderActions(coordinatingBody: CoordinatingBodyListEntry) {
+    if (!allowDelete) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            router.push(`${detailBasePath}/${coordinatingBody.id}`)
+          }
+        >
+          <Eye className="size-4" />
+          Lihat Detail
+        </Button>
+      );
+    }
+
+    return (
+      <Dropdown
+        panelClassName="w-44 rounded-xl"
+        trigger={({ toggle }) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label="Aksi"
+          >
+            <EllipsisVertical className="size-4" />
+          </Button>
+        )}
+      >
+        <button
+          type="button"
+          onClick={() =>
+            router.push(`${detailBasePath}/${coordinatingBody.id}`)
+          }
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+        >
+          <Eye className="size-4 text-[#5f6573]" />
+          Lihat Detail
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditTarget(coordinatingBody)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+        >
+          <Pencil className="size-4 text-[#5f6573]" />
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={() => setDeleteTarget(coordinatingBody)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+        >
+          <Trash2 className="size-4" />
+          Hapus
+        </button>
+      </Dropdown>
+    );
+  }
+
+  function renderCardAction(coordinatingBody: CoordinatingBodyListEntry) {
+    if (allowDelete) {
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDeleteTarget(coordinatingBody);
+          }}
+          aria-label="Hapus Badko"
+          className="text-destructive hover:bg-destructive-soft"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      );
+    }
+
+    return null;
+  }
+
+  const isEmpty = coordinatingBodies.length === 0;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -129,7 +268,7 @@ export default function AdminCoordinatingBodyListPage({
         </div>
         <Button
           variant="primary"
-          onClick={() => setSheetTarget("create")}
+          onClick={() => setShowCreateForm(true)}
           className="w-fit"
         >
           <PlusCircle className="size-4" />
@@ -156,10 +295,40 @@ export default function AdminCoordinatingBodyListPage({
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
+        <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5 sm:ml-auto">
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("table")}
+            aria-pressed={viewMode === "table"}
+            title="Tampilan Tabel"
+            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              viewMode === "table"
+                ? "bg-primary-soft text-primary"
+                : "text-[#5f6573] hover:text-[#172033]"
+            }`}
+          >
+            <Table2 className="size-3.5" />
+            <span className="hidden sm:inline">Tabel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("card")}
+            aria-pressed={viewMode === "card"}
+            title="Tampilan Card"
+            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              viewMode === "card"
+                ? "bg-primary-soft text-primary"
+                : "text-[#5f6573] hover:text-[#172033]"
+            }`}
+          >
+            <LayoutGrid className="size-3.5" />
+            <span className="hidden sm:inline">Card</span>
+          </button>
+        </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-        {coordinatingBodies.length === 0 ? (
+      {isEmpty ? (
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
           <EmptyState
             title={
               initialSearch || initialStatus
@@ -172,7 +341,9 @@ export default function AdminCoordinatingBodyListPage({
                 : "Badko yang ditambahkan akan ditampilkan di sini."
             }
           />
-        ) : (
+        </div>
+      ) : viewMode === "table" ? (
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
@@ -190,8 +361,14 @@ export default function AdminCoordinatingBodyListPage({
                     <td className="px-4 py-3">
                       <Link
                         href={`${detailBasePath}/${coordinatingBody.id}`}
-                        className="block w-fit min-w-0"
+                        className="flex w-fit min-w-0 items-center gap-3"
                       >
+                        <CoordinatingBodyLogo
+                          imageUrl={coordinatingBody.image_url}
+                          name={coordinatingBody.name}
+                          containerClassName="size-10"
+                          logoClassName="h-7 w-auto"
+                        />
                         <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
                           {formatCoordinatingBodyName(coordinatingBody.name)}
                         </p>
@@ -216,47 +393,7 @@ export default function AdminCoordinatingBodyListPage({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
-                        {allowDelete ? (
-                          <Dropdown
-                            panelClassName="w-44 rounded-xl"
-                            trigger={({ toggle }) => (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={toggle}
-                                aria-label="Aksi"
-                              >
-                                <EllipsisVertical className="size-4" />
-                              </Button>
-                            )}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => setSheetTarget(coordinatingBody)}
-                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                            >
-                              <Pencil className="size-4 text-[#5f6573]" />
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTarget(coordinatingBody)}
-                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-                            >
-                              <Trash2 className="size-4" />
-                              Hapus
-                            </button>
-                          </Dropdown>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => setSheetTarget(coordinatingBody)}
-                          >
-                            <Pencil className="size-4" />
-                            Edit
-                          </Button>
-                        )}
+                        {renderActions(coordinatingBody)}
                       </div>
                     </td>
                   </tr>
@@ -264,8 +401,60 @@ export default function AdminCoordinatingBodyListPage({
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {coordinatingBodies.map((coordinatingBody) => (
+            <Link
+              key={coordinatingBody.id}
+              href={`${detailBasePath}/${coordinatingBody.id}`}
+              className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/40"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <CoordinatingBodyLogo
+                    imageUrl={coordinatingBody.image_url}
+                    name={coordinatingBody.name}
+                    containerClassName="size-12"
+                    logoClassName="h-8 w-auto"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#172033]">
+                      {formatCoordinatingBodyName(coordinatingBody.name)}
+                    </p>
+                    <Label
+                      size="sm"
+                      variant={
+                        coordinatingBody.status === "active" ? "green" : "red"
+                      }
+                    >
+                      {coordinatingBody.status === "active"
+                        ? "Aktif"
+                        : "Tidak Aktif"}
+                    </Label>
+                  </div>
+                </div>
+                {renderCardAction(coordinatingBody)}
+              </div>
+
+              <div className="flex items-center justify-between gap-2 border-t border-[#e6e9ef] pt-3 text-[13px]">
+                <span className="text-[#5f6573]">
+                  Jumlah Cabang{" "}
+                  <span className="font-semibold text-[#172033]">
+                    {coordinatingBody.branch_count ?? "—"}
+                  </span>
+                </span>
+                <span className="text-[#5f6573]">
+                  Jumlah Kader{" "}
+                  <span className="font-semibold text-[#172033]">
+                    {coordinatingBody.user_count ?? "—"}
+                  </span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {coordinatingBodies.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
@@ -278,14 +467,23 @@ export default function AdminCoordinatingBodyListPage({
         </div>
       )}
 
-      <CoordinatingBodyFormSheet
-        open={sheetTarget !== null}
-        onClose={() => setSheetTarget(null)}
+      <CreateCoordinatingBodyFormSheet
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
         onSaved={() => {
-          setSheetTarget(null);
+          setShowCreateForm(false);
           router.refresh();
         }}
-        coordinatingBody={sheetTarget === "create" ? null : sheetTarget}
+      />
+
+      <EditCoordinatingBodyFormSheet
+        open={editTarget !== null}
+        onClose={() => setEditTarget(null)}
+        onSaved={() => {
+          setEditTarget(null);
+          router.refresh();
+        }}
+        coordinatingBody={editTarget}
       />
 
       {allowDelete && (

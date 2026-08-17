@@ -31,6 +31,7 @@ import {
 import {
   createCoordinatingBody as createCoordinatingBodyApi,
   deleteCoordinatingBody as deleteCoordinatingBodyApi,
+  getCoordinatingBodyDetail as getCoordinatingBodyDetailApi,
   updateCoordinatingBody as updateCoordinatingBodyApi,
   type CreateCoordinatingBodyPayload,
   type UpdateCoordinatingBodyPayload,
@@ -253,6 +254,10 @@ export async function updateChapter(payload: UpdateChapterPayload) {
 
 export async function deleteChapter(id: string) {
   return deleteChapterApi(id);
+}
+
+export async function getCoordinatingBodyDetail(id: string) {
+  return getCoordinatingBodyDetailApi(id);
 }
 
 export async function createCoordinatingBody(payload: CreateCoordinatingBodyPayload) {

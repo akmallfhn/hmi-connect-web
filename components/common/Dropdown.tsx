@@ -100,7 +100,7 @@ export default function Dropdown({
             onClick={() => setOpen(false)}
             style={{ top: 0, left: 0, visibility: "hidden" }}
             className={[
-              "fixed z-[120] w-72 overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white shadow-lg",
+              "font-google-sans fixed z-[120] w-72 overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white shadow-lg",
               panelClassName,
             ]
               .filter(Boolean)

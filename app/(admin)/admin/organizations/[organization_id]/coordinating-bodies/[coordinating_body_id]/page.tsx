@@ -67,6 +67,7 @@ export default async function OrganizationCoordinatingBodyDetailPage({
       trainings={trainingResult.list}
       initialTab={parseTab(query.tab)}
       backHref={`/organizations/${organization_id}/coordinating-bodies`}
+      allowEdit={false}
     />
   );
 }

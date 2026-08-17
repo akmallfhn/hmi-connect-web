@@ -17,11 +17,19 @@ const VARIANT_CLASSNAME: Record<LabelVariant, string> = {
   pink: "border-[#F3A6BC] bg-[#FDE7EE] text-[#BE2B5D]",
 };
 
+export type LabelSize = "default" | "sm";
+
+const SIZE_CLASSNAME: Record<LabelSize, string> = {
+  default: "px-2.5 py-1 text-xs",
+  sm: "px-2 py-0.5 text-[11px]",
+};
+
 interface LabelProps {
   variant: LabelVariant;
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
+  size?: LabelSize;
 }
 
 export default function Label({
@@ -29,11 +37,13 @@ export default function Label({
   icon,
   children,
   className,
+  size = "default",
 }: LabelProps) {
   return (
     <span
       className={[
-        "inline-flex w-fit items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0",
+        "inline-flex w-fit items-center gap-1 truncate rounded-full border font-semibold shrink-0",
+        SIZE_CLASSNAME[size],
         VARIANT_CLASSNAME[variant],
         className,
       ]

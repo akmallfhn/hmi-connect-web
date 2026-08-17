@@ -2,66 +2,58 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import type { CoordinatingBodyListEntry } from "@/apis/coordinating-bodies";
-import { createCoordinatingBody, updateCoordinatingBody } from "@/lib/actions";
+import { createCoordinatingBody } from "@/lib/actions";
 import { isSuccessStatus, type StatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
+import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
+import CoordinatingBodyLogoField from "./CoordinatingBodyLogoField";
 
 const STATUS_OPTIONS: { label: string; value: StatusEnum }[] = [
   { label: "Aktif", value: "active" },
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
-interface CoordinatingBodyFormSheetProps {
+interface CreateCoordinatingBodyFormSheetProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  coordinatingBody: CoordinatingBodyListEntry | null;
 }
 
-export default function CoordinatingBodyFormSheet({
+export default function CreateCoordinatingBodyFormSheet({
   open,
   onClose,
   onSaved,
-  coordinatingBody,
-}: CoordinatingBodyFormSheetProps) {
+}: CreateCoordinatingBodyFormSheetProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={coordinatingBody ? "Edit Badko" : "Tambah Badko"}
-      description={
-        coordinatingBody
-          ? "Perbarui data Badko ini."
-          : "Buat Badan Koordinasi (Badko) HMI baru."
-      }
+      title="Tambah Badko"
+      description="Buat Badan Koordinasi (Badko) HMI baru."
     >
       {open && (
-        <CoordinatingBodyFields
-          coordinatingBody={coordinatingBody}
-          onClose={onClose}
-          onSaved={onSaved}
-        />
+        <CreateCoordinatingBodyFields onClose={onClose} onSaved={onSaved} />
       )}
     </Sheet>
   );
 }
 
-// Mounted only while open, so state always seeds fresh from the row — no reset effect needed.
-function CoordinatingBodyFields({
-  coordinatingBody,
+// Mounted only while open, so state always starts fresh — no reset effect needed.
+function CreateCoordinatingBodyFields({
   onClose,
   onSaved,
 }: {
-  coordinatingBody: CoordinatingBodyListEntry | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState(coordinatingBody?.name ?? "");
-  const [status, setStatus] = useState<StatusEnum>(coordinatingBody?.status ?? "active");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [status, setStatus] = useState<StatusEnum>("active");
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
@@ -72,22 +64,23 @@ function CoordinatingBodyFields({
 
     setIsSaving(true);
     try {
-      const result = coordinatingBody
-        ? await updateCoordinatingBody({ id: coordinatingBody.id, name, status })
-        : await createCoordinatingBody({ name, status });
+      const result = await createCoordinatingBody({
+        name,
+        description,
+        image_url: imageUrl,
+        status,
+      });
 
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menyimpan Badko.");
+        toast.error(result.message ?? "Gagal membuat Badko.");
         return;
       }
 
-      toast.success(
-        coordinatingBody ? "Badko berhasil diperbarui." : "Badko berhasil dibuat."
-      );
+      toast.success("Badko berhasil dibuat.");
       onSaved();
     } catch (err) {
-      console.error("[CoordinatingBodyFormSheet] save threw:", err);
-      toast.error("Gagal menyimpan Badko.");
+      console.error("[CreateCoordinatingBodyFormSheet] save threw:", err);
+      toast.error("Gagal membuat Badko.");
     } finally {
       setIsSaving(false);
     }
@@ -95,14 +88,31 @@ function CoordinatingBodyFields({
 
   return (
     <div className="flex flex-col gap-4">
+      <CoordinatingBodyLogoField
+        imageUrl={imageUrl}
+        onChange={setImageUrl}
+        onUploadingChange={setIsUploadingImage}
+        disabled={isSaving}
+      />
+
       <Input
         inputId="coordinating-body-name"
         label="Nama Badko"
-        placeholder="Contoh: BADKO Sumatera Bagian Utara"
+        placeholder="Contoh: Sumatera Bagian Utara"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
       />
+
+      <TextArea
+        textAreaId="coordinating-body-description"
+        label="Deskripsi"
+        placeholder="Ceritakan sekilas tentang Badko ini"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={6}
+      />
+
       <Select
         selectId="coordinating-body-status"
         label="Status"
@@ -117,7 +127,11 @@ function CoordinatingBodyFields({
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={isSaving || isUploadingImage}
+        >
           {isSaving ? "Menyimpan..." : "Simpan"}
         </Button>
       </div>

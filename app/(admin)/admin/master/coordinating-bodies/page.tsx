@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 18;
 
 interface MasterCoordinatingBodiesPageProps {
   searchParams: Promise<{ search?: string; status?: string; page?: string }>;

@@ -10,11 +10,13 @@ export type CoordinatingBody = {
   name: string;
 };
 
-// Mirrors POST /api/v1/coordinating-bodies/detail's response — used to seed the Badko filter's default label on /master/branches.
+// Mirrors POST /api/v1/coordinating-bodies/detail's response — used to seed the Badko filter's default label on /master/branches, and to seed the edit form (description isn't on the list row).
 export type CoordinatingBodyDetail = {
   id: string;
   organization_id: string;
   name: string;
+  description: string | null;
+  image_url: string | null;
   status: StatusEnum;
   created_at: string;
   updated_at: string;
@@ -27,7 +29,7 @@ export type CoordinatingBodyDetail = {
 };
 
 export async function getCoordinatingBodyDetail(
-  id: string,
+  id: string
 ): Promise<CoordinatingBodyDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -39,7 +41,7 @@ export async function getCoordinatingBodyDetail(
       method: "POST",
       token: sessionToken,
       body: { id },
-    },
+    }
   );
 
   if (!isSuccessStatus(result.status) || !result.data) return null;
@@ -69,7 +71,7 @@ export type GetCoordinatingBodiesResult = {
 
 // Backs the Badko picker in the admin branch form — same shape/status-filter convention as searchBranches.
 export async function searchCoordinatingBodies(
-  options: GetCoordinatingBodiesOptions = {},
+  options: GetCoordinatingBodiesOptions = {}
 ): Promise<GetCoordinatingBodiesResult> {
   const { search, page, pageSize } = options;
   const cookieStore = await cookies();
@@ -87,7 +89,7 @@ export async function searchCoordinatingBodies(
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),
       },
-    },
+    }
   );
 
   const list = result.data?.list ?? [];
@@ -103,10 +105,9 @@ export async function searchCoordinatingBodies(
 export type CoordinatingBodyListEntry = {
   id: string;
   name: string;
+  image_url: string | null;
   status: StatusEnum;
-  // Only present when include_aggregates is requested — active kader count under this Badko via its branches/chapters.
   user_count?: number;
-  // Only present when include_aggregates is requested — branch count under this Badko.
   branch_count?: number;
 };
 
@@ -137,7 +138,7 @@ type CoordinatingBodyListAdminResponse = {
 
 // Requires the admin CRUD role; callers are gated by either the Master or Organization layout.
 export async function listCoordinatingBodiesAdmin(
-  options: ListCoordinatingBodiesOptions = {},
+  options: ListCoordinatingBodiesOptions = {}
 ): Promise<PagedListResult<CoordinatingBodyListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -158,7 +159,7 @@ export async function listCoordinatingBodiesAdmin(
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },
-    },
+    }
   );
 
   if (!isSuccessStatus(result.status)) {
@@ -178,12 +179,14 @@ export async function listCoordinatingBodiesAdmin(
 
 export type CreateCoordinatingBodyPayload = {
   name: string;
+  description?: string;
+  image_url?: string;
   status?: StatusEnum;
 };
 
 // organization_id is always this app's single ORGANIZATION_ID — never exposed as a caller-supplied field.
 export async function createCoordinatingBody(
-  payload: CreateCoordinatingBodyPayload,
+  payload: CreateCoordinatingBodyPayload
 ): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -204,11 +207,13 @@ export async function createCoordinatingBody(
 export type UpdateCoordinatingBodyPayload = {
   id: string;
   name?: string;
+  description?: string;
+  image_url?: string;
   status?: StatusEnum;
 };
 
 export async function updateCoordinatingBody(
-  payload: UpdateCoordinatingBodyPayload,
+  payload: UpdateCoordinatingBodyPayload
 ): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;

@@ -8,6 +8,7 @@ import {
   GitBranch,
   GraduationCap,
   MapPin,
+  Pencil,
   Power,
   Users,
   type LucideIcon,
@@ -25,6 +26,7 @@ import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Label from "../common/Label";
+import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
 import {
@@ -42,6 +44,8 @@ interface CoordinatingBodyDetailPageProps {
   trainings: TrainingListEntry[];
   initialTab: CoordinatingBodyDetailTab;
   backHref: string;
+  // Master manages Badko directly; Organization's view of a Badko is read-only (mirrors allowDelete on the list page).
+  allowEdit?: boolean;
 }
 
 const TABS: {
@@ -95,6 +99,7 @@ export default function CoordinatingBodyDetailPage({
   trainings,
   initialTab,
   backHref,
+  allowEdit = true,
 }: CoordinatingBodyDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -103,6 +108,7 @@ export default function CoordinatingBodyDetailPage({
     useState<CoordinatingBodyDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   if (seenTab !== initialTab) {
     setSeenTab(initialTab);
@@ -163,10 +169,20 @@ export default function CoordinatingBodyDetailPage({
         </Button>
       </Link>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <AdminPageTitle>
           {formatCoordinatingBodyName(coordinatingBody.name)}
         </AdminPageTitle>
+        {allowEdit && (
+          <Button
+            variant="primary"
+            onClick={() => setShowEditForm(true)}
+            className="w-fit"
+          >
+            <Pencil className="size-4" />
+            Edit Detail
+          </Button>
+        )}
       </div>
 
       <div className="mt-6 overflow-x-auto">
@@ -434,6 +450,18 @@ export default function CoordinatingBodyDetailPage({
         }
         loading={isUpdatingStatus}
       />
+
+      {allowEdit && (
+        <EditCoordinatingBodyFormSheet
+          open={showEditForm}
+          onClose={() => setShowEditForm(false)}
+          onSaved={() => {
+            setShowEditForm(false);
+            router.refresh();
+          }}
+          coordinatingBody={coordinatingBody}
+        />
+      )}
     </div>
   );
 }
