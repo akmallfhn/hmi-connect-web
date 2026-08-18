@@ -203,6 +203,36 @@ export async function listBranchAdmins(branchId: string): Promise<UserListEntry[
   return pages.flatMap((page) => page.list).filter((user) => user.can_manage_branch);
 }
 
+// Same exhaustive-fetch-then-filter shape as listBranchAdmins — no backend filter for can_manage_chapter either.
+export async function listChapterAdmins(chapterId: string): Promise<UserListEntry[]> {
+  const pageSize = 100;
+  const firstPage = await listUsers({
+    chapterId,
+    status: "active",
+    page: 1,
+    pageSize,
+  });
+
+  const pages =
+    firstPage.totalPage <= 1
+      ? [firstPage]
+      : [
+          firstPage,
+          ...(await Promise.all(
+            Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
+              listUsers({
+                chapterId,
+                status: "active",
+                page: index + 2,
+                pageSize,
+              }),
+            ),
+          )),
+        ];
+
+  return pages.flatMap((page) => page.list).filter((user) => user.can_manage_chapter);
+}
+
 export type CreateUserPayload = {
   full_name: string;
   email: string;

@@ -53,6 +53,7 @@ export default async function ChapterLayout({
         entityId={chapter.id}
         entityName={chapter.name}
         entityType={chapter.type}
+        imageUrl={chapter.image_url}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

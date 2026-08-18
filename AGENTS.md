@@ -1758,23 +1758,29 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail
   — no group wrapper either, since Badko only has this one Cabang-related link). `MasterSidebar`'s
   pre-existing Cabang item is relabeled "Kelola Cabang" to match Master's real CRUD rights.
-- Both Badko and Cabang have their own self-service "Pengaturan" page on their own scoped dashboard
-  (`/coordinating-bodies/[coordinating_body_id]/settings` and `/branches/[branch_id]/settings`, flat
-  `EntitySidebar` items on both scopes) — `components/pages/CoordinatingBodySettingsPage.tsx` and its
-  mirror `BranchSettingsPage.tsx`. Both have the same two tabs: Profil (logo via
-  `CoordinatingBodyLogoField`/`BranchLogoField` at `size={160}` `layout="column"`, Nama, Deskripsi —
-  deliberately narrower than the Master/Organization Edit form, no Tipe/parent picker/Status here,
-  calling `updateCoordinatingBody`/`updateBranch` with just `{id, name, description, image_url}`) and
-  Akses (a table of that entity's own admins — `apis/users.ts#listCoordinatingBodyAdmins`/
-  `listBranchAdmins`, which page through every member via `users/list` scoped by
-  `coordinating_body_id`/`branch_id` and filter client-side on `can_manage_coordinating_body`/
-  `can_manage_branch` since neither field has a backend list filter — plus a Super-Admin-only "Tambah
-  Akses" modal backed by `/api/users/search?coordinating_body_id=`/`?branch_id=` and
-  `grantCoordinatingBodyAdmin`/`grantBranchAdmin`, and a revoke `Trash2` button per row calling
-  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`). Both route files fetch the entity detail, its
-  admin list, and `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}`
-  straight through — non-Super-Admin viewers (a Cabang/Badko's own `Administrator`) can still reach the
-  page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
+- Badko, Cabang, and Komisariat each have their own self-service "Pengaturan" page on their own
+  scoped dashboard (`/coordinating-bodies/[coordinating_body_id]/settings`,
+  `/branches/[branch_id]/settings`, `/chapters/[chapter_id]/settings` — flat `EntitySidebar` items on
+  all three scopes) — `components/pages/CoordinatingBodySettingsPage.tsx`,
+  `BranchSettingsPage.tsx`, and `ChapterSettingsPage.tsx`. All three have the same two tabs: Profil
+  (logo via `CoordinatingBodyLogoField`/`BranchLogoField`/`ChapterLogoField` at `size={160}`
+  `layout="column"`, Nama, Deskripsi — deliberately narrower than the Master/Organization Edit form,
+  no Tipe/parent picker/Status here, calling `updateCoordinatingBody`/`updateBranch`/`updateChapter`
+  with just `{id, name, description, image_url}`) and Akses (a table of that entity's own admins —
+  `apis/users.ts#listCoordinatingBodyAdmins`/`listBranchAdmins`/`listChapterAdmins`, which page
+  through every member via `users/list` scoped by
+  `coordinating_body_id`/`branch_id`/`chapter_id` and filter client-side on
+  `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_chapter` since none of those fields
+  has a backend list filter — plus a Super-Admin-only "Tambah Akses" modal backed by
+  `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?chapter_id=` (the `chapter_id` branch was
+  added to that Route Handler alongside the other two, same `can_manage_chapter`-and-own-`chapter_id`
+  authorization check) and `grantCoordinatingBodyAdmin`/`grantBranchAdmin`/`grantChapterAdmin`, and a
+  revoke `Trash2` button per row calling
+  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`/`revokeChapterAdmin`). All three route files fetch
+  the entity detail, its admin list, and `getSession()` in parallel and pass
+  `isSuperAdmin={user?.role_name === "Super Admin"}` straight through — non-Super-Admin viewers (a
+  Cabang/Badko/Komisariat's own `Administrator`) can still reach the page and edit Profil, they just
+  don't see the Tambah/Cabut Akses controls.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

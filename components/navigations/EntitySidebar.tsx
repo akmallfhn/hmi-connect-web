@@ -114,10 +114,11 @@ function getNavItems(
     ];
   }
 
-  if (scope !== "branch") {
+  if (scope === "chapter") {
     return [
       dashboardItem,
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
 
