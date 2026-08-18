@@ -27,7 +27,6 @@ import { updateCoordinatingBody } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import AdminPageTitle from "../common/AdminPageTitle";
 import Label from "../common/Label";
 import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -192,21 +191,100 @@ export default function CoordinatingBodyDetailPage({
         </Button>
       </Link>
 
-      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <AdminPageTitle>
-          {formatCoordinatingBodyName(coordinatingBody.name)}
-        </AdminPageTitle>
-        {allowEdit && (
-          <Button
-            variant="primary"
-            onClick={() => setShowEditForm(true)}
-            className="w-fit"
-          >
-            <Pencil className="size-4" />
-            Edit Detail
-          </Button>
-        )}
-      </div>
+      <section className="mt-4 rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e6e9ef] bg-primary-soft text-primary">
+              {coordinatingBody.image_url ? (
+                <Image
+                  src={coordinatingBody.image_url}
+                  alt={coordinatingBody.name}
+                  width={80}
+                  height={80}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <Building2 className="size-8" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-[#172033]">
+                  {formatCoordinatingBodyName(coordinatingBody.name)}
+                </h2>
+                <Label
+                  variant={
+                    coordinatingBody.status === "active" ? "green" : "red"
+                  }
+                >
+                  {coordinatingBody.status === "active"
+                    ? "Aktif"
+                    : "Tidak Aktif"}
+                </Label>
+              </div>
+              <p className="mt-1 text-sm text-[#69707d]">
+                {coordinatingBody.organization?.name ?? "HMI"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {coordinatingBody.status === "active" ? (
+              <Button
+                variant="destructive"
+                onClick={() => setShowStatusConfirmation(true)}
+                className="w-fit shrink-0"
+              >
+                <Ban className="size-4" />
+                Suspend Badko ini
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={() => setShowStatusConfirmation(true)}
+                className="w-fit shrink-0"
+              >
+                <Power className="size-4" />
+                Aktifkan Badko ini
+              </Button>
+            )}
+            {allowEdit && (
+              <Button
+                variant="outline"
+                onClick={() => setShowEditForm(true)}
+                className="w-fit shrink-0"
+              >
+                <Pencil className="size-4" />
+                Edit Detail
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <StatPill
+            icon={GitBranch}
+            label="Jumlah Cabang"
+            value={branches.length}
+          />
+          <StatPill
+            icon={Building}
+            label="Jumlah Komisariat"
+            value={totalChapterCount}
+          />
+          <StatPill icon={Users} label="Jumlah Kader" value={totalUserCount} />
+          <StatPill
+            icon={CalendarDays}
+            label="Dibuat"
+            value={formatTimestamp(coordinatingBody.created_at)}
+          />
+          <StatPill
+            icon={History}
+            label="Diperbarui"
+            value={formatTimestamp(coordinatingBody.updated_at)}
+          />
+        </div>
+      </section>
 
       <div className="mt-6 overflow-x-auto">
         <div
@@ -248,105 +326,14 @@ export default function CoordinatingBodyDetailPage({
         className="mt-6"
       >
         {activeTab === "profile" && (
-          <div className="flex flex-col gap-4">
-            <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e6e9ef] bg-primary-soft text-primary">
-                    {coordinatingBody.image_url ? (
-                      <Image
-                        src={coordinatingBody.image_url}
-                        alt={coordinatingBody.name}
-                        width={80}
-                        height={80}
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <Building2 className="size-8" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-bold text-[#172033]">
-                        {formatCoordinatingBodyName(coordinatingBody.name)}
-                      </h2>
-                      <Label
-                        variant={
-                          coordinatingBody.status === "active"
-                            ? "green"
-                            : "red"
-                        }
-                      >
-                        {coordinatingBody.status === "active"
-                          ? "Aktif"
-                          : "Tidak Aktif"}
-                      </Label>
-                    </div>
-                    <p className="mt-1 text-sm text-[#69707d]">
-                      {coordinatingBody.organization?.name ?? "HMI"}
-                    </p>
-                  </div>
-                </div>
-
-                {coordinatingBody.status === "active" ? (
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowStatusConfirmation(true)}
-                    className="w-fit shrink-0"
-                  >
-                    <Ban className="size-4" />
-                    Suspend Badko ini
-                  </Button>
-                ) : (
-                  <Button
-                    variant="primary"
-                    onClick={() => setShowStatusConfirmation(true)}
-                    className="w-fit shrink-0"
-                  >
-                    <Power className="size-4" />
-                    Aktifkan Badko ini
-                  </Button>
-                )}
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <StatPill
-                  icon={GitBranch}
-                  label="Jumlah Cabang"
-                  value={branches.length}
-                />
-                <StatPill
-                  icon={Building}
-                  label="Jumlah Komisariat"
-                  value={totalChapterCount}
-                />
-                <StatPill
-                  icon={Users}
-                  label="Jumlah Kader"
-                  value={totalUserCount}
-                />
-                <StatPill
-                  icon={CalendarDays}
-                  label="Dibuat"
-                  value={formatTimestamp(coordinatingBody.created_at)}
-                />
-                <StatPill
-                  icon={History}
-                  label="Diperbarui"
-                  value={formatTimestamp(coordinatingBody.updated_at)}
-                />
-              </div>
-            </section>
-
-            <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
-              <h3 className="text-base font-semibold text-[#172033]">
-                Deskripsi
-              </h3>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40454f]">
-                {coordinatingBody.description || "Belum ada deskripsi."}
-              </p>
-            </section>
-          </div>
+          <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+            <h3 className="text-base font-semibold text-[#172033]">
+              Deskripsi
+            </h3>
+            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40454f]">
+              {coordinatingBody.description || "Belum ada deskripsi."}
+            </p>
+          </section>
         )}
 
         {activeTab === "management" && (
