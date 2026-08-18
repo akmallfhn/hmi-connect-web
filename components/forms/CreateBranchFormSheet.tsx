@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import type { BranchListEntry } from "@/apis/branches";
-import { createBranch, updateBranch } from "@/lib/actions";
+import { createBranch } from "@/lib/actions";
 import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
+import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
+import BranchLogoField from "./BranchLogoField";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -21,36 +22,33 @@ const STATUS_OPTIONS: { label: string; value: StatusEnum }[] = [
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
-interface BranchFormSheetProps {
+interface CreateBranchFormSheetProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  branch: BranchListEntry | null;
   defaultCoordinatingBody?: SearchableOption | null;
+  // When true, the Badko field renders as fixed, read-only text instead of a searchable picker — used from a Badko's own scoped "Kelola Cabang" page so a new Cabang can't be attached to another Badko.
+  lockCoordinatingBody?: boolean;
 }
 
-export default function BranchFormSheet({
+export default function CreateBranchFormSheet({
   open,
   onClose,
   onSaved,
-  branch,
   defaultCoordinatingBody = null,
-}: BranchFormSheetProps) {
+  lockCoordinatingBody = false,
+}: CreateBranchFormSheetProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={branch ? "Edit Cabang" : "Tambah Cabang"}
-      description={
-        branch
-          ? "Perbarui data cabang ini."
-          : "Buat cabang (Cabang HMI) baru di bawah sebuah Badko."
-      }
+      title="Tambah Cabang"
+      description="Buat Cabang HMI baru di bawah sebuah Badko."
     >
       {open && (
-        <BranchFields
-          branch={branch}
+        <CreateBranchFields
           defaultCoordinatingBody={defaultCoordinatingBody}
+          lockCoordinatingBody={lockCoordinatingBody}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -59,34 +57,27 @@ export default function BranchFormSheet({
   );
 }
 
-// Mounted only while open, so state always seeds fresh from the row — no reset effect needed.
-function BranchFields({
-  branch,
+// Mounted only while open, so state always starts fresh — no reset effect needed.
+function CreateBranchFields({
   defaultCoordinatingBody,
+  lockCoordinatingBody,
   onClose,
   onSaved,
 }: {
-  branch: BranchListEntry | null;
   defaultCoordinatingBody: SearchableOption | null;
+  lockCoordinatingBody: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState(branch?.name ?? "");
-  const [type, setType] = useState<BranchTypeEnum>(branch?.type ?? "full");
-  const [status, setStatus] = useState<StatusEnum>(branch?.status ?? "active");
-  const [coordinatingBody, setCoordinatingBody] = useState<SearchableOption | null>(
-    branch?.coordinating_body_id && branch.coordinating_body_name
-      ? { label: branch.coordinating_body_name, value: branch.coordinating_body_id }
-      : defaultCoordinatingBody
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [type, setType] = useState<BranchTypeEnum>("full");
+  const [status, setStatus] = useState<StatusEnum>("active");
+  const [coordinatingBody, setCoordinatingBody] =
+    useState<SearchableOption | null>(defaultCoordinatingBody);
   const [isSaving, setIsSaving] = useState(false);
-
-  const coordinatingBodyDefaultOptions: SearchableOption[] =
-    branch?.coordinating_body_id && branch.coordinating_body_name
-      ? [{ label: branch.coordinating_body_name, value: branch.coordinating_body_id }]
-      : defaultCoordinatingBody
-        ? [defaultCoordinatingBody]
-        : [];
 
   async function loadCoordinatingBodyOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });
@@ -102,7 +93,7 @@ function BranchFields({
 
   async function handleSubmit() {
     if (!name.trim()) {
-      toast.error("Nama cabang wajib diisi.");
+      toast.error("Nama Cabang wajib diisi.");
       return;
     }
     if (!coordinatingBody) {
@@ -112,31 +103,25 @@ function BranchFields({
 
     setIsSaving(true);
     try {
-      const result = branch
-        ? await updateBranch({
-            id: branch.id,
-            name,
-            type,
-            status,
-            coordinating_body_id: String(coordinatingBody.value),
-          })
-        : await createBranch({
-            name,
-            type,
-            status,
-            coordinating_body_id: String(coordinatingBody.value),
-          });
+      const result = await createBranch({
+        name,
+        description,
+        image_url: imageUrl,
+        type,
+        status,
+        coordinating_body_id: String(coordinatingBody.value),
+      });
 
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menyimpan cabang.");
+        toast.error(result.message ?? "Gagal membuat Cabang.");
         return;
       }
 
-      toast.success(branch ? "Cabang berhasil diperbarui." : "Cabang berhasil dibuat.");
+      toast.success("Cabang berhasil dibuat.");
       onSaved();
     } catch (err) {
-      console.error("[BranchFormSheet] save threw:", err);
-      toast.error("Gagal menyimpan cabang.");
+      console.error("[CreateBranchFormSheet] save threw:", err);
+      toast.error("Gagal membuat Cabang.");
     } finally {
       setIsSaving(false);
     }
@@ -144,6 +129,13 @@ function BranchFields({
 
   return (
     <div className="flex flex-col gap-4">
+      <BranchLogoField
+        imageUrl={imageUrl}
+        onChange={setImageUrl}
+        onUploadingChange={setIsUploadingImage}
+        disabled={isSaving}
+      />
+
       <Input
         inputId="branch-name"
         label="Nama Cabang"
@@ -152,16 +144,38 @@ function BranchFields({
         onChange={(e) => setName(e.target.value)}
         required
       />
-      <SearchableSelect
-        selectId="branch-coordinating-body"
-        label="Badko"
-        placeholder="Cari Badko..."
-        value={coordinatingBody}
-        onChange={setCoordinatingBody}
-        loadOptions={loadCoordinatingBodyOptions}
-        defaultOptions={coordinatingBodyDefaultOptions}
-        required
+
+      {lockCoordinatingBody ? (
+        <div className="flex flex-col gap-1">
+          <label className="pl-1 text-[15px] font-medium text-[#172033]">
+            Badko
+          </label>
+          <p className="rounded-lg border border-[#e6e9ef] bg-[#f9fafc] px-3 py-2.5 text-sm text-[#172033]">
+            {coordinatingBody?.label ?? "—"}
+          </p>
+        </div>
+      ) : (
+        <SearchableSelect
+          selectId="branch-coordinating-body"
+          label="Badko"
+          placeholder="Cari Badko..."
+          value={coordinatingBody}
+          onChange={setCoordinatingBody}
+          loadOptions={loadCoordinatingBodyOptions}
+          defaultOptions={defaultCoordinatingBody ? [defaultCoordinatingBody] : []}
+          required
+        />
+      )}
+
+      <TextArea
+        textAreaId="branch-description"
+        label="Deskripsi"
+        placeholder="Ceritakan sekilas tentang Cabang ini"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={6}
       />
+
       <Select
         selectId="branch-type"
         label="Tipe"
@@ -171,6 +185,7 @@ function BranchFields({
         options={TYPE_OPTIONS}
         required
       />
+
       <Select
         selectId="branch-status"
         label="Status"
@@ -185,7 +200,11 @@ function BranchFields({
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={isSaving || isUploadingImage}
+        >
           {isSaving ? "Menyimpan..." : "Simpan"}
         </Button>
       </div>

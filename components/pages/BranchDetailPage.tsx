@@ -2,11 +2,10 @@
 
 import {
   ArrowLeft,
+  Award,
   Ban,
   Building,
-  Building2,
   CalendarDays,
-  GitBranch,
   GraduationCap,
   History,
   MapPin,
@@ -20,15 +19,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import type { BranchListEntry } from "@/apis/branches";
-import type { CoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import type { BranchDetail } from "@/apis/branches";
+import type { ChapterListEntry } from "@/apis/chapters";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { updateCoordinatingBody } from "@/lib/actions";
+import { updateBranch } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
-import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
+import EditBranchFormSheet from "../forms/EditBranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
@@ -38,38 +37,37 @@ import {
   TrainingStatusLabel,
 } from "../trainings/TrainingLabels";
 
-export type CoordinatingBodyDetailTab =
-  "profile" | "management" | "branches" | "trainings";
+export type BranchDetailTab = "profile" | "management" | "chapters" | "trainings";
 
-interface CoordinatingBodyDetailPageProps {
-  coordinatingBody: CoordinatingBodyDetail;
-  branches: BranchListEntry[];
+interface BranchDetailPageProps {
+  branch: BranchDetail;
+  chapters: ChapterListEntry[];
   trainings: TrainingListEntry[];
-  initialTab: CoordinatingBodyDetailTab;
+  initialTab: BranchDetailTab;
   backHref: string;
-  // Master manages Badko directly; Organization's view of a Badko is read-only (mirrors allowDelete on the list page).
+  // Master manages Cabang directly; Organization's view of a Cabang is read-only (mirrors allowDelete on the list page).
   allowEdit?: boolean;
+  // Hides the Suspend/Aktifkan action — a Badko's own scoped "Kelola Cabang" detail page can't change its Cabang's status.
+  allowStatusChange?: boolean;
+  // Passed through to the Edit sheet — locks the Badko field when viewed from a Badko's own scoped "Kelola Cabang" page.
+  lockCoordinatingBody?: boolean;
 }
 
-const TABS: {
-  id: CoordinatingBodyDetailTab;
-  label: string;
-  icon: LucideIcon;
-}[] = [
-  { id: "profile", label: "Profil", icon: Building2 },
+const TABS: { id: BranchDetailTab; label: string; icon: LucideIcon }[] = [
+  { id: "profile", label: "Profil", icon: Building },
   { id: "management", label: "Kepengurusan", icon: Users },
-  { id: "branches", label: "Daftar Cabang", icon: GitBranch },
-  { id: "trainings", label: "Latihan Kader", icon: GraduationCap },
+  { id: "chapters", label: "Daftar Komisariat", icon: GraduationCap },
+  { id: "trainings", label: "Latihan Kader", icon: Award },
 ];
-
-function formatCoordinatingBodyName(name: string) {
-  const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
-  return `Badko ${normalizedName || name}`;
-}
 
 function formatBranchName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?cabang\s+/i, "").trim();
   return `Cabang ${normalizedName || name}`;
+}
+
+function formatChapterName(name: string) {
+  const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
+  return `Komisariat ${normalizedName || name}`;
 }
 
 function formatTimestamp(value?: string) {
@@ -107,29 +105,26 @@ function StatPill({
   );
 }
 
-export default function CoordinatingBodyDetailPage({
-  coordinatingBody,
-  branches,
+export default function BranchDetailPage({
+  branch,
+  chapters,
   trainings,
   initialTab,
   backHref,
   allowEdit = true,
-}: CoordinatingBodyDetailPageProps) {
+  allowStatusChange = true,
+  lockCoordinatingBody = false,
+}: BranchDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [seenTab, setSeenTab] = useState(initialTab);
-  const [activeTab, setActiveTab] =
-    useState<CoordinatingBodyDetailTab>(initialTab);
+  const [activeTab, setActiveTab] = useState<BranchDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
-  const totalChapterCount = branches.reduce(
-    (sum, branch) => sum + (branch.chapter_count ?? 0),
-    0
-  );
-  const totalUserCount = branches.reduce(
-    (sum, branch) => sum + (branch.user_count ?? 0),
+  const totalUserCount = chapters.reduce(
+    (sum, chapter) => sum + (chapter.user_count ?? 0),
     0
   );
 
@@ -138,7 +133,7 @@ export default function CoordinatingBodyDetailPage({
     setActiveTab(initialTab);
   }
 
-  function selectTab(tab: CoordinatingBodyDetailTab) {
+  function selectTab(tab: BranchDetailTab) {
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     if (tab === "profile") params.delete("tab");
@@ -148,36 +143,32 @@ export default function CoordinatingBodyDetailPage({
   }
 
   async function handleStatusChange() {
-    const nextStatus =
-      coordinatingBody.status === "active" ? "inactive" : "active";
+    const nextStatus = branch.status === "active" ? "inactive" : "active";
     setIsUpdatingStatus(true);
 
     try {
-      const result = await updateCoordinatingBody({
-        id: coordinatingBody.id,
+      const result = await updateBranch({
+        id: branch.id,
         status: nextStatus,
       });
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
-            `Gagal ${nextStatus === "active" ? "mengaktifkan" : "menangguhkan"} Badko.`
+            `Gagal ${nextStatus === "active" ? "mengaktifkan" : "menangguhkan"} Cabang.`
         );
         return;
       }
 
       toast.success(
         nextStatus === "active"
-          ? "Badko berhasil diaktifkan."
-          : "Badko berhasil disuspend."
+          ? "Cabang berhasil diaktifkan."
+          : "Cabang berhasil disuspend."
       );
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error(
-        "[CoordinatingBodyDetailPage] updateCoordinatingBody threw:",
-        error
-      );
-      toast.error("Gagal memperbarui status Badko.");
+      console.error("[BranchDetailPage] updateBranch threw:", error);
+      toast.error("Gagal memperbarui status Cabang.");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -188,7 +179,7 @@ export default function CoordinatingBodyDetailPage({
       <Link href={backHref} className="inline-block w-fit">
         <Button variant="ghost">
           <ArrowLeft className="size-4" />
-          Kembali ke daftar Badko
+          Kembali ke daftar Cabang
         </Button>
       </Link>
 
@@ -196,10 +187,10 @@ export default function CoordinatingBodyDetailPage({
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e6e9ef] bg-primary-soft text-primary">
-              {coordinatingBody.image_url ? (
+              {branch.image_url ? (
                 <Image
-                  src={coordinatingBody.image_url}
-                  alt={coordinatingBody.name}
+                  src={branch.image_url}
+                  alt={branch.name}
                   width={80}
                   height={80}
                   className="size-full object-cover"
@@ -211,44 +202,46 @@ export default function CoordinatingBodyDetailPage({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-[#172033]">
-                  {formatCoordinatingBodyName(coordinatingBody.name)}
+                  {formatBranchName(branch.name)}
                 </h2>
-                <Label
-                  variant={
-                    coordinatingBody.status === "active" ? "green" : "red"
-                  }
-                >
-                  {coordinatingBody.status === "active"
-                    ? "Aktif"
-                    : "Tidak Aktif"}
+                <Label variant={branch.status === "active" ? "green" : "red"}>
+                  {branch.status === "active" ? "Status: Aktif" : "Status: Tidak Aktif"}
+                </Label>
+                <Label variant={branch.type === "full" ? "blue" : "yellow"}>
+                  {branch.type === "full"
+                    ? "Status Kepengurusan: Penuh"
+                    : "Status Kepengurusan: Persiapan"}
                 </Label>
               </div>
               <p className="mt-1 text-sm text-[#69707d]">
-                {coordinatingBody.organization?.name ?? "HMI"}
+                {branch.coordinating_body
+                  ? `Badko ${branch.coordinating_body.name}`
+                  : "HMI"}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {coordinatingBody.status === "active" ? (
-              <Button
-                variant="destructive"
-                onClick={() => setShowStatusConfirmation(true)}
-                className="w-fit shrink-0"
-              >
-                <Ban className="size-4" />
-                Suspend Badko ini
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={() => setShowStatusConfirmation(true)}
-                className="w-fit shrink-0"
-              >
-                <Power className="size-4" />
-                Aktifkan Badko ini
-              </Button>
-            )}
+            {allowStatusChange &&
+              (branch.status === "active" ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowStatusConfirmation(true)}
+                  className="w-fit shrink-0"
+                >
+                  <Ban className="size-4" />
+                  Suspend Cabang ini
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowStatusConfirmation(true)}
+                  className="w-fit shrink-0"
+                >
+                  <Power className="size-4" />
+                  Aktifkan Cabang ini
+                </Button>
+              ))}
             {allowEdit && (
               <Button
                 variant="outline"
@@ -262,27 +255,22 @@ export default function CoordinatingBodyDetailPage({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatPill
-            icon={GitBranch}
-            label="Jumlah Cabang"
-            value={branches.length}
-          />
-          <StatPill
-            icon={Building}
+            icon={GraduationCap}
             label="Jumlah Komisariat"
-            value={totalChapterCount}
+            value={chapters.length}
           />
           <StatPill icon={Users} label="Jumlah Kader" value={totalUserCount} />
           <StatPill
             icon={CalendarDays}
             label="Dibuat"
-            value={formatTimestamp(coordinatingBody.created_at)}
+            value={formatTimestamp(branch.created_at)}
           />
           <StatPill
             icon={History}
             label="Diperbarui"
-            value={formatTimestamp(coordinatingBody.updated_at)}
+            value={formatTimestamp(branch.updated_at)}
           />
         </div>
       </section>
@@ -290,7 +278,7 @@ export default function CoordinatingBodyDetailPage({
       <div className="mt-6 overflow-x-auto">
         <div
           role="tablist"
-          aria-label="Detail Badko"
+          aria-label="Detail Cabang"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
           {TABS.map((tab) => {
@@ -300,11 +288,11 @@ export default function CoordinatingBodyDetailPage({
             return (
               <button
                 key={tab.id}
-                id={`badko-tab-${tab.id}`}
+                id={`branch-tab-${tab.id}`}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                aria-controls={`badko-panel-${tab.id}`}
+                aria-controls={`branch-panel-${tab.id}`}
                 onClick={() => selectTab(tab.id)}
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                   isActive
@@ -321,9 +309,9 @@ export default function CoordinatingBodyDetailPage({
       </div>
 
       <div
-        id={`badko-panel-${activeTab}`}
+        id={`branch-panel-${activeTab}`}
         role="tabpanel"
-        aria-labelledby={`badko-tab-${activeTab}`}
+        aria-labelledby={`branch-tab-${activeTab}`}
         className="mt-6"
       >
         {activeTab === "profile" && (
@@ -332,7 +320,7 @@ export default function CoordinatingBodyDetailPage({
               Deskripsi
             </h3>
             <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40454f]">
-              {coordinatingBody.description || "Belum ada deskripsi."}
+              {branch.description || "Belum ada deskripsi."}
             </p>
           </section>
         )}
@@ -341,56 +329,58 @@ export default function CoordinatingBodyDetailPage({
           <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
             <EmptyState
               title="Struktur kepengurusan belum tersedia"
-              description="Data struktur kepengurusan Badko akan ditampilkan di sini setelah layanan datanya tersedia."
+              description="Data struktur kepengurusan Cabang akan ditampilkan di sini setelah layanan datanya tersedia."
             />
           </section>
         )}
 
-        {activeTab === "branches" && (
+        {activeTab === "chapters" && (
           <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            {branches.length === 0 ? (
+            {chapters.length === 0 ? (
               <EmptyState
-                title="Belum ada Cabang"
-                description="Cabang yang berada di bawah Badko ini akan ditampilkan di sini."
+                title="Belum ada Komisariat"
+                description="Komisariat yang berada di bawah Cabang ini akan ditampilkan di sini."
               />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                     <tr>
-                      <th className="px-4 py-3">Nama Cabang</th>
+                      <th className="px-4 py-3">Nama Komisariat</th>
+                      <th className="px-4 py-3">Asal Universitas</th>
                       <th className="px-4 py-3">Tipe</th>
-                      <th className="px-4 py-3">Jumlah Komisariat</th>
                       <th className="px-4 py-3">Jumlah Kader</th>
                       <th className="px-4 py-3">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                    {branches.map((branch) => (
-                      <tr key={branch.id}>
+                    {chapters.map((chapter) => (
+                      <tr key={chapter.id}>
                         <td className="px-4 py-3 font-semibold text-[#172033]">
-                          {formatBranchName(branch.name)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Label
-                            variant={branch.type === "full" ? "blue" : "yellow"}
-                          >
-                            {branch.type === "full" ? "Penuh" : "Persiapan"}
-                          </Label>
+                          {formatChapterName(chapter.name)}
                         </td>
                         <td className="px-4 py-3 text-[#172033]">
-                          {branch.chapter_count ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-[#172033]">
-                          {branch.user_count ?? "—"}
+                          {chapter.institution_name || "—"}
                         </td>
                         <td className="px-4 py-3">
                           <Label
                             variant={
-                              branch.status === "active" ? "green" : "red"
+                              chapter.type === "full" ? "blue" : "yellow"
                             }
                           >
-                            {branch.status === "active"
+                            {chapter.type === "full" ? "Penuh" : "Persiapan"}
+                          </Label>
+                        </td>
+                        <td className="px-4 py-3 text-[#172033]">
+                          {chapter.user_count ?? "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Label
+                            variant={
+                              chapter.status === "active" ? "green" : "red"
+                            }
+                          >
+                            {chapter.status === "active"
                               ? "Aktif"
                               : "Tidak Aktif"}
                           </Label>
@@ -410,7 +400,7 @@ export default function CoordinatingBodyDetailPage({
               <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
                 <EmptyState
                   title="Belum ada Latihan Kader"
-                  description="Latihan Kader yang diselenggarakan Badko ini akan ditampilkan di sini."
+                  description="Latihan Kader yang diselenggarakan Cabang ini akan ditampilkan di sini."
                 />
               </div>
             ) : (
@@ -426,8 +416,7 @@ export default function CoordinatingBodyDetailPage({
                           {training.name}
                         </h2>
                         <p className="mt-1 text-sm text-[#69707d]">
-                          HMI{" "}
-                          {formatCoordinatingBodyName(coordinatingBody.name)}
+                          HMI {formatBranchName(branch.name)}
                         </p>
                       </div>
                       <TrainingLevelLabel level={training.level} />
@@ -469,35 +458,32 @@ export default function CoordinatingBodyDetailPage({
         onClose={() => setShowStatusConfirmation(false)}
         onConfirm={handleStatusChange}
         title={
-          coordinatingBody.status === "active"
-            ? "Suspend Badko ini?"
-            : "Aktifkan Badko ini?"
+          branch.status === "active"
+            ? "Suspend Cabang ini?"
+            : "Aktifkan Cabang ini?"
         }
         message={
-          coordinatingBody.status === "active"
-            ? `${formatCoordinatingBodyName(coordinatingBody.name)} akan dinonaktifkan dan akses admin Badko akan dibatasi.`
-            : `${formatCoordinatingBodyName(coordinatingBody.name)} akan diaktifkan kembali.`
+          branch.status === "active"
+            ? `${formatBranchName(branch.name)} akan dinonaktifkan dan akses admin Cabang akan dibatasi.`
+            : `${formatBranchName(branch.name)} akan diaktifkan kembali.`
         }
         confirmLabel={
-          coordinatingBody.status === "active"
-            ? "Suspend Badko"
-            : "Aktifkan Badko"
+          branch.status === "active" ? "Suspend Cabang" : "Aktifkan Cabang"
         }
-        confirmVariant={
-          coordinatingBody.status === "active" ? "destructive" : "primary"
-        }
+        confirmVariant={branch.status === "active" ? "destructive" : "primary"}
         loading={isUpdatingStatus}
       />
 
       {allowEdit && (
-        <EditCoordinatingBodyFormSheet
+        <EditBranchFormSheet
           open={showEditForm}
           onClose={() => setShowEditForm(false)}
           onSaved={() => {
             setShowEditForm(false);
             router.refresh();
           }}
-          coordinatingBody={coordinatingBody}
+          branch={branch}
+          lockCoordinatingBody={lockCoordinatingBody}
         />
       )}
     </div>

@@ -81,6 +81,7 @@ export type BranchListEntry = {
   id: string;
   coordinating_body_id: string;
   name: string;
+  image_url: string | null;
   type: BranchTypeEnum;
   coordinating_body_name?: string;
   status: StatusEnum;
@@ -183,6 +184,8 @@ export type BranchDetail = {
   id: string;
   coordinating_body_id: string;
   name: string;
+  description: string | null;
+  image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
   created_at: string;
@@ -215,6 +218,8 @@ export async function getBranchDetail(
 export type CreateBranchPayload = {
   coordinating_body_id: string;
   name: string;
+  description?: string;
+  image_url?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
 };
@@ -242,6 +247,8 @@ export type UpdateBranchPayload = {
   id: string;
   coordinating_body_id?: string;
   name?: string;
+  description?: string;
+  image_url?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
 };

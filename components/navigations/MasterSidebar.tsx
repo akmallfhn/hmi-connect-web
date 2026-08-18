@@ -28,7 +28,7 @@ const NAV_ITEMS: AdminNavEntry[] = [
         href: "/master/coordinating-bodies",
         icon: Network,
       },
-      { label: "Cabang", href: "/master/branches", icon: Building2 },
+      { label: "Kelola Cabang", href: "/master/branches", icon: Building2 },
       { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
     ],
   },

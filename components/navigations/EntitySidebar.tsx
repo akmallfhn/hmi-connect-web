@@ -4,6 +4,7 @@ import type { BranchTypeEnum } from "@/lib/types";
 import {
   Award,
   BookText,
+  GitBranch,
   GraduationCap,
   LayoutDashboard,
   Network,
@@ -71,6 +72,11 @@ function getNavItems(
             href: `${base}/coordinating-bodies`,
             icon: Network,
           },
+          {
+            label: "Kelola Cabang",
+            href: `${base}/branches`,
+            icon: GitBranch,
+          },
         ],
       },
       {
@@ -90,6 +96,7 @@ function getNavItems(
   if (scope === "coordinating_body") {
     return [
       dashboardItem,
+      { label: "Kelola Cabang", href: `${base}/branches`, icon: GitBranch },
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
       { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];

@@ -1683,6 +1683,46 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   before delegating to the existing `updateCoordinatingBody` Server Action.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
+- "Kelola Cabang" is the Cabang counterpart of the Badko CRUD panel above, reused verbatim across
+  three scopes: `/master/branches`, `/organizations/[organization_id]/branches`, and
+  `/coordinating-bodies/[coordinating_body_id]/branches` (a Badko managing its own Cabang roster —
+  distinct from the branch-scoped "Kelola Komisariat" described elsewhere in this file, which is a
+  Cabang managing its own Komisariat). All three render
+  `components/pages/AdminBranchListPage.tsx`, the same searchable/status-filtered, Tabel/Card
+  dual-view list `AdminCoordinatingBodyListPage.tsx` uses for Badko — square logo-or-`LogoHmi`
+  badge, Tipe (`Penuh`/`Persiapan`) and Status pills, Jumlah Komisariat/Jumlah Kader counts from
+  `include_aggregates: true` — plus an optional Badko `SearchableSelect` filter
+  (`hideCoordinatingBodyFilter` hides it once the scope is already a single fixed Badko). Row/card
+  actions and the "Tambah Cabang" button are gated by two independent props: `allowEdit` (Tambah +
+  Edit access) and `allowDelete` (the destructive action) — Master gets both, Organization gets
+  neither (view-only, `Lihat Detail` only, mirroring the Badko Organization view), and the Badko
+  scope gets `allowEdit` but not `allowDelete`, matching "Kelola Komisariat"'s own create/edit-only,
+  no-delete precedent for a scoped admin managing its immediate children. `apis/branches.ts`'s
+  `BranchListEntry`/`BranchDetail` carry `image_url`/`description` the same way
+  `CoordinatingBodyListEntry`/`CoordinatingBodyDetail` do (list has no `description`, detail has
+  both). `components/forms/BranchLogoField.tsx` mirrors `CoordinatingBodyLogoField.tsx` (same
+  `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit are
+  `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx` (split for the same reason
+  as Badko's — `branches/list` doesn't return `description`, so Edit fetches the real detail via
+  `getBranchDetail` before mounting its fields), each with a Badko `SearchableSelect` plus Tipe —
+  fields Badko's own sheets don't have, since a Badko has no changeable parent. Both sheets take an
+  optional `lockCoordinatingBody` prop (threaded from `AdminBranchListPage`'s
+  `hideCoordinatingBodyFilter` and from `BranchDetailPage`'s own same-named prop) that swaps the
+  Badko picker for fixed read-only text — set from the Badko-scoped route so a Cabang can't be
+  created under, or moved to, a different Badko from that screen, the same "no parent picker at
+  all" rule `BranchChapterFormSheet.tsx` enforces for `branch_id`. `components/pages/
+BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape — a header card
+  above the tabs (logo, name, Status + Tipe badges, Badko subtitle, Suspend/Aktifkan next to Edit
+  Detail, then Jumlah Komisariat/Jumlah Kader/Dibuat/Diperbarui stat pills) — with Profil (Deskripsi
+  only), Kepengurusan (explicit unavailable empty state, same as Badko), Daftar Komisariat (table of
+  this branch's chapters via `listAllChaptersAdmin`, including Asal Universitas), and Latihan Kader
+  (`trainings/list` filtered to the `branch` organizer) tabs. The Organization detail route verifies
+  the fetched branch's `coordinating_body.organization_id` matches its own validated scope, the same
+  way the Badko Organization detail route checks `organization_id`; the Badko-scoped detail route
+  checks `coordinating_body_id` instead. `EntitySidebar`'s Organization scope adds "Kelola Cabang" to
+  its existing "Organisasi" group next to "Kelola Badko"; the `coordinating_body` scope gains its own
+  new "Organisasi" group holding just "Kelola Cabang". `MasterSidebar`'s pre-existing Cabang item is
+  relabeled "Kelola Cabang" to match.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

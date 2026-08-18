@@ -5,7 +5,7 @@ import AdminBranchListPage from "@/components/pages/AdminBranchListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Cabang",
+  title: "Kelola Cabang",
   robots: {
     index: false,
     follow: false,
@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 18;
 
-interface MasterBranchesPageProps {
+interface OrganizationBranchesPageProps {
+  params: Promise<{ organization_id: string }>;
   searchParams: Promise<{
     coordinating_body_id?: string;
     search?: string;
@@ -23,18 +24,25 @@ interface MasterBranchesPageProps {
   }>;
 }
 
-export default async function MasterBranchesPage({
+export default async function OrganizationBranchesPage({
+  params,
   searchParams,
-}: MasterBranchesPageProps) {
-  const params = await searchParams;
-  const coordinatingBodyId = params.coordinating_body_id?.trim() ?? "";
-  const search = params.search?.trim() ?? "";
-  const status = params.status ?? "";
-  const page = Number(params.page ?? "1") || 1;
+}: OrganizationBranchesPageProps) {
+  const [{ organization_id }, query] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const coordinatingBodyId = query.coordinating_body_id?.trim() ?? "";
+  const search = query.search?.trim() ?? "";
+  const status = query.status ?? "";
+  const page = Number(query.page ?? "1") || 1;
 
   const [coordinatingBody, result] = await Promise.all([
-    coordinatingBodyId ? getCoordinatingBodyDetail(coordinatingBodyId) : Promise.resolve(null),
+    coordinatingBodyId
+      ? getCoordinatingBodyDetail(coordinatingBodyId)
+      : Promise.resolve(null),
     listBranchesAdmin({
+      organizationId: organization_id,
       coordinatingBodyId: coordinatingBodyId || undefined,
       search: search || undefined,
       status: (status || undefined) as StatusEnum | undefined,
@@ -53,8 +61,13 @@ export default async function MasterBranchesPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedCoordinatingBody={
-        coordinatingBody ? { id: coordinatingBody.id, name: coordinatingBody.name } : null
+        coordinatingBody
+          ? { id: coordinatingBody.id, name: coordinatingBody.name }
+          : null
       }
+      allowEdit={false}
+      allowDelete={false}
+      detailBasePath={`/organizations/${organization_id}/branches`}
     />
   );
 }
