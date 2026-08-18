@@ -4,9 +4,11 @@ import {
   grantBranchAdmin as grantBranchAdminApi,
   grantChapterAdmin as grantChapterAdminApi,
   grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
+  grantCoordinatingChapterAdmin as grantCoordinatingChapterAdminApi,
   revokeBranchAdmin as revokeBranchAdminApi,
   revokeChapterAdmin as revokeChapterAdminApi,
   revokeCoordinatingBodyAdmin as revokeCoordinatingBodyAdminApi,
+  revokeCoordinatingChapterAdmin as revokeCoordinatingChapterAdminApi,
 } from "@/apis/access";
 import {
   approveVerificationRequest as approveVerificationRequestApi,
@@ -37,6 +39,14 @@ import {
   type CreateCoordinatingBodyPayload,
   type UpdateCoordinatingBodyPayload,
 } from "@/apis/coordinating-bodies";
+import {
+  createCoordinatingChapter as createCoordinatingChapterApi,
+  deleteCoordinatingChapter as deleteCoordinatingChapterApi,
+  getCoordinatingChapterDetail as getCoordinatingChapterDetailApi,
+  updateCoordinatingChapter as updateCoordinatingChapterApi,
+  type CreateCoordinatingChapterPayload,
+  type UpdateCoordinatingChapterPayload,
+} from "@/apis/coordinating-chapters";
 import {
   createInstitution as createInstitutionApi,
   type Institution,
@@ -215,6 +225,14 @@ export async function revokeCoordinatingBodyAdmin(id: string) {
   return revokeCoordinatingBodyAdminApi(id);
 }
 
+export async function grantCoordinatingChapterAdmin(id: string) {
+  return grantCoordinatingChapterAdminApi(id);
+}
+
+export async function revokeCoordinatingChapterAdmin(id: string) {
+  return revokeCoordinatingChapterAdminApi(id);
+}
+
 // Super Admin, or Administrator with can_manage_branch — see apis/verification-requests.ts.
 export async function approveVerificationRequest(id: string) {
   return approveVerificationRequestApi(id);
@@ -275,6 +293,26 @@ export async function updateCoordinatingBody(payload: UpdateCoordinatingBodyPayl
 
 export async function deleteCoordinatingBody(id: string) {
   return deleteCoordinatingBodyApi(id);
+}
+
+export async function getCoordinatingChapterDetail(id: string) {
+  return getCoordinatingChapterDetailApi(id);
+}
+
+export async function createCoordinatingChapter(
+  payload: CreateCoordinatingChapterPayload
+) {
+  return createCoordinatingChapterApi(payload);
+}
+
+export async function updateCoordinatingChapter(
+  payload: UpdateCoordinatingChapterPayload
+) {
+  return updateCoordinatingChapterApi(payload);
+}
+
+export async function deleteCoordinatingChapter(id: string) {
+  return deleteCoordinatingChapterApi(id);
 }
 
 export async function createTraining(payload: CreateTrainingPayload) {

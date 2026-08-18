@@ -1,0 +1,543 @@
+"use client";
+
+import AdminPageTitle from "../common/AdminPageTitle";
+import {
+  EllipsisVertical,
+  Eye,
+  LayoutGrid,
+  Pencil,
+  PlusCircle,
+  Search,
+  Table2,
+  Trash2,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import type { CoordinatingChapterListEntry } from "@/apis/coordinating-chapters";
+import { deleteCoordinatingChapter } from "@/lib/actions";
+import { isSuccessStatus } from "@/lib/types";
+import Button from "../buttons/Button";
+import Dropdown from "../common/Dropdown";
+import Label from "../common/Label";
+import Pagination from "../common/Pagination";
+import Input from "../fields/Input";
+import Select from "../fields/Select";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
+import CreateCoordinatingChapterFormSheet from "../forms/CreateCoordinatingChapterFormSheet";
+import EditCoordinatingChapterFormSheet from "../forms/EditCoordinatingChapterFormSheet";
+import AlertConfirmation from "../modals/AlertConfirmation";
+import EmptyState from "../states/EmptyState";
+import LogoHmi from "../svg/LogoHmi";
+
+const STATUS_FILTER_OPTIONS = [
+  { label: "Semua Status", value: "" },
+  { label: "Aktif", value: "active" },
+  { label: "Tidak Aktif", value: "inactive" },
+];
+
+type ViewMode = "table" | "card";
+
+const VIEW_MODE_STORAGE_KEY = "coordinating_chapter_view_mode";
+
+function formatCoordinatingChapterName(name: string) {
+  const normalizedName = name.replace(/^korkom\s+/i, "").trim();
+  return `Korkom ${normalizedName || name}`;
+}
+
+// Square, rounded-lg badge — falls back to the LogoHmi emblem when image_url is unset, same treatment as ChapterLogo/BranchLogo.
+function CoordinatingChapterLogo({
+  imageUrl,
+  name,
+  containerClassName,
+  logoClassName,
+}: {
+  imageUrl: string | null;
+  name: string;
+  containerClassName: string;
+  logoClassName: string;
+}) {
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb] ${containerClassName}`}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          width={64}
+          height={64}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <LogoHmi className={logoClassName} />
+      )}
+    </span>
+  );
+}
+
+interface AdminCoordinatingChapterListPageProps {
+  coordinatingChapters: CoordinatingChapterListEntry[];
+  totalData: number;
+  totalPage: number;
+  currentPage: number;
+  initialSearch: string;
+  initialStatus: string;
+  pageSize: number;
+  selectedBranch: { id: string; name: string } | null;
+  allowCreate?: boolean;
+  allowEdit?: boolean;
+  allowDelete?: boolean;
+  detailBasePath?: string;
+  hideBranchFilter?: boolean;
+}
+
+export default function AdminCoordinatingChapterListPage({
+  coordinatingChapters,
+  totalData,
+  totalPage,
+  currentPage,
+  initialSearch,
+  initialStatus,
+  pageSize,
+  selectedBranch,
+  allowCreate = true,
+  allowEdit = true,
+  allowDelete = true,
+  detailBasePath = "/master/coordinating-chapters",
+  hideBranchFilter = false,
+}: AdminCoordinatingChapterListPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // "Adjust state during render" (not a useEffect) when the server hands back a new initialSearch, same pattern as SearchPage.
+  const [seenSearch, setSeenSearch] = useState(initialSearch);
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  if (initialSearch !== seenSearch) {
+    setSeenSearch(initialSearch);
+    setSearchInput(initialSearch);
+  }
+
+  // Always start on table view so the client's first render matches the server's (no localStorage access there).
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  useEffect(() => {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored === "table" || stored === "card") setViewMode(stored);
+  }, []);
+
+  // Persisted from the click handler itself (not a reactive effect on viewMode) so the read-on-mount above never races a write that clobbers it right back.
+  function handleViewModeChange(mode: ViewMode) {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  }
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editTarget, setEditTarget] =
+    useState<CoordinatingChapterListEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<CoordinatingChapterListEntry | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const branchOption: SearchableOption | null = selectedBranch
+    ? { label: selectedBranch.name, value: selectedBranch.id }
+    : null;
+
+  function pushParams(next: Record<string, string>) {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(next).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    });
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  }
+
+  async function loadBranchOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+    const response = await fetch(`/api/branches/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput === initialSearch) return;
+      pushParams({ search: searchInput });
+    }, 500);
+    return () => clearTimeout(handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  async function handleDelete() {
+    if (!allowDelete || !deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteCoordinatingChapter(deleteTarget.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal menghapus Korkom.");
+        return;
+      }
+      toast.success("Korkom berhasil dihapus.");
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (err) {
+      console.error(
+        "[AdminCoordinatingChapterListPage] deleteCoordinatingChapter threw:",
+        err
+      );
+      toast.error("Gagal menghapus Korkom.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function renderActions(coordinatingChapter: CoordinatingChapterListEntry) {
+    if (!allowEdit) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            router.push(`${detailBasePath}/${coordinatingChapter.id}`)
+          }
+        >
+          <Eye className="size-4" />
+          Lihat Detail
+        </Button>
+      );
+    }
+
+    return (
+      <Dropdown
+        panelClassName="w-44 rounded-xl"
+        trigger={({ toggle }) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label="Aksi"
+          >
+            <EllipsisVertical className="size-4" />
+          </Button>
+        )}
+      >
+        <button
+          type="button"
+          onClick={() =>
+            router.push(`${detailBasePath}/${coordinatingChapter.id}`)
+          }
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+        >
+          <Eye className="size-4 text-[#5f6573]" />
+          Lihat Detail
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditTarget(coordinatingChapter)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+        >
+          <Pencil className="size-4 text-[#5f6573]" />
+          Edit
+        </button>
+        {allowDelete && (
+          <button
+            type="button"
+            onClick={() => setDeleteTarget(coordinatingChapter)}
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+          >
+            <Trash2 className="size-4" />
+            Hapus
+          </button>
+        )}
+      </Dropdown>
+    );
+  }
+
+  function renderCardAction(coordinatingChapter: CoordinatingChapterListEntry) {
+    if (allowDelete) {
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDeleteTarget(coordinatingChapter);
+          }}
+          aria-label="Hapus Korkom"
+          className="text-destructive hover:bg-destructive-soft"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      );
+    }
+
+    return null;
+  }
+
+  const hasFilter = Boolean(
+    initialSearch || initialStatus || (!hideBranchFilter && selectedBranch)
+  );
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <AdminPageTitle description="Kelola data Korkom (Koordinator Komisariat) HMI.">
+            Korkom
+          </AdminPageTitle>
+        </div>
+        {allowCreate && (
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateForm(true)}
+            className="w-fit"
+          >
+            <PlusCircle className="size-4" />
+            Tambah Korkom
+          </Button>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="w-full sm:max-w-xs">
+          <Input
+            inputId="coordinating-chapter-search"
+            placeholder="Cari nama Korkom..."
+            icon={<Search className="size-4" />}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+        {!hideBranchFilter && (
+          <div className="w-full sm:max-w-xs">
+            <SearchableSelect
+              selectId="coordinating-chapter-branch-filter"
+              placeholder="Filter Cabang"
+              value={branchOption}
+              onChange={(option) =>
+                pushParams({ branch_id: option ? String(option.value) : "" })
+              }
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOption ? [branchOption] : []}
+            />
+          </div>
+        )}
+        <div className="w-full sm:max-w-52">
+          <Select
+            selectId="coordinating-chapter-status-filter"
+            placeholder="Filter Status"
+            value={initialStatus || null}
+            onChange={(value) => pushParams({ status: String(value ?? "") })}
+            options={STATUS_FILTER_OPTIONS}
+          />
+        </div>
+        <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5 sm:ml-auto">
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("table")}
+            aria-pressed={viewMode === "table"}
+            title="Tampilan Tabel"
+            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              viewMode === "table"
+                ? "bg-primary-soft text-primary"
+                : "text-[#5f6573] hover:text-[#172033]"
+            }`}
+          >
+            <Table2 className="size-3.5" />
+            <span className="hidden sm:inline">Tabel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleViewModeChange("card")}
+            aria-pressed={viewMode === "card"}
+            title="Tampilan Card"
+            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              viewMode === "card"
+                ? "bg-primary-soft text-primary"
+                : "text-[#5f6573] hover:text-[#172033]"
+            }`}
+          >
+            <LayoutGrid className="size-3.5" />
+            <span className="hidden sm:inline">Card</span>
+          </button>
+        </div>
+      </div>
+
+      {coordinatingChapters.length === 0 ? (
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <EmptyState
+            title={hasFilter ? "Korkom tidak ditemukan" : "Belum ada Korkom"}
+            description={
+              hasFilter
+                ? "Coba ubah kata kunci pencarian atau filter."
+                : "Korkom yang ditambahkan akan ditampilkan di sini."
+            }
+          />
+        </div>
+      ) : viewMode === "table" ? (
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <tr>
+                  <th className="px-4 py-3">Nama Korkom</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                {coordinatingChapters.map((coordinatingChapter) => (
+                  <tr key={coordinatingChapter.id} className="align-middle">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`${detailBasePath}/${coordinatingChapter.id}`}
+                        className="flex w-fit min-w-0 items-center gap-3"
+                      >
+                        <CoordinatingChapterLogo
+                          imageUrl={coordinatingChapter.image_url}
+                          name={coordinatingChapter.name}
+                          containerClassName="size-10"
+                          logoClassName="h-7 w-auto"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
+                            {formatCoordinatingChapterName(
+                              coordinatingChapter.name
+                            )}
+                          </p>
+                          <p className="truncate text-[13px] text-[#5f6573]">
+                            Cabang {coordinatingChapter.branch_name}
+                          </p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Label
+                        variant={
+                          coordinatingChapter.status === "active"
+                            ? "green"
+                            : "red"
+                        }
+                      >
+                        {coordinatingChapter.status === "active"
+                          ? "Aktif"
+                          : "Tidak Aktif"}
+                      </Label>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        {renderActions(coordinatingChapter)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {coordinatingChapters.map((coordinatingChapter) => (
+            <Link
+              key={coordinatingChapter.id}
+              href={`${detailBasePath}/${coordinatingChapter.id}`}
+              className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/40"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <CoordinatingChapterLogo
+                    imageUrl={coordinatingChapter.image_url}
+                    name={coordinatingChapter.name}
+                    containerClassName="size-12"
+                    logoClassName="h-8 w-auto"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#172033]">
+                      {formatCoordinatingChapterName(coordinatingChapter.name)}
+                    </p>
+                    <p className="truncate text-[13px] text-[#5f6573]">
+                      Cabang {coordinatingChapter.branch_name}
+                    </p>
+                  </div>
+                </div>
+                {renderCardAction(coordinatingChapter)}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-[#e6e9ef] pt-3">
+                <Label
+                  size="sm"
+                  variant={
+                    coordinatingChapter.status === "active" ? "green" : "red"
+                  }
+                >
+                  {coordinatingChapter.status === "active"
+                    ? "Status: Aktif"
+                    : "Status: Tidak Aktif"}
+                </Label>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {coordinatingChapters.length > 0 && (
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Pagination currentPage={currentPage} totalPages={totalPage} />
+          <p className="text-center text-sm text-[#5f6573]">
+            Menampilkan {(currentPage - 1) * pageSize + 1}–
+            {(currentPage - 1) * pageSize + coordinatingChapters.length} dari{" "}
+            {totalData} Korkom
+          </p>
+        </div>
+      )}
+
+      {allowCreate && (
+        <CreateCoordinatingChapterFormSheet
+          open={showCreateForm}
+          onClose={() => setShowCreateForm(false)}
+          onSaved={() => {
+            setShowCreateForm(false);
+            router.refresh();
+          }}
+          defaultBranch={branchOption}
+          lockBranch={hideBranchFilter}
+        />
+      )}
+
+      {allowEdit && (
+        <EditCoordinatingChapterFormSheet
+          open={editTarget !== null}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            setEditTarget(null);
+            router.refresh();
+          }}
+          coordinatingChapter={editTarget}
+        />
+      )}
+
+      {allowDelete && (
+        <AlertConfirmation
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleDelete}
+          title="Hapus Korkom ini?"
+          message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`}
+          confirmLabel="Hapus"
+          loading={isDeleting}
+        />
+      )}
+    </div>
+  );
+}

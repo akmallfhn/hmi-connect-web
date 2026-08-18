@@ -7,6 +7,7 @@ import {
   School,
   ShieldCheck,
   Users,
+  Waypoints,
 } from "lucide-react";
 import Link from "next/link";
 import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
@@ -29,6 +30,11 @@ const NAV_ITEMS: AdminNavEntry[] = [
         icon: Network,
       },
       { label: "Kelola Cabang", href: "/master/branches", icon: GitBranch },
+      {
+        label: "Kelola Korkom",
+        href: "/master/coordinating-chapters",
+        icon: Waypoints,
+      },
       {
         label: "Kelola Komisariat",
         href: "/master/chapters",

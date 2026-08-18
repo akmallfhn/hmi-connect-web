@@ -56,6 +56,7 @@ export default async function CoordinatingChapterLayout({
         entityId={coordinatingChapter.id}
         entityName={coordinatingChapter.name}
         parentName={coordinatingChapter.branch_name}
+        imageUrl={coordinatingChapter.image_url}
         fullName={user?.full_name}
         avatar={user?.avatar}
         roleName={user?.role_name}

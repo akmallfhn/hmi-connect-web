@@ -11,6 +11,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Waypoints,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -111,6 +112,7 @@ function getNavItems(
         icon: School,
       },
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
 
@@ -128,6 +130,11 @@ function getNavItems(
       groupName: "Organisasi",
       items: [
         { label: "AD ART", href: `${base}/ad-art`, icon: BookText },
+        {
+          label: "Kelola Korkom",
+          href: `${base}/coordinating-chapters`,
+          icon: Waypoints,
+        },
         {
           label: "Kelola Komisariat",
           href: `${base}/chapters`,

@@ -38,6 +38,13 @@ export async function grantCoordinatingBodyAdmin(id: string) {
   return callAccessEndpoint("/api/v1/access/grant/coordinating-body-admin", id);
 }
 
+export async function grantCoordinatingChapterAdmin(id: string) {
+  return callAccessEndpoint(
+    "/api/v1/access/grant/coordinating-chapter-admin",
+    id
+  );
+}
+
 export async function revokeBranchAdmin(id: string) {
   return callAccessEndpoint("/api/v1/access/revoke/branch-admin", id);
 }
@@ -49,6 +56,13 @@ export async function revokeChapterAdmin(id: string) {
 export async function revokeCoordinatingBodyAdmin(id: string) {
   return callAccessEndpoint(
     "/api/v1/access/revoke/coordinating-body-admin",
+    id
+  );
+}
+
+export async function revokeCoordinatingChapterAdmin(id: string) {
+  return callAccessEndpoint(
+    "/api/v1/access/revoke/coordinating-chapter-admin",
     id
   );
 }

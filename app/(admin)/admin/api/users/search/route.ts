@@ -10,6 +10,8 @@ export async function GET(request: Request) {
   const branchId = searchParams.get("branch_id") ?? "";
   const chapterId = searchParams.get("chapter_id") ?? "";
   const coordinatingBodyId = searchParams.get("coordinating_body_id") ?? "";
+  const coordinatingChapterId =
+    searchParams.get("coordinating_chapter_id") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
@@ -57,6 +59,34 @@ export async function GET(request: Request) {
       search: q.trim() || undefined,
       status: "active",
       branchId,
+      page,
+      pageSize,
+    });
+
+    return NextResponse.json({
+      data: result.list,
+      hasMore: result.currentPage < result.totalPage,
+    });
+  }
+
+  if (coordinatingChapterId) {
+    const { user } = await getSession();
+    const canAccessCoordinatingChapter =
+      user?.role_name === "Super Admin" ||
+      (user?.can_manage_coordinating_chapter === true &&
+        user.coordinating_chapter_id === coordinatingChapterId);
+
+    if (!canAccessCoordinatingChapter) {
+      return NextResponse.json(
+        { data: [], hasMore: false },
+        { status: 403 }
+      );
+    }
+
+    const result = await listUsers({
+      search: q.trim() || undefined,
+      status: "active",
+      coordinatingChapterId,
       page,
       pageSize,
     });

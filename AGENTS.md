@@ -1682,6 +1682,43 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   institution rather than a generic "education" glyph; `MasterSidebar`'s own "Kelola Cabang" item was
   also switched from `Building2` to `GitBranch` to match the icon `EntitySidebar` already uses for
   every other "Kelola Cabang"/"Daftar Cabang" entry.
+- "Kelola Korkom" (`/master/coordinating-chapters` and the branch-scoped
+  `.../branches/[branch_id]/coordinating-chapters/`) is Korkom's own CRUD panel —
+  `components/pages/AdminCoordinatingChapterListPage.tsx` gets the same Tabel/Card dual-view shape
+  every other entity list uses (`coordinating_chapter_view_mode` localStorage key), even though
+  `coordinating-chapters/list` has no `include_aggregates` option at all — unlike Cabang/Komisariat's
+  cards, a Korkom card has no Jumlah X stat row to show, just the logo/name/Cabang subtitle and
+  Status badge. Its square `CoordinatingChapterLogo` badge (`image_url`, `LogoHmi` fallback) sits
+  next to the name in both views, same as every other entity list, and the same
+  `allowCreate`/`allowEdit`/`allowDelete`/`hideBranchFilter` prop shape `AdminChapterListPage`
+  uses — Master gets all three, the branch scope gets only `allowCreate` (a Cabang can add and retire
+  its own Korkom via Suspend/Aktifkan, but not rename one — editing is Master-only, the same split
+  as Cabang's own rights over Komisariat). `apis/coordinating-chapters.ts` gained the matching
+  `CoordinatingChapterListEntry`/`listCoordinatingChaptersAdmin`/`createCoordinatingChapter`/
+  `updateCoordinatingChapter`/`deleteCoordinatingChapter` surface, and `CoordinatingChapterDetail`
+  now carries `description`/`image_url` (previously just id/branch/name/status/timestamps).
+  `components/forms/CoordinatingChapterLogoField.tsx` mirrors `ChapterLogoField.tsx` (uploads into a
+  new `coordinating-chapters/` storage folder). `CreateCoordinatingChapterFormSheet.tsx`/
+  `EditCoordinatingChapterFormSheet.tsx` mirror the Chapter pair field-for-field minus Tipe/institution
+  (a Korkom has neither) — Edit needs the same detail-fetch loader Chapter's edit does, since
+  `coordinating-chapters/list` omits `description` the same way `chapters/list` does, and Edit
+  deliberately has no Status field either. `components/pages/CoordinatingChapterDetailPage.tsx`
+  mirrors `BranchDetailPage.tsx`'s header-card-above-tabs shape but drops the Tipe badge (Korkom has
+  no `full`/`provisional` concept) — its stat pills are Jumlah Komisariat
+  (`apis/chapters.ts#listAllChaptersAdmin({ coordinatingChapterId }).length`) and Jumlah Kader
+  (`apis/users.ts#listUsers({ coordinatingChapterId, status: "active", pageSize: 1 }).totalData`,
+  the same targeted-count trick `ChapterDetailPage` uses for its own member count, since
+  `coordinating-chapters/detail` carries no aggregate either). Its four tabs are Profil (a plain
+  Deskripsi card, since a Korkom has no other profile fields worth a structured grid), Kepengurusan
+  (same unavailable-empty-state precedent), Daftar Komisariat (the chapters under this Korkom), and
+  Latihan Kader — `TrainingOrganizerTypeEnum` has no `coordinating_chapter` value (a Korkom never
+  organizes its own training events; LK1 is always organized per Komisariat), so this tab instead
+  fetches `trainings/list` once per chapter under the Korkom (`organizerType: "chapter"`) via
+  `Promise.all`, flattens every page's results, and sorts the merged list by `start_date` descending
+  — each card's subtitle reads `training.organizer_name` (the actual organizing Komisariat) rather
+  than the Korkom's own name, since the Korkom itself never organized any of them. Both
+  `MasterSidebar` and the branch-scoped `EntitySidebar` "Kelola Korkom" items use the `Waypoints`
+  icon.
 - `/master/coordinating-bodies` and
   `/organizations/[organization_id]/coordinating-bodies` both reuse
   `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of
@@ -1758,29 +1795,35 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail
   — no group wrapper either, since Badko only has this one Cabang-related link). `MasterSidebar`'s
   pre-existing Cabang item is relabeled "Kelola Cabang" to match Master's real CRUD rights.
-- Badko, Cabang, and Komisariat each have their own self-service "Pengaturan" page on their own
-  scoped dashboard (`/coordinating-bodies/[coordinating_body_id]/settings`,
-  `/branches/[branch_id]/settings`, `/chapters/[chapter_id]/settings` — flat `EntitySidebar` items on
-  all three scopes) — `components/pages/CoordinatingBodySettingsPage.tsx`,
-  `BranchSettingsPage.tsx`, and `ChapterSettingsPage.tsx`. All three have the same two tabs: Profil
-  (logo via `CoordinatingBodyLogoField`/`BranchLogoField`/`ChapterLogoField` at `size={160}`
-  `layout="column"`, Nama, Deskripsi — deliberately narrower than the Master/Organization Edit form,
-  no Tipe/parent picker/Status here, calling `updateCoordinatingBody`/`updateBranch`/`updateChapter`
-  with just `{id, name, description, image_url}`) and Akses (a table of that entity's own admins —
-  `apis/users.ts#listCoordinatingBodyAdmins`/`listBranchAdmins`/`listChapterAdmins`, which page
-  through every member via `users/list` scoped by
-  `coordinating_body_id`/`branch_id`/`chapter_id` and filter client-side on
-  `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_chapter` since none of those fields
-  has a backend list filter — plus a Super-Admin-only "Tambah Akses" modal backed by
-  `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?chapter_id=` (the `chapter_id` branch was
-  added to that Route Handler alongside the other two, same `can_manage_chapter`-and-own-`chapter_id`
-  authorization check) and `grantCoordinatingBodyAdmin`/`grantBranchAdmin`/`grantChapterAdmin`, and a
-  revoke `Trash2` button per row calling
-  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`/`revokeChapterAdmin`). All three route files fetch
-  the entity detail, its admin list, and `getSession()` in parallel and pass
-  `isSuperAdmin={user?.role_name === "Super Admin"}` straight through — non-Super-Admin viewers (a
-  Cabang/Badko/Komisariat's own `Administrator`) can still reach the page and edit Profil, they just
-  don't see the Tambah/Cabut Akses controls.
+- Badko, Cabang, Korkom, and Komisariat each have their own self-service "Pengaturan" page on their
+  own scoped dashboard (`/coordinating-bodies/[coordinating_body_id]/settings`,
+  `/branches/[branch_id]/settings`, `/coordinating-chapters/[coordinating_chapter_id]/settings`,
+  `/chapters/[chapter_id]/settings` — flat `EntitySidebar` items on all four scopes) —
+  `components/pages/CoordinatingBodySettingsPage.tsx`, `BranchSettingsPage.tsx`,
+  `CoordinatingChapterSettingsPage.tsx`, and `ChapterSettingsPage.tsx`. All four have the same two
+  tabs: Profil (logo via `CoordinatingBodyLogoField`/`BranchLogoField`/
+  `CoordinatingChapterLogoField`/`ChapterLogoField` at `size={160}` `layout="column"`, Nama,
+  Deskripsi — deliberately narrower than the Master/Organization Edit form, no Tipe/parent
+  picker/Status here, calling
+  `updateCoordinatingBody`/`updateBranch`/`updateCoordinatingChapter`/`updateChapter` with just
+  `{id, name, description, image_url}`) and Akses (a table of that entity's own admins —
+  `apis/users.ts#listCoordinatingBodyAdmins`/`listBranchAdmins`/`listCoordinatingChapterAdmins`/
+  `listChapterAdmins`, which page through every member via `users/list` scoped by
+  `coordinating_body_id`/`branch_id`/`coordinating_chapter_id`/`chapter_id` and filter client-side
+  on `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_coordinating_chapter`/
+  `can_manage_chapter` since none of those fields has a backend list filter — plus a
+  Super-Admin-only "Tambah Akses" modal backed by
+  `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?coordinating_chapter_id=`/`?chapter_id=`
+  (the `coordinating_chapter_id`/`chapter_id` branches were added to that Route Handler alongside
+  the other two, same `can_manage_coordinating_chapter`/`can_manage_chapter`-and-own-id
+  authorization check) and
+  `grantCoordinatingBodyAdmin`/`grantBranchAdmin`/`grantCoordinatingChapterAdmin`/
+  `grantChapterAdmin`, and a revoke `Trash2` button per row calling
+  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`/`revokeCoordinatingChapterAdmin`/
+  `revokeChapterAdmin`). All four route files fetch the entity detail, its admin list, and
+  `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}` straight
+  through — non-Super-Admin viewers (a Cabang/Badko/Korkom/Komisariat's own `Administrator`) can
+  still reach the page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its
