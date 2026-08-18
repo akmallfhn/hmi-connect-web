@@ -13,6 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -82,9 +83,19 @@ function formatTimestamp(value?: string) {
   }).format(date);
 }
 
-function ProfileField({ label, value }: { label: string; value: ReactNode }) {
+function ProfileField({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-lg border border-[#e6e9ef] bg-[#f9fafc] p-4">
+    <div
+      className={`rounded-lg border border-[#e6e9ef] bg-[#f9fafc] p-4 ${className ?? ""}`}
+    >
       <p className="text-xs font-medium uppercase tracking-wide text-[#69707d]">
         {label}
       </p>
@@ -227,8 +238,18 @@ export default function CoordinatingBodyDetailPage({
         {activeTab === "profile" && (
           <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Building2 className="size-5" />
+              <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-soft text-primary">
+                {coordinatingBody.image_url ? (
+                  <Image
+                    src={coordinatingBody.image_url}
+                    alt={coordinatingBody.name}
+                    width={40}
+                    height={40}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="size-5" />
+                )}
               </div>
               <div>
                 <h2 className="text-base font-semibold text-[#172033]">
@@ -274,6 +295,11 @@ export default function CoordinatingBodyDetailPage({
               <ProfileField
                 label="Terakhir Diperbarui"
                 value={formatTimestamp(coordinatingBody.updated_at)}
+              />
+              <ProfileField
+                label="Deskripsi"
+                value={coordinatingBody.description || "Belum ada deskripsi."}
+                className="sm:col-span-2"
               />
             </div>
 

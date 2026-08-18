@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
   const branchId = searchParams.get("branch_id") ?? "";
+  const coordinatingBodyId = searchParams.get("coordinating_body_id") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
@@ -28,6 +29,34 @@ export async function GET(request: Request) {
       search: q.trim() || undefined,
       status: "active",
       branchId,
+      page,
+      pageSize,
+    });
+
+    return NextResponse.json({
+      data: result.list,
+      hasMore: result.currentPage < result.totalPage,
+    });
+  }
+
+  if (coordinatingBodyId) {
+    const { user } = await getSession();
+    const canAccessCoordinatingBody =
+      user?.role_name === "Super Admin" ||
+      (user?.can_manage_coordinating_body === true &&
+        user.coordinating_body_id === coordinatingBodyId);
+
+    if (!canAccessCoordinatingBody) {
+      return NextResponse.json(
+        { data: [], hasMore: false },
+        { status: 403 }
+      );
+    }
+
+    const result = await listUsers({
+      search: q.trim() || undefined,
+      status: "active",
+      coordinatingBodyId,
       page,
       pageSize,
     });

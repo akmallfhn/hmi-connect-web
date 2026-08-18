@@ -7,6 +7,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Network,
+  Settings,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -83,6 +84,14 @@ function getNavItems(
           },
         ],
       },
+    ];
+  }
+
+  if (scope === "coordinating_body") {
+    return [
+      dashboardItem,
+      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
 
