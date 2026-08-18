@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import type { ChapterListEntry } from "@/apis/chapters";
 import type { Institution } from "@/apis/institutions";
-import { createChapter, createInstitution, updateChapter } from "@/lib/actions";
+import { createChapter, createInstitution } from "@/lib/actions";
 import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
@@ -13,7 +12,9 @@ import CreateableSelect, {
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
+import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
+import ChapterLogoField from "./ChapterLogoField";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -25,36 +26,33 @@ const STATUS_OPTIONS: { label: string; value: StatusEnum }[] = [
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
-interface ChapterFormSheetProps {
+interface CreateChapterFormSheetProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  chapter: ChapterListEntry | null;
-  defaultBranch: SearchableOption | null;
+  defaultBranch?: SearchableOption | null;
+  // When true, the Cabang field renders as fixed, read-only text instead of a searchable picker — used from a Cabang's own scoped "Kelola Komisariat" page so a new Komisariat can't be attached to another Cabang.
+  lockBranch?: boolean;
 }
 
-export default function ChapterFormSheet({
+export default function CreateChapterFormSheet({
   open,
   onClose,
   onSaved,
-  chapter,
-  defaultBranch,
-}: ChapterFormSheetProps) {
+  defaultBranch = null,
+  lockBranch = false,
+}: CreateChapterFormSheetProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={chapter ? "Edit Komisariat" : "Tambah Komisariat"}
-      description={
-        chapter
-          ? "Perbarui data komisariat ini."
-          : "Buat komisariat (Komisariat HMI) baru di bawah sebuah Cabang."
-      }
+      title="Tambah Komisariat"
+      description="Buat Komisariat HMI baru di bawah sebuah Cabang."
     >
       {open && (
-        <ChapterFields
-          chapter={chapter}
+        <CreateChapterFields
           defaultBranch={defaultBranch}
+          lockBranch={lockBranch}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -63,38 +61,27 @@ export default function ChapterFormSheet({
   );
 }
 
-// Mounted only while open, so state always seeds fresh from the row — no reset effect needed.
-function ChapterFields({
-  chapter,
+// Mounted only while open, so state always starts fresh — no reset effect needed.
+function CreateChapterFields({
   defaultBranch,
+  lockBranch,
   onClose,
   onSaved,
 }: {
-  chapter: ChapterListEntry | null;
   defaultBranch: SearchableOption | null;
+  lockBranch: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState(chapter?.name ?? "");
-  const [type, setType] = useState<BranchTypeEnum>(chapter?.type ?? "full");
-  const [status, setStatus] = useState<StatusEnum>(chapter?.status ?? "active");
-  const [branch, setBranch] = useState<SearchableOption | null>(
-    chapter ? { label: chapter.branch_name, value: chapter.branch_id } : defaultBranch
-  );
-  const [institution, setInstitution] = useState<CreateableOption | null>(
-    chapter?.institution_id
-      ? {
-          label: chapter.institution_name ?? "",
-          value: chapter.institution_id,
-          image: chapter.institution_avatar,
-        }
-      : null
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [type, setType] = useState<BranchTypeEnum>("full");
+  const [status, setStatus] = useState<StatusEnum>("active");
+  const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
+  const [institution, setInstitution] = useState<CreateableOption | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  const institutionDefaultOptions: CreateableOption[] = institution
-    ? [institution]
-    : [];
 
   async function loadInstitutionOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });
@@ -120,12 +107,6 @@ function ChapterFields({
     return { label: created.name, value: created.id, image: created.image_url };
   }
 
-  const branchDefaultOptions: SearchableOption[] = chapter
-    ? [{ label: chapter.branch_name, value: chapter.branch_id }]
-    : defaultBranch
-      ? [defaultBranch]
-      : [];
-
   async function loadBranchOptions(inputValue: string, page: number) {
     const params = new URLSearchParams({ page: String(page) });
     if (inputValue) params.set("q", inputValue);
@@ -140,7 +121,7 @@ function ChapterFields({
 
   async function handleSubmit() {
     if (!name.trim()) {
-      toast.error("Nama komisariat wajib diisi.");
+      toast.error("Nama Komisariat wajib diisi.");
       return;
     }
     if (!branch) {
@@ -150,35 +131,26 @@ function ChapterFields({
 
     setIsSaving(true);
     try {
-      const result = chapter
-        ? await updateChapter({
-            id: chapter.id,
-            name,
-            type,
-            status,
-            branch_id: String(branch.value),
-            ...(institution ? { institution_id: Number(institution.value) } : {}),
-          })
-        : await createChapter({
-            name,
-            type,
-            status,
-            branch_id: String(branch.value),
-            ...(institution ? { institution_id: Number(institution.value) } : {}),
-          });
+      const result = await createChapter({
+        name,
+        description,
+        image_url: imageUrl,
+        type,
+        status,
+        branch_id: String(branch.value),
+        ...(institution ? { institution_id: Number(institution.value) } : {}),
+      });
 
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menyimpan komisariat.");
+        toast.error(result.message ?? "Gagal membuat Komisariat.");
         return;
       }
 
-      toast.success(
-        chapter ? "Komisariat berhasil diperbarui." : "Komisariat berhasil dibuat."
-      );
+      toast.success("Komisariat berhasil dibuat.");
       onSaved();
     } catch (err) {
-      console.error("[ChapterFormSheet] save threw:", err);
-      toast.error("Gagal menyimpan komisariat.");
+      console.error("[CreateChapterFormSheet] save threw:", err);
+      toast.error("Gagal membuat Komisariat.");
     } finally {
       setIsSaving(false);
     }
@@ -186,6 +158,13 @@ function ChapterFields({
 
   return (
     <div className="flex flex-col gap-4">
+      <ChapterLogoField
+        imageUrl={imageUrl}
+        onChange={setImageUrl}
+        onUploadingChange={setIsUploadingImage}
+        disabled={isSaving}
+      />
+
       <Input
         inputId="chapter-name"
         label="Nama Komisariat"
@@ -194,16 +173,29 @@ function ChapterFields({
         onChange={(e) => setName(e.target.value)}
         required
       />
-      <SearchableSelect
-        selectId="chapter-branch"
-        label="Cabang"
-        placeholder="Cari Cabang..."
-        value={branch}
-        onChange={setBranch}
-        loadOptions={loadBranchOptions}
-        defaultOptions={branchDefaultOptions}
-        required
-      />
+
+      {lockBranch ? (
+        <div className="flex flex-col gap-1">
+          <label className="pl-1 text-[15px] font-medium text-[#172033]">
+            Cabang
+          </label>
+          <p className="rounded-lg border border-[#e6e9ef] bg-[#f9fafc] px-3 py-2.5 text-sm text-[#172033]">
+            {branch?.label ?? "—"}
+          </p>
+        </div>
+      ) : (
+        <SearchableSelect
+          selectId="chapter-branch"
+          label="Cabang"
+          placeholder="Cari Cabang..."
+          value={branch}
+          onChange={setBranch}
+          loadOptions={loadBranchOptions}
+          defaultOptions={defaultBranch ? [defaultBranch] : []}
+          required
+        />
+      )}
+
       <CreateableSelect
         selectId="chapter-institution"
         label="Asal Universitas"
@@ -211,8 +203,16 @@ function ChapterFields({
         value={institution}
         onChange={setInstitution}
         loadOptions={loadInstitutionOptions}
-        defaultOptions={institutionDefaultOptions}
+        defaultOptions={institution ? [institution] : []}
         onCreateOption={createInstitutionOption}
+      />
+      <TextArea
+        textAreaId="chapter-description"
+        label="Deskripsi"
+        placeholder="Ceritakan sekilas tentang Komisariat ini"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={6}
       />
       <Select
         selectId="chapter-type"
@@ -237,7 +237,11 @@ function ChapterFields({
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={isSaving || isUploadingImage}
+        >
           {isSaving ? "Menyimpan..." : "Simpan"}
         </Button>
       </div>

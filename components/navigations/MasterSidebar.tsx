@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  Building2,
-  GraduationCap,
+  GitBranch,
   LayoutDashboard,
   Network,
+  School,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -28,8 +28,12 @@ const NAV_ITEMS: AdminNavEntry[] = [
         href: "/master/coordinating-bodies",
         icon: Network,
       },
-      { label: "Kelola Cabang", href: "/master/branches", icon: Building2 },
-      { label: "Komisariat", href: "/master/chapters", icon: GraduationCap },
+      { label: "Kelola Cabang", href: "/master/branches", icon: GitBranch },
+      {
+        label: "Kelola Komisariat",
+        href: "/master/chapters",
+        icon: School,
+      },
     ],
   },
   {

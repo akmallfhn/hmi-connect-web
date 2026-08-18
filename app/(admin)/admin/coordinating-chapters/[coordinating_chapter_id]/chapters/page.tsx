@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { getBranchDetail } from "@/apis/branches";
 import { listChaptersAdmin } from "@/apis/chapters";
 import AdminChapterListPage from "@/components/pages/AdminChapterListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Kelola Komisariat",
+  title: "Daftar Komisariat",
   robots: {
     index: false,
     follow: false,
@@ -14,34 +13,30 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
-interface BranchChaptersPageProps {
-  params: Promise<{ branch_id: string }>;
+interface CoordinatingChapterChaptersPageProps {
+  params: Promise<{ coordinating_chapter_id: string }>;
   searchParams: Promise<{ search?: string; status?: string; page?: string }>;
 }
 
-export default async function BranchChaptersPage({
+export default async function CoordinatingChapterChaptersPage({
   params,
   searchParams,
-}: BranchChaptersPageProps) {
-  const { branch_id } = await params;
-  const query = await searchParams;
+}: CoordinatingChapterChaptersPageProps) {
+  const [{ coordinating_chapter_id }, query] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const search = query.search?.trim() ?? "";
   const status = query.status ?? "";
   const page = Number(query.page ?? "1") || 1;
 
   const result = await listChaptersAdmin({
-    branchId: branch_id,
+    coordinatingChapterId: coordinating_chapter_id,
     search: search || undefined,
     status: (status || undefined) as StatusEnum | undefined,
     page,
     pageSize: PAGE_SIZE,
   });
-
-  // chapters/list already returns branch_name per row (every row here shares the same Cabang) — only fall back to a detail fetch when the list is empty and there's no row to read it from.
-  const branchName =
-    result.list[0]?.branch_name ??
-    (await getBranchDetail(branch_id))?.name ??
-    null;
 
   return (
     <AdminChapterListPage
@@ -52,10 +47,11 @@ export default async function BranchChaptersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
-      selectedBranch={branchName ? { id: branch_id, name: branchName } : null}
+      selectedBranch={null}
+      allowCreate={false}
       allowEdit={false}
       allowDelete={false}
-      detailBasePath={`/branches/${branch_id}/chapters`}
+      detailBasePath={`/coordinating-chapters/${coordinating_chapter_id}/chapters`}
       hideBranchFilter
     />
   );

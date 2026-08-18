@@ -24,6 +24,7 @@ import {
 import {
   createChapter as createChapterApi,
   deleteChapter as deleteChapterApi,
+  getChapterDetail as getChapterDetailApi,
   updateChapter as updateChapterApi,
   type CreateChapterPayload,
   type UpdateChapterPayload,
@@ -242,6 +243,10 @@ export async function updateBranch(payload: UpdateBranchPayload) {
 
 export async function deleteBranch(id: string) {
   return deleteBranchApi(id);
+}
+
+export async function getChapterDetail(id: string) {
+  return getChapterDetailApi(id);
 }
 
 export async function createChapter(payload: CreateChapterPayload) {

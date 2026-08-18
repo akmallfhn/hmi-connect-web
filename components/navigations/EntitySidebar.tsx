@@ -5,9 +5,9 @@ import {
   Award,
   BookText,
   GitBranch,
-  GraduationCap,
   LayoutDashboard,
   Network,
+  School,
   Settings,
   ShieldCheck,
   Users,
@@ -96,9 +96,21 @@ function getNavItems(
   if (scope === "coordinating_body") {
     return [
       dashboardItem,
-      { label: "Kelola Cabang", href: `${base}/branches`, icon: GitBranch },
+      { label: "Daftar Cabang", href: `${base}/branches`, icon: GitBranch },
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
       { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
+    ];
+  }
+
+  if (scope === "coordinating_chapter") {
+    return [
+      dashboardItem,
+      {
+        label: "Daftar Komisariat",
+        href: `${base}/chapters`,
+        icon: School,
+      },
+      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
     ];
   }
 
@@ -118,7 +130,7 @@ function getNavItems(
         {
           label: "Kelola Komisariat",
           href: `${base}/chapters`,
-          icon: GraduationCap,
+          icon: School,
         },
       ],
     },

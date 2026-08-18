@@ -1459,26 +1459,13 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   group appears above `Keanggotaan`. All retain the
   standard session profile/logout block at the bottom. Each route owns an
   access-checking nested layout and an intentionally empty index page; its `/members` child holds
-  the read-only roster described below. The branch-scoped
-  Kelola Komisariat page below is a Cabang managing its _own_ Komisariat rows, a different scope
-  from the Komisariat self-management shell.
-  Kelola Komisariat (`app/(admin)/admin/branches/[branch_id]/chapters/`) is **create/edit only, no
-  delete** (deliberately narrower than `/master/chapters`, which has all three) — it reuses
-  `apis/chapters.ts#listChaptersAdmin`/`createChapter`/`updateChapter` but not `deleteChapter`.
-  `listChaptersAdmin`'s existing optional `branchId` (already there for `/master/chapters`' own
-  Cabang filter, see below) is always passed by this route's `page.tsx`, so chapters outside this
-  branch never show up. `components/pages/BranchChapterListPage.tsx` is `AdminChapterListPage.tsx`'s
-  table/filter/pagination look reused verbatim, minus the (now redundant, single-branch-scoped)
-  Cabang `SearchableSelect` filter and the "Cabang {branch_name}" subtitle under each row's name;
-  its empty results use the same shared `EmptyState` as the training and user lists —
-  same "already scoped, don't repeat it per row" reasoning as Daftar Kader's own column trim below —
-  and minus the master version's Dropdown/`AlertConfirmation` delete flow entirely: the Aksi column
-  is just a single ghost icon `Button` (`Pencil`) that opens the same edit sheet the row's own name
-  already opens by clicking it. `components/forms/BranchChapterFormSheet.tsx` mirrors
-  `ChapterFormSheet.tsx` field-for-field (Nama Komisariat, Asal Universitas via the same institution
-  `CreateableSelect`, Tipe, Status) but drops the Cabang picker entirely — `branchId` is a fixed prop
-  threaded straight into `createChapter`'s `branch_id`, never sent on `updateChapter` (a chapter
-  can't be moved to another branch from this scoped screen). Daftar Kader is a **read-only** roster
+  the read-only roster described below. Komisariat management (list + detail) is a single
+  `components/pages/AdminChapterListPage.tsx`/`ChapterDetailPage.tsx` pair reused across three
+  scopes — `/master/chapters`, the branch-scoped "Kelola Komisariat"
+  (`app/(admin)/admin/branches/[branch_id]/chapters/`, a Cabang managing its _own_ Komisariat rows),
+  and the Korkom-scoped "Daftar Komisariat" (`app/(admin)/admin/coordinating-chapters/
+[coordinating_chapter_id]/chapters/`) — see the `/master/chapters` entry below for the full shape and
+  its `allowCreate`/`allowEdit`/`allowDelete`/`hideBranchFilter` prop matrix. Daftar Kader is a **read-only** roster
   under every scoped admin shell: `/organizations/{id}/members`,
   `/coordinating-bodies/{id}/members`, `/branches/{id}/members`,
   `/coordinating-chapters/{id}/members`, and `/chapters/{id}/members`. All five reuse
@@ -1624,35 +1611,77 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   option), so starting "Tambah Cabang" from a filtered view doesn't make you re-pick the Badko.
   `coordinating-bodies/*` has full CRUD on the backend (list/detail/create/update/delete, mirroring
   branches/chapters) and now on this side too, see `/master/coordinating-bodies` below.
-- `/master/chapters` (`app/(admin)/admin/master/chapters/page.tsx` → `components/pages/AdminChapterListPage.tsx`)
-  is the Komisariat CRUD panel, same shape as `/master/branches` including its own optional entity
-  filter — `chapters/list`'s `branch_id` is optional (omit to list chapters across every branch), so
-  the page's filter row has search, an optional Cabang `SearchableSelect` (backed by the existing
-  `apis/branches.ts#searchBranches` through the same `app/(admin)/admin/api/branches/search/route.ts`
-  the Cabang form already uses) driving a `branch_id` URL param, and status — table/pagination render
-  unconditionally, there's no "pick a branch first" gate. `chapters/list` now also accepts an
-  optional `coordinating_chapter_id` that may be combined with `branch_id`, and returns
-  `coordinating_chapter_id`/`coordinating_chapter_name` plus `branch_name` per row. The table shows
-  "Cabang {branch_name}" as a subtitle under the chapter name unconditionally, same as Cabang's
-  "Badko {coordinating_body_name}" subtitle — no extra per-row lookup needed. `apis/chapters.ts` gained the same
-  `listChaptersAdmin`/`createChapter`/`updateChapter`/`deleteChapter` admin surface `branches.ts` has
-  (`ChapterListEntry`/`ChapterDetail` mirroring `BranchListEntry`/`BranchDetail`), and
-  `components/forms/ChapterFormSheet.tsx` mirrors `BranchFormSheet.tsx` field-for-field with Cabang
-  standing in for Badko — editing seeds the Cabang field straight from the clicked row's own
-  `branch_id`/`branch_name` (not the list page's filter context, which may differ or be absent when
-  browsing unfiltered); only creating falls back to the filter's selected branch via the sheet's
-  optional `defaultBranch` prop, same reasoning as `BranchFormSheet`'s `defaultCoordinatingBody`.
-  `branch_id` is still required by `chapters/create`/`update`, only `list` relaxed it. A chapter also
-  optionally links to a university via `institution_id` (`institution_name`/`institution_avatar` are
-  derived, `null` until it's set — see `internal/organization/README.md` in the `ordina` backend repo).
-  The table's "Asal Universitas" column and `ChapterFormSheet`'s matching field render/pick it the
-  same logo-or-`University`-icon-fallback way the activation flow's institution field does
-  (`CreateableSelect`'s `image` option support, see Activation flow above) — search is backed by the
-  same `apis/institutions.ts#searchInstitutions` the activation flow uses, through a duplicate
-  `app/(admin)/admin/api/institutions/search/route.ts` (same cross-origin reasoning as the
-  branches/chapters/provinces/cities/districts search route duplicates above), and picking "Tambah"
-  on a new name calls the existing `createInstitution` action. It's optional on both `create` and
-  `update`, unlike activation's LK1-style hard requirement.
+- `/master/chapters`, the branch-scoped "Kelola Komisariat", and the Korkom-scoped "Daftar Komisariat"
+  (`app/(admin)/admin/master/chapters/page.tsx`, `.../branches/[branch_id]/chapters/page.tsx`,
+  `.../coordinating-chapters/[coordinating_chapter_id]/chapters/page.tsx`) all render the same
+  `components/pages/AdminChapterListPage.tsx` — same Tabel/Card dual-view shape
+  `AdminBranchListPage.tsx` uses for Cabang (`chapter_view_mode` localStorage key). Names render
+  through a local `formatChapterName` (strips any existing "Komisariat"/"HMI Komisariat" prefix and
+  re-adds a single "Komisariat " one, same normalization `formatBranchName`/`formatCoordinatingBodyName`
+  do). A chapter now has its own square `ChapterLogo` badge (`image_url`, `LogoHmi`-fallback, identical
+  treatment to `BranchLogo`/`CoordinatingBodyLogo`) next to its name in both the table and the card
+  header — a separate, circular `InstitutionAvatar` (the chapter's linked university's own avatar,
+  falling back to a plain `University` glyph) is a distinct visual for the distinct "Asal Universitas"
+  concept, not a stand-in for the chapter's own logo the way it briefly was before chapters gained
+  `image_url`. The card renders the university avatar+name as its own dedicated row (below the header,
+  above the status badges) rather than squeezed into the footer stat line, so the logo always sits
+  immediately left of the name on its own line. A "Status Kepengurusan" column (renamed from the old
+  "Tipe") holds the same `full`/`provisional` badge Cabang's own table/card use. `chapters/list`'s `branch_id` is
+  optional (omit to list across every branch) and its `coordinating_chapter_id` filter narrows
+  further still; the page's own optional Cabang `SearchableSelect` filter can be hidden via
+  `hideBranchFilter` once a route is already scoped to one Cabang/Korkom. Three independent props
+  gate what a scope can do — `allowCreate` (the "Tambah Komisariat" button + create sheet),
+  `allowEdit` (the row/card Edit action + edit sheet — row actions fall back to a bare "Lihat Detail"
+  button when this is `false`, the same `Eye`-icon pattern Cabang's read-only scopes use), and
+  `allowDelete` (the destructive dropdown action, gated separately from `allowEdit` since — unlike
+  Badko/Cabang, where a scope either has full write access or none — a Komisariat scope can create
+  and suspend without being able to edit or delete). The three scopes: Master gets all three plus
+  Edit Detail and Suspend/Aktifkan on the detail page; the branch scope gets `allowCreate` and
+  Suspend/Aktifkan but neither `allowEdit` nor `allowDelete` (a Cabang can add and retire its own
+  Komisariat, but can't rename/reassign one — editing is Master-only); the Korkom scope gets none of
+  the three and no Suspend/Aktifkan either (pure browse-only "Daftar Komisariat"). Create/edit are
+  `components/forms/CreateChapterFormSheet.tsx`/`EditChapterFormSheet.tsx` — `components/forms/
+ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.tsx`, uploads into the
+  `chapters/` storage folder), Nama Komisariat, Cabang `SearchableSelect` — or fixed read-only text
+  when the create sheet's `lockBranch` prop is set from a branch-scoped route, the same treatment
+  `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — Asal Universitas, Deskripsi, Tipe;
+  Create also has Status, Edit deliberately doesn't, matching `EditBranchFormSheet`'s no-status rule
+  since status only changes via the detail page's Suspend/Aktifkan. Unlike its first pass,
+  `EditChapterFormSheet` now does need the same detail-fetch loader Badko/Cabang's edit sheets use —
+  `chapters/list` covers institution/type/branch but still omits `description` the same way
+  `branches/list` does, so Edit fetches the real `chapters/detail` via the newly-added
+  `getChapterDetail` Server Action (`lib/actions.ts`) before mounting its fields.
+  `apis/chapters.ts#ChapterDetail.branch_name` is typed as a required `string` (not optional) since
+  `chapters/detail`/`create`/`update` always return it — fixed from an earlier defensive
+  `string | undefined` that would have rejected passing a `ChapterDetail` anywhere a `ChapterListEntry`
+  is expected, the same structural-typing reuse `CoordinatingBodyDetailPage` already relies on for
+  its own Edit sheet. `components/pages/ChapterDetailPage.tsx` mirrors `BranchDetailPage.tsx`'s
+  header-card-above-tabs shape, including the same real-photo-or-`LogoHmi`-fallback header badge now
+  that a chapter has its own `image_url`; its Profil tab is two stacked cards — a structured
+  "Informasi Komisariat" field grid (Cabang, Korkom, Asal Universitas, Tipe, Status, Dibuat,
+  Diperbarui) followed by a Deskripsi card, same shape as Branch/Badko's own Profil tab. Its "Jumlah
+  Kader" stat pill comes from
+  `apis/users.ts#listUsers({ chapterId, status: "active", pageSize: 1 }).totalData` — `chapters/detail`
+  itself carries no member count, unlike `branches/list`'s aggregate `user_count`. Tabs are Profil,
+  Kepengurusan (same unavailable-empty-state precedent), and Latihan Kader (`trainings/list` filtered
+  to the `chapter` organizer, since LK1 is chapter-organized) — there's no fourth "Daftar X" tab since
+  a Komisariat is a leaf node with no child entity to list. A chapter optionally links to a university
+  via `institution_id` (`institution_name`/`institution_avatar` derived, `null` until set — see
+  `internal/organization/README.md` in the `ordina` backend repo); both form sheets' "Asal Universitas"
+  field render/pick it the same logo-or-`University`-icon-fallback way the activation flow's
+  institution field does (`CreateableSelect`'s `image` option support, see Activation flow above) —
+  search is backed by the same `apis/institutions.ts#searchInstitutions` the activation flow uses,
+  through a duplicate `app/(admin)/admin/api/institutions/search/route.ts` (same cross-origin
+  reasoning as the branches/chapters/provinces/cities/districts search route duplicates above), and
+  picking "Tambah" on a new name calls the existing `createInstitution` action. It's optional on both
+  `create` and `update`, unlike activation's LK1-style hard requirement. `EntitySidebar`'s
+  `coordinating_chapter` scope gets a flat "Daftar Komisariat" item (view-only wording, same reasoning
+  as Badko's own "Daftar Cabang"); `MasterSidebar`'s Komisariat item is relabeled "Kelola Komisariat"
+  to match Master's real CRUD rights, mirroring "Kelola Cabang"/"Kelola Badko". Every Komisariat nav
+  item across both sidebars uses the `School` icon (not `GraduationCap`) so it reads as a physical
+  institution rather than a generic "education" glyph; `MasterSidebar`'s own "Kelola Cabang" item was
+  also switched from `Building2` to `GitBranch` to match the icon `EntitySidebar` already uses for
+  every other "Kelola Cabang"/"Daftar Cabang" entry.
 - `/master/coordinating-bodies` and
   `/organizations/[organization_id]/coordinating-bodies` both reuse
   `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of
@@ -1683,34 +1712,35 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   before delegating to the existing `updateCoordinatingBody` Server Action.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
-- "Kelola Cabang" is the Cabang counterpart of the Badko CRUD panel above, reused verbatim across
-  three scopes: `/master/branches`, `/organizations/[organization_id]/branches`, and
-  `/coordinating-bodies/[coordinating_body_id]/branches` (a Badko managing its own Cabang roster —
-  distinct from the branch-scoped "Kelola Komisariat" described elsewhere in this file, which is a
-  Cabang managing its own Komisariat). All three render
+- "Kelola Cabang"/"Daftar Cabang" is the Cabang counterpart of the Badko CRUD panel above, reused
+  verbatim across three scopes: `/master/branches`, `/organizations/[organization_id]/branches`, and
+  `/coordinating-bodies/[coordinating_body_id]/branches` (a Badko browsing its own Cabang roster,
+  read-only — distinct from the branch-scoped "Kelola Komisariat" described elsewhere in this file,
+  which is a Cabang with genuine create/edit rights over its own Komisariat). All three render
   `components/pages/AdminBranchListPage.tsx`, the same searchable/status-filtered, Tabel/Card
   dual-view list `AdminCoordinatingBodyListPage.tsx` uses for Badko — square logo-or-`LogoHmi`
   badge, Tipe (`Penuh`/`Persiapan`) and Status pills, Jumlah Komisariat/Jumlah Kader counts from
   `include_aggregates: true` — plus an optional Badko `SearchableSelect` filter
   (`hideCoordinatingBodyFilter` hides it once the scope is already a single fixed Badko). Row/card
   actions and the "Tambah Cabang" button are gated by two independent props: `allowEdit` (Tambah +
-  Edit access) and `allowDelete` (the destructive action) — Master gets both, Organization gets
-  neither (view-only, `Lihat Detail` only, mirroring the Badko Organization view), and the Badko
-  scope gets `allowEdit` but not `allowDelete`, matching "Kelola Komisariat"'s own create/edit-only,
-  no-delete precedent for a scoped admin managing its immediate children. `apis/branches.ts`'s
+  Edit access) and `allowDelete` (the destructive action) — only Master gets both; Organization and
+  the Badko scope both get neither (view-only, `Lihat Detail` only) since a Badko has no update/edit
+  right over its own Cabang rows, unlike a Cabang's genuine create/edit (no-delete) right over its own
+  Komisariat via "Kelola Komisariat". `apis/branches.ts`'s
   `BranchListEntry`/`BranchDetail` carry `image_url`/`description` the same way
   `CoordinatingBodyListEntry`/`CoordinatingBodyDetail` do (list has no `description`, detail has
   both). `components/forms/BranchLogoField.tsx` mirrors `CoordinatingBodyLogoField.tsx` (same
-  `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit are
-  `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx` (split for the same reason
-  as Badko's — `branches/list` doesn't return `description`, so Edit fetches the real detail via
-  `getBranchDetail` before mounting its fields), each with a Badko `SearchableSelect` plus Tipe —
-  fields Badko's own sheets don't have, since a Badko has no changeable parent. Both sheets take an
-  optional `lockCoordinatingBody` prop (threaded from `AdminBranchListPage`'s
-  `hideCoordinatingBodyFilter` and from `BranchDetailPage`'s own same-named prop) that swaps the
-  Badko picker for fixed read-only text — set from the Badko-scoped route so a Cabang can't be
-  created under, or moved to, a different Badko from that screen, the same "no parent picker at
-  all" rule `BranchChapterFormSheet.tsx` enforces for `branch_id`. `components/pages/
+  `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit (Master
+  only, in practice) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
+  (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
+  fetches the real detail via `getBranchDetail` before mounting its fields), each with a Badko
+  `SearchableSelect` plus Tipe — fields Badko's own sheets don't have, since a Badko has no
+  changeable parent. Both sheets also take an optional `lockCoordinatingBody` prop (threaded from
+  `AdminBranchListPage`'s `hideCoordinatingBodyFilter` and from `BranchDetailPage`'s own same-named
+  prop) that would swap the Badko picker for fixed read-only text instead of a dropdown — currently
+  dormant since neither sheet renders once `allowEdit` is `false`, kept for if a scoped create/edit
+  right is ever reintroduced, the same read-only-text-instead-of-a-picker treatment
+  `CreateChapterFormSheet`'s own `lockBranch` gives its Cabang field. `components/pages/
 BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape — a header card
   above the tabs (logo, name, Status + Tipe badges, Badko subtitle, Suspend/Aktifkan next to Edit
   Detail, then Jumlah Komisariat/Jumlah Kader/Dibuat/Diperbarui stat pills) — with Profil (Deskripsi
@@ -1720,14 +1750,14 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   the fetched branch's `coordinating_body.organization_id` matches its own validated scope, the same
   way the Badko Organization detail route checks `organization_id`; the Badko-scoped detail route
   checks `coordinating_body_id` instead. That Badko-scoped detail route also passes `allowEdit={false}`
-  and `allowStatusChange={false}` — a Badko can create/edit Cabang rows from its own list, but not from
-  that list's detail page (no Edit Detail button, no Suspend/Aktifkan; `allowStatusChange` is a second,
-  independent flag from `allowEdit` since `CoordinatingBodyDetailPage`'s own Suspend/Aktifkan stays
-  unconditional regardless of `allowEdit` — this route needed a way to turn that off too). `EntitySidebar`'s
-  Organization scope adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko"; the
-  `coordinating_body` scope gets a flat "Kelola Cabang" item (no group wrapper — unlike Organization's
-  "Organisasi" group, Badko only has this one organisasi-management link so a group would be pointless
-  chrome). `MasterSidebar`'s pre-existing Cabang item is relabeled "Kelola Cabang" to match.
+  and `allowStatusChange={false}` (no Edit Detail button, no Suspend/Aktifkan) — `allowStatusChange`
+  is a second, independent flag from `allowEdit` since `CoordinatingBodyDetailPage`'s own
+  Suspend/Aktifkan stays unconditional regardless of `allowEdit`, so `BranchDetailPage` needed a way
+  to turn that off too once Badko lost edit rights everywhere. `EntitySidebar`'s Organization scope
+  adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko"; the `coordinating_body`
+  scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail
+  — no group wrapper either, since Badko only has this one Cabang-related link). `MasterSidebar`'s
+  pre-existing Cabang item is relabeled "Kelola Cabang" to match Master's real CRUD rights.
 - Both Badko and Cabang have their own self-service "Pengaturan" page on their own scoped dashboard
   (`/coordinating-bodies/[coordinating_body_id]/settings` and `/branches/[branch_id]/settings`, flat
   `EntitySidebar` items on both scopes) — `components/pages/CoordinatingBodySettingsPage.tsx` and its

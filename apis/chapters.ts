@@ -75,6 +75,7 @@ export type ChapterListEntry = {
   coordinating_chapter_id: string | null;
   coordinating_chapter_name: string | null;
   name: string;
+  image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
   // Derived from institution_id, null until it's set on the chapter.
@@ -177,10 +178,12 @@ export async function listAllChaptersAdmin(
 export type ChapterDetail = {
   id: string;
   branch_id: string;
-  branch_name?: string;
+  branch_name: string;
   coordinating_chapter_id: string | null;
   coordinating_chapter_name: string | null;
   name: string;
+  description: string | null;
+  image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
   institution_id: number | null;
@@ -210,6 +213,8 @@ export async function getChapterDetail(
 export type CreateChapterPayload = {
   branch_id: string;
   name: string;
+  description?: string;
+  image_url?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
   // Must match an existing lookup_institutions row.
@@ -239,6 +244,8 @@ export type UpdateChapterPayload = {
   id: string;
   branch_id?: string;
   name?: string;
+  description?: string;
+  image_url?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
   // Must match an existing lookup_institutions row.

@@ -5,7 +5,7 @@ import AdminBranchListPage from "@/components/pages/AdminBranchListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Kelola Cabang",
+  title: "Daftar Cabang",
   robots: {
     index: false,
     follow: false,
@@ -59,6 +59,7 @@ export default async function CoordinatingBodyBranchesPage({
           ? { id: coordinating_body_id, name: coordinatingBodyName }
           : null
       }
+      allowEdit={false}
       allowDelete={false}
       detailBasePath={`/coordinating-bodies/${coordinating_body_id}/branches`}
       hideCoordinatingBodyFilter
