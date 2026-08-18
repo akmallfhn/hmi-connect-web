@@ -5,7 +5,7 @@ import AdminBranchListPage from "@/components/pages/AdminBranchListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Cabang",
+  title: "Kelola Cabang",
   robots: {
     index: false,
     follow: false,
@@ -33,7 +33,9 @@ export default async function MasterBranchesPage({
   const page = Number(params.page ?? "1") || 1;
 
   const [coordinatingBody, result] = await Promise.all([
-    coordinatingBodyId ? getCoordinatingBodyDetail(coordinatingBodyId) : Promise.resolve(null),
+    coordinatingBodyId
+      ? getCoordinatingBodyDetail(coordinatingBodyId)
+      : Promise.resolve(null),
     listBranchesAdmin({
       coordinatingBodyId: coordinatingBodyId || undefined,
       search: search || undefined,
@@ -53,7 +55,9 @@ export default async function MasterBranchesPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedCoordinatingBody={
-        coordinatingBody ? { id: coordinatingBody.id, name: coordinatingBody.name } : null
+        coordinatingBody
+          ? { id: coordinatingBody.id, name: coordinatingBody.name }
+          : null
       }
     />
   );

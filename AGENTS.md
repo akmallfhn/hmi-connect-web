@@ -1719,10 +1719,32 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   (`trainings/list` filtered to the `branch` organizer) tabs. The Organization detail route verifies
   the fetched branch's `coordinating_body.organization_id` matches its own validated scope, the same
   way the Badko Organization detail route checks `organization_id`; the Badko-scoped detail route
-  checks `coordinating_body_id` instead. `EntitySidebar`'s Organization scope adds "Kelola Cabang" to
-  its existing "Organisasi" group next to "Kelola Badko"; the `coordinating_body` scope gains its own
-  new "Organisasi" group holding just "Kelola Cabang". `MasterSidebar`'s pre-existing Cabang item is
-  relabeled "Kelola Cabang" to match.
+  checks `coordinating_body_id` instead. That Badko-scoped detail route also passes `allowEdit={false}`
+  and `allowStatusChange={false}` — a Badko can create/edit Cabang rows from its own list, but not from
+  that list's detail page (no Edit Detail button, no Suspend/Aktifkan; `allowStatusChange` is a second,
+  independent flag from `allowEdit` since `CoordinatingBodyDetailPage`'s own Suspend/Aktifkan stays
+  unconditional regardless of `allowEdit` — this route needed a way to turn that off too). `EntitySidebar`'s
+  Organization scope adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko"; the
+  `coordinating_body` scope gets a flat "Kelola Cabang" item (no group wrapper — unlike Organization's
+  "Organisasi" group, Badko only has this one organisasi-management link so a group would be pointless
+  chrome). `MasterSidebar`'s pre-existing Cabang item is relabeled "Kelola Cabang" to match.
+- Both Badko and Cabang have their own self-service "Pengaturan" page on their own scoped dashboard
+  (`/coordinating-bodies/[coordinating_body_id]/settings` and `/branches/[branch_id]/settings`, flat
+  `EntitySidebar` items on both scopes) — `components/pages/CoordinatingBodySettingsPage.tsx` and its
+  mirror `BranchSettingsPage.tsx`. Both have the same two tabs: Profil (logo via
+  `CoordinatingBodyLogoField`/`BranchLogoField` at `size={160}` `layout="column"`, Nama, Deskripsi —
+  deliberately narrower than the Master/Organization Edit form, no Tipe/parent picker/Status here,
+  calling `updateCoordinatingBody`/`updateBranch` with just `{id, name, description, image_url}`) and
+  Akses (a table of that entity's own admins — `apis/users.ts#listCoordinatingBodyAdmins`/
+  `listBranchAdmins`, which page through every member via `users/list` scoped by
+  `coordinating_body_id`/`branch_id` and filter client-side on `can_manage_coordinating_body`/
+  `can_manage_branch` since neither field has a backend list filter — plus a Super-Admin-only "Tambah
+  Akses" modal backed by `/api/users/search?coordinating_body_id=`/`?branch_id=` and
+  `grantCoordinatingBodyAdmin`/`grantBranchAdmin`, and a revoke `Trash2` button per row calling
+  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`). Both route files fetch the entity detail, its
+  admin list, and `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}`
+  straight through — non-Super-Admin viewers (a Cabang/Badko's own `Administrator`) can still reach the
+  page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

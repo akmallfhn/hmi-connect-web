@@ -4,7 +4,7 @@ import AdminCoordinatingBodyListPage from "@/components/pages/AdminCoordinatingB
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Badko",
+  title: "Kelola Badko",
   robots: {
     index: false,
     follow: false,

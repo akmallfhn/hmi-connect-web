@@ -139,6 +139,7 @@ function getNavItems(
         { label: "Latihan Kader 2", href: `${base}/trainings`, icon: Award },
       ],
     },
+    { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
   ];
 }
 

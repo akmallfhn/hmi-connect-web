@@ -55,6 +55,7 @@ export default async function BranchLayout({
           entityId={branch.id}
           entityName={branch.name}
           entityType={branch.type}
+          imageUrl={branch.image_url}
           fullName={user?.full_name}
           avatar={user?.avatar}
           roleName={user?.role_name}

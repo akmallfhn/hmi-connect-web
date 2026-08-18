@@ -5,7 +5,7 @@ import AdminChapterListPage from "@/components/pages/AdminChapterListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Komisariat",
+  title: "Kelola Komisariat",
   robots: {
     index: false,
     follow: false,
