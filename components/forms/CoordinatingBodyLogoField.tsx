@@ -46,14 +46,18 @@ interface CoordinatingBodyLogoFieldProps {
   onChange: (imageUrl: string) => void;
   onUploadingChange?: (uploading: boolean) => void;
   disabled?: boolean;
+  size?: number;
+  layout?: "row" | "column";
 }
 
-// Shared by Create/EditCoordinatingBodyFormSheet — same square rounded-lg preview + upload/remove pair either way.
+// Shared by Create/EditCoordinatingBodyFormSheet and CoordinatingBodySettingsPage — same square rounded-lg preview + upload/remove pair, sized/laid out per caller.
 export default function CoordinatingBodyLogoField({
   imageUrl,
   onChange,
   onUploadingChange,
   disabled,
+  size = 80,
+  layout = "row",
 }: CoordinatingBodyLogoFieldProps) {
   const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -120,18 +124,29 @@ export default function CoordinatingBodyLogoField({
       <label className="pl-1 text-[15px] font-medium text-[#172033]">
         Logo Badko
       </label>
-      <div className="flex items-center gap-4">
-        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
+      <div
+        className={
+          layout === "column"
+            ? "flex flex-col items-start gap-3"
+            : "flex items-center gap-4"
+        }
+      >
+        <div
+          className="flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]"
+          style={{ width: size, height: size }}
+        >
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt="Logo Badko"
-              width={80}
-              height={80}
+              width={size}
+              height={size}
               className="size-full object-cover"
             />
           ) : (
-            <ImageIcon className="size-6 text-[#5f6573]" />
+            <ImageIcon
+              className={size >= 120 ? "size-10 text-[#5f6573]" : "size-6 text-[#5f6573]"}
+            />
           )}
         </div>
         <div className="flex flex-col gap-2">

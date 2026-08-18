@@ -170,42 +170,48 @@ function ProfileTab({
   }
 
   return (
-    <section className="max-w-xl rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
-      <div className="flex flex-col gap-4">
-        <CoordinatingBodyLogoField
-          imageUrl={imageUrl}
-          onChange={setImageUrl}
-          onUploadingChange={setIsUploadingImage}
-          disabled={isSaving}
-        />
-
-        <Input
-          inputId="coordinating-body-settings-name"
-          label="Nama Badko"
-          placeholder="Contoh: Sumatera Bagian Utara"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-
-        <TextArea
-          textAreaId="coordinating-body-settings-description"
-          label="Deskripsi"
-          placeholder="Ceritakan sekilas tentang Badko ini"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={6}
-        />
-
-        <div className="mt-2 flex justify-end border-t border-[#e6e9ef] pt-4">
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={isSaving || isUploadingImage}
-          >
-            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
+    <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+      <div className="flex flex-col gap-8 lg:flex-row">
+        <div className="lg:w-56 lg:shrink-0">
+          <CoordinatingBodyLogoField
+            imageUrl={imageUrl}
+            onChange={setImageUrl}
+            onUploadingChange={setIsUploadingImage}
+            disabled={isSaving}
+            size={160}
+            layout="column"
+          />
         </div>
+
+        <div className="flex flex-1 flex-col gap-4">
+          <Input
+            inputId="coordinating-body-settings-name"
+            label="Nama Badko"
+            placeholder="Contoh: Sumatera Bagian Utara"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <TextArea
+            textAreaId="coordinating-body-settings-description"
+            label="Deskripsi"
+            placeholder="Ceritakan sekilas tentang Badko ini"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={10}
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end border-t border-[#e6e9ef] pt-4">
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={isSaving || isUploadingImage}
+        >
+          {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+        </Button>
       </div>
     </section>
   );
@@ -246,7 +252,7 @@ function AccessTab({
   }
 
   return (
-    <section className="max-w-2xl">
+    <section>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-base font-semibold text-[#172033]">
@@ -282,37 +288,56 @@ function AccessTab({
             description="Admin yang diberi akses untuk Badko ini akan ditampilkan di sini."
           />
         ) : (
-          <ul className="divide-y divide-[#e6e9ef]">
-            {admins.map((admin) => (
-              <li
-                key={admin.id}
-                className="flex items-center justify-between gap-3 px-4 py-3"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar src={admin.avatar} name={admin.full_name} size={40} />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#172033]">
-                      {admin.full_name}
-                    </p>
-                    <p className="truncate text-xs text-[#5f6573]">
-                      @{admin.username}
-                    </p>
-                  </div>
-                </div>
-                {isSuperAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setRevokeTarget(admin)}
-                    aria-label={`Cabut akses ${admin.full_name}`}
-                    className="text-destructive hover:bg-destructive-soft"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <tr>
+                  <th className="px-4 py-3">Admin</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                {admins.map((admin) => (
+                  <tr key={admin.id} className="align-middle">
+                    <td className="px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar
+                          src={admin.avatar}
+                          name={admin.full_name}
+                          size={36}
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#172033]">
+                            {admin.full_name}
+                          </p>
+                          <p className="truncate text-[13px] text-[#5f6573]">
+                            @{admin.username}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        {isSuperAdmin ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setRevokeTarget(admin)}
+                            aria-label={`Cabut akses ${admin.full_name}`}
+                            className="text-destructive hover:bg-destructive-soft"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        ) : (
+                          <span className="text-[#5f6573]">—</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
