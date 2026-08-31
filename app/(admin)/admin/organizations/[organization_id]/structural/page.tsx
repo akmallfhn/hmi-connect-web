@@ -4,36 +4,41 @@ import { getStructuralOverview } from "@/apis/structurals";
 import StructuralPage from "@/components/pages/StructuralPage";
 
 export const metadata: Metadata = {
-  title: "Struktur Kepengurusan Komisariat",
+  title: "Struktur Kepengurusan Organisasi",
   robots: { index: false, follow: false },
 };
 
-interface ChapterStructuralRouteProps {
-  params: Promise<{ chapter_id: string }>;
+interface OrganizationStructuralRouteProps {
+  params: Promise<{ organization_id: string }>;
   searchParams: Promise<{ period?: string }>;
 }
 
-export default async function ChapterStructuralRoute({
+export default async function OrganizationStructuralRoute({
   params,
   searchParams,
-}: ChapterStructuralRouteProps) {
-  const { chapter_id } = await params;
+}: OrganizationStructuralRouteProps) {
+  const { organization_id } = await params;
   const { period } = await searchParams;
 
   const [{ user }, overview] = await Promise.all([
     getSession(),
-    getStructuralOverview("chapter", chapter_id, period ? Number(period) : null),
+    getStructuralOverview(
+      "organization",
+      organization_id,
+      period ? Number(period) : null
+    ),
   ]);
 
   const isSuperAdmin = user?.role_name === "Super Admin";
   const canManage =
     isSuperAdmin ||
-    (Boolean(user?.can_manage_chapter) && user?.chapter_id === chapter_id);
+    (Boolean(user?.can_manage_organization) &&
+      user?.organization_id === organization_id);
 
   return (
     <StructuralPage
-      entityType="chapter"
-      entityId={chapter_id}
+      entityType="organization"
+      entityId={organization_id}
       periods={overview.periods}
       selectedPeriod={overview.selectedPeriod}
       selectedPeriodId={overview.selectedPeriodId}

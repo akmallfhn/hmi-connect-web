@@ -303,7 +303,9 @@ Three layers, each with one job. Don't blend them.
    `updateStructuralOfficer`'s `position_id` and `status` are both independently optional — an
    omitted one leaves that field unchanged, matching `officers/update`'s partial-update contract.
    `deleteStructuralOfficer` is a hard delete (`structural_officers` has no `deleted_at`), matching
-   `officers/delete`. `searchStructuralPositions`
+   `officers/delete`. `getStructuralOverview` composes `listStructuralPeriods` + `getStructuralPeriodDetail`
+   into the one "which period is selected, then fetch it" call every scoped `.../structural` route
+   shares (see the shared `StructuralPage` component below). `searchStructuralPositions`
    wraps the separate, non-admin-gated
    `structural-positions/list` lookup endpoint (`lookup_structural_positions`, same
    auth-only/no-entity-scope shape as `institutions/list`/`social-media-platforms/list` — any
@@ -1844,11 +1846,28 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}` straight
   through — non-Super-Admin viewers (a Cabang/Badko/Korkom/Komisariat's own `Administrator`) can
   still reach the page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
-- Komisariat's own admin dashboard (`/chapters/[chapter_id]/structural`, `EntitySidebar`'s
-  "Str. Kepengurusan" item between Daftar Kader and Pengaturan — shortened from the page's own
-  "Struktur Kepengurusan" `AdminPageTitle` since the full label ran too wide in the sidebar) renders
-  the real `structural_periods`/`structural_officers` roster (`apis/structurals.ts`, see above) as a
-  multi-tier org chart — `components/pages/ChapterStructuralPage.tsx`. The backend has no
+- Every one of the five scoped admin dashboards (`/organizations/[organization_id]/structural`,
+  `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
+  `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`
+  — `EntitySidebar`'s "Str. Kepengurusan" item, shortened from the page's own "Struktur Kepengurusan"
+  `AdminPageTitle` since the full label ran too wide in the sidebar; sits in the "Keanggotaan" group
+  for Organization/Cabang, right after Daftar Kader for Badko/Korkom/Komisariat which have no
+  groups) renders the real `structural_periods`/`structural_officers` roster (`apis/structurals.ts`,
+  see above) as a multi-tier org chart through **one shared component**,
+  `components/pages/StructuralPage.tsx` — it takes `entityType`/`entityId` (a `StructuralEntityTypeEnum`
+  and the route's own id) instead of a chapter-specific prop, so all five routes render the exact same
+  component and a fix/tweak made to it applies everywhere at once; each route's own `page.tsx` is a
+  thin fetch-and-gate wrapper (session + `apis/structurals.ts#getStructuralOverview` in parallel, then
+  its own `isSuperAdmin || can_manage_*`-matching-this-entity check, same shape as that scope's own
+  layout gate) with no entity-detail fetch of its own — the parent layout already guarantees the
+  entity exists/is active, and the page needs nothing from it beyond the id already in the route
+  param. `getStructuralOverview` centralizes the "resolve which period is selected, then fetch its
+  detail" logic once in the data layer rather than duplicating it across five route files. The
+  officer-picker's `/api/users/search` scoping is likewise data-driven: `ENTITY_USER_SEARCH_PARAM`
+  maps each `StructuralEntityTypeEnum` to that endpoint's matching query param
+  (`coordinating_body_id`/`branch_id`/`coordinating_chapter_id`/`chapter_id`), and `organization` maps
+  to `null` — no param at all, same org-wide-roster convention `AdminMemberListPage` already uses,
+  since this deployment only ever manages one organization. The backend has no
   parent/level column on `structural_officers` (or `lookup_structural_positions`), so
   `buildStructuralTiers` derives the tiers from `position_name` text matching instead, per explicit
   product rule (max 3 nodes per row): the officer whose `position_name` matches `/ketua\s+umum/i` is
@@ -1889,10 +1908,11 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   Each `OfficerNode` shows the officer's real `status` as a green "Aktif"/gray "Non-aktif"
   `Label` rather than reusing the reference mock's node-selection highlight, since `status` is the one
   per-officer field the backend actually has. `canManage` (`Super Admin`, or an Administrator whose
-  `can_manage_chapter` matches this chapter — the same check the route's parent layout already gates
-  entry on) adds "Tambah Periode Kepengurusan" (a `Modal` creating a period plus its initial officer
-  batch in one `structurals/create` call — dynamic officer rows, each a `SearchableSelect` user picker
-  scoped via `/api/users/search?chapter_id=` same as `ChapterSettingsPage`'s "Tambah Akses" modal),
+  matching `can_manage_*` flag targets this exact entity — the same check that scope's own layout
+  already gates entry on) adds "Tambah Periode Kepengurusan" (a `Modal` creating a period plus its
+  initial officer batch in one `structurals/create` call — dynamic officer rows, each a
+  `SearchableSelect` user picker scoped via `ENTITY_USER_SEARCH_PARAM`, same debounced-search
+  Route Handler `ChapterSettingsPage`'s "Tambah Akses" modal already uses),
   "Update Periode" (`outline`, left of "Tambah Anggota" in the period header row — a separate
   `UpdatePeriodModal`/`UpdatePeriodFields` pair, the latter mounted only while open so its year fields
   seed fresh from the currently selected period every time it's reopened, calling

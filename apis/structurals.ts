@@ -121,6 +121,39 @@ export async function getStructuralPeriodDetail(
   return result.data;
 }
 
+export type StructuralOverview = {
+  periods: StructuralPeriodSummary[];
+  selectedPeriodId: number | null;
+  selectedPeriod: StructuralPeriodDetail | null;
+};
+
+// Resolves the "selected" period (valid ?period=, else the still-ongoing one, else the newest) and fetches its detail — shared by every scoped .../structural route.
+export async function getStructuralOverview(
+  entityType: StructuralEntityTypeEnum,
+  entityId: string,
+  requestedPeriodId: number | null
+): Promise<StructuralOverview> {
+  const { list } = await listStructuralPeriods({
+    entityType,
+    entityId,
+    pageSize: 50,
+  });
+
+  const requestedIsValid =
+    requestedPeriodId !== null &&
+    list.some((item) => item.id === requestedPeriodId);
+  const defaultPeriodId =
+    list.find((item) => item.end_year === null)?.id ?? list[0]?.id ?? null;
+  const selectedPeriodId = requestedIsValid
+    ? requestedPeriodId
+    : defaultPeriodId;
+  const selectedPeriod = selectedPeriodId
+    ? await getStructuralPeriodDetail(selectedPeriodId)
+    : null;
+
+  return { periods: list, selectedPeriodId, selectedPeriod };
+}
+
 export type CreateStructuralPeriodPayload = {
   entity_type: StructuralEntityTypeEnum;
   entity_id: string;

@@ -14,7 +14,6 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { ChapterDetail } from "@/apis/chapters";
 import type {
   StructuralOfficer,
   StructuralPeriodDetail,
@@ -27,7 +26,7 @@ import {
   updateStructuralOfficer,
   updateStructuralPeriod,
 } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
+import { isSuccessStatus, type StructuralEntityTypeEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
@@ -42,13 +41,23 @@ import AlertConfirmation from "../modals/AlertConfirmation";
 import Modal from "../modals/Modal";
 import EmptyState from "../states/EmptyState";
 
-interface ChapterStructuralPageProps {
-  chapter: ChapterDetail;
+interface StructuralPageProps {
+  entityType: StructuralEntityTypeEnum;
+  entityId: string;
   periods: StructuralPeriodSummary[];
   selectedPeriod: StructuralPeriodDetail | null;
   selectedPeriodId: number | null;
   canManage: boolean;
 }
+
+// /api/users/search's scoping param per entity type — organization has none, matching AdminMemberListPage's own org-wide roster.
+const ENTITY_USER_SEARCH_PARAM: Record<StructuralEntityTypeEnum, string | null> = {
+  organization: null,
+  coordinating_body: "coordinating_body_id",
+  branch: "branch_id",
+  coordinating_chapter: "coordinating_chapter_id",
+  chapter: "chapter_id",
+};
 
 function periodLabel(
   period: Pick<StructuralPeriodSummary, "start_year" | "end_year">
@@ -105,16 +114,15 @@ function buildStructuralTiers(officers: StructuralOfficer[]): {
   return { root, tiers };
 }
 
-async function loadChapterUserOptions(
-  chapterId: string,
+async function loadEntityUserOptions(
+  entityType: StructuralEntityTypeEnum,
+  entityId: string,
   inputValue: string,
   page: number
 ) {
-  const params = new URLSearchParams({
-    q: inputValue,
-    page: String(page),
-    chapter_id: chapterId,
-  });
+  const params = new URLSearchParams({ q: inputValue, page: String(page) });
+  const scopeParam = ENTITY_USER_SEARCH_PARAM[entityType];
+  if (scopeParam) params.set(scopeParam, entityId);
   const response = await fetch(`/api/users/search?${params}`);
   const json = await response.json();
   const results: { id: string; full_name: string; avatar?: string }[] =
@@ -140,13 +148,14 @@ async function loadStructuralPositionOptions(inputValue: string, page: number) {
   };
 }
 
-export default function ChapterStructuralPage({
-  chapter,
+export default function StructuralPage({
+  entityType,
+  entityId,
   periods,
   selectedPeriod,
   selectedPeriodId,
   canManage,
-}: ChapterStructuralPageProps) {
+}: StructuralPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
@@ -193,7 +202,7 @@ export default function ChapterStructuralPage({
       router.refresh();
     } catch (err) {
       console.error(
-        "[ChapterStructuralPage] update officer status threw:",
+        "[StructuralPage] update officer status threw:",
         err
       );
       toast.error("Gagal memperbarui status anggota.");
@@ -215,7 +224,7 @@ export default function ChapterStructuralPage({
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
-      console.error("[ChapterStructuralPage] delete officer threw:", err);
+      console.error("[StructuralPage] delete officer threw:", err);
       toast.error("Gagal menghapus anggota.");
     } finally {
       setIsDeleting(false);
@@ -323,7 +332,8 @@ export default function ChapterStructuralPage({
         <CreatePeriodModal
           open={showCreatePeriod}
           onClose={() => setShowCreatePeriod(false)}
-          chapterId={chapter.id}
+          entityType={entityType}
+          entityId={entityId}
           onCreated={(newPeriodId) => {
             setShowCreatePeriod(false);
             selectPeriod(newPeriodId);
@@ -347,7 +357,8 @@ export default function ChapterStructuralPage({
         <AddOfficerModal
           open={showAddOfficer}
           onClose={() => setShowAddOfficer(false)}
-          chapterId={chapter.id}
+          entityType={entityType}
+          entityId={entityId}
           periodId={selectedPeriod.id}
           onAdded={() => {
             setShowAddOfficer(false);
@@ -578,12 +589,14 @@ function createEmptyOfficerDraft(): OfficerDraft {
 function CreatePeriodModal({
   open,
   onClose,
-  chapterId,
+  entityType,
+  entityId,
   onCreated,
 }: {
   open: boolean;
   onClose: () => void;
-  chapterId: string;
+  entityType: StructuralEntityTypeEnum;
+  entityId: string;
   onCreated: (periodId: number) => void;
 }) {
   const [startYear, setStartYear] = useState("");
@@ -651,8 +664,8 @@ function CreatePeriodModal({
     setIsSaving(true);
     try {
       const result = await createStructuralPeriod({
-        entity_type: "chapter",
-        entity_id: chapterId,
+        entity_type: entityType,
+        entity_id: entityId,
         start_year: parsedStartYear,
         ...(parsedEndYear !== undefined ? { end_year: parsedEndYear } : {}),
         officers: validOfficers.map((item) => ({
@@ -670,7 +683,7 @@ function CreatePeriodModal({
       resetForm();
       onCreated(result.data.id);
     } catch (err) {
-      console.error("[ChapterStructuralPage] create period threw:", err);
+      console.error("[StructuralPage] create period threw:", err);
       toast.error("Gagal membuat periode kepengurusan.");
     } finally {
       setIsSaving(false);
@@ -753,7 +766,7 @@ function CreatePeriodModal({
                   value={officerDraft.user}
                   onChange={(user) => updateOfficer(officerDraft.key, { user })}
                   loadOptions={(inputValue, page) =>
-                    loadChapterUserOptions(chapterId, inputValue, page)
+                    loadEntityUserOptions(entityType, entityId, inputValue, page)
                   }
                   showOptionAvatar
                 />
@@ -880,7 +893,7 @@ function UpdatePeriodFields({
       toast.success("Periode kepengurusan berhasil diperbarui.");
       onUpdated();
     } catch (err) {
-      console.error("[ChapterStructuralPage] update period threw:", err);
+      console.error("[StructuralPage] update period threw:", err);
       toast.error("Gagal memperbarui periode kepengurusan.");
     } finally {
       setIsSaving(false);
@@ -1004,7 +1017,7 @@ function UpdateOfficerPositionFields({
       onUpdated();
     } catch (err) {
       console.error(
-        "[ChapterStructuralPage] update officer position threw:",
+        "[StructuralPage] update officer position threw:",
         err
       );
       toast.error("Gagal memperbarui jabatan.");
@@ -1047,13 +1060,15 @@ function UpdateOfficerPositionFields({
 function AddOfficerModal({
   open,
   onClose,
-  chapterId,
+  entityType,
+  entityId,
   periodId,
   onAdded,
 }: {
   open: boolean;
   onClose: () => void;
-  chapterId: string;
+  entityType: StructuralEntityTypeEnum;
+  entityId: string;
   periodId: number;
   onAdded: () => void;
 }) {
@@ -1096,7 +1111,7 @@ function AddOfficerModal({
       resetForm();
       onAdded();
     } catch (err) {
-      console.error("[ChapterStructuralPage] add officer threw:", err);
+      console.error("[StructuralPage] add officer threw:", err);
       toast.error("Gagal menambahkan anggota.");
     } finally {
       setIsSaving(false);
@@ -1120,7 +1135,7 @@ function AddOfficerModal({
           value={selectedUser}
           onChange={setSelectedUser}
           loadOptions={(inputValue, page) =>
-            loadChapterUserOptions(chapterId, inputValue, page)
+            loadEntityUserOptions(entityType, entityId, inputValue, page)
           }
           showOptionAvatar
         />

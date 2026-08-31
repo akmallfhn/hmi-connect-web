@@ -86,6 +86,11 @@ function getNavItems(
         items: [
           { label: "Daftar Kader", href: `${base}/members`, icon: Users },
           {
+            label: "Str. Kepengurusan",
+            href: `${base}/structural`,
+            icon: Workflow,
+          },
+          {
             label: "Permintaan Verifikasi",
             href: `${base}/verification`,
             icon: ShieldCheck,
@@ -100,6 +105,11 @@ function getNavItems(
       dashboardItem,
       { label: "Daftar Cabang", href: `${base}/branches`, icon: GitBranch },
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      {
+        label: "Str. Kepengurusan",
+        href: `${base}/structural`,
+        icon: Workflow,
+      },
       { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
@@ -113,6 +123,11 @@ function getNavItems(
         icon: School,
       },
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      {
+        label: "Str. Kepengurusan",
+        href: `${base}/structural`,
+        icon: Workflow,
+      },
       { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
@@ -152,6 +167,11 @@ function getNavItems(
       groupName: "Keanggotaan",
       items: [
         { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+        {
+          label: "Str. Kepengurusan",
+          href: `${base}/structural`,
+          icon: Workflow,
+        },
         {
           label: "Permintaan Verifikasi",
           href: `${base}/verification`,
