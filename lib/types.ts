@@ -33,6 +33,12 @@ export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | 
 export type SearchTypeEnum = "people" | "posting";
 export type RevelationPlaceEnum = "mekkah" | "madinah";
 export type MessageStatusEnum = "sent" | "read";
+export type StructuralEntityTypeEnum =
+  | "organization"
+  | "coordinating_body"
+  | "branch"
+  | "chapter"
+  | "coordinating_chapter";
 
 export type StatusName =
   | "OK"

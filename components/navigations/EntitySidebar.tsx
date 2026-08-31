@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Users,
   Waypoints,
+  Workflow,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -120,6 +121,11 @@ function getNavItems(
     return [
       dashboardItem,
       { label: "Daftar Kader", href: `${base}/members`, icon: Users },
+      {
+        label: "Str. Kepengurusan",
+        href: `${base}/structural`,
+        icon: Workflow,
+      },
       { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }

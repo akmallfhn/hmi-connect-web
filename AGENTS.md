@@ -290,7 +290,27 @@ Three layers, each with one job. Don't blend them.
    rather than omitting the body because these backend handlers bind a JSON object and an absent
    body returns no usable aggregate data. Every function reads the session cookie itself
    and returns `null` on a non-success status rather than throwing, since each dashboard renders
-   every widget's own empty state), plus the shared `api.ts`).
+   every widget's own empty state), `structurals.ts` (the `structurals/*` officer-roster resource —
+   `listStructuralPeriods`/`getStructuralPeriodDetail` are readable by any authenticated user with no
+   entity-scope restriction, matching the backend; `createStructuralPeriod`/`updateStructuralPeriod`/
+   `createStructuralOfficer`/`updateStructuralOfficer`/`deleteStructuralOfficer` require `Super Admin`
+   or a matching `can_manage_*` Administrator on the backend side. `updateStructuralPeriod` only
+   mutates `start_year`/`end_year` — `entity_type`/`entity_id` and officers are immutable through this
+   endpoint, matching the backend (officers still go through `officers/create`/`officers/update`/
+   `officers/delete`). `end_year` is nullable end-to-end (never `omitempty` on the backend, so every
+   response — create, update, list, detail — always carries the key as a number or `null`); sending
+   `end_year: null` on `structurals/update` is how a period gets marked still-ongoing again.
+   `updateStructuralOfficer`'s `position_id` and `status` are both independently optional — an
+   omitted one leaves that field unchanged, matching `officers/update`'s partial-update contract.
+   `deleteStructuralOfficer` is a hard delete (`structural_officers` has no `deleted_at`), matching
+   `officers/delete`. `searchStructuralPositions`
+   wraps the separate, non-admin-gated
+   `structural-positions/list` lookup endpoint (`lookup_structural_positions`, same
+   auth-only/no-entity-scope shape as `institutions/list`/`social-media-platforms/list` — any
+   authenticated user can browse) — it's kept in this file rather than a standalone
+   `structural-positions.ts` since nothing outside the structural-officer forms needs it, unlike
+   institutions/social-media-platforms which are independent lookup resources with their own pages),
+   plus the shared `api.ts`).
    Marked `import "server-only"`.
    Holds _every_ operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
@@ -1824,6 +1844,77 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}` straight
   through — non-Super-Admin viewers (a Cabang/Badko/Korkom/Komisariat's own `Administrator`) can
   still reach the page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
+- Komisariat's own admin dashboard (`/chapters/[chapter_id]/structural`, `EntitySidebar`'s
+  "Str. Kepengurusan" item between Daftar Kader and Pengaturan — shortened from the page's own
+  "Struktur Kepengurusan" `AdminPageTitle` since the full label ran too wide in the sidebar) renders
+  the real `structural_periods`/`structural_officers` roster (`apis/structurals.ts`, see above) as a
+  multi-tier org chart — `components/pages/ChapterStructuralPage.tsx`. The backend has no
+  parent/level column on `structural_officers` (or `lookup_structural_positions`), so
+  `buildStructuralTiers` derives the tiers from `position_name` text matching instead, per explicit
+  product rule (max 3 nodes per row): the officer whose `position_name` matches `/ketua\s+umum/i` is
+  the single root (falls back to the officer with the lowest `position_id` — officers come back
+  ordered `position_id` then `created_at` — if no name matches); the next tier is exactly whichever
+  officers match `/sekretaris\s+(jenderal|umum)/i` and `/bendahara\s+umum/i` (in that order, at most
+  one of each), regardless of where their `position_id` actually sits, since those two always report
+  straight to Ketua; everyone else renders below that in further tiers chunked at `TIER_ROW_SIZE` (3)
+  per row, in the backend's own `position_id`/`created_at` order. `TreeTier` is the reusable
+  per-row renderer (one shared vertical stem down from the tier above, plus — only when a tier has
+  more than one officer — a horizontal connector down to each card). That connector is deliberately
+  not one shared full-width bar: each card owns its own left/right half (a `w-1/2` div anchored to
+  its own `left-1/2`/`right-1/2`, skipped on whichever side has no neighbor — first card has no left
+  half, last has no right half), inside a wrapper sized to the card's own width plus `px-3` padding
+  (no `gap-x-*` on the row, so one card's half-line meets its neighbor's exactly at the shared
+  padding boundary with no dead zone). This is the classic CSS-org-chart connector technique, ported
+  to plain divs instead of `::before`/`::after`: it's what makes the line start and end exactly at
+  the outermost cards' own stems (a clean right angle there) instead of overhanging past them the
+  way one edge-to-edge `border-t` bar does — a `border-t` bar spans the row's full content width,
+  which reaches each card's outer edge, but a card's own stem sits at its horizontal *center*, so the
+  bar overshoots by roughly half a card's width past the outermost stems on both ends. Every
+  connector line (stems and half-bars alike) uses the shared `TREE_LINE_CLASS` (`bg-[#c7d0de]`) — a
+  touch more visible than this app's usual `#dbe3ef` border tone (which disappears against the white
+  card background), without going as dark as a full mid-gray. Each `OfficerNode`'s "Jabatan" text is
+  `line-clamp-2` rather than a single-line `truncate`, wrapped in its own `group/position` (a named
+  group, since `OfficerNode` already nests other interactive elements) so a plain-black
+  `role="tooltip"` pill — `bg-[#172033]`, matching this app's near-black text color — fades in above
+  it on hover with the position's full, unclamped name, the same `opacity-0`→`group-hover:opacity-100`
+  transition pattern `IndonesiaBranchMap`'s point tooltips use, just styled dark/minimal instead of
+  that white informational-card treatment. A period Select switches
+  between a chapter's `structural_periods` rows via `?period=` (server-refetched through
+  `structurals/detail`, same query-param-drives-a-server-refetch pattern `NewsPage`/`SearchPage` use
+  for `?q=`). With no (or an invalid/stale) `?period=`, the route defaults to the period with a null
+  `end_year` — that's the one still ongoing — rather than just `periods.list[0]`; `structurals/list`
+  orders `start_year DESC, created_at DESC` with no "is current" concept on the backend, so a
+  future-dated period with an already-set `end_year` would otherwise outrank the real current one.
+  Falls back to `periods.list[0]` only when every period already has an `end_year` (none ongoing).
+  Each `OfficerNode` shows the officer's real `status` as a green "Aktif"/gray "Non-aktif"
+  `Label` rather than reusing the reference mock's node-selection highlight, since `status` is the one
+  per-officer field the backend actually has. `canManage` (`Super Admin`, or an Administrator whose
+  `can_manage_chapter` matches this chapter — the same check the route's parent layout already gates
+  entry on) adds "Tambah Periode Kepengurusan" (a `Modal` creating a period plus its initial officer
+  batch in one `structurals/create` call — dynamic officer rows, each a `SearchableSelect` user picker
+  scoped via `/api/users/search?chapter_id=` same as `ChapterSettingsPage`'s "Tambah Akses" modal),
+  "Update Periode" (`outline`, left of "Tambah Anggota" in the period header row — a separate
+  `UpdatePeriodModal`/`UpdatePeriodFields` pair, the latter mounted only while open so its year fields
+  seed fresh from the currently selected period every time it's reopened, calling
+  `structurals/update` with just `id`/`start_year`/`end_year` for the already-selected period; there's
+  no entity/officer editing here, matching the endpoint), and "Tambah Anggota" (`secondary`,
+  `structurals/officers/create` against the currently selected period) actions, plus a per-node "..."
+  `Dropdown` (every `OfficerNode`, root included) with three actions: toggle `status` via
+  `structurals/officers/update`; "Update Jabatan" (`Pencil`, opens `UpdateOfficerPositionModal`/
+  `UpdateOfficerPositionFields` — same mounted-only-while-open reseed pattern as `UpdatePeriodFields`
+  — a single `SearchableSelect` pre-filled from the officer's own `position_id`/`position_name` via
+  `defaultOptions`, calling `structurals/officers/update` with just `id`/`position_id`); and
+  "Hapus Anggota" (`Trash2`, destructive-styled, behind its own `AlertConfirmation` —
+  `structurals/officers/delete` is a real hard delete, `structural_officers` has no `deleted_at`, so
+  this is the only way to remove someone from the chart; toggling `status` to `inactive` is a
+  separate, non-destructive action that keeps the row). Every "Jabatan" field in these forms is a
+  `SearchableSelect`
+  backed by
+  `apis/structurals.ts#searchStructuralPositions` through
+  `app/(admin)/admin/api/structural-positions/search/route.ts` (same debounced-search-needs-a-
+  Route-Handler reasoning as `institutions/search`, and the same admin-origin-duplicate reasoning as
+  the branches/chapters/provinces/cities/districts search routes) — not the `www` origin, since only
+  these admin-only structural forms need it.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

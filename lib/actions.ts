@@ -51,6 +51,17 @@ import {
   createInstitution as createInstitutionApi,
   type Institution,
 } from "@/apis/institutions";
+import {
+  createStructuralOfficer as createStructuralOfficerApi,
+  createStructuralPeriod as createStructuralPeriodApi,
+  deleteStructuralOfficer as deleteStructuralOfficerApi,
+  updateStructuralOfficer as updateStructuralOfficerApi,
+  updateStructuralPeriod as updateStructuralPeriodApi,
+  type CreateStructuralOfficerPayload,
+  type CreateStructuralPeriodPayload,
+  type UpdateStructuralOfficerPayload,
+  type UpdateStructuralPeriodPayload,
+} from "@/apis/structurals";
 import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
   activateUser as activateUserApi,
@@ -313,6 +324,34 @@ export async function updateCoordinatingChapter(
 
 export async function deleteCoordinatingChapter(id: string) {
   return deleteCoordinatingChapterApi(id);
+}
+
+export async function createStructuralPeriod(
+  payload: CreateStructuralPeriodPayload
+) {
+  return createStructuralPeriodApi(payload);
+}
+
+export async function createStructuralOfficer(
+  payload: CreateStructuralOfficerPayload
+) {
+  return createStructuralOfficerApi(payload);
+}
+
+export async function updateStructuralOfficer(
+  payload: UpdateStructuralOfficerPayload
+) {
+  return updateStructuralOfficerApi(payload);
+}
+
+export async function updateStructuralPeriod(
+  payload: UpdateStructuralPeriodPayload
+) {
+  return updateStructuralPeriodApi(payload);
+}
+
+export async function deleteStructuralOfficer(id: string) {
+  return deleteStructuralOfficerApi(id);
 }
 
 export async function createTraining(payload: CreateTrainingPayload) {
