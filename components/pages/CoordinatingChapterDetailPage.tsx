@@ -21,6 +21,10 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { ChapterListEntry } from "@/apis/chapters";
 import type { CoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import type {
+  StructuralPeriodDetail,
+  StructuralPeriodSummary,
+} from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { updateCoordinatingChapter } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -29,6 +33,7 @@ import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditCoordinatingChapterFormSheet from "../forms/EditCoordinatingChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import StructuralPage from "./StructuralPage";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
 import {
@@ -48,6 +53,9 @@ interface CoordinatingChapterDetailPageProps {
   chapters: ChapterListEntry[];
   memberCount: number;
   trainings: TrainingListEntry[];
+  structuralPeriods: StructuralPeriodSummary[];
+  selectedStructuralPeriod: StructuralPeriodDetail | null;
+  selectedStructuralPeriodId: number | null;
   initialTab: CoordinatingChapterDetailTab;
   backHref: string;
   // Master manages Korkom directly; Cabang can create/suspend its own but not edit them.
@@ -116,6 +124,9 @@ export default function CoordinatingChapterDetailPage({
   chapters,
   memberCount,
   trainings,
+  structuralPeriods,
+  selectedStructuralPeriod,
+  selectedStructuralPeriodId,
   initialTab,
   backHref,
   allowEdit = false,
@@ -331,12 +342,15 @@ export default function CoordinatingChapterDetailPage({
         )}
 
         {activeTab === "management" && (
-          <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            <EmptyState
-              title="Struktur kepengurusan belum tersedia"
-              description="Data struktur kepengurusan Korkom akan ditampilkan di sini setelah layanan datanya tersedia."
-            />
-          </section>
+          <StructuralPage
+            entityType="coordinating_chapter"
+            entityId={coordinatingChapter.id}
+            periods={structuralPeriods}
+            selectedPeriod={selectedStructuralPeriod}
+            selectedPeriodId={selectedStructuralPeriodId}
+            canManage={false}
+            embedded
+          />
         )}
 
         {activeTab === "chapters" && (

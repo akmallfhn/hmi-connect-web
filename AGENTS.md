@@ -1685,8 +1685,18 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   Kader" stat pill comes from
   `apis/users.ts#listUsers({ chapterId, status: "active", pageSize: 1 }).totalData` — `chapters/detail`
   itself carries no member count, unlike `branches/list`'s aggregate `user_count`. Tabs are Profil,
-  Kepengurusan (same unavailable-empty-state precedent), and Latihan Kader (`trainings/list` filtered
-  to the `chapter` organizer, since LK1 is chapter-organized) — there's no fourth "Daftar X" tab since
+  Kepengurusan, and Latihan Kader (`trainings/list` filtered to the `chapter` organizer, since LK1 is
+  chapter-organized) — there's no fourth "Daftar X" tab since a Komisariat is a leaf node with no
+  child entity to list. Kepengurusan is the same `StructuralPage` component the chapter's own
+  self-service dashboard uses, embedded read-only (`canManage={false}`, `embedded` — drops the page
+  padding and the "Struktur Kepengurusan" title/create-period row, since they'd duplicate this tab's
+  own chrome) rather than the placeholder empty state it used to be; all three routes that render
+  `ChapterDetailPage` (Master, the branch-scoped "Kelola Komisariat", the coordinating-chapter-scoped
+  "Daftar Komisariat") fetch `apis/structurals.ts#getStructuralOverview("chapter", chapter_id, ...)`
+  alongside their existing member-count/training fetches and thread the result straight through —
+  none of the three ever pass `canManage`, so this view can never mutate officers from any of them;
+  editing stays exclusive to the Komisariat's own `/chapters/[chapter_id]/structural` page. A Komisariat
+  optionally links to a university
   a Komisariat is a leaf node with no child entity to list. A chapter optionally links to a university
   via `institution_id` (`institution_name`/`institution_avatar` derived, `null` until set — see
   `internal/organization/README.md` in the `ordina` backend repo); both form sheets' "Asal Universitas"
@@ -1732,7 +1742,9 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   the same targeted-count trick `ChapterDetailPage` uses for its own member count, since
   `coordinating-chapters/detail` carries no aggregate either). Its four tabs are Profil (a plain
   Deskripsi card, since a Korkom has no other profile fields worth a structured grid), Kepengurusan
-  (same unavailable-empty-state precedent), Daftar Komisariat (the chapters under this Korkom), and
+  (the same read-only-embedded `StructuralPage` pattern as Badko/Cabang, scoped
+  `"coordinating_chapter"`/`coordinatingChapter.id`, fetched via `getStructuralOverview` by both this
+  component's routes), Daftar Komisariat (the chapters under this Korkom), and
   Latihan Kader — `TrainingOrganizerTypeEnum` has no `coordinating_chapter` value (a Korkom never
   organizes its own training events; LK1 is always organized per Komisariat), so this tab instead
   fetches `trainings/list` once per chapter under the Korkom (`organizerType: "chapter"`) via
@@ -1758,12 +1770,15 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   shared read-only detail page under the current scope
   (`/master/coordinating-bodies/[coordinating_body_id]` or
   `/organizations/[organization_id]/coordinating-bodies/[coordinating_body_id]`). That page has
-  Profil, Struktur Kepengurusan, Cabang, and Latihan Kader tabs: Profil reads the expanded
+  Profil, Kepengurusan, Cabang, and Latihan Kader tabs: Profil reads the expanded
   `coordinating-bodies/detail` response, Cabang uses the full `branches/list` result filtered by
   `coordinating_body_id`, and Latihan Kader filters `trainings/list` by the
-  `coordinating_body` organizer. There is no Badko-management-structure endpoint yet, so the
-  Struktur Kepengurusan tab deliberately renders an explicit unavailable empty state rather than
-  treating every Badko member as an office holder. The Organization detail route also verifies
+  `coordinating_body` organizer. Kepengurusan is the shared `StructuralPage` component (same one the
+  Badko's own self-service dashboard uses) embedded read-only — `canManage={false}`, `embedded` — via
+  `apis/structurals.ts#getStructuralOverview("coordinating_body", coordinating_body_id, ...)`, fetched
+  by both this scope's route files alongside their existing `branches`/`trainings` calls; neither ever
+  passes `canManage`, so this view can't mutate officers — that stays exclusive to the Badko's own
+  `/coordinating-bodies/[coordinating_body_id]/structural` page. The Organization detail route also verifies
   that the fetched Badko's `organization_id` matches its already-validated route scope. Its tab
   switcher uses a fully-rounded white bordered track with an orange active pill.
   The Profil footer exposes the status mutation: an active Badko gets a destructive Suspend action,
@@ -1803,7 +1818,9 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
 BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape — a header card
   above the tabs (logo, name, Status + Tipe badges, Badko subtitle, Suspend/Aktifkan next to Edit
   Detail, then Jumlah Komisariat/Jumlah Kader/Dibuat/Diperbarui stat pills) — with Profil (Deskripsi
-  only), Kepengurusan (explicit unavailable empty state, same as Badko), Daftar Komisariat (table of
+  only), Kepengurusan (the same read-only-embedded `StructuralPage` pattern as Badko's own detail
+  page, scoped `"branch"`/`branch.id` — every one of this component's three routes, Master included,
+  fetches `getStructuralOverview` and passes it through), Daftar Komisariat (table of
   this branch's chapters via `listAllChaptersAdmin`, including Asal Universitas), and Latihan Kader
   (`trainings/list` filtered to the `branch` organizer) tabs. The Organization detail route verifies
   the fetched branch's `coordinating_body.organization_id` matches its own validated scope, the same

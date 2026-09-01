@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import { listUsers } from "@/apis/users";
 import CoordinatingChapterDetailPage, {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 interface MasterCoordinatingChapterDetailPageProps {
   params: Promise<{ coordinating_chapter_id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string }>;
 }
 
 function parseTab(tab?: string): CoordinatingChapterDetailTab {
@@ -41,7 +42,7 @@ export default async function MasterCoordinatingChapterDetailPage({
   );
   if (!coordinatingChapter) notFound();
 
-  const [chapters, memberResult] = await Promise.all([
+  const [chapters, memberResult, structuralOverview] = await Promise.all([
     listAllChaptersAdmin({ coordinatingChapterId: coordinating_chapter_id }),
     listUsers({
       coordinatingChapterId: coordinating_chapter_id,
@@ -49,6 +50,11 @@ export default async function MasterCoordinatingChapterDetailPage({
       page: 1,
       pageSize: 1,
     }),
+    getStructuralOverview(
+      "coordinating_chapter",
+      coordinating_chapter_id,
+      query.period ? Number(query.period) : null
+    ),
   ]);
 
   // A Korkom never organizes its own trainings — LK1 is organized per Komisariat, so this aggregates every chapter's own trainings/list into one feed.
@@ -75,6 +81,9 @@ export default async function MasterCoordinatingChapterDetailPage({
       chapters={chapters}
       memberCount={memberResult.totalData}
       trainings={trainings}
+      structuralPeriods={structuralOverview.periods}
+      selectedStructuralPeriod={structuralOverview.selectedPeriod}
+      selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       initialTab={parseTab(query.tab)}
       backHref="/master/coordinating-chapters"
       allowEdit

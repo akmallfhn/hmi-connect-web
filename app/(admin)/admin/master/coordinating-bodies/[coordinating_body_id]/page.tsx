@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import CoordinatingBodyDetailPage, {
   type CoordinatingBodyDetailTab,
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 interface MasterCoordinatingBodyDetailPageProps {
   params: Promise<{ coordinating_body_id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string }>;
 }
 
 function parseTab(tab?: string): CoordinatingBodyDetailTab {
@@ -39,7 +40,7 @@ export default async function MasterCoordinatingBodyDetailPage({
     await getCoordinatingBodyDetail(coordinating_body_id);
   if (!coordinatingBody) notFound();
 
-  const [branches, trainingResult] = await Promise.all([
+  const [branches, trainingResult, structuralOverview] = await Promise.all([
     listAllBranchesAdmin({ coordinatingBodyId: coordinating_body_id }),
     listTrainings({
       organizerType: "coordinating_body",
@@ -47,6 +48,11 @@ export default async function MasterCoordinatingBodyDetailPage({
       page: 1,
       pageSize: 100,
     }),
+    getStructuralOverview(
+      "coordinating_body",
+      coordinating_body_id,
+      query.period ? Number(query.period) : null
+    ),
   ]);
 
   return (
@@ -54,6 +60,9 @@ export default async function MasterCoordinatingBodyDetailPage({
       coordinatingBody={coordinatingBody}
       branches={branches}
       trainings={trainingResult.list}
+      structuralPeriods={structuralOverview.periods}
+      selectedStructuralPeriod={structuralOverview.selectedPeriod}
+      selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       initialTab={parseTab(query.tab)}
       backHref="/master/coordinating-bodies"
     />

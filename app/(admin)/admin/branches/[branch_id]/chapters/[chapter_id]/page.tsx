@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
+import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import { listUsers } from "@/apis/users";
 import ChapterDetailPage, {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 interface BranchChapterDetailPageProps {
   params: Promise<{ branch_id: string; chapter_id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string }>;
 }
 
 function parseTab(tab?: string): ChapterDetailTab {
@@ -38,7 +39,7 @@ export default async function BranchChapterDetailPage({
     notFound();
   }
 
-  const [memberResult, trainingResult] = await Promise.all([
+  const [memberResult, trainingResult, structuralOverview] = await Promise.all([
     listUsers({ chapterId: chapter_id, status: "active", page: 1, pageSize: 1 }),
     listTrainings({
       organizerType: "chapter",
@@ -46,6 +47,11 @@ export default async function BranchChapterDetailPage({
       page: 1,
       pageSize: 100,
     }),
+    getStructuralOverview(
+      "chapter",
+      chapter_id,
+      query.period ? Number(query.period) : null
+    ),
   ]);
 
   return (
@@ -53,6 +59,9 @@ export default async function BranchChapterDetailPage({
       chapter={chapter}
       memberCount={memberResult.totalData}
       trainings={trainingResult.list}
+      structuralPeriods={structuralOverview.periods}
+      selectedStructuralPeriod={structuralOverview.selectedPeriod}
+      selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/chapters`}
       allowStatusChange

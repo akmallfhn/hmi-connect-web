@@ -20,6 +20,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { ChapterDetail } from "@/apis/chapters";
+import type {
+  StructuralPeriodDetail,
+  StructuralPeriodSummary,
+} from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { updateChapter } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -28,6 +32,7 @@ import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditChapterFormSheet from "../forms/EditChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import StructuralPage from "./StructuralPage";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
 import {
@@ -42,6 +47,9 @@ interface ChapterDetailPageProps {
   chapter: ChapterDetail;
   memberCount: number;
   trainings: TrainingListEntry[];
+  structuralPeriods: StructuralPeriodSummary[];
+  selectedStructuralPeriod: StructuralPeriodDetail | null;
+  selectedStructuralPeriodId: number | null;
   initialTab: ChapterDetailTab;
   backHref: string;
   // Edit Detail is Master-only; Cabang/Korkom views of a Komisariat are read-only here.
@@ -109,6 +117,9 @@ export default function ChapterDetailPage({
   chapter,
   memberCount,
   trainings,
+  structuralPeriods,
+  selectedStructuralPeriod,
+  selectedStructuralPeriodId,
   initialTab,
   backHref,
   allowEdit = false,
@@ -342,12 +353,15 @@ export default function ChapterDetailPage({
         )}
 
         {activeTab === "management" && (
-          <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            <EmptyState
-              title="Struktur kepengurusan belum tersedia"
-              description="Data struktur kepengurusan Komisariat akan ditampilkan di sini setelah layanan datanya tersedia."
-            />
-          </section>
+          <StructuralPage
+            entityType="chapter"
+            entityId={chapter.id}
+            periods={structuralPeriods}
+            selectedPeriod={selectedStructuralPeriod}
+            selectedPeriodId={selectedStructuralPeriodId}
+            canManage={false}
+            embedded
+          />
         )}
 
         {activeTab === "trainings" && (

@@ -21,6 +21,10 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { BranchDetail } from "@/apis/branches";
 import type { ChapterListEntry } from "@/apis/chapters";
+import type {
+  StructuralPeriodDetail,
+  StructuralPeriodSummary,
+} from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { updateBranch } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -29,6 +33,7 @@ import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditBranchFormSheet from "../forms/EditBranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import StructuralPage from "./StructuralPage";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
 import {
@@ -43,6 +48,9 @@ interface BranchDetailPageProps {
   branch: BranchDetail;
   chapters: ChapterListEntry[];
   trainings: TrainingListEntry[];
+  structuralPeriods: StructuralPeriodSummary[];
+  selectedStructuralPeriod: StructuralPeriodDetail | null;
+  selectedStructuralPeriodId: number | null;
   initialTab: BranchDetailTab;
   backHref: string;
   // Master manages Cabang directly; Organization's view of a Cabang is read-only (mirrors allowDelete on the list page).
@@ -109,6 +117,9 @@ export default function BranchDetailPage({
   branch,
   chapters,
   trainings,
+  structuralPeriods,
+  selectedStructuralPeriod,
+  selectedStructuralPeriodId,
   initialTab,
   backHref,
   allowEdit = true,
@@ -326,12 +337,15 @@ export default function BranchDetailPage({
         )}
 
         {activeTab === "management" && (
-          <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            <EmptyState
-              title="Struktur kepengurusan belum tersedia"
-              description="Data struktur kepengurusan Cabang akan ditampilkan di sini setelah layanan datanya tersedia."
-            />
-          </section>
+          <StructuralPage
+            entityType="branch"
+            entityId={branch.id}
+            periods={structuralPeriods}
+            selectedPeriod={selectedStructuralPeriod}
+            selectedPeriodId={selectedStructuralPeriodId}
+            canManage={false}
+            embedded
+          />
         )}
 
         {activeTab === "chapters" && (

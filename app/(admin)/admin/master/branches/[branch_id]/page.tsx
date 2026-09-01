@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBranchDetail } from "@/apis/branches";
 import { listAllChaptersAdmin } from "@/apis/chapters";
+import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import BranchDetailPage, {
   type BranchDetailTab,
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 interface MasterBranchDetailPageProps {
   params: Promise<{ branch_id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string }>;
 }
 
 function parseTab(tab?: string): BranchDetailTab {
@@ -35,7 +36,7 @@ export default async function MasterBranchDetailPage({
   const branch = await getBranchDetail(branch_id);
   if (!branch) notFound();
 
-  const [chapters, trainingResult] = await Promise.all([
+  const [chapters, trainingResult, structuralOverview] = await Promise.all([
     listAllChaptersAdmin({ branchId: branch_id }),
     listTrainings({
       organizerType: "branch",
@@ -43,6 +44,11 @@ export default async function MasterBranchDetailPage({
       page: 1,
       pageSize: 100,
     }),
+    getStructuralOverview(
+      "branch",
+      branch_id,
+      query.period ? Number(query.period) : null
+    ),
   ]);
 
   return (
@@ -50,6 +56,9 @@ export default async function MasterBranchDetailPage({
       branch={branch}
       chapters={chapters}
       trainings={trainingResult.list}
+      structuralPeriods={structuralOverview.periods}
+      selectedStructuralPeriod={structuralOverview.selectedPeriod}
+      selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       initialTab={parseTab(query.tab)}
       backHref="/master/branches"
     />

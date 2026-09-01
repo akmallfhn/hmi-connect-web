@@ -22,6 +22,10 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { BranchListEntry } from "@/apis/branches";
 import type { CoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import type {
+  StructuralPeriodDetail,
+  StructuralPeriodSummary,
+} from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { updateCoordinatingBody } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -30,6 +34,7 @@ import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
+import StructuralPage from "./StructuralPage";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
 import {
@@ -45,6 +50,9 @@ interface CoordinatingBodyDetailPageProps {
   coordinatingBody: CoordinatingBodyDetail;
   branches: BranchListEntry[];
   trainings: TrainingListEntry[];
+  structuralPeriods: StructuralPeriodSummary[];
+  selectedStructuralPeriod: StructuralPeriodDetail | null;
+  selectedStructuralPeriodId: number | null;
   initialTab: CoordinatingBodyDetailTab;
   backHref: string;
   // Master manages Badko directly; Organization's view of a Badko is read-only (mirrors allowDelete on the list page).
@@ -111,6 +119,9 @@ export default function CoordinatingBodyDetailPage({
   coordinatingBody,
   branches,
   trainings,
+  structuralPeriods,
+  selectedStructuralPeriod,
+  selectedStructuralPeriodId,
   initialTab,
   backHref,
   allowEdit = true,
@@ -338,12 +349,15 @@ export default function CoordinatingBodyDetailPage({
         )}
 
         {activeTab === "management" && (
-          <section className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-            <EmptyState
-              title="Struktur kepengurusan belum tersedia"
-              description="Data struktur kepengurusan Badko akan ditampilkan di sini setelah layanan datanya tersedia."
-            />
-          </section>
+          <StructuralPage
+            entityType="coordinating_body"
+            entityId={coordinatingBody.id}
+            periods={structuralPeriods}
+            selectedPeriod={selectedStructuralPeriod}
+            selectedPeriodId={selectedStructuralPeriodId}
+            canManage={false}
+            embedded
+          />
         )}
 
         {activeTab === "branches" && (

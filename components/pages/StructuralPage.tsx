@@ -48,6 +48,8 @@ interface StructuralPageProps {
   selectedPeriod: StructuralPeriodDetail | null;
   selectedPeriodId: number | null;
   canManage: boolean;
+  // Drops the page padding and title/create-period row when nested inside another page's own tab.
+  embedded?: boolean;
 }
 
 // /api/users/search's scoping param per entity type — organization has none, matching AdminMemberListPage's own org-wide roster.
@@ -155,6 +157,7 @@ export default function StructuralPage({
   selectedPeriod,
   selectedPeriodId,
   canManage,
+  embedded = false,
 }: StructuralPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -234,23 +237,27 @@ export default function StructuralPage({
   const { root, tiers } = buildStructuralTiers(selectedPeriod?.officers ?? []);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <AdminPageTitle>Struktur Kepengurusan</AdminPageTitle>
+    <div className={embedded ? undefined : "p-4 sm:p-6 lg:p-8"}>
+      {!embedded && (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <AdminPageTitle>Struktur Kepengurusan</AdminPageTitle>
 
-        {canManage && (
-          <Button
-            variant="primary"
-            onClick={() => setShowCreatePeriod(true)}
-            className="w-fit shrink-0"
-          >
-            <PlusCircle className="size-4" />
-            Tambah Periode Kepengurusan
-          </Button>
-        )}
-      </div>
+          {canManage && (
+            <Button
+              variant="primary"
+              onClick={() => setShowCreatePeriod(true)}
+              className="w-fit shrink-0"
+            >
+              <PlusCircle className="size-4" />
+              Tambah Periode Kepengurusan
+            </Button>
+          )}
+        </div>
+      )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+      <div
+        className={`overflow-hidden rounded-xl border border-[#e6e9ef] bg-white ${embedded ? "" : "mt-6"}`}
+      >
         {periods.length === 0 ? (
           <EmptyState
             title="Struktur kepengurusan belum tersedia"
