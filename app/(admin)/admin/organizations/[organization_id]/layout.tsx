@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
@@ -17,12 +18,7 @@ export default async function OrganizationLayout({
   const { user } = await getSession();
   const configuredOrganizationId = process.env.ORGANIZATION_ID;
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManageThisOrganization =
-    Boolean(user?.can_manage_organization) &&
-    user?.organization_id === organization_id;
-
-  if (!isSuperAdmin && !canManageThisOrganization) {
+  if (!canManageEntity(user, "organization", organization_id)) {
     return (
       <PageState
         variant="forbidden"

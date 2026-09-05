@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
+import { canManageEntity } from "@/lib/access";
 import StructuralPage from "@/components/pages/StructuralPage";
 
 export const metadata: Metadata = {
@@ -25,10 +26,7 @@ export default async function ChapterStructuralRoute({
     getStructuralOverview("chapter", chapter_id, period ? Number(period) : null),
   ]);
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManage =
-    isSuperAdmin ||
-    (Boolean(user?.can_manage_chapter) && user?.chapter_id === chapter_id);
+  const canManage = canManageEntity(user, "chapter", chapter_id);
 
   return (
     <StructuralPage

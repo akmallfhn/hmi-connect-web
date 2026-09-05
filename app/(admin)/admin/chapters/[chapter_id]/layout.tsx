@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getChapterDetail } from "@/apis/chapters";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
@@ -17,11 +18,7 @@ export default async function ChapterLayout({
   const { chapter_id } = await params;
   const { user } = await getSession();
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManageThisChapter =
-    Boolean(user?.can_manage_chapter) && user?.chapter_id === chapter_id;
-
-  if (!isSuperAdmin && !canManageThisChapter) {
+  if (!canManageEntity(user, "chapter", chapter_id)) {
     return (
       <PageState
         variant="forbidden"

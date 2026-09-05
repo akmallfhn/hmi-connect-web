@@ -117,7 +117,7 @@ type BranchListAdminResponse = {
   };
 };
 
-// Requires Super Admin/Administrator — only called from the /master/branches admin panel, gated by MasterLayout.
+// Requires Super Admin, or a manage grant on the entity named in the request — gated by MasterLayout for /master/branches.
 export async function listBranchesAdmin(
   options: ListBranchesOptions = {},
 ): Promise<PagedListResult<BranchListEntry>> {

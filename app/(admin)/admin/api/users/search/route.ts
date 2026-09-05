@@ -1,120 +1,54 @@
 import { NextResponse } from "next/server";
 import { searchPeople } from "@/apis/search";
 import { getSession } from "@/apis/session";
-import { listUsers } from "@/apis/users";
+import { listUsers, type ListUsersOptions } from "@/apis/users";
+import { canManageEntity } from "@/lib/access";
+import type { AccessEntityTypeEnum } from "@/lib/types";
+
+// Query param carrying each entity scope, paired with the listUsers filter it maps onto.
+const SCOPES: {
+  param: string;
+  entityType: AccessEntityTypeEnum;
+  filter: keyof Pick<
+    ListUsersOptions,
+    "chapterId" | "branchId" | "coordinatingChapterId" | "coordinatingBodyId"
+  >;
+}[] = [
+  { param: "chapter_id", entityType: "chapter", filter: "chapterId" },
+  { param: "branch_id", entityType: "branch", filter: "branchId" },
+  {
+    param: "coordinating_chapter_id",
+    entityType: "coordinating_chapter",
+    filter: "coordinatingChapterId",
+  },
+  {
+    param: "coordinating_body_id",
+    entityType: "coordinating_body",
+    filter: "coordinatingBodyId",
+  },
+];
 
 // Duplicate of app/(www)/www/api/users/search/route.ts — admin.(example.com) is a separate origin, needs its own copy.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
-  const branchId = searchParams.get("branch_id") ?? "";
-  const chapterId = searchParams.get("chapter_id") ?? "";
-  const coordinatingBodyId = searchParams.get("coordinating_body_id") ?? "";
-  const coordinatingChapterId =
-    searchParams.get("coordinating_chapter_id") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
-  if (chapterId) {
-    const { user } = await getSession();
-    const canAccessChapter =
-      user?.role_name === "Super Admin" ||
-      (user?.can_manage_chapter === true && user.chapter_id === chapterId);
+  const scope = SCOPES.find((entry) => searchParams.get(entry.param));
 
-    if (!canAccessChapter) {
-      return NextResponse.json(
-        { data: [], hasMore: false },
-        { status: 403 }
-      );
+  if (scope) {
+    const entityId = searchParams.get(scope.param) as string;
+    const { user } = await getSession();
+
+    if (!canManageEntity(user, scope.entityType, entityId)) {
+      return NextResponse.json({ data: [], hasMore: false }, { status: 403 });
     }
 
     const result = await listUsers({
       search: q.trim() || undefined,
       status: "active",
-      chapterId,
-      page,
-      pageSize,
-    });
-
-    return NextResponse.json({
-      data: result.list,
-      hasMore: result.currentPage < result.totalPage,
-    });
-  }
-
-  if (branchId) {
-    const { user } = await getSession();
-    const canAccessBranch =
-      user?.role_name === "Super Admin" ||
-      (user?.can_manage_branch === true && user.branch_id === branchId);
-
-    if (!canAccessBranch) {
-      return NextResponse.json(
-        { data: [], hasMore: false },
-        { status: 403 }
-      );
-    }
-
-    const result = await listUsers({
-      search: q.trim() || undefined,
-      status: "active",
-      branchId,
-      page,
-      pageSize,
-    });
-
-    return NextResponse.json({
-      data: result.list,
-      hasMore: result.currentPage < result.totalPage,
-    });
-  }
-
-  if (coordinatingChapterId) {
-    const { user } = await getSession();
-    const canAccessCoordinatingChapter =
-      user?.role_name === "Super Admin" ||
-      (user?.can_manage_coordinating_chapter === true &&
-        user.coordinating_chapter_id === coordinatingChapterId);
-
-    if (!canAccessCoordinatingChapter) {
-      return NextResponse.json(
-        { data: [], hasMore: false },
-        { status: 403 }
-      );
-    }
-
-    const result = await listUsers({
-      search: q.trim() || undefined,
-      status: "active",
-      coordinatingChapterId,
-      page,
-      pageSize,
-    });
-
-    return NextResponse.json({
-      data: result.list,
-      hasMore: result.currentPage < result.totalPage,
-    });
-  }
-
-  if (coordinatingBodyId) {
-    const { user } = await getSession();
-    const canAccessCoordinatingBody =
-      user?.role_name === "Super Admin" ||
-      (user?.can_manage_coordinating_body === true &&
-        user.coordinating_body_id === coordinatingBodyId);
-
-    if (!canAccessCoordinatingBody) {
-      return NextResponse.json(
-        { data: [], hasMore: false },
-        { status: 403 }
-      );
-    }
-
-    const result = await listUsers({
-      search: q.trim() || undefined,
-      status: "active",
-      coordinatingBodyId,
+      [scope.filter]: entityId,
       page,
       pageSize,
     });

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBranchDetail } from "@/apis/branches";
 import { getSession } from "@/apis/session";
-import { listBranchAdmins } from "@/apis/users";
+import { canManageEntity } from "@/lib/access";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import BranchSettingsPage from "@/components/pages/BranchSettingsPage";
 
 export const metadata: Metadata = {
@@ -18,10 +19,10 @@ export default async function BranchSettingsRoute({
   params,
 }: BranchSettingsRouteProps) {
   const { branch_id } = await params;
-  const [{ user }, branch, admins] = await Promise.all([
+  const [{ user }, branch, grants] = await Promise.all([
     getSession(),
     getBranchDetail(branch_id),
-    listBranchAdmins(branch_id),
+    listAllAccessGrants("branch", branch_id),
   ]);
 
   if (!branch) notFound();
@@ -29,8 +30,8 @@ export default async function BranchSettingsRoute({
   return (
     <BranchSettingsPage
       branch={branch}
-      admins={admins}
-      isSuperAdmin={user?.role_name === "Super Admin"}
+      grants={grants}
+      canManageAccess={canManageEntity(user, "branch", branch_id)}
     />
   );
 }

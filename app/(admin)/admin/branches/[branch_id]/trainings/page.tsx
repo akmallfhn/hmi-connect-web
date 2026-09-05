@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listTrainings } from "@/apis/trainings";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import BranchTrainingListPage from "@/components/pages/BranchTrainingListPage";
 
 export const metadata: Metadata = {
@@ -37,8 +38,8 @@ export default async function BranchTrainingListRoute({
     }),
     getSession(),
   ]);
-  const canManageTrainings =
-    user?.role_name === "Super Admin" || user?.role_name === "Administrator";
+  // Writes need a manage grant on the training's own organizer — this route is always branch-organized.
+  const canManageTrainings = canManageEntity(user, "branch", branch_id);
 
   return (
     <BranchTrainingListPage

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
 import type { UserStatusEnum } from "@/lib/types";
@@ -36,6 +37,8 @@ export default async function CoordinatingChapterMembersPage({
     }),
   ]);
 
+  const accessGrants = await listAllAccessGrants("coordinating_chapter", coordinating_chapter_id);
+
   return (
     <AdminMemberListPage
       basePath={`/coordinating-chapters/${coordinating_chapter_id}`}
@@ -48,6 +51,9 @@ export default async function CoordinatingChapterMembersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
+      adminUserIds={accessGrants
+        .filter((grant) => grant.status === "accepted")
+        .map((grant) => grant.user_id)}
     />
   );
 }

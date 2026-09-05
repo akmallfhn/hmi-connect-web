@@ -112,7 +112,7 @@ type ChapterListAdminResponse = {
   };
 };
 
-// Requires Super Admin/Administrator — only called from the /master/chapters admin panel, gated by MasterLayout.
+// Requires Super Admin, or a manage grant on the entity named in the request — gated by MasterLayout for /master/chapters.
 export async function listChaptersAdmin(
   options: ListChaptersOptions = {},
 ): Promise<PagedListResult<ChapterListEntry>> {

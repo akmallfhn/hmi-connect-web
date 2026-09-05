@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
+import { canManageEntity } from "@/lib/access";
 import StructuralPage from "@/components/pages/StructuralPage";
 
 export const metadata: Metadata = {
@@ -29,11 +30,7 @@ export default async function CoordinatingChapterStructuralRoute({
     ),
   ]);
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManage =
-    isSuperAdmin ||
-    (Boolean(user?.can_manage_coordinating_chapter) &&
-      user?.coordinating_chapter_id === coordinating_chapter_id);
+  const canManage = canManageEntity(user, "coordinating_chapter", coordinating_chapter_id);
 
   return (
     <StructuralPage

@@ -40,7 +40,7 @@ type CoordinatingChapterListAdminResponse = {
   };
 };
 
-// Requires Super Admin/Administrator — only called from the /master/coordinating-chapters admin panel and the branch-scoped Kelola Korkom page.
+// Requires Super Admin, or a manage grant on the entity named in the request — /master/coordinating-chapters and the branch-scoped Kelola Korkom page.
 export async function listCoordinatingChaptersAdmin(
   options: ListCoordinatingChaptersOptions = {}
 ): Promise<PagedListResult<CoordinatingChapterListEntry>> {

@@ -3,8 +3,23 @@ import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type UserStatusEnum, type VerificationStatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type AccessCapabilityEnum,
+  type AccessEntityTypeEnum,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
+
+// One accepted, unrevoked access grant — check-session only ever returns accepted ones.
+export type SessionGrant = {
+  id: string;
+  entity_type: AccessEntityTypeEnum;
+  entity_id: string;
+  entity_name?: string;
+  capability: AccessCapabilityEnum;
+};
 
 export type SessionUser = {
   id?: string;
@@ -18,11 +33,7 @@ export type SessionUser = {
   coordinating_chapter_name?: string;
   chapter_id?: string;
   chapter_name?: string;
-  can_manage_organization?: boolean;
-  can_manage_coordinating_body?: boolean;
-  can_manage_branch?: boolean;
-  can_manage_coordinating_chapter?: boolean;
-  can_manage_chapter?: boolean;
+  grants?: SessionGrant[]; // replaced the can_manage_* booleans; `[]` for plain members and for Super Admin
   full_name?: string;
   username: string; // backend auto-generates a placeholder at sign-up, never null — see internal/user/README.md
   avatar?: string;

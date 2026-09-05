@@ -3,12 +3,15 @@ import SuspendedEntityList from "./SuspendedEntityList";
 import TrainingPriorityList from "./TrainingPriorityList";
 
 interface MasterAttentionListsProps {
+  // Absent on /master, which reads these unscoped as Super Admin.
+  organizationId?: string;
   trainingPriorities: TrainingPriorities | null;
   suspendedBranches: SuspendedEntities | null;
   suspendedCoordinatingBodies: SuspendedEntities | null;
 }
 
 export default function MasterAttentionLists({
+  organizationId,
   trainingPriorities,
   suspendedBranches,
   suspendedCoordinatingBodies,
@@ -32,9 +35,11 @@ export default function MasterAttentionLists({
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TrainingPriorityList
           entity="branch"
+          organizationId={organizationId}
           initialData={trainingPriorities}
         />
         <SuspendedEntityList
+          organizationId={organizationId}
           tabs={[
             {
               entityType: "branch",

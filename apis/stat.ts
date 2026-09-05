@@ -52,9 +52,20 @@ export type BranchDistribution = {
   total_active_kader: number;
 };
 
-export type GetBranchDistributionOptions = {
-  coordinatingBodyId?: string;
-};
+// Exactly one scope id, or none — the backend refuses two at once, and refuses none for everyone but Super Admin.
+type ExactlyOneScope<T> =
+  | {
+      [K in keyof T]: Pick<T, K> & Partial<Record<Exclude<keyof T, K>, never>>;
+    }[keyof T]
+  | Partial<Record<keyof T, never>>;
+
+// organization_id is the widest scope on the seven endpoints that accept it; narrower ids are mutually exclusive with it.
+type OrganizationOrCoordinatingBodyScope = ExactlyOneScope<{
+  organizationId: string;
+  coordinatingBodyId: string;
+}>;
+
+export type GetBranchDistributionOptions = OrganizationOrCoordinatingBodyScope;
 
 export type ChapterDistributionEntry = {
   chapter_id: string;
@@ -84,37 +95,13 @@ export type UserGrowth = {
   list: UserGrowthEntry[];
 };
 
-type UserGrowthScope =
-  | {
-      coordinatingBodyId: string;
-      branchId?: never;
-      coordinatingChapterId?: never;
-      chapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId: string;
-      coordinatingChapterId?: never;
-      chapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId: string;
-      chapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId?: never;
-      chapterId: string;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId?: never;
-      chapterId?: never;
-    };
+type UserGrowthScope = ExactlyOneScope<{
+  organizationId: string;
+  coordinatingBodyId: string;
+  branchId: string;
+  coordinatingChapterId: string;
+  chapterId: string;
+}>;
 
 export type GetUserGrowthOptions = {
   granularity?: UserGrowthGranularity;
@@ -155,36 +142,19 @@ export type BranchStatus = {
   total_provisional: number;
 };
 
-export type GetBranchStatusOptions = {
-  coordinatingBodyId?: string;
-};
+export type GetBranchStatusOptions = OrganizationOrCoordinatingBodyScope;
 
 export type ChapterStatus = {
   total_full: number;
   total_provisional: number;
 };
 
-type ChapterStatusScope =
-  | {
-      coordinatingBodyId: string;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId: string;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId: string;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    };
+type ChapterStatusScope = ExactlyOneScope<{
+  organizationId: string;
+  coordinatingBodyId: string;
+  branchId: string;
+  coordinatingChapterId: string;
+}>;
 
 export type GetChapterStatusOptions = ChapterStatusScope;
 
@@ -238,36 +208,21 @@ type TrainingPriorityPaginationOptions = {
   pageSize?: number;
 };
 
-type ChapterTrainingPriorityScope =
-  | {
-      coordinatingBodyId: string;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId: string;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId: string;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    };
+// branch_id/coordinating_chapter_id are only accepted when the target entity is a chapter.
+type ChapterTrainingPriorityScope = ExactlyOneScope<{
+  organizationId: string;
+  coordinatingBodyId: string;
+  branchId: string;
+  coordinatingChapterId: string;
+}>;
 
 export type GetTrainingPrioritiesOptions = TrainingPriorityPaginationOptions &
   (
-    | {
+    | ({
         entity: "branch";
-        coordinatingBodyId?: string;
         branchId?: never;
         coordinatingChapterId?: never;
-      }
+      } & OrganizationOrCoordinatingBodyScope)
     | ({ entity: "chapter" } & ChapterTrainingPriorityScope)
   );
 
@@ -300,42 +255,31 @@ type SuspendedEntityPaginationOptions = {
   pageSize?: number;
 };
 
-type SuspendedCoordinatingChapterScope =
-  | {
-      coordinatingBodyId: string;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId: string;
-      coordinatingChapterId?: never;
-    }
-  | {
-      coordinatingBodyId?: never;
-      branchId?: never;
-      coordinatingChapterId?: never;
-    };
+// branch_id is only accepted for coordinating_chapter and chapter; coordinating_chapter_id only for chapter.
+type SuspendedCoordinatingChapterScope = ExactlyOneScope<{
+  organizationId: string;
+  coordinatingBodyId: string;
+  branchId: string;
+}>;
 
 export type GetSuspendedEntitiesOptions = SuspendedEntityPaginationOptions &
   (
-    | {
+    | ({
         entityType: "coordinating_body" | "branch";
-        coordinatingBodyId?: string;
         branchId?: never;
         coordinatingChapterId?: never;
-      }
+      } & OrganizationOrCoordinatingBodyScope)
     | ({
         entityType: "coordinating_chapter";
+        coordinatingChapterId?: never;
       } & SuspendedCoordinatingChapterScope)
     | ({ entityType: "chapter" } & ChapterTrainingPriorityScope)
   );
 
 export type GetBranchMapOptions = {
   coverage?: BranchMapCoverage;
-  coordinatingBodyId?: string;
   search?: string;
-};
+} & OrganizationOrCoordinatingBodyScope;
 
 async function getSessionToken() {
   const cookieStore = await cookies();
@@ -398,14 +342,17 @@ export async function getBranchDistribution(
   options: GetBranchDistributionOptions = {},
 ): Promise<BranchDistribution | null> {
   const token = await getSessionToken();
-  const { coordinatingBodyId } = options;
+  const { organizationId, coordinatingBodyId } = options;
   const result = await callApi<BranchDistribution>(
     "/api/v1/stat/branch-distribution",
     {
       token,
-      body: coordinatingBodyId
-        ? { coordinating_body_id: coordinatingBodyId }
-        : {},
+      body: {
+        ...(organizationId ? { organization_id: organizationId } : {}),
+        ...(coordinatingBodyId
+          ? { coordinating_body_id: coordinatingBodyId }
+          : {}),
+      },
     },
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
@@ -437,6 +384,7 @@ export async function getUserGrowth(
   const token = await getSessionToken();
   const {
     granularity = "month",
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -446,6 +394,7 @@ export async function getUserGrowth(
     token,
     body: {
       granularity,
+      ...(organizationId ? { organization_id: organizationId } : {}),
       ...(coordinatingBodyId
         ? { coordinating_body_id: coordinatingBodyId }
         : {}),
@@ -484,12 +433,15 @@ export async function getBranchStatus(
   options: GetBranchStatusOptions = {},
 ): Promise<BranchStatus | null> {
   const token = await getSessionToken();
-  const { coordinatingBodyId } = options;
+  const { organizationId, coordinatingBodyId } = options;
   const result = await callApi<BranchStatus>("/api/v1/stat/branch-status", {
     token,
-    body: coordinatingBodyId
-      ? { coordinating_body_id: coordinatingBodyId }
-      : {},
+    body: {
+      ...(organizationId ? { organization_id: organizationId } : {}),
+      ...(coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {}),
+    },
   });
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
@@ -498,10 +450,12 @@ export async function getChapterStatus(
   options: GetChapterStatusOptions = {},
 ): Promise<ChapterStatus | null> {
   const token = await getSessionToken();
-  const { coordinatingBodyId, branchId, coordinatingChapterId } = options;
+  const { organizationId, coordinatingBodyId, branchId, coordinatingChapterId } =
+    options;
   const result = await callApi<ChapterStatus>("/api/v1/stat/chapter-status", {
     token,
     body: {
+      ...(organizationId ? { organization_id: organizationId } : {}),
       ...(coordinatingBodyId
         ? { coordinating_body_id: coordinatingBodyId }
         : {}),
@@ -527,12 +481,18 @@ export async function getBranchMap(
   options: GetBranchMapOptions = {},
 ): Promise<BranchMap | null> {
   const token = await getSessionToken();
-  const { coverage = "nationwide", coordinatingBodyId, search } = options;
+  const {
+    coverage = "nationwide",
+    organizationId,
+    coordinatingBodyId,
+    search,
+  } = options;
   const normalizedSearch = search?.trim();
   const result = await callApi<BranchMap>("/api/v1/stat/branch-map", {
     token,
     body: {
       coverage,
+      ...(organizationId ? { organization_id: organizationId } : {}),
       ...(coordinatingBodyId
         ? { coordinating_body_id: coordinatingBodyId }
         : {}),
@@ -548,6 +508,7 @@ export async function getTrainingPriorities(
   const token = await getSessionToken();
   const {
     entity,
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -562,6 +523,7 @@ export async function getTrainingPriorities(
       token,
       body: {
         entity,
+        ...(organizationId ? { organization_id: organizationId } : {}),
         ...(coordinatingBodyId
           ? { coordinating_body_id: coordinatingBodyId }
           : {}),
@@ -584,6 +546,7 @@ export async function getSuspendedEntities(
   const token = await getSessionToken();
   const {
     entityType,
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -598,6 +561,7 @@ export async function getSuspendedEntities(
       token,
       body: {
         entity_type: entityType,
+        ...(organizationId ? { organization_id: organizationId } : {}),
         ...(coordinatingBodyId
           ? { coordinating_body_id: coordinatingBodyId }
           : {}),

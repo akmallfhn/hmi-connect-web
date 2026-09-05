@@ -17,6 +17,7 @@ import {
   Settings,
   TriangleAlert,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,12 @@ import Button from "../buttons/Button";
 import NotificationsDropdownPanel from "../notifications/NotificationsDropdownPanel";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
+import {
+  ADMIN_ENTITY_LABEL,
+  ADMIN_ENTITY_ORDER,
+  adminEntityHref,
+} from "@/lib/access";
+import type { AccessEntityTypeEnum } from "@/lib/types";
 
 interface HeaderProps {
   fullName?: string;
@@ -46,6 +53,15 @@ interface HeaderProps {
   mobileMenuLabel?: string;
   desktopFilterBar?: ReactNode;
 }
+
+// Menu glyph per hierarchy entity, matching the icons the admin sidebars use.
+const ADMIN_ENTITY_ICON: Record<AccessEntityTypeEnum, LucideIcon> = {
+  organization: LayoutDashboard,
+  coordinating_body: Network,
+  branch: Building2,
+  coordinating_chapter: Network,
+  chapter: GraduationCap,
+};
 
 export default function Header({
   fullName,
@@ -70,62 +86,20 @@ export default function Header({
   const unreadChatCount = useUnreadChatCount(userId);
   const adminMenuItems = adminAccess
     ? [
-        ...(adminAccess.canManageChapter
-          ? [
-              {
-                label: adminAccess.chapterName
-                  ? `Kelola ${adminAccess.chapterName}`
-                  : "Kelola Komisariat",
-                href: `${adminAccess.adminOrigin}/chapters${adminAccess.chapterId ? `/${adminAccess.chapterId}` : ""}`,
-                icon: GraduationCap,
-              },
-            ]
-          : []),
-        ...(adminAccess.canManageCoordinatingChapter
-          ? [
-              {
-                label: adminAccess.coordinatingChapterName
-                  ? `Kelola Korkom ${adminAccess.coordinatingChapterName}`
-                  : "Kelola Korkom",
-                href: `${adminAccess.adminOrigin}/coordinating-chapters${adminAccess.coordinatingChapterId ? `/${adminAccess.coordinatingChapterId}` : ""}`,
-                icon: Network,
-              },
-            ]
-          : []),
-        ...(adminAccess.canManageBranch
-          ? [
-              {
-                label: adminAccess.branchName
-                  ? `Kelola Cabang ${adminAccess.branchName}`
-                  : "Kelola Cabang",
-                href: `${adminAccess.adminOrigin}/branches${adminAccess.branchId ? `/${adminAccess.branchId}` : ""}`,
-                icon: Building2,
-              },
-            ]
-          : []),
-        ...(adminAccess.canManageCoordinatingBody
-          ? [
-              {
-                label: adminAccess.coordinatingBodyName
-                  ? `Kelola Badko ${adminAccess.coordinatingBodyName}`
-                  : "Kelola Badko",
-                href: `${adminAccess.adminOrigin}/coordinating-bodies${adminAccess.coordinatingBodyId ? `/${adminAccess.coordinatingBodyId}` : ""}`,
-                icon: Network,
-              },
-            ]
-          : []),
-        ...(adminAccess.canManageOrganization &&
-        adminAccess.roleName !== "Super Admin"
-          ? [
-              {
-                label: adminAccess.organizationName
-                  ? `Kelola ${adminAccess.organizationName}`
-                  : "Kelola Organisasi",
-                href: `${adminAccess.adminOrigin}/organizations${adminAccess.organizationId ? `/${adminAccess.organizationId}` : ""}`,
-                icon: LayoutDashboard,
-              },
-            ]
-          : []),
+        ...adminAccess.grants
+          .slice()
+          .sort(
+            (a, b) =>
+              ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
+              ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
+          )
+          .map((grant) => ({
+            label: grant.entity_name
+              ? `Kelola ${ADMIN_ENTITY_LABEL[grant.entity_type]} ${grant.entity_name}`
+              : `Kelola ${ADMIN_ENTITY_LABEL[grant.entity_type]}`,
+            href: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
+            icon: ADMIN_ENTITY_ICON[grant.entity_type],
+          })),
         ...(adminAccess.roleName === "Super Admin"
           ? [
               {

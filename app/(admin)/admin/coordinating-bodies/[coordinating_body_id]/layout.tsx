@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
@@ -17,12 +18,7 @@ export default async function CoordinatingBodyLayout({
   const { coordinating_body_id } = await params;
   const { user } = await getSession();
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManageThisCoordinatingBody =
-    Boolean(user?.can_manage_coordinating_body) &&
-    user?.coordinating_body_id === coordinating_body_id;
-
-  if (!isSuperAdmin && !canManageThisCoordinatingBody) {
+  if (!canManageEntity(user, "coordinating_body", coordinating_body_id)) {
     return (
       <PageState
         variant="forbidden"

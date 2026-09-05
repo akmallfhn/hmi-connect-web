@@ -33,6 +33,8 @@ interface MasterDashboardPageProps {
   trainingPriorities?: TrainingPriorities | null;
   suspendedBranches?: SuspendedEntities | null;
   suspendedCoordinatingBodies?: SuspendedEntities | null;
+  // Set by the Organization dashboard so every aggregate stays scoped; /master omits it and reads unscoped.
+  organizationId?: string;
   showBanner?: boolean;
   showIndonesiaMap?: boolean;
   showAttentionLists?: boolean;
@@ -51,6 +53,7 @@ export default function MasterDashboardPage({
   trainingPriorities = null,
   suspendedBranches = null,
   suspendedCoordinatingBodies = null,
+  organizationId,
   showBanner = false,
   showIndonesiaMap = false,
   showAttentionLists = false,
@@ -111,7 +114,10 @@ export default function MasterDashboardPage({
 
       {showIndonesiaMap && (
         <div className="mt-4">
-          <IndonesiaBranchMap initialBranches={branchMapEntries} />
+          <IndonesiaBranchMap
+            initialBranches={branchMapEntries}
+            organizationId={organizationId}
+          />
         </div>
       )}
 
@@ -186,6 +192,7 @@ export default function MasterDashboardPage({
       {showAttentionLists && (
         <div className="mt-6">
           <MasterAttentionLists
+            organizationId={organizationId}
             trainingPriorities={trainingPriorities}
             suspendedBranches={suspendedBranches}
             suspendedCoordinatingBodies={suspendedCoordinatingBodies}

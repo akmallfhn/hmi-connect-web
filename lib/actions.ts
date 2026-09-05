@@ -1,15 +1,14 @@
 "use server";
 
 import {
-  grantBranchAdmin as grantBranchAdminApi,
-  grantChapterAdmin as grantChapterAdminApi,
-  grantCoordinatingBodyAdmin as grantCoordinatingBodyAdminApi,
-  grantCoordinatingChapterAdmin as grantCoordinatingChapterAdminApi,
-  revokeBranchAdmin as revokeBranchAdminApi,
-  revokeChapterAdmin as revokeChapterAdminApi,
-  revokeCoordinatingBodyAdmin as revokeCoordinatingBodyAdminApi,
-  revokeCoordinatingChapterAdmin as revokeCoordinatingChapterAdminApi,
-} from "@/apis/access";
+  acceptAccessGrant as acceptAccessGrantApi,
+  inviteAccessGrant as inviteAccessGrantApi,
+  listAccessGrants as listAccessGrantsApi,
+  listMyAccessGrants as listMyAccessGrantsApi,
+  revokeAccessGrant as revokeAccessGrantApi,
+  type InviteAccessGrantPayload,
+  type ListAccessGrantsOptions,
+} from "@/apis/access-grants";
 import {
   approveVerificationRequest as approveVerificationRequestApi,
   getVerificationRequestDetail as getVerificationRequestDetailApi,
@@ -211,40 +210,31 @@ export async function deleteUser(id: string, username: string) {
   return deleteUserApi(id, username);
 }
 
-// Super Admin-only — see apis/access.ts.
-export async function grantBranchAdmin(id: string) {
-  return grantBranchAdminApi(id);
+// Super Admin, or a manage grant on that same entity — see apis/access-grants.ts.
+export async function listAccessGrants(options: ListAccessGrantsOptions) {
+  return listAccessGrantsApi(options);
 }
 
-export async function grantChapterAdmin(id: string) {
-  return grantChapterAdminApi(id);
+export async function listMyAccessGrants(options?: {
+  page?: number;
+  pageSize?: number;
+}) {
+  return listMyAccessGrantsApi(options);
 }
 
-export async function grantCoordinatingBodyAdmin(id: string) {
-  return grantCoordinatingBodyAdminApi(id);
+export async function inviteAccessGrant(payload: InviteAccessGrantPayload) {
+  return inviteAccessGrantApi(payload);
 }
 
-export async function revokeBranchAdmin(id: string) {
-  return revokeBranchAdminApi(id);
+export async function acceptAccessGrant(id: string) {
+  return acceptAccessGrantApi(id);
 }
 
-export async function revokeChapterAdmin(id: string) {
-  return revokeChapterAdminApi(id);
+export async function revokeAccessGrant(id: string) {
+  return revokeAccessGrantApi(id);
 }
 
-export async function revokeCoordinatingBodyAdmin(id: string) {
-  return revokeCoordinatingBodyAdminApi(id);
-}
-
-export async function grantCoordinatingChapterAdmin(id: string) {
-  return grantCoordinatingChapterAdminApi(id);
-}
-
-export async function revokeCoordinatingChapterAdmin(id: string) {
-  return revokeCoordinatingChapterAdminApi(id);
-}
-
-// Super Admin, or Administrator with can_manage_branch — see apis/verification-requests.ts.
+// Super Admin, or a manage grant on the request's branch — see apis/verification-requests.ts.
 export async function approveVerificationRequest(id: string) {
   return approveVerificationRequestApi(id);
 }
@@ -257,7 +247,7 @@ export async function getVerificationRequestDetail(id: string) {
   return getVerificationRequestDetailApi(id);
 }
 
-// Super Admin/Administrator-only admin panel (/master/branches) — gated by MasterLayout, not re-checked here.
+// Super Admin, or a manage grant on the entity — /master/branches is gated by MasterLayout, not re-checked here.
 export async function getBranchDetail(id: string) {
   return getBranchDetailApi(id);
 }

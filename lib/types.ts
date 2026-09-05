@@ -33,12 +33,16 @@ export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | 
 export type SearchTypeEnum = "people" | "posting";
 export type RevelationPlaceEnum = "mekkah" | "madinah";
 export type MessageStatusEnum = "sent" | "read";
-export type StructuralEntityTypeEnum =
+// The five organization-hierarchy entities an access grant (and a structural period) can point at.
+export type AccessEntityTypeEnum =
   | "organization"
   | "coordinating_body"
   | "branch"
   | "chapter"
   | "coordinating_chapter";
+export type AccessCapabilityEnum = "manage";
+export type AccessGrantStatusEnum = "pending" | "accepted";
+export type StructuralEntityTypeEnum = AccessEntityTypeEnum;
 
 export type StatusName =
   | "OK"

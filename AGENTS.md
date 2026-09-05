@@ -82,31 +82,36 @@ bounce when there's no session, and the "Akses Ditolak" back-link (via
 `<PageState variant="forbidden">`, see `components/states/PageState.tsx` below). Access itself
 is gated on `SessionUser.role_name === "Super Admin"` (note the space — matches the backend's
 `RoleNameSuperAdmin` constant in `internal/shared/entity/role.go`, not the `SuperAdmin` you'd
-guess from camelCase) or any of `can_manage_organization`/`can_manage_coordinating_body`/
-`can_manage_branch`/`can_manage_coordinating_chapter`/`can_manage_chapter` being true (mirrors
-the backend's `check-session` response, see
-`internal/auth/README.md` in the `ordina` backend repo) — there's no fixed `role_name` union in
-`lib/types.ts` yet because this backend hasn't published its full role list. The backend also
-has a broader `"Administrator"` role (see `AUTH.md` in `ordina`) that most other admin write
-endpoints accept alongside `Super Admin`, but this app's admin gate/dashboard don't special-case
-it yet — an `Administrator` account currently only sees what its own `can_manage_*` flags allow,
-same as a plain member. Anyone failing the gate check renders `PageState` instead of the
-admin UI. `app/(admin)/admin/page.tsx` delegates straight to
-`components/pages/AdminIndexPage.tsx`, which filters its menu cards by that same
-`isSuperAdmin`/`can_manage_*` split — a `Super Admin` sees every card (including the
-"Dashboard Super Admin" card, which is otherwise hidden), everyone else only sees the cards for
-whichever of Organisasi/Badko/Cabang/Korkom/Komisariat they can manage — in that order
-(Dashboard Super Admin, Organisasi, Badko, Cabang, Korkom, Komisariat, top to bottom). Each of
-those five cards links straight to the viewer's own entity —
-`/organizations/{user.organization_id}`, `/coordinating-bodies/{user.coordinating_body_id}`,
-`/branches/{user.branch_id}`, `/coordinating-chapters/{user.coordinating_chapter_id}`, or
-`/chapters/{user.chapter_id}`. The Organization card can use the server-side `ORGANIZATION_ID`
-when the Super Admin isn't affiliated with a chapter; the others fall back to the bare list route
-if their id is missing, not to a picker. Each of those five `[id]` layouts re-checks access itself
-(`isSuperAdmin` or
-`can_manage_*` **and** the id matches the viewer's own) rather than trusting the outer
-`/admin` gate, since that gate only proves _some_ `can_manage_*` is true, not that it's for
-_this_ id — otherwise a chapter-only admin could reach another branch's page by URL. The scoped
+guess from camelCase) or the caller holding at least one accepted **access grant**. The old
+`can_manage_*` booleans are gone — the backend replaced them with the `access_grants` table (one
+row per `(user, entity, capability)`), and `check-session` now returns `grants[]` instead (see
+`docs/api/access.md` and `docs/api/auth.md` in the `ordina` backend repo). A grant points at any
+entity, one person may hold several, and `capability` is currently always `manage`. Two rules
+govern it: **governance** actions (create/update/delete/review) need a grant at _exactly_ that
+entity, while **reads** are satisfied by a grant at that entity _or anywhere above it_.
+`Super Admin` sits outside `access_grants` entirely (its `grants` is `[]`) as the root of the
+grant chain. The `"Administrator"` role was removed in the same change, so `USER_ROLE_OPTIONS`
+only lists Super Admin (0) and General User (2) — there's still no fixed `role_name` union in
+`lib/types.ts` because this backend hasn't published a roles endpoint.
+**Every gate reads through `lib/access.ts`** — `isSuperAdmin`, `manageGrants`,
+`manageGrantsOfType`, `canManageEntity(user, entityType, entityId)` (Super Admin or an exact
+grant, i.e. the governance rule), and `hasAnyManageAccess` — plus the `ADMIN_ENTITY_BASE_PATH`/
+`ADMIN_ENTITY_LABEL`/`ADMIN_ENTITY_ORDER`/`adminEntityHref` maps, which are the single source of
+truth for the five admin route segments and their Indonesian labels. It's a plain module (not
+`server-only`), so client components import it too; it type-imports `SessionUser` from
+`apis/session.ts`, which is erased at compile time and therefore doesn't drag `server-only` into
+a client bundle. Don't re-derive a gate from session hierarchy ids — `user.branch_id` is the
+viewer's _membership_, not what they may manage, and conflating the two is exactly the bug the
+backend change fixed. Anyone failing the gate check renders `PageState` instead of the admin UI.
+`app/(admin)/admin/page.tsx` delegates straight to `components/pages/AdminIndexPage.tsx`, which
+renders **one card per accepted grant** (ordered by `ADMIN_ENTITY_ORDER`, titled
+`Kelola {label} {entity_name}`, linking to `adminEntityHref(...)`). `Super Admin` holds no grants,
+so it instead gets the fixed six-card set — Dashboard Super Admin, then Organisasi/Badko/Cabang/
+Korkom/Komisariat derived from its own session ids, falling back to the bare list route when an id
+is missing (the Organization card can use the server-side `ORGANIZATION_ID`). Each of those five
+`[id]` layouts re-checks access itself with `canManageEntity`, rather than trusting the outer
+`/admin` gate, since that gate only proves _some_ grant exists, not that it's for _this_ id —
+otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
 Organization layout uses the session name because the backend has no organization-detail route.
 After a successful detail lookup, the Badko, Cabang, Korkom, and Komisariat layouts return the
@@ -254,10 +259,31 @@ Three layers, each with one job. Don't blend them.
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
-   by source), `access.ts` (grant/revoke wrappers for entity-admin permissions),
+   by source), `access-grants.ts` (the `access-grants/*` resource — `listAccessGrants`/
+   `listAllAccessGrants` (pages exhausted, for a whole entity's roster)/`listMyAccessGrants`/
+   `inviteAccessGrant`/`acceptAccessGrant`/`revokeAccessGrant`. Replaced the old `access.ts`, whose
+   ten `/access/grant/*`//`/access/revoke/*` endpoints the backend deleted. Note the different
+   model: you invite (creating a `pending` row that confers nothing until accepted) rather than
+   granting outright, and you revoke by **grant id**, not user id — only the issuer or `Super Admin`
+   may revoke, and revoking cascades to everything that holder went on to grant, reported back as
+   `revoked_count`),
    `verification-requests.ts` (the standalone `verification-requests/*` review resource,
    including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
-   `Super Admin`/`Administrator`-only `stat/*` aggregate endpoints
+   `stat/*` aggregate endpoints, authorized by the read rule — a manage grant at or above the
+   requested entity, or `Super Admin`. Note **every caller but `Super Admin` must name exactly one
+   entity**: omitting it returns `an entity id is required to scope this aggregate`. Seven of them
+   take `organization_id` as their widest scope (`branch-distribution`, `branch-status`,
+   `branch-map`, `user-growth`, `chapter-status`, `training-priorities/list`,
+   `suspended-entities/list`), which is what lets `/organizations/[organization_id]` render the same
+   dashboard as `/master` — every one of its calls passes the route's own organization id, while
+   `/master` omits it and reads unrestricted as `Super Admin`. `chapter-distribution` and
+   `verification-count` deliberately do **not** take one; no dashboard needs them org-wide.
+   Mutual exclusivity is enforced in the types via `ExactlyOneScope<T>` (one scope id, or none)
+   rather than hand-written `?: never` unions. `MasterDashboardPage` takes an optional
+   `organizationId` and threads it into `IndonesiaBranchMap` and `MasterAttentionLists` so their
+   client-side "load more"/search requests keep the same scope; the three
+   `/admin/api/stat/*` Route Handlers accept and forward `organization_id` alongside the narrower
+   ids. These back
    backing `/master`'s organization-wide dashboard and `/branches/[branch_id]`'s scoped
    dashboard — five entity-specific summary endpoints, branch/chapter distribution, user growth,
    membership/branch/chapter/coordinating-body status breakdowns, and the Indonesia Cabang map.
@@ -294,7 +320,8 @@ Three layers, each with one job. Don't blend them.
    `listStructuralPeriods`/`getStructuralPeriodDetail` are readable by any authenticated user with no
    entity-scope restriction, matching the backend; `createStructuralPeriod`/`updateStructuralPeriod`/
    `createStructuralOfficer`/`updateStructuralOfficer`/`deleteStructuralOfficer` require `Super Admin`
-   or a matching `can_manage_*` Administrator on the backend side. `updateStructuralPeriod` only
+   or a `manage` access grant on that exact entity on the backend side (a grant held above it confers
+   nothing here).' `updateStructuralPeriod` only
    mutates `start_year`/`end_year` — `entity_type`/`entity_id` and officers are immutable through this
    endpoint, matching the backend (officers still go through `officers/create`/`officers/update`/
    `officers/delete`). `end_year` is nullable end-to-end (never `omitempty` on the backend, so every
@@ -529,7 +556,9 @@ iconSm`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
   checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
-  checkbox (e.g. the admin user detail page's `can_manage_*` scope toggle chips, see below).
+  checkbox. Its `can_manage_*` scope toggle chips on the admin user detail page were removed when
+  `access_grants` replaced those booleans — granting now names an entity, so it lives on each
+  entity's own Pengaturan → Akses tab instead (see `EntityAccessTab` below).
 - `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
   `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil).
   `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
@@ -540,13 +569,13 @@ iconSm`.
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
   how the bell/avatar triggers next to it also don't. The avatar dropdown gets admin scope
   from `HeaderAdminAccessContext`, populated once by `app/(www)/www/layout.tsx` from
-  `getSession()`: each true `can_manage_chapter`/`can_manage_coordinating_chapter`/
-  `can_manage_branch`/`can_manage_coordinating_body`/`can_manage_organization` flag adds a
-  cross-subdomain link to the viewer's own Komisariat/Korkom/Cabang/Badko/Organisasi admin page.
-  Those labels include the session's entity name (`Kelola {chapter_name}`, `Kelola Korkom
-{coordinating_chapter_name}`, `Kelola Cabang {branch_name}`, `Kelola Badko
-{coordinating_body_name}`, and `Kelola {organization_name}`), falling back to the generic
-  entity label when the name is missing. `role_name === "Super Admin"` adds `Kelola Organisasi`
+  `getSession()`, which now passes `manageGrants(user)` straight through as `grants` (the context
+  no longer carries five `canManage*` booleans plus five id/name pairs). `Header` renders one
+  cross-subdomain link per grant, sorted by `ADMIN_ENTITY_ORDER`, labeled
+  `Kelola {ADMIN_ENTITY_LABEL} {grant.entity_name}` and pointing at
+  `adminEntityHref(grant.entity_type, grant.entity_id)` — so someone holding two Cabang gets two
+  links, which the old membership-derived version could never express. It falls back to the bare
+  `Kelola {label}` when `entity_name` is missing. `role_name === "Super Admin"` adds `Kelola Organisasi`
   linking straight to the
   admin subdomain root. The absolute admin origin comes from
   `lib/constants.ts#getAdminSiteOrigin`, so these links perform the required full
@@ -1209,8 +1238,9 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
 - `components/admin/*` + the `/master/users*` routes — the Super Admin User Management CRUD
   panel (list, detail/read, create), gated by `MasterLayout` like every other `/master/*`
   route (no extra per-page re-check needed, since that gate already requires literal
-  `Super Admin`, unlike the outer `/admin/[id]` pages' looser `can_manage_*` check).
-  `apis/users.ts#listUsers` (`users/list`, Super Admin/Administrator per its own README) backs
+  `Super Admin`, unlike the outer `/admin/[id]` pages' looser any-grant check).
+  `apis/users.ts#listUsers` (`users/list`, Super Admin or any accepted grant — the backend's
+  `requireAnyGrant`, which doesn't itself scope the rows) backs
   `/master/users` (`app/(admin)/admin/master/users/page.tsx`, a Server Component reading
   `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
   — search/status-filter/pagination are all URL state driven by `router.push`, the same
@@ -1243,31 +1273,21 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `create`/`update`/`delete` endpoints are hardcoded to the caller's own JWT, never take an
   `id`/`username` in the body), so "editable per scope" here means _slicing `users/update`'s
   own fields into sections_, not reaching the owner-only child-table endpoints. `role_id` has no
-  `roles/list` endpoint either; `lib/constants.ts#USER_ROLE_OPTIONS` hardcodes the three known
-  ids (`0` Super Admin, `1` Administrator, `2` General User) inferred from the `ordina` backend's
-  `RoleName*` consts + a repository comment confirming `role_id = 0` is a real, meaningful value
-  — update that constant if the backend ever publishes a real lookup. The account card's
+  `roles/list` endpoint either; `lib/constants.ts#USER_ROLE_OPTIONS` hardcodes the two remaining
+  ids (`0` Super Admin, `2` General User) from the `ordina` backend's `RoleName*` consts —
+  `Administrator` (`1`) was dropped when `access_grants` replaced `can_manage_*`, so don't offer it
+  again; management access is a grant now, not a role. Update that constant if the backend ever
+  publishes a real lookup. The account card's
   "Status Verifikasi" field is a 3-state `Select` (`VerificationStatusEnum`: `unverified` |
   `pending` | `verified`, see the Verification flow section above) rather than a boolean
   `Switch`, since the backend replaced `is_verified` with a reviewed-workflow enum. The
   Organisasi card also renders three `Switch` toggles (`components/buttons/Switch.tsx`) —
-  Admin Badko/Admin Cabang/Admin Komisariat, reading
-  `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_chapter` off `UserProfile` — but
-  **only when `user.role_name === "Administrator"`**, since the backend's grant endpoints 409 for
-  anyone else (see below). These aren't part of `AdminEditUserOrganizationForm`'s modal at all —
-  they sit directly in the card, below the Field grid, and flipping one doesn't apply immediately:
-  it opens a second `AlertConfirmation` (`confirmVariant="primary"` for granting, `"destructive"`
-  for revoking) and only calls the actual endpoint on confirm, so the switch snaps back to its
-  real value if the admin cancels. They're backed by a new `apis/access.ts` — six thin wrappers
-  (`grant`/`revoke` × `branch-admin`/`chapter-admin`/`coordinating-body-admin`) over the
-  `/api/v1/access/grant/*` and `/api/v1/access/revoke/*` endpoints, which live under `/access`
-  rather than `/users` since they're access-control actions, not profile CRUD (see `internal/user/
-README.md`'s "Access control endpoints" section) — all six require literal `Super Admin` on the
-  backend (stricter than `users/update`'s Super Admin/Administrator), take just `{ id }`, and
-  return the full updated `users/detail` shape; a grant 409s unless the target's `role_id` is
-  already `Administrator`, and revoking someone's last remaining scope resets their `role_id` back
-  to `General User` server-side, which is why this page just `router.refresh()`s on success rather
-  than patching local state. Branch→chapter and
+  a short static note in the Organisasi card pointing at each entity's own Pengaturan → Akses tab.
+  The three Admin Badko/Cabang/Komisariat `Switch` chips that used to sit there are gone: they read
+  `can_manage_*` off `UserProfile` and called the deleted `/access/grant/*`//`/access/revoke/*`
+  endpoints, and under `access_grants` a grant has to name an entity, which a user-detail page has
+  no way to pick. Don't reintroduce them here — `EntityAccessTab` is where granting lives.
+  Branch→chapter and
   province→city→district cascading selects (create/contact/organization forms) reuse the exact
   `SearchableSelect` + debounced-search-Route-Handler pattern from `VerificationPage`, but can't
   reuse the `www` route handlers directly — `admin.(example.com)` rewrites to `/admin`, a
@@ -1332,9 +1352,8 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `components/navigations/EntitySidebar.tsx` is the single scoped-entity sidebar rendered by all
   five entity layouts, including `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout
   does the same
-  `isSuperAdmin`/`can_manage_branch`-and-
-  matching-own-`branch_id` check the old single-page version did (`PageState` forbidden on
-  failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
+  `canManageEntity(user, "branch", branch_id)` check every scoped layout uses (`PageState` forbidden
+  on failure), then fetches `apis/branches.ts#getBranchDetail` for the sidebar header (`PageState`
   not_found if the id doesn't resolve) — since this layout is now the authoritative gate for
   everything under `/admin/branches/[branch_id]/*`, the nested pages don't re-check access
   themselves, unlike the standalone-page convention described in Domain routing above. The same
@@ -1391,8 +1410,8 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `trainings/materials/list` returns them in creation order, so the form has no "Urutan" field and
   the table has no order column. Daftar Peserta is searchable and read-only because the backend
   currently exposes participant list/detail only. Training and material writes are only shown when
-  `role_name` is `Super Admin` or `Administrator`, matching the backend middleware even though the
-  outer branch layout also permits a branch-scoped manager to browse. Penilaian is a real
+  the caller is `Super Admin` or holds a manage grant on the training's organizer — this route is
+  always branch-organized, so it uses `canManageEntity(user, "branch", branch_id)`. Penilaian is a real
   cognitive/affective/psychomotor evaluation matrix backed by `trainings/evaluations/list`/`update`
   (`apis/trainings.ts#listTrainingEvaluations`/`updateTrainingEvaluation`) — rows are participants
   (avatar + name), columns are grouped into Materi (Kognitif) (one sub-column per training material,
@@ -1415,7 +1434,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `psychomotor_weight`) still come from the same response and vary by level (LK1 50/30/20, LK2
   30/40/30, LK3 30/30/40 per the backend), just no longer surfaced as their own columns. Header
   text is title case, not `uppercase`-transformed, since the fuller aspect names read worse
-  all-caps. `canManageEvaluations` (Super Admin/Administrator, or the training's own
+  all-caps. `canManageEvaluations` (`canManageTrainings`, or the training's own
   `contact_person_id` matching the caller) disables every `ScoreCell` for anyone else instead of
   hiding a column. The header has no separate "Materi (Kognitif)"/"Afektif"/"Psikomotorik"
   group-label row anymore — instead every header/body cell in a group carries that group's own
@@ -1502,10 +1521,12 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   the Komisariat, matching `/master/users`; the narrower Cabang/Korkom/Komisariat scopes keep only
   the Komisariat line. Page descriptions name their full scope (`Pengurus Besar HMI`, `HMI Badko
 {name}`, `HMI Cabang {name}`, `HMI Korkom {name}`, or `HMI Komisariat {name}`). Row links use the
-  current scoped base path plus `/members/{username}`. Its Role label is also scope-aware: it reads
-  the matching `can_manage_organization`/`can_manage_coordinating_body`/`can_manage_branch`/
-  `can_manage_coordinating_chapter`/`can_manage_chapter` flag from `UserListEntry`, showing the
-  corresponding purple Administrator label or gray `Kader Anggota`.
+  current scoped base path plus `/members/{username}`. Its Role label is also scope-aware, but
+  `users/list` carries no access field any more — each of the five member routes fetches
+  `apis/access-grants.ts#listAllAccessGrants(scope, entityId)` alongside its `listUsers` call and
+  passes the `accepted` holders' ids down as `adminUserIds`; a row in that set gets the purple
+  `Administrator {scope}` label, everyone else gray `Kader Anggota`. Pending invitations are
+  deliberately excluded — an unaccepted grant confers nothing.
   `apis/users.ts#listUsers` exposes the backend's direct `chapterId`, `branchId`,
   `coordinatingChapterId`, and `coordinatingBodyId` filters. The Korkom roster always passes
   `coordinatingChapterId` as `coordinating_chapter_id`, so backend pagination/search/status remain
@@ -1516,8 +1537,9 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   user whose own organization chain does not match the route id. The organization check permits a
   missing `organization_id` only for pending/pre-affiliation users already present in this app's
   single-organization roster; Badko/Cabang/Korkom/Komisariat checks are strict. `users/list` itself
-  still requires the backend `Super Admin` or `Administrator` role in addition to the frontend
-  layout's matching `can_manage_*` gate, the same role/flag split noted under Domain routing.
+  still requires `Super Admin` or at least one accepted grant on the backend (`requireAnyGrant`) in
+  addition to the frontend layout's own `canManageEntity` gate — note the backend middleware does
+  not scope the rows to that grant, so the frontend filter is what narrows them.
   Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, the
   Super Admin-only `/master/verification`, and the read-only
   `/organizations/[organization_id]/verification`, with no separate detail pages) is the UI for the
@@ -1527,7 +1549,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   (`listVerificationRequests`/`getVerificationRequestDetail`/`approveVerificationRequest`/
   `rejectVerificationRequest`), matching the backend's standalone
   `/api/v1/verification-requests/*` resource. Entity-admin grant/revoke wrappers remain isolated
-  in `apis/access.ts`. `verification-requests/list` accepts `branch_id`;
+  in `apis/access-grants.ts`. `verification-requests/list` accepts `branch_id`;
   `apis/verification-requests.ts#listVerificationRequests` exposes it as `branchId` and sends the
   snake-case field.
   The Cabang route always supplies its route id, while the Master and Organization pages omit it by
@@ -1846,23 +1868,29 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   picker/Status here, calling
   `updateCoordinatingBody`/`updateBranch`/`updateCoordinatingChapter`/`updateChapter` with just
   `{id, name, description, image_url}`) and Akses (a table of that entity's own admins —
-  `apis/users.ts#listCoordinatingBodyAdmins`/`listBranchAdmins`/`listCoordinatingChapterAdmins`/
-  `listChapterAdmins`, which page through every member via `users/list` scoped by
-  `coordinating_body_id`/`branch_id`/`coordinating_chapter_id`/`chapter_id` and filter client-side
-  on `can_manage_coordinating_body`/`can_manage_branch`/`can_manage_coordinating_chapter`/
-  `can_manage_chapter` since none of those fields has a backend list filter — plus a
-  Super-Admin-only "Tambah Akses" modal backed by
+  all four render the **one shared** `components/admin/EntityAccessTab.tsx`, parameterized by
+  `entityType`/`entityId`, rather than four copies of the same table+modal pair. It's fed by
+  `apis/access-grants.ts#listAllAccessGrants(entityType, entityId)`, which pages through
+  `access-grants/list` — that endpoint returns the holder's name/username/avatar, the issuer, and
+  the grant `status` directly, so the old exhaustive `users/list` crawl that filtered on
+  `can_manage_*` is gone; don't reintroduce it. The table shows Admin / Status
+  (green `Aktif` vs orange `Menunggu Konfirmasi`, since an invitation confers nothing until
+  accepted) / Diberikan Oleh / Aksi. "Tambah Akses" is backed by
   `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?coordinating_chapter_id=`/`?chapter_id=`
-  (the `coordinating_chapter_id`/`chapter_id` branches were added to that Route Handler alongside
-  the other two, same `can_manage_coordinating_chapter`/`can_manage_chapter`-and-own-id
-  authorization check) and
-  `grantCoordinatingBodyAdmin`/`grantBranchAdmin`/`grantCoordinatingChapterAdmin`/
-  `grantChapterAdmin`, and a revoke `Trash2` button per row calling
-  `revokeCoordinatingBodyAdmin`/`revokeBranchAdmin`/`revokeCoordinatingChapterAdmin`/
-  `revokeChapterAdmin`). All four route files fetch the entity detail, its admin list, and
-  `getSession()` in parallel and pass `isSuperAdmin={user?.role_name === "Super Admin"}` straight
-  through — non-Super-Admin viewers (a Cabang/Badko/Korkom/Komisariat's own `Administrator`) can
-  still reach the page and edit Profil, they just don't see the Tambah/Cabut Akses controls.
+  (that Route Handler now maps all four scopes through one `SCOPES` table, each authorized with
+  `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant.
+  The revoke `Trash2` button per row calls `revokeAccessGrant(grant.id)` — note it takes the
+  *grant* id, not a user id, and the backend cascades to everything that holder went on to grant,
+  which the toast reports via `revoked_count` — the cascade follows only grants that holder issued
+  on **this same entity**, not everything they ever granted. Both controls are gated on `canManageAccess`, which
+  is `canManageEntity(...)` and therefore true for any manage-holder of that entity, not just
+  `Super Admin` — the backend lets any holder invite peers to the same entity, so appointments no
+  longer funnel through Super Admin. All four route files fetch the entity detail, its grant list,
+  and
+  `getSession()` in parallel and pass `canManageAccess={canManageEntity(user, ..., id)}` straight
+  through. Since that is the same check the scope's own layout already gates entry on, anyone who
+  can open the page can also manage its access — the prop stays explicit rather than being assumed
+  inside `EntityAccessTab`, so a future read-only embedding of that tab can pass `false`.
 - Every one of the five scoped admin dashboards (`/organizations/[organization_id]/structural`,
   `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
   `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`
@@ -1875,7 +1903,7 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   and the route's own id) instead of a chapter-specific prop, so all five routes render the exact same
   component and a fix/tweak made to it applies everywhere at once; each route's own `page.tsx` is a
   thin fetch-and-gate wrapper (session + `apis/structurals.ts#getStructuralOverview` in parallel, then
-  its own `isSuperAdmin || can_manage_*`-matching-this-entity check, same shape as that scope's own
+  its own `canManageEntity(user, entityType, entityId)` check, same shape as that scope's own
   layout gate) with no entity-detail fetch of its own — the parent layout already guarantees the
   entity exists/is active, and the page needs nothing from it beyond the id already in the route
   param. `getStructuralOverview` centralizes the "resolve which period is selected, then fetch its
@@ -1924,9 +1952,9 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   Falls back to `periods.list[0]` only when every period already has an `end_year` (none ongoing).
   Each `OfficerNode` shows the officer's real `status` as a green "Aktif"/gray "Non-aktif"
   `Label` rather than reusing the reference mock's node-selection highlight, since `status` is the one
-  per-officer field the backend actually has. `canManage` (`Super Admin`, or an Administrator whose
-  matching `can_manage_*` flag targets this exact entity — the same check that scope's own layout
-  already gates entry on) adds "Tambah Periode Kepengurusan" (a `Modal` creating a period plus its
+  per-officer field the backend actually has. `canManage` (`canManageEntity` — `Super Admin`, or a
+  manage grant on this exact entity; the backend refuses a grant held above it for structural
+  writes, and it's the same check that scope's own layout already gates entry on) adds "Tambah Periode Kepengurusan" (a `Modal` creating a period plus its
   initial officer batch in one `structurals/create` call — dynamic officer rows, each a
   `SearchableSelect` user picker scoped via `ENTITY_USER_SEARCH_PARAM`, same debounced-search
   Route Handler `ChapterSettingsPage`'s "Tambah Akses" modal already uses),

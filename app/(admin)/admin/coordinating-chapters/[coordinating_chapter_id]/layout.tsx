@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
@@ -17,12 +18,9 @@ export default async function CoordinatingChapterLayout({
   const { coordinating_chapter_id } = await params;
   const { user } = await getSession();
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManageThisCoordinatingChapter =
-    Boolean(user?.can_manage_coordinating_chapter) &&
-    user?.coordinating_chapter_id === coordinating_chapter_id;
-
-  if (!isSuperAdmin && !canManageThisCoordinatingChapter) {
+  if (
+    !canManageEntity(user, "coordinating_chapter", coordinating_chapter_id)
+  ) {
     return (
       <PageState
         variant="forbidden"

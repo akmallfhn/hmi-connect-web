@@ -135,11 +135,13 @@ function BranchPoint({ point }: { point: BranchMapPoint }) {
 
 interface IndonesiaBranchMapProps {
   initialBranches: BranchMapEntry[];
+  organizationId?: string;
   coordinatingBodyId?: string;
 }
 
 export default function IndonesiaBranchMap({
   initialBranches,
+  organizationId,
   coordinatingBodyId,
 }: IndonesiaBranchMapProps) {
   const [search, setSearch] = useState("");
@@ -171,6 +173,7 @@ export default function IndonesiaBranchMap({
       setSearchFailed(false);
       try {
         const params = new URLSearchParams({ q: normalizedSearch });
+        if (organizationId) params.set("organization_id", organizationId);
         if (coordinatingBodyId) {
           params.set("coordinating_body_id", coordinatingBodyId);
         }
@@ -196,7 +199,7 @@ export default function IndonesiaBranchMap({
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [coordinatingBodyId, normalizedSearch]);
+  }, [organizationId, coordinatingBodyId, normalizedSearch]);
 
   const points = useMemo(
     () =>

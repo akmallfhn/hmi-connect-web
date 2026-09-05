@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getChapterDetail } from "@/apis/chapters";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
 import type { UserStatusEnum } from "@/lib/types";
@@ -36,6 +37,8 @@ export default async function ChapterMembersPage({
     }),
   ]);
 
+  const accessGrants = await listAllAccessGrants("chapter", chapter_id);
+
   return (
     <AdminMemberListPage
       basePath={`/chapters/${chapter_id}`}
@@ -48,6 +51,9 @@ export default async function ChapterMembersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
+      adminUserIds={accessGrants
+        .filter((grant) => grant.status === "accepted")
+        .map((grant) => grant.user_id)}
     />
   );
 }

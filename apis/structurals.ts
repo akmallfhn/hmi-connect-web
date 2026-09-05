@@ -162,7 +162,7 @@ export type CreateStructuralPeriodPayload = {
   officers: { user_id: string; position_id: number }[];
 };
 
-// Requires Super Admin, or Administrator with the can_manage_* permission matching entity_type.
+// Requires Super Admin, or a manage grant on the entity named by entity_type/entity_id.
 export async function createStructuralPeriod(
   payload: CreateStructuralPeriodPayload
 ): Promise<ApiEnvelope<StructuralPeriodDetail>> {
@@ -189,7 +189,7 @@ export type UpdateStructuralPeriodPayload = {
   end_year?: number | null;
 };
 
-// Requires Super Admin, or Administrator with the can_manage_* permission matching the period's entity.
+// Requires Super Admin, or a manage grant on the period's own entity — a grant held above it confers nothing.
 export async function updateStructuralPeriod(
   payload: UpdateStructuralPeriodPayload
 ): Promise<ApiEnvelope<StructuralPeriodDetail>> {
@@ -215,7 +215,7 @@ export type CreateStructuralOfficerPayload = {
   position_id: number;
 };
 
-// Requires Super Admin, or Administrator with the can_manage_* permission matching the period's entity.
+// Requires Super Admin, or a manage grant on the period's own entity — a grant held above it confers nothing.
 export async function createStructuralOfficer(
   payload: CreateStructuralOfficerPayload
 ): Promise<ApiEnvelope<StructuralOfficer>> {

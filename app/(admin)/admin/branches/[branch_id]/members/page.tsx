@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { listUsers } from "@/apis/users";
 import BranchMemberListPage from "@/components/pages/BranchMemberListPage";
 import type { UserStatusEnum } from "@/lib/types";
@@ -36,6 +37,8 @@ export default async function BranchMembersPage({
     pageSize: PAGE_SIZE,
   });
 
+  const accessGrants = await listAllAccessGrants("branch", branch_id);
+
   return (
     <BranchMemberListPage
       branchId={branch_id}
@@ -46,6 +49,9 @@ export default async function BranchMembersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
+      adminUserIds={accessGrants
+        .filter((grant) => grant.status === "accepted")
+        .map((grant) => grant.user_id)}
     />
   );
 }

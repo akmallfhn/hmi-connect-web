@@ -1,25 +1,13 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import type { SessionGrant } from "@/apis/session";
 
 export interface HeaderAdminAccess {
   adminOrigin: string;
   roleName?: string;
-  organizationId?: string;
-  organizationName?: string;
-  canManageOrganization: boolean;
-  coordinatingBodyId?: string;
-  coordinatingBodyName?: string;
-  canManageCoordinatingBody: boolean;
-  branchId?: string;
-  branchName?: string;
-  canManageBranch: boolean;
-  coordinatingChapterId?: string;
-  coordinatingChapterName?: string;
-  canManageCoordinatingChapter: boolean;
-  chapterId?: string;
-  chapterName?: string;
-  canManageChapter: boolean;
+  // Accepted manage grants — a grant may point at any entity, and one person may hold several.
+  grants: SessionGrant[];
 }
 
 const HeaderAdminAccessContext = createContext<HeaderAdminAccess | null>(null);

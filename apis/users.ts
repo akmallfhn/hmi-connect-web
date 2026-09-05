@@ -60,11 +60,6 @@ export type UserListEntry = {
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
   is_subscribe: boolean;
-  can_manage_organization: boolean;
-  can_manage_coordinating_body: boolean;
-  can_manage_branch: boolean;
-  can_manage_coordinating_chapter: boolean;
-  can_manage_chapter: boolean;
 };
 
 export type ListUsersOptions = {
@@ -89,7 +84,7 @@ export type PagedListResult<T> = {
   currentPage: number;
 };
 
-// Requires Super Admin/Administrator — used by /master/users and every scoped read-only member roster.
+// Requires Super Admin or any accepted access grant — used by /master/users and every scoped read-only member roster.
 export async function listUsers(
   options: ListUsersOptions = {}
 ): Promise<PagedListResult<UserListEntry>> {
@@ -137,134 +132,6 @@ export async function listUsers(
     totalPage: metapaging?.total_page ?? 1,
     currentPage: metapaging?.current_page ?? page ?? 1,
   };
-}
-
-// No backend filter for can_manage_coordinating_body exists, so this pages through every member under the Badko (same exhaustive-fetch shape as listAllBranchesAdmin) and filters client-side — fine for the small number of actual admins, but scales with total member count.
-export async function listCoordinatingBodyAdmins(
-  coordinatingBodyId: string,
-): Promise<UserListEntry[]> {
-  const pageSize = 100;
-  const firstPage = await listUsers({
-    coordinatingBodyId,
-    status: "active",
-    page: 1,
-    pageSize,
-  });
-
-  const pages =
-    firstPage.totalPage <= 1
-      ? [firstPage]
-      : [
-          firstPage,
-          ...(await Promise.all(
-            Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
-              listUsers({
-                coordinatingBodyId,
-                status: "active",
-                page: index + 2,
-                pageSize,
-              }),
-            ),
-          )),
-        ];
-
-  return pages
-    .flatMap((page) => page.list)
-    .filter((user) => user.can_manage_coordinating_body);
-}
-
-// Same exhaustive-fetch-then-filter shape as listCoordinatingBodyAdmins — no backend filter for can_manage_branch either.
-export async function listBranchAdmins(branchId: string): Promise<UserListEntry[]> {
-  const pageSize = 100;
-  const firstPage = await listUsers({
-    branchId,
-    status: "active",
-    page: 1,
-    pageSize,
-  });
-
-  const pages =
-    firstPage.totalPage <= 1
-      ? [firstPage]
-      : [
-          firstPage,
-          ...(await Promise.all(
-            Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
-              listUsers({
-                branchId,
-                status: "active",
-                page: index + 2,
-                pageSize,
-              }),
-            ),
-          )),
-        ];
-
-  return pages.flatMap((page) => page.list).filter((user) => user.can_manage_branch);
-}
-
-// Same exhaustive-fetch-then-filter shape as listBranchAdmins — no backend filter for can_manage_chapter either.
-export async function listChapterAdmins(chapterId: string): Promise<UserListEntry[]> {
-  const pageSize = 100;
-  const firstPage = await listUsers({
-    chapterId,
-    status: "active",
-    page: 1,
-    pageSize,
-  });
-
-  const pages =
-    firstPage.totalPage <= 1
-      ? [firstPage]
-      : [
-          firstPage,
-          ...(await Promise.all(
-            Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
-              listUsers({
-                chapterId,
-                status: "active",
-                page: index + 2,
-                pageSize,
-              }),
-            ),
-          )),
-        ];
-
-  return pages.flatMap((page) => page.list).filter((user) => user.can_manage_chapter);
-}
-
-// Same exhaustive-fetch-then-filter shape as listChapterAdmins — no backend filter for can_manage_coordinating_chapter either.
-export async function listCoordinatingChapterAdmins(
-  coordinatingChapterId: string
-): Promise<UserListEntry[]> {
-  const pageSize = 100;
-  const firstPage = await listUsers({
-    coordinatingChapterId,
-    status: "active",
-    page: 1,
-    pageSize,
-  });
-
-  const pages =
-    firstPage.totalPage <= 1
-      ? [firstPage]
-      : [
-          firstPage,
-          ...(await Promise.all(
-            Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
-              listUsers({
-                coordinatingChapterId,
-                status: "active",
-                page: index + 2,
-                pageSize,
-              })
-            )
-          )),
-        ];
-
-  return pages
-    .flatMap((page) => page.list)
-    .filter((user) => user.can_manage_coordinating_chapter);
 }
 
 export type CreateUserPayload = {
@@ -540,11 +407,6 @@ export type UserProfile = {
   province_id?: number;
   province_name?: string;
   is_subscribe: boolean;
-  can_manage_organization: boolean;
-  can_manage_coordinating_body: boolean;
-  can_manage_branch: boolean;
-  can_manage_coordinating_chapter: boolean;
-  can_manage_chapter: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
   created_at: string;

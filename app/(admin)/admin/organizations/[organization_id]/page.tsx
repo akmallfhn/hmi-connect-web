@@ -28,6 +28,8 @@ export default async function OrganizationDetailPage({
   params,
 }: OrganizationDetailPageProps) {
   const { organization_id } = await params;
+
+  // Every aggregate is scoped to this organization — Master is the only dashboard that reads them unscoped.
   const [
     summary,
     branchDistribution,
@@ -43,18 +45,29 @@ export default async function OrganizationDetailPage({
     suspendedCoordinatingBodies,
   ] = await Promise.all([
     getOrganizationSummary(organization_id),
-    getBranchDistribution(),
+    getBranchDistribution({ organizationId: organization_id }),
     listAllBranchesAdmin({ organizationId: organization_id }),
-    getUserGrowth({ granularity: "day" }),
-    getUserGrowth({ granularity: "week" }),
-    getUserGrowth({ granularity: "month" }),
-    getBranchStatus(),
-    getChapterStatus(),
-    getBranchMap({ coverage: "nationwide" }),
-    getTrainingPriorities({ entity: "branch", page: 1, pageSize: 5 }),
-    getSuspendedEntities({ entityType: "branch", page: 1, pageSize: 5 }),
+    getUserGrowth({ granularity: "day", organizationId: organization_id }),
+    getUserGrowth({ granularity: "week", organizationId: organization_id }),
+    getUserGrowth({ granularity: "month", organizationId: organization_id }),
+    getBranchStatus({ organizationId: organization_id }),
+    getChapterStatus({ organizationId: organization_id }),
+    getBranchMap({ coverage: "nationwide", organizationId: organization_id }),
+    getTrainingPriorities({
+      entity: "branch",
+      organizationId: organization_id,
+      page: 1,
+      pageSize: 5,
+    }),
+    getSuspendedEntities({
+      entityType: "branch",
+      organizationId: organization_id,
+      page: 1,
+      pageSize: 5,
+    }),
     getSuspendedEntities({
       entityType: "coordinating_body",
+      organizationId: organization_id,
       page: 1,
       pageSize: 5,
     }),
@@ -74,6 +87,7 @@ export default async function OrganizationDetailPage({
       trainingPriorities={trainingPriorities}
       suspendedBranches={suspendedBranches}
       suspendedCoordinatingBodies={suspendedCoordinatingBodies}
+      organizationId={organization_id}
       showAttentionLists
       showBanner
       showIndonesiaMap

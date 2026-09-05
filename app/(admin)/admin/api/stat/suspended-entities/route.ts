@@ -28,12 +28,14 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const entityType = searchParams.get("entity_type");
   const page = parsePage(searchParams.get("page"));
+  const organizationId = searchParams.get("organization_id") ?? undefined;
   const coordinatingBodyId =
     searchParams.get("coordinating_body_id") ?? undefined;
   const branchId = searchParams.get("branch_id") ?? undefined;
   const coordinatingChapterId =
     searchParams.get("coordinating_chapter_id") ?? undefined;
   const scopeCount = [
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -60,61 +62,49 @@ export async function GET(request: Request) {
     );
   }
 
+  const paging = { page, pageSize: PAGE_SIZE };
   let data: SuspendedEntities | null;
+
   if (entityType === "coordinating_body" || entityType === "branch") {
-    data = await getSuspendedEntities({
-      entityType,
-      coordinatingBodyId,
-      page,
-      pageSize: PAGE_SIZE,
-    });
+    data = organizationId
+      ? await getSuspendedEntities({ entityType, organizationId, ...paging })
+      : coordinatingBodyId
+        ? await getSuspendedEntities({
+            entityType,
+            coordinatingBodyId,
+            ...paging,
+          })
+        : await getSuspendedEntities({ entityType, ...paging });
   } else if (entityType === "coordinating_chapter") {
-    data = coordinatingBodyId
-      ? await getSuspendedEntities({
-          entityType,
-          coordinatingBodyId,
-          page,
-          pageSize: PAGE_SIZE,
-        })
-      : branchId
+    data = organizationId
+      ? await getSuspendedEntities({ entityType, organizationId, ...paging })
+      : coordinatingBodyId
         ? await getSuspendedEntities({
             entityType,
-            branchId,
-            page,
-            pageSize: PAGE_SIZE,
+            coordinatingBodyId,
+            ...paging,
           })
-        : await getSuspendedEntities({
-            entityType,
-            page,
-            pageSize: PAGE_SIZE,
-          });
+        : branchId
+          ? await getSuspendedEntities({ entityType, branchId, ...paging })
+          : await getSuspendedEntities({ entityType, ...paging });
   } else {
-    data = coordinatingBodyId
-      ? await getSuspendedEntities({
-          entityType,
-          coordinatingBodyId,
-          page,
-          pageSize: PAGE_SIZE,
-        })
-      : branchId
+    data = organizationId
+      ? await getSuspendedEntities({ entityType, organizationId, ...paging })
+      : coordinatingBodyId
         ? await getSuspendedEntities({
             entityType,
-            branchId,
-            page,
-            pageSize: PAGE_SIZE,
+            coordinatingBodyId,
+            ...paging,
           })
-        : coordinatingChapterId
-          ? await getSuspendedEntities({
-              entityType,
-              coordinatingChapterId,
-              page,
-              pageSize: PAGE_SIZE,
-            })
-          : await getSuspendedEntities({
-              entityType,
-              page,
-              pageSize: PAGE_SIZE,
-            });
+        : branchId
+          ? await getSuspendedEntities({ entityType, branchId, ...paging })
+          : coordinatingChapterId
+            ? await getSuspendedEntities({
+                entityType,
+                coordinatingChapterId,
+                ...paging,
+              })
+            : await getSuspendedEntities({ entityType, ...paging });
   }
 
   if (!data) {

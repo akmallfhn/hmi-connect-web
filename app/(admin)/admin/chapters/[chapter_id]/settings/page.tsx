@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
 import { getSession } from "@/apis/session";
-import { listChapterAdmins } from "@/apis/users";
+import { canManageEntity } from "@/lib/access";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import ChapterSettingsPage from "@/components/pages/ChapterSettingsPage";
 
 export const metadata: Metadata = {
@@ -18,10 +19,10 @@ export default async function ChapterSettingsRoute({
   params,
 }: ChapterSettingsRouteProps) {
   const { chapter_id } = await params;
-  const [{ user }, chapter, admins] = await Promise.all([
+  const [{ user }, chapter, grants] = await Promise.all([
     getSession(),
     getChapterDetail(chapter_id),
-    listChapterAdmins(chapter_id),
+    listAllAccessGrants("chapter", chapter_id),
   ]);
 
   if (!chapter) notFound();
@@ -29,8 +30,8 @@ export default async function ChapterSettingsRoute({
   return (
     <ChapterSettingsPage
       chapter={chapter}
-      admins={admins}
-      isSuperAdmin={user?.role_name === "Super Admin"}
+      grants={grants}
+      canManageAccess={canManageEntity(user, "chapter", chapter_id)}
     />
   );
 }

@@ -17,22 +17,12 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
 import type { UserProfile } from "@/apis/users";
-import {
-  deactivateUser,
-  deleteUser,
-  grantBranchAdmin,
-  grantChapterAdmin,
-  grantCoordinatingBodyAdmin,
-  revokeBranchAdmin,
-  revokeChapterAdmin,
-  revokeCoordinatingBodyAdmin,
-} from "@/lib/actions";
+import { deactivateUser, deleteUser } from "@/lib/actions";
 import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
 import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 import Button from "../buttons/Button";
-import Switch from "../buttons/Switch";
 import Avatar from "../common/Avatar";
 import AdminEditUserAccountForm from "../forms/AdminEditUserAccountForm";
 import AdminEditUserContactForm from "../forms/AdminEditUserContactForm";
@@ -45,32 +35,6 @@ const STATUS_DOT_CLASSNAME: Record<UserStatusEnum, string> = {
   active: "bg-primary",
   pending: "bg-secondary",
   inactive: "bg-destructive",
-};
-
-type ManagementScope = "branch" | "chapter" | "coordinating_body";
-
-const SCOPE_LABEL: Record<ManagementScope, string> = {
-  coordinating_body: "Administrator Badko",
-  branch: "Administrator Cabang",
-  chapter: "Administrator Komisariat",
-};
-
-const GRANT_ACTION: Record<
-  ManagementScope,
-  (id: string) => ReturnType<typeof grantBranchAdmin>
-> = {
-  branch: grantBranchAdmin,
-  chapter: grantChapterAdmin,
-  coordinating_body: grantCoordinatingBodyAdmin,
-};
-
-const REVOKE_ACTION: Record<
-  ManagementScope,
-  (id: string) => ReturnType<typeof revokeBranchAdmin>
-> = {
-  branch: revokeBranchAdmin,
-  chapter: revokeChapterAdmin,
-  coordinating_body: revokeCoordinatingBodyAdmin,
 };
 
 interface AdminUserDetailPageProps {
@@ -125,38 +89,6 @@ function Field({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-function ScopeToggleChip({
-  scope,
-  checked,
-  disabled,
-  onRequestChange,
-}: {
-  scope: ManagementScope;
-  checked: boolean;
-  disabled: boolean;
-  onRequestChange: (scope: ManagementScope, nextValue: boolean) => void;
-}) {
-  return (
-    <div
-      className={`flex w-full items-center justify-center gap-2.5 rounded-lg border px-3.5 py-2 transition ${
-        checked ? "border-primary bg-primary-soft/30" : "border-[#e6e9ef]"
-      }`}
-    >
-      <Switch
-        switchId={`admin-org-can-manage-${scope}`}
-        checked={checked}
-        onChange={(next) => onRequestChange(scope, next)}
-        disabled={disabled}
-      />
-      <span
-        className={`text-[13px] font-medium ${checked ? "text-primary" : "text-[#172033]"}`}
-      >
-        {SCOPE_LABEL[scope]}
-      </span>
-    </div>
-  );
-}
-
 function StatPill({
   icon: Icon,
   label,
@@ -190,41 +122,10 @@ export default function AdminUserDetailPage({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [isDeactivating, setIsDeactivating] = useState(false);
-  const [pendingScope, setPendingScope] = useState<{
-    scope: ManagementScope;
-    nextValue: boolean;
-  } | null>(null);
-  const [isSavingScope, setIsSavingScope] = useState(false);
 
   function handleSaved() {
     setEditSection(null);
     router.refresh();
-  }
-
-  function requestScopeToggle(scope: ManagementScope, nextValue: boolean) {
-    setPendingScope({ scope, nextValue });
-  }
-
-  async function confirmScopeToggle() {
-    if (!pendingScope) return;
-    const { scope, nextValue } = pendingScope;
-    setIsSavingScope(true);
-    try {
-      const action = nextValue ? GRANT_ACTION[scope] : REVOKE_ACTION[scope];
-      const result = await action(user.id);
-      if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal memperbarui hak akses.");
-        return;
-      }
-      toast.success("Hak akses berhasil diperbarui.");
-      setPendingScope(null);
-      router.refresh();
-    } catch (err) {
-      console.error("[AdminUserDetailPage] access toggle threw:", err);
-      toast.error("Gagal memperbarui hak akses.");
-    } finally {
-      setIsSavingScope(false);
-    }
   }
 
   async function handleDelete() {
@@ -361,33 +262,14 @@ export default function AdminUserDetailPage({
           <Field label="Badko" value={user.coordinating_body_name} />
           <Field label="Organisasi" value={user.organization_name} />
           <Field label="Nomor Kartu Anggota" value={user.member_card} />
-          {user.role_name === "Administrator" && (
-            <div className="flex flex-col gap-3 border-t border-[#e6e9ef] pt-4 sm:col-span-2">
-              <p className="text-sm font-medium text-[#172033]">
-                Hak Akses Admin
-              </p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <ScopeToggleChip
-                  scope="coordinating_body"
-                  checked={user.can_manage_coordinating_body}
-                  disabled={isSavingScope}
-                  onRequestChange={requestScopeToggle}
-                />
-                <ScopeToggleChip
-                  scope="branch"
-                  checked={user.can_manage_branch}
-                  disabled={isSavingScope}
-                  onRequestChange={requestScopeToggle}
-                />
-                <ScopeToggleChip
-                  scope="chapter"
-                  checked={user.can_manage_chapter}
-                  disabled={isSavingScope}
-                  onRequestChange={requestScopeToggle}
-                />
-              </div>
-            </div>
-          )}
+          <div className="flex flex-col gap-1 border-t border-[#e6e9ef] pt-4 sm:col-span-2">
+            <p className="text-sm font-medium text-[#172033]">Hak Akses Admin</p>
+            <p className="text-[13px] text-[#5f6573]">
+              Akses admin kini diberikan per entitas lewat undangan. Buka
+              Pengaturan &rarr; Akses pada Badko/Cabang/Korkom/Komisariat yang
+              bersangkutan untuk mengundang atau mencabut akses.
+            </p>
+          </div>
         </SectionCard>
 
         <SectionCard
@@ -470,28 +352,6 @@ export default function AdminUserDetailPage({
         loading={isDeleting}
       />
 
-      <AlertConfirmation
-        open={pendingScope !== null}
-        onClose={() => setPendingScope(null)}
-        onConfirm={confirmScopeToggle}
-        title={
-          pendingScope
-            ? pendingScope.nextValue
-              ? `Jadikan ${SCOPE_LABEL[pendingScope.scope]}?`
-              : `Cabut akses ${SCOPE_LABEL[pendingScope.scope]}?`
-            : ""
-        }
-        message={
-          pendingScope
-            ? pendingScope.nextValue
-              ? `Apakah kamu yakin ingin menjadikan ${user.full_name} sebagai ${SCOPE_LABEL[pendingScope.scope]}?`
-              : `Apakah kamu yakin ingin mencabut akses ${SCOPE_LABEL[pendingScope.scope]} dari ${user.full_name}?`
-            : ""
-        }
-        confirmLabel={pendingScope?.nextValue ? "Jadikan Admin" : "Cabut Akses"}
-        confirmVariant={pendingScope?.nextValue ? "primary" : "destructive"}
-        loading={isSavingScope}
-      />
     </div>
   );
 }

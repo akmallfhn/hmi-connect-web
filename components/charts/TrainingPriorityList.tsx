@@ -14,6 +14,7 @@ import Button from "../buttons/Button";
 interface TrainingPriorityListProps {
   initialData: TrainingPriorities | null;
   entity: "branch" | "chapter";
+  organizationId?: string;
   coordinatingBodyId?: string;
   branchId?: string;
   coordinatingChapterId?: string;
@@ -26,12 +27,14 @@ function formatNumber(value: number) {
 export default function TrainingPriorityList({
   initialData,
   entity,
+  organizationId,
   coordinatingBodyId,
   branchId,
   coordinatingChapterId,
 }: TrainingPriorityListProps) {
   const scopeKey = [
     entity,
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -67,6 +70,7 @@ export default function TrainingPriorityList({
       entity,
       page: String(page),
     });
+    if (organizationId) params.set("organization_id", organizationId);
     if (coordinatingBodyId) {
       params.set("coordinating_body_id", coordinatingBodyId);
     }

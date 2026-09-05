@@ -38,24 +38,6 @@ const ADMIN_LABELS: Record<MemberManagementScope, string> = {
   chapter: "Administrator Komisariat",
 };
 
-function canManageScope(
-  user: UserListEntry,
-  scope: MemberManagementScope
-) {
-  switch (scope) {
-    case "organization":
-      return user.can_manage_organization;
-    case "coordinating_body":
-      return user.can_manage_coordinating_body;
-    case "branch":
-      return user.can_manage_branch;
-    case "coordinating_chapter":
-      return user.can_manage_coordinating_chapter;
-    case "chapter":
-      return user.can_manage_chapter;
-  }
-}
-
 export interface AdminMemberListDataProps {
   users: UserListEntry[];
   totalData: number;
@@ -64,6 +46,8 @@ export interface AdminMemberListDataProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
+  // Ids holding an accepted manage grant on this entity — users/list no longer carries any access flag.
+  adminUserIds?: string[];
 }
 
 interface AdminMemberListPageProps extends AdminMemberListDataProps {
@@ -84,9 +68,11 @@ export default function AdminMemberListPage({
   initialSearch,
   initialStatus,
   pageSize,
+  adminUserIds,
 }: AdminMemberListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const adminIds = new Set(adminUserIds ?? []);
   const showBranchContext =
     managementScope === "organization" ||
     managementScope === "coordinating_body";
@@ -176,7 +162,7 @@ export default function AdminMemberListPage({
               </thead>
               <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
                 {users.map((user) => {
-                  const isScopeAdmin = canManageScope(user, managementScope);
+                  const isScopeAdmin = adminIds.has(user.id);
                   return (
                     <tr key={user.id} className="align-middle">
                       <td className="px-4 py-3">

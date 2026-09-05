@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getBranchDetail } from "@/apis/branches";
 import { getSession } from "@/apis/session";
+import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
 import PageState from "@/components/states/PageState";
@@ -18,11 +19,7 @@ export default async function BranchLayout({
   const { branch_id } = await params;
   const { user } = await getSession();
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const canManageThisBranch =
-    Boolean(user?.can_manage_branch) && user?.branch_id === branch_id;
-
-  if (!isSuperAdmin && !canManageThisBranch) {
+  if (!canManageEntity(user, "branch", branch_id)) {
     return (
       <PageState
         variant="forbidden"

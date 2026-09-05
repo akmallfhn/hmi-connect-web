@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTrainingPriorities } from "@/apis/stat";
+import { getTrainingPriorities, type TrainingPriorities } from "@/apis/stat";
 
 const PAGE_SIZE = 5;
 
@@ -12,12 +12,14 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const entity = searchParams.get("entity");
   const page = parsePage(searchParams.get("page"));
+  const organizationId = searchParams.get("organization_id") ?? undefined;
   const coordinatingBodyId =
     searchParams.get("coordinating_body_id") ?? undefined;
   const branchId = searchParams.get("branch_id") ?? undefined;
   const coordinatingChapterId =
     searchParams.get("coordinating_chapter_id") ?? undefined;
   const scopeCount = [
+    organizationId,
     coordinatingBodyId,
     branchId,
     coordinatingChapterId,
@@ -40,40 +42,30 @@ export async function GET(request: Request) {
     );
   }
 
-  const data =
-    entity === "branch"
-      ? await getTrainingPriorities({
-          entity,
-          coordinatingBodyId,
-          page,
-          pageSize: PAGE_SIZE,
-        })
+  const paging = { page, pageSize: PAGE_SIZE };
+  let data: TrainingPriorities | null;
+
+  if (entity === "branch") {
+    data = organizationId
+      ? await getTrainingPriorities({ entity, organizationId, ...paging })
       : coordinatingBodyId
-        ? await getTrainingPriorities({
-            entity,
-            coordinatingBodyId,
-            page,
-            pageSize: PAGE_SIZE,
-          })
+        ? await getTrainingPriorities({ entity, coordinatingBodyId, ...paging })
+        : await getTrainingPriorities({ entity, ...paging });
+  } else {
+    data = organizationId
+      ? await getTrainingPriorities({ entity, organizationId, ...paging })
+      : coordinatingBodyId
+        ? await getTrainingPriorities({ entity, coordinatingBodyId, ...paging })
         : branchId
-          ? await getTrainingPriorities({
-              entity,
-              branchId,
-              page,
-              pageSize: PAGE_SIZE,
-            })
+          ? await getTrainingPriorities({ entity, branchId, ...paging })
           : coordinatingChapterId
             ? await getTrainingPriorities({
                 entity,
                 coordinatingChapterId,
-                page,
-                pageSize: PAGE_SIZE,
+                ...paging,
               })
-            : await getTrainingPriorities({
-                entity,
-                page,
-                pageSize: PAGE_SIZE,
-              });
+            : await getTrainingPriorities({ entity, ...paging });
+  }
 
   if (!data) {
     return NextResponse.json(

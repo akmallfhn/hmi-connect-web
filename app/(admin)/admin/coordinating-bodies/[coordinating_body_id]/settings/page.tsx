@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import { getSession } from "@/apis/session";
-import { listCoordinatingBodyAdmins } from "@/apis/users";
+import { canManageEntity } from "@/lib/access";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import CoordinatingBodySettingsPage from "@/components/pages/CoordinatingBodySettingsPage";
 
 export const metadata: Metadata = {
@@ -18,10 +19,10 @@ export default async function CoordinatingBodySettingsRoute({
   params,
 }: CoordinatingBodySettingsRouteProps) {
   const { coordinating_body_id } = await params;
-  const [{ user }, coordinatingBody, admins] = await Promise.all([
+  const [{ user }, coordinatingBody, grants] = await Promise.all([
     getSession(),
     getCoordinatingBodyDetail(coordinating_body_id),
-    listCoordinatingBodyAdmins(coordinating_body_id),
+    listAllAccessGrants("coordinating_body", coordinating_body_id),
   ]);
 
   if (!coordinatingBody) notFound();
@@ -29,8 +30,8 @@ export default async function CoordinatingBodySettingsRoute({
   return (
     <CoordinatingBodySettingsPage
       coordinatingBody={coordinatingBody}
-      admins={admins}
-      isSuperAdmin={user?.role_name === "Super Admin"}
+      grants={grants}
+      canManageAccess={canManageEntity(user, "coordinating_body", coordinating_body_id)}
     />
   );
 }

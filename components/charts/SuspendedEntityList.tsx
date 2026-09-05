@@ -25,6 +25,7 @@ export type SuspendedEntityTab = {
 
 interface SuspendedEntityListProps {
   tabs: SuspendedEntityTab[];
+  organizationId?: string;
   coordinatingBodyId?: string;
   branchId?: string;
   coordinatingChapterId?: string;
@@ -93,13 +94,17 @@ function getParentName(
 
 export default function SuspendedEntityList({
   tabs,
+  organizationId,
   coordinatingBodyId,
   branchId,
   coordinatingChapterId,
 }: SuspendedEntityListProps) {
-  const scopeKey = [coordinatingBodyId, branchId, coordinatingChapterId].join(
-    ":",
-  );
+  const scopeKey = [
+    organizationId,
+    coordinatingBodyId,
+    branchId,
+    coordinatingChapterId,
+  ].join(":");
   const [activeEntityType, setActiveEntityType] = useState(tabs[0].entityType);
   const [loadedData, setLoadedData] = useState<
     Partial<
@@ -151,6 +156,7 @@ export default function SuspendedEntityList({
       entity_type: entityType,
       page: String(page),
     });
+    if (organizationId) params.set("organization_id", organizationId);
     if (coordinatingBodyId) {
       params.set("coordinating_body_id", coordinatingBodyId);
     }

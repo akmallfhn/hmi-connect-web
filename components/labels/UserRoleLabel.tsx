@@ -3,7 +3,6 @@ import Label, { type LabelVariant } from "../common/Label";
 // Keyed by role_id — see lib/constants.ts#USER_ROLE_OPTIONS for where these ids come from.
 const ROLE_VARIANT: Record<number, LabelVariant> = {
   0: "purple", // Super Admin
-  1: "blue", // Administrator
   2: "gray", // General User
 };
 

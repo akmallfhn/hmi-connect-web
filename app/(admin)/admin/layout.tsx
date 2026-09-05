@@ -1,4 +1,5 @@
 import { getSession } from "@/apis/session";
+import { hasAnyManageAccess } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import PageState from "@/components/states/PageState";
 import { redirect } from "next/navigation";
@@ -14,16 +15,7 @@ export default async function AdminLayout({
 
   if (!sessionToken) redirect(`${mainSiteOrigin}/auth/login`);
 
-  const isSuperAdmin = user?.role_name === "Super Admin";
-  const hasAdminAccess =
-    isSuperAdmin ||
-    user?.can_manage_organization ||
-    user?.can_manage_coordinating_body ||
-    user?.can_manage_branch ||
-    user?.can_manage_coordinating_chapter ||
-    user?.can_manage_chapter;
-
-  if (!hasAdminAccess) {
+  if (!hasAnyManageAccess(user)) {
     return (
       <PageState
         variant="forbidden"
