@@ -28,7 +28,10 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { updateBranch } from "@/lib/actions";
+import {
+  activateBranch,
+  suspendBranch,
+} from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -185,10 +188,10 @@ export default function BranchDetailPage({
     setIsUpdatingStatus(true);
 
     try {
-      const result = await updateBranch({
-        id: branch.id,
-        status: nextStatus,
-      });
+      const result =
+        nextStatus === "active"
+          ? await activateBranch(branch.id)
+          : await suspendBranch(branch.id);
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
@@ -205,7 +208,7 @@ export default function BranchDetailPage({
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error("[BranchDetailPage] updateBranch threw:", error);
+      console.error("[BranchDetailPage] status change threw:", error);
       toast.error("Gagal memperbarui status Cabang.");
     } finally {
       setIsUpdatingStatus(false);

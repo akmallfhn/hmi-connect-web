@@ -28,7 +28,10 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { updateCoordinatingChapter } from "@/lib/actions";
+import {
+  activateCoordinatingChapter,
+  suspendCoordinatingChapter,
+} from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -184,10 +187,10 @@ export default function CoordinatingChapterDetailPage({
     setIsUpdatingStatus(true);
 
     try {
-      const result = await updateCoordinatingChapter({
-        id: coordinatingChapter.id,
-        status: nextStatus,
-      });
+      const result =
+        nextStatus === "active"
+          ? await activateCoordinatingChapter(coordinatingChapter.id)
+          : await suspendCoordinatingChapter(coordinatingChapter.id);
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
@@ -204,10 +207,7 @@ export default function CoordinatingChapterDetailPage({
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error(
-        "[CoordinatingChapterDetailPage] updateCoordinatingChapter threw:",
-        error
-      );
+      console.error("[CoordinatingChapterDetailPage] status change threw:", error);
       toast.error("Gagal memperbarui status Korkom.");
     } finally {
       setIsUpdatingStatus(false);

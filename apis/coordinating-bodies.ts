@@ -247,3 +247,32 @@ export async function deleteCoordinatingBody(id: string): Promise<ApiEnvelope> {
     body: { id },
   });
 }
+
+// Suspension answers to the level above, never to the row itself — hence its own endpoint rather than update({status}).
+export async function suspendCoordinatingBody(id: string): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
+  return setEntityStatusCoordinatingBody("suspend", id);
+}
+
+export async function activateCoordinatingBody(id: string): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
+  return setEntityStatusCoordinatingBody("activate", id);
+}
+
+async function setEntityStatusCoordinatingBody(
+  action: "suspend" | "activate",
+  id: string
+): Promise<ApiEnvelope<CoordinatingBodyDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<CoordinatingBodyDetail>(`/api/v1/coordinating-bodies/${action}`, {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}

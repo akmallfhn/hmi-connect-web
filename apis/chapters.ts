@@ -287,3 +287,32 @@ export async function deleteChapter(id: string): Promise<ApiEnvelope> {
     body: { id },
   });
 }
+
+// Suspension answers to the level above, never to the row itself — hence its own endpoint rather than update({status}).
+export async function suspendChapter(id: string): Promise<ApiEnvelope<ChapterDetail>> {
+  return setEntityStatusChapter("suspend", id);
+}
+
+export async function activateChapter(id: string): Promise<ApiEnvelope<ChapterDetail>> {
+  return setEntityStatusChapter("activate", id);
+}
+
+async function setEntityStatusChapter(
+  action: "suspend" | "activate",
+  id: string
+): Promise<ApiEnvelope<ChapterDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<ChapterDetail>(`/api/v1/chapters/${action}`, {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}

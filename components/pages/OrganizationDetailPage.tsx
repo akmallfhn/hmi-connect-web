@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  Ban,
   Building,
   CalendarDays,
   History,
+  Pencil,
+  Power,
   Network,
-  Settings,
   ShieldCheck,
   Users,
   Workflow,
@@ -14,8 +16,14 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { OrganizationDetail } from "@/apis/organizations";
+import {
+  activateOrganization,
+  suspendOrganization,
+} from "@/lib/actions";
+import { isSuccessStatus } from "@/lib/types";
 import type {
   StructuralPeriodDetail,
   StructuralPeriodSummary,
@@ -23,6 +31,7 @@ import type {
 import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import EditOrganizationFormSheet from "../forms/EditOrganizationFormSheet";
+import AlertConfirmation from "../modals/AlertConfirmation";
 import Label from "../common/Label";
 import StructuralPage from "./StructuralPage";
 import LogoHmi from "../svg/LogoHmi";
@@ -39,6 +48,8 @@ interface OrganizationDetailPageProps {
   accessGrants: AccessGrantEntry[];
   canManageAccess: boolean;
   initialTab: OrganizationDetailTab;
+  // Suspending the whole organization is a Master-only action.
+  allowStatusChange?: boolean;
 }
 
 const TABS: { id: OrganizationDetailTab; label: string; icon: LucideIcon }[] = [
@@ -101,16 +112,51 @@ export default function OrganizationDetailPage({
   accessGrants,
   canManageAccess,
   initialTab,
+  allowStatusChange = false,
 }: OrganizationDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [seenTab, setSeenTab] = useState(initialTab);
   const [showEditSheet, setShowEditSheet] = useState(false);
+  const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [activeTab, setActiveTab] = useState<OrganizationDetailTab>(initialTab);
 
   if (seenTab !== initialTab) {
     setSeenTab(initialTab);
     setActiveTab(initialTab);
+  }
+
+  async function handleStatusChange() {
+    const nextStatus = organization.status === "active" ? "inactive" : "active";
+    setIsUpdatingStatus(true);
+
+    try {
+      const result =
+        nextStatus === "active"
+          ? await activateOrganization(organization.id)
+          : await suspendOrganization(organization.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(
+          result.message ??
+            `Gagal ${nextStatus === "active" ? "mengaktifkan" : "menangguhkan"} organisasi.`
+        );
+        return;
+      }
+
+      toast.success(
+        nextStatus === "active"
+          ? "Organisasi berhasil diaktifkan."
+          : "Organisasi berhasil disuspend."
+      );
+      setShowStatusConfirmation(false);
+      router.refresh();
+    } catch (error) {
+      console.error("[OrganizationDetailPage] status change threw:", error);
+      toast.error("Gagal memperbarui status organisasi.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   }
 
   function selectTab(tab: OrganizationDetailTab) {
@@ -157,14 +203,36 @@ export default function OrganizationDetailPage({
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => setShowEditSheet(true)}
-            className="w-fit shrink-0"
-          >
-            <Settings className="size-4" />
-            Pengaturan Organisasi
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            {allowStatusChange &&
+              (organization.status === "active" ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowStatusConfirmation(true)}
+                  className="w-fit shrink-0"
+                >
+                  <Ban className="size-4" />
+                  Suspend Organisasi ini
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowStatusConfirmation(true)}
+                  className="w-fit shrink-0"
+                >
+                  <Power className="size-4" />
+                  Aktifkan Organisasi ini
+                </Button>
+              ))}
+            <Button
+              variant="outline"
+              onClick={() => setShowEditSheet(true)}
+              className="w-fit shrink-0"
+            >
+              <Pencil className="size-4" />
+              Edit Detail
+            </Button>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -266,6 +334,31 @@ export default function OrganizationDetailPage({
           />
         )}
       </div>
+
+      <AlertConfirmation
+        open={showStatusConfirmation}
+        onClose={() => setShowStatusConfirmation(false)}
+        onConfirm={handleStatusChange}
+        title={
+          organization.status === "active"
+            ? "Suspend organisasi ini?"
+            : "Aktifkan organisasi ini?"
+        }
+        message={
+          organization.status === "active"
+            ? `${organization.name} akan dinonaktifkan beserta seluruh Badko, Cabang, Korkom, dan Komisariat di bawahnya.`
+            : `${organization.name} akan diaktifkan kembali.`
+        }
+        confirmLabel={
+          organization.status === "active"
+            ? "Suspend Organisasi"
+            : "Aktifkan Organisasi"
+        }
+        confirmVariant={
+          organization.status === "active" ? "destructive" : "primary"
+        }
+        loading={isUpdatingStatus}
+      />
 
       <EditOrganizationFormSheet
         open={showEditSheet}

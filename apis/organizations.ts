@@ -59,3 +59,32 @@ export async function updateOrganization(
     body: payload,
   });
 }
+
+// Suspension answers to the level above, never to the row itself — hence its own endpoint rather than update({status}).
+export async function suspendOrganization(id: string): Promise<ApiEnvelope<OrganizationDetail>> {
+  return setEntityStatusOrganization("suspend", id);
+}
+
+export async function activateOrganization(id: string): Promise<ApiEnvelope<OrganizationDetail>> {
+  return setEntityStatusOrganization("activate", id);
+}
+
+async function setEntityStatusOrganization(
+  action: "suspend" | "activate",
+  id: string
+): Promise<ApiEnvelope<OrganizationDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<OrganizationDetail>(`/api/v1/organizations/${action}`, {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+}

@@ -74,6 +74,7 @@ export default async function MasterOrganizationDetailPage({
       accessGrants={accessGrants}
       canManageAccess
       initialTab={parseTab(query.tab)}
+      allowStatusChange
     />
   );
 }

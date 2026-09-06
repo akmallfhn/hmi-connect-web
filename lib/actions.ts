@@ -19,6 +19,8 @@ import {
   deleteBranch as deleteBranchApi,
   getBranchDetail as getBranchDetailApi,
   updateBranch as updateBranchApi,
+  suspendBranch as suspendBranchApi,
+  activateBranch as activateBranchApi,
   type CreateBranchPayload,
   type UpdateBranchPayload,
 } from "@/apis/branches";
@@ -27,6 +29,8 @@ import {
   deleteChapter as deleteChapterApi,
   getChapterDetail as getChapterDetailApi,
   updateChapter as updateChapterApi,
+  suspendChapter as suspendChapterApi,
+  activateChapter as activateChapterApi,
   type CreateChapterPayload,
   type UpdateChapterPayload,
 } from "@/apis/chapters";
@@ -35,11 +39,15 @@ import {
   deleteCoordinatingBody as deleteCoordinatingBodyApi,
   getCoordinatingBodyDetail as getCoordinatingBodyDetailApi,
   updateCoordinatingBody as updateCoordinatingBodyApi,
+  suspendCoordinatingBody as suspendCoordinatingBodyApi,
+  activateCoordinatingBody as activateCoordinatingBodyApi,
   type CreateCoordinatingBodyPayload,
   type UpdateCoordinatingBodyPayload,
 } from "@/apis/coordinating-bodies";
 import {
   updateOrganization as updateOrganizationApi,
+  suspendOrganization as suspendOrganizationApi,
+  activateOrganization as activateOrganizationApi,
   type UpdateOrganizationPayload,
 } from "@/apis/organizations";
 import {
@@ -47,6 +55,8 @@ import {
   deleteCoordinatingChapter as deleteCoordinatingChapterApi,
   getCoordinatingChapterDetail as getCoordinatingChapterDetailApi,
   updateCoordinatingChapter as updateCoordinatingChapterApi,
+  suspendCoordinatingChapter as suspendCoordinatingChapterApi,
+  activateCoordinatingChapter as activateCoordinatingChapterApi,
   type CreateCoordinatingChapterPayload,
   type UpdateCoordinatingChapterPayload,
 } from "@/apis/coordinating-chapters";
@@ -660,4 +670,44 @@ export async function deleteChatMessage(id: string) {
 
 export async function markMessagesAsRead(conversationId: string) {
   return markMessagesAsReadApi(conversationId);
+}
+
+export async function suspendOrganization(id: string) {
+  return suspendOrganizationApi(id);
+}
+
+export async function activateOrganization(id: string) {
+  return activateOrganizationApi(id);
+}
+
+export async function suspendCoordinatingBody(id: string) {
+  return suspendCoordinatingBodyApi(id);
+}
+
+export async function activateCoordinatingBody(id: string) {
+  return activateCoordinatingBodyApi(id);
+}
+
+export async function suspendBranch(id: string) {
+  return suspendBranchApi(id);
+}
+
+export async function activateBranch(id: string) {
+  return activateBranchApi(id);
+}
+
+export async function suspendCoordinatingChapter(id: string) {
+  return suspendCoordinatingChapterApi(id);
+}
+
+export async function activateCoordinatingChapter(id: string) {
+  return activateCoordinatingChapterApi(id);
+}
+
+export async function suspendChapter(id: string) {
+  return suspendChapterApi(id);
+}
+
+export async function activateChapter(id: string) {
+  return activateChapterApi(id);
 }

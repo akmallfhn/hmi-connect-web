@@ -1834,10 +1834,24 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   admins previously had no home under `/master` at all. There is deliberately no Daftar Badko tab:
   `/master/coordinating-bodies` is already that list, and the route only asks
   `coordinating-bodies/list` for `total_data` (`page_size: 1`) to fill the Jumlah Badko stat.
-  Its header's "Pengaturan Organisasi" button opens `EditOrganizationFormSheet` (logo/nama/slug) in
+  Its header's "Edit Detail" button opens `EditOrganizationFormSheet` (logo/nama/slug) in
   place rather than linking to `/organizations/[id]/settings` — that page belongs to the
   organization's own scoped dashboard, and bouncing an admin out of `/master` to edit one field is a
-  detour, not a destination. There is no Suspend action, and the backend has no organizations/delete.
+  detour, not a destination. Suspend/Aktifkan sits next to it behind `allowStatusChange`, which only
+  the Master route passes; the backend has no organizations/delete.
+
+  Suspension runs through **dedicated `{resource}/suspend` and `/activate` endpoints**, never
+  `update({status})` — the two answer to different authority: editing a row is the row's own
+  business, but taking it out of service belongs to the level above it, so an entity is never
+  suspended by whoever runs it. `apis/{organizations,coordinating-bodies,branches,
+  coordinating-chapters,chapters}.ts` each expose a `suspendX`/`activateX` pair over one private
+  `setEntityStatusX` helper, wrapped in `lib/actions.ts` like every other mutation. The backend's
+  own table (`docs/api/organization.md` → Suspension) is what the frontend's `allowStatusChange`
+  matrix mirrors: an organization is `Super Admin` only; Badko and Cabang answer to a grant on the
+  **organization**; Korkom and Komisariat answer to a grant on the **branch**. Two consequences that
+  read as surprises: a **Badko may not suspend its own Cabang** (that is the organization's call),
+  and a **Korkom may not suspend the Komisariat it groups** (that is the Cabang's) — which is why
+  those two scopes pass `allowStatusChange={false}` while Master, Organization, and Cabang do not.
 - `/master/coordinating-bodies` and
   `/organizations/[organization_id]/coordinating-bodies` both reuse
   `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of

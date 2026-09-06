@@ -27,7 +27,10 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { updateChapter } from "@/lib/actions";
+import {
+  activateChapter,
+  suspendChapter,
+} from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -178,10 +181,10 @@ export default function ChapterDetailPage({
     setIsUpdatingStatus(true);
 
     try {
-      const result = await updateChapter({
-        id: chapter.id,
-        status: nextStatus,
-      });
+      const result =
+        nextStatus === "active"
+          ? await activateChapter(chapter.id)
+          : await suspendChapter(chapter.id);
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
@@ -198,7 +201,7 @@ export default function ChapterDetailPage({
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error("[ChapterDetailPage] updateChapter threw:", error);
+      console.error("[ChapterDetailPage] status change threw:", error);
       toast.error("Gagal memperbarui status Komisariat.");
     } finally {
       setIsUpdatingStatus(false);

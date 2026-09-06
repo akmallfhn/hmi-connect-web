@@ -29,7 +29,10 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { updateCoordinatingBody } from "@/lib/actions";
+import {
+  activateCoordinatingBody,
+  suspendCoordinatingBody,
+} from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -190,10 +193,10 @@ export default function CoordinatingBodyDetailPage({
     setIsUpdatingStatus(true);
 
     try {
-      const result = await updateCoordinatingBody({
-        id: coordinatingBody.id,
-        status: nextStatus,
-      });
+      const result =
+        nextStatus === "active"
+          ? await activateCoordinatingBody(coordinatingBody.id)
+          : await suspendCoordinatingBody(coordinatingBody.id);
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
@@ -210,10 +213,7 @@ export default function CoordinatingBodyDetailPage({
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error(
-        "[CoordinatingBodyDetailPage] updateCoordinatingBody threw:",
-        error
-      );
+      console.error("[CoordinatingBodyDetailPage] status change threw:", error);
       toast.error("Gagal memperbarui status Badko.");
     } finally {
       setIsUpdatingStatus(false);

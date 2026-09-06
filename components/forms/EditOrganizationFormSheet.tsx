@@ -27,7 +27,7 @@ export default function EditOrganizationFormSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Pengaturan Organisasi"
+      title="Edit Organisasi"
       description="Perbarui profil organisasi ini."
     >
       {open && (
