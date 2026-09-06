@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
-import { listAllAccessGrants } from "@/apis/access-grants";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
 import type { UserStatusEnum } from "@/lib/types";
@@ -37,7 +36,6 @@ export default async function CoordinatingBodyMembersPage({
     }),
   ]);
 
-  const accessGrants = await listAllAccessGrants("coordinating_body", coordinating_body_id);
 
   return (
     <AdminMemberListPage
@@ -51,9 +49,6 @@ export default async function CoordinatingBodyMembersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
-      adminUserIds={accessGrants
-        .filter((grant) => grant.status === "accepted")
-        .map((grant) => grant.user_id)}
     />
   );
 }

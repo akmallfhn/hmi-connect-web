@@ -187,10 +187,11 @@ export default function AdminUserListPage({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[880px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
                   <th className="px-4 py-3">User</th>
+                  <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Cabang / Komisariat</th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
@@ -220,6 +221,11 @@ export default function AdminUserListPage({
                           </p>
                         </div>
                       </Link>
+                    </td>
+                    <td className="px-4 py-3 text-[#5f6573]">
+                      <span className="block max-w-56 truncate">
+                        {user.email || "—"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-[#172033]">
                       {user.chapter_name ? (

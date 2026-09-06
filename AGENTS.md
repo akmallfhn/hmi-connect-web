@@ -1559,12 +1559,14 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   the Komisariat, matching `/master/users`; the narrower Cabang/Korkom/Komisariat scopes keep only
   the Komisariat line. Page descriptions name their full scope (`Pengurus Besar HMI`, `HMI Badko
 {name}`, `HMI Cabang {name}`, `HMI Korkom {name}`, or `HMI Komisariat {name}`). Row links use the
-  current scoped base path plus `/members/{username}`. Its Role label is also scope-aware, but
-  `users/list` carries no access field any more — each of the five member routes fetches
-  `apis/access-grants.ts#listAllAccessGrants(scope, entityId)` alongside its `listUsers` call and
-  passes the `accepted` holders' ids down as `adminUserIds`; a row in that set gets the purple
-  `Administrator {scope}` label, everyone else gray `Kader Anggota`. Pending invitations are
-  deliberately excluded — an unaccepted grant confers nothing.
+  current scoped base path plus `/members/{username}`. The roster has **no Role column** — role is a
+  Master concern, and the scoped rosters answer "who are our members", not "who administers this".
+  An earlier version derived an `Administrator {scope}` label by fetching
+  `listAllAccessGrants(scope, entityId)` in each of the five routes and passing the accepted
+  holders' ids down as `adminUserIds`; that column, the prop, and those five fetches are all gone —
+  don't reintroduce them, `EntityAccessTab` shows an entity's admins and `/master/users/[username]`
+  shows one person's grants. Both this roster and `/master/users` carry an Email column (straight
+  off `users/list`'s own `email`), truncated so a long address can't stretch the table.
   `apis/users.ts#listUsers` exposes the backend's direct `chapterId`, `branchId`,
   `coordinatingChapterId`, and `coordinatingBodyId` filters. The Korkom roster always passes
   `coordinatingChapterId` as `coordinating_chapter_id`, so backend pagination/search/status remain

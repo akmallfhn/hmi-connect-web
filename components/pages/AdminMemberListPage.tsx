@@ -8,7 +8,6 @@ import type { UserListEntry } from "@/apis/users";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
-import Label from "../common/Label";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -30,14 +29,6 @@ export type MemberManagementScope =
   | "coordinating_chapter"
   | "chapter";
 
-const ADMIN_LABELS: Record<MemberManagementScope, string> = {
-  organization: "Administrator Organisasi",
-  coordinating_body: "Administrator Badko",
-  branch: "Administrator Cabang",
-  coordinating_chapter: "Administrator Korkom",
-  chapter: "Administrator Komisariat",
-};
-
 export interface AdminMemberListDataProps {
   users: UserListEntry[];
   totalData: number;
@@ -46,8 +37,6 @@ export interface AdminMemberListDataProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
-  // Ids holding an accepted manage grant on this entity — users/list no longer carries any access flag.
-  adminUserIds?: string[];
 }
 
 interface AdminMemberListPageProps extends AdminMemberListDataProps {
@@ -68,11 +57,9 @@ export default function AdminMemberListPage({
   initialSearch,
   initialStatus,
   pageSize,
-  adminUserIds,
 }: AdminMemberListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const adminIds = new Set(adminUserIds ?? []);
   const showBranchContext =
     managementScope === "organization" ||
     managementScope === "coordinating_body";
@@ -147,24 +134,22 @@ export default function AdminMemberListPage({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[880px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
                 <tr>
                   <th className="px-4 py-3">User</th>
+                  <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">
                     {showBranchContext ? "Cabang / Komisariat" : "Komisariat"}
                   </th>
-                  <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Terverifikasi</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {users.map((user) => {
-                  const isScopeAdmin = adminIds.has(user.id);
-                  return (
-                    <tr key={user.id} className="align-middle">
+                {users.map((user) => (
+                  <tr key={user.id} className="align-middle">
                       <td className="px-4 py-3">
                         <Link
                           href={`${basePath}/members/${encodeURIComponent(user.username)}`}
@@ -185,6 +170,11 @@ export default function AdminMemberListPage({
                           </div>
                         </Link>
                       </td>
+                      <td className="px-4 py-3 text-[#5f6573]">
+                        <span className="block max-w-56 truncate">
+                          {user.email || "—"}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-[#172033]">
                         {user.chapter_name ? (
                           <div className="min-w-0">
@@ -200,13 +190,6 @@ export default function AdminMemberListPage({
                         ) : (
                           <span className="text-[#5f6573]">—</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Label variant={isScopeAdmin ? "purple" : "gray"}>
-                          {isScopeAdmin
-                            ? ADMIN_LABELS[managementScope]
-                            : "Kader Anggota"}
-                        </Label>
                       </td>
                       <td className="px-4 py-3">
                         <UserStatusLabel status={user.status} />
@@ -232,8 +215,7 @@ export default function AdminMemberListPage({
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>

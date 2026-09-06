@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { listAllAccessGrants } from "@/apis/access-grants";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
 import type { UserStatusEnum } from "@/lib/types";
@@ -32,7 +31,6 @@ export default async function OrganizationMembersPage({
     pageSize: PAGE_SIZE,
   });
 
-  const accessGrants = await listAllAccessGrants("organization", organization_id);
 
   return (
     <AdminMemberListPage
@@ -46,9 +44,6 @@ export default async function OrganizationMembersPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
-      adminUserIds={accessGrants
-        .filter((grant) => grant.status === "accepted")
-        .map((grant) => grant.user_id)}
     />
   );
 }
