@@ -265,7 +265,7 @@ export default function ChapterDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Ban className="size-4" />
-                  Suspend Komisariat ini
+                  Suspend
                 </Button>
               ) : (
                 <Button
@@ -274,7 +274,7 @@ export default function ChapterDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Power className="size-4" />
-                  Aktifkan Komisariat ini
+                  Aktifkan
                 </Button>
               ))}
             {allowEdit && (

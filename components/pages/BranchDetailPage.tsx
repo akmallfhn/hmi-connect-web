@@ -271,7 +271,7 @@ export default function BranchDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Ban className="size-4" />
-                  Suspend Cabang ini
+                  Suspend
                 </Button>
               ) : (
                 <Button
@@ -280,7 +280,7 @@ export default function BranchDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Power className="size-4" />
-                  Aktifkan Cabang ini
+                  Aktifkan
                 </Button>
               ))}
             {allowEdit && (

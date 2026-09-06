@@ -274,7 +274,7 @@ export default function CoordinatingBodyDetailPage({
                 className="w-fit shrink-0"
               >
                 <Ban className="size-4" />
-                Suspend Badko ini
+                Suspend
               </Button>
             ) : (
               <Button
@@ -283,7 +283,7 @@ export default function CoordinatingBodyDetailPage({
                 className="w-fit shrink-0"
               >
                 <Power className="size-4" />
-                Aktifkan Badko ini
+                Aktifkan
               </Button>
             )}
             {allowEdit && (

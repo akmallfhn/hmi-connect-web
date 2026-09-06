@@ -269,7 +269,7 @@ export default function CoordinatingChapterDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Ban className="size-4" />
-                  Suspend Korkom ini
+                  Suspend
                 </Button>
               ) : (
                 <Button
@@ -278,7 +278,7 @@ export default function CoordinatingChapterDetailPage({
                   className="w-fit shrink-0"
                 >
                   <Power className="size-4" />
-                  Aktifkan Korkom ini
+                  Aktifkan
                 </Button>
               ))}
             {allowEdit && (
