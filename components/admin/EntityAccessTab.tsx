@@ -243,9 +243,21 @@ function AddAccessModal({
     const params = new URLSearchParams({
       q: inputValue,
       page: String(page),
+      verification_status: "verified",
       [SEARCH_PARAM[entityType]]: entityId,
     });
     const response = await fetch(`/api/users/search?${params}`);
+
+    // A failed search would otherwise be indistinguishable from an entity with no members.
+    if (!response.ok) {
+      toast.error(
+        response.status === 403
+          ? `Kamu tidak punya akses untuk mencari kader di ${entityLabel} ini.`
+          : "Gagal memuat daftar kader."
+      );
+      return { options: [], hasMore: false };
+    }
+
     const json = await response.json();
     const results: { id: string; full_name: string; avatar?: string }[] =
       json.data ?? [];
@@ -297,11 +309,13 @@ function AddAccessModal({
           value={selected}
           onChange={setSelected}
           loadOptions={loadOptions}
+          noOptionsMessage={`Tidak ada kader terverifikasi di ${entityLabel} ini.`}
           showOptionAvatar
         />
         <p className="text-xs text-[#5f6573]">
-          Undangan dikirim sebagai permintaan — pengguna baru bisa mengelola{" "}
-          {entityLabel} ini setelah menerimanya.
+          Hanya kader aktif dan terverifikasi yang terdaftar di {entityLabel}{" "}
+          ini yang bisa dipilih. Undangan dikirim sebagai permintaan — pengguna baru bisa
+          mengelola {entityLabel} ini setelah menerimanya.
         </p>
 
         <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">

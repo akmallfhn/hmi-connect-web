@@ -1,14 +1,21 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { after } from "next/server";
+import { render } from "@react-email/components";
 import { callApi, type ApiEnvelope } from "./api";
+import AccessInvitationEmail, {
+  type AccessInvitationEmailProps,
+} from "@/components/emails/AccessInvitationEmail";
+import { ADMIN_ENTITY_LABEL } from "@/lib/access";
+import { sendEmail } from "@/lib/mailtrap";
 import {
   isSuccessStatus,
   type AccessCapabilityEnum,
   type AccessEntityTypeEnum,
   type AccessGrantStatusEnum,
 } from "@/lib/types";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { getMainSiteOrigin, SESSION_COOKIE_NAME } from "@/lib/constants";
 
 // Mirrors one row of POST /api/v1/access-grants/list — a grant, or an invitation not yet accepted.
 export type AccessGrantEntry = {
@@ -146,6 +153,22 @@ export async function listMyAccessGrants(
   return toPagedResult(result, page);
 }
 
+// One grant by id, readable only by the holder it names — `null` when it isn't theirs, or was revoked.
+export async function getAccessGrantDetail(
+  id: string
+): Promise<AccessGrantEntry | null> {
+  const token = await sessionToken();
+  if (!token) return null;
+
+  const result = await callApi<AccessGrantEntry>(
+    "/api/v1/access-grants/detail",
+    { method: "POST", token, body: { id } }
+  );
+
+  if (!isSuccessStatus(result.status) || !result.data) return null;
+  return result.data;
+}
+
 export type InviteAccessGrantPayload = {
   userId: string;
   entityType: AccessEntityTypeEnum;
@@ -165,15 +188,56 @@ export async function inviteAccessGrant(
     };
   }
 
-  return callApi<AccessGrantEntry>("/api/v1/access-grants/invite", {
-    method: "POST",
-    token,
-    body: {
-      user_id: payload.userId,
-      entity_type: payload.entityType,
-      entity_id: payload.entityId,
-      capability: payload.capability ?? "manage",
-    },
+  const result = await callApi<AccessGrantEntry>(
+    "/api/v1/access-grants/invite",
+    {
+      method: "POST",
+      token,
+      body: {
+        user_id: payload.userId,
+        entity_type: payload.entityType,
+        entity_id: payload.entityId,
+        capability: payload.capability ?? "manage",
+      },
+    }
+  );
+
+  const grant = isSuccessStatus(result.status) ? result.data : undefined;
+  const recipient = grant?.user_email;
+
+  if (grant && recipient) {
+    const props: AccessInvitationEmailProps = {
+      fullName: grant.user_full_name ?? "Kader",
+      inviterName: grant.granted_by_name ?? "Admin",
+      entityLabel: ADMIN_ENTITY_LABEL[grant.entity_type],
+      entityName: grant.entity_name ?? "",
+      invitationUrl: `${getMainSiteOrigin()}/invitations/${grant.id}`,
+    };
+
+    // after() so the send outlives the action's own response instead of racing it.
+    after(async () => {
+      try {
+        await sendAccessInvitationEmail(recipient, props);
+      } catch (err) {
+        console.error("[inviteAccessGrant] invitation email job threw:", err);
+      }
+    });
+  }
+
+  return result;
+}
+
+// A failed send must never fail the invitation itself, so this only ever logs.
+async function sendAccessInvitationEmail(
+  recipient: string,
+  props: AccessInvitationEmailProps
+) {
+  const html = await render(AccessInvitationEmail(props));
+
+  await sendEmail({
+    mailRecipients: [recipient],
+    mailSubject: `Undangan jadi admin ${props.entityLabel} di HMI Connect`,
+    mailHtml: html,
   });
 }
 

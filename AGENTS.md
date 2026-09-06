@@ -55,7 +55,10 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 `next.config.mts` rewrites and redirects everything for host `www.(example.com)` into
 the `/www` segment (see `app/(www)/www/`), and hides `/www` from direct access. It also
 holds the cookie-based redirect rules (no session → `/auth/login`, has session → don't
-show login again). This is why almost every route lives under `app/(www)/www/...` even
+show login again). Paths listed in that first rule's negative lookahead opt out of it:
+`profile/*`, `trainings*`, and `feeds/*` because they're genuinely public, and
+`invitations/*` because it isn't — that route needs to redirect to login with its own
+`redirectTo` so the emailed link survives signing in, which a config-level redirect can't do. This is why almost every route lives under `app/(www)/www/...` even
 though the URLs you actually visit don't show `/www`.
 
 `admin.(example.com)` is rewritten into `/admin` the same way (see `app/(admin)/admin/`),
@@ -261,12 +264,20 @@ Three layers, each with one job. Don't blend them.
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
    by source), `access-grants.ts` (the `access-grants/*` resource — `listAccessGrants`/
    `listAllAccessGrants` (pages exhausted, for a whole entity's roster)/`listMyAccessGrants`/
+   `getAccessGrantDetail` (`access-grants/detail`, one grant by id — the backend compares the caller
+   against the grant's own `user_id` and 403s otherwise, `Super Admin` included, so this is what
+   scopes `/invitations/[grant_id]` to the invited account; revoked grants read as not found, and
+   both cases surface here as `null`)/
    `inviteAccessGrant`/`acceptAccessGrant`/`revokeAccessGrant`. Replaced the old `access.ts`, whose
    ten `/access/grant/*`//`/access/revoke/*` endpoints the backend deleted. Note the different
    model: you invite (creating a `pending` row that confers nothing until accepted) rather than
    granting outright, and you revoke by **grant id**, not user id — only the issuer or `Super Admin`
    may revoke, and revoking cascades to everything that holder went on to grant, reported back as
-   `revoked_count`),
+   `revoked_count`. `inviteAccessGrant` also owns the invitation email side effect: `invite`'s
+   response carries the invitee's `user_email`/`user_full_name` and the issuer's `granted_by_name`,
+   so the send needs no second lookup — it reads them straight off the response and hands them to
+   an `after()` job, the same post-response shape `trainings.ts#lockTrainingEvaluations` uses.
+   An earlier revision had to re-read the entity roster for the address; don't reintroduce that),
    `verification-requests.ts` (the standalone `verification-requests/*` review resource,
    including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
    `stat/*` aggregate endpoints, authorized by the read rule — a manage grant at or above the
@@ -515,6 +526,13 @@ post-response job uses Next's `after()` to fetch the training detail plus every 
 in bounded batches. A missing participant result/email is skipped, and page/send failures are
 `console.error`'d without changing the already-successful permanent lock. Its CTA also uses
 `getMainSiteOrigin()`, pointing to the public `/trainings/{training_id}` detail page.
+`components/emails/AccessInvitationEmail.tsx` is the admin-invitation notice sent from
+`apis/access-grants.ts#inviteAccessGrant` whenever someone is invited to manage an entity (see the
+data-layer entry above for how the recipient is resolved). Its CTA is
+`{getMainSiteOrigin()}/invitations/{grant_id}` — the invitee holds no grant yet, so the admin
+subdomain would only show them "Akses Ditolak"; the accept surface has to live on the main site.
+The copy says plainly that no access exists until Terima is pressed, so an unexpected invitation
+can just be ignored.
 
 ## Component conventions
 
@@ -1888,7 +1906,18 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   duplicated copy. "Tambah Akses" is backed by
   `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?coordinating_chapter_id=`/`?chapter_id=`
   (that Route Handler now maps all four scopes through one `SCOPES` table, each authorized with
-  `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant.
+  `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant,
+  which also emails the invitee a link to `/invitations/[grant_id]` (see Transactional email above
+  and the accept-invitation route below). That picker also sends `verification_status=verified`,
+  which routes the lookup through `apis/users.ts#listVerifiedUsers` instead of `listUsers` —
+  `users/list` has no verification filter of its own, so that function crawls backend pages of 100
+  (capped at 10) and paginates the *filtered* rows, since filtering a single backend page after the
+  fact would hand `SearchableSelect` an empty menu it can never scroll to page 2 from. The training
+  contact-person picker deliberately omits the param and still sees every active member. Both the
+  picker's empty message and its note say plainly that only active, verified members of that entity
+  can be picked — an empty dropdown otherwise reads as a broken search rather than an entity with
+  nobody eligible. `loadOptions` also checks `response.ok`, so a 403 from that Route Handler
+  toasts instead of masquerading as no results.
   The per-row revoke button (a default-size outlined `UserMinus` + "Revoke", deliberately not a
   bare trash icon — this withdraws a person's access, it doesn't delete a record) calls
   `revokeAccessGrant(grant.id)` — note it takes the
@@ -1912,6 +1941,24 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   (Organization's, a Badko's Cabang view, a Cabang's Komisariat view, a Korkom's) leave it unset
   and show no Akses tab. `canManageAccess` is passed unconditionally there because `MasterLayout`
   already gates every `/master/*` route on literal `Super Admin`.
+- `/invitations/[grant_id]` (`app/(www)/www/invitations/[grant_id]/page.tsx` →
+  `components/pages/AccessInvitationPage.tsx`) is where an invited admin accepts. It lives on the
+  **main site**, not the admin subdomain, because `check-session`'s `grants` only ever carries
+  *accepted* grants — a pending invitee has `grants: []`, so `hasAnyManageAccess` is false and
+  `/admin` would answer with "Akses Ditolak". It also sits outside `(gated)` so the route can own
+  its own `/auth/login?redirectTo=...` bounce (the same treatment `/trainings/[id]/register` gets);
+  that needs `invitations/.*` in `next.config.mts`'s no-session redirect allowlist, otherwise the
+  config-level rule fires first and drops the `redirectTo`. Scoping is the whole point: the route
+  resolves the grant through `getAccessGrantDetail` (`access-grants/detail`), which the backend
+  authorizes against the grant's own `user_id` — not against a `manage` grant — so signing in as
+  anyone else gets a 403 that surfaces as `PageState` `not_found` instead of the card. Don't "fix"
+  this by reading the grant out of the entity-scoped `access-grants/list`; that endpoint answers to
+  any manager of the entity and would happily render another account's invitation. A `pending`
+  (unactivated) account is sent to `/activation` first. The page is a single centered card naming
+  the inviter and the scope with one Terima button; an already-`accepted` grant renders the same
+  card in a done state linking to the dashboard instead. Accepting hard-navigates
+  (`window.location.href`) to `{getAdminSiteOrigin()}{adminEntityHref(...)}` — the session still
+  holds the pre-accept grants until it is re-fetched, the same reason activation hard-navigates.
 - Every one of the five scoped admin dashboards (`/organizations/[organization_id]/structural`,
   `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
   `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`

@@ -134,6 +134,50 @@ export async function listUsers(
   };
 }
 
+// Backend pages crawled per pass while filtering — 100 is users/list's own cap.
+const VERIFIED_SCAN_PAGE_SIZE = 100;
+// Safety stop so an unfiltered roster can't turn one keystroke into an unbounded crawl.
+const VERIFIED_SCAN_MAX_PAGES = 10;
+
+// users/list has no verification_status filter, so pages are crawled and filtered here — paginating the filtered rows, not the backend's own.
+export async function listVerifiedUsers(
+  options: ListUsersOptions = {}
+): Promise<PagedListResult<UserListEntry>> {
+  const { page = 1, pageSize = 20, ...filters } = options;
+  const needed = page * pageSize + 1;
+
+  const verified: UserListEntry[] = [];
+  let scanPage = 1;
+  let backendTotalPage = 1;
+
+  while (verified.length < needed && scanPage <= VERIFIED_SCAN_MAX_PAGES) {
+    const result = await listUsers({
+      ...filters,
+      page: scanPage,
+      pageSize: VERIFIED_SCAN_PAGE_SIZE,
+    });
+
+    verified.push(
+      ...result.list.filter((user) => user.verification_status === "verified")
+    );
+
+    backendTotalPage = result.totalPage;
+    if (scanPage >= backendTotalPage) break;
+    scanPage += 1;
+  }
+
+  const start = (page - 1) * pageSize;
+  const list = verified.slice(start, start + pageSize);
+  const hasMore = verified.length > start + pageSize;
+
+  return {
+    list,
+    totalData: verified.length,
+    totalPage: hasMore ? page + 1 : page,
+    currentPage: page,
+  };
+}
+
 export type CreateUserPayload = {
   full_name: string;
   email: string;
