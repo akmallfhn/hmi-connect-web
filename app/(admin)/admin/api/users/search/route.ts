@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { searchPeople } from "@/apis/search";
 import { getSession } from "@/apis/session";
-import {
-  listUsers,
-  listVerifiedUsers,
-  type ListUsersOptions,
-} from "@/apis/users";
+import { listUsers, type ListUsersOptions } from "@/apis/users";
 import { canManageEntity } from "@/lib/access";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type {
+  AccessEntityTypeEnum,
+  VerificationStatusEnum,
+} from "@/lib/types";
 
 // Query param carrying each entity scope, paired with the listUsers filter it maps onto.
 const SCOPES: {
@@ -32,6 +31,15 @@ const SCOPES: {
   },
 ];
 
+function parseVerificationStatus(
+  value: string | null
+): VerificationStatusEnum | undefined {
+  if (value === "unverified" || value === "pending" || value === "verified") {
+    return value;
+  }
+  return undefined;
+}
+
 // Duplicate of app/(www)/www/api/users/search/route.ts — admin.(example.com) is a separate origin, needs its own copy.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -40,8 +48,10 @@ export async function GET(request: Request) {
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
   const scope = SCOPES.find((entry) => searchParams.get(entry.param));
-  // The access-grant picker asks for this; the training contact-person picker deliberately doesn't.
-  const verifiedOnly = searchParams.get("verification_status") === "verified";
+  // The access-grant picker asks for verified only; the training contact-person picker sends nothing.
+  const verificationStatus = parseVerificationStatus(
+    searchParams.get("verification_status")
+  );
 
   if (scope) {
     const entityId = searchParams.get(scope.param) as string;
@@ -51,10 +61,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ data: [], hasMore: false }, { status: 403 });
     }
 
-    const listScopedUsers = verifiedOnly ? listVerifiedUsers : listUsers;
-    const result = await listScopedUsers({
+    const result = await listUsers({
       search: q.trim() || undefined,
       status: "active",
+      verificationStatus,
       [scope.filter]: entityId,
       page,
       pageSize,

@@ -1909,11 +1909,10 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant,
   which also emails the invitee a link to `/invitations/[grant_id]` (see Transactional email above
   and the accept-invitation route below). That picker also sends `verification_status=verified`,
-  which routes the lookup through `apis/users.ts#listVerifiedUsers` instead of `listUsers` —
-  `users/list` has no verification filter of its own, so that function crawls backend pages of 100
-  (capped at 10) and paginates the *filtered* rows, since filtering a single backend page after the
-  fact would hand `SearchableSelect` an empty menu it can never scroll to page 2 from. The training
-  contact-person picker deliberately omits the param and still sees every active member. Both the
+  which the Route Handler validates against `VerificationStatusEnum` and forwards as
+  `listUsers`'s own `verificationStatus` option — `users/list` filters it server-side, so paging
+  stays the backend's. The training contact-person picker omits the param and still sees every
+  active member. Both the
   picker's empty message and its note say plainly that only active, verified members of that entity
   can be picked — an empty dropdown otherwise reads as a broken search rather than an entity with
   nobody eligible. `loadOptions` also checks `response.ok`, so a 403 from that Route Handler
