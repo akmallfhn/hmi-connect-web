@@ -7,18 +7,27 @@ export function getSessionCookieDomain(): string | undefined {
     : "hmi-connect-web.vercel.app";
 }
 
-// Main site origin per DOMAIN_MODE — swap the vercel.app default once a real domain is live.
+// Site origins per environment — swap the placeholder/vercel.app values once a real domain is live.
+export const DEV_MAIN_SITE_URL = "https://www.example.com:3000";
+export const PROD_MAIN_SITE_URL = "https://hmi-connect-web.vercel.app";
+export const DEV_ADMIN_SITE_URL = "https://admin.example.com:3000";
+export const PROD_ADMIN_SITE_URL = "https://admin.example.com";
+
+// Origin transactional email links must use — they're opened from an inbox, where a dev host resolves to nothing.
+export const EMAIL_SITE_ORIGIN = PROD_MAIN_SITE_URL;
+
+// Main site origin per DOMAIN_MODE — for links followed inside this app, never for email.
 export function getMainSiteOrigin(): string {
   return process.env.DOMAIN_MODE === "local"
-    ? "https://www.example.com:3000"
-    : "https://hmi-connect-web.vercel.app";
+    ? DEV_MAIN_SITE_URL
+    : PROD_MAIN_SITE_URL;
 }
 
-// Admin site origin per DOMAIN_MODE — swap the placeholder domain once the real domain is live.
+// Admin site origin per DOMAIN_MODE — same rule, cross-subdomain links only.
 export function getAdminSiteOrigin(): string {
   return process.env.DOMAIN_MODE === "local"
-    ? "https://admin.example.com:3000"
-    : "https://admin.example.com";
+    ? DEV_ADMIN_SITE_URL
+    : PROD_ADMIN_SITE_URL;
 }
 
 // sessionStorage key + window event name the bottom navbar's compose button uses to open the composer after navigating.

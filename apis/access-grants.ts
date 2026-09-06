@@ -15,7 +15,7 @@ import {
   type AccessEntityTypeEnum,
   type AccessGrantStatusEnum,
 } from "@/lib/types";
-import { getMainSiteOrigin, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { EMAIL_SITE_ORIGIN, SESSION_COOKIE_NAME } from "@/lib/constants";
 
 // Mirrors one row of POST /api/v1/access-grants/list — a grant, or an invitation not yet accepted.
 export type AccessGrantEntry = {
@@ -211,7 +211,7 @@ export async function inviteAccessGrant(
       inviterName: grant.granted_by_name ?? "Admin",
       entityLabel: ADMIN_ENTITY_LABEL[grant.entity_type],
       entityName: grant.entity_name ?? "",
-      invitationUrl: `${getMainSiteOrigin()}/invitations/${grant.id}`,
+      invitationUrl: `${EMAIL_SITE_ORIGIN}/invitations/${grant.id}`,
     };
 
     // after() so the send outlives the action's own response instead of racing it.

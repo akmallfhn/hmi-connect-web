@@ -4,7 +4,7 @@ import { render } from "@react-email/components";
 import { cookies } from "next/headers";
 import { after } from "next/server";
 import { TrainingResultEmail } from "@/components/emails/TrainingResultEmail";
-import { getMainSiteOrigin, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { EMAIL_SITE_ORIGIN, SESSION_COOKIE_NAME } from "@/lib/constants";
 import { sendEmail } from "@/lib/mailtrap";
 import {
   isSuccessStatus,
@@ -619,7 +619,7 @@ async function sendTrainingResultEmail(
     TrainingResultEmail({
       fullName: participant.user_full_name,
       trainingName: training.name,
-      trainingUrl: `${getMainSiteOrigin()}/trainings/${training.id}`,
+      trainingUrl: `${EMAIL_SITE_ORIGIN}/trainings/${training.id}`,
       result: participant.result,
     })
   );

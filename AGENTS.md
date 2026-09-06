@@ -510,11 +510,15 @@ itself. `verification-requests/list`/`/detail`/`/approve`/`/reject` all now retu
 their shared base shape (`VerificationRequestListEntry.email`), so the helper reads
 `request.email` straight off the approve response — no extra lookup call needed; earlier
 revisions of this feature had to resolve it via a second `getUserByUsername` call before the
-backend added the field, don't reintroduce that. The CTA link is built from `getMainSiteOrigin()`
-(`lib/constants.ts`) plus `/profile/{username}`, the same per-`DOMAIN_MODE` origin helper the
-`/admin` layout already uses for its own login/forbidden redirects — reused here since a
-transactional email needs an absolute URL, unlike everything else in this app which can just use
-relative `<Link>`s. `components/emails/TrainingResultEmail.tsx` is the participant graduation
+backend added the field, don't reintroduce that. The CTA link is built from `EMAIL_SITE_ORIGIN`
+(`lib/constants.ts`) plus `/profile/{username}` — a transactional email needs an absolute URL,
+unlike everything else in this app which can just use relative `<Link>`s. Note it is **not**
+`getMainSiteOrigin()`: that helper follows `DOMAIN_MODE`, so a send triggered from a local dev
+run would mail out an `example.com:3000` link that resolves to nothing in the recipient's inbox.
+`EMAIL_SITE_ORIGIN` is pinned to `PROD_MAIN_SITE_URL` for that reason, and every email link in
+this codebase uses it. `getMainSiteOrigin`/`getAdminSiteOrigin` stay for links followed inside
+the app; all four origins now sit in named `DEV_`/`PROD_` constants so the real domain is swapped
+in one place. `components/emails/TrainingResultEmail.tsx` is the participant graduation
 announcement sent after `apis/trainings.ts#lockTrainingEvaluations` succeeds: `passed` and
 `conditional_pass` get distinct congratulatory copy (the conditional variant also points the
 participant back to the committee for remaining requirements), while `failed` is presented as
@@ -525,11 +529,11 @@ post-response job uses Next's `after()` to fetch the training detail plus every 
 `user_email`, and `user_full_name`; it then renders and sends one personalized email per participant
 in bounded batches. A missing participant result/email is skipped, and page/send failures are
 `console.error`'d without changing the already-successful permanent lock. Its CTA also uses
-`getMainSiteOrigin()`, pointing to the public `/trainings/{training_id}` detail page.
+`EMAIL_SITE_ORIGIN`, pointing to the public `/trainings/{training_id}` detail page.
 `components/emails/AccessInvitationEmail.tsx` is the admin-invitation notice sent from
 `apis/access-grants.ts#inviteAccessGrant` whenever someone is invited to manage an entity (see the
 data-layer entry above for how the recipient is resolved). Its CTA is
-`{getMainSiteOrigin()}/invitations/{grant_id}` — the invitee holds no grant yet, so the admin
+`{EMAIL_SITE_ORIGIN}/invitations/{grant_id}` — the invitee holds no grant yet, so the admin
 subdomain would only show them "Akses Ditolak"; the accept surface has to live on the main site.
 The copy says plainly that no access exists until Terima is pressed, so an unexpected invitation
 can just be ignored.

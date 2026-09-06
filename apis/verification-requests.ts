@@ -3,7 +3,7 @@ import "server-only";
 import { render } from "@react-email/components";
 import { cookies } from "next/headers";
 import { VerificationApprovedEmail } from "@/components/emails/VerificationApprovedEmail";
-import { SESSION_COOKIE_NAME, getMainSiteOrigin } from "@/lib/constants";
+import { SESSION_COOKIE_NAME, EMAIL_SITE_ORIGIN } from "@/lib/constants";
 import { sendEmail } from "@/lib/mailtrap";
 import {
   isSuccessStatus,
@@ -198,7 +198,7 @@ async function sendVerificationApprovedEmail(
     VerificationApprovedEmail({
       fullName: request.full_name,
       username: request.username,
-      siteUrl: getMainSiteOrigin(),
+      siteUrl: EMAIL_SITE_ORIGIN,
     })
   );
 
