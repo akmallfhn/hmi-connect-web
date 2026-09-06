@@ -21,6 +21,11 @@ import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
 import CoordinatingChapterLogoField from "../forms/CoordinatingChapterLogoField";
 
+function formatCoordinatingChapterName(name: string) {
+  const normalizedName = name.replace(/^(?:hmi\s+)?korkom\s+/i, "").trim();
+  return `HMI Korkom ${normalizedName || name}`;
+}
+
 export type CoordinatingChapterSettingsTab = "profile" | "access";
 
 const TABS: {
@@ -61,7 +66,11 @@ export default function CoordinatingChapterSettingsPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <AdminPageTitle description="Kelola profil dan akses dashboard Korkom ini.">
+      <AdminPageTitle
+        description={`Kelola profil dan akses dashboard ${formatCoordinatingChapterName(
+          coordinatingChapter.name
+        )}.`}
+      >
         Pengaturan
       </AdminPageTitle>
 

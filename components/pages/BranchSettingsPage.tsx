@@ -19,6 +19,11 @@ import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
 import BranchLogoField from "../forms/BranchLogoField";
 
+function formatBranchName(name: string) {
+  const normalizedName = name.replace(/^(?:hmi\s+)?cabang\s+/i, "").trim();
+  return `HMI Cabang ${normalizedName || name}`;
+}
+
 export type BranchSettingsTab = "profile" | "access";
 
 const TABS: { id: BranchSettingsTab; label: string; icon: LucideIcon }[] = [
@@ -54,7 +59,11 @@ export default function BranchSettingsPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <AdminPageTitle description="Kelola profil dan akses dashboard Cabang ini.">
+      <AdminPageTitle
+        description={`Kelola profil dan akses dashboard ${formatBranchName(
+          branch.name
+        )}.`}
+      >
         Pengaturan
       </AdminPageTitle>
 

@@ -14,7 +14,11 @@ const SCOPES: {
   entityType: AccessEntityTypeEnum;
   filter: keyof Pick<
     ListUsersOptions,
-    "chapterId" | "branchId" | "coordinatingChapterId" | "coordinatingBodyId"
+    | "chapterId"
+    | "branchId"
+    | "coordinatingChapterId"
+    | "coordinatingBodyId"
+    | "organizationId"
   >;
 }[] = [
   { param: "chapter_id", entityType: "chapter", filter: "chapterId" },
@@ -28,6 +32,11 @@ const SCOPES: {
     param: "coordinating_body_id",
     entityType: "coordinating_body",
     filter: "coordinatingBodyId",
+  },
+  {
+    param: "organization_id",
+    entityType: "organization",
+    filter: "organizationId",
   },
 ];
 

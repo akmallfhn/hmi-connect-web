@@ -39,6 +39,10 @@ import {
   type UpdateCoordinatingBodyPayload,
 } from "@/apis/coordinating-bodies";
 import {
+  updateOrganization as updateOrganizationApi,
+  type UpdateOrganizationPayload,
+} from "@/apis/organizations";
+import {
   createCoordinatingChapter as createCoordinatingChapterApi,
   deleteCoordinatingChapter as deleteCoordinatingChapterApi,
   getCoordinatingChapterDetail as getCoordinatingChapterDetailApi,
@@ -290,6 +294,10 @@ export async function createCoordinatingBody(payload: CreateCoordinatingBodyPayl
 
 export async function updateCoordinatingBody(payload: UpdateCoordinatingBodyPayload) {
   return updateCoordinatingBodyApi(payload);
+}
+
+export async function updateOrganization(payload: UpdateOrganizationPayload) {
+  return updateOrganizationApi(payload);
 }
 
 export async function deleteCoordinatingBody(id: string) {

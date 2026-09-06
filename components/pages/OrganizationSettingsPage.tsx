@@ -1,54 +1,46 @@
 "use client";
 
-import {
-  School,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+import { Building, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
-import type { ChapterDetail } from "@/apis/chapters";
-import { updateChapter } from "@/lib/actions";
+import type { OrganizationDetail } from "@/apis/organizations";
+import { updateOrganization } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Input from "../fields/Input";
-import TextArea from "../fields/TextArea";
-import ChapterLogoField from "../forms/ChapterLogoField";
+import OrganizationLogoField from "../forms/OrganizationLogoField";
 
-function formatChapterName(name: string) {
-  const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
-  return `HMI Komisariat ${normalizedName || name}`;
-}
+export type OrganizationSettingsTab = "profile" | "access";
 
-export type ChapterSettingsTab = "profile" | "access";
+const TABS: { id: OrganizationSettingsTab; label: string; icon: LucideIcon }[] =
+  [
+    { id: "profile", label: "Profil", icon: Building },
+    { id: "access", label: "Akses", icon: ShieldCheck },
+  ];
 
-const TABS: { id: ChapterSettingsTab; label: string; icon: LucideIcon }[] = [
-  { id: "profile", label: "Profil", icon: School },
-  { id: "access", label: "Akses", icon: ShieldCheck },
-];
-
-interface ChapterSettingsPageProps {
-  chapter: ChapterDetail;
+interface OrganizationSettingsPageProps {
+  organization: OrganizationDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
 }
 
-export default function ChapterSettingsPage({
-  chapter,
+export default function OrganizationSettingsPage({
+  organization,
   grants,
   canManageAccess,
-}: ChapterSettingsPageProps) {
+}: OrganizationSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab: ChapterSettingsTab =
+  const initialTab: OrganizationSettingsTab =
     searchParams.get("tab") === "access" ? "access" : "profile";
-  const [activeTab, setActiveTab] = useState<ChapterSettingsTab>(initialTab);
+  const [activeTab, setActiveTab] =
+    useState<OrganizationSettingsTab>(initialTab);
 
-  function selectTab(tab: ChapterSettingsTab) {
+  function selectTab(tab: OrganizationSettingsTab) {
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     if (tab === "profile") params.delete("tab");
@@ -60,9 +52,7 @@ export default function ChapterSettingsPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <AdminPageTitle
-        description={`Kelola profil dan akses dashboard ${formatChapterName(
-          chapter.name
-        )}.`}
+        description={`Kelola profil dan akses dashboard ${organization.name}.`}
       >
         Pengaturan
       </AdminPageTitle>
@@ -70,7 +60,7 @@ export default function ChapterSettingsPage({
       <div className="mt-6 overflow-x-auto">
         <div
           role="tablist"
-          aria-label="Pengaturan Komisariat"
+          aria-label="Pengaturan Organisasi"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
           {TABS.map((tab) => {
@@ -107,11 +97,11 @@ export default function ChapterSettingsPage({
         className="mt-6"
       >
         {activeTab === "profile" ? (
-          <ProfileTab chapter={chapter} />
+          <ProfileTab organization={organization} />
         ) : (
           <EntityAccessTab
-            entityType="chapter"
-            entityId={chapter.id}
+            entityType="organization"
+            entityId={organization.id}
             grants={grants}
             canManageAccess={canManageAccess}
           />
@@ -121,27 +111,31 @@ export default function ChapterSettingsPage({
   );
 }
 
-function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
+function ProfileTab({ organization }: { organization: OrganizationDetail }) {
   const router = useRouter();
-  const [name, setName] = useState(chapter.name);
-  const [description, setDescription] = useState(chapter.description ?? "");
-  const [imageUrl, setImageUrl] = useState(chapter.image_url ?? "");
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [name, setName] = useState(organization.name);
+  const [slug, setSlug] = useState(organization.slug);
+  const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
     if (!name.trim()) {
-      toast.error("Nama Komisariat wajib diisi.");
+      toast.error("Nama organisasi wajib diisi.");
+      return;
+    }
+    if (!slug.trim()) {
+      toast.error("Slug organisasi wajib diisi.");
       return;
     }
 
     setIsSaving(true);
     try {
-      const result = await updateChapter({
-        id: chapter.id,
+      const result = await updateOrganization({
+        id: organization.id,
         name,
-        description,
-        image_url: imageUrl,
+        slug,
+        logo_url: logoUrl,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -149,10 +143,10 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
         return;
       }
 
-      toast.success("Profil Komisariat berhasil diperbarui.");
+      toast.success("Profil organisasi berhasil diperbarui.");
       router.refresh();
     } catch (err) {
-      console.error("[ChapterSettingsPage] save profile threw:", err);
+      console.error("[OrganizationSettingsPage] save profile threw:", err);
       toast.error("Gagal menyimpan perubahan.");
     } finally {
       setIsSaving(false);
@@ -163,10 +157,10 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
     <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <div className="lg:w-56 lg:shrink-0">
-          <ChapterLogoField
-            imageUrl={imageUrl}
-            onChange={setImageUrl}
-            onUploadingChange={setIsUploadingImage}
+          <OrganizationLogoField
+            imageUrl={logoUrl}
+            onChange={setLogoUrl}
+            onUploadingChange={setIsUploadingLogo}
             disabled={isSaving}
             size={160}
             layout="column"
@@ -175,22 +169,27 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
 
         <div className="flex flex-1 flex-col gap-4">
           <Input
-            inputId="chapter-settings-name"
-            label="Nama Komisariat"
-            placeholder="Contoh: HMI Komisariat Fakultas Teknik USK"
+            inputId="organization-settings-name"
+            label="Nama Organisasi"
+            placeholder="Contoh: Himpunan Mahasiswa Islam"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
 
-          <TextArea
-            textAreaId="chapter-settings-description"
-            label="Deskripsi"
-            placeholder="Ceritakan sekilas tentang Komisariat ini"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={10}
-          />
+          <div className="flex flex-col gap-1">
+            <Input
+              inputId="organization-settings-slug"
+              label="Slug"
+              placeholder="Contoh: hmi"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              required
+            />
+            <p className="pl-1 text-xs text-[#5f6573]">
+              Pengenal unik organisasi. Ubah hanya jika benar-benar perlu.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -198,7 +197,7 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
         <Button
           variant="primary"
           onClick={handleSubmit}
-          disabled={isSaving || isUploadingImage}
+          disabled={isSaving || isUploadingLogo}
         >
           {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
         </Button>

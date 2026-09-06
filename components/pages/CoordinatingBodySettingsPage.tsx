@@ -21,6 +21,11 @@ import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
 import CoordinatingBodyLogoField from "../forms/CoordinatingBodyLogoField";
 
+function formatCoordinatingBodyName(name: string) {
+  const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
+  return `HMI Badko ${normalizedName || name}`;
+}
+
 export type CoordinatingBodySettingsTab = "profile" | "access";
 
 const TABS: { id: CoordinatingBodySettingsTab; label: string; icon: LucideIcon }[] = [
@@ -57,7 +62,11 @@ export default function CoordinatingBodySettingsPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <AdminPageTitle description="Kelola profil dan akses dashboard Badko ini.">
+      <AdminPageTitle
+        description={`Kelola profil dan akses dashboard ${formatCoordinatingBodyName(
+          coordinatingBody.name
+        )}.`}
+      >
         Pengaturan
       </AdminPageTitle>
 

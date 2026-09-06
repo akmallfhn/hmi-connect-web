@@ -116,7 +116,8 @@ is missing (the Organization card can use the server-side `ORGANIZATION_ID`). Ea
 `/admin` gate, since that gate only proves _some_ grant exists, not that it's for _this_ id —
 otherwise a chapter-only admin could reach another branch's page by URL. The scoped
 Badko/Korkom/Komisariat layouts resolve their own names through their detail endpoints; the
-Organization layout uses the session name because the backend has no organization-detail route.
+Organization layout uses the session name rather than fetching `organizations/detail`, since the
+name is already there; that endpoint does exist and `/organizations/[id]/settings` reads it.
 After a successful detail lookup, the Badko, Cabang, Korkom, and Komisariat layouts return the
 shared forbidden `PageState` whenever that entity's own `status` is `inactive`, including for
 Super Admin; reactivation remains available from the Master CRUD pages rather than the suspended
@@ -257,7 +258,9 @@ Three layers, each with one job. Don't blend them.
    (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `coordinating-chapters.ts`,
    `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
-   not independent resources), `social-media-platforms.ts`, `users.ts`, `trainings.ts`
+   not independent resources), `organizations.ts` (`organizations/detail`+`organizations/update`
+   only — this deployment manages the one configured `ORGANIZATION_ID`, so there is no
+   list/create/delete to wrap), `social-media-platforms.ts`, `users.ts`, `trainings.ts`
    (training events + materials + participants, distinct from user training histories), `session.ts`,
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
@@ -1413,14 +1416,14 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   carry `aria-label`. The Cabang scope's nav items route to a top-level Dashboard
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
   `stat/summary/branch`, `chapter-distribution`, `user-growth`, `verification-count`, and `chapter-status`
-  calls), then three `AdminNavGroup`s —
+  calls), then two `AdminNavGroup`s —
   "Organisasi" (AD ART at `/branches/{id}/ad-art`, still a placeholder; Kelola Komisariat at
-  `/branches/{id}/chapters`, real — see below), "Keanggotaan" (Daftar Kader at
+  `/branches/{id}/chapters`, real — see below) and "Keanggotaan" (Daftar Kader at
   `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
-  `/branches/{id}/verification`, real — see further below), and "Program" (Latihan Kader 2 at
-  `/branches/{id}/trainings`, real and backed by the training API described below). The existing
-  `/branches/{id}/sk` and `/branches/{id}/konfercab` placeholder routes are not linked in the
-  sidebar.
+  `/branches/{id}/verification`, real — see further below). The "Program" group that held Latihan
+  Kader 2 is gone: `/branches/{id}/trainings` and everything under it stays real and reachable by
+  URL, it is simply unlinked now, like the existing `/branches/{id}/sk` and
+  `/branches/{id}/konfercab` placeholder routes.
   Latihan Kader 2 (`/branches/{id}/trainings` +
   `/branches/{id}/trainings/{training_id}` + `/branches/{id}/trainings/guideline`) uses
   `apis/trainings.ts`, which wraps all backend
@@ -1568,7 +1571,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   shows one person's grants. Both this roster and `/master/users` carry an Email column (straight
   off `users/list`'s own `email`), truncated so a long address can't stretch the table.
   `apis/users.ts#listUsers` exposes the backend's direct `chapterId`, `branchId`,
-  `coordinatingChapterId`, and `coordinatingBodyId` filters. The Korkom roster always passes
+  `coordinatingChapterId`, `coordinatingBodyId`, and `organizationId` filters. The Korkom roster always passes
   `coordinatingChapterId` as `coordinating_chapter_id`, so backend pagination/search/status remain
   authoritative without including kader from another Korkom in the same Cabang. The organization
   roster deliberately sends no structural filter because this frontend/backend deployment manages
@@ -1923,9 +1926,11 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   entirely and only `EmptyState` renders, carrying "Tambah Akses" as its own `action` CTA —
   repeating a description above an illustration that already says the same thing read as
   duplicated copy. "Tambah Akses" is backed by
-  `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?coordinating_chapter_id=`/`?chapter_id=`
-  (that Route Handler now maps all four scopes through one `SCOPES` table, each authorized with
-  `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant,
+  `/api/users/search?organization_id=`/`?coordinating_body_id=`/`?branch_id=`/
+  `?coordinating_chapter_id=`/`?chapter_id=` (that Route Handler maps all five scopes through one
+  `SCOPES` table, each authorized with `canManageEntity`; `organization_id` is the widest of
+  `users/list`'s own hierarchy filters, and without it the Organisasi picker fell through to the
+  unscoped people search and came up empty) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant,
   which also emails the invitee a link to `/invitations/[grant_id]` (see Transactional email above
   and the accept-invitation route below). That picker also sends `verification_status=verified`,
   which the Route Handler validates against `VerificationStatusEnum` and forwards as

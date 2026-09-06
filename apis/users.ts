@@ -75,6 +75,8 @@ export type ListUsersOptions = {
   coordinatingChapterId?: string;
   // Narrows the list to users in any chapter under this one coordinating body (BADKO).
   coordinatingBodyId?: string;
+  // Widest of the hierarchy filters — users in any chapter under this organization.
+  organizationId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -102,6 +104,7 @@ export async function listUsers(
     branchId,
     coordinatingChapterId,
     coordinatingBodyId,
+    organizationId,
     page,
     pageSize,
   } = options;
@@ -120,6 +123,7 @@ export async function listUsers(
         ? { coordinating_chapter_id: coordinatingChapterId }
         : {}),
       ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
+      ...(organizationId ? { organization_id: organizationId } : {}),
       page: page ?? 1,
       page_size: pageSize ?? 20,
     },

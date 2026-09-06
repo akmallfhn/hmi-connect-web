@@ -2,7 +2,6 @@
 
 import type { BranchTypeEnum } from "@/lib/types";
 import {
-  Award,
   BookText,
   GitBranch,
   LayoutDashboard,
@@ -97,6 +96,7 @@ function getNavItems(
           },
         ],
       },
+      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
     ];
   }
 
@@ -177,12 +177,6 @@ function getNavItems(
           href: `${base}/verification`,
           icon: ShieldCheck,
         },
-      ],
-    },
-    {
-      groupName: "Program",
-      items: [
-        { label: "Latihan Kader 2", href: `${base}/trainings`, icon: Award },
       ],
     },
     { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
