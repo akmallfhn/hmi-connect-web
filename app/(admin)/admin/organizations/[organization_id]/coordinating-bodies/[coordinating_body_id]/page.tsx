@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { getStructuralOverview } from "@/apis/structurals";
-import { listTrainings } from "@/apis/trainings";
 import CoordinatingBodyDetailPage, {
   type CoordinatingBodyDetailTab,
 } from "@/components/pages/CoordinatingBodyDetailPage";
@@ -25,7 +25,7 @@ interface OrganizationCoordinatingBodyDetailPageProps {
 }
 
 function parseTab(tab?: string): CoordinatingBodyDetailTab {
-  if (tab === "management" || tab === "branches" || tab === "trainings") {
+  if (tab === "management" || tab === "branches" || tab === "access") {
     return tab;
   }
   return "profile";
@@ -48,32 +48,28 @@ export default async function OrganizationCoordinatingBodyDetailPage({
     notFound();
   }
 
-  const [branches, trainingResult, structuralOverview] = await Promise.all([
+  const [branches, structuralOverview, accessGrants] = await Promise.all([
     listAllBranchesAdmin({
       organizationId: organization_id,
       coordinatingBodyId: coordinating_body_id,
-    }),
-    listTrainings({
-      organizerType: "coordinating_body",
-      organizerId: coordinating_body_id,
-      page: 1,
-      pageSize: 100,
     }),
     getStructuralOverview(
       "coordinating_body",
       coordinating_body_id,
       query.period ? Number(query.period) : null
     ),
+    listAllAccessGrants("coordinating_body", coordinating_body_id),
   ]);
 
   return (
     <CoordinatingBodyDetailPage
       coordinatingBody={coordinatingBody}
       branches={branches}
-      trainings={trainingResult.list}
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      showTrainings={false}
+      accessGrants={accessGrants}
       initialTab={parseTab(query.tab)}
       backHref={`/organizations/${organization_id}/coordinating-bodies`}
       allowEdit={false}

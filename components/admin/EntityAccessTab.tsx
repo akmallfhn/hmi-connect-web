@@ -116,13 +116,6 @@ export default function EntityAccessTab({
             )}
           </div>
 
-          {!canManageAccess && (
-            <p className="mt-3 text-xs text-[#5f6573]">
-              Hanya pemegang akses {entityLabel} ini yang dapat menambah atau
-              mencabut akses.
-            </p>
-          )}
-
           <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef]">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
@@ -132,7 +125,9 @@ export default function EntityAccessTab({
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Diberikan Oleh</th>
-                    <th className="px-4 py-3 text-right">Aksi</th>
+                    {canManageAccess && (
+                      <th className="px-4 py-3 text-right">Aksi</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
@@ -168,9 +163,9 @@ export default function EntityAccessTab({
                       <td className="px-4 py-3 text-[#5f6573]">
                         {grant.granted_by_name ?? "—"}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end">
-                          {canManageAccess ? (
+                      {canManageAccess && (
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end">
                             <Button
                               variant="destructive"
                               size="sm"
@@ -180,11 +175,9 @@ export default function EntityAccessTab({
                               <UserMinus className="size-4" />
                               Revoke
                             </Button>
-                          ) : (
-                            <span className="text-[#5f6573]">—</span>
-                          )}
-                        </div>
-                      </td>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

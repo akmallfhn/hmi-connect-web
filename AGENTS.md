@@ -1950,15 +1950,19 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   through. Since that is the same check the scope's own layout already gates entry on, anyone who
   can open the page can also manage its access — the prop stays explicit rather than being assumed
   inside `EntityAccessTab`, so a future read-only embedding of that tab can pass `false`.
-  The same component is also the last tab ("Akses", `ShieldCheck`, `?tab=access`) on Master's own
-  four entity detail pages — `/master/coordinating-bodies/[id]`, `/master/branches/[id]`,
-  `/master/coordinating-chapters/[id]`, and `/master/chapters/[id]`. Each of those four route
-  files adds `listAllAccessGrants(entityType, id)` to its existing `Promise.all` and passes the
-  result as the detail page's optional `accessGrants` prop plus `canManageAccess` — that prop is
-  what makes the tab appear at all, so the other scopes rendering the same four detail components
-  (Organization's, a Badko's Cabang view, a Cabang's Komisariat view, a Korkom's) leave it unset
-  and show no Akses tab. `canManageAccess` is passed unconditionally there because `MasterLayout`
-  already gates every `/master/*` route on literal `Super Admin`.
+  The same component is also the last tab ("Akses", `ShieldCheck`, `?tab=access`) on **every** entity
+  detail page — Master's four (`/master/coordinating-bodies/[id]`, `/master/branches/[id]`,
+  `/master/coordinating-chapters/[id]`, `/master/chapters/[id]`) and the six scoped ones under
+  `/organizations`, `/coordinating-bodies`, `/branches`, and `/coordinating-chapters`. Each route
+  adds `listAllAccessGrants(entityType, id)` to its existing `Promise.all` and passes the result as
+  the detail page's optional `accessGrants` prop — that prop is what makes the tab appear at all.
+  Only Master also passes `canManageAccess`, which `MasterLayout` has already earned by gating every
+  `/master/*` route on literal `Super Admin`; the six scoped routes leave it `false`, so their Akses
+  tab is a plain roster — no Tambah Akses button, and `EntityAccessTab` drops the whole Aksi column
+  rather than filling it with em dashes. Those six also pass `showTrainings={false}`: an entity's
+  Latihan Kader belongs to Master's view of it, and the flag drops both the tab and its panel, so
+  each of those routes no longer fetches `trainings/list` at all — the Korkom one was firing one
+  request per Komisariat under it purely to fill a tab that is now gone.
 - `/invitations/[grant_id]` (`app/(www)/www/invitations/[grant_id]/page.tsx` →
   `components/pages/AccessInvitationPage.tsx`) is where an invited admin accepts. It lives on the
   **main site**, not the admin subdomain, because `check-session`'s `grants` only ever carries

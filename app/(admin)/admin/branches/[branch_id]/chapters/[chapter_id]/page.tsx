@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { getStructuralOverview } from "@/apis/structurals";
-import { listTrainings } from "@/apis/trainings";
 import { listUsers } from "@/apis/users";
 import ChapterDetailPage, {
   type ChapterDetailTab,
@@ -22,7 +22,7 @@ interface BranchChapterDetailPageProps {
 }
 
 function parseTab(tab?: string): ChapterDetailTab {
-  if (tab === "management" || tab === "trainings") return tab;
+  if (tab === "management" || tab === "access") return tab;
   return "profile";
 }
 
@@ -39,29 +39,25 @@ export default async function BranchChapterDetailPage({
     notFound();
   }
 
-  const [memberResult, trainingResult, structuralOverview] = await Promise.all([
+  const [memberResult, structuralOverview, accessGrants] = await Promise.all([
     listUsers({ chapterId: chapter_id, status: "active", page: 1, pageSize: 1 }),
-    listTrainings({
-      organizerType: "chapter",
-      organizerId: chapter_id,
-      page: 1,
-      pageSize: 100,
-    }),
     getStructuralOverview(
       "chapter",
       chapter_id,
       query.period ? Number(query.period) : null
     ),
+    listAllAccessGrants("chapter", chapter_id),
   ]);
 
   return (
     <ChapterDetailPage
       chapter={chapter}
       memberCount={memberResult.totalData}
-      trainings={trainingResult.list}
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      showTrainings={false}
+      accessGrants={accessGrants}
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/chapters`}
       allowStatusChange

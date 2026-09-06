@@ -53,7 +53,9 @@ export type ChapterDetailTab =
 interface ChapterDetailPageProps {
   chapter: ChapterDetail;
   memberCount: number;
-  trainings: TrainingListEntry[];
+  trainings?: TrainingListEntry[];
+  // Scoped dashboards hide it; only Master lists an entity's Latihan Kader here.
+  showTrainings?: boolean;
   structuralPeriods: StructuralPeriodSummary[];
   selectedStructuralPeriod: StructuralPeriodDetail | null;
   selectedStructuralPeriodId: number | null;
@@ -132,7 +134,8 @@ function Field({ label, value }: { label: string; value: ReactNode }) {
 export default function ChapterDetailPage({
   chapter,
   memberCount,
-  trainings,
+  trainings = [],
+  showTrainings = true,
   structuralPeriods,
   selectedStructuralPeriod,
   selectedStructuralPeriodId,
@@ -156,7 +159,10 @@ export default function ChapterDetailPage({
     setActiveTab(initialTab);
   }
 
-  const tabs = accessGrants ? [...TABS, ACCESS_TAB] : TABS;
+  const visibleTabs = showTrainings
+    ? TABS
+    : TABS.filter((tab) => tab.id !== "trainings");
+  const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
   function selectTab(tab: ChapterDetailTab) {
     setActiveTab(tab);
@@ -384,7 +390,7 @@ export default function ChapterDetailPage({
           />
         )}
 
-        {activeTab === "trainings" && (
+        {showTrainings && activeTab === "trainings" && (
           <section>
             {trainings.length === 0 ? (
               <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
