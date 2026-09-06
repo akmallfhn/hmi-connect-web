@@ -37,12 +37,16 @@ interface CoordinatingBodySettingsPageProps {
   coordinatingBody: CoordinatingBodyDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
+  viewerId?: string;
+  mainSiteHref: string;
 }
 
 export default function CoordinatingBodySettingsPage({
   coordinatingBody,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: CoordinatingBodySettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,6 +121,8 @@ export default function CoordinatingBodySettingsPage({
             entityId={coordinatingBody.id}
             grants={grants}
             canManageAccess={canManageAccess}
+            viewerId={viewerId}
+            mainSiteHref={mainSiteHref}
           />
         )}
       </div>

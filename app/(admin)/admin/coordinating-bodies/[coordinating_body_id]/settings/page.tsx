@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import { getSession } from "@/apis/session";
 import { canManageEntity } from "@/lib/access";
+import { getMainSiteOrigin } from "@/lib/constants";
 import { listAllAccessGrants } from "@/apis/access-grants";
 import CoordinatingBodySettingsPage from "@/components/pages/CoordinatingBodySettingsPage";
 
@@ -32,6 +33,8 @@ export default async function CoordinatingBodySettingsRoute({
       coordinatingBody={coordinatingBody}
       grants={grants}
       canManageAccess={canManageEntity(user, "coordinating_body", coordinating_body_id)}
+      viewerId={user?.id}
+      mainSiteHref={getMainSiteOrigin()}
     />
   );
 }

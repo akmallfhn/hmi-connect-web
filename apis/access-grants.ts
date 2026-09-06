@@ -31,6 +31,8 @@ export type AccessGrantEntry = {
   granted_by: string;
   granted_at: string;
   accepted_at?: string | null;
+  revoked_by?: string | null;
+  revoked_at?: string | null;
   user_full_name?: string;
   user_username?: string;
   user_email?: string;
@@ -297,10 +299,10 @@ export async function acceptAccessGrant(
   });
 }
 
-// Takes the grant id, not a user id — and cascades to grants its holder issued on this same entity.
+// Takes the grant id, not a user id. Withdraws exactly that one grant — no cascade, and any manage holder on the entity may do it.
 export async function revokeAccessGrant(
   id: string
-): Promise<ApiEnvelope<{ revoked_count: number }>> {
+): Promise<ApiEnvelope<AccessGrantEntry>> {
   const token = await sessionToken();
   if (!token) {
     return {
@@ -309,7 +311,7 @@ export async function revokeAccessGrant(
     };
   }
 
-  return callApi<{ revoked_count: number }>("/api/v1/access-grants/revoke", {
+  return callApi<AccessGrantEntry>("/api/v1/access-grants/revoke", {
     method: "POST",
     token,
     body: { id },

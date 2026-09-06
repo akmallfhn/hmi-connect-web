@@ -33,6 +33,9 @@ interface EntityAccessTabProps {
   grants: AccessGrantEntry[];
   // Anyone holding manage on this entity may invite others to it — not just Super Admin.
   canManageAccess: boolean;
+  // Set by the settings pages so a self-revoke can leave instead of refreshing into a 403.
+  viewerId?: string;
+  mainSiteHref?: string;
 }
 
 export default function EntityAccessTab({
@@ -40,6 +43,8 @@ export default function EntityAccessTab({
   entityId,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: EntityAccessTabProps) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -48,6 +53,8 @@ export default function EntityAccessTab({
   );
   const [isRevoking, setIsRevoking] = useState(false);
   const entityLabel = ADMIN_ENTITY_LABEL[entityType];
+  const isRevokingSelf =
+    revokeTarget !== null && revokeTarget.user_id === viewerId;
 
   async function handleRevoke() {
     if (!revokeTarget) return;
@@ -58,12 +65,14 @@ export default function EntityAccessTab({
         toast.error(result.message ?? "Gagal mencabut akses.");
         return;
       }
-      const cascaded = (result.data?.revoked_count ?? 1) - 1;
-      toast.success(
-        cascaded > 0
-          ? `Akses ${revokeTarget.user_full_name} dicabut, beserta ${cascaded} akses turunannya.`
-          : `Akses ${revokeTarget.user_full_name} berhasil dicabut.`
-      );
+      if (isRevokingSelf) {
+        toast.success(`Akses kamu di ${entityLabel} ini sudah dicabut.`);
+        // Refreshing here would only land on this scope's own "Akses Ditolak" page.
+        window.location.href = mainSiteHref ?? "/";
+        return;
+      }
+
+      toast.success(`Akses ${revokeTarget.user_full_name} berhasil dicabut.`);
       setRevokeTarget(null);
       router.refresh();
     } catch (err) {
@@ -205,8 +214,14 @@ export default function EntityAccessTab({
         open={revokeTarget !== null}
         onClose={() => setRevokeTarget(null)}
         onConfirm={handleRevoke}
-        title="Cabut akses admin ini?"
-        message={`${revokeTarget?.user_full_name} tidak akan bisa lagi mengelola dashboard ${entityLabel} ini. Akses yang ia berikan ke orang lain pada ${entityLabel} ini ikut dicabut.`}
+        title={
+          isRevokingSelf ? "Cabut akses kamu sendiri?" : "Cabut akses admin ini?"
+        }
+        message={
+          isRevokingSelf
+            ? `Kamu akan langsung kehilangan akses ke dashboard ${entityLabel} ini dan keluar dari halaman ini. Hanya admin lain di ${entityLabel} ini yang bisa mengundangmu kembali.`
+            : `${revokeTarget?.user_full_name} tidak akan bisa lagi mengelola dashboard ${entityLabel} ini. Admin lain yang pernah ia undang tetap memegang aksesnya.`
+        }
         confirmLabel="Cabut Akses"
         loading={isRevoking}
       />

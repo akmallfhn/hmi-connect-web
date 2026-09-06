@@ -35,12 +35,16 @@ interface ChapterSettingsPageProps {
   chapter: ChapterDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
+  viewerId?: string;
+  mainSiteHref: string;
 }
 
 export default function ChapterSettingsPage({
   chapter,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: ChapterSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,6 +118,8 @@ export default function ChapterSettingsPage({
             entityId={chapter.id}
             grants={grants}
             canManageAccess={canManageAccess}
+            viewerId={viewerId}
+            mainSiteHref={mainSiteHref}
           />
         )}
       </div>

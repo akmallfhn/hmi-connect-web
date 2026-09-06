@@ -277,9 +277,12 @@ Three layers, each with one job. Don't blend them.
    `inviteAccessGrant`/`acceptAccessGrant`/`revokeAccessGrant`. Replaced the old `access.ts`, whose
    ten `/access/grant/*`//`/access/revoke/*` endpoints the backend deleted. Note the different
    model: you invite (creating a `pending` row that confers nothing until accepted) rather than
-   granting outright, and you revoke by **grant id**, not user id — only the issuer or `Super Admin`
-   may revoke, and revoking cascades to everything that holder went on to grant, reported back as
-   `revoked_count`. `inviteAccessGrant` also owns the invitation email side effect: `invite`'s
+   granting outright, and you revoke by **grant id**, not user id. Withdrawal is horizontal: any
+   `manage` holder **at that same entity** may revoke anyone's access on it, peers included and
+   regardless of who granted it (`granted_by` is audit trail, not a right), but it does not reach
+   down the hierarchy — only `Super Admin` crosses levels. There is no cascade: revoking one grant
+   leaves everyone that holder appointed in place, and the response is the revoked grant itself
+   (with `revoked_by`/`revoked_at` set), not a count. `inviteAccessGrant` also owns the invitation email side effect: `invite`'s
    response carries the invitee's `user_email`/`user_full_name` and the issuer's `granted_by_name`,
    so the send needs no second lookup — it reads them straight off the response and hands them to
    an `after()` job, the same post-response shape `trainings.ts#lockTrainingEvaluations` uses.
@@ -1818,6 +1821,23 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   than the Korkom's own name, since the Korkom itself never organized any of them. Both
   `MasterSidebar` and the branch-scoped `EntitySidebar` "Kelola Korkom" items use the `Waypoints`
   icon.
+- `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
+  (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:
+  this deployment manages the one configured `ORGANIZATION_ID`, so a list of one row is noise —
+  `MasterSidebar` links straight at the id instead, which is why `NAV_ITEMS` became
+  `getNavItems(organizationId)` and `MasterLayout` passes
+  `user?.organization_id ?? process.env.ORGANIZATION_ID` down to it (the sidebar is a Client
+  Component and cannot read that server-only env itself); the item is omitted entirely when neither
+  is set. Its three tabs are Profil (a field grid over `organizations/detail`, which has no
+  description to show), Kepengurusan (the same read-only-embedded `StructuralPage`, scoped
+  `"organization"`), and Akses — the last being the point of the page, since an organization's
+  admins previously had no home under `/master` at all. There is deliberately no Daftar Badko tab:
+  `/master/coordinating-bodies` is already that list, and the route only asks
+  `coordinating-bodies/list` for `total_data` (`page_size: 1`) to fill the Jumlah Badko stat.
+  Its header's "Pengaturan Organisasi" button opens `EditOrganizationFormSheet` (logo/nama/slug) in
+  place rather than linking to `/organizations/[id]/settings` — that page belongs to the
+  organization's own scoped dashboard, and bouncing an admin out of `/master` to edit one field is a
+  detour, not a destination. There is no Suspend action, and the backend has no organizations/delete.
 - `/master/coordinating-bodies` and
   `/organizations/[organization_id]/coordinating-bodies` both reuse
   `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of
@@ -1944,12 +1964,12 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   The per-row revoke button (a default-size outlined `UserMinus` + "Revoke", deliberately not a
   bare trash icon — this withdraws a person's access, it doesn't delete a record) calls
   `revokeAccessGrant(grant.id)` — note it takes the
-  *grant* id, not a user id, and the backend cascades to everything that holder went on to grant,
-  which the toast reports via `revoked_count` — the cascade follows only grants that holder issued
-  on **this same entity**, not everything they ever granted. Both controls are gated on `canManageAccess`, which
-  is `canManageEntity(...)` and therefore true for any manage-holder of that entity, not just
-  `Super Admin` — the backend lets any holder invite peers to the same entity, so appointments no
-  longer funnel through Super Admin. All four route files fetch the entity detail, its grant list,
+  *grant* id, not a user id, and it withdraws exactly that one grant. Whoever that holder appointed
+  keeps their access, which is why the confirmation says so rather than warning about a cascade;
+  clearing a line means revoking each grant on purpose. Both controls are gated on
+  `canManageAccess`, which is `canManageEntity(...)` and therefore true for any manage-holder of
+  that entity, not just `Super Admin` — that matches the backend exactly on both sides now: any
+  holder may invite peers to the same entity, and any holder may withdraw anyone's access on it. All four route files fetch the entity detail, its grant list,
   and
   `getSession()` in parallel and pass `canManageAccess={canManageEntity(user, ..., id)}` straight
   through. Since that is the same check the scope's own layout already gates entry on, anyone who

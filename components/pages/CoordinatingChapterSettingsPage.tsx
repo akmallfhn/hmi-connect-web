@@ -41,12 +41,16 @@ interface CoordinatingChapterSettingsPageProps {
   coordinatingChapter: CoordinatingChapterDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
+  viewerId?: string;
+  mainSiteHref: string;
 }
 
 export default function CoordinatingChapterSettingsPage({
   coordinatingChapter,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: CoordinatingChapterSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,6 +125,8 @@ export default function CoordinatingChapterSettingsPage({
             entityId={coordinatingChapter.id}
             grants={grants}
             canManageAccess={canManageAccess}
+            viewerId={viewerId}
+            mainSiteHref={mainSiteHref}
           />
         )}
       </div>

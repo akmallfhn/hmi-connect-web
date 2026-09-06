@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
 import { getSession } from "@/apis/session";
 import { canManageEntity } from "@/lib/access";
+import { getMainSiteOrigin } from "@/lib/constants";
 import { listAllAccessGrants } from "@/apis/access-grants";
 import ChapterSettingsPage from "@/components/pages/ChapterSettingsPage";
 
@@ -32,6 +33,8 @@ export default async function ChapterSettingsRoute({
       chapter={chapter}
       grants={grants}
       canManageAccess={canManageEntity(user, "chapter", chapter_id)}
+      viewerId={user?.id}
+      mainSiteHref={getMainSiteOrigin()}
     />
   );
 }

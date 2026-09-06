@@ -4,6 +4,7 @@ import { listAllAccessGrants } from "@/apis/access-grants";
 import { getOrganizationDetail } from "@/apis/organizations";
 import { getSession } from "@/apis/session";
 import { canManageEntity } from "@/lib/access";
+import { getMainSiteOrigin } from "@/lib/constants";
 import OrganizationSettingsPage from "@/components/pages/OrganizationSettingsPage";
 
 export const metadata: Metadata = {
@@ -32,6 +33,8 @@ export default async function OrganizationSettingsRoute({
       organization={organization}
       grants={grants}
       canManageAccess={canManageEntity(user, "organization", organization_id)}
+      viewerId={user?.id}
+      mainSiteHref={getMainSiteOrigin()}
     />
   );
 }

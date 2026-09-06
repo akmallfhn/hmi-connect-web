@@ -26,12 +26,16 @@ interface OrganizationSettingsPageProps {
   organization: OrganizationDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
+  viewerId?: string;
+  mainSiteHref: string;
 }
 
 export default function OrganizationSettingsPage({
   organization,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: OrganizationSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -104,6 +108,8 @@ export default function OrganizationSettingsPage({
             entityId={organization.id}
             grants={grants}
             canManageAccess={canManageAccess}
+            viewerId={viewerId}
+            mainSiteHref={mainSiteHref}
           />
         )}
       </div>

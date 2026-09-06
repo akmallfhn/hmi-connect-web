@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getBranchDetail } from "@/apis/branches";
 import { getSession } from "@/apis/session";
 import { canManageEntity } from "@/lib/access";
+import { getMainSiteOrigin } from "@/lib/constants";
 import { listAllAccessGrants } from "@/apis/access-grants";
 import BranchSettingsPage from "@/components/pages/BranchSettingsPage";
 
@@ -32,6 +33,8 @@ export default async function BranchSettingsRoute({
       branch={branch}
       grants={grants}
       canManageAccess={canManageEntity(user, "branch", branch_id)}
+      viewerId={user?.id}
+      mainSiteHref={getMainSiteOrigin()}
     />
   );
 }

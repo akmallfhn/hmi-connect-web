@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { getSession } from "@/apis/session";
 import { canManageEntity } from "@/lib/access";
+import { getMainSiteOrigin } from "@/lib/constants";
 import { listAllAccessGrants } from "@/apis/access-grants";
 import CoordinatingChapterSettingsPage from "@/components/pages/CoordinatingChapterSettingsPage";
 
@@ -32,6 +33,8 @@ export default async function CoordinatingChapterSettingsRoute({
       coordinatingChapter={coordinatingChapter}
       grants={grants}
       canManageAccess={canManageEntity(user, "coordinating_chapter", coordinating_chapter_id)}
+      viewerId={user?.id}
+      mainSiteHref={getMainSiteOrigin()}
     />
   );
 }

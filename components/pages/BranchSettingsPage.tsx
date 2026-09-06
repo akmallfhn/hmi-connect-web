@@ -35,12 +35,16 @@ interface BranchSettingsPageProps {
   branch: BranchDetail;
   grants: AccessGrantEntry[];
   canManageAccess: boolean;
+  viewerId?: string;
+  mainSiteHref: string;
 }
 
 export default function BranchSettingsPage({
   branch,
   grants,
   canManageAccess,
+  viewerId,
+  mainSiteHref,
 }: BranchSettingsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,6 +118,8 @@ export default function BranchSettingsPage({
             entityId={branch.id}
             grants={grants}
             canManageAccess={canManageAccess}
+            viewerId={viewerId}
+            mainSiteHref={mainSiteHref}
           />
         )}
       </div>
