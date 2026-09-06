@@ -93,7 +93,8 @@ export default async function MasterCoordinatingChapterDetailPage({
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       accessGrants={accessGrants}
-      canManageAccess
+      canInviteAccess
+      canRevokeAccess
       initialTab={parseTab(query.tab)}
       backHref="/master/coordinating-chapters"
       allowEdit

@@ -31,8 +31,11 @@ interface EntityAccessTabProps {
   entityType: AccessEntityTypeEnum;
   entityId: string;
   grants: AccessGrantEntry[];
-  // Anyone holding manage on this entity may invite others to it — not just Super Admin.
-  canManageAccess: boolean;
+  // Appointing reaches down the hierarchy; withdrawing only ever applies at the entity itself.
+  canInvite: boolean;
+  canRevoke: boolean;
+  // Set while the entity is suspended, so its roster can't be reshuffled mid-dispute.
+  inviteDisabled?: boolean;
   // Set by the settings pages so a self-revoke can leave instead of refreshing into a 403.
   viewerId?: string;
   mainSiteHref?: string;
@@ -42,7 +45,9 @@ export default function EntityAccessTab({
   entityType,
   entityId,
   grants,
-  canManageAccess,
+  canInvite,
+  canRevoke,
+  inviteDisabled = false,
   viewerId,
   mainSiteHref,
 }: EntityAccessTabProps) {
@@ -91,8 +96,12 @@ export default function EntityAccessTab({
             title="Belum ada admin"
             description={`Admin yang diberi akses untuk ${entityLabel} ini akan ditampilkan di sini.`}
             action={
-              canManageAccess ? (
-                <Button variant="primary" onClick={() => setShowAddModal(true)}>
+              canInvite ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowAddModal(true)}
+                  disabled={inviteDisabled}
+                >
                   <UserPlus className="size-4" />
                   Tambah Akses
                 </Button>
@@ -112,11 +121,12 @@ export default function EntityAccessTab({
                 {entityLabel} ini.
               </p>
             </div>
-            {canManageAccess && (
+            {canInvite && (
               <Button
                 variant="primary"
                 size="sm"
                 onClick={() => setShowAddModal(true)}
+                disabled={inviteDisabled}
                 className="w-fit"
               >
                 <UserPlus className="size-4" />
@@ -134,7 +144,7 @@ export default function EntityAccessTab({
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Diberikan Oleh</th>
-                    {canManageAccess && (
+                    {canRevoke && (
                       <th className="px-4 py-3 text-right">Aksi</th>
                     )}
                   </tr>
@@ -172,7 +182,7 @@ export default function EntityAccessTab({
                       <td className="px-4 py-3 text-[#5f6573]">
                         {grant.granted_by_name ?? "—"}
                       </td>
-                      {canManageAccess && (
+                      {canRevoke && (
                         <td className="px-4 py-3">
                           <div className="flex justify-end">
                             <Button
@@ -196,7 +206,7 @@ export default function EntityAccessTab({
         </div>
       )}
 
-      {canManageAccess && (
+      {canInvite && (
         <AddAccessModal
           open={showAddModal}
           onClose={() => setShowAddModal(false)}

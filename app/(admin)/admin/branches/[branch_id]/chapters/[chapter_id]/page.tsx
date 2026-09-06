@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
 import { listAllAccessGrants } from "@/apis/access-grants";
+import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
+import { canManageEntity } from "@/lib/access";
 import { listUsers } from "@/apis/users";
 import ChapterDetailPage, {
   type ChapterDetailTab,
@@ -39,15 +41,22 @@ export default async function BranchChapterDetailPage({
     notFound();
   }
 
-  const [memberResult, structuralOverview, accessGrants] = await Promise.all([
-    listUsers({ chapterId: chapter_id, status: "active", page: 1, pageSize: 1 }),
-    getStructuralOverview(
-      "chapter",
-      chapter_id,
-      query.period ? Number(query.period) : null
-    ),
-    listAllAccessGrants("chapter", chapter_id),
-  ]);
+  const [memberResult, structuralOverview, { user }, accessGrants] =
+    await Promise.all([
+      listUsers({
+        chapterId: chapter_id,
+        status: "active",
+        page: 1,
+        pageSize: 1,
+      }),
+      getStructuralOverview(
+        "chapter",
+        chapter_id,
+        query.period ? Number(query.period) : null
+      ),
+      getSession(),
+      listAllAccessGrants("chapter", chapter_id),
+    ]);
 
   return (
     <ChapterDetailPage
@@ -58,6 +67,8 @@ export default async function BranchChapterDetailPage({
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       showTrainings={false}
       accessGrants={accessGrants}
+      canInviteAccess={canManageEntity(user, "branch", branch_id)}
+      accessInviteDisabled={chapter.status === "inactive"}
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/chapters`}
       allowStatusChange

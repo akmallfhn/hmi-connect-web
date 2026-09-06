@@ -96,6 +96,8 @@ entity, while **reads** are satisfied by a grant at that entity _or anywhere abo
 grant chain. The `"Administrator"` role was removed in the same change, so `USER_ROLE_OPTIONS`
 only lists Super Admin (0) and General User (2) — there's still no fixed `role_name` union in
 `lib/types.ts` because this backend hasn't published a roles endpoint.
+`docs/access-grant.md` in this repo is the Indonesian summary of who may invite, revoke, and
+suspend whom — keep it in sync when the backend's rules move.
 **Every gate reads through `lib/access.ts`** — `isSuperAdmin`, `manageGrants`,
 `manageGrantsOfType`, `canManageEntity(user, entityType, entityId)` (Super Admin or an exact
 grant, i.e. the governance rule), and `hasAnyManageAccess` — plus the `ADMIN_ENTITY_BASE_PATH`/
@@ -1980,25 +1982,29 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `revokeAccessGrant(grant.id)` — note it takes the
   *grant* id, not a user id, and it withdraws exactly that one grant. Whoever that holder appointed
   keeps their access, which is why the confirmation says so rather than warning about a cascade;
-  clearing a line means revoking each grant on purpose. Both controls are gated on
-  `canManageAccess`, which is `canManageEntity(...)` and therefore true for any manage-holder of
-  that entity, not just `Super Admin` — that matches the backend exactly on both sides now: any
-  holder may invite peers to the same entity, and any holder may withdraw anyone's access on it. All four route files fetch the entity detail, its grant list,
-  and
-  `getSession()` in parallel and pass `canManageAccess={canManageEntity(user, ..., id)}` straight
-  through. Since that is the same check the scope's own layout already gates entry on, anyone who
-  can open the page can also manage its access — the prop stays explicit rather than being assumed
-  inside `EntityAccessTab`, so a future read-only embedding of that tab can pass `false`.
+  clearing a line means revoking each grant on purpose. The two controls take **separate** flags,
+  because the backend gates them differently: **appointing reaches down the hierarchy, withdrawing
+  does not.** `canInvite` holds for a grant at that entity *or anywhere above it*; `canRevoke` needs
+  one at exactly that entity. `inviteDisabled` greys the button out while the entity's own `status`
+  is `inactive` — a suspended unit is mid-dispute, and its roster shouldn't be reshuffled until the
+  level above lifts the suspension. The five settings routes fetch the entity detail, its grant
+  list, and `getSession()` in parallel and pass `canManageEntity(user, ..., id)` as both flags,
+  since a holder at its own entity may do either.
   The same component is also the last tab ("Akses", `ShieldCheck`, `?tab=access`) on **every** entity
   detail page — Master's four (`/master/coordinating-bodies/[id]`, `/master/branches/[id]`,
   `/master/coordinating-chapters/[id]`, `/master/chapters/[id]`) and the six scoped ones under
   `/organizations`, `/coordinating-bodies`, `/branches`, and `/coordinating-chapters`. Each route
   adds `listAllAccessGrants(entityType, id)` to its existing `Promise.all` and passes the result as
   the detail page's optional `accessGrants` prop — that prop is what makes the tab appear at all.
-  Only Master also passes `canManageAccess`, which `MasterLayout` has already earned by gating every
-  `/master/*` route on literal `Super Admin`; the six scoped routes leave it `false`, so their Akses
-  tab is a plain roster — no Tambah Akses button, and `EntityAccessTab` drops the whole Aksi column
-  rather than filling it with em dashes. Those six also pass `showTrainings={false}`: an entity's
+  Master passes both flags, which `MasterLayout` has already earned by gating every `/master/*`
+  route on literal `Super Admin`. The Organisasi dashboard's Badko and Cabang routes and the
+  Cabang dashboard's Korkom and Komisariat routes pass `canInviteAccess={canManageEntity(user,
+  "organization"|"branch", id)}` plus `accessInviteDisabled` when that entity is suspended, and
+  leave `canRevokeAccess` unset — a governing level appoints downward but never withdraws downward.
+  The remaining two scoped routes (a Badko's view of a Cabang, a Korkom's view of a Komisariat) pass
+  neither: those two coordinate rather than govern, so their Akses tab is a plain roster — no Tambah
+  Akses button, and `EntityAccessTab` drops the whole Aksi column rather than filling it with em
+  dashes. Those six also pass `showTrainings={false}`: an entity's
   Latihan Kader belongs to Master's view of it, and the flag drops both the tab and its panel, so
   each of those routes no longer fetches `trainings/list` at all — the Korkom one was firing one
   request per Komisariat under it purely to fill a tab that is now gone.

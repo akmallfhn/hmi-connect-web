@@ -72,7 +72,10 @@ interface CoordinatingChapterDetailPageProps {
   allowStatusChange?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
   accessGrants?: AccessGrantEntry[] | null;
-  canManageAccess?: boolean;
+  // Appointing reaches down the hierarchy, withdrawing does not — hence two flags.
+  canInviteAccess?: boolean;
+  canRevokeAccess?: boolean;
+  accessInviteDisabled?: boolean;
 }
 
 const TABS: {
@@ -151,7 +154,9 @@ export default function CoordinatingChapterDetailPage({
   allowEdit = false,
   allowStatusChange = false,
   accessGrants = null,
-  canManageAccess = false,
+  canInviteAccess = false,
+  canRevokeAccess = false,
+  accessInviteDisabled = false,
 }: CoordinatingChapterDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -491,7 +496,9 @@ export default function CoordinatingChapterDetailPage({
             entityType="coordinating_chapter"
             entityId={coordinatingChapter.id}
             grants={accessGrants}
-            canManageAccess={canManageAccess}
+            canInvite={canInviteAccess}
+            canRevoke={canRevokeAccess}
+            inviteDisabled={accessInviteDisabled}
           />
         )}
       </div>

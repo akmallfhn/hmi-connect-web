@@ -71,7 +71,10 @@ interface CoordinatingBodyDetailPageProps {
   allowEdit?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
   accessGrants?: AccessGrantEntry[] | null;
-  canManageAccess?: boolean;
+  // Appointing reaches down the hierarchy, withdrawing does not — hence two flags.
+  canInviteAccess?: boolean;
+  canRevokeAccess?: boolean;
+  accessInviteDisabled?: boolean;
 }
 
 const TABS: {
@@ -148,7 +151,9 @@ export default function CoordinatingBodyDetailPage({
   backHref,
   allowEdit = true,
   accessGrants = null,
-  canManageAccess = false,
+  canInviteAccess = false,
+  canRevokeAccess = false,
+  accessInviteDisabled = false,
 }: CoordinatingBodyDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -508,7 +513,9 @@ export default function CoordinatingBodyDetailPage({
             entityType="coordinating_body"
             entityId={coordinatingBody.id}
             grants={accessGrants}
-            canManageAccess={canManageAccess}
+            canInvite={canInviteAccess}
+            canRevoke={canRevokeAccess}
+            inviteDisabled={accessInviteDisabled}
           />
         )}
       </div>

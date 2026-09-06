@@ -120,7 +120,8 @@ export default function CoordinatingBodySettingsPage({
             entityType="coordinating_body"
             entityId={coordinatingBody.id}
             grants={grants}
-            canManageAccess={canManageAccess}
+            canInvite={canManageAccess}
+            canRevoke={canManageAccess}
             viewerId={viewerId}
             mainSiteHref={mainSiteHref}
           />

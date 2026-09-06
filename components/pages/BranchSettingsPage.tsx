@@ -117,7 +117,8 @@ export default function BranchSettingsPage({
             entityType="branch"
             entityId={branch.id}
             grants={grants}
-            canManageAccess={canManageAccess}
+            canInvite={canManageAccess}
+            canRevoke={canManageAccess}
             viewerId={viewerId}
             mainSiteHref={mainSiteHref}
           />

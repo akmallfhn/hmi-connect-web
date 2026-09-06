@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { listAllAccessGrants } from "@/apis/access-grants";
+import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
+import { canManageEntity } from "@/lib/access";
 import { listUsers } from "@/apis/users";
 import CoordinatingChapterDetailPage, {
   type CoordinatingChapterDetailTab,
@@ -44,7 +46,7 @@ export default async function BranchCoordinatingChapterDetailPage({
     notFound();
   }
 
-  const [chapters, memberResult, structuralOverview, accessGrants] =
+  const [chapters, memberResult, structuralOverview, { user }, accessGrants] =
     await Promise.all([
       listAllChaptersAdmin({ coordinatingChapterId: coordinating_chapter_id }),
       listUsers({
@@ -58,6 +60,7 @@ export default async function BranchCoordinatingChapterDetailPage({
         coordinating_chapter_id,
         query.period ? Number(query.period) : null
       ),
+      getSession(),
       listAllAccessGrants("coordinating_chapter", coordinating_chapter_id),
     ]);
 
@@ -71,6 +74,8 @@ export default async function BranchCoordinatingChapterDetailPage({
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       showTrainings={false}
       accessGrants={accessGrants}
+      canInviteAccess={canManageEntity(user, "branch", branch_id)}
+      accessInviteDisabled={coordinatingChapter.status === "inactive"}
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/coordinating-chapters`}
       allowStatusChange

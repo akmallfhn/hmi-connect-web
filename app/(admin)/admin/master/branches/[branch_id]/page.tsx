@@ -68,7 +68,8 @@ export default async function MasterBranchDetailPage({
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       accessGrants={accessGrants}
-      canManageAccess
+      canInviteAccess
+      canRevokeAccess
       initialTab={parseTab(query.tab)}
       backHref="/master/branches"
     />

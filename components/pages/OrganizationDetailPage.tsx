@@ -46,7 +46,9 @@ interface OrganizationDetailPageProps {
   selectedStructuralPeriod: StructuralPeriodDetail | null;
   selectedStructuralPeriodId: number | null;
   accessGrants: AccessGrantEntry[];
-  canManageAccess: boolean;
+  canInviteAccess: boolean;
+  canRevokeAccess: boolean;
+  accessInviteDisabled?: boolean;
   initialTab: OrganizationDetailTab;
   // Suspending the whole organization is a Master-only action.
   allowStatusChange?: boolean;
@@ -110,7 +112,9 @@ export default function OrganizationDetailPage({
   selectedStructuralPeriod,
   selectedStructuralPeriodId,
   accessGrants,
-  canManageAccess,
+  canInviteAccess,
+  canRevokeAccess,
+  accessInviteDisabled = false,
   initialTab,
   allowStatusChange = false,
 }: OrganizationDetailPageProps) {
@@ -330,7 +334,9 @@ export default function OrganizationDetailPage({
             entityType="organization"
             entityId={organization.id}
             grants={accessGrants}
-            canManageAccess={canManageAccess}
+            canInvite={canInviteAccess}
+            canRevoke={canRevokeAccess}
+            inviteDisabled={accessInviteDisabled}
           />
         )}
       </div>

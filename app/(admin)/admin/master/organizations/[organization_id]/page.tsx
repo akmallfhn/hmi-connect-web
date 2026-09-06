@@ -72,7 +72,8 @@ export default async function MasterOrganizationDetailPage({
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       accessGrants={accessGrants}
-      canManageAccess
+      canInviteAccess
+      canRevokeAccess
       initialTab={parseTab(query.tab)}
       allowStatusChange
     />

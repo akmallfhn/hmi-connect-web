@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import { listAllAccessGrants } from "@/apis/access-grants";
+import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
+import { canManageEntity } from "@/lib/access";
 import CoordinatingBodyDetailPage, {
   type CoordinatingBodyDetailTab,
 } from "@/components/pages/CoordinatingBodyDetailPage";
@@ -48,18 +50,20 @@ export default async function OrganizationCoordinatingBodyDetailPage({
     notFound();
   }
 
-  const [branches, structuralOverview, accessGrants] = await Promise.all([
-    listAllBranchesAdmin({
-      organizationId: organization_id,
-      coordinatingBodyId: coordinating_body_id,
-    }),
-    getStructuralOverview(
-      "coordinating_body",
-      coordinating_body_id,
-      query.period ? Number(query.period) : null
-    ),
-    listAllAccessGrants("coordinating_body", coordinating_body_id),
-  ]);
+  const [branches, structuralOverview, { user }, accessGrants] =
+    await Promise.all([
+      listAllBranchesAdmin({
+        organizationId: organization_id,
+        coordinatingBodyId: coordinating_body_id,
+      }),
+      getStructuralOverview(
+        "coordinating_body",
+        coordinating_body_id,
+        query.period ? Number(query.period) : null
+      ),
+      getSession(),
+      listAllAccessGrants("coordinating_body", coordinating_body_id),
+    ]);
 
   return (
     <CoordinatingBodyDetailPage
@@ -70,6 +74,8 @@ export default async function OrganizationCoordinatingBodyDetailPage({
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
       showTrainings={false}
       accessGrants={accessGrants}
+      canInviteAccess={canManageEntity(user, "organization", organization_id)}
+      accessInviteDisabled={coordinatingBody.status === "inactive"}
       initialTab={parseTab(query.tab)}
       backHref={`/organizations/${organization_id}/coordinating-bodies`}
       allowEdit={false}

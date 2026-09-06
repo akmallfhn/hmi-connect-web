@@ -117,7 +117,8 @@ export default function ChapterSettingsPage({
             entityType="chapter"
             entityId={chapter.id}
             grants={grants}
-            canManageAccess={canManageAccess}
+            canInvite={canManageAccess}
+            canRevoke={canManageAccess}
             viewerId={viewerId}
             mainSiteHref={mainSiteHref}
           />

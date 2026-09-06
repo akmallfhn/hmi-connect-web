@@ -124,7 +124,8 @@ export default function CoordinatingChapterSettingsPage({
             entityType="coordinating_chapter"
             entityId={coordinatingChapter.id}
             grants={grants}
-            canManageAccess={canManageAccess}
+            canInvite={canManageAccess}
+            canRevoke={canManageAccess}
             viewerId={viewerId}
             mainSiteHref={mainSiteHref}
           />

@@ -107,7 +107,8 @@ export default function OrganizationSettingsPage({
             entityType="organization"
             entityId={organization.id}
             grants={grants}
-            canManageAccess={canManageAccess}
+            canInvite={canManageAccess}
+            canRevoke={canManageAccess}
             viewerId={viewerId}
             mainSiteHref={mainSiteHref}
           />
