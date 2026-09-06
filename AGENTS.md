@@ -264,6 +264,9 @@ Three layers, each with one job. Don't blend them.
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
    by source), `access-grants.ts` (the `access-grants/*` resource — `listAccessGrants`/
    `listAllAccessGrants` (pages exhausted, for a whole entity's roster)/`listMyAccessGrants`/
+   `listUserAccessGrants`/`listAllUserAccessGrants` (`access-grants/user/list`, one user's whole
+   roster by **username** — `Super Admin` only, since it maps someone's access across the entire
+   hierarchy, which no single grant holder is entitled to see)/
    `getAccessGrantDetail` (`access-grants/detail`, one grant by id — the backend compares the caller
    against the grant's own `user_id` and 403s otherwise, `Super Admin` included, so this is what
    scopes `/invitations/[grant_id]` to the invited account; revoked grants read as not found, and
@@ -1307,11 +1310,21 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `pending` | `verified`, see the Verification flow section above) rather than a boolean
   `Switch`, since the backend replaced `is_verified` with a reviewed-workflow enum. The
   Organisasi card also renders three `Switch` toggles (`components/buttons/Switch.tsx`) —
-  a short static note in the Organisasi card pointing at each entity's own Pengaturan → Akses tab.
-  The three Admin Badko/Cabang/Komisariat `Switch` chips that used to sit there are gone: they read
-  `can_manage_*` off `UserProfile` and called the deleted `/access/grant/*`//`/access/revoke/*`
-  endpoints, and under `access_grants` a grant has to name an entity, which a user-detail page has
-  no way to pick. Don't reintroduce them here — `EntityAccessTab` is where granting lives.
+  a read-only "Hak Akses Admin" section below the four section cards, one card per **accepted**
+  grant from `listAllUserAccessGrants(username)` — pending invitations are filtered out here, since
+  this section answers what someone administers today, not what they were offered. Each card shows
+  the entity's own `entity_image_url` (falling back to a per-type lucide glyph when it's `null`),
+  the scope, and who granted it plus a `formatShortDate` timestamp ("4 Sep 2026"). The scope reads
+  `HMI {label} {entity_name}` except for an organization, which is named outright — "HMI Organisasi
+  Pengurus Besar HMI" says the same word twice. The cards are deliberately inert, not links: this
+  is a fact about the user, and a card that navigates away invites a misread that it's an action on
+  them. It answers "what does this person administer", which is exactly the question a
+  user-detail page raises and no entity-scoped `access-grants/list` can answer. It stays read-only:
+  granting names an entity, so inviting and revoking live on that entity's own Pengaturan → Akses
+  tab, which the section's own description points at. The three Admin Badko/Cabang/Komisariat
+  `Switch` chips that used to sit in the Organisasi card are gone: they read `can_manage_*` off
+  `UserProfile` and called the deleted `/access/grant/*`//`/access/revoke/*` endpoints. Don't
+  reintroduce them here — `EntityAccessTab` is where granting lives.
   Branch→chapter and
   province→city→district cascading selects (create/contact/organization forms) reuse the exact
   `SearchableSelect` + debounced-search-Route-Handler pattern from `VerificationPage`, but can't

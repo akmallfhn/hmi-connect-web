@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { listAllUserAccessGrants } from "@/apis/access-grants";
 import { getSession } from "@/apis/session";
 import { getUserByUsername } from "@/apis/users";
 import AdminUserDetailPage from "@/components/pages/AdminUserDetailPage";
@@ -24,9 +25,12 @@ export default async function MasterUserDetailPage({
 }: MasterUserDetailPageProps) {
   const { username } = await params;
   const { sessionToken } = await getSession();
-  const user = await getUserByUsername(username, sessionToken);
+  const [user, accessGrants] = await Promise.all([
+    getUserByUsername(username, sessionToken),
+    listAllUserAccessGrants(username),
+  ]);
 
   if (!user) notFound();
 
-  return <AdminUserDetailPage user={user} />;
+  return <AdminUserDetailPage user={user} accessGrants={accessGrants} />;
 }

@@ -24,6 +24,8 @@ export type AccessGrantEntry = {
   entity_type: AccessEntityTypeEnum;
   entity_id: string;
   entity_name?: string;
+  // logo_url on an organization, image_url on the other four — always present, null when unset.
+  entity_image_url?: string | null;
   capability: AccessCapabilityEnum;
   status: AccessGrantStatusEnum;
   granted_by: string;
@@ -131,6 +133,41 @@ export async function listAllAccessGrants(
   const rest = await Promise.all(
     Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
       listAccessGrants({ entityType, entityId, page: index + 2, pageSize })
+    )
+  );
+
+  return [firstPage, ...rest].flatMap((page) => page.list);
+}
+
+// Every grant one user holds, addressed by username — Super Admin only, since it maps someone's access across the whole hierarchy.
+export async function listUserAccessGrants(
+  username: string,
+  options: { page?: number; pageSize?: number } = {}
+): Promise<PagedListResult<AccessGrantEntry>> {
+  const token = await sessionToken();
+  if (!token) return EMPTY_PAGE;
+
+  const { page = 1, pageSize = 20 } = options;
+  const result = await callApi<AccessGrantListResponse>(
+    "/api/v1/access-grants/user/list",
+    { method: "POST", token, body: { username, page, page_size: pageSize } }
+  );
+
+  return toPagedResult(result, page);
+}
+
+// One user's whole roster, pages exhausted — the admin user detail page lists all of it at once.
+export async function listAllUserAccessGrants(
+  username: string
+): Promise<AccessGrantEntry[]> {
+  const pageSize = 100;
+  const firstPage = await listUserAccessGrants(username, { page: 1, pageSize });
+
+  if (firstPage.totalPage <= 1) return firstPage.list;
+
+  const rest = await Promise.all(
+    Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
+      listUserAccessGrants(username, { page: index + 2, pageSize })
     )
   );
 

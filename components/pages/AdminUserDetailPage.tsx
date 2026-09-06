@@ -4,21 +4,34 @@ import AdminPageTitle from "../common/AdminPageTitle";
 import {
   ArrowLeft,
   Ban,
+  Building,
+  Building2,
   CalendarDays,
   FileText,
+  GitBranch,
   Pencil,
+  School,
   Trash2,
   UserCheck,
   Users as UsersIcon,
+  Waypoints,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
+import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { UserProfile } from "@/apis/users";
 import { deactivateUser, deleteUser } from "@/lib/actions";
-import { isSuccessStatus, type UserStatusEnum } from "@/lib/types";
+import { formatShortDate } from "@/lib/time-manipulation";
+import { ADMIN_ENTITY_LABEL } from "@/lib/access";
+import {
+  isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type UserStatusEnum,
+} from "@/lib/types";
 import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
@@ -39,7 +52,24 @@ const STATUS_DOT_CLASSNAME: Record<UserStatusEnum, string> = {
 
 interface AdminUserDetailPageProps {
   user: UserProfile;
+  // Super-Admin-only roster from access-grants/user/list; only accepted rows are shown.
+  accessGrants: AccessGrantEntry[];
 }
+
+// An organization is named outright; the other four read as "HMI Cabang Depok".
+function formatGrantScope(grant: AccessGrantEntry) {
+  const name = grant.entity_name ?? "—";
+  if (grant.entity_type === "organization") return name;
+  return `HMI ${ADMIN_ENTITY_LABEL[grant.entity_type]} ${name}`;
+}
+
+const ENTITY_ICON: Record<AccessEntityTypeEnum, LucideIcon> = {
+  organization: Building,
+  coordinating_body: Building2,
+  branch: GitBranch,
+  coordinating_chapter: Waypoints,
+  chapter: School,
+};
 
 const GENDER_LABEL: Record<string, string> = {
   male: "Laki-laki",
@@ -113,8 +143,12 @@ function StatPill({
 
 export default function AdminUserDetailPage({
   user,
+  accessGrants,
 }: AdminUserDetailPageProps) {
   const router = useRouter();
+  const acceptedGrants = accessGrants.filter(
+    (grant) => grant.status === "accepted"
+  );
   const [editSection, setEditSection] = useState<
     "account" | "contact" | "organization" | "membership" | null
   >(null);
@@ -262,14 +296,6 @@ export default function AdminUserDetailPage({
           <Field label="Badko" value={user.coordinating_body_name} />
           <Field label="Organisasi" value={user.organization_name} />
           <Field label="Nomor Kartu Anggota" value={user.member_card} />
-          <div className="flex flex-col gap-1 border-t border-[#e6e9ef] pt-4 sm:col-span-2">
-            <p className="text-sm font-medium text-[#172033]">Hak Akses Admin</p>
-            <p className="text-[13px] text-[#5f6573]">
-              Akses admin kini diberikan per entitas lewat undangan. Buka
-              Pengaturan &rarr; Akses pada Badko/Cabang/Korkom/Komisariat yang
-              bersangkutan untuk mengundang atau mencabut akses.
-            </p>
-          </div>
         </SectionCard>
 
         <SectionCard
@@ -288,6 +314,56 @@ export default function AdminUserDetailPage({
           <Field label="Bio" value={user.bio} />
         </SectionCard>
       </div>
+
+      <section className="mt-4 rounded-xl border border-[#e6e9ef] bg-white p-5">
+        <h2 className="text-base font-semibold text-[#172033]">
+          Hak Akses Admin
+        </h2>
+
+        {acceptedGrants.length === 0 ? (
+          <p className="mt-4 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-4 py-6 text-center text-sm text-[#5f6573]">
+            Belum memegang akses admin di entitas mana pun.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {acceptedGrants.map((grant) => {
+              const EntityIcon = ENTITY_ICON[grant.entity_type];
+
+              return (
+                <div
+                  key={grant.id}
+                  className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] bg-[#f9fafc] px-4 py-3"
+                >
+                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-soft text-primary">
+                    {grant.entity_image_url ? (
+                      <Image
+                        src={grant.entity_image_url}
+                        alt={grant.entity_name ?? ""}
+                        width={40}
+                        height={40}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <EntityIcon className="size-5" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold text-[#172033]">
+                      {formatGrantScope(grant)}
+                    </p>
+                    <p className="truncate text-[13px] text-[#5f6573]">
+                      Diberikan oleh {grant.granted_by_name ?? "—"}
+                      {grant.granted_at
+                        ? ` • ${formatShortDate(grant.granted_at)}`
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <div className="mt-4 flex flex-wrap justify-end gap-2">
         <Button
