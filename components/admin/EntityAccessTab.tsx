@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, UserPlus } from "lucide-react";
+import { Loader2, UserMinus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import { inviteAccessGrant, revokeAccessGrant } from "@/lib/actions";
@@ -76,107 +76,123 @@ export default function EntityAccessTab({
 
   return (
     <section>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-[#172033]">
-            Admin {entityLabel}
-          </h2>
-          <p className="mt-1 text-sm text-[#5f6573]">
-            Pengguna yang memiliki akses untuk mengelola dashboard {entityLabel}{" "}
-            ini.
-          </p>
-        </div>
-        {canManageAccess && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setShowAddModal(true)}
-            className="w-fit"
-          >
-            <UserPlus className="size-4" />
-            Tambah Akses
-          </Button>
-        )}
-      </div>
-
-      {!canManageAccess && (
-        <p className="mt-3 text-xs text-[#5f6573]">
-          Hanya pemegang akses {entityLabel} ini yang dapat menambah atau
-          mencabut akses.
-        </p>
-      )}
-
-      <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-        {grants.length === 0 ? (
+      {grants.length === 0 ? (
+        <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
           <EmptyState
             title="Belum ada admin"
             description={`Admin yang diberi akses untuk ${entityLabel} ini akan ditampilkan di sini.`}
+            action={
+              canManageAccess ? (
+                <Button variant="primary" onClick={() => setShowAddModal(true)}>
+                  <UserPlus className="size-4" />
+                  Tambah Akses
+                </Button>
+              ) : undefined
+            }
           />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-                <tr>
-                  <th className="px-4 py-3">Admin</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Diberikan Oleh</th>
-                  <th className="px-4 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {grants.map((grant) => (
-                  <tr key={grant.id} className="align-middle">
-                    <td className="px-4 py-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar
-                          src={grant.user_avatar ?? undefined}
-                          name={grant.user_full_name ?? ""}
-                          size={36}
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033]">
-                            {grant.user_full_name}
-                          </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            @{grant.user_username}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {grant.status === "accepted" ? (
-                        <Label variant="green">Aktif</Label>
-                      ) : (
-                        <Label variant="orange">Menunggu Konfirmasi</Label>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-[#5f6573]">
-                      {grant.granted_by_name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end">
-                        {canManageAccess ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setRevokeTarget(grant)}
-                            aria-label={`Cabut akses ${grant.user_full_name}`}
-                            className="text-destructive hover:bg-destructive-soft"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        ) : (
-                          <span className="text-[#5f6573]">—</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-[#172033]">
+                Admin {entityLabel}
+              </h2>
+              <p className="mt-1 text-sm text-[#5f6573]">
+                Pengguna yang memiliki akses untuk mengelola dashboard{" "}
+                {entityLabel} ini.
+              </p>
+            </div>
+            {canManageAccess && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowAddModal(true)}
+                className="w-fit"
+              >
+                <UserPlus className="size-4" />
+                Tambah Akses
+              </Button>
+            )}
           </div>
-        )}
-      </div>
+
+          {!canManageAccess && (
+            <p className="mt-3 text-xs text-[#5f6573]">
+              Hanya pemegang akses {entityLabel} ini yang dapat menambah atau
+              mencabut akses.
+            </p>
+          )}
+
+          <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef]">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                  <tr>
+                    <th className="px-4 py-3">Admin</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Diberikan Oleh</th>
+                    <th className="px-4 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                  {grants.map((grant) => (
+                    <tr key={grant.id} className="align-middle">
+                      <td className="px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Avatar
+                            src={grant.user_avatar ?? undefined}
+                            name={grant.user_full_name ?? ""}
+                            size={36}
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#172033]">
+                              {grant.user_full_name}
+                            </p>
+                            <p className="truncate text-[13px] text-[#5f6573]">
+                              @{grant.user_username}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[#5f6573]">
+                        {grant.user_email ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {grant.status === "accepted" ? (
+                          <Label variant="green">Aktif</Label>
+                        ) : (
+                          <Label variant="orange">Menunggu Konfirmasi</Label>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-[#5f6573]">
+                        {grant.granted_by_name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          {canManageAccess ? (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setRevokeTarget(grant)}
+                              aria-label={`Revoke akses ${grant.user_full_name}`}
+                            >
+                              <UserMinus className="size-4" />
+                              Revoke
+                            </Button>
+                          ) : (
+                            <span className="text-[#5f6573]">—</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {canManageAccess && (
         <AddAccessModal

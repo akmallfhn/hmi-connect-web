@@ -522,7 +522,10 @@ in bounded batches. A missing participant result/email is skipped, and page/send
   only when it needs client state/hooks. The `app/.../page.tsx` Server Component fetches data
   (`getSession`, `getInstitutions`, ...) and passes it down as props.
 - `components/states/EmptyState.tsx` — the shared empty-result presentation for every admin
-  list: the larger `EmptyStateIllustration`, a `text-base` title, and a `text-sm` description.
+  list: the larger `EmptyStateIllustration`, a `text-base` title, a `text-sm` description, and an
+  optional `action` node rendered under the description — for a list whose only next step is
+  creating the first row, the CTA belongs in the empty state itself rather than in a header the
+  empty view doesn't need (see `EntityAccessTab` below).
   List pages pass different copy for a genuinely empty collection versus an empty search/filter.
   Admin list filter controls use action-oriented placeholders (`Filter Status`, `Filter Cabang`,
   `Filter Badko`, etc.), never state-like placeholders such as `Semua ...`. Status filters pass
@@ -1873,13 +1876,22 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `apis/access-grants.ts#listAllAccessGrants(entityType, entityId)`, which pages through
   `access-grants/list` — that endpoint returns the holder's name/username/avatar, the issuer, and
   the grant `status` directly, so the old exhaustive `users/list` crawl that filtered on
-  `can_manage_*` is gone; don't reintroduce it. The table shows Admin / Status
+  `can_manage_*` is gone; don't reintroduce it. The table shows Admin / Email
+  (`user_email`, also straight off `access-grants/list`) / Status
   (green `Aktif` vs orange `Menunggu Konfirmasi`, since an invitation confers nothing until
-  accepted) / Diberikan Oleh / Aksi. "Tambah Akses" is backed by
+  accepted) / Diberikan Oleh / Aksi. Accepted and pending rows are listed together — the tab never
+  filters by `status`. The tab renders one of two shapes, never both: with rows, a single white
+  `p-5 sm:p-6` card holds the `Admin {label}` heading, its description, the "Tambah Akses" button,
+  and the bordered table together; with none, the heading/description/button row is dropped
+  entirely and only `EmptyState` renders, carrying "Tambah Akses" as its own `action` CTA —
+  repeating a description above an illustration that already says the same thing read as
+  duplicated copy. "Tambah Akses" is backed by
   `/api/users/search?coordinating_body_id=`/`?branch_id=`/`?coordinating_chapter_id=`/`?chapter_id=`
   (that Route Handler now maps all four scopes through one `SCOPES` table, each authorized with
   `canManageEntity`) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant.
-  The revoke `Trash2` button per row calls `revokeAccessGrant(grant.id)` — note it takes the
+  The per-row revoke button (a default-size outlined `UserMinus` + "Revoke", deliberately not a
+  bare trash icon — this withdraws a person's access, it doesn't delete a record) calls
+  `revokeAccessGrant(grant.id)` — note it takes the
   *grant* id, not a user id, and the backend cascades to everything that holder went on to grant,
   which the toast reports via `revoked_count` — the cascade follows only grants that holder issued
   on **this same entity**, not everything they ever granted. Both controls are gated on `canManageAccess`, which
@@ -1891,6 +1903,15 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   through. Since that is the same check the scope's own layout already gates entry on, anyone who
   can open the page can also manage its access — the prop stays explicit rather than being assumed
   inside `EntityAccessTab`, so a future read-only embedding of that tab can pass `false`.
+  The same component is also the last tab ("Akses", `ShieldCheck`, `?tab=access`) on Master's own
+  four entity detail pages — `/master/coordinating-bodies/[id]`, `/master/branches/[id]`,
+  `/master/coordinating-chapters/[id]`, and `/master/chapters/[id]`. Each of those four route
+  files adds `listAllAccessGrants(entityType, id)` to its existing `Promise.all` and passes the
+  result as the detail page's optional `accessGrants` prop plus `canManageAccess` — that prop is
+  what makes the tab appear at all, so the other scopes rendering the same four detail components
+  (Organization's, a Badko's Cabang view, a Cabang's Komisariat view, a Korkom's) leave it unset
+  and show no Akses tab. `canManageAccess` is passed unconditionally there because `MasterLayout`
+  already gates every `/master/*` route on literal `Super Admin`.
 - Every one of the five scoped admin dashboards (`/organizations/[organization_id]/structural`,
   `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
   `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`

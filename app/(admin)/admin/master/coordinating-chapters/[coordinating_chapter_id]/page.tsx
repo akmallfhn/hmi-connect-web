@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import { listUsers } from "@/apis/users";
@@ -23,7 +24,12 @@ interface MasterCoordinatingChapterDetailPageProps {
 }
 
 function parseTab(tab?: string): CoordinatingChapterDetailTab {
-  if (tab === "management" || tab === "chapters" || tab === "trainings") {
+  if (
+    tab === "management" ||
+    tab === "chapters" ||
+    tab === "trainings" ||
+    tab === "access"
+  ) {
     return tab;
   }
   return "profile";
@@ -42,20 +48,22 @@ export default async function MasterCoordinatingChapterDetailPage({
   );
   if (!coordinatingChapter) notFound();
 
-  const [chapters, memberResult, structuralOverview] = await Promise.all([
-    listAllChaptersAdmin({ coordinatingChapterId: coordinating_chapter_id }),
-    listUsers({
-      coordinatingChapterId: coordinating_chapter_id,
-      status: "active",
-      page: 1,
-      pageSize: 1,
-    }),
-    getStructuralOverview(
-      "coordinating_chapter",
-      coordinating_chapter_id,
-      query.period ? Number(query.period) : null
-    ),
-  ]);
+  const [chapters, memberResult, structuralOverview, accessGrants] =
+    await Promise.all([
+      listAllChaptersAdmin({ coordinatingChapterId: coordinating_chapter_id }),
+      listUsers({
+        coordinatingChapterId: coordinating_chapter_id,
+        status: "active",
+        page: 1,
+        pageSize: 1,
+      }),
+      getStructuralOverview(
+        "coordinating_chapter",
+        coordinating_chapter_id,
+        query.period ? Number(query.period) : null
+      ),
+      listAllAccessGrants("coordinating_chapter", coordinating_chapter_id),
+    ]);
 
   // A Korkom never organizes its own trainings — LK1 is organized per Komisariat, so this aggregates every chapter's own trainings/list into one feed.
   const trainingResults = await Promise.all(
@@ -84,6 +92,8 @@ export default async function MasterCoordinatingChapterDetailPage({
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      accessGrants={accessGrants}
+      canManageAccess
       initialTab={parseTab(query.tab)}
       backHref="/master/coordinating-chapters"
       allowEdit

@@ -11,6 +11,7 @@ import {
   MapPin,
   Pencil,
   Power,
+  ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { BranchDetail } from "@/apis/branches";
 import type { ChapterListEntry } from "@/apis/chapters";
 import type {
@@ -29,6 +31,7 @@ import type { TrainingListEntry } from "@/apis/trainings";
 import { updateBranch } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
+import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditBranchFormSheet from "../forms/EditBranchFormSheet";
@@ -42,7 +45,12 @@ import {
   TrainingStatusLabel,
 } from "../trainings/TrainingLabels";
 
-export type BranchDetailTab = "profile" | "management" | "chapters" | "trainings";
+export type BranchDetailTab =
+  | "profile"
+  | "management"
+  | "chapters"
+  | "trainings"
+  | "access";
 
 interface BranchDetailPageProps {
   branch: BranchDetail;
@@ -59,6 +67,9 @@ interface BranchDetailPageProps {
   allowStatusChange?: boolean;
   // Passed through to the Edit sheet — locks the Badko field when viewed from a Badko's own scoped "Kelola Cabang" page.
   lockCoordinatingBody?: boolean;
+  // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
+  accessGrants?: AccessGrantEntry[] | null;
+  canManageAccess?: boolean;
 }
 
 const TABS: { id: BranchDetailTab; label: string; icon: LucideIcon }[] = [
@@ -67,6 +78,12 @@ const TABS: { id: BranchDetailTab; label: string; icon: LucideIcon }[] = [
   { id: "chapters", label: "Daftar Komisariat", icon: GraduationCap },
   { id: "trainings", label: "Latihan Kader", icon: Award },
 ];
+
+const ACCESS_TAB = {
+  id: "access" as const,
+  label: "Akses",
+  icon: ShieldCheck,
+};
 
 function formatBranchName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?cabang\s+/i, "").trim();
@@ -125,6 +142,8 @@ export default function BranchDetailPage({
   allowEdit = true,
   allowStatusChange = true,
   lockCoordinatingBody = false,
+  accessGrants = null,
+  canManageAccess = false,
 }: BranchDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -143,6 +162,8 @@ export default function BranchDetailPage({
     setSeenTab(initialTab);
     setActiveTab(initialTab);
   }
+
+  const tabs = accessGrants ? [...TABS, ACCESS_TAB] : TABS;
 
   function selectTab(tab: BranchDetailTab) {
     setActiveTab(tab);
@@ -292,7 +313,7 @@ export default function BranchDetailPage({
           aria-label="Detail Cabang"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
@@ -464,6 +485,15 @@ export default function BranchDetailPage({
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "access" && accessGrants && (
+          <EntityAccessTab
+            entityType="branch"
+            entityId={branch.id}
+            grants={accessGrants}
+            canManageAccess={canManageAccess}
+          />
         )}
       </div>
 

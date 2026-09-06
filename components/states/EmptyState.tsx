@@ -1,11 +1,18 @@
+import type { ReactNode } from "react";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 
 interface EmptyStateProps {
   title: string;
   description: string;
+  // Optional CTA under the description — the empty state itself carries the action.
+  action?: ReactNode;
 }
 
-export default function EmptyState({ title, description }: EmptyStateProps) {
+export default function EmptyState({
+  title,
+  description,
+  action,
+}: EmptyStateProps) {
   return (
     <div className="flex min-h-80 flex-col items-center justify-center px-5 py-16 text-center">
       <EmptyStateIllustration className="h-auto w-56" aria-hidden="true" />
@@ -15,6 +22,7 @@ export default function EmptyState({ title, description }: EmptyStateProps) {
       <p className="mt-1 max-w-md text-sm leading-6 text-[#5f6573] xl:text-base">
         {description}
       </p>
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

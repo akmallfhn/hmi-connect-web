@@ -24,6 +24,7 @@ export type AccessGrantEntry = {
   accepted_at?: string | null;
   user_full_name?: string;
   user_username?: string;
+  user_email?: string;
   user_avatar?: string | null;
   granted_by_name?: string;
 };

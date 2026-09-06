@@ -10,6 +10,7 @@ import {
   MapPin,
   Pencil,
   Power,
+  ShieldCheck,
   Users,
   Waypoints,
   type LucideIcon,
@@ -19,6 +20,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { ChapterListEntry } from "@/apis/chapters";
 import type { CoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import type {
@@ -29,6 +31,7 @@ import type { TrainingListEntry } from "@/apis/trainings";
 import { updateCoordinatingChapter } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
+import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditCoordinatingChapterFormSheet from "../forms/EditCoordinatingChapterFormSheet";
@@ -46,7 +49,8 @@ export type CoordinatingChapterDetailTab =
   | "profile"
   | "management"
   | "chapters"
-  | "trainings";
+  | "trainings"
+  | "access";
 
 interface CoordinatingChapterDetailPageProps {
   coordinatingChapter: CoordinatingChapterDetail;
@@ -61,6 +65,9 @@ interface CoordinatingChapterDetailPageProps {
   // Master manages Korkom directly; Cabang can create/suspend its own but not edit them.
   allowEdit?: boolean;
   allowStatusChange?: boolean;
+  // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
+  accessGrants?: AccessGrantEntry[] | null;
+  canManageAccess?: boolean;
 }
 
 const TABS: {
@@ -73,6 +80,12 @@ const TABS: {
   { id: "chapters", label: "Daftar Komisariat", icon: GraduationCap },
   { id: "trainings", label: "Latihan Kader", icon: Award },
 ];
+
+const ACCESS_TAB = {
+  id: "access" as const,
+  label: "Akses",
+  icon: ShieldCheck,
+};
 
 function formatCoordinatingChapterName(name: string) {
   const normalizedName = name.replace(/^korkom\s+/i, "").trim();
@@ -131,6 +144,8 @@ export default function CoordinatingChapterDetailPage({
   backHref,
   allowEdit = false,
   allowStatusChange = false,
+  accessGrants = null,
+  canManageAccess = false,
 }: CoordinatingChapterDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,6 +160,8 @@ export default function CoordinatingChapterDetailPage({
     setSeenTab(initialTab);
     setActiveTab(initialTab);
   }
+
+  const tabs = accessGrants ? [...TABS, ACCESS_TAB] : TABS;
 
   function selectTab(tab: CoordinatingChapterDetailTab) {
     setActiveTab(tab);
@@ -297,7 +314,7 @@ export default function CoordinatingChapterDetailPage({
           aria-label="Detail Korkom"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
@@ -461,6 +478,15 @@ export default function CoordinatingChapterDetailPage({
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "access" && accessGrants && (
+          <EntityAccessTab
+            entityType="coordinating_chapter"
+            entityId={coordinatingChapter.id}
+            grants={accessGrants}
+            canManageAccess={canManageAccess}
+          />
         )}
       </div>
 

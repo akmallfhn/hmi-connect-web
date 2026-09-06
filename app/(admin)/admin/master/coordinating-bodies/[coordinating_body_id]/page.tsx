@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import { listAllAccessGrants } from "@/apis/access-grants";
 import { getStructuralOverview } from "@/apis/structurals";
 import { listTrainings } from "@/apis/trainings";
 import CoordinatingBodyDetailPage, {
@@ -22,7 +23,12 @@ interface MasterCoordinatingBodyDetailPageProps {
 }
 
 function parseTab(tab?: string): CoordinatingBodyDetailTab {
-  if (tab === "management" || tab === "branches" || tab === "trainings") {
+  if (
+    tab === "management" ||
+    tab === "branches" ||
+    tab === "trainings" ||
+    tab === "access"
+  ) {
     return tab;
   }
   return "profile";
@@ -40,20 +46,22 @@ export default async function MasterCoordinatingBodyDetailPage({
     await getCoordinatingBodyDetail(coordinating_body_id);
   if (!coordinatingBody) notFound();
 
-  const [branches, trainingResult, structuralOverview] = await Promise.all([
-    listAllBranchesAdmin({ coordinatingBodyId: coordinating_body_id }),
-    listTrainings({
-      organizerType: "coordinating_body",
-      organizerId: coordinating_body_id,
-      page: 1,
-      pageSize: 100,
-    }),
-    getStructuralOverview(
-      "coordinating_body",
-      coordinating_body_id,
-      query.period ? Number(query.period) : null
-    ),
-  ]);
+  const [branches, trainingResult, structuralOverview, accessGrants] =
+    await Promise.all([
+      listAllBranchesAdmin({ coordinatingBodyId: coordinating_body_id }),
+      listTrainings({
+        organizerType: "coordinating_body",
+        organizerId: coordinating_body_id,
+        page: 1,
+        pageSize: 100,
+      }),
+      getStructuralOverview(
+        "coordinating_body",
+        coordinating_body_id,
+        query.period ? Number(query.period) : null
+      ),
+      listAllAccessGrants("coordinating_body", coordinating_body_id),
+    ]);
 
   return (
     <CoordinatingBodyDetailPage
@@ -63,6 +71,8 @@ export default async function MasterCoordinatingBodyDetailPage({
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      accessGrants={accessGrants}
+      canManageAccess
       initialTab={parseTab(query.tab)}
       backHref="/master/coordinating-bodies"
     />

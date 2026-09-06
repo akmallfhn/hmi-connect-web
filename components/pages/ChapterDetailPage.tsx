@@ -10,6 +10,7 @@ import {
   MapPin,
   Pencil,
   Power,
+  ShieldCheck,
   University,
   Users,
   type LucideIcon,
@@ -19,6 +20,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { ChapterDetail } from "@/apis/chapters";
 import type {
   StructuralPeriodDetail,
@@ -28,6 +30,7 @@ import type { TrainingListEntry } from "@/apis/trainings";
 import { updateChapter } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
+import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditChapterFormSheet from "../forms/EditChapterFormSheet";
@@ -41,7 +44,11 @@ import {
   TrainingStatusLabel,
 } from "../trainings/TrainingLabels";
 
-export type ChapterDetailTab = "profile" | "management" | "trainings";
+export type ChapterDetailTab =
+  | "profile"
+  | "management"
+  | "trainings"
+  | "access";
 
 interface ChapterDetailPageProps {
   chapter: ChapterDetail;
@@ -56,6 +63,9 @@ interface ChapterDetailPageProps {
   allowEdit?: boolean;
   // Suspend/Aktifkan is Master + Cabang; Korkom's view can't change status.
   allowStatusChange?: boolean;
+  // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
+  accessGrants?: AccessGrantEntry[] | null;
+  canManageAccess?: boolean;
 }
 
 const TABS: { id: ChapterDetailTab; label: string; icon: LucideIcon }[] = [
@@ -63,6 +73,12 @@ const TABS: { id: ChapterDetailTab; label: string; icon: LucideIcon }[] = [
   { id: "management", label: "Kepengurusan", icon: Users },
   { id: "trainings", label: "Latihan Kader", icon: Award },
 ];
+
+const ACCESS_TAB = {
+  id: "access" as const,
+  label: "Akses",
+  icon: ShieldCheck,
+};
 
 function formatChapterName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
@@ -124,6 +140,8 @@ export default function ChapterDetailPage({
   backHref,
   allowEdit = false,
   allowStatusChange = false,
+  accessGrants = null,
+  canManageAccess = false,
 }: ChapterDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -137,6 +155,8 @@ export default function ChapterDetailPage({
     setSeenTab(initialTab);
     setActiveTab(initialTab);
   }
+
+  const tabs = accessGrants ? [...TABS, ACCESS_TAB] : TABS;
 
   function selectTab(tab: ChapterDetailTab) {
     setActiveTab(tab);
@@ -282,7 +302,7 @@ export default function ChapterDetailPage({
           aria-label="Detail Komisariat"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
@@ -420,6 +440,15 @@ export default function ChapterDetailPage({
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "access" && accessGrants && (
+          <EntityAccessTab
+            entityType="chapter"
+            entityId={chapter.id}
+            grants={accessGrants}
+            canManageAccess={canManageAccess}
+          />
         )}
       </div>
 

@@ -12,6 +12,7 @@ import {
   MapPin,
   Pencil,
   Power,
+  ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { BranchListEntry } from "@/apis/branches";
 import type { CoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import type {
@@ -30,6 +32,7 @@ import type { TrainingListEntry } from "@/apis/trainings";
 import { updateCoordinatingBody } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
+import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
 import EditCoordinatingBodyFormSheet from "../forms/EditCoordinatingBodyFormSheet";
@@ -44,7 +47,11 @@ import {
 } from "../trainings/TrainingLabels";
 
 export type CoordinatingBodyDetailTab =
-  "profile" | "management" | "branches" | "trainings";
+  | "profile"
+  | "management"
+  | "branches"
+  | "trainings"
+  | "access";
 
 interface CoordinatingBodyDetailPageProps {
   coordinatingBody: CoordinatingBodyDetail;
@@ -57,6 +64,9 @@ interface CoordinatingBodyDetailPageProps {
   backHref: string;
   // Master manages Badko directly; Organization's view of a Badko is read-only (mirrors allowDelete on the list page).
   allowEdit?: boolean;
+  // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
+  accessGrants?: AccessGrantEntry[] | null;
+  canManageAccess?: boolean;
 }
 
 const TABS: {
@@ -69,6 +79,12 @@ const TABS: {
   { id: "branches", label: "Daftar Cabang", icon: GitBranch },
   { id: "trainings", label: "Latihan Kader", icon: GraduationCap },
 ];
+
+const ACCESS_TAB = {
+  id: "access" as const,
+  label: "Akses",
+  icon: ShieldCheck,
+};
 
 function formatCoordinatingBodyName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
@@ -125,6 +141,8 @@ export default function CoordinatingBodyDetailPage({
   initialTab,
   backHref,
   allowEdit = true,
+  accessGrants = null,
+  canManageAccess = false,
 }: CoordinatingBodyDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -148,6 +166,8 @@ export default function CoordinatingBodyDetailPage({
     setSeenTab(initialTab);
     setActiveTab(initialTab);
   }
+
+  const tabs = accessGrants ? [...TABS, ACCESS_TAB] : TABS;
 
   function selectTab(tab: CoordinatingBodyDetailTab) {
     setActiveTab(tab);
@@ -304,7 +324,7 @@ export default function CoordinatingBodyDetailPage({
           aria-label="Detail Badko"
           className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
@@ -475,6 +495,15 @@ export default function CoordinatingBodyDetailPage({
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "access" && accessGrants && (
+          <EntityAccessTab
+            entityType="coordinating_body"
+            entityId={coordinatingBody.id}
+            grants={accessGrants}
+            canManageAccess={canManageAccess}
+          />
         )}
       </div>
 
