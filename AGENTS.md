@@ -1957,11 +1957,15 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   anyone else gets a 403 that surfaces as `PageState` `not_found` instead of the card. Don't "fix"
   this by reading the grant out of the entity-scoped `access-grants/list`; that endpoint answers to
   any manager of the entity and would happily render another account's invitation. A `pending`
-  (unactivated) account is sent to `/activation` first. The page is a single centered card naming
-  the inviter and the scope with one Terima button; an already-`accepted` grant renders the same
-  card in a done state linking to the dashboard instead. Accepting hard-navigates
-  (`window.location.href`) to `{getAdminSiteOrigin()}{adminEntityHref(...)}` — the session still
-  holds the pre-accept grants until it is re-fetched, the same reason activation hard-navigates.
+  (unactivated) account is sent to `/activation` first. The page is a single centered card — the
+  horizontal wordmark inside the card, the inviter's name, the scope written as
+  `HMI {label} {entity_name}` in bold, and one Terima button. Deliberately nothing else: no icon,
+  no separate entity summary block, no "access starts once you accept" note, since the sentence
+  already says all of it. An already-`accepted` grant renders the same card in a done state
+  linking to the dashboard instead. Accepting hard-navigates (`window.location.href`) to
+  `{getAdminSiteOrigin()}{adminEntityHref(...)}` — `router.push` can't be used here, the admin
+  subdomain is a different origin, and the session still holds the pre-accept grants until it is
+  re-fetched anyway, the same reason activation hard-navigates.
 - Every one of the five scoped admin dashboards (`/organizations/[organization_id]/structural`,
   `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
   `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`

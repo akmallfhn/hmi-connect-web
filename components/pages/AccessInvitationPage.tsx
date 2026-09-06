@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import { acceptAccessGrant } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import LogoHmiConnect from "../svg/LogoHmiConnect";
+import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
 interface AccessInvitationPageProps {
   grant: AccessGrantEntry;
@@ -25,8 +25,8 @@ export default function AccessInvitationPage({
   const [isAccepting, setIsAccepting] = useState(false);
   const alreadyAccepted = grant.status === "accepted";
   const scope = grant.entity_name
-    ? `${entityLabel} ${grant.entity_name}`
-    : entityLabel;
+    ? `HMI ${entityLabel} ${grant.entity_name}`
+    : `HMI ${entityLabel}`;
 
   async function handleAccept() {
     setIsAccepting(true);
@@ -49,18 +49,10 @@ export default function AccessInvitationPage({
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-[#f5f7fb] px-5 py-12">
-      <LogoHmiConnect className="h-8 w-auto" />
+      <section className="w-full max-w-md rounded-2xl border border-[#e6e9ef] bg-white p-6 text-center sm:p-8">
+        <LogoHmiConnectHorizontal className="mx-auto h-8 w-auto" />
 
-      <section className="mt-6 w-full max-w-md rounded-2xl border border-[#e6e9ef] bg-white p-6 text-center sm:p-8">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
-          {alreadyAccepted ? (
-            <CheckCircle2 className="size-7" />
-          ) : (
-            <ShieldCheck className="size-7" />
-          )}
-        </div>
-
-        <h1 className="mt-5 text-xl font-bold text-[#172033]">
+        <h1 className="mt-6 text-xl font-bold text-[#172033]">
           {alreadyAccepted
             ? `Kamu sudah jadi admin ${entityLabel} ini`
             : `Kamu diundang sebagai Admin ${entityLabel}`}
@@ -70,7 +62,8 @@ export default function AccessInvitationPage({
           {alreadyAccepted ? (
             <>
               Undangan ini sudah kamu terima sebelumnya. Kamu bisa langsung
-              membuka dashboard {scope}.
+              membuka dashboard{" "}
+              <strong className="text-[#172033]">{scope}</strong> di HMI Connect.
             </>
           ) : (
             <>
@@ -84,15 +77,12 @@ export default function AccessInvitationPage({
               ) : (
                 "Kamu diundang"
               )}{" "}
-              untuk mengelola dashboard {scope} di HMI Connect.
+              untuk mengelola dashboard{" "}
+              <strong className="text-[#172033]">{scope}</strong> di HMI
+              Connect.
             </>
           )}
         </p>
-
-        <div className="mt-5 rounded-xl border border-[#e6e9ef] bg-[#f9fafc] px-4 py-3 text-left">
-          <p className="text-[13px] text-[#5f6573]">Entitas yang dikelola</p>
-          <p className="mt-0.5 text-[15px] font-bold text-[#172033]">{scope}</p>
-        </div>
 
         {alreadyAccepted ? (
           <a href={dashboardUrl} className="mt-6 block">
@@ -101,21 +91,16 @@ export default function AccessInvitationPage({
             </Button>
           </a>
         ) : (
-          <>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={handleAccept}
-              disabled={isAccepting}
-              className="mt-6 w-full"
-            >
-              {isAccepting && <Loader2 className="size-4 animate-spin" />}
-              {isAccepting ? "Memproses..." : "Terima"}
-            </Button>
-            <p className="mt-3 text-xs text-[#5f6573]">
-              Akses baru aktif setelah kamu menerimanya.
-            </p>
-          </>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleAccept}
+            disabled={isAccepting}
+            className="mt-6 w-full"
+          >
+            {isAccepting && <Loader2 className="size-4 animate-spin" />}
+            {isAccepting ? "Memproses..." : "Terima"}
+          </Button>
         )}
 
         <Link
