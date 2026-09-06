@@ -54,15 +54,14 @@ export default function AccessInvitationPage({
 
         <h1 className="mt-6 text-xl font-bold text-[#172033]">
           {alreadyAccepted
-            ? `Kamu sudah jadi admin ${entityLabel} ini`
+            ? `Sukses!`
             : `Kamu diundang sebagai Admin ${entityLabel}`}
         </h1>
 
         <p className="mt-2 leading-relaxed text-[#5f6573]">
           {alreadyAccepted ? (
             <>
-              Undangan ini sudah kamu terima sebelumnya. Kamu bisa langsung
-              membuka dashboard{" "}
+              kamu telah terdaftar sebagai Admin{" "}
               <strong className="text-[#172033]">{scope}</strong> di HMI
               Connect.
             </>
