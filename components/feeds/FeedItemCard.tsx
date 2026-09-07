@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Ban,
   Eye,
   Heart,
   MessageCircle,
@@ -18,6 +19,7 @@ import {
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
+import Label from "../common/Label";
 import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
@@ -39,6 +41,7 @@ import {
   repostFeed,
   unrepostFeed,
 } from "@/lib/actions";
+import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 
@@ -205,6 +208,7 @@ export default function FeedItemCard({
   onFeedCreated,
 }: FeedItemCardProps) {
   const router = useRouter();
+  const author = resolveFeedAuthor(feed);
   const reaction = useReaction("feed", feed.id, {
     myReaction: feed.my_reaction,
     total: feed.reaction_count.total,
@@ -225,6 +229,8 @@ export default function FeedItemCard({
   const [reposted, setReposted] = useState(Boolean(initialReposted));
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
+  // An entity feed speaks for the entity, not its author, so amplifying it is fair game.
+  const isOwnPersonalFeed = isOwnFeed && !feed.author_entity_type;
 
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState<FeedComment[]>(
@@ -285,7 +291,7 @@ export default function FeedItemCard({
 
   function toggleRepost() {
     if (!requireVerified()) return;
-    if (isOwnFeed) return;
+    if (isOwnPersonalFeed) return;
 
     const nextReposted = !reposted;
     setReposted(nextReposted);
@@ -363,19 +369,17 @@ export default function FeedItemCard({
         </div>
       )}
       <div className="flex items-start justify-between gap-3">
-        <Link
-          href={`/profile/${feed.creator_username}`}
-          className="flex items-start gap-3"
-        >
-          <Avatar
-            src={feed.creator_avatar}
-            name={feed.creator_full_name}
-            size={44}
-          />
-          <div>
-            <p className="font-semibold text-[#172033]">
-              {feed.creator_full_name}
-            </p>
+        <Link href={author.href} className="flex min-w-0 items-start gap-3">
+          <Avatar src={author.avatar} name={author.name} size={44} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="font-semibold text-[#172033]">{author.name}</p>
+              {author.isEntity && (
+                <Label variant="blue" size="sm">
+                  Official Account
+                </Label>
+              )}
+            </div>
             <p className="text-xs text-[#5f6573] xl:text-[13px]">
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
@@ -443,7 +447,11 @@ export default function FeedItemCard({
         />
       )}
       {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
-      {feed.repost_of && <QuotedFeed feed={feed.repost_of} />}
+      {feed.repost_of ? (
+        <QuotedFeed feed={feed.repost_of} />
+      ) : (
+        feed.repost_of_id && <DeletedQuotedFeed />
+      )}
 
       {reaction.reactionCount > 0 && (
         <button
@@ -523,9 +531,11 @@ export default function FeedItemCard({
             <button
               type="button"
               onClick={toggleRepost}
-              disabled={isOwnFeed}
+              disabled={isOwnPersonalFeed}
               title={
-                isOwnFeed ? "Tidak bisa me-repost postingan sendiri" : undefined
+                isOwnPersonalFeed
+                  ? "Tidak bisa me-repost postingan sendiri"
+                  : undefined
               }
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1] xl:text-[15px]"
             >
@@ -663,12 +673,22 @@ export default function FeedItemCard({
         open={showShareModal}
         onClose={() => setShowShareModal(false)}
         url={shareUrl}
-        text={`Lihat postingan dari ${feed.creator_full_name} di HMI Connect`}
+        text={`Lihat postingan dari ${author.name} di HMI Connect`}
       />
       <ImagePreviewModal
         photo={previewPhoto}
         onClose={() => setPreviewPhoto(null)}
       />
     </article>
+  );
+}
+
+// A quote repost keeps its own words after the quoted feed is deleted — say so rather than showing an empty card.
+function DeletedQuotedFeed() {
+  return (
+    <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-3 py-4 text-sm text-[#5f6573]">
+      <Ban className="size-4 shrink-0" />
+      Postingan yang dibagikan sudah dihapus.
+    </div>
   );
 }

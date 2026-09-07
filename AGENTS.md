@@ -902,7 +902,20 @@ iconSm`.
   header, prepends a new feed via `handleFeedCreated` (passed to both `CreateFeedForms`'s
   `onCreated` and each `FeedItemCard`'s `onFeedCreated` — the latter fires from quote
   repost, since that also creates a new top-level feed), and removes a feed from local
-  state when `FeedItemCard`'s `onDeleted` fires. `FeedItemCard.tsx` renders a feed's
+  state when `FeedItemCard`'s `onDeleted` fires. A feed can be posted **as an entity** — `feeds/create` takes
+  `author_entity_type`/`author_entity_id`, and every feed item then carries
+  `author_entity_name`/`author_entity_image_url` resolved live (`null` on a personal feed;
+  `creator_*` still names the human who pressed post, always). `lib/feed-author.ts#resolveFeedAuthor`
+  is the single place that decides which of the two a feed renders under, so `FeedItemCard`,
+  `QuotedFeed`, and `ActivityEntryCard` never branch on it themselves: it returns the display name
+  (`HMI Cabang {name}`, `HMI Badko {name}`, ... — an organization is named outright, and an existing
+  prefix in the stored name is stripped before one is added), the entity logo, an `isEntity` flag
+  driving the blue `Official Account` pill, and the profile href from `entityProfileHref` —
+  `/branches/{id}` and friends, routes that **don't exist yet** and are wired ahead of the pages.
+  A quote repost whose original was deleted comes back as `repost_of_id` set with `repost_of` null;
+  both `FeedItemCard` and `ActivityEntryCard` render "Postingan yang dibagikan sudah dihapus" there
+  rather than silently dropping the quote, since the quote repost keeps its own words either way.
+  `FeedItemCard.tsx` renders a feed's
   content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.

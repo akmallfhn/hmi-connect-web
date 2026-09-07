@@ -2,7 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type FeedMediaTypeEnum, type ReactionTypeEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type FeedMediaTypeEnum,
+  type ReactionTypeEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type FeedReactionCount = {
@@ -23,6 +28,11 @@ export type Feed = {
   creator_full_name: string;
   creator_username: string;
   creator_avatar?: string;
+  // Set when the feed was posted on behalf of an entity — render its name and logo instead of the creator's.
+  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_id?: string | null;
+  author_entity_name?: string | null;
+  author_entity_image_url?: string | null;
   content: string;
   media?: FeedMedia[];
   repost_of_id?: string;

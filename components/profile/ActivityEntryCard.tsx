@@ -10,6 +10,7 @@ import type { ActivityEntry } from "@/apis/users";
 import type { ActivityTypeEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import QuotedFeed from "../feeds/QuotedFeed";
+import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 
 const TYPE_LABEL: Record<ActivityTypeEnum, string> = {
@@ -31,6 +32,7 @@ const TYPE_ICON: Record<ActivityTypeEnum, typeof FileText> = {
 export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
   const { type, feed, comment } = entry;
   const Icon = TYPE_ICON[type];
+  const author = resolveFeedAuthor(feed);
 
   return (
     <Link href={`/feeds/${feed.id}`} className="block rounded-xl">
@@ -47,13 +49,9 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
           </p>
           <div className="mt-2 rounded-xl border border-[#e6e9ef] p-3">
             <div className="flex items-center gap-2">
-              <Avatar
-                src={feed.creator_avatar}
-                name={feed.creator_full_name}
-                size={24}
-              />
+              <Avatar src={author.avatar} name={author.name} size={24} />
               <p className="truncate text-xs font-semibold text-[#172033] xl:text-sm">
-                {feed.creator_full_name}
+                {author.name}
               </p>
             </div>
             <p className="mt-1 line-clamp-2 text-xs text-[#5f6573] xl:text-sm">
@@ -68,7 +66,15 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
           <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-[#172033] xl:text-[15px]">
             {feed.content}
           </p>
-          {feed.repost_of && <QuotedFeed feed={feed.repost_of} />}
+          {feed.repost_of ? (
+            <QuotedFeed feed={feed.repost_of} />
+          ) : (
+            feed.repost_of_id && (
+              <p className="mt-3 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-3 py-4 text-sm text-[#5f6573]">
+                Postingan yang dibagikan sudah dihapus.
+              </p>
+            )
+          )}
         </>
       )}
 
