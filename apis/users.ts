@@ -3,10 +3,9 @@ import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
-import type { Feed, FeedComment } from "./feeds";
+import type { ActivityEntry } from "./feeds";
 import {
   isSuccessStatus,
-  type ActivityTypeEnum,
   type Degree,
   type GenderEnum,
   type TrainingResultEnum,
@@ -964,14 +963,6 @@ export async function listSocialMediaAccounts(
   const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
   return { list, hasMore };
 }
-
-// Mirrors POST /api/v1/users/activity/list's response — one entry of a user's merged post/repost/comment activity.
-export type ActivityEntry = {
-  type: ActivityTypeEnum;
-  created_at: string;
-  feed: Feed;
-  comment: FeedComment | null;
-};
 
 // Gated by the org client secret like getUserByUsername, but reads the viewer's own session
 // cookie too so nested feed/comment carry viewer-scoped fields (my_reaction) when logged in.

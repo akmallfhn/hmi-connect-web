@@ -140,6 +140,7 @@ import {
   deleteCommentReply as deleteCommentReplyApi,
   deleteFeed as deleteFeedApi,
   listCommentReplies as listCommentRepliesApi,
+  listEntityActivity as listEntityActivityApi,
   listFeedComments as listFeedCommentsApi,
   listFeeds as listFeedsApi,
   repostFeed as repostFeedApi,
@@ -189,7 +190,11 @@ import {
   type UpdateTrainingMaterialPayload,
   type UpdateTrainingPayload,
 } from "@/apis/trainings";
-import type { ReactionTargetTypeEnum, ReactionTypeEnum } from "@/lib/types";
+import type {
+  AccessEntityTypeEnum,
+  ReactionTargetTypeEnum,
+  ReactionTypeEnum,
+} from "@/lib/types";
 
 export async function activateUser(payload: ActivationPayload) {
   return activateUserApi(payload);
@@ -422,6 +427,14 @@ export async function listFollowers(userId: string, page?: number) {
 
 export async function loadMoreUserActivity(username: string, page: number) {
   return listUserActivityApi(username, { page, pageSize: 20 });
+}
+
+export async function loadMoreEntityActivity(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+  page: number
+) {
+  return listEntityActivityApi(entityType, entityId, { page, pageSize: 20 });
 }
 
 export async function createEducationHistory(

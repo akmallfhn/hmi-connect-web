@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
+import { listEntityActivity } from "@/apis/feeds";
 import {
   getCoordinatingBodyDetail,
   listCoordinatingBodiesAdmin,
@@ -51,13 +52,16 @@ export default async function CoordinatingBodyProfile({
     return notFound();
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
-  const [siblings, branches, structural] = await Promise.all([
+  const [siblings, branches, structural, activity] = await Promise.all([
     listCoordinatingBodiesAdmin({ status: "active", pageSize: 100 }),
     listAllBranchesAdmin({
       coordinatingBodyId: coordinating_body_id,
       status: "active",
     }),
     getStructuralOverview("coordinating_body", coordinating_body_id, null),
+    listEntityActivity("coordinating_body", coordinating_body_id, {
+      pageSize: 3,
+    }),
   ]);
   const self = siblings.list.find((row) => row.id === coordinating_body_id);
 
@@ -66,6 +70,8 @@ export default async function CoordinatingBodyProfile({
   return (
     <EntityProfilePage
       entity={{
+        entityType: "coordinating_body",
+        entityId: coordinating_body_id,
         name: formatEntityAuthorName(
           "coordinating_body",
           coordinatingBody.name
@@ -92,6 +98,7 @@ export default async function CoordinatingBodyProfile({
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
         structuralPeriod: structural.selectedPeriod,
+        activities: activity.list,
         children: {
           title: "Daftar Cabang",
           emptyMessage: "Belum ada Cabang yang terdaftar.",

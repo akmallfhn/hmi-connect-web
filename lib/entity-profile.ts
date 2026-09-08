@@ -21,6 +21,22 @@ export function kaderMeta(userCount?: number): string | undefined {
   return userCount === undefined ? undefined : `${userCount} kader`;
 }
 
+export function entityActivitiesMetadata(options: {
+  entityType: AccessEntityTypeEnum;
+  entityId: string;
+  name: string | null;
+}): Metadata {
+  const { entityType, entityId, name } = options;
+
+  return {
+    title: name ? `Postingan ${name}` : "Halaman Tidak Ditemukan",
+    alternates: {
+      canonical: `${entityProfileHref(entityType, entityId)}/activities`,
+    },
+    robots: { index: false, follow: false },
+  };
+}
+
 export function entityProfileMetadata(options: {
   entityType: AccessEntityTypeEnum;
   entityId: string;

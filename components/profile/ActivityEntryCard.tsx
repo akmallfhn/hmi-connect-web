@@ -6,7 +6,7 @@ import {
   MessageSquareQuote,
   Repeat2,
 } from "lucide-react";
-import type { ActivityEntry } from "@/apis/users";
+import type { ActivityEntry } from "@/apis/feeds";
 import type { ActivityTypeEnum } from "@/lib/types";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import QuotedFeed from "../feeds/QuotedFeed";

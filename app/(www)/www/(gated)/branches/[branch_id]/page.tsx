@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getBranchDetail, listAllBranchesAdmin } from "@/apis/branches";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { listCoordinatingChaptersAdmin } from "@/apis/coordinating-chapters";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
@@ -45,7 +46,7 @@ export default async function BranchProfile({
   if (!branch || branch.status !== "active") return notFound();
 
   // A Cabang's own kader/Komisariat counts are only exposed on its Badko's branch list row.
-  const [siblings, chapters, coordinatingChapters, structural] =
+  const [siblings, chapters, coordinatingChapters, structural, activity] =
     await Promise.all([
       listAllBranchesAdmin({
         coordinatingBodyId: branch.coordinating_body_id,
@@ -58,6 +59,7 @@ export default async function BranchProfile({
         pageSize: 1,
       }),
       getStructuralOverview("branch", branch_id, null),
+      listEntityActivity("branch", branch_id, { pageSize: 3 }),
     ]);
   const self = siblings.find((row) => row.id === branch_id);
 
@@ -70,6 +72,8 @@ export default async function BranchProfile({
   return (
     <EntityProfilePage
       entity={{
+        entityType: "branch",
+        entityId: branch_id,
         name: formatEntityAuthorName("branch", branch.name),
         imageUrl: branch.image_url,
         description: branch.description,
@@ -108,6 +112,7 @@ export default async function BranchProfile({
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
         structuralPeriod: structural.selectedPeriod,
+        activities: activity.list,
         children: {
           title: "Daftar Komisariat",
           emptyMessage: "Belum ada Komisariat yang terdaftar.",

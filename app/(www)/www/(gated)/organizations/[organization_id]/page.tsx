@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
+import { listEntityActivity } from "@/apis/feeds";
 import { getOrganizationDetail } from "@/apis/organizations";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
@@ -43,18 +44,21 @@ export default async function OrganizationProfile({
 
   if (!organization || organization.status !== "active") return notFound();
 
-  const [coordinatingBodies, structural] = await Promise.all([
+  const [coordinatingBodies, structural, activity] = await Promise.all([
     listCoordinatingBodiesAdmin({
       organizationId: organization_id,
       status: "active",
       pageSize: 100,
     }),
     getStructuralOverview("organization", organization_id, null),
+    listEntityActivity("organization", organization_id, { pageSize: 3 }),
   ]);
 
   return (
     <EntityProfilePage
       entity={{
+        entityType: "organization",
+        entityId: organization_id,
         name: formatEntityAuthorName("organization", organization.name),
         imageUrl: organization.logo_url,
         // organizations/detail carries no description, so the Tentang card stays hidden here.
@@ -80,6 +84,7 @@ export default async function OrganizationProfile({
           },
         ],
         structuralPeriod: structural.selectedPeriod,
+        activities: activity.list,
         children: {
           title: "Daftar Badko",
           emptyMessage: "Belum ada Badko yang terdaftar.",

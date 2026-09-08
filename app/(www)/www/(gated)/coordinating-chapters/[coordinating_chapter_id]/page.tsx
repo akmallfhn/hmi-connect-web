@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
@@ -50,7 +51,7 @@ export default async function CoordinatingChapterProfile({
   if (!coordinatingChapter || coordinatingChapter.status !== "active")
     return notFound();
 
-  const [chapters, structural] = await Promise.all([
+  const [chapters, structural, activity] = await Promise.all([
     listAllChaptersAdmin({
       coordinatingChapterId: coordinating_chapter_id,
       status: "active",
@@ -60,6 +61,9 @@ export default async function CoordinatingChapterProfile({
       coordinating_chapter_id,
       null
     ),
+    listEntityActivity("coordinating_chapter", coordinating_chapter_id, {
+      pageSize: 3,
+    }),
   ]);
 
   const branchHref = entityProfileHref("branch", coordinatingChapter.branch_id);
@@ -67,6 +71,8 @@ export default async function CoordinatingChapterProfile({
   return (
     <EntityProfilePage
       entity={{
+        entityType: "coordinating_chapter",
+        entityId: coordinating_chapter_id,
         name: formatEntityAuthorName(
           "coordinating_chapter",
           coordinatingChapter.name
@@ -102,6 +108,7 @@ export default async function CoordinatingChapterProfile({
           },
         ],
         structuralPeriod: structural.selectedPeriod,
+        activities: activity.list,
         children: {
           title: "Daftar Komisariat",
           emptyMessage: "Belum ada Komisariat yang terdaftar.",

@@ -5,6 +5,7 @@ import { callApi, type ApiEnvelope } from "./api";
 import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
+  type ActivityTypeEnum,
   type FeedMediaTypeEnum,
   type ReactionTypeEnum,
 } from "@/lib/types";
@@ -123,6 +124,57 @@ export async function listFeeds(
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listFeeds] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  return {
+    list: result.data?.list ?? [],
+    hasMore: hasMoreFromMetapaging(result.data?.metapaging),
+  };
+}
+
+// Mirrors both users/activity/list and {entity}/activity/list — one entry of a merged post/repost/comment feed.
+export type ActivityEntry = {
+  type: ActivityTypeEnum;
+  created_at: string;
+  feed: Feed;
+  comment: FeedComment | null;
+};
+
+// The same activity/list endpoint is registered under all five entity resources, keyed by that level's own id.
+const ENTITY_ACTIVITY_PATH: Record<AccessEntityTypeEnum, string> = {
+  organization: "/api/v1/organizations/activity/list",
+  coordinating_body: "/api/v1/coordinating-bodies/activity/list",
+  branch: "/api/v1/branches/activity/list",
+  coordinating_chapter: "/api/v1/coordinating-chapters/activity/list",
+  chapter: "/api/v1/chapters/activity/list",
+};
+
+// An entity only ever posts under its own name, so `type` is always post or quote_repost here.
+export async function listEntityActivity(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+  options: { page?: number; pageSize?: number } = {}
+): Promise<{ list: ActivityEntry[]; hasMore: boolean }> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) return { list: [], hasMore: false };
+
+  const { page, pageSize } = options;
+  const result = await callApi<ListResponse<ActivityEntry>>(
+    ENTITY_ACTIVITY_PATH[entityType],
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        id: entityId,
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listEntityActivity] request failed:", result);
     return { list: [], hasMore: false };
   }
 

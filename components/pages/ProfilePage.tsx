@@ -1,7 +1,7 @@
 import type { Institution } from "@/apis/institutions";
+import type { ActivityEntry } from "@/apis/feeds";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
-  ActivityEntry,
   EducationHistoryEntry,
   HonorAwardEntry,
   OrganizationExperienceEntry,
@@ -140,7 +140,14 @@ export default function ProfilePage({
               entries={profile.honorAwards}
               isOwnProfile={isOwnProfile}
             />
-            <ActivityCard username={profile.username} entries={profile.activities} />
+            <ActivityCard
+              entries={profile.activities}
+              seeAllHref={
+                profile.username
+                  ? `/profile/${profile.username}/activities`
+                  : undefined
+              }
+            />
           </div>
 
           <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">

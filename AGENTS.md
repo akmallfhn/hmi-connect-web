@@ -1119,9 +1119,32 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   avatar in the feed, just larger — revealing that text as a `role="tooltip"` pill on hover (same
   `group-hover`/`opacity-0` treatment as `StructuralPage`'s `OfficerNode` position tooltip); the
   badge carries its own `aria-label`, since a tooltip alone says nothing on touch.
-  There is deliberately **no feed/activity section**:
-  `feeds/list` has no author-entity filter on the backend, so an entity's own postings can't be
-  listed yet — don't fake one from the home timeline.
+  Last comes the entity's own feed activity from `apis/feeds.ts#listEntityActivity` — the
+  entity-side twin of `users/activity/list`, registered by the backend under all five resources
+  (`/organizations/activity/list`, `/coordinating-bodies/activity/list`, ...) but implemented in its
+  `internal/feed`, which is why one `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covers all five rather
+  than a copy per `apis/*.ts` entity file. It splits exactly the way a user's activity does: the
+  profile page fetches `pageSize: 3` and renders the shared `components/profile/ActivityCard.tsx`
+  (titled "Postingan" here, "Aktivitas" on a user, via its `title`/`emptyMessage`/`seeAllHref`
+  props — `seeAllHref` replaced the old `username` prop so both callers can build their own link),
+  while the full history lives at `{entityProfileHref}/activities`, five explicit routes mirroring
+  the five profile routes. Those render `components/pages/EntityActivitiesPage.tsx`, the twin of
+  `ProfileActivitiesPage.tsx` — same two-column shell, but with
+  `components/entity/EntitySummarySidebar.tsx` in the aside instead of `ProfileSidebar`: the logo,
+  the name, and a link back — nothing else. No counts, since an entity's own live on its *parent's*
+  list row and a sidebar isn't worth refetching them for, and no level line either, since the name
+  already reads `HMI Korkom {name}`. Unlike the profile twin it does pass `mobileBackTitle`,
+  since the aside is `lg:`-only and mobile would otherwise have no way back. Both pages share
+  `components/profile/ActivityInfiniteList.tsx`, which owns the
+  infinite-scroll-via-`IntersectionObserver` list and takes a `loadMore(page)` closure so each
+  caller reaches its own Server Action (`loadMoreUserActivity` / `loadMoreEntityActivity`).
+  Rows render through the shared `ActivityEntryCard`, not `FeedItemCard`, matching how a user's own
+  activity renders; `type` is only ever `post` or `quote_repost` here, since reposts, comments, and
+  reactions still belong to a person, so `comment` is always `null`. This replaces the earlier rule
+  that there was deliberately no activity section — that held only while `feeds/list` had no
+  author-entity filter, and this endpoint is the answer, so still don't fake one from the home
+  timeline. `ActivityEntry` itself lives in `apis/feeds.ts` (not `users.ts`, which now imports it)
+  now that both a user and an entity return it.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered

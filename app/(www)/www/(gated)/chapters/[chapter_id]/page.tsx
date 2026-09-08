@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail, listAllChaptersAdmin } from "@/apis/chapters";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
@@ -42,9 +43,10 @@ export default async function ChapterProfile({
   if (!chapter || chapter.status !== "active") return notFound();
 
   // A Komisariat's own kader count is only exposed on its Cabang's chapter list row.
-  const [siblings, structural] = await Promise.all([
+  const [siblings, structural, activity] = await Promise.all([
     listAllChaptersAdmin({ branchId: chapter.branch_id, status: "active" }),
     getStructuralOverview("chapter", chapter_id, null),
+    listEntityActivity("chapter", chapter_id, { pageSize: 3 }),
   ]);
   const self = siblings.find((row) => row.id === chapter_id);
 
@@ -56,6 +58,8 @@ export default async function ChapterProfile({
   return (
     <EntityProfilePage
       entity={{
+        entityType: "chapter",
+        entityId: chapter_id,
         name: formatEntityAuthorName("chapter", chapter.name),
         imageUrl: chapter.image_url,
         description: chapter.description,
@@ -100,6 +104,7 @@ export default async function ChapterProfile({
         ],
         stats: [{ label: "Kader", value: self?.user_count ?? 0 }],
         structuralPeriod: structural.selectedPeriod,
+        activities: activity.list,
         children: null,
       }}
       viewer={viewer}

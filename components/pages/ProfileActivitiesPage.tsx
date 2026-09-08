@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ActivityEntry, EducationHistoryEntry } from "@/apis/users";
+import { useCallback } from "react";
+import type { ActivityEntry } from "@/apis/feeds";
+import type { EducationHistoryEntry } from "@/apis/users";
 import { loadMoreUserActivity } from "@/lib/actions";
 import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
-import ActivityEntryCard from "../profile/ActivityEntryCard";
+import ActivityInfiniteList from "../profile/ActivityInfiniteList";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
@@ -44,46 +45,10 @@ export default function ProfileActivitiesPage({
   profile,
   viewer,
 }: ProfileActivitiesPageProps) {
-  const [items, setItems] = useState(initialItems);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef(1);
-  const loadingRef = useRef(false);
-
-  const loadNextPage = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-
-    loadingRef.current = true;
-    setLoadingMore(true);
-    try {
-      const nextPage = pageRef.current + 1;
-      const result = await loadMoreUserActivity(username, nextPage);
-      setItems((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      pageRef.current = nextPage;
-    } finally {
-      loadingRef.current = false;
-      setLoadingMore(false);
-    }
-  }, [hasMore, username]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          loadNextPage();
-        }
-      },
-      { rootMargin: "600px 0px" }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loadNextPage]);
+  const loadMore = useCallback(
+    (page: number) => loadMoreUserActivity(username, page),
+    [username],
+  );
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
@@ -113,31 +78,12 @@ export default function ProfileActivitiesPage({
 
           <main className="min-w-0">
             <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
-              <div className="flex flex-col gap-4">
-                {items.length === 0 && (
-                  <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-center text-sm text-[#5f6573]">
-                    Belum ada aktivitas.
-                  </p>
-                )}
-
-                {items.map((entry, index) => (
-                  <div
-                    key={`${entry.type}-${entry.feed.id}-${entry.comment?.id ?? index}`}
-                    className="border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0"
-                  >
-                    <ActivityEntryCard entry={entry} />
-                  </div>
-                ))}
-
-                {(hasMore || loadingMore) && (
-                  <div
-                    ref={sentinelRef}
-                    className="flex h-12 items-center justify-center text-xs font-medium text-[#5f6573]"
-                  >
-                    {loadingMore ? "Memuat..." : null}
-                  </div>
-                )}
-              </div>
+              <ActivityInfiniteList
+                initialItems={initialItems}
+                initialHasMore={initialHasMore}
+                loadMore={loadMore}
+                emptyMessage="Belum ada aktivitas."
+              />
             </div>
           </main>
         </div>

@@ -21,12 +21,12 @@ export default function QuotedFeed({
   const body = (
     <>
       <div className="flex items-center gap-2">
-        <FeedAuthorAvatar author={author} size={28} />
+        <FeedAuthorAvatar author={author} size={36} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#172033]">
+          <p className="truncate text-[15px] font-semibold text-[#172033]">
             {author.name}
           </p>
-          <p className="text-xs text-[#5f6573]">
+          <p className="text-[13px] text-[#5f6573]">
             {formatRelativeTime(feed.created_at)}
           </p>
         </div>
