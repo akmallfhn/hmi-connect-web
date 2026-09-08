@@ -73,8 +73,9 @@ absolute URL and so can't be shared: `admin.example.com:3000` → `https://www.e
 different domains, so rule order no longer matters here the way it did while both were
 `example.com`. The three host matchers live in named consts at the top of `next.config.mts`
 (`WWW_HOSTS`, `ADMIN_HOSTS`, `ALL_HOSTS`) rather than being repeated per rule; each covers the real
-domain, the `hmi-connect-web.vercel.app` deploy host (kept so the raw deployment URL still renders),
-and the local `example.com` hosts-file entry. They end in `(:[0-9]+)?`, not `.*` — a trailing `.*`
+domain plus the local `example.com` hosts-file entry, and deliberately **not** the
+`hmi-connect-web.vercel.app` deploy host — Vercel permanently redirects that to `www.hmiconnect.id`,
+so no request ever reaches the app on it and matching it would be dead config. They end in `(:[0-9]+)?`, not `.*` — a trailing `.*`
 also matched `hmiconnect.id.attacker.com`, and only a port ever legitimately follows a host.
 `app/(admin)/admin/layout.tsx` gets the main site's origin via
 `lib/constants.ts#getMainSiteOrigin`, a static per-environment switch driven by `DOMAIN_MODE`
@@ -235,10 +236,11 @@ the SK and Konfercab routes are currently hidden from the Cabang sidebar.
   request host: `DOMAIN_MODE=local` returns the bare `"example.com"` (no leading dot), so
   the cookie is shared between `www.` and `admin.` locally; anything else returns the bare
   `"hmiconnect.id"`, which is what lets one session cover `www.` and `admin.` in production.
-  The browser rejects a `Domain` that doesn't match/superdomain the actual host, so login
-  silently doesn't persist on any host outside `hmiconnect.id` — the raw
-  `hmi-connect-web.vercel.app` deployment and per-deploy Vercel preview URLs included. Those hosts
-  still render (they're in `WWW_HOSTS`) but can't hold a session; use the real domain to sign in.
+  The browser rejects a `Domain` that doesn't match/superdomain the actual host, so a session can
+  only be held on `hmiconnect.id` itself. That's moot for the main deploy host, which Vercel
+  redirects to `www.hmiconnect.id`, but per-deploy preview URLs are a real gap: they serve on their
+  own `*.vercel.app` host, which `WWW_HOSTS` doesn't match either, so previews neither route nor
+  hold a session — sign in on the real domain.
   Any code that deletes this cookie must call the same helper (no arguments needed) or the
   browser won't match it — see `logoutUser()` in `apis/session.ts` and
   `GET /www/api/auth/clear-session` below.
@@ -495,13 +497,12 @@ no link when `"pending"` — and only renders the verified badge next to the acc
 ## Transactional email
 
 `lib/mailtrap.ts` (`import "server-only"`) wraps the `mailtrap` npm package's `MailtrapClient` —
-one shared client, sender fixed to `{ name: "HMI Connect", email: "no-reply@sevenpreneur.com" }`
-(temporary — `hmiconnect.id` isn't yet added/DNS-verified under this Mailtrap account's Sending
-Domains, `sevenpreneur.com` already is; swap the sender email to `hmiconnect.id` once it's
-verified there, don't do it before then or every send times out against Mailtrap's
-production `send.api.mailtrap.io`. Owning the domain is not the same as having verified it with
-Mailtrap.), one `sendEmail({ mailRecipients, mailSubject, mailBody?,
-mailHtml? })` function. Same shape as the
+one shared client, sender fixed to `{ name: "HMI Connect", email: "no-reply@hmiconnect.id" }`
+(it moved off the borrowed `sevenpreneur.com` sender once the real domain was in hand — note this
+only works while `hmiconnect.id` stays added and DNS-verified under this Mailtrap account's Sending
+Domains; an unverified sender domain doesn't bounce, it times out against Mailtrap's production
+`send.api.mailtrap.io`, so that's the first thing to check if sends start hanging),
+one `sendEmail({ mailRecipients, mailSubject, mailBody?, mailHtml? })` function. Same shape as the
 sibling `sevenpreneur` project's own `lib/mailtrap.ts`, minus its Prisma-backed `LogError` call
 (this repo has no DB access, so send failures here are just `console.error`'d by the caller).
 `components/emails/*` holds the actual templates as `@react-email/components` JSX (`Html`/`Body`/

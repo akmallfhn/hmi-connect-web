@@ -2,12 +2,12 @@ import type { NextConfig } from "next";
 
 const SESSION_COOKIE_NAME = "session_token_hmi";
 
-// Host matchers per site: the real domain, the vercel.app deploy host, and the local hosts-file entry.
+// Host matchers per site: the real domain plus the local hosts-file entry; Vercel redirects its own deploy host to www.
 const WWW_HOSTS =
-  "(www\\.example\\.com|(www\\.)?hmiconnect\\.id|hmi-connect-web\\.vercel\\.app)(:[0-9]+)?";
+  "(www\\.example\\.com|(www\\.)?hmiconnect\\.id)(:[0-9]+)?";
 const ADMIN_HOSTS = "(admin\\.example\\.com|admin\\.hmiconnect\\.id)(:[0-9]+)?";
 const ALL_HOSTS =
-  "((www|admin)\\.example\\.com|(www\\.|admin\\.)?hmiconnect\\.id|hmi-connect-web\\.vercel\\.app)(:[0-9]+)?";
+  "((www|admin)\\.example\\.com|(www\\.|admin\\.)?hmiconnect\\.id)(:[0-9]+)?";
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -144,7 +144,6 @@ const nextConfig: NextConfig = {
         "*.hmiconnect.id",
         "example.com",
         "*.example.com",
-        "hmi-connect-web.vercel.app",
       ],
     },
   },

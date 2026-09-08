@@ -13,10 +13,10 @@ const client = new MailtrapClient({
   token: process.env.MAILTRAP_API_TOKEN!,
 });
 
-// Temporary sender domain until hmiconnect.id is added and DNS-verified under Mailtrap's Sending Domains — swap back once that's done.
+// Only sends once hmiconnect.id is verified under Mailtrap's Sending Domains — an unverified domain times out.
 const sender = {
   name: "HMI Connect",
-  email: "no-reply@sevenpreneur.com",
+  email: "no-reply@hmiconnect.id",
 };
 
 export async function sendEmail({
