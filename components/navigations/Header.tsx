@@ -36,6 +36,7 @@ import {
   ADMIN_ENTITY_LABEL,
   ADMIN_ENTITY_ORDER,
   adminEntityHref,
+  officialEntityHref,
 } from "@/lib/access";
 
 interface HeaderProps {
@@ -79,7 +80,7 @@ export default function Header({
         .sort(
           (a, b) =>
             ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
+            ADMIN_ENTITY_ORDER.indexOf(b.entity_type),
         )
         .map((grant) => ({
           key: grant.id,
@@ -88,6 +89,7 @@ export default function Header({
             : ADMIN_ENTITY_LABEL[grant.entity_type],
           imageUrl: grant.entity_image_url,
           adminHref: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
+          officialHref: officialEntityHref(grant.entity_type, grant.entity_id),
         }))
     : [];
   // Super Admin manages no single entity, so its dashboard is a plain menu item, not a Kelola block.
@@ -285,15 +287,19 @@ export default function Header({
                               <span className="truncate">Dashboard</span>
                             </Button>
                           </a>
-                          {/* No public entity surface to send them to from here yet. */}
-                          <Button
-                            variant="soft"
-                            size="sm"
-                            className="min-w-0 flex-1 gap-1.5 px-2"
+                          <Link
+                            href={entity.officialHref}
+                            className="min-w-0 flex-1"
                           >
-                            <BadgeCheck className="size-3.5 shrink-0" />
-                            <span className="truncate">Official Account</span>
-                          </Button>
+                            <Button
+                              variant="soft"
+                              size="sm"
+                              className="w-full gap-1.5 px-2"
+                            >
+                              <BadgeCheck className="size-3.5 shrink-0" />
+                              <span className="truncate">Official Account</span>
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     ))}

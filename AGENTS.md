@@ -614,9 +614,9 @@ iconSm`.
   one row (`flex-1`, never wrapping — which is also why this one `Dropdown` passes
   `panelClassName="w-80"` instead of the default `w-72`: two labels this long don't fit side by side
   in 288px) — `Dashboard`, a cross-subdomain link to
-  `adminEntityHref(grant.entity_type, grant.entity_id)`, and `Official Account`, which is
-  **enabled but deliberately has no destination yet**; wire it to the public entity profile when
-  that's asked for, don't assume it was forgotten. Someone holding two Cabang gets two blocks, which
+  `adminEntityHref(grant.entity_type, grant.entity_id)`, and `Official Account`, a plain in-app
+  `<Link>` to `officialEntityHref(...)` (see the official-account routes below) — same-origin, so
+  unlike its neighbour it stays in the tab rather than opening the admin subdomain. Someone holding two Cabang gets two blocks, which
   the old membership-derived version could never express. `Super Admin` is **not** in this section —
   it manages no single entity, so it instead gets a plain `Dashboard Super Admin` item under
   Pengaturan in the menu above, linking to the admin subdomain root. The absolute admin origin comes from
@@ -1154,6 +1154,19 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   author-entity filter, and this endpoint is the answer, so still don't fake one from the home
   timeline. `ActivityEntry` itself lives in `apis/feeds.ts` (not `users.ts`, which now imports it)
   now that both a user and an entity return it.
+- `/official/{organizations,coordinating-bodies,branches,coordinating-chapters,chapters}/[id]` —
+  the five official-account surfaces, where someone acts *as* an entity rather than looking at it.
+  They live under `app/(www)/www/(gated)/official/`, so a logged-out visitor is bounced by
+  `next.config.mts`'s no-session rule, and their route segments come from `adminEntityHref` via
+  `lib/access.ts#officialEntityHref`, keeping the five paths spelled out in exactly one place.
+  The gate is **`holdsGrantAtEntity`, not `canManageEntity`** — a new helper that is `canManageEntity`
+  minus the `isSuperAdmin` shortcut (which now reads `isSuperAdmin(user) || holdsGrantAtEntity(...)`,
+  so the two can't drift). `Super Admin` is refused here on purpose: speaking in an entity's own
+  name is its appointed admins' job, and being the root of the grant chain does not make you a
+  Cabang. Anyone failing it gets `PageState` `forbidden`, checked **before** the entity is fetched so
+  a wrong id can't confirm what exists. All five render the shared
+  `components/pages/OfficialAccountPage.tsx`, currently identity plus a "Fitur akun resmi sedang
+  disiapkan." placeholder — the routes and their permission rule were built first, on purpose.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered
