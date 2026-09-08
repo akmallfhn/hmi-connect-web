@@ -10,6 +10,7 @@ import type { ActivityEntry } from "@/apis/users";
 import type { ActivityTypeEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import QuotedFeed from "../feeds/QuotedFeed";
+import Label from "../common/Label";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 
@@ -27,8 +28,6 @@ const TYPE_ICON: Record<ActivityTypeEnum, typeof FileText> = {
   comment: MessageCircle,
 };
 
-// One entry of a user's activity — reused by ActivityCard (top 3, on the profile page)
-// and the full /profile/[username]/activities list.
 export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
   const { type, feed, comment } = entry;
   const Icon = TYPE_ICON[type];
@@ -53,6 +52,11 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
               <p className="truncate text-xs font-semibold text-[#172033] xl:text-sm">
                 {author.name}
               </p>
+              {author.isEntity && (
+                <Label variant="blue" size="sm">
+                  Official Account
+                </Label>
+              )}
             </div>
             <p className="mt-1 line-clamp-2 text-xs text-[#5f6573] xl:text-sm">
               {feed.content}

@@ -2,7 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi } from "./api";
-import { isSuccessStatus, type SearchTypeEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type SearchTypeEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type SearchPersonResult = {
@@ -26,6 +30,11 @@ export type SearchPostingResult = {
   creator_full_name: string;
   creator_username: string;
   creator_avatar?: string;
+  // Set when the feed was posted on behalf of an entity — render its name and logo instead of the creator's.
+  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_id?: string | null;
+  author_entity_name?: string | null;
+  author_entity_image_url?: string | null;
   created_at: string;
 };
 

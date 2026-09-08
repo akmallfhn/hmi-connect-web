@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFeedById, listAllFeedComments } from "@/apis/feeds";
+import { resolveFeedAuthor } from "@/lib/feed-author";
 import { getSession } from "@/apis/session";
 import { getUserByUsername, listEducationHistories } from "@/apis/users";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
@@ -31,13 +32,14 @@ export async function generateMetadata({
       ? `${feed.content.slice(0, 137)}...`
       : feed.content;
   const image = feed.media?.find((item) => item.type === "photo")?.url;
+  const authorName = resolveFeedAuthor(feed).name;
 
   return {
-    title: `Postingan ${feed.creator_full_name}`,
+    title: `Postingan ${authorName}`,
     description,
     alternates: { canonical: `/feeds/${feed.id}` },
     openGraph: {
-      title: `${feed.creator_full_name} | HMI Connect`,
+      title: `${authorName} | HMI Connect`,
       description,
       url: `/feeds/${feed.id}`,
       type: "article",
@@ -45,7 +47,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title: `${feed.creator_full_name} | HMI Connect`,
+      title: `${authorName} | HMI Connect`,
       description,
       images: image ? [image] : undefined,
     },

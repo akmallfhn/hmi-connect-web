@@ -907,11 +907,13 @@ iconSm`.
   `author_entity_name`/`author_entity_image_url` resolved live (`null` on a personal feed;
   `creator_*` still names the human who pressed post, always). `lib/feed-author.ts#resolveFeedAuthor`
   is the single place that decides which of the two a feed renders under, so `FeedItemCard`,
-  `QuotedFeed`, and `ActivityEntryCard` never branch on it themselves: it returns the display name
+  `QuotedFeed`, `ActivityEntryCard`, `SearchPostingRow`, and `/feeds/[feed_id]`'s own metadata never
+  branch on it themselves: it takes a `FeedAuthorSource` (the author-bearing subset of `Feed`, which
+  `search/list`'s posting row satisfies too) and returns the display name
   (`HMI Cabang {name}`, `HMI Badko {name}`, ... — an organization is named outright, and an existing
   prefix in the stored name is stripped before one is added), the entity logo, an `isEntity` flag
   driving the blue `Official Account` pill, and the profile href from `entityProfileHref` —
-  `/branches/{id}` and friends, routes that **don't exist yet** and are wired ahead of the pages.
+  `/branches/{id}` and friends, the public entity profile pages described below.
   A quote repost whose original was deleted comes back as `repost_of_id` set with `repost_of` null;
   both `FeedItemCard` and `ActivityEntryCard` render "Postingan yang dibagikan sudah dihapus" there
   rather than silently dropping the quote, since the quote repost keeps its own words either way.
@@ -1062,6 +1064,49 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   paginated history lives at `/profile/[username]/activities`
   (`components/pages/ProfileActivitiesPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
   shape as `FeedTimeline`, backed by the `loadMoreUserActivity` Server Action).
+- `components/entity/*` + the five public entity profile routes — the page every
+  `entityProfileHref` link (feed author, quoted feed, activity entry, search posting row) points at.
+  There are **five explicit gated routes**, not one `[entity_type]` catch-all:
+  `app/(www)/www/(gated)/{organizations/[organization_id],coordinating-bodies/[coordinating_body_id],
+branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[chapter_id]}/page.tsx`.
+  The router is deliberately the dispatch here — each file knows exactly one entity, so there is no
+  `switch (entityType)` anywhere and no shared union type carrying another scope's optional parent
+  ids. A catch-all was tried first and rejected for two further reasons: it made every unmatched
+  two-segment URL run a session fetch before `notFound()`, and a dynamic slug at the first segment
+  permanently blocks ever adding root-level vanity handles (`/{username}`), since Next refuses two
+  different slug names at the same position. They sit under `(gated)` rather than beside the public
+  `/profile/[username]`, so a logged-out visitor is bounced by `next.config.mts`'s own no-session
+  rule — these paths are deliberately not in that rule's allowlist.
+  Each route fetches its own `*/detail` (all five are open to any authenticated user on the backend
+  — no grant needed, unlike the admin `users/list` reads), `notFound()`s on a missing or `inactive`
+  entity, then fetches its own relations. An entity's own kader/child counts are only exposed on its
+  **parent's** list row (`include_aggregates`), so each route finds itself there — Cabang in
+  `listAllBranchesAdmin({coordinatingBodyId})`, Komisariat in `listAllChaptersAdmin({branchId})` —
+  rather than calling `stat/summary/*`, which needs a manage grant a plain member doesn't have.
+  `lib/entity-profile.ts` holds only what all five genuinely share and nothing per-entity:
+  `ENTITY_TYPE_LABEL` (`Penuh`/`Persiapan`), `entityLevelField`, `kaderMeta`, and
+  `entityProfileMetadata` (title/description/canonical/robots, so five `generateMetadata`s don't
+  each rebuild the same object).
+  `components/pages/EntityProfilePage.tsx` mirrors `ProfilePage.tsx`'s shell exactly (`Header`,
+  `PageMargin` two-column grid, `SuggestedConnectionsCard` aside, `BottomNav`) and takes the
+  `SessionUser` as-is rather than a pre-mapped viewer object, since all five routes render identical
+  chrome and would otherwise repeat that mapping. It stacks `EntityProfileHeader` (gradient banner,
+  the entity logo as a circle with a `ring-2 ring-primary` outside its white border — the one place
+  an entity logo is round rather than the square `rounded-lg` badge the admin lists use — name via
+  `formatEntityAuthorName`, `Penuh`/`Persiapan` label, parent-chain links, "Terdaftar {bulan tahun}",
+  and a stat row), the shared `AboutCard` (an
+  organization has no `description`, so it renders nothing there), `EntityInfoCard`,
+  `EntityStructuralCard` (the entity's current `structurals` period via
+  `getStructuralOverview(..., null)` — a flat officer list, not `StructuralPage`'s admin org chart),
+  and `EntityChildrenCard` (Daftar Badko/Cabang/Komisariat, each linking to its own entity profile;
+  a Komisariat is a leaf and passes `null`). The `Official Account` marker here is **not** the blue
+  `Label` pill `FeedItemCard` renders beside an entity's name — it's a primary-colored check badge
+  pinned to the logo's bottom-right, revealing that text as a `role="tooltip"` pill on hover (same
+  `group-hover`/`opacity-0` treatment as `StructuralPage`'s `OfficerNode` position tooltip); the
+  badge carries its own `aria-label`, since a tooltip alone says nothing on touch.
+  There is deliberately **no feed/activity section**:
+  `feeds/list` has no author-entity filter on the backend, so an entity's own postings can't be
+  listed yet — don't fake one from the home timeline.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered

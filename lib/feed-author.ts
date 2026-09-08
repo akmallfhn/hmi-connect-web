@@ -1,7 +1,7 @@
 import type { Feed } from "@/apis/feeds";
 import type { AccessEntityTypeEnum } from "@/lib/types";
 
-// Public profile route per entity — these pages don't exist yet, the links are ready for when they do.
+// Public profile route per entity, one gated route each — see components/entity/*.
 const ENTITY_PROFILE_BASE_PATH: Record<AccessEntityTypeEnum, string> = {
   organization: "/organizations",
   coordinating_body: "/coordinating-bodies",
@@ -52,7 +52,19 @@ export type FeedAuthor = {
   isEntity: boolean;
 };
 
-export function resolveFeedAuthor(feed: Feed): FeedAuthor {
+// Every feed-shaped payload the app renders an author for, including search's own posting row.
+export type FeedAuthorSource = Pick<
+  Feed,
+  | "creator_full_name"
+  | "creator_username"
+  | "creator_avatar"
+  | "author_entity_type"
+  | "author_entity_id"
+  | "author_entity_name"
+  | "author_entity_image_url"
+>;
+
+export function resolveFeedAuthor(feed: FeedAuthorSource): FeedAuthor {
   if (feed.author_entity_type && feed.author_entity_id) {
     return {
       name: formatEntityAuthorName(
