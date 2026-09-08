@@ -239,3 +239,95 @@ export function ActivityListSkeleton({ rows = 3 }: { rows?: number }) {
     </div>
   );
 }
+
+export function ConversationRowSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <Circle className="size-11" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <Bar className="h-3.5 w-32" />
+          <Bar className="h-2.5 w-10" />
+        </div>
+        <Bar className="h-3 w-2/3" />
+      </div>
+    </div>
+  );
+}
+
+export function ConversationListSkeleton({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="flex animate-pulse flex-col">
+      {Array.from({ length: rows }).map((_, index) => (
+        <ConversationRowSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
+export function ChatThreadHeaderSkeleton() {
+  return (
+    <div className="flex min-w-0 flex-1 animate-pulse items-center gap-3 px-1 py-1">
+      <Circle className="size-[34px]" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <Bar className="h-3 w-28" />
+        <Bar className="h-2.5 w-16" />
+      </div>
+    </div>
+  );
+}
+
+// Widths/heights are staggered so the pane reads as a real conversation, not a stack of equal bars.
+const MESSAGE_SKELETON_ROWS = [
+  { own: false, className: "h-9 w-40" },
+  { own: true, className: "h-9 w-28" },
+  { own: false, className: "h-14 w-64" },
+  { own: true, className: "h-9 w-36" },
+  { own: true, className: "h-14 w-52" },
+  { own: false, className: "h-9 w-44" },
+];
+
+export function MessageThreadSkeleton() {
+  return (
+    <div className="flex flex-1 animate-pulse flex-col justify-end gap-3 px-4 py-4 lg:px-6">
+      {MESSAGE_SKELETON_ROWS.map((row, index) => (
+        <div
+          key={index}
+          className={`flex items-end gap-2 ${row.own ? "flex-row-reverse" : ""}`}
+        >
+          {!row.own && <Circle className="size-7" />}
+          <div className={`max-w-[75%] rounded-[20px] bg-[#e6e9ef] ${row.className}`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MessageComposerSkeleton() {
+  return (
+    <div className="shrink-0 animate-pulse border-t border-[#e6e9ef] bg-white px-3 py-3 lg:px-5">
+      <div className="flex items-end gap-1.5">
+        <Circle className="size-9" />
+        <Circle className="size-9" />
+        <div className="h-10 min-w-0 flex-1 rounded-full bg-[#e6e9ef]" />
+        <Circle className="size-9" />
+      </div>
+    </div>
+  );
+}
+
+export function PersonListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="flex animate-pulse flex-col">
+      {Array.from({ length: rows }).map((_, index) => (
+        <div key={index} className="flex items-center gap-3 px-2 py-2.5">
+          <Circle className="size-11" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <Bar className="h-3.5 w-36" />
+            <Bar className="h-2.5 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

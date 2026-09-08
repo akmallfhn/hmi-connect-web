@@ -7,6 +7,7 @@ import { listFollowing } from "@/lib/actions";
 import { CHAT_NEW_RECIPIENT_KEY } from "@/lib/constants";
 import Avatar from "../common/Avatar";
 import Modal from "../modals/Modal";
+import { PersonListSkeleton } from "../states/Skeleton";
 
 const SEARCH_DEBOUNCE_MS = 350;
 const FOLLOWING_SUGGESTIONS_LIMIT = 5;
@@ -116,9 +117,7 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
       <div className="flex flex-col">
         {isSearching ? (
           <>
-            {loading && (
-              <p className="px-1 py-6 text-center text-sm text-[#7b8190]">Mencari...</p>
-            )}
+            {loading && <PersonListSkeleton rows={4} />}
             {!loading && results.length === 0 && (
               <p className="px-1 py-6 text-center text-sm text-[#7b8190]">Tidak ditemukan.</p>
             )}
@@ -132,9 +131,7 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#9aa1ad]">
               Mengikuti
             </p>
-            {followingLoading && (
-              <p className="px-1 py-6 text-center text-sm text-[#7b8190]">Memuat...</p>
-            )}
+            {followingLoading && <PersonListSkeleton />}
             {!followingLoading && following.length === 0 && (
               <p className="px-1 py-6 text-center text-sm text-[#7b8190]">
                 Anda belum mengikuti siapa pun.

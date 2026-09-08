@@ -3,7 +3,7 @@
 import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import Avatar from "../common/Avatar";
-import { Bar, Circle } from "../states/Skeleton";
+import { ChatThreadHeaderSkeleton } from "../states/Skeleton";
 
 interface ChatThreadHeaderProps {
   fullName: string;
@@ -30,13 +30,7 @@ export default function ChatThreadHeader({
         </Link>
 
         {loading ? (
-          <div className="flex min-w-0 flex-1 animate-pulse items-center gap-3 px-1 py-1">
-            <Circle className="size-[34px]" />
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <Bar className="h-3 w-28" />
-              <Bar className="h-2.5 w-16" />
-            </div>
-          </div>
+          <ChatThreadHeaderSkeleton />
         ) : (
           <div className="flex min-w-0 flex-1 items-center">
             <Link

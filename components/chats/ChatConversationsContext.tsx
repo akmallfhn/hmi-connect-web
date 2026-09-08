@@ -21,18 +21,18 @@ interface ChatConversationsContextValue {
   refetch: () => void;
 }
 
-const ChatConversationsContext = createContext<ChatConversationsContextValue | null>(null);
+const ChatConversationsContext =
+  createContext<ChatConversationsContextValue | null>(null);
 
 interface ChatConversationsProviderProps {
   userId?: string;
   children: ReactNode;
 }
 
-// Owns the conversation list once at the /chats shell level so the sidebar and the open
-// thread's header both read from one fetch — there's no `conversations/detail` endpoint on
-// the backend, so a thread's header info (name/avatar/affiliation) comes from whichever
-// summary is already sitting here rather than a second round-trip.
-export function ChatConversationsProvider({ userId, children }: ChatConversationsProviderProps) {
+export function ChatConversationsProvider({
+  userId,
+  children,
+}: ChatConversationsProviderProps) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
@@ -90,7 +90,14 @@ export function ChatConversationsProvider({ userId, children }: ChatConversation
 
   return (
     <ChatConversationsContext.Provider
-      value={{ conversations, loading, hasMore, loadingMore, loadMore, refetch }}
+      value={{
+        conversations,
+        loading,
+        hasMore,
+        loadingMore,
+        loadMore,
+        refetch,
+      }}
     >
       {children}
     </ChatConversationsContext.Provider>
@@ -100,7 +107,9 @@ export function ChatConversationsProvider({ userId, children }: ChatConversation
 export function useChatConversations(): ChatConversationsContextValue {
   const ctx = useContext(ChatConversationsContext);
   if (!ctx) {
-    throw new Error("useChatConversations must be used within ChatConversationsProvider");
+    throw new Error(
+      "useChatConversations must be used within ChatConversationsProvider"
+    );
   }
   return ctx;
 }

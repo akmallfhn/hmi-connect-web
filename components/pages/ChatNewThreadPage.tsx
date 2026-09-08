@@ -1,30 +1,38 @@
 "use client";
 
-import { MessageCircleOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { ChatMessage } from "@/apis/chats";
 import type { SearchPersonResult } from "@/apis/search";
 import { sendChatMessage } from "@/lib/actions";
-import { CHAT_NEW_RECIPIENT_KEY } from "@/lib/constants";
+import {
+  CHAT_NEW_RECIPIENT_KEY,
+  CHAT_PENDING_MESSAGE_KEY,
+} from "@/lib/constants";
 import Button from "../buttons/Button";
+import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
+import { NewThreadPaneSkeleton } from "../chats/ChatPaneSkeleton";
 import { useChatConversations } from "../chats/ChatConversationsContext";
 import ChatThreadHeader from "../chats/ChatThreadHeader";
+import ImageLightbox from "../chats/ImageLightbox";
 import MessageComposer from "../chats/MessageComposer";
+import MessageList from "../chats/MessageList";
 import SendMessageIllustration from "../illustrations/SendMessageIllustration";
 
 interface ChatNewThreadPageProps {
   viewerId?: string;
 }
 
-// Reached from NewMessageModal, which stashes the picked recipient's basic profile in
-// sessionStorage since there's no conversation id to navigate to yet — the backend only
-// creates a conversation as a side effect of the first `messages/send` call.
-export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) {
+export default function ChatNewThreadPage({
+  viewerId,
+}: ChatNewThreadPageProps) {
   const router = useRouter();
   const { refetch } = useChatConversations();
   const [recipient, setRecipient] = useState<SearchPersonResult | null>(null);
   const [ready, setReady] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Picking someone else while already on /chats/new doesn't remount, so re-read on the modal's event too.
   useEffect(() => {
@@ -60,19 +68,27 @@ export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) 
       return;
     }
 
+    setMessages((prev) => [...prev, message]);
     sessionStorage.removeItem(CHAT_NEW_RECIPIENT_KEY);
+    sessionStorage.setItem(CHAT_PENDING_MESSAGE_KEY, JSON.stringify(message));
     refetch();
     router.replace(`/chats/${message.conversation_id}`);
   }
 
-  if (!ready) return null;
+  if (!ready) return <NewThreadPaneSkeleton />;
 
   if (!recipient) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <MessageCircleOff className="size-10 text-[#9aa1ad]" />
-        <p className="text-sm text-[#7b8190]">Pilih orang yang ingin dikirimi pesan dulu.</p>
-        <Button variant="light" size="sm" onClick={() => router.push("/chats")}>
+        <EmptyStateIllustration className="h-auto w-52" aria-hidden="true" />
+        <p className="text-[15px] text-[#7b8190]">
+          Pilih orang yang ingin dikirimi pesan dulu.
+        </p>
+        <Button
+          variant="primary"
+          size="pill"
+          onClick={() => router.push("/chats")}
+        >
           Kembali ke Pesan
         </Button>
       </div>
@@ -87,14 +103,36 @@ export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) 
         avatar={recipient.avatar}
       />
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-        <SendMessageIllustration className="w-52 max-w-full" />
-        <p className="text-[15px] text-[#7b8190]">
-          Mulai percakapan dengan mengirim pesan pertama.
-        </p>
-      </div>
+      {messages.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+          <SendMessageIllustration className="w-52 max-w-full" />
+          <p className="text-[15px] text-[#7b8190]">
+            Mulai percakapan dengan mengirim pesan pertama.
+          </p>
+        </div>
+      ) : (
+        <MessageList
+          messages={messages}
+          viewerId={viewerId}
+          personName={recipient.full_name}
+          personAvatar={recipient.avatar}
+          loading={false}
+          hasMore={false}
+          loadingMore={false}
+          onLoadMore={() => {}}
+          onOpenImage={setLightboxUrl}
+        />
+      )}
 
-      <MessageComposer key={recipient.id} userId={viewerId} onSend={handleSend} />
+      <MessageComposer
+        key={recipient.id}
+        userId={viewerId}
+        onSend={handleSend}
+      />
+
+      {lightboxUrl && (
+        <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </div>
   );
 }

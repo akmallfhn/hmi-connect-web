@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useChatConversations } from "./ChatConversationsContext";
 import ConversationListItem from "./ConversationListItem";
 import NewMessageModal from "./NewMessageModal";
+import { ConversationListSkeleton } from "../states/Skeleton";
 
 interface ConversationListProps {
   viewerId?: string;
@@ -55,7 +56,7 @@ export default function ConversationList({ viewerId, activeConversationId }: Con
 
       <div className="flex-1 overflow-y-auto pb-24 lg:pb-2">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-[#7b8190]">Memuat...</p>
+          <ConversationListSkeleton />
         ) : filtered.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-[#7b8190]">
             {query ? "Tidak ada percakapan yang cocok." : "Belum ada percakapan."}

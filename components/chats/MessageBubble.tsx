@@ -3,9 +3,8 @@
 import { CheckCheck } from "lucide-react";
 import type { ChatMessage } from "@/apis/chats";
 
-// A short, emoji-only message renders large and bare, with no bubble background — same
-// convention as WhatsApp/iMessage/Instagram.
-const EMOJI_ONLY_PATTERN = /^(?:\p{Extended_Pictographic}|\u{FE0F}|\u{200D})+$/u;
+const EMOJI_ONLY_PATTERN =
+  /^(?:\p{Extended_Pictographic}|\u{FE0F}|\u{200D})+$/u;
 
 function isEmojiOnly(text: string): boolean {
   if (!text) return false;
@@ -25,16 +24,20 @@ interface MessageBubbleProps {
   onOpenImage: (url: string) => void;
 }
 
-export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBubbleProps) {
-  const bare = Boolean(message.content) && isEmojiOnly(message.content) && !message.attachment_url;
+export default function MessageBubble({
+  message,
+  isOwn,
+  onOpenImage,
+}: MessageBubbleProps) {
+  const bare =
+    Boolean(message.content) &&
+    isEmojiOnly(message.content) &&
+    !message.attachment_url;
 
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
       <div className="w-fit max-w-[min(75%,480px)]">
         {message.attachment_url && message.content ? (
-          // Photo + caption share one padded card (bubble padding wraps both, photo sits
-          // inset with its own smaller rounding — WhatsApp's own convention — rather than
-          // bleeding edge-to-edge to the outer bubble's corners).
           <div
             className={[
               "w-full rounded-lg p-2",
@@ -47,7 +50,11 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
               className="block w-full cursor-zoom-in overflow-hidden rounded-lg"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
-              <img src={message.attachment_url} alt="Lampiran" className="max-h-72 w-full object-cover" />
+              <img
+                src={message.attachment_url}
+                alt="Lampiran"
+                className="max-h-72 w-full object-cover"
+              />
             </button>
             <div
               className={[
@@ -65,7 +72,11 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
             className="block cursor-zoom-in overflow-hidden rounded-lg"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
-            <img src={message.attachment_url} alt="Lampiran" className="max-h-72 w-auto object-cover" />
+            <img
+              src={message.attachment_url}
+              alt="Lampiran"
+              className="max-h-72 w-auto object-cover"
+            />
           </button>
         ) : message.content ? (
           <div
@@ -74,7 +85,9 @@ export default function MessageBubble({ message, isOwn, onOpenImage }: MessageBu
                 ? "select-none px-1 py-1 text-4xl leading-none"
                 : [
                     "select-none whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words",
-                    isOwn ? "bg-primary text-white" : "bg-[#f0f2f6] text-[#172033]",
+                    isOwn
+                      ? "bg-primary text-white"
+                      : "bg-[#f0f2f6] text-[#172033]",
                   ].join(" ")
             }
           >
@@ -94,8 +107,12 @@ interface MessageMetaProps {
 // Separate row (not inside MessageBubble's column) so the avatar aligns with the bubble, not this.
 export function MessageMeta({ message, isOwn }: MessageMetaProps) {
   return (
-    <div className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-      <span className="text-[11px] text-[#9aa1ad]">{formatClockTime(message.created_at)}</span>
+    <div
+      className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}
+    >
+      <span className="text-[11px] text-[#9aa1ad]">
+        {formatClockTime(message.created_at)}
+      </span>
       {isOwn && (
         <CheckCheck
           className={`size-3.5 ${message.status === "read" ? "text-primary" : "text-[#9aa1ad]"}`}

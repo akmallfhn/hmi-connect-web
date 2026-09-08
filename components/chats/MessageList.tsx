@@ -7,6 +7,7 @@ import type { ChatMessage } from "@/apis/chats";
 import SendMessageIllustration from "../illustrations/SendMessageIllustration";
 import Avatar from "../common/Avatar";
 import MessageBubble, { MessageMeta } from "./MessageBubble";
+import { MessageThreadSkeleton } from "../states/Skeleton";
 
 const GROUP_GAP_MINUTES = 5;
 
@@ -58,13 +59,7 @@ export default function MessageList({
     lastMessageIdRef.current = lastMessage?.id;
   }, [loading, messages]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-[#7b8190]">Memuat pesan...</p>
-      </div>
-    );
-  }
+  if (loading && messages.length === 0) return <MessageThreadSkeleton />;
 
   if (messages.length === 0) {
     return (

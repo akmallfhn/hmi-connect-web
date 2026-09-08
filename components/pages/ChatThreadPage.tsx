@@ -1,15 +1,25 @@
 "use client";
 
-import { MessageCircleOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ChatMessage } from "@/apis/chats";
-import { listMessages, loadMoreMessages, markMessagesAsRead, sendChatMessage } from "@/lib/actions";
+import {
+  listMessages,
+  loadMoreMessages,
+  markMessagesAsRead,
+  sendChatMessage,
+} from "@/lib/actions";
+import { CHAT_PENDING_MESSAGE_KEY } from "@/lib/constants";
 import { useRealtimeTopic } from "@/hooks/useRealtimeTopic";
 import Button from "../buttons/Button";
-import { useChatConversations, useConversationSummary } from "../chats/ChatConversationsContext";
+import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
+import {
+  useChatConversations,
+  useConversationSummary,
+} from "../chats/ChatConversationsContext";
 import ChatThreadHeader from "../chats/ChatThreadHeader";
+import ImageLightbox from "../chats/ImageLightbox";
 import MessageComposer from "../chats/MessageComposer";
 import MessageList from "../chats/MessageList";
 
@@ -18,13 +28,34 @@ interface ChatThreadPageProps {
   viewerId?: string;
 }
 
-function mergeMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
-  const byId = new Map(current.map((message) => [message.id, message]));
-  for (const message of incoming) byId.set(message.id, message);
-  return Array.from(byId.values()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+// Handed over by /chats/new so its just-sent bubble isn't replaced by this route's loading skeleton.
+function takePendingMessage(conversationId: string): ChatMessage[] {
+  const raw = sessionStorage.getItem(CHAT_PENDING_MESSAGE_KEY);
+  if (!raw) return [];
+  sessionStorage.removeItem(CHAT_PENDING_MESSAGE_KEY);
+  try {
+    const message = JSON.parse(raw) as ChatMessage;
+    return message.conversation_id === conversationId ? [message] : [];
+  } catch {
+    return [];
+  }
 }
 
-export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadPageProps) {
+function mergeMessages(
+  current: ChatMessage[],
+  incoming: ChatMessage[]
+): ChatMessage[] {
+  const byId = new Map(current.map((message) => [message.id, message]));
+  for (const message of incoming) byId.set(message.id, message);
+  return Array.from(byId.values()).sort((a, b) =>
+    a.created_at.localeCompare(b.created_at)
+  );
+}
+
+export default function ChatThreadPage({
+  conversationId,
+  viewerId,
+}: ChatThreadPageProps) {
   const router = useRouter();
   const conversation = useConversationSummary(conversationId);
   const { loading: conversationsLoading } = useChatConversations();
@@ -41,17 +72,22 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
     let cancelled = false;
     const timeoutId = setTimeout(() => {
       if (cancelled) return;
+      const pending = takePendingMessage(conversationId);
       setLoading(true);
-      setMessages([]);
+      setMessages(pending);
       setNotFound(false);
       pageRef.current = 1;
 
       listMessages(conversationId, 1).then((result) => {
         if (cancelled) return;
-        if (result.list.length === 0 && !result.hasMore) {
+        if (
+          result.list.length === 0 &&
+          !result.hasMore &&
+          pending.length === 0
+        ) {
           setNotFound(true);
         }
-        setMessages(mergeMessages([], result.list));
+        setMessages((prev) => mergeMessages(prev, result.list));
         setHasMore(result.hasMore);
         setLoading(false);
       });
@@ -89,7 +125,11 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
   }
 
   async function handleSend(content: string, attachmentUrl?: string) {
-    const { message, envelope } = await sendChatMessage({ conversationId, content, attachmentUrl });
+    const { message, envelope } = await sendChatMessage({
+      conversationId,
+      content,
+      attachmentUrl,
+    });
     if (!message) {
       toast.error(envelope.message ?? "Gagal mengirim pesan.");
       return;
@@ -101,9 +141,9 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
   if (!loading && notFound && !conversation) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <MessageCircleOff className="size-10 text-[#9aa1ad]" />
-        <p className="text-sm text-[#7b8190]">Percakapan tidak ditemukan.</p>
-        <Button variant="light" size="sm" onClick={() => router.push("/chats")}>
+        <EmptyStateIllustration className="h-auto w-52" aria-hidden="true" />
+        <p className="text-lg font-semibold">Percakapan tidak ditemukan.</p>
+        <Button variant="primary" onClick={() => router.push("/chats")}>
           Kembali ke Pesan
         </Button>
       </div>
@@ -136,17 +176,7 @@ export default function ChatThreadPage({ conversationId, viewerId }: ChatThreadP
       <MessageComposer userId={viewerId} onSend={handleSend} />
 
       {lightboxUrl && (
-        <div
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setLightboxUrl(null)}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage */}
-          <img
-            src={lightboxUrl}
-            alt="Lampiran"
-            className="max-h-[85vh] max-w-full rounded-lg object-contain"
-          />
-        </div>
+        <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
     </div>
   );

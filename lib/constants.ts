@@ -37,6 +37,9 @@ export const COMPOSE_INTENT_URL_KEY = "hmi-compose-intent-url";
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
 
+// sessionStorage key carrying the just-sent message from /chats/new into the real thread, so it isn't hidden by that route's own first fetch.
+export const CHAT_PENDING_MESSAGE_KEY = "hmi-chat-pending-message";
+
 // No roles/list endpoint on the backend — ids come from ordina's RoleName* consts. Administrator (1) was dropped when access_grants replaced can_manage_*.
 export const USER_ROLE_OPTIONS = [
   { label: "Super Admin", value: 0 },
