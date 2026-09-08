@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import PageState from "@/components/states/PageState";
@@ -35,6 +36,15 @@ export default async function CoordinatingChapterOfficialAccount({
   if (!coordinatingChapter || coordinatingChapter.status !== "active")
     return notFound();
 
+  const activity = await listEntityActivity(
+    "coordinating_chapter",
+    coordinating_chapter_id,
+    {
+      page: 1,
+      pageSize: 20,
+    },
+  );
+
   return (
     <OfficialAccountPage
       entityType="coordinating_chapter"
@@ -44,6 +54,8 @@ export default async function CoordinatingChapterOfficialAccount({
         coordinatingChapter.name,
       )}
       imageUrl={coordinatingChapter.image_url}
+      initialItems={activity.list}
+      initialHasMore={activity.hasMore}
       viewer={user}
     />
   );

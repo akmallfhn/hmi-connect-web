@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import PageState from "@/components/states/PageState";
@@ -32,12 +33,23 @@ export default async function CoordinatingBodyOfficialAccount({
   if (!coordinatingBody || coordinatingBody.status !== "active")
     return notFound();
 
+  const activity = await listEntityActivity(
+    "coordinating_body",
+    coordinating_body_id,
+    {
+      page: 1,
+      pageSize: 20,
+    },
+  );
+
   return (
     <OfficialAccountPage
       entityType="coordinating_body"
       entityId={coordinating_body_id}
       name={formatEntityAuthorName("coordinating_body", coordinatingBody.name)}
       imageUrl={coordinatingBody.image_url}
+      initialItems={activity.list}
+      initialHasMore={activity.hasMore}
       viewer={user}
     />
   );

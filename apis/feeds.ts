@@ -70,6 +70,9 @@ export type CreateFeedPayload = {
     urls: string[];
   };
   repost_of_id?: string;
+  // Sent as a pair to publish under an entity; the backend requires a manage grant at that exact entity.
+  author_entity_type?: AccessEntityTypeEnum;
+  author_entity_id?: string;
 };
 
 export type FeedComment = {
@@ -110,17 +113,20 @@ function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
 }
 
 export async function listFeeds(
-  options: { page?: number; pageSize?: number } = {}
+  options: { page?: number; pageSize?: number } = {},
 ): Promise<{ list: FeedTimelineItem[]; hasMore: boolean }> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) return { list: [], hasMore: false };
 
   const { page = 1, pageSize = 20 } = options;
-  const result = await callApi<ListResponse<FeedTimelineItem>>("/api/v1/feeds/list", {
-    method: "POST",
-    token: sessionToken,
-    body: { page, page_size: pageSize },
-  });
+  const result = await callApi<ListResponse<FeedTimelineItem>>(
+    "/api/v1/feeds/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { page, page_size: pageSize },
+    },
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listFeeds] request failed:", result);
@@ -154,7 +160,7 @@ const ENTITY_ACTIVITY_PATH: Record<AccessEntityTypeEnum, string> = {
 export async function listEntityActivity(
   entityType: AccessEntityTypeEnum,
   entityId: string,
-  options: { page?: number; pageSize?: number } = {}
+  options: { page?: number; pageSize?: number } = {},
 ): Promise<{ list: ActivityEntry[]; hasMore: boolean }> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) return { list: [], hasMore: false };
@@ -170,7 +176,7 @@ export async function listEntityActivity(
         ...(page ? { page } : {}),
         ...(pageSize ? { page_size: pageSize } : {}),
       },
-    }
+    },
   );
 
   if (!isSuccessStatus(result.status)) {
@@ -184,7 +190,10 @@ export async function listEntityActivity(
   };
 }
 
-export async function getFeedById(id: string, token?: string): Promise<Feed | null> {
+export async function getFeedById(
+  id: string,
+  token?: string,
+): Promise<Feed | null> {
   const authToken = token ?? process.env.CLIENT_SECRET;
   if (!authToken) return null;
 
@@ -203,11 +212,14 @@ export async function getFeedById(id: string, token?: string): Promise<Feed | nu
 }
 
 export async function createFeed(
-  payload: CreateFeedPayload
+  payload: CreateFeedPayload,
 ): Promise<ApiEnvelope<Feed>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<Feed>("/api/v1/feeds/create", {
@@ -224,11 +236,14 @@ export type UpdateFeedPayload = {
 
 // Only content can change — media cannot be added, removed, or replaced after creation.
 export async function updateFeed(
-  payload: UpdateFeedPayload
+  payload: UpdateFeedPayload,
 ): Promise<ApiEnvelope<Feed>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<Feed>("/api/v1/feeds/update", {
@@ -240,18 +255,21 @@ export async function updateFeed(
 
 export async function listFeedComments(
   feedId: string,
-  options: { page?: number; pageSize?: number; token?: string } = {}
+  options: { page?: number; pageSize?: number; token?: string } = {},
 ): Promise<{ list: FeedComment[]; hasMore: boolean }> {
   const sessionToken = options.token ?? (await getSessionToken());
   const authToken = sessionToken ?? process.env.CLIENT_SECRET;
   if (!authToken) return { list: [], hasMore: false };
 
   const { page = 1, pageSize = 20 } = options;
-  const result = await callApi<ListResponse<FeedComment>>("/api/v1/feeds/comments/list", {
-    method: "POST",
-    token: authToken,
-    body: { feed_id: feedId, page, page_size: pageSize },
-  });
+  const result = await callApi<ListResponse<FeedComment>>(
+    "/api/v1/feeds/comments/list",
+    {
+      method: "POST",
+      token: authToken,
+      body: { feed_id: feedId, page, page_size: pageSize },
+    },
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listFeedComments] request failed:", result);
@@ -266,7 +284,7 @@ export async function listFeedComments(
 
 export async function listAllFeedComments(
   feedId: string,
-  options: { pageSize?: number; token?: string } = {}
+  options: { pageSize?: number; token?: string } = {},
 ): Promise<FeedComment[]> {
   const pageSize = options.pageSize ?? 50;
   const comments: FeedComment[] = [];
@@ -293,7 +311,10 @@ export async function createFeedComment(payload: {
 }): Promise<ApiEnvelope<FeedComment>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<FeedComment>("/api/v1/feeds/comments/create", {
@@ -305,7 +326,7 @@ export async function createFeedComment(payload: {
 
 export async function listCommentReplies(
   commentId: string,
-  options: { page?: number; pageSize?: number } = {}
+  options: { page?: number; pageSize?: number } = {},
 ): Promise<{ list: FeedComment[]; hasMore: boolean }> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) return { list: [], hasMore: false };
@@ -317,7 +338,7 @@ export async function listCommentReplies(
       method: "POST",
       token: sessionToken,
       body: { comment_id: commentId, page, page_size: pageSize },
-    }
+    },
   );
 
   if (!isSuccessStatus(result.status)) {
@@ -337,7 +358,10 @@ export async function createCommentReply(payload: {
 }): Promise<ApiEnvelope<FeedComment>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<FeedComment>("/api/v1/feeds/comments/replies/create", {
@@ -350,7 +374,10 @@ export async function createCommentReply(payload: {
 export async function deleteComment(commentId: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/feeds/comments/delete", {
@@ -360,10 +387,15 @@ export async function deleteComment(commentId: string): Promise<ApiEnvelope> {
   });
 }
 
-export async function deleteCommentReply(replyId: string): Promise<ApiEnvelope> {
+export async function deleteCommentReply(
+  replyId: string,
+): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/feeds/comments/replies/delete", {
@@ -376,7 +408,10 @@ export async function deleteCommentReply(replyId: string): Promise<ApiEnvelope> 
 export async function deleteFeed(feedId: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/feeds/delete", {
@@ -388,10 +423,15 @@ export async function deleteFeed(feedId: string): Promise<ApiEnvelope> {
 
 export type RepostResult = { feed_id: string; reposter_id: string };
 
-export async function repostFeed(feedId: string): Promise<ApiEnvelope<RepostResult>> {
+export async function repostFeed(
+  feedId: string,
+): Promise<ApiEnvelope<RepostResult>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<RepostResult>("/api/v1/feeds/repost", {
@@ -401,10 +441,15 @@ export async function repostFeed(feedId: string): Promise<ApiEnvelope<RepostResu
   });
 }
 
-export async function unrepostFeed(feedId: string): Promise<ApiEnvelope<RepostResult>> {
+export async function unrepostFeed(
+  feedId: string,
+): Promise<ApiEnvelope<RepostResult>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<RepostResult>("/api/v1/feeds/unrepost", {

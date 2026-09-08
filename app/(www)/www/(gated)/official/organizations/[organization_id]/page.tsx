@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOrganizationDetail } from "@/apis/organizations";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import PageState from "@/components/states/PageState";
@@ -30,12 +31,19 @@ export default async function OrganizationOfficialAccount({
   const organization = await getOrganizationDetail(organization_id);
   if (!organization || organization.status !== "active") return notFound();
 
+  const activity = await listEntityActivity("organization", organization_id, {
+    page: 1,
+    pageSize: 20,
+  });
+
   return (
     <OfficialAccountPage
       entityType="organization"
       entityId={organization_id}
       name={formatEntityAuthorName("organization", organization.name)}
       imageUrl={organization.logo_url}
+      initialItems={activity.list}
+      initialHasMore={activity.hasMore}
       viewer={user}
     />
   );

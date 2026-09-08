@@ -33,13 +33,58 @@ import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
-import { isSuccessStatus, type FeedMediaTypeEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type FeedMediaTypeEnum,
+} from "@/lib/types";
 import type { Feed } from "@/apis/feeds";
+import LogoHmi from "../svg/LogoHmi";
+
+// Set on the official-account pages, where a post is published under the entity instead of the caller.
+export type ComposerAuthorEntity = {
+  type: AccessEntityTypeEnum;
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+};
+
+// Plain entity logo here — the ring and official badge mark a published feed, not a compose box.
+function ComposerAvatar({
+  authorEntity,
+  fullName,
+  avatar,
+}: {
+  authorEntity?: ComposerAuthorEntity;
+  fullName?: string;
+  avatar?: string;
+}) {
+  if (!authorEntity) {
+    return <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />;
+  }
+
+  return (
+    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+      {authorEntity.imageUrl ? (
+        <Image
+          src={authorEntity.imageUrl}
+          alt={authorEntity.name}
+          width={44}
+          height={44}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <LogoHmi className="size-6" />
+      )}
+    </span>
+  );
+}
 
 interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
   userId?: string;
+  authorEntity?: ComposerAuthorEntity;
   onCreated?: (feed: Feed) => void;
   forceOpenSignal?: number;
   forceOpenUrl?: string;
@@ -128,7 +173,7 @@ function isStoragePolicyError(error: unknown) {
 async function uploadFeedMedia(
   file: File,
   userId: string | undefined,
-  kind: "photo" | "video"
+  kind: "photo" | "video",
 ) {
   const extension = getExtension(file);
   const fileName = `${kind}-${Date.now()}-${randomId()}.${extension}`;
@@ -140,18 +185,22 @@ export default function CreateFeedForms({
   fullName,
   avatar,
   userId,
+  authorEntity,
   onCreated,
   forceOpenSignal,
   forceOpenUrl,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] = useState<FeedMediaTypeEnum | null>(
-    null
+    null,
   );
   const [initialUrl, setInitialUrl] = useState<string | undefined>(undefined);
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
+  const composerPrompt = authorEntity
+    ? "Bagikan sesuatu..."
+    : `Apa yang ingin kamu bagikan, ${firstName}?`;
 
   function openComposer(mode: FeedMediaTypeEnum | null = null, url?: string) {
     setInitialMode(mode);
@@ -172,7 +221,11 @@ export default function CreateFeedForms({
       <div className="-mt-16 mx-4 rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm lg:mx-0 lg:mt-0">
         <div className="flex items-center gap-3">
           <div className="hidden lg:block">
-            <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />
+            <ComposerAvatar
+              authorEntity={authorEntity}
+              fullName={fullName}
+              avatar={avatar}
+            />
           </div>
           <div
             role="button"
@@ -186,7 +239,7 @@ export default function CreateFeedForms({
             }}
             className="flex-1 cursor-pointer rounded-full bg-[#f5f7fb] px-4 py-2.5 text-sm font-medium text-[#5f6573] transition hover:bg-[#eef1f6] focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
-            Apa yang ingin kamu bagikan, {firstName}?
+            {composerPrompt}
           </div>
         </div>
         <div className="mt-3 flex items-center justify-around border-t border-[#e6e9ef] pt-3">
@@ -210,6 +263,7 @@ export default function CreateFeedForms({
         fullName={fullName}
         avatar={avatar}
         userId={userId}
+        authorEntity={authorEntity}
         initialMode={initialMode}
         initialUrl={initialUrl}
         onCreated={onCreated}
@@ -224,6 +278,7 @@ interface FeedComposerModalProps {
   fullName?: string;
   avatar?: string;
   userId?: string;
+  authorEntity?: ComposerAuthorEntity;
   initialMode?: FeedMediaTypeEnum | null;
   initialUrl?: string;
   quoteFeed?: Feed;
@@ -237,6 +292,7 @@ export function FeedComposerModal({
   fullName,
   avatar,
   userId,
+  authorEntity,
   initialMode,
   initialUrl,
   quoteFeed,
@@ -257,6 +313,7 @@ export function FeedComposerModal({
           initialMode={initialMode}
           initialUrl={initialUrl}
           quoteFeed={quoteFeed}
+          authorEntity={authorEntity}
           onClose={onClose}
           onCreated={onCreated}
         />
@@ -269,6 +326,7 @@ interface FeedComposerFieldsProps {
   fullName?: string;
   avatar?: string;
   userId?: string;
+  authorEntity?: ComposerAuthorEntity;
   initialMode?: FeedMediaTypeEnum | null;
   initialUrl?: string;
   quoteFeed?: Feed;
@@ -280,6 +338,7 @@ function FeedComposerFields({
   fullName,
   avatar,
   userId,
+  authorEntity,
   initialMode,
   initialUrl,
   quoteFeed,
@@ -296,7 +355,7 @@ function FeedComposerFields({
   const [video, setVideo] = useState<VideoDraft | null>(null);
   const [urlValue, setUrlValue] = useState(initialUrl ?? "");
   const [urlActive, setUrlActive] = useState(
-    initialMode === "url" || Boolean(initialUrl)
+    initialMode === "url" || Boolean(initialUrl),
   );
   const [previewUrl, setPreviewUrl] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -332,7 +391,7 @@ function FeedComposerFields({
     const delay = nextPreviewUrl ? 900 : 0;
     const timeoutId = window.setTimeout(
       () => setPreviewUrl(nextPreviewUrl),
-      delay
+      delay,
     );
     return () => window.clearTimeout(timeoutId);
   }, [hasValidUrl, normalizedUrl, urlActive]);
@@ -526,7 +585,7 @@ function FeedComposerFields({
       if (!quoteFeed) {
         if (photos.length > 0) {
           const urls = await Promise.all(
-            photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo"))
+            photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo")),
           );
           media = { type: "photo", urls };
         } else if (video) {
@@ -541,6 +600,12 @@ function FeedComposerFields({
         content: content.trim(),
         ...(media ? { media } : {}),
         ...(quoteFeed ? { repost_of_id: quoteFeed.id } : {}),
+        ...(authorEntity
+          ? {
+              author_entity_type: authorEntity.type,
+              author_entity_id: authorEntity.id,
+            }
+          : {}),
       });
 
       if (!isSuccessStatus(result.status) || !result.data) {
@@ -548,7 +613,7 @@ function FeedComposerFields({
           result.message ??
             (quoteFeed
               ? "Gagal membuat quote repost."
-              : "Gagal membuat postingan.")
+              : "Gagal membuat postingan."),
         );
         return;
       }
@@ -556,7 +621,7 @@ function FeedComposerFields({
       toast.success(
         quoteFeed
           ? "Quote repost berhasil dibuat."
-          : "Postingan berhasil dibuat."
+          : "Postingan berhasil dibuat.",
       );
       onCreated?.(result.data);
       clearAllMedia();
@@ -566,13 +631,13 @@ function FeedComposerFields({
       console.error("[CreateFeedForms] create feed threw:", err);
       if (isStoragePolicyError(err)) {
         toast.error(
-          "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect."
+          "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect.",
         );
       } else {
         toast.error(
           quoteFeed
             ? "Gagal membuat quote repost. Coba lagi."
-            : "Gagal membuat postingan. Coba lagi."
+            : "Gagal membuat postingan. Coba lagi.",
         );
       }
     } finally {
@@ -583,11 +648,19 @@ function FeedComposerFields({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Avatar src={avatar} name={fullName ?? "Kader"} size={44} />
+        <ComposerAvatar
+          authorEntity={authorEntity}
+          fullName={fullName}
+          avatar={avatar}
+        />
         <div>
-          <p className="font-semibold text-[#172033]">{fullName ?? "Kader"}</p>
+          <p className="font-semibold text-[#172033]">
+            {authorEntity ? authorEntity.name : (fullName ?? "Kader")}
+          </p>
           <p className="text-[13px] text-[#5f6573]">
-            Posting ke feed HMI Connect
+            {authorEntity
+              ? "Posting sebagai akun resmi"
+              : "Posting ke feed HMI Connect"}
           </p>
         </div>
       </div>

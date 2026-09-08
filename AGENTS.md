@@ -1171,9 +1171,26 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   so the two can't drift). `Super Admin` is refused here on purpose: speaking in an entity's own
   name is its appointed admins' job, and being the root of the grant chain does not make you a
   Cabang. Anyone failing it gets `PageState` `forbidden`, checked **before** the entity is fetched so
-  a wrong id can't confirm what exists. All five render the shared
-  `components/pages/OfficialAccountPage.tsx`, currently identity plus a "Fitur akun resmi sedang
-  disiapkan." placeholder — the routes and their permission rule were built first, on purpose.
+  a wrong id can't confirm what exists. That gate mirrors the backend's own rule for
+  `feeds/create`'s author pair exactly ("a grant above it does not reach down, and `Super Admin`
+  alone does not qualify"), which is what this page is for. All five render the shared
+  `components/pages/OfficialAccountPage.tsx`, deliberately built to the same three-column shape as
+  the `/` home feed (`FeedPage`) — `EntitySummarySidebar` on the left, `components/official/
+OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s **centered**
+  two-column grid (`mx-auto lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)]`) rather than the
+  home feed's three-column one. There is deliberately no right rail: nothing has been decided for
+  it, and a page with two columns should center them rather than reserve an empty third track. The timeline is `FeedTimeline`'s
+  entity twin: the same `CreateFeedForms` composer above the same `FeedItemCard` list, but fed by
+  `listEntityActivity`/`loadMoreEntityActivity` (an `ActivityEntry[]`, so each row renders
+  `entry.feed`) rather than `feeds/list`, and with no news/suggested/quick-menu inserts. Posting as
+  the entity is what `CreateFeedForms`' `authorEntity` prop does — it sends `feeds/create`'s
+  `author_entity_type`/`author_entity_id` pair and swaps the composer's own avatar and name for the
+  entity's. That avatar is deliberately a **plain** circle (logo, `LogoHmi` fallback, no
+  `ring-2 ring-primary` and no check badge, so not `FeedAuthorAvatar`): the ring and badge mark a
+  published feed as official, and a compose box isn't one yet. Its placeholder is likewise the flat
+  "Bagikan sesuatu..." rather than the personal composer's "Apa yang ingin kamu bagikan, {firstName}?"
+  — an entity has no first name, and repeating its full name back at it reads oddly. Omit the prop
+  and the composer stays personal, exactly as on `/`.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered

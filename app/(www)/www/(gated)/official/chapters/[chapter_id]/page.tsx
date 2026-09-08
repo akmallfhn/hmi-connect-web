@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail } from "@/apis/chapters";
+import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import PageState from "@/components/states/PageState";
@@ -30,12 +31,19 @@ export default async function ChapterOfficialAccount({
   const chapter = await getChapterDetail(chapter_id);
   if (!chapter || chapter.status !== "active") return notFound();
 
+  const activity = await listEntityActivity("chapter", chapter_id, {
+    page: 1,
+    pageSize: 20,
+  });
+
   return (
     <OfficialAccountPage
       entityType="chapter"
       entityId={chapter_id}
       name={formatEntityAuthorName("chapter", chapter.name)}
       imageUrl={chapter.image_url}
+      initialItems={activity.list}
+      initialHasMore={activity.hasMore}
       viewer={user}
     />
   );

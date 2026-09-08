@@ -1,19 +1,20 @@
-import Image from "next/image";
-import Link from "next/link";
+import type { ActivityEntry } from "@/apis/feeds";
 import type { SessionUser } from "@/apis/session";
-import { ADMIN_ENTITY_LABEL } from "@/lib/access";
-import { entityProfileHref } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
+import EntitySummarySidebar from "../entity/EntitySummarySidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import LogoHmi from "../svg/LogoHmi";
+import OfficialTimeline from "../official/OfficialTimeline";
+import { entityProfileHref } from "@/lib/feed-author";
 
 interface OfficialAccountPageProps {
   entityType: AccessEntityTypeEnum;
   entityId: string;
   name: string;
   imageUrl?: string | null;
+  initialItems: ActivityEntry[];
+  initialHasMore: boolean;
   viewer: SessionUser | null;
 }
 
@@ -22,6 +23,8 @@ export default function OfficialAccountPage({
   entityId,
   name,
   imageUrl,
+  initialItems,
+  initialHasMore,
   viewer,
 }: OfficialAccountPageProps) {
   return (
@@ -32,49 +35,30 @@ export default function OfficialAccountPage({
         userId={viewer?.id}
         username={viewer?.username}
         verificationStatus={viewer?.verification_status}
-        mobileBackTitle="Akun Resmi"
+        mobileBackTitle={name}
       />
 
-      <PageMargin noMobilePadding className="pb-6 lg:py-6">
-        <div className="mx-auto flex max-w-[768px] flex-col gap-1.5 lg:gap-4">
-          <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={name}
-                    width={56}
-                    height={56}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <LogoHmi className="size-7" />
-                )}
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#5f6573]">
-                  Akun Resmi {ADMIN_ENTITY_LABEL[entityType]}
-                </p>
-                <p className="truncate text-lg font-bold text-[#172033]">
-                  {name}
-                </p>
-              </div>
-            </div>
-
-            <Link
+      <PageMargin noMobilePadding className="pb-6 lg:pt-6">
+        <div className="mx-auto grid grid-cols-1 gap-1.5 lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)] lg:gap-4">
+          <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+            <EntitySummarySidebar
+              name={name}
+              imageUrl={imageUrl}
               href={entityProfileHref(entityType, entityId)}
-              className="mt-4 inline-block text-sm font-semibold text-primary hover:underline"
-            >
-              Lihat profil publik
-            </Link>
-          </div>
+            />
+          </aside>
 
-          <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
-            <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-6 text-center text-sm text-[#5f6573] xl:text-[15px]">
-              Fitur akun resmi sedang disiapkan.
-            </p>
-          </div>
+          <main className="min-w-0">
+            <OfficialTimeline
+              authorEntity={{ type: entityType, id: entityId, name, imageUrl }}
+              initialItems={initialItems}
+              initialHasMore={initialHasMore}
+              currentUserId={viewer?.id}
+              currentUserName={viewer?.full_name}
+              currentUserAvatar={viewer?.avatar}
+              verificationStatus={viewer?.verification_status}
+            />
+          </main>
         </div>
       </PageMargin>
 
