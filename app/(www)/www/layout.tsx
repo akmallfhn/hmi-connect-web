@@ -4,22 +4,14 @@ import { listMyAccessGrants } from "@/apis/access-grants";
 import { getSession } from "@/apis/session";
 import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
 import { manageGrants } from "@/lib/access";
-import { getAdminSiteOrigin } from "@/lib/constants";
+import { getAdminSiteOrigin, PROD_MAIN_SITE_URL } from "@/lib/constants";
 
 const siteDescription =
   "HMI Connect adalah ruang digital kader HMI untuk terhubung, berbagi kabar, dan mengelola data keanggotaan.";
 
-function getMetadataBase() {
-  const fallbackUrl = "https://hmi-connect-web.vercel.app";
-  try {
-    return new URL(process.env.NEXT_PUBLIC_BASE_URL ?? fallbackUrl);
-  } catch {
-    return new URL(fallbackUrl);
-  }
-}
-
 export const metadata: Metadata = {
-  metadataBase: getMetadataBase(),
+  // Pinned to production like EMAIL_SITE_ORIGIN — canonical/OG URLs are read off-site, where a dev origin means nothing.
+  metadataBase: new URL(PROD_MAIN_SITE_URL),
   applicationName: "HMI Connect",
   title: {
     default: "HMI Connect",

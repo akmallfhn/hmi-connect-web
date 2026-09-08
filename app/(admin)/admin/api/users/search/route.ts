@@ -49,7 +49,7 @@ function parseVerificationStatus(
   return undefined;
 }
 
-// Duplicate of app/(www)/www/api/users/search/route.ts — admin.(example.com) is a separate origin, needs its own copy.
+// Duplicate of app/(www)/www/api/users/search/route.ts — the admin subdomain is a separate origin, needs its own copy.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";

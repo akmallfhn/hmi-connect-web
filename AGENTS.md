@@ -41,18 +41,18 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | Variable                                                     | Used by                                       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BASE_URL`                                                   | `apis/api.ts`                                 | Base URL of the Go backend all `callApi()` calls hit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `DOMAIN_MODE`                                                | `lib/constants.ts#getSessionCookieDomain`     | `"local"` → session cookie domain `example.com`; anything else → `hmi-connect-web.vercel.app` (update once a real domain is live). Set to `local` in local `.env`.                                                                                                                                                                                                                                                                                                                                                                           |
+| `DOMAIN_MODE`                                                | `lib/constants.ts#getSessionCookieDomain`     | `"local"` → session cookie domain `example.com`; anything else → `hmiconnect.id`, the production domain. Set to `local` in local `.env`.                                                                                                                                                                                                                                                                                                                                                                           |
 | `CLIENT_SECRET`                                              | `app/.../api/auth/callback/google/route.ts`   | Bearer secret for the backend's `/api/v1/auth/login` exchange.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `ORGANIZATION_ID`                                            | `apis/branches.ts`                            | Scopes branch lookups to this org.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID`            | `app/layout.tsx`, Google login flow           | Google OAuth client id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `NEXT_PUBLIC_BASE_URL`                                       | client-side code that needs the public origin |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `NEXT_PUBLIC_BASE_URL`                                       | — (no consumer today)                         | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts`                             | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres _is_ this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
 | `MAILTRAP_API_TOKEN`                                         | `lib/mailtrap.ts`                             | Server-side Mailtrap API token for `sendEmail()` (see Transactional email below).                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `MAILTRAP_WEBHOOK_SECRET`                                    | —                                             | Present in `.env` for a future Mailtrap delivery-event webhook (bounces/opens); not consumed by any code yet — don't assume a webhook route exists until one is actually added.                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Domain routing
 
-`next.config.mts` rewrites and redirects everything for host `www.(example.com)` into
+`next.config.mts` rewrites and redirects everything for the main-site hosts (`WWW_HOSTS`) into
 the `/www` segment (see `app/(www)/www/`), and hides `/www` from direct access. It also
 holds the cookie-based redirect rules (no session → `/auth/login`, has session → don't
 show login again). Paths listed in that first rule's negative lookahead opt out of it:
@@ -61,25 +61,30 @@ show login again). Paths listed in that first rule's negative lookahead opt out 
 `redirectTo` so the emailed link survives signing in, which a config-level redirect can't do. This is why almost every route lives under `app/(www)/www/...` even
 though the URLs you actually visit don't show `/www`.
 
-`admin.(example.com)` is rewritten into `/admin` the same way (see `app/(admin)/admin/`),
+The admin hosts (`ADMIN_HOSTS`) are rewritten into `/admin` the same way (see `app/(admin)/admin/`),
 mirroring the sibling `sevenpreneur` project's subdomain-per-app-area pattern — `/admin`
 is likewise hidden from direct access. Since it's a separate subdomain rather than a path
 under `/www`, a logged-out request there can't just relative-redirect to `/auth/login`
 (that path doesn't exist under `/admin`); `next.config.mts`'s admin redirect instead sends
-it to an absolute `https://www.example.com/auth/login`, same as sevenpreneur's own admin
-redirect — including sevenpreneur's two-rule split for local dev (`next.config.mjs` has one
-rule for the prod host, one hardcoding `:3000` for `example.com:3000`). Unlike sevenpreneur,
-which has genuinely distinct prod/staging/local domains so rule order there doesn't matter,
-this repo reuses the one placeholder `example.com` domain for all of them, so the `:3000`
-rule **must** come first in the `redirects()` array — otherwise the broader prod pattern
-(`admin.(example.com).*`) would match the local host too and the port-specific rule would
-never be reached. `app/(admin)/admin/layout.tsx` gets the main site's origin via
+it to an absolute main-site `/auth/login`, same as sevenpreneur's own admin redirect —
+including sevenpreneur's two-rule split, one rule per environment, since the destination is an
+absolute URL and so can't be shared: `admin.example.com:3000` → `https://www.example.com:3000/...`,
+`admin.hmiconnect.id` → `https://www.hmiconnect.id/...`. Production and local are now genuinely
+different domains, so rule order no longer matters here the way it did while both were
+`example.com`. The three host matchers live in named consts at the top of `next.config.mts`
+(`WWW_HOSTS`, `ADMIN_HOSTS`, `ALL_HOSTS`) rather than being repeated per rule; each covers the real
+domain, the `hmi-connect-web.vercel.app` deploy host (kept so the raw deployment URL still renders),
+and the local `example.com` hosts-file entry. They end in `(:[0-9]+)?`, not `.*` — a trailing `.*`
+also matched `hmiconnect.id.attacker.com`, and only a port ever legitimately follows a host.
+`app/(admin)/admin/layout.tsx` gets the main site's origin via
 `lib/constants.ts#getMainSiteOrigin`, a static per-environment switch driven by `DOMAIN_MODE`
 (same convention as `getSessionCookieDomain`) — `"local"` returns `https://www.example.com:3000`,
-anything else returns `https://hmi-connect-web.vercel.app` (swap for the real domain once one
-is live in production). The matching `getAdminSiteOrigin` returns
-`https://admin.example.com:3000` locally and the placeholder `https://admin.example.com`
-otherwise; the desktop profile dropdown uses it for its cross-subdomain admin links. The main
+anything else returns `https://www.hmiconnect.id`. The matching `getAdminSiteOrigin` returns
+`https://admin.example.com:3000` locally and `https://admin.hmiconnect.id` otherwise; the desktop
+profile dropdown uses it for its cross-subdomain admin links. The apex `hmiconnect.id` is accepted
+by `WWW_HOSTS` too, so a bare visit renders instead of 404-ing, but `www.` is canonical — that's
+what `metadataBase` and every email link use, and an apex→www redirect belongs in DNS/Vercel, not
+here. The main
 site origin is used by the admin layout for its own defense-in-depth session re-check, its `/auth/login`
 bounce when there's no session, and the "Akses Ditolak" back-link (via
 `<PageState variant="forbidden">`, see `components/states/PageState.tsx` below). Access itself
@@ -228,11 +233,12 @@ the SK and Konfercab routes are currently hidden from the Cabang sidebar.
   `lib/constants.ts#getSessionCookieDomain()`, which — same convention as sevenpreneur's
   callback route — is a static per-environment switch driven by `DOMAIN_MODE`, not the
   request host: `DOMAIN_MODE=local` returns the bare `"example.com"` (no leading dot), so
-  the cookie is shared between `www.` and `admin.` locally; anything else returns
-  `"hmi-connect-web.vercel.app"` (swap this for the real domain once one is live in
-  production — Vercel preview deployments, which each get their own `hmi-connect-web-*
-.vercel.app` host, are a known gap here: the browser rejects a `Domain` that doesn't
-  match/superdomain the actual host, so login silently doesn't persist on preview URLs).
+  the cookie is shared between `www.` and `admin.` locally; anything else returns the bare
+  `"hmiconnect.id"`, which is what lets one session cover `www.` and `admin.` in production.
+  The browser rejects a `Domain` that doesn't match/superdomain the actual host, so login
+  silently doesn't persist on any host outside `hmiconnect.id` — the raw
+  `hmi-connect-web.vercel.app` deployment and per-deploy Vercel preview URLs included. Those hosts
+  still render (they're in `WWW_HOSTS`) but can't hold a session; use the real domain to sign in.
   Any code that deletes this cookie must call the same helper (no arguments needed) or the
   browser won't match it — see `logoutUser()` in `apis/session.ts` and
   `GET /www/api/auth/clear-session` below.
@@ -490,10 +496,11 @@ no link when `"pending"` — and only renders the verified badge next to the acc
 
 `lib/mailtrap.ts` (`import "server-only"`) wraps the `mailtrap` npm package's `MailtrapClient` —
 one shared client, sender fixed to `{ name: "HMI Connect", email: "no-reply@sevenpreneur.com" }`
-(temporary — `hmiconnect.com` isn't yet added/DNS-verified under this Mailtrap account's Sending
-Domains, `sevenpreneur.com` already is; swap the sender email back once `hmiconnect.com` is
-verified there, don't reintroduce it before then or every send times out against Mailtrap's
-production `send.api.mailtrap.io`), one `sendEmail({ mailRecipients, mailSubject, mailBody?,
+(temporary — `hmiconnect.id` isn't yet added/DNS-verified under this Mailtrap account's Sending
+Domains, `sevenpreneur.com` already is; swap the sender email to `hmiconnect.id` once it's
+verified there, don't do it before then or every send times out against Mailtrap's
+production `send.api.mailtrap.io`. Owning the domain is not the same as having verified it with
+Mailtrap.), one `sendEmail({ mailRecipients, mailSubject, mailBody?,
 mailHtml? })` function. Same shape as the
 sibling `sevenpreneur` project's own `lib/mailtrap.ts`, minus its Prisma-backed `LogError` call
 (this repo has no DB access, so send failures here are just `console.error`'d by the caller).
@@ -1454,8 +1461,8 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Branch→chapter and
   province→city→district cascading selects (create/contact/organization forms) reuse the exact
   `SearchableSelect` + debounced-search-Route-Handler pattern from `VerificationPage`, but can't
-  reuse the `www` route handlers directly — `admin.(example.com)` rewrites to `/admin`, a
-  different origin than `www.(example.com)` (see Domain routing above), so
+  reuse the `www` route handlers directly — the admin subdomain rewrites to `/admin`, a
+  different origin than the main site (see Domain routing above), so
   `app/(admin)/admin/api/{branches,chapters,provinces,cities,districts}/search/route.ts` are thin
   duplicates of their `app/(www)/www/api/.../search/route.ts` counterparts, not new logic.
   `app/(admin)/admin/master/users/create/page.tsx` renders `components/pages/AdminUserCreatePage.tsx`,

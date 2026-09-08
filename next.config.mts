@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const SESSION_COOKIE_NAME = "session_token_hmi";
 
+// Host matchers per site: the real domain, the vercel.app deploy host, and the local hosts-file entry.
+const WWW_HOSTS =
+  "(www\\.example\\.com|(www\\.)?hmiconnect\\.id|hmi-connect-web\\.vercel\\.app)(:[0-9]+)?";
+const ADMIN_HOSTS = "(admin\\.example\\.com|admin\\.hmiconnect\\.id)(:[0-9]+)?";
+const ALL_HOSTS =
+  "((www|admin)\\.example\\.com|(www\\.|admin\\.)?hmiconnect\\.id|hmi-connect-web\\.vercel\\.app)(:[0-9]+)?";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
@@ -9,7 +16,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Force revalidation on www.example.com/admin.example.com so a cookie-dependent response never gets served stale.
+  // Force revalidation on every site host so a cookie-dependent response never gets served stale.
   async headers() {
     return [
       {
@@ -18,8 +25,7 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value:
-              "((www|admin).(example.com)|hmi-connect-web\\.vercel\\.app).*",
+            value: ALL_HOSTS,
           },
         ],
         headers: [
@@ -41,7 +47,7 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
+            value: WWW_HOSTS,
           },
         ],
         missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
@@ -55,11 +61,25 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "admin.(example.com):3000.*",
+            value: "admin\\.example\\.com:3000",
           },
         ],
         missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
         destination: "https://www.example.com:3000/auth/login",
+        basePath: false,
+        permanent: false,
+      },
+      {
+        source: "/(.*)",
+        has: [
+          {
+            type: "header",
+            key: "host",
+            value: "admin\\.hmiconnect\\.id(:[0-9]+)?",
+          },
+        ],
+        missing: [{ type: "cookie", key: SESSION_COOKIE_NAME }],
+        destination: "https://www.hmiconnect.id/auth/login",
         basePath: false,
         permanent: false,
       },
@@ -70,7 +90,7 @@ const nextConfig: NextConfig = {
           {
             type: "header",
             key: "host",
-            value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
+            value: WWW_HOSTS,
           },
           { type: "cookie", key: SESSION_COOKIE_NAME, value: undefined },
         ],
@@ -89,14 +109,14 @@ const nextConfig: NextConfig = {
         },
       ],
       afterFiles: [
-        // admin.example.com -> the /admin route group.
+        // The admin subdomain -> the /admin route group.
         {
           source: "/:path*",
           has: [
             {
               type: "header",
               key: "host",
-              value: "admin.(example.com).*",
+              value: ADMIN_HOSTS,
             },
           ],
           destination: "/admin/:path*",
@@ -108,7 +128,7 @@ const nextConfig: NextConfig = {
             {
               type: "header",
               key: "host",
-              value: "(www.(example.com)|hmi-connect-web\\.vercel\\.app).*",
+              value: WWW_HOSTS,
             },
           ],
           destination: "/www/:path*",
@@ -120,6 +140,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
+        "hmiconnect.id",
+        "*.hmiconnect.id",
         "example.com",
         "*.example.com",
         "hmi-connect-web.vercel.app",

@@ -1,17 +1,15 @@
 export const SESSION_COOKIE_NAME = "session_token_hmi";
 
-// Session cookie domain per DOMAIN_MODE — swap the vercel.app default once a real domain is live.
+// Session cookie domain per DOMAIN_MODE — bare, no leading dot, so www. and admin. share one session.
 export function getSessionCookieDomain(): string | undefined {
-  return process.env.DOMAIN_MODE === "local"
-    ? "example.com"
-    : "hmi-connect-web.vercel.app";
+  return process.env.DOMAIN_MODE === "local" ? "example.com" : "hmiconnect.id";
 }
 
-// Site origins per environment — swap the placeholder/vercel.app values once a real domain is live.
+// Site origins per environment — local still runs on the example.com hosts file entry.
 export const DEV_MAIN_SITE_URL = "https://www.example.com:3000";
-export const PROD_MAIN_SITE_URL = "https://hmi-connect-web.vercel.app";
+export const PROD_MAIN_SITE_URL = "https://www.hmiconnect.id";
 export const DEV_ADMIN_SITE_URL = "https://admin.example.com:3000";
-export const PROD_ADMIN_SITE_URL = "https://admin.example.com";
+export const PROD_ADMIN_SITE_URL = "https://admin.hmiconnect.id";
 
 // Origin transactional email links must use — they're opened from an inbox, where a dev host resolves to nothing.
 export const EMAIL_SITE_ORIGIN = PROD_MAIN_SITE_URL;
