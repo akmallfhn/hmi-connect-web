@@ -3,22 +3,20 @@
 import { logoutUser } from "@/lib/actions";
 import {
   ArrowLeft,
+  BadgeCheck,
   Bell,
-  Building2,
   ChevronDown,
   CreditCard,
   EllipsisVertical,
-  GraduationCap,
   LayoutDashboard,
   LogOut,
   MessageCircleMore,
-  Network,
   Search,
   Settings,
   TriangleAlert,
   UserRound,
-  type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -31,6 +29,7 @@ import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
 import NotificationsDropdownPanel from "../notifications/NotificationsDropdownPanel";
+import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 import {
@@ -38,7 +37,6 @@ import {
   ADMIN_ENTITY_ORDER,
   adminEntityHref,
 } from "@/lib/access";
-import type { AccessEntityTypeEnum } from "@/lib/types";
 
 interface HeaderProps {
   fullName?: string;
@@ -53,15 +51,6 @@ interface HeaderProps {
   mobileMenuLabel?: string;
   desktopFilterBar?: ReactNode;
 }
-
-// Menu glyph per hierarchy entity, matching the icons the admin sidebars use.
-const ADMIN_ENTITY_ICON: Record<AccessEntityTypeEnum, LucideIcon> = {
-  organization: LayoutDashboard,
-  coordinating_body: Network,
-  branch: Building2,
-  coordinating_chapter: Network,
-  chapter: GraduationCap,
-};
 
 export default function Header({
   fullName,
@@ -84,33 +73,28 @@ export default function Header({
   const { notifications, unreadCount, handleRead, handleMarkAllRead } =
     useNotificationsBell(userId);
   const unreadChatCount = useUnreadChatCount(userId);
-  const adminMenuItems = adminAccess
-    ? [
-        ...adminAccess.grants
-          .slice()
-          .sort(
-            (a, b) =>
-              ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-              ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
-          )
-          .map((grant) => ({
-            label: grant.entity_name
-              ? `Kelola ${ADMIN_ENTITY_LABEL[grant.entity_type]} ${grant.entity_name}`
-              : `Kelola ${ADMIN_ENTITY_LABEL[grant.entity_type]}`,
-            href: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
-            icon: ADMIN_ENTITY_ICON[grant.entity_type],
-          })),
-        ...(adminAccess.roleName === "Super Admin"
-          ? [
-              {
-                label: "Kelola Organisasi",
-                href: adminAccess.adminOrigin,
-                icon: LayoutDashboard,
-              },
-            ]
-          : []),
-      ]
+  const adminEntities = adminAccess
+    ? adminAccess.grants
+        .slice()
+        .sort(
+          (a, b) =>
+            ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
+            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
+        )
+        .map((grant) => ({
+          key: grant.id,
+          name: grant.entity_name
+            ? `${ADMIN_ENTITY_LABEL[grant.entity_type]} ${grant.entity_name}`
+            : ADMIN_ENTITY_LABEL[grant.entity_type],
+          imageUrl: grant.entity_image_url,
+          adminHref: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
+        }))
     : [];
+  // Super Admin manages no single entity, so its dashboard is a plain menu item, not a Kelola block.
+  const superAdminHref =
+    adminAccess?.roleName === "Super Admin"
+      ? `${adminAccess.adminOrigin}/master`
+      : null;
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
@@ -211,6 +195,7 @@ export default function Header({
 
               <Dropdown
                 align="right"
+                panelClassName="w-80"
                 trigger={({ toggle }) => (
                   <button
                     type="button"
@@ -256,20 +241,61 @@ export default function Header({
                     <Settings className="size-4 text-[#5f6573]" />
                     Pengaturan
                   </a>
+                  {superAdminHref && (
+                    <a
+                      href={superAdminHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                    >
+                      <LayoutDashboard className="size-4 text-[#5f6573]" />
+                      Dashboard Super Admin
+                    </a>
+                  )}
                 </div>
-                {adminMenuItems.length > 0 && (
-                  <div className="flex flex-col border-t border-[#e6e9ef] py-1">
-                    {adminMenuItems.map(({ label, href, icon: Icon }) => (
-                      <a
-                        key={label}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                      >
-                        <Icon className="size-4 text-[#5f6573]" />
-                        {label}
-                      </a>
+                {adminEntities.length > 0 && (
+                  <div className="border-t border-[#e6e9ef] py-2">
+                    <p className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide text-[#5f6573]">
+                      Kelola
+                    </p>
+                    {adminEntities.map((entity) => (
+                      <div key={entity.key} className="px-4 py-2">
+                        <div className="flex items-center gap-2.5">
+                          <EntityBadge
+                            name={entity.name}
+                            imageUrl={entity.imageUrl}
+                          />
+                          <p className="min-w-0 truncate text-sm font-semibold text-[#172033]">
+                            {entity.name}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex gap-2">
+                          <a
+                            href={entity.adminHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-w-0 flex-1"
+                          >
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="w-full gap-1.5 px-2"
+                            >
+                              <LayoutDashboard className="size-3.5 shrink-0" />
+                              <span className="truncate">Dashboard</span>
+                            </Button>
+                          </a>
+                          {/* No public entity surface to send them to from here yet. */}
+                          <Button
+                            variant="soft"
+                            size="sm"
+                            className="min-w-0 flex-1 gap-1.5 px-2"
+                          >
+                            <BadgeCheck className="size-3.5 shrink-0" />
+                            <span className="truncate">Official Account</span>
+                          </Button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -369,5 +395,30 @@ export default function Header({
         </div>
       )}
     </header>
+  );
+}
+
+// The entity's own logo, square like every admin list badge, falling back to the HMI emblem.
+function EntityBadge({
+  name,
+  imageUrl,
+}: {
+  name: string;
+  imageUrl?: string | null;
+}) {
+  return (
+    <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          width={32}
+          height={32}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <LogoHmi className="size-4" />
+      )}
+    </span>
   );
 }

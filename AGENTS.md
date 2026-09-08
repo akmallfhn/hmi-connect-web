@@ -605,18 +605,27 @@ iconSm`.
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
   how the bell/avatar triggers next to it also don't. The avatar dropdown gets admin scope
   from `HeaderAdminAccessContext`, populated once by `app/(www)/www/layout.tsx` from
-  `getSession()`, which now passes `manageGrants(user)` straight through as `grants` (the context
-  no longer carries five `canManage*` booleans plus five id/name pairs). `Header` renders one
-  cross-subdomain link per grant, sorted by `ADMIN_ENTITY_ORDER`, labeled
-  `Kelola {ADMIN_ENTITY_LABEL} {grant.entity_name}` and pointing at
-  `adminEntityHref(grant.entity_type, grant.entity_id)` — so someone holding two Cabang gets two
-  links, which the old membership-derived version could never express. It falls back to the bare
-  `Kelola {label}` when `entity_name` is missing. `role_name === "Super Admin"` adds `Kelola Organisasi`
-  linking straight to the
-  admin subdomain root. The absolute admin origin comes from
+  `getSession()`, which passes `manageGrants(user)` through as `grants` (the context
+  no longer carries five `canManage*` booleans plus five id/name pairs). Under a `Kelola` subtitle
+  the dropdown renders **one block per grant**, sorted by `ADMIN_ENTITY_ORDER`: the entity's own
+  logo in a square `rounded-lg` badge (`LogoHmi` when it has none, same treatment as
+  `EntityChildrenCard`), its `{ADMIN_ENTITY_LABEL} {entity_name}` on one line, then two pill
+  `Button`s (`size="sm"`, `variant="primary"` and `variant="soft"` — the app's primary-light) sharing
+  one row (`flex-1`, never wrapping — which is also why this one `Dropdown` passes
+  `panelClassName="w-80"` instead of the default `w-72`: two labels this long don't fit side by side
+  in 288px) — `Dashboard`, a cross-subdomain link to
+  `adminEntityHref(grant.entity_type, grant.entity_id)`, and `Official Account`, which is
+  **enabled but deliberately has no destination yet**; wire it to the public entity profile when
+  that's asked for, don't assume it was forgotten. Someone holding two Cabang gets two blocks, which
+  the old membership-derived version could never express. `Super Admin` is **not** in this section —
+  it manages no single entity, so it instead gets a plain `Dashboard Super Admin` item under
+  Pengaturan in the menu above, linking to the admin subdomain root. The absolute admin origin comes from
   `lib/constants.ts#getAdminSiteOrigin`, so these links perform the required full
-  cross-origin navigation instead of resolving against the `www` host. Every `Kelola ...`
-  link opens in a new tab with `target="_blank"` and `rel="noopener noreferrer"`. The
+  cross-origin navigation instead of resolving against the `www` host; each opens in a new tab with
+  `target="_blank"` and `rel="noopener noreferrer"`. `check-session` returns no logo on a grant, so
+  the layout backfills one: it calls `listMyAccessGrants` (which does carry `entity_image_url`) and
+  maps it in by `entity_id` — **only when the caller actually holds a grant**, so a plain member
+  and `Super Admin` never pay for that request on every www page load. The
   "belum diverifikasi"/"sedang ditinjau admin" banners are siblings of that row (not nested
   inside it), so one still shows on mobile whenever `verificationStatus` is `"unverified"` or
   `"pending"`. The outer `<header>`'s own

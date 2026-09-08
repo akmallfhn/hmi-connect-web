@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { listMyAccessGrants } from "@/apis/access-grants";
 import { getSession } from "@/apis/session";
 import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
 import { manageGrants } from "@/lib/access";
@@ -50,13 +51,26 @@ export const metadata: Metadata = {
   },
 };
 
+async function listGrantEntityLogos(): Promise<Map<string, string | null>> {
+  const { list } = await listMyAccessGrants({ pageSize: 100 });
+  return new Map(
+    list.map((grant) => [grant.entity_id, grant.entity_image_url ?? null]),
+  );
+}
+
 export default async function WwwLayout({ children }: { children: ReactNode }) {
   const { user } = await getSession();
+  const grants = user ? manageGrants(user) : [];
+  // Only a grant holder pays for this lookup, and only because check-session omits the entity logo.
+  const logos = grants.length > 0 ? await listGrantEntityLogos() : new Map();
   const adminAccess = user
     ? {
         adminOrigin: getAdminSiteOrigin(),
         roleName: user.role_name,
-        grants: manageGrants(user),
+        grants: grants.map((grant) => ({
+          ...grant,
+          entity_image_url: logos.get(grant.entity_id) ?? null,
+        })),
       }
     : null;
 
