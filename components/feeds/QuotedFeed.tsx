@@ -1,31 +1,31 @@
 import Image from "next/image";
-import Avatar from "../common/Avatar";
-import Label from "../common/Label";
+import Link from "next/link";
+import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import type { Feed } from "@/apis/feeds";
 
 // The read-only preview of an original feed embedded in a quote repost — used both when
 // rendering an existing quote repost (FeedItemCard) and while composing one (CreateFeedForms).
-export default function QuotedFeed({ feed }: { feed: Feed }) {
+export default function QuotedFeed({
+  feed,
+  // Only set by a caller that isn't already nested inside a link of its own.
+  linkToDetail = false,
+}: {
+  feed: Feed;
+  linkToDetail?: boolean;
+}) {
   const photo = feed.media?.find((item) => item.type === "photo");
   const author = resolveFeedAuthor(feed);
 
-  return (
-    <div className="mt-3 rounded-xl border border-[#e6e9ef] p-3">
+  const body = (
+    <>
       <div className="flex items-center gap-2">
-        <Avatar src={author.avatar} name={author.name} size={28} />
+        <FeedAuthorAvatar author={author} size={28} />
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="truncate text-sm font-semibold text-[#172033]">
-              {author.name}
-            </p>
-            {author.isEntity && (
-              <Label variant="blue" size="sm">
-                Official Account
-              </Label>
-            )}
-          </div>
+          <p className="truncate text-sm font-semibold text-[#172033]">
+            {author.name}
+          </p>
           <p className="text-xs text-[#5f6573]">
             {formatRelativeTime(feed.created_at)}
           </p>
@@ -39,6 +39,21 @@ export default function QuotedFeed({ feed }: { feed: Feed }) {
           <Image src={photo.url} alt="" fill className="object-cover" unoptimized />
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (linkToDetail) {
+    return (
+      <Link
+        href={`/feeds/${feed.id}`}
+        className="mt-3 block rounded-xl border border-[#e6e9ef] p-3 transition hover:bg-[#f5f7fb]"
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-[#e6e9ef] p-3">{body}</div>
   );
 }

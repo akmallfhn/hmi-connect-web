@@ -8,9 +8,8 @@ import {
 } from "lucide-react";
 import type { ActivityEntry } from "@/apis/users";
 import type { ActivityTypeEnum } from "@/lib/types";
-import Avatar from "../common/Avatar";
+import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import QuotedFeed from "../feeds/QuotedFeed";
-import Label from "../common/Label";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 
@@ -48,15 +47,10 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
           </p>
           <div className="mt-2 rounded-xl border border-[#e6e9ef] p-3">
             <div className="flex items-center gap-2">
-              <Avatar src={author.avatar} name={author.name} size={24} />
+              <FeedAuthorAvatar author={author} size={24} />
               <p className="truncate text-xs font-semibold text-[#172033] xl:text-sm">
                 {author.name}
               </p>
-              {author.isEntity && (
-                <Label variant="blue" size="sm">
-                  Official Account
-                </Label>
-              )}
             </div>
             <p className="mt-1 line-clamp-2 text-xs text-[#5f6573] xl:text-sm">
               {feed.content}

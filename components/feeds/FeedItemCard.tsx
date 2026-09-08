@@ -19,13 +19,13 @@ import {
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
-import Label from "../common/Label";
 import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
 import QuotedFeed from "./QuotedFeed";
+import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import EditFeedForm from "../forms/EditFeedForm";
 import { FeedComposerModal } from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -370,16 +370,9 @@ export default function FeedItemCard({
       )}
       <div className="flex items-start justify-between gap-3">
         <Link href={author.href} className="flex min-w-0 items-start gap-3">
-          <Avatar src={author.avatar} name={author.name} size={44} />
+          <FeedAuthorAvatar author={author} size={44} />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <p className="font-semibold text-[#172033]">{author.name}</p>
-              {author.isEntity && (
-                <Label variant="blue" size="sm">
-                  Official Account
-                </Label>
-              )}
-            </div>
+            <p className="font-semibold text-[#172033]">{author.name}</p>
             <p className="text-xs text-[#5f6573] xl:text-[13px]">
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
@@ -448,7 +441,7 @@ export default function FeedItemCard({
       )}
       {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
       {feed.repost_of ? (
-        <QuotedFeed feed={feed.repost_of} />
+        <QuotedFeed feed={feed.repost_of} linkToDetail />
       ) : (
         feed.repost_of_id && <DeletedQuotedFeed />
       )}

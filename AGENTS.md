@@ -912,11 +912,26 @@ iconSm`.
   `search/list`'s posting row satisfies too) and returns the display name
   (`HMI Cabang {name}`, `HMI Badko {name}`, ... — an organization is named outright, and an existing
   prefix in the stored name is stripped before one is added), the entity logo, an `isEntity` flag
-  driving the blue `Official Account` pill, and the profile href from `entityProfileHref` —
-  `/branches/{id}` and friends, the public entity profile pages described below.
+  marking it as an entity, and the profile href from `entityProfileHref` —
+  `/branches/{id}` and friends, the public entity profile pages described below. Every one of those
+  four callers draws that author through `components/feeds/FeedAuthorAvatar.tsx` rather than
+  `Avatar` directly — a personal feed still renders a plain `Avatar`, while an entity feed gets the
+  same ringed circle its own profile header uses (`border-2 border-white ring-2 ring-primary`,
+  scaled down from `EntityProfileHeader`'s `ring-4`) plus that header's own primary check badge
+  pinned to the circle's bottom-right, sized off the avatar with a 12px floor so it stays legible on
+  a 24px quoted-feed avatar. It falls back to the `LogoHmi` emblem at half the avatar's size when
+  `author_entity_image_url` is `null` — an entity without a logo is common, and initials read as a
+  person's account — but the check renders either way, logo or photo. There is deliberately **no**
+  blue `Official Account` `Label` pill beside the name anywhere: the badge already says it, and an
+  earlier revision that rendered both read as the same claim made twice. `isEntity` therefore only
+  drives the avatar treatment now, not a pill — don't reintroduce one.
   A quote repost whose original was deleted comes back as `repost_of_id` set with `repost_of` null;
   both `FeedItemCard` and `ActivityEntryCard` render "Postingan yang dibagikan sudah dihapus" there
   rather than silently dropping the quote, since the quote repost keeps its own words either way.
+  `QuotedFeed`'s optional `linkToDetail` wraps the whole preview in a `<Link>` to the quoted feed's
+  own `/feeds/[feed_id]` — only `FeedItemCard` passes it, since `ActivityEntryCard` and the composer
+  already sit inside a link (or inside no navigable surface at all) and a nested `<a>` would break
+  hydration.
   `FeedItemCard.tsx` renders a feed's
   content/media (photo grid, video, or
   `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
@@ -1099,9 +1114,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `EntityStructuralCard` (the entity's current `structurals` period via
   `getStructuralOverview(..., null)` — a flat officer list, not `StructuralPage`'s admin org chart),
   and `EntityChildrenCard` (Daftar Badko/Cabang/Komisariat, each linking to its own entity profile;
-  a Komisariat is a leaf and passes `null`). The `Official Account` marker here is **not** the blue
-  `Label` pill `FeedItemCard` renders beside an entity's name — it's a primary-colored check badge
-  pinned to the logo's bottom-right, revealing that text as a `role="tooltip"` pill on hover (same
+  a Komisariat is a leaf and passes `null`). The `Official Account` marker is a primary-colored check
+  badge pinned to the logo's bottom-right — the same marker `FeedAuthorAvatar` puts on every entity
+  avatar in the feed, just larger — revealing that text as a `role="tooltip"` pill on hover (same
   `group-hover`/`opacity-0` treatment as `StructuralPage`'s `OfficerNode` position tooltip); the
   badge carries its own `aria-label`, since a tooltip alone says nothing on touch.
   There is deliberately **no feed/activity section**:
