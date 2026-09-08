@@ -56,7 +56,7 @@ export default function ConversationListItem({
         <div className="flex items-center justify-between gap-2">
           <p
             className={[
-              "min-w-0 truncate text-sm",
+              "min-w-0 truncate text-[15px]",
               unread
                 ? "font-semibold text-[#172033]"
                 : "font-medium text-[#172033]",
@@ -75,7 +75,7 @@ export default function ConversationListItem({
         </div>
         <p
           className={[
-            "mt-0.5 line-clamp-1 break-all text-xs",
+            "mt-0.5 line-clamp-1 break-all text-[13px]",
             unread ? "font-semibold text-[#172033]" : "text-[#7b8190]",
           ].join(" ")}
         >

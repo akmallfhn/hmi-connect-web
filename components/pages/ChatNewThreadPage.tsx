@@ -8,10 +8,10 @@ import type { SearchPersonResult } from "@/apis/search";
 import { sendChatMessage } from "@/lib/actions";
 import { CHAT_NEW_RECIPIENT_KEY } from "@/lib/constants";
 import Button from "../buttons/Button";
-import Avatar from "../common/Avatar";
 import { useChatConversations } from "../chats/ChatConversationsContext";
 import ChatThreadHeader from "../chats/ChatThreadHeader";
 import MessageComposer from "../chats/MessageComposer";
+import SendMessageIllustration from "../illustrations/SendMessageIllustration";
 
 interface ChatNewThreadPageProps {
   viewerId?: string;
@@ -26,19 +26,24 @@ export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) 
   const [recipient, setRecipient] = useState<SearchPersonResult | null>(null);
   const [ready, setReady] = useState(false);
 
+  // Picking someone else while already on /chats/new doesn't remount, so re-read on the modal's event too.
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    function readRecipient() {
       const raw = sessionStorage.getItem(CHAT_NEW_RECIPIENT_KEY);
-      if (raw) {
-        try {
-          setRecipient(JSON.parse(raw));
-        } catch {
-          setRecipient(null);
-        }
+      try {
+        setRecipient(raw ? JSON.parse(raw) : null);
+      } catch {
+        setRecipient(null);
       }
       setReady(true);
-    }, 0);
-    return () => clearTimeout(timeoutId);
+    }
+
+    const timeoutId = setTimeout(readRecipient, 0);
+    window.addEventListener(CHAT_NEW_RECIPIENT_KEY, readRecipient);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener(CHAT_NEW_RECIPIENT_KEY, readRecipient);
+    };
   }, []);
 
   async function handleSend(content: string, attachmentUrl?: string) {
@@ -83,16 +88,13 @@ export default function ChatNewThreadPage({ viewerId }: ChatNewThreadPageProps) 
       />
 
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-        <Avatar src={recipient.avatar} name={recipient.full_name} size={72} />
-        <div>
-          <p className="text-base font-semibold text-[#172033]">{recipient.full_name}</p>
-          <p className="mt-1 text-sm text-[#7b8190]">
-            Mulai percakapan dengan mengirim pesan pertama.
-          </p>
-        </div>
+        <SendMessageIllustration className="w-52 max-w-full" />
+        <p className="text-[15px] text-[#7b8190]">
+          Mulai percakapan dengan mengirim pesan pertama.
+        </p>
       </div>
 
-      <MessageComposer userId={viewerId} onSend={handleSend} />
+      <MessageComposer key={recipient.id} userId={viewerId} onSend={handleSend} />
     </div>
   );
 }

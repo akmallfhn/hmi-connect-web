@@ -93,6 +93,7 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
     setQuery("");
     setResults([]);
     onClose();
+    window.dispatchEvent(new Event(CHAT_NEW_RECIPIENT_KEY));
     router.push("/chats/new");
   }
 

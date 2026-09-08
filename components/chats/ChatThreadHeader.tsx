@@ -38,22 +38,24 @@ export default function ChatThreadHeader({
             </div>
           </div>
         ) : (
-          <Link
-            href={username ? `/profile/${username}` : "#"}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 transition hover:bg-[#f5f7fb]"
-          >
-            <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#172033]">{fullName}</p>
-              {username && <p className="truncate text-xs text-[#7b8190]">@{username}</p>}
-            </div>
-          </Link>
+          <div className="flex min-w-0 flex-1 items-center">
+            <Link
+              href={username ? `/profile/${username}` : "#"}
+              className="flex w-fit max-w-full items-center gap-3 px-1 py-1"
+            >
+              <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-[#172033]">{fullName}</p>
+                {username && <p className="truncate text-[13px] text-[#7b8190]">@{username}</p>}
+              </div>
+            </Link>
+          </div>
         )}
       </div>
 
       <div className="flex items-center justify-center gap-1.5 border-t border-[#e6e9ef] bg-[#f8fafb] px-3 py-1.5">
         <Lock className="size-3 shrink-0 text-[#9aa1ad]" />
-        <p className="text-center text-[11px] text-[#9aa1ad]">
+        <p className="text-center text-[13px] text-[#9aa1ad]">
           Pesan di percakapan ini terenkripsi end-to-end
         </p>
       </div>

@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/id";
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "@/apis/chats";
+import SendMessageIllustration from "../illustrations/SendMessageIllustration";
 import Avatar from "../common/Avatar";
 import MessageBubble, { MessageMeta } from "./MessageBubble";
 
@@ -68,13 +69,10 @@ export default function MessageList({
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-        <Avatar src={personAvatar} name={personName} size={72} />
-        <div>
-          <p className="text-base font-semibold text-[#172033]">{personName}</p>
-          <p className="mt-1 text-sm text-[#7b8190]">
-            Mulai percakapan dengan mengirim pesan pertama.
-          </p>
-        </div>
+        <SendMessageIllustration className="w-52 max-w-full" />
+        <p className="text-[15px] text-[#7b8190]">
+          Mulai percakapan dengan mengirim pesan pertama.
+        </p>
       </div>
     );
   }
