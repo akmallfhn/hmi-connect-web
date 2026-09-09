@@ -81,6 +81,18 @@ export function canManageEntity(
   return isSuperAdmin(user) || holdsGrantAtEntity(user, entityType, entityId);
 }
 
+// Read rule: a grant reaches its own level and every level beneath it, never the ones above.
+export function canScopeToEntityLevel(
+  user: SessionUser | null | undefined,
+  entityType: AccessEntityTypeEnum,
+): boolean {
+  if (isSuperAdmin(user)) return true;
+  const targetLevel = ADMIN_ENTITY_ORDER.indexOf(entityType);
+  return manageGrants(user).some(
+    (grant) => ADMIN_ENTITY_ORDER.indexOf(grant.entity_type) <= targetLevel,
+  );
+}
+
 // Whether the account may see the admin area at all, without saying which entity.
 export function hasAnyManageAccess(
   user: SessionUser | null | undefined,

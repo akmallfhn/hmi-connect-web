@@ -10,6 +10,9 @@ import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import Select from "../fields/Select";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
@@ -29,6 +32,13 @@ export type MemberManagementScope =
   | "coordinating_chapter"
   | "chapter";
 
+// Only for scopes whose own grant may narrow users/list by chapter — Cabang and Korkom.
+export interface MemberChapterFilter {
+  selected: { id: string; name: string } | null;
+  // Scopes the Komisariat picker to this roster's own Cabang/Korkom.
+  searchParams: Record<string, string>;
+}
+
 export interface AdminMemberListDataProps {
   users: UserListEntry[];
   totalData: number;
@@ -37,6 +47,7 @@ export interface AdminMemberListDataProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
+  chapterFilter?: MemberChapterFilter;
 }
 
 interface AdminMemberListPageProps extends AdminMemberListDataProps {
@@ -57,12 +68,22 @@ export default function AdminMemberListPage({
   initialSearch,
   initialStatus,
   pageSize,
+  chapterFilter,
 }: AdminMemberListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const showBranchContext =
     managementScope === "organization" ||
     managementScope === "coordinating_body";
+
+  const chapterOption: SearchableOption | null = chapterFilter?.selected
+    ? {
+        label: `Komisariat ${chapterFilter.selected.name}`,
+        value: chapterFilter.selected.id,
+      }
+    : null;
+
+  const isFiltered = Boolean(initialSearch || initialStatus || chapterOption);
 
   // Adjust state during render when the server hands back a new search value, same pattern as SearchPage.
   const [seenSearch, setSeenSearch] = useState(initialSearch);
@@ -80,6 +101,24 @@ export default function AdminMemberListPage({
     });
     params.set("page", "1");
     router.push(`?${params.toString()}`);
+  }
+
+  async function loadChapterOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({
+      ...chapterFilter?.searchParams,
+      page: String(page),
+    });
+    if (inputValue) params.set("q", inputValue);
+    const response = await fetch(`/api/chapters/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+    return {
+      options: results.map((item) => ({
+        label: `Komisariat ${item.name}`,
+        value: item.id,
+      })),
+      hasMore: Boolean(json.hasMore),
+    };
   }
 
   useEffect(() => {
@@ -107,6 +146,20 @@ export default function AdminMemberListPage({
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
+        {chapterFilter && (
+          <div className="w-full sm:max-w-xs">
+            <SearchableSelect
+              selectId={`${managementScope}-member-chapter-filter`}
+              placeholder="Filter Komisariat"
+              value={chapterOption}
+              onChange={(option) =>
+                pushParams({ chapter_id: option ? String(option.value) : "" })
+              }
+              loadOptions={loadChapterOptions}
+              defaultOptions={chapterOption ? [chapterOption] : []}
+            />
+          </div>
+        )}
         <div className="w-full sm:max-w-52">
           <Select
             selectId={`${managementScope}-member-status-filter`}
@@ -121,14 +174,10 @@ export default function AdminMemberListPage({
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {users.length === 0 ? (
           <EmptyState
-            title={
-              initialSearch || initialStatus
-                ? "Kader tidak ditemukan"
-                : "Belum ada kader"
-            }
+            title={isFiltered ? "Kader tidak ditemukan" : "Belum ada kader"}
             description={
-              initialSearch || initialStatus
-                ? "Coba ubah kata kunci pencarian atau filter status."
+              isFiltered
+                ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
                 : "Kader yang terdaftar akan ditampilkan di sini."
             }
           />

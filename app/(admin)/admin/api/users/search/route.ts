@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { searchPeople } from "@/apis/search";
 import { getSession } from "@/apis/session";
 import { listUsers, type ListUsersOptions } from "@/apis/users";
-import { canManageEntity } from "@/lib/access";
+import { canScopeToEntityLevel } from "@/lib/access";
 import type {
   AccessEntityTypeEnum,
   VerificationStatusEnum,
@@ -66,7 +66,8 @@ export async function GET(request: Request) {
     const entityId = searchParams.get(scope.param) as string;
     const { user } = await getSession();
 
-    if (!canManageEntity(user, scope.entityType, entityId)) {
+    // users/list scopes rows to the caller's own domain, so only the filter's level is ours to check.
+    if (!canScopeToEntityLevel(user, scope.entityType)) {
       return NextResponse.json({ data: [], hasMore: false }, { status: 403 });
     }
 

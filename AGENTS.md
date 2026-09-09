@@ -106,7 +106,11 @@ only lists Super Admin (0) and General User (2) — there's still no fixed `role
 suspend whom — keep it in sync when the backend's rules move.
 **Every gate reads through `lib/access.ts`** — `isSuperAdmin`, `manageGrants`,
 `manageGrantsOfType`, `canManageEntity(user, entityType, entityId)` (Super Admin or an exact
-grant, i.e. the governance rule), and `hasAnyManageAccess` — plus the `ADMIN_ENTITY_BASE_PATH`/
+grant, i.e. the governance rule), `canScopeToEntityLevel(user, entityType)` (the read rule as a
+pure level comparison over `ADMIN_ENTITY_ORDER` — a grant reaches its own level and every level
+beneath it, never the ones above; it deliberately takes no entity id, since naming a sibling
+entity at your own level is answered with no rows rather than an error), and `hasAnyManageAccess`
+— plus the `ADMIN_ENTITY_BASE_PATH`/
 `ADMIN_ENTITY_LABEL`/`ADMIN_ENTITY_ORDER`/`adminEntityHref` maps, which are the single source of
 truth for the five admin route segments and their Indonesian labels. It's a plain module (not
 `server-only`), so client components import it too; it type-imports `SessionUser` from
@@ -487,10 +491,11 @@ no link when `"pending"` — and only renders the verified badge next to the acc
    are derived server-side from it.
 3. **Asal Organisasi** — cascading Branch (Cabang HMI) → Chapter (Komisariat)
    (`apis/branches.ts` + `apis/chapters.ts`, backed by `/www/api/branches/search` and
-   `/www/api/chapters/search`). `searchChapters` always scopes its `chapters/list` call to the
-   selected `branch_id` here (`chapters/list` itself now accepts an optional `branch_id`, see
-   `/master/chapters` below, but this cascading picker still always passes one — a Komisariat
-   pick with no Cabang context wouldn't make sense in this flow); only `chapter_id` is submitted
+   `/www/api/chapters/search`). `searchChapters` takes a scope object (`branchId` or
+   `coordinatingChapterId` — it returns nothing when given neither, since an unscoped
+   `chapters/list` would answer with every Komisariat the caller can see), and this cascading
+   picker always passes `branchId`: a Komisariat pick with no Cabang context wouldn't make sense
+   in this flow. The Korkom scope exists for the Daftar Kader Komisariat filter below. Only `chapter_id` is submitted
    to `users/verification`, branch/coordinating body and organization are derived server-side
    from the chapter.
 
@@ -1705,6 +1710,12 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
   with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only
   thin compatibility wrappers that supply the Cabang base path/name to those shared components.
+  The Cabang and Korkom rosters additionally get a Komisariat `SearchableSelect` filter (backed by
+  `/admin/api/chapters/search`, scoped by `branch_id` and `coordinating_chapter_id` respectively) —
+  the two scopes whose own grant may narrow `users/list` by chapter. Since `users/list` rejects two
+  hierarchy ids in one request, a picked Komisariat **replaces** the route's own scope id rather
+  than joining it; the backend still confines rows to the caller's domain, so this can't widen the
+  roster. The other three scopes pass no `chapterFilter` and render as before.
   Every Komisariat value in the table is prefixed with `Komisariat`. Organization and Badko span
   multiple Cabang, so their `Cabang / Komisariat` cells also show `Cabang {branch_name}` beneath
   the Komisariat, matching `/master/users`; the narrower Cabang/Korkom/Komisariat scopes keep only
@@ -2107,7 +2118,10 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   duplicated copy. "Tambah Akses" is backed by
   `/api/users/search?organization_id=`/`?coordinating_body_id=`/`?branch_id=`/
   `?coordinating_chapter_id=`/`?chapter_id=` (that Route Handler maps all five scopes through one
-  `SCOPES` table, each authorized with `canManageEntity`; `organization_id` is the widest of
+  `SCOPES` table, each authorized with `canScopeToEntityLevel` — **not** `canManageEntity`, which
+  would be the governance rule and so would refuse a Cabang admin searching one of its own
+  Komisariat, breaking every downward invitation; `users/list` scopes rows to the caller's own
+  domain server-side, so the filter's level is all this handler has to check; `organization_id` is the widest of
   `users/list`'s own hierarchy filters, and without it the Organisasi picker fell through to the
   unscoped people search and came up empty) and calls `inviteAccessGrant` — an **invitation**, not an immediate grant,
   which also emails the invitee a link to `/invitations/[grant_id]` (see Transactional email above

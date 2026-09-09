@@ -28,6 +28,9 @@ type ChaptersListResponse = {
 };
 
 export type GetChaptersOptions = {
+  branchId?: string;
+  // Alternative scope for the Korkom roster filter, which has no branch of its own to narrow by.
+  coordinatingChapterId?: string;
   search?: string;
   page?: number;
   pageSize?: number;
@@ -39,10 +42,12 @@ export type GetChaptersResult = {
 };
 
 export async function searchChapters(
-  branchId: string,
   options: GetChaptersOptions = {},
 ): Promise<GetChaptersResult> {
-  const { search, page, pageSize } = options;
+  const { branchId, coordinatingChapterId, search, page, pageSize } = options;
+  // Unscoped, chapters/list would answer with every chapter the caller can see.
+  if (!branchId && !coordinatingChapterId) return { list: [], hasMore: false };
+
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -50,7 +55,10 @@ export async function searchChapters(
     method: "POST",
     token: sessionToken,
     body: {
-      branch_id: branchId,
+      ...(branchId ? { branch_id: branchId } : {}),
+      ...(coordinatingChapterId
+        ? { coordinating_chapter_id: coordinatingChapterId }
+        : {}),
       status: "active",
       ...(search ? { search } : {}),
       ...(page ? { page } : {}),

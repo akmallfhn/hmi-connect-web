@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
-  const { list, hasMore } = await searchChapters(branchId, {
+  const { list, hasMore } = await searchChapters({
+    branchId,
     search,
     page,
     pageSize,
