@@ -1,21 +1,14 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { after } from "next/server";
-import { render } from "@react-email/components";
 import { callApi, type ApiEnvelope } from "./api";
-import AccessInvitationEmail, {
-  type AccessInvitationEmailProps,
-} from "@/components/emails/AccessInvitationEmail";
-import { ADMIN_ENTITY_LABEL } from "@/lib/access";
-import { sendEmail } from "@/lib/mailtrap";
 import {
   isSuccessStatus,
   type AccessCapabilityEnum,
   type AccessEntityTypeEnum,
   type AccessGrantStatusEnum,
 } from "@/lib/types";
-import { EMAIL_SITE_ORIGIN, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 // Mirrors one row of POST /api/v1/access-grants/list — a grant, or an invitation not yet accepted.
 export type AccessGrantEntry = {
@@ -227,56 +220,16 @@ export async function inviteAccessGrant(
     };
   }
 
-  const result = await callApi<AccessGrantEntry>(
-    "/api/v1/access-grants/invite",
-    {
-      method: "POST",
-      token,
-      body: {
-        user_id: payload.userId,
-        entity_type: payload.entityType,
-        entity_id: payload.entityId,
-        capability: payload.capability ?? "manage",
-      },
-    }
-  );
-
-  const grant = isSuccessStatus(result.status) ? result.data : undefined;
-  const recipient = grant?.user_email;
-
-  if (grant && recipient) {
-    const props: AccessInvitationEmailProps = {
-      fullName: grant.user_full_name ?? "Kader",
-      inviterName: grant.granted_by_name ?? "Admin",
-      entityLabel: ADMIN_ENTITY_LABEL[grant.entity_type],
-      entityName: grant.entity_name ?? "",
-      invitationUrl: `${EMAIL_SITE_ORIGIN}/invitations/${grant.id}`,
-    };
-
-    // after() so the send outlives the action's own response instead of racing it.
-    after(async () => {
-      try {
-        await sendAccessInvitationEmail(recipient, props);
-      } catch (err) {
-        console.error("[inviteAccessGrant] invitation email job threw:", err);
-      }
-    });
-  }
-
-  return result;
-}
-
-// A failed send must never fail the invitation itself, so this only ever logs.
-async function sendAccessInvitationEmail(
-  recipient: string,
-  props: AccessInvitationEmailProps
-) {
-  const html = await render(AccessInvitationEmail(props));
-
-  await sendEmail({
-    mailRecipients: [recipient],
-    mailSubject: `Undangan jadi admin ${props.entityLabel} di HMI Connect`,
-    mailHtml: html,
+  // The backend sends the invitation email itself once the grant is created.
+  return callApi<AccessGrantEntry>("/api/v1/access-grants/invite", {
+    method: "POST",
+    token,
+    body: {
+      user_id: payload.userId,
+      entity_type: payload.entityType,
+      entity_id: payload.entityId,
+      capability: payload.capability ?? "manage",
+    },
   });
 }
 

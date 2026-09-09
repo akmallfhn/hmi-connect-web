@@ -296,11 +296,8 @@ Three layers, each with one job. Don't blend them.
    regardless of who granted it (`granted_by` is audit trail, not a right), but it does not reach
    down the hierarchy — only `Super Admin` crosses levels. There is no cascade: revoking one grant
    leaves everyone that holder appointed in place, and the response is the revoked grant itself
-   (with `revoked_by`/`revoked_at` set), not a count. `inviteAccessGrant` also owns the invitation email side effect: `invite`'s
-   response carries the invitee's `user_email`/`user_full_name` and the issuer's `granted_by_name`,
-   so the send needs no second lookup — it reads them straight off the response and hands them to
-   an `after()` job, the same post-response shape `trainings.ts#lockTrainingEvaluations` uses.
-   An earlier revision had to re-read the entity roster for the address; don't reintroduce that),
+   (with `revoked_by`/`revoked_at` set), not a count. The invitation email is the backend's own side effect of
+   `access-grants/invite` — this layer only makes the call, and neither renders nor sends one),
    `verification-requests.ts` (the standalone `verification-requests/*` review resource,
    including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
    `stat/*` aggregate endpoints, authorized by the read rule — a manage grant at or above the
@@ -554,13 +551,11 @@ post-response job uses Next's `after()` to fetch the training detail plus every 
 in bounded batches. A missing participant result/email is skipped, and page/send failures are
 `console.error`'d without changing the already-successful permanent lock. Its CTA also uses
 `EMAIL_SITE_ORIGIN`, pointing to the public `/trainings/{training_id}` detail page.
-`components/emails/AccessInvitationEmail.tsx` is the admin-invitation notice sent from
-`apis/access-grants.ts#inviteAccessGrant` whenever someone is invited to manage an entity (see the
-data-layer entry above for how the recipient is resolved). Its CTA is
-`{EMAIL_SITE_ORIGIN}/invitations/{grant_id}` — the invitee holds no grant yet, so the admin
-subdomain would only show them "Akses Ditolak"; the accept surface has to live on the main site.
-The copy says plainly that no access exists until Terima is pressed, so an unexpected invitation
-can just be ignored.
+There is deliberately **no** admin-invitation template here — the backend renders and sends that
+one itself as part of `access-grants/invite`, so nothing in this repo touches it; don't reintroduce
+a frontend template or send for it. Its CTA still points at `/invitations/{grant_id}` on the main
+site rather than the admin subdomain, since the invitee holds no grant yet and `/admin` would only
+show them "Akses Ditolak" (see the accept route below).
 
 ## Component conventions
 
