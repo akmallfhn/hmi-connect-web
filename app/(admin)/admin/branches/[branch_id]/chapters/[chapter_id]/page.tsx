@@ -72,6 +72,7 @@ export default async function BranchChapterDetailPage({
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/chapters`}
       allowStatusChange
+      allowTypeChange={canManageEntity(user, "branch", branch_id)}
     />
   );
 }

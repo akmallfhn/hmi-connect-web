@@ -4,19 +4,13 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { BranchDetail, BranchListEntry } from "@/apis/branches";
 import { getBranchDetail, updateBranch } from "@/lib/actions";
-import { isSuccessStatus, type BranchTypeEnum } from "@/lib/types";
+import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
-import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
-
-const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
-  { label: "Penuh (Full)", value: "full" },
-  { label: "Persiapan (Provisional)", value: "provisional" },
-];
 
 interface EditBranchFormSheetProps {
   open: boolean;
@@ -98,7 +92,6 @@ function EditBranchLoader({
       initialName={detail?.name ?? branch.name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? branch.image_url}
-      initialType={detail?.type ?? branch.type}
       initialCoordinatingBody={
         detail?.coordinating_body
           ? { label: detail.coordinating_body.name, value: detail.coordinating_body.id }
@@ -119,7 +112,6 @@ function EditBranchFields({
   initialName,
   initialDescription,
   initialImageUrl,
-  initialType,
   initialCoordinatingBody,
   lockCoordinatingBody,
   onClose,
@@ -129,7 +121,6 @@ function EditBranchFields({
   initialName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
-  initialType: BranchTypeEnum;
   initialCoordinatingBody: SearchableOption | null;
   lockCoordinatingBody: boolean;
   onClose: () => void;
@@ -139,7 +130,6 @@ function EditBranchFields({
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [type, setType] = useState<BranchTypeEnum>(initialType);
   const [coordinatingBody, setCoordinatingBody] =
     useState<SearchableOption | null>(initialCoordinatingBody);
   const [isSaving, setIsSaving] = useState(false);
@@ -173,7 +163,6 @@ function EditBranchFields({
         name,
         description,
         image_url: imageUrl,
-        type,
         coordinating_body_id: String(coordinatingBody.value),
       });
 
@@ -239,16 +228,6 @@ function EditBranchFields({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={6}
-      />
-
-      <Select
-        selectId="branch-type"
-        label="Tipe"
-        placeholder="Pilih tipe"
-        value={type}
-        onChange={(value) => setType(value as BranchTypeEnum)}
-        options={TYPE_OPTIONS}
-        required
       />
 
       <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">

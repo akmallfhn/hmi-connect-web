@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ArrowDownCircle,
   ArrowLeft,
+  ArrowUpCircle,
   Award,
   Ban,
   CalendarDays,
@@ -29,6 +31,7 @@ import type {
 import type { TrainingListEntry } from "@/apis/trainings";
 import {
   activateChapter,
+  setChapterType,
   suspendChapter,
 } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -68,6 +71,8 @@ interface ChapterDetailPageProps {
   allowEdit?: boolean;
   // Suspend/Aktifkan is Master + Cabang; Korkom's view can't change status.
   allowStatusChange?: boolean;
+  // Penuh/Persiapan answers to the Cabang above, so Korkom's view can't promote either.
+  allowTypeChange?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
   accessGrants?: AccessGrantEntry[] | null;
   // Appointing reaches down the hierarchy, withdrawing does not — hence two flags.
@@ -149,6 +154,7 @@ export default function ChapterDetailPage({
   backHref,
   allowEdit = false,
   allowStatusChange = false,
+  allowTypeChange = false,
   accessGrants = null,
   canInviteAccess = false,
   canRevokeAccess = false,
@@ -160,7 +166,12 @@ export default function ChapterDetailPage({
   const [activeTab, setActiveTab] = useState<ChapterDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showTypeConfirmation, setShowTypeConfirmation] = useState(false);
+  const [isUpdatingType, setIsUpdatingType] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+
+  const isFullType = chapter.type === "full";
+  const nextType = isFullType ? "provisional" : "full";
 
   if (seenTab !== initialTab) {
     setSeenTab(initialTab);
@@ -213,6 +224,33 @@ export default function ChapterDetailPage({
     }
   }
 
+  async function handleTypeChange() {
+    setIsUpdatingType(true);
+
+    try {
+      const result = await setChapterType(chapter.id, nextType);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(
+          result.message ?? "Gagal mengubah status kepengurusan Komisariat."
+        );
+        return;
+      }
+
+      toast.success(
+        nextType === "full"
+          ? "Komisariat berhasil dijadikan Penuh."
+          : "Komisariat berhasil dijadikan Persiapan."
+      );
+      setShowTypeConfirmation(false);
+      router.refresh();
+    } catch (error) {
+      console.error("[ChapterDetailPage] type change threw:", error);
+      toast.error("Gagal mengubah status kepengurusan Komisariat.");
+    } finally {
+      setIsUpdatingType(false);
+    }
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <Link href={backHref} className="inline-block w-fit">
@@ -262,6 +300,20 @@ export default function ChapterDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {allowTypeChange && (
+              <Button
+                variant={isFullType ? "secondarySoft" : "soft"}
+                onClick={() => setShowTypeConfirmation(true)}
+                className="w-fit shrink-0"
+              >
+                {isFullType ? (
+                  <ArrowDownCircle className="size-4" />
+                ) : (
+                  <ArrowUpCircle className="size-4" />
+                )}
+                {isFullType ? "Jadikan Persiapan" : "Jadikan Penuh"}
+              </Button>
+            )}
             {allowStatusChange &&
               (chapter.status === "active" ? (
                 <Button
@@ -487,6 +539,25 @@ export default function ChapterDetailPage({
         }
         confirmVariant={chapter.status === "active" ? "destructive" : "primary"}
         loading={isUpdatingStatus}
+      />
+
+      <AlertConfirmation
+        open={showTypeConfirmation}
+        onClose={() => setShowTypeConfirmation(false)}
+        onConfirm={handleTypeChange}
+        title={
+          isFullType
+            ? "Jadikan Komisariat ini Persiapan?"
+            : "Jadikan Komisariat ini Penuh?"
+        }
+        message={
+          isFullType
+            ? `${formatChapterName(chapter.name)} akan berstatus kepengurusan Persiapan.`
+            : `${formatChapterName(chapter.name)} akan berstatus kepengurusan Penuh.`
+        }
+        confirmLabel={isFullType ? "Jadikan Persiapan" : "Jadikan Penuh"}
+        confirmVariant="primary"
+        loading={isUpdatingType}
       />
 
       {allowEdit && (

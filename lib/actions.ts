@@ -21,6 +21,7 @@ import {
   updateBranch as updateBranchApi,
   suspendBranch as suspendBranchApi,
   activateBranch as activateBranchApi,
+  setBranchType as setBranchTypeApi,
   type CreateBranchPayload,
   type UpdateBranchPayload,
 } from "@/apis/branches";
@@ -31,6 +32,7 @@ import {
   updateChapter as updateChapterApi,
   suspendChapter as suspendChapterApi,
   activateChapter as activateChapterApi,
+  setChapterType as setChapterTypeApi,
   type CreateChapterPayload,
   type UpdateChapterPayload,
 } from "@/apis/chapters";
@@ -192,6 +194,7 @@ import {
 } from "@/apis/trainings";
 import type {
   AccessEntityTypeEnum,
+  BranchTypeEnum,
   ReactionTargetTypeEnum,
   ReactionTypeEnum,
 } from "@/lib/types";
@@ -723,4 +726,12 @@ export async function suspendChapter(id: string) {
 
 export async function activateChapter(id: string) {
   return activateChapterApi(id);
+}
+
+export async function setBranchType(id: string, type: BranchTypeEnum) {
+  return setBranchTypeApi(id, type);
+}
+
+export async function setChapterType(id: string, type: BranchTypeEnum) {
+  return setChapterTypeApi(id, type);
 }

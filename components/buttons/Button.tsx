@@ -10,6 +10,7 @@ export type ButtonVariant =
   | "dark"
   | "outline"
   | "soft"
+  | "secondarySoft"
   | "ghost"
   | "destructive";
 
@@ -54,6 +55,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       outline:
         "border border-[#dbe3ef] bg-transparent text-[#172033] hover:bg-primary-soft",
       soft: "bg-primary-soft text-primary hover:bg-primary-soft/80",
+      secondarySoft:
+        "bg-secondary-soft text-secondary hover:bg-secondary-soft/80",
       ghost: "bg-transparent text-[#172033] hover:bg-black/5",
       destructive:
         "bg-destructive text-white hover:bg-[#c92e25] active:bg-destructive-foreground",

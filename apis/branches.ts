@@ -243,13 +243,13 @@ export async function createBranch(
   });
 }
 
+// type is rejected here by the backend — it moved to branches/set-type.
 export type UpdateBranchPayload = {
   id: string;
   coordinating_body_id?: string;
   name?: string;
   description?: string;
   image_url?: string;
-  type?: BranchTypeEnum;
   status?: StatusEnum;
 };
 
@@ -315,5 +315,26 @@ async function setEntityStatusBranch(
     method: "POST",
     token: sessionToken,
     body: { id },
+  });
+}
+
+// Promotion answers to the organization above the Badko, not to the Cabang itself — hence its own endpoint.
+export async function setBranchType(
+  id: string,
+  type: BranchTypeEnum,
+): Promise<ApiEnvelope<BranchDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<BranchDetail>("/api/v1/branches/set-type", {
+    method: "POST",
+    token: sessionToken,
+    body: { id, type },
   });
 }

@@ -248,13 +248,13 @@ export async function createChapter(
   });
 }
 
+// type is rejected here by the backend — it moved to chapters/set-type.
 export type UpdateChapterPayload = {
   id: string;
   branch_id?: string;
   name?: string;
   description?: string;
   image_url?: string;
-  type?: BranchTypeEnum;
   status?: StatusEnum;
   // Must match an existing lookup_institutions row.
   institution_id?: number;
@@ -322,5 +322,26 @@ async function setEntityStatusChapter(
     method: "POST",
     token: sessionToken,
     body: { id },
+  });
+}
+
+// Promotion answers to the Cabang above the Korkom, not to the Komisariat itself — hence its own endpoint.
+export async function setChapterType(
+  id: string,
+  type: BranchTypeEnum,
+): Promise<ApiEnvelope<ChapterDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<ChapterDetail>("/api/v1/chapters/set-type", {
+    method: "POST",
+    token: sessionToken,
+    body: { id, type },
   });
 }

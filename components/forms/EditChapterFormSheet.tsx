@@ -5,22 +5,16 @@ import { toast } from "sonner";
 import type { ChapterDetail, ChapterListEntry } from "@/apis/chapters";
 import type { Institution } from "@/apis/institutions";
 import { createInstitution, getChapterDetail, updateChapter } from "@/lib/actions";
-import { isSuccessStatus, type BranchTypeEnum } from "@/lib/types";
+import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
   type SearchableOption as CreateableOption,
 } from "../fields/CreateableSelect";
 import Input from "../fields/Input";
-import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
-
-const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
-  { label: "Penuh (Full)", value: "full" },
-  { label: "Persiapan (Provisional)", value: "provisional" },
-];
 
 interface EditChapterFormSheetProps {
   open: boolean;
@@ -93,7 +87,6 @@ function EditChapterLoader({
       initialName={detail?.name ?? chapter.name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? chapter.image_url}
-      initialType={detail?.type ?? chapter.type}
       initialBranch={{
         label: detail?.branch_name ?? chapter.branch_name,
         value: detail?.branch_id ?? chapter.branch_id,
@@ -119,7 +112,6 @@ function EditChapterFields({
   initialName,
   initialDescription,
   initialImageUrl,
-  initialType,
   initialBranch,
   initialInstitution,
   onClose,
@@ -129,7 +121,6 @@ function EditChapterFields({
   initialName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
-  initialType: BranchTypeEnum;
   initialBranch: SearchableOption;
   initialInstitution: CreateableOption | null;
   onClose: () => void;
@@ -139,7 +130,6 @@ function EditChapterFields({
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [type, setType] = useState<BranchTypeEnum>(initialType);
   const [branch, setBranch] = useState<SearchableOption | null>(initialBranch);
   const [institution, setInstitution] = useState<CreateableOption | null>(
     initialInstitution
@@ -199,7 +189,6 @@ function EditChapterFields({
         name,
         description,
         image_url: imageUrl,
-        type,
         branch_id: String(branch.value),
         ...(institution ? { institution_id: Number(institution.value) } : {}),
       });
@@ -264,16 +253,6 @@ function EditChapterFields({
         onChange={(e) => setDescription(e.target.value)}
         rows={6}
       />
-      <Select
-        selectId="chapter-type"
-        label="Tipe"
-        placeholder="Pilih tipe"
-        value={type}
-        onChange={(value) => setType(value as BranchTypeEnum)}
-        options={TYPE_OPTIONS}
-        required
-      />
-
       <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal

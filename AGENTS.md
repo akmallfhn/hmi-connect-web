@@ -568,7 +568,8 @@ them "Akses Ditolak" (see the accept route below).
   always-downward — `AdminEditUserOrganizationForm`'s Cabang/Komisariat pair sets `"bottom"` since
   flipping upward read as disorienting for a cascading pair the user reads top-to-bottom.
 - `components/buttons/Button.tsx` — variants: `primary | secondary | tertiary | light | dark |
-outline | soft | ghost | destructive`; sizes: `sm | default | lg | pill | pillSm | icon |
+outline | soft | secondarySoft | ghost | destructive` (`soft` is primary-light, `secondarySoft` its
+  secondary twin); sizes: `sm | default | lg | pill | pillSm | icon |
 iconSm`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
@@ -1859,8 +1860,9 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   `chapters/` storage folder), Nama Komisariat, Cabang `SearchableSelect` — or fixed read-only text
   when the create sheet's `lockBranch` prop is set from a branch-scoped route, the same treatment
   `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — Asal Universitas, Deskripsi, Tipe;
-  Create also has Status, Edit deliberately doesn't, matching `EditBranchFormSheet`'s no-status rule
-  since status only changes via the detail page's Suspend/Aktifkan. Unlike its first pass,
+  Create also has Status, Edit deliberately has neither Status nor Tipe, matching
+  `EditBranchFormSheet` — both only change through the detail page's own Suspend/Aktifkan and
+  Jadikan Penuh/Persiapan actions, and `chapters/update` now 400s on a `type` field. Unlike its first pass,
   `EditChapterFormSheet` now does need the same detail-fetch loader Badko/Cabang's edit sheets use —
   `chapters/list` covers institution/type/branch but still omits `description` the same way
   `branches/list` does, so Edit fetches the real `chapters/detail` via the newly-added
@@ -1976,6 +1978,21 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   read as surprises: a **Badko may not suspend its own Cabang** (that is the organization's call),
   and a **Korkom may not suspend the Komisariat it groups** (that is the Cabang's) — which is why
   those two scopes pass `allowStatusChange={false}` while Master, Organization, and Cabang do not.
+
+  A Cabang's and Komisariat's `type` (`full`/`provisional`) moved out of `update` for the same
+  reason and follows the same authority: `apis/branches.ts#setBranchType`/
+  `apis/chapters.ts#setChapterType` post to `{resource}/set-type`, and `branches/update`/
+  `chapters/update` now **reject** a `type` field with `400` rather than ignoring it — which is why
+  neither Edit sheet has a Tipe field any more (Create still sends one, the backend still accepts it
+  there). The detail pages carry it instead, as a `allowTypeChange`-gated "Jadikan Penuh"/"Jadikan
+  Persiapan" button behind an `AlertConfirmation`, sitting left of Suspend/Aktifkan in the same
+  header row; it renders `soft` while promoting and `secondarySoft` while demoting, so stepping a
+  unit back down reads as a different act from promoting it without going as loud as `destructive`
+  (which stays reserved for Suspend). A Cabang's type answers to a grant on the **organization**, a Komisariat's to a grant
+  on its **branch**, so `allowTypeChange` is passed by Master's two detail routes,
+  `/organizations/[organization_id]/branches/[branch_id]`, and
+  `/branches/[branch_id]/chapters/[chapter_id]` — and by nothing else. A Badko still may not promote
+  its own Cabang, and a Korkom may not promote the Komisariat it groups.
 - `/master/coordinating-bodies` and
   `/organizations/[organization_id]/coordinating-bodies` both reuse
   `components/pages/AdminCoordinatingBodyListPage.tsx` for the Badko CRUD panel, the simplest of
@@ -2031,8 +2048,9 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   only, in practice) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
   (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
   fetches the real detail via `getBranchDetail` before mounting its fields), each with a Badko
-  `SearchableSelect` plus Tipe — fields Badko's own sheets don't have, since a Badko has no
-  changeable parent. Both sheets also take an optional `lockCoordinatingBody` prop (threaded from
+  `SearchableSelect`, plus Tipe on Create only — fields Badko's own sheets don't have, since a Badko
+  has no changeable parent and no `full`/`provisional` concept; Edit has no Tipe field, since
+  `branches/update` now 400s on one. Both sheets also take an optional `lockCoordinatingBody` prop (threaded from
   `AdminBranchListPage`'s `hideCoordinatingBodyFilter` and from `BranchDetailPage`'s own same-named
   prop) that would swap the Badko picker for fixed read-only text instead of a dropdown — currently
   dormant since neither sheet renders once `allowEdit` is `false`, kept for if a scoped create/edit

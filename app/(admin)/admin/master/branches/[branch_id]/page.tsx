@@ -72,6 +72,7 @@ export default async function MasterBranchDetailPage({
       canRevokeAccess
       initialTab={parseTab(query.tab)}
       backHref="/master/branches"
+      allowTypeChange
     />
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ArrowDownCircle,
   ArrowLeft,
+  ArrowUpCircle,
   Award,
   Ban,
   Building,
@@ -30,6 +32,7 @@ import type {
 import type { TrainingListEntry } from "@/apis/trainings";
 import {
   activateBranch,
+  setBranchType,
   suspendBranch,
 } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -70,6 +73,8 @@ interface BranchDetailPageProps {
   allowEdit?: boolean;
   // Hides the Suspend/Aktifkan action — a Badko's own scoped "Kelola Cabang" detail page can't change its Cabang's status.
   allowStatusChange?: boolean;
+  // Penuh/Persiapan answers to the organization above the Badko, so a Badko's own view can't promote either.
+  allowTypeChange?: boolean;
   // Passed through to the Edit sheet — locks the Badko field when viewed from a Badko's own scoped "Kelola Cabang" page.
   lockCoordinatingBody?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
@@ -150,6 +155,7 @@ export default function BranchDetailPage({
   backHref,
   allowEdit = true,
   allowStatusChange = true,
+  allowTypeChange = false,
   lockCoordinatingBody = false,
   accessGrants = null,
   canInviteAccess = false,
@@ -162,7 +168,12 @@ export default function BranchDetailPage({
   const [activeTab, setActiveTab] = useState<BranchDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showTypeConfirmation, setShowTypeConfirmation] = useState(false);
+  const [isUpdatingType, setIsUpdatingType] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+
+  const isFullType = branch.type === "full";
+  const nextType = isFullType ? "provisional" : "full";
 
   const totalUserCount = chapters.reduce(
     (sum, chapter) => sum + (chapter.user_count ?? 0),
@@ -220,6 +231,33 @@ export default function BranchDetailPage({
     }
   }
 
+  async function handleTypeChange() {
+    setIsUpdatingType(true);
+
+    try {
+      const result = await setBranchType(branch.id, nextType);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(
+          result.message ?? "Gagal mengubah status kepengurusan Cabang."
+        );
+        return;
+      }
+
+      toast.success(
+        nextType === "full"
+          ? "Cabang berhasil dijadikan Penuh."
+          : "Cabang berhasil dijadikan Persiapan."
+      );
+      setShowTypeConfirmation(false);
+      router.refresh();
+    } catch (error) {
+      console.error("[BranchDetailPage] type change threw:", error);
+      toast.error("Gagal mengubah status kepengurusan Cabang.");
+    } finally {
+      setIsUpdatingType(false);
+    }
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <Link href={backHref} className="inline-block w-fit">
@@ -268,6 +306,20 @@ export default function BranchDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {allowTypeChange && (
+              <Button
+                variant={isFullType ? "secondarySoft" : "soft"}
+                onClick={() => setShowTypeConfirmation(true)}
+                className="w-fit shrink-0"
+              >
+                {isFullType ? (
+                  <ArrowDownCircle className="size-4" />
+                ) : (
+                  <ArrowUpCircle className="size-4" />
+                )}
+                {isFullType ? "Jadikan Persiapan" : "Jadikan Penuh"}
+              </Button>
+            )}
             {allowStatusChange &&
               (branch.status === "active" ? (
                 <Button
@@ -532,6 +584,25 @@ export default function BranchDetailPage({
         }
         confirmVariant={branch.status === "active" ? "destructive" : "primary"}
         loading={isUpdatingStatus}
+      />
+
+      <AlertConfirmation
+        open={showTypeConfirmation}
+        onClose={() => setShowTypeConfirmation(false)}
+        onConfirm={handleTypeChange}
+        title={
+          isFullType
+            ? "Jadikan Cabang ini Persiapan?"
+            : "Jadikan Cabang ini Penuh?"
+        }
+        message={
+          isFullType
+            ? `${formatBranchName(branch.name)} akan berstatus kepengurusan Persiapan.`
+            : `${formatBranchName(branch.name)} akan berstatus kepengurusan Penuh.`
+        }
+        confirmLabel={isFullType ? "Jadikan Persiapan" : "Jadikan Penuh"}
+        confirmVariant="primary"
+        loading={isUpdatingType}
       />
 
       {allowEdit && (

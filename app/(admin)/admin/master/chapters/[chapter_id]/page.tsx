@@ -74,6 +74,7 @@ export default async function MasterChapterDetailPage({
       backHref="/master/chapters"
       allowEdit
       allowStatusChange
+      allowTypeChange
     />
   );
 }
