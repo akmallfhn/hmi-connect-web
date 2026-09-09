@@ -1,10 +1,7 @@
 import "server-only";
 
-import { render } from "@react-email/components";
 import { cookies } from "next/headers";
-import { VerificationApprovedEmail } from "@/components/emails/VerificationApprovedEmail";
-import { SESSION_COOKIE_NAME, EMAIL_SITE_ORIGIN } from "@/lib/constants";
-import { sendEmail } from "@/lib/mailtrap";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import {
   isSuccessStatus,
   type GenderEnum,
@@ -176,37 +173,7 @@ export async function approveVerificationRequest(
     { method: "POST", token: sessionToken, body: { id } }
   );
 
-  if (isSuccessStatus(result.status) && result.data) {
-    sendVerificationApprovedEmail(result.data).catch((err) => {
-      console.error(
-        "[approveVerificationRequest] sendVerificationApprovedEmail threw:",
-        err
-      );
-    });
-  }
-
   return result;
-}
-
-// Fire-and-forget — a failed send must never fail the approval itself.
-async function sendVerificationApprovedEmail(
-  request: VerificationRequestListEntry
-) {
-  if (!request.email) return;
-
-  const html = await render(
-    VerificationApprovedEmail({
-      fullName: request.full_name,
-      username: request.username,
-      siteUrl: EMAIL_SITE_ORIGIN,
-    })
-  );
-
-  await sendEmail({
-    mailRecipients: [request.email],
-    mailSubject: "Akun kamu sudah terverifikasi di HMI Connect 🎉",
-    mailHtml: html,
-  });
 }
 
 export async function rejectVerificationRequest(

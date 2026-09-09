@@ -13,7 +13,8 @@ fix the rule, not just the code.
   `--primary` (tosca) and `--secondary` (orange)).
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
-  `@react-email/components` for transactional email (see Transactional email below).
+  `@react-email/components` (installed, but unused — every transactional email is sent by the Go
+  backend, see Transactional email below).
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
   Stack Sans Headline is exposed as `font-stack-sans-headline` and reserved for admin
   page titles plus all admin sidebar chrome (including scoped entity names in `EntitySidebar`).
@@ -47,7 +48,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` / `GOOGLE_OAUTH_ID`            | `app/layout.tsx`, Google login flow           | Google OAuth client id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `NEXT_PUBLIC_BASE_URL`                                       | — (no consumer today)                         | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts`                             | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres _is_ this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
-| `MAILTRAP_API_TOKEN`                                         | `lib/mailtrap.ts`                             | Server-side Mailtrap API token for `sendEmail()` (see Transactional email below).                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `MAILTRAP_API_TOKEN`                                         | `lib/mailtrap.ts`                             | Server-side Mailtrap API token for `sendEmail()`, which nothing calls today (see Transactional email below).                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `MAILTRAP_WEBHOOK_SECRET`                                    | —                                             | Present in `.env` for a future Mailtrap delivery-event webhook (bounces/opens); not consumed by any code yet — don't assume a webhook route exists until one is actually added.                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Domain routing
@@ -299,7 +300,7 @@ Three layers, each with one job. Don't blend them.
    (with `revoked_by`/`revoked_at` set), not a count. The invitation email is the backend's own side effect of
    `access-grants/invite` — this layer only makes the call, and neither renders nor sends one),
    `verification-requests.ts` (the standalone `verification-requests/*` review resource,
-   including list/detail/approve/reject and the approval email side effect), `stat.ts` (the
+   including list/detail/approve/reject; the approval email is the backend's own side effect), `stat.ts` (the
    `stat/*` aggregate endpoints, authorized by the read rule — a manage grant at or above the
    requested entity, or `Super Admin`. Note **every caller but `Super Admin` must name exactly one
    entity**: omitting it returns `an entity id is required to scope this aggregate`. Seven of them
@@ -498,64 +499,36 @@ no link when `"pending"` — and only renders the verified badge next to the acc
 
 ## Transactional email
 
-`lib/mailtrap.ts` (`import "server-only"`) wraps the `mailtrap` npm package's `MailtrapClient` —
-one shared client, sender fixed to `{ name: "HMI Connect", email: "no-reply@hmiconnect.id" }`
-(it moved off the borrowed `sevenpreneur.com` sender once the real domain was in hand — note this
-only works while `hmiconnect.id` stays added and DNS-verified under this Mailtrap account's Sending
-Domains; an unverified sender domain doesn't bounce, it times out against Mailtrap's production
-`send.api.mailtrap.io`, so that's the first thing to check if sends start hanging),
-one `sendEmail({ mailRecipients, mailSubject, mailBody?, mailHtml? })` function. Same shape as the
+**Every transactional email is sent by the Go backend, not by this app.** Verification approval,
+Latihan Kader results, and the admin invitation are all side effects of their own backend endpoint
+(`verification-requests/approve`, `trainings/evaluations/lock`, `access-grants/invite`) — this layer
+only makes the call. There are no email templates in this repo (`components/emails/*` is gone) and
+no `render()`/`sendEmail()` call anywhere in `apis/*.ts`; don't reintroduce one for a flow the
+backend already owns.
+
+`lib/mailtrap.ts` (`import "server-only"`) is kept as the sending primitive for a future
+frontend-originated email, and nothing calls it today. It wraps the `mailtrap` npm package's
+`MailtrapClient` — one shared client, sender fixed to
+`{ name: "HMI Connect", email: "no-reply@hmiconnect.id" }` (it moved off the borrowed
+`sevenpreneur.com` sender once the real domain was in hand — note this only works while
+`hmiconnect.id` stays added and DNS-verified under this Mailtrap account's Sending Domains; an
+unverified sender domain doesn't bounce, it times out against Mailtrap's production
+`send.api.mailtrap.io`, so that's the first thing to check if sends start hanging), one
+`sendEmail({ mailRecipients, mailSubject, mailBody?, mailHtml? })` function. Same shape as the
 sibling `sevenpreneur` project's own `lib/mailtrap.ts`, minus its Prisma-backed `LogError` call
-(this repo has no DB access, so send failures here are just `console.error`'d by the caller).
-`components/emails/*` holds the actual templates as `@react-email/components` JSX (`Html`/`Body`/
-`Container`/`Section`/`Row`/`Column`/`Text`/`Link`/`Img`/`Hr`), styled with plain
-`React.CSSProperties` objects, not Tailwind — email clients don't run a stylesheet, so every style
-has to already be inline, which is what `@react-email/components`' own primitives produce. Colors
-are hardcoded hex (`#159fa2` primary/`#ff5c53` secondary/etc., copied from `app/globals.css`'s
-`--primary`/`--secondary` tokens), not CSS variables, for the same reason. A template takes every
-piece of dynamic data as props (name, links, ...) — it never fetches or reads `process.env`
-itself, so it stays trivially testable via `render()` and reusable from any caller. Convert a
-template's rendered output to a string with `@react-email/components`' own `render()` (async) —
-`sendEmail`'s `mailHtml` wants a string, not the JSX element — then hand that string to
-`sendEmail`. `components/emails/VerificationApprovedEmail.tsx` is the first template: sent when a
-branch admin approves a `verification_requests` row (see
-`apis/verification-requests.ts#approveVerificationRequest`
-below), welcoming the newly-verified kader and pointing out what verified membership unlocks
-(berjejaring/follow, posting & diskusi, E-KTA). Its header renders the real HMI Connect logo — a
-hardcoded `LOGO_URL` pointing at the public `hmi-connect` Supabase bucket
-(`.../hmi-connect/logo-hmi-connect.png`), via `Img`, not a wordmark/SVG component, since email
-clients need a real hosted raster image. `approveVerificationRequest` fires this fire-and-forget
-(`.catch()`, not awaited into the response) from a private `sendVerificationApprovedEmail` helper
-in the same file — a failed send is only `console.error`'d, it must never fail the approval
-itself. `verification-requests/list`/`/detail`/`/approve`/`/reject` all now return `email` on
-their shared base shape (`VerificationRequestListEntry.email`), so the helper reads
-`request.email` straight off the approve response — no extra lookup call needed; earlier
-revisions of this feature had to resolve it via a second `getUserByUsername` call before the
-backend added the field, don't reintroduce that. The CTA link is built from `EMAIL_SITE_ORIGIN`
-(`lib/constants.ts`) plus `/profile/{username}` — a transactional email needs an absolute URL,
-unlike everything else in this app which can just use relative `<Link>`s. Note it is **not**
-`getMainSiteOrigin()`: that helper follows `DOMAIN_MODE`, so a send triggered from a local dev
-run would mail out an `example.com:3000` link that resolves to nothing in the recipient's inbox.
-`EMAIL_SITE_ORIGIN` is pinned to `PROD_MAIN_SITE_URL` for that reason, and every email link in
-this codebase uses it. `getMainSiteOrigin`/`getAdminSiteOrigin` stay for links followed inside
-the app; all four origins now sit in named `DEV_`/`PROD_` constants so the real domain is swapped
-in one place. `components/emails/TrainingResultEmail.tsx` is the participant graduation
-announcement sent after `apis/trainings.ts#lockTrainingEvaluations` succeeds: `passed` and
-`conditional_pass` get distinct congratulatory copy (the conditional variant also points the
-participant back to the committee for remaining requirements), while `failed` is presented as
-"Belum Lulus" with encouraging copy that thanks them for joining and makes clear they can take
-Latihan Kader again elsewhere. The lock response only contains aggregate result counts, so the
-post-response job uses Next's `after()` to fetch the training detail plus every page of
-`trainings/participants/list` (`page_size: 100`), whose rows carry the finalized `result`,
-`user_email`, and `user_full_name`; it then renders and sends one personalized email per participant
-in bounded batches. A missing participant result/email is skipped, and page/send failures are
-`console.error`'d without changing the already-successful permanent lock. Its CTA also uses
-`EMAIL_SITE_ORIGIN`, pointing to the public `/trainings/{training_id}` detail page.
-There is deliberately **no** admin-invitation template here — the backend renders and sends that
-one itself as part of `access-grants/invite`, so nothing in this repo touches it; don't reintroduce
-a frontend template or send for it. Its CTA still points at `/invitations/{grant_id}` on the main
-site rather than the admin subdomain, since the invitee holds no grant yet and `/admin` would only
-show them "Akses Ditolak" (see the accept route below).
+(this repo has no DB access, so send failures here would just be `console.error`'d by the caller).
+`MAILTRAP_API_TOKEN` stays in `.env` for it.
+
+`EMAIL_SITE_ORIGIN` (`lib/constants.ts`) likewise stays: an email link needs an absolute URL, and
+it is **not** `getMainSiteOrigin()` — that helper follows `DOMAIN_MODE`, so a send triggered from a
+local dev run would mail out an `example.com:3000` link that resolves to nothing in the recipient's
+inbox. It is pinned to `PROD_MAIN_SITE_URL` for that reason. `getMainSiteOrigin`/`getAdminSiteOrigin`
+stay for links followed inside the app; all four origins sit in named `DEV_`/`PROD_` constants so the
+real domain is swapped in one place.
+
+The invitation email the backend sends still points at `/invitations/{grant_id}` on the main site
+rather than the admin subdomain, since the invitee holds no grant yet and `/admin` would only show
+them "Akses Ditolak" (see the accept route below).
 
 ## Component conventions
 
