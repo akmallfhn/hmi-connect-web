@@ -11,11 +11,13 @@ import {
   ExternalLink,
   Pencil,
   Plus,
+  Settings,
   TriangleAlert,
   UserCheck,
   UserPlus,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -232,7 +234,17 @@ export default function ProfileHeader({
 
   return (
     <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x lg:shadow-sm">
-      <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
+      <div className="relative h-28 bg-gradient-to-r from-primary to-secondary sm:h-40">
+        {isOwnProfile && (
+          <Link
+            href="/settings"
+            aria-label="Pengaturan"
+            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white/30 lg:hidden"
+          >
+            <Settings className="size-5" />
+          </Link>
+        )}
+      </div>
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
         <div className="flex items-start justify-between">

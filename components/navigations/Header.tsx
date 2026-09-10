@@ -80,7 +80,7 @@ export default function Header({
         .sort(
           (a, b) =>
             ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-            ADMIN_ENTITY_ORDER.indexOf(b.entity_type),
+            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
         )
         .map((grant) => ({
           key: grant.id,
@@ -236,13 +236,13 @@ export default function Header({
                     <CreditCard className="size-4 text-[#5f6573]" />
                     E-KTA
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    href="/settings"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                   >
                     <Settings className="size-4 text-[#5f6573]" />
                     Pengaturan
-                  </a>
+                  </Link>
                   {superAdminHref && (
                     <a
                       href={superAdminHref}

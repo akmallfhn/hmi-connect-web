@@ -1174,6 +1174,62 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   request body — always the caller's own card). `member_card` is `null` until
   `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
   `/verification` instead of a broken card when it's missing.
+- `components/pages/SettingsPage.tsx` (`/settings`, under `(gated)`) — the account menu.
+  Reached from `Header`'s desktop profile dropdown ("Pengaturan", previously a dead
+  `href="#"`) and, on mobile, from a `lg:hidden` gear button `ProfileHeader` renders in the
+  top-right of its gradient banner **only on the viewer's own profile** — mobile has no
+  `Header` top row to hang it off (that row is `lg:`-only, see `components/navigations/*`),
+  so the banner is the page's real top-right corner. It's a plain list of links plus a
+  destructive "Keluar" row behind an `AlertConfirmation`; logging out calls the same
+  `logoutUser` Server Action + `window.location.href = "/auth/login"` hard navigation
+  `Header`'s own menu item uses, since the destination's access depends on the session
+  cookie it just deleted. The account card above it holds only `Verifikasi Akun` (when
+  `verification_status` is `"unverified"`) and `Super Admin`'s own dashboard row, so it
+  renders as nothing at all for most people — `MenuCard` returns `null` on an empty list.
+  Profil Saya and E-KTA were deliberately dropped from it: both already have their own
+  `BottomNav`/`Header` entry, and re-listing them here is a settings menu padding itself
+  out. Whatever fills the rest is still undecided; a placeholder row that goes nowhere
+  reads as a broken page rather than a coming-soon one. On `lg:` it's the same centered
+  two-column shell `ProfileActivitiesPage` uses — `mx-auto lg:max-w-[900px]
+  lg:grid-cols-[280px_minmax(0,600px)]` with the shared `ProfileSidebar` in a sticky `aside`
+  — rather than a left-aligned single column, so a settings page with two short cards on it
+  doesn't sit alone against a wide empty right side. The page title sits **above** that grid,
+  not inside the `main` column, so both columns start at the same top edge and the sidebar
+  lines up with the first `MenuCard` — a title inside `main` pushes the cards down and leaves
+  the sidebar hanging above them. Mobile is unchanged (one column, `PageMargin`'s own
+  gutters). Its route fetches `getUserByUsername` for the viewer's `email` (which `Header`'s
+  dropdown shows and `check-session` doesn't return, same as `/profile/[username]` already
+  does) plus the `headline`/follow counts the sidebar needs, and `listEducationHistories`
+  alongside it for the sidebar's "Informasi" block. Below that first card it renders the
+  caller's **access grants**, the page's own take on the same `Kelola` block `Header`'s
+  dropdown carries: it reads `useHeaderAdminAccess()` directly rather than taking grants as
+  a prop, since `app/(www)/www/layout.tsx` already populates that context (logo backfill
+  included) for every page under `(www)` and a second fetch would duplicate it. One card per
+  grant, sorted by `ADMIN_ENTITY_ORDER`, via `MenuCard`'s optional `header` — the entity's
+  square logo badge plus its name render as a subtitle row
+  *inside* the same white card, above a divider and its two menu rows, rather than as a
+  floating label on the page background; that's what makes the name read as the card's own
+  heading instead of a caption pointing at it, and it's why the badge keeps `Header`'s
+  `bg-[#f5f7fb]` fill (a white badge on a white card has no edge). There is deliberately no
+  `Kelola` section label above them — the card headers already name each entity, and a
+  heading over self-labelling cards was one label too many. The two rows are `Dashboard`
+  (the cross-subdomain `adminEntityHref` link, a plain `<a target="_blank">` since it's a
+  different origin) and `Official Account` (an in-app `<Link>` to `officialEntityHref`).
+  Both rows and the card header name the entity through the page's own local
+  `formatEntityName` — `{ADMIN_ENTITY_LABEL} {entity_name}` ("Cabang Depok"), except an
+  **organization, which is named outright** since "Organisasi Pengurus Besar HMI" says the
+  same word twice. It's the third copy of that organization-outright rule (see
+  `lib/feed-author.ts#formatEntityAuthorName` and `AdminUserDetailPage`'s own
+  `formatGrantScope`) and stays local because those two both prefix `HMI ` and this one
+  doesn't; the labels themselves still come from `ADMIN_ENTITY_LABEL`, never re-spelled.
+  Row descriptions name the entity rather than saying "entitas ini", and deliberately avoid
+  naming the admin subdomain — a settings row explains what the destination does, not where
+  it's hosted.
+  Deliberately full-width rows rather than the dropdown's two side-by-side pill `Button`s —
+  a settings page is a list, and `Header`'s side-by-side pair only exists because a 288px
+  panel has no room to stack. `Super Admin` holds no grants, so it gets a
+  `Dashboard Super Admin` row in the account card instead, same placement logic as the
+  dropdown's own.
 - `components/news/NewsArticleCard.tsx` — one article card, `variant` prop picks the shape:
   `"grid"` (image-on-top, no card chrome — no white bg/border/padding, just floats on the
   page background, used in the `lg:` 4-column grid), `"mobileBig"` and `"mobileList"`
