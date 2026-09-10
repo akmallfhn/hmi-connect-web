@@ -16,7 +16,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
-import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
+import AdminSidebar, {
+  type AdminNavEntry,
+  type SidebarTone,
+} from "./AdminSidebar";
 
 export type EntitySidebarScope =
   | "organization"
@@ -213,12 +216,15 @@ function EntityHeader({
   entityType,
   imageUrl,
   collapsed,
+  tone,
 }: Pick<
   EntitySidebarProps,
   "scope" | "entityId" | "entityName" | "parentName" | "entityType" | "imageUrl"
 > & {
   collapsed: boolean;
+  tone: SidebarTone;
 }) {
+  const isLight = tone === "light";
   const href = getBaseHref(scope, entityId);
   const { title, subtitle } = getHeaderCopy({
     scope,
@@ -233,7 +239,11 @@ function EntityHeader({
   const secondaryText = showsStatus ? statusText : subtitle;
   const accessibleLabel = secondaryText ? `${title}. ${secondaryText}` : title;
   const icon = (
-    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/15 ring-inset">
+    <span
+      className={`flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-inset ${
+        isLight ? "bg-[#f5f7fb] ring-[#e6e9ef]" : "bg-white/10 ring-white/15"
+      }`}
+    >
       {imageUrl ? (
         <Image
           src={imageUrl}
@@ -267,7 +277,9 @@ function EntityHeader({
       <div className="min-w-0">
         <p
           title={title}
-          className="font-stack-sans-headline truncate text-sm font-semibold text-white"
+          className={`font-stack-sans-headline truncate text-sm font-semibold ${
+            isLight ? "text-[#172033]" : "text-white"
+          }`}
         >
           {title}
         </p>
@@ -281,13 +293,17 @@ function EntityHeader({
                 className={`relative inline-flex size-1.5 rounded-full ${dotColor}`}
               />
             </span>
-            <span className="truncate text-xs text-white/50">{statusText}</span>
+            <span
+              className={`truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
+            >
+              {statusText}
+            </span>
           </div>
         ) : (
           subtitle && (
             <p
               title={subtitle}
-              className="mt-0.5 truncate text-xs text-white/50"
+              className={`mt-0.5 truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
             >
               {subtitle}
             </p>
@@ -312,8 +328,9 @@ export default function EntitySidebar({
   return (
     <AdminSidebar
       storageKey={`${scope}_sidebar_collapsed`}
+      homeHref={getBaseHref(scope, entityId)}
       navItems={getNavItems(scope, entityId)}
-      renderHeader={(collapsed) => (
+      renderHeader={(collapsed, tone) => (
         <EntityHeader
           scope={scope}
           entityId={entityId}
@@ -322,6 +339,7 @@ export default function EntitySidebar({
           entityType={entityType}
           imageUrl={imageUrl}
           collapsed={collapsed}
+          tone={tone}
         />
       )}
       fullName={fullName}

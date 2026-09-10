@@ -1534,13 +1534,51 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Master's, which renders nothing there when collapsed), so a caller whose header stays visible
   while collapsed (e.g. `EntitySidebar`) would otherwise get it silently clipped. It owns the
   collapse/mobile-drawer chrome, `NavList`, and `ProfileBlock` (avatar/name/role + logout) — the
-  only things a caller supplies are `navItems: AdminNavEntry[]` and `renderHeader(collapsed)` (a
+  only things a caller supplies are `navItems: AdminNavEntry[]`, `homeHref` (that admin area's own
+  root — `/master`, or `getBaseHref(scope, entityId)`), and `renderHeader(collapsed, tone)` (a
   render prop for the top-left header content — a logo, or an entity's own icon/name/status —
-  since that's the one piece that genuinely differs per admin area). Its desktop rail, mobile
-  header, and mobile drawer all use `font-stack-sans-headline` plus the solid deep-slate
-  `bg-admin-sidebar` (`#172033`, via
-  `--admin-sidebar`) from `app/globals.css`; there is deliberately no custom surface class,
-  pseudo-element, gradient, or geometric texture on the sidebar. Navigation follows the sibling
+  since that's the one piece that genuinely differs per admin area).
+  **The mobile bar deliberately does not use `renderHeader`** — every scope shows the same
+  `LogoHmiConnectHorizontal` linked to `homeHref` on the left and a burger on the right, so the
+  admin app has one consistent mobile chrome instead of `/master` showing a wordmark while a
+  scoped route showed an entity badge; the scope's own header still opens with the drawer.
+  That drawer stays **mounted at all times** (translated off-canvas with `-translate-x-full`,
+  `pointer-events-none` + `aria-hidden` + `inert` while closed) rather than being conditionally
+  rendered — an unmounted drawer can only pop in, so closing had no animation at all. It slides
+  on `transition-transform duration-300 ease-out` with `will-change-transform` while the backdrop
+  cross-fades on its own `transition-opacity`; both carry `motion-reduce:transition-none`.
+  The drawer is sized with `h-dvh`, **not** `inset-0`: a `fixed` box resolves its edges against the
+  *large* viewport, so with the URL bar showing, the panel ran taller than the visible area — the
+  user/role footer sat under the fold and the nav never overflowed, so the page scrolled instead of
+  the menu. It closes on Escape like `Modal.tsx`, and its scroll lock sets `overflow: hidden` on
+  **both** `documentElement` and `body` rather than `Modal`'s body alone. It deliberately does
+  **not** use the `position: fixed` + `top: -scrollY` body-pinning trick: that takes `body` out of
+  flow, which un-sticks the `sticky top-0` mobile bar and drops it off-screen for as long as the
+  drawer is open.
+  The nav also carries `overscroll-contain` so reaching the end of the menu doesn't chain outward.
+  One `matchMedia("(min-width: 1024px)")` listener closes the drawer if the viewport grows to
+  desktop — the drawer is `lg:hidden`, so without it a resize while open leaves the page pinned
+  with the burger gone and no way to unlock it. Closing on
+  tap is wired through `NavList`'s `onNavigate`, which only `NavLink` calls — the old version put
+  an `onClick` on the whole scroll container, so expanding a `NavGroup` closed the entire drawer.
+  **The deep-slate `bg-admin-sidebar` (`#172033`, via `--admin-sidebar` in `app/globals.css`) is
+  now a desktop-only treatment** — the mobile bar and drawer are plain white with `#e6e9ef`
+  borders, `#172033`/`#5f6573` text and `#f5f7fb` hovers, the same neutral palette every other
+  surface in this app uses. A phone-width panel of solid near-black read as a different product
+  from the rest of the app. Both palettes live in one `NAV_TONE` map keyed by a
+  `SidebarTone` (`"dark" | "light"`), threaded as an optional `tone` prop (defaulting to `dark`,
+  so the rail needs no change) through `NavList`/`NavGroup`/`NavLink`/`ProfileBlock`, and passed
+  to `renderHeader` so `EntitySidebar`'s own `EntityHeader` can recolor its badge, title, and
+  status line too — there are **not** two copies of the sidebar, just two palettes over one tree.
+  The drawer's backdrop stays dark (`bg-[#172033]/40`) since a scrim dims the page behind it
+  regardless of the panel's own color; its `backdrop-blur` was dropped, since blurring behind a
+  now-opaque white panel only cost a compositing layer mid-animation. Its logout button is
+  `destructive` on light, matching `SettingsPage`'s own Keluar row, rather than the rail's orange
+  `secondary`. All three still use `font-stack-sans-headline`; there is deliberately no custom
+  surface class, pseudo-element, gradient, or geometric texture on the sidebar.
+  Header and `ProfileBlock` are `shrink-0` in both the rail and the drawer so **only the nav list
+  scrolls** — `flex-1` on the middle alone lets a long menu squeeze the logo and the user/role
+  block instead of scrolling. Navigation follows the sibling
   `ailene-os` `SidebarOS` treatment — muted white idle labels, a `primary`-tinted left-to-right
   gradient with a `primary` icon for the active route, and a translucent profile footer.
   `NavList` uses a larger gap between top-level links/groups in both expanded and collapsed modes,

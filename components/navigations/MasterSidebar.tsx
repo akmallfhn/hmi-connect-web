@@ -78,6 +78,7 @@ export default function MasterSidebar({
   return (
     <AdminSidebar
       storageKey="master_sidebar_collapsed"
+      homeHref="/master"
       navItems={getNavItems(organizationId)}
       renderHeader={(collapsed) =>
         !collapsed ? (
