@@ -23,7 +23,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
-import VerifiedBadge from "../common/VerifiedBadge";
+import ProfileBadges from "../common/ProfileBadges";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
@@ -41,7 +41,7 @@ interface ProfileHeaderProps {
   chapterName?: string;
   branchName?: string;
   verificationStatus?: VerificationStatusEnum;
-  isSubscribe?: boolean;
+  isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
   createdAt?: string;
@@ -137,7 +137,7 @@ export default function ProfileHeader({
   chapterName,
   branchName,
   verificationStatus,
-  isSubscribe,
+  isAlumni,
   followingCount,
   followersCount,
   createdAt,
@@ -267,7 +267,7 @@ export default function ProfileHeader({
               src={avatar}
               name={displayName}
               size={112}
-              className="-mt-14 shrink-0 border-4 border-white lg:-mt-16"
+              className="relative -mt-14 shrink-0 border-4 border-white lg:-mt-16"
             />
           )}
 
@@ -279,19 +279,17 @@ export default function ProfileHeader({
             <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
               {displayName}
             </h1>
-            {verificationStatus === "verified" ? (
-              <VerifiedBadge size={20} />
-            ) : (
+            {verificationStatus !== "verified" && (
               <TriangleAlert
                 className="size-5 text-destructive"
                 aria-label="Belum terverifikasi"
               />
             )}
-            {isSubscribe && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-secondary-soft px-2 py-0.5 text-xs font-semibold text-secondary">
-                HMI Connect+
-              </span>
-            )}
+            <ProfileBadges
+              isVerified={verificationStatus === "verified"}
+              isAlumni={Boolean(isAlumni)}
+              size={20}
+            />
           </div>
 
           {username && (

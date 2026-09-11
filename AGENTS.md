@@ -1081,6 +1081,23 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   button top-right, then name+badge/`@username`/headline/affiliation/social links+joined-date/
   stats flowing below) — deliberately doesn't show `coordinatingBodyName`/`organizationName`
   or a `feedCount` stat; affiliation renders as `"HMI Komisariat {chapterName} • Cabang {branchName}"`.
+  The badges beside the name come from `components/common/ProfileBadges.tsx`, shared with
+  `ProfileSidebar` so one person is marked identically wherever their card appears: the blue
+  `VerifiedBadge` when `verification_status` is `"verified"`, then the KAHMI emblem to its right when
+  `is_alumni` is true. **One badge, one tooltip** — each carries its own `lg:`-only
+  `role="tooltip"` pill (`bg-black/70` + `backdrop-blur-sm`) repeating its own icon beside its own
+  label (`Terverifikasi`, `Alumni HMI`), never a shared panel listing both. `lg:`-only because a tooltip says nothing on
+  touch. `ProfileHeader` keeps its own `TriangleAlert` for the unverified case as a **sibling** of
+  `ProfileBadges`, not an else-branch, so an unverified alumni still shows both. Its avatar carries
+  `relative` in **both** the own-profile and other-profile branches: the banner above it is itself
+  `relative`, so a non-positioned avatar loses the paint order and the gradient covers the half that
+  overlaps it. The
+  `HMI Connect+` subscription pill that used to sit here is **gone** — don't reintroduce it;
+  `is_subscribe` still drives `MembershipInfoCard`, which is where a subscription belongs.
+  `is_alumni` is on `users/detail` and `check-session` alike, so `ProfileSidebar` reads it from the
+  session on most pages and from the viewed profile on `/profile/[username]/activities`. Note the
+  backend defaults it to `false` and **no endpoint sets it yet**, so the badge is wired but dormant
+  until one does.
   It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
   `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
   counts open `FollowListModal`. When viewing someone else's profile while logged in
@@ -2453,7 +2470,10 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `overflow-x-auto` wrapper becomes part of that scroll area's height or gets clipped on the last
   rows.
 - `components/svg/*` — brand logo components (`LogoHmi`, `LogoHmiConnect`,
-  `LogoSilaturahmi`).
+  `LogoSilaturahmi`, `LogoKahmi`). `LogoKahmi` was hand-converted from the designer's
+  `logo kahmi.svg` (now deleted, same convention as `AlQuranIcon`/`ChatIcon`); its source
+  `clipPath` was a no-op equal to the viewBox and is dropped, so rendering the badge twice on one
+  page can't collide on a duplicate element id.
 - `components/states/PageState.tsx` — single full-page 403/404 state component, `variant:
 "forbidden" | "not_found"` picks title/message/illustration, plus optional `backHref`/
   `message` overrides. `app/not-found.tsx` renders `variant="not_found"` for the framework's

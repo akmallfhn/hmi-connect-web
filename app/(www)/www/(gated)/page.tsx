@@ -42,6 +42,7 @@ export default async function HomePage() {
       userId={user?.id}
       username={user?.username}
       verificationStatus={user?.verification_status}
+      isAlumni={user?.is_alumni}
       followingCount={profile?.following_count}
       followersCount={profile?.followers_count}
       educationHistories={educationHistories.list}

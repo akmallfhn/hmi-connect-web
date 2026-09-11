@@ -94,7 +94,8 @@ export async function listUsers(
 ): Promise<PagedListResult<UserListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
+  if (!sessionToken)
+    return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
   const {
     search,
@@ -108,26 +109,31 @@ export async function listUsers(
     page,
     pageSize,
   } = options;
-  const result = await callApi<ListResponse<UserListEntry>>("/api/v1/users/list", {
-    method: "POST",
-    token: sessionToken,
-    body: {
-      ...(search ? { search } : {}),
-      ...(status ? { status } : {}),
-      ...(verificationStatus
-        ? { verification_status: verificationStatus }
-        : {}),
-      ...(chapterId ? { chapter_id: chapterId } : {}),
-      ...(branchId ? { branch_id: branchId } : {}),
-      ...(coordinatingChapterId
-        ? { coordinating_chapter_id: coordinatingChapterId }
-        : {}),
-      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
-      ...(organizationId ? { organization_id: organizationId } : {}),
-      page: page ?? 1,
-      page_size: pageSize ?? 20,
-    },
-  });
+  const result = await callApi<ListResponse<UserListEntry>>(
+    "/api/v1/users/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: {
+        ...(search ? { search } : {}),
+        ...(status ? { status } : {}),
+        ...(verificationStatus
+          ? { verification_status: verificationStatus }
+          : {}),
+        ...(chapterId ? { chapter_id: chapterId } : {}),
+        ...(branchId ? { branch_id: branchId } : {}),
+        ...(coordinatingChapterId
+          ? { coordinating_chapter_id: coordinatingChapterId }
+          : {}),
+        ...(coordinatingBodyId
+          ? { coordinating_body_id: coordinatingBodyId }
+          : {}),
+        ...(organizationId ? { organization_id: organizationId } : {}),
+        page: page ?? 1,
+        page_size: pageSize ?? 20,
+      },
+    }
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listUsers] request failed:", result);
@@ -189,7 +195,10 @@ export async function createUser(
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<CreateUserResult>("/api/v1/users/create", {
@@ -205,7 +214,10 @@ export async function deactivateUser(id: string): Promise<ApiEnvelope> {
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/deactivate", {
@@ -216,12 +228,18 @@ export async function deactivateUser(id: string): Promise<ApiEnvelope> {
 }
 
 // Permanently deletes the user row and everything referencing it. `username` must exactly match the target's stored username — a confirmation guard the backend enforces, not just a lookup key.
-export async function deleteUser(id: string, username: string): Promise<ApiEnvelope> {
+export async function deleteUser(
+  id: string,
+  username: string
+): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/delete", {
@@ -416,6 +434,7 @@ export type UserProfile = {
   city_name?: string;
   province_id?: number;
   province_name?: string;
+  is_alumni: boolean;
   is_subscribe: boolean;
   subscription_started_at?: string;
   subscription_ended_at?: string;
@@ -460,10 +479,13 @@ export type MembershipDetail = {
 
 export const getMembershipDetail = cache(
   async (token: string): Promise<MembershipDetail | null> => {
-    const result = await callApi<MembershipDetail>("/api/v1/users/membership-details", {
-      method: "POST",
-      token,
-    });
+    const result = await callApi<MembershipDetail>(
+      "/api/v1/users/membership-details",
+      {
+        method: "POST",
+        token,
+      }
+    );
 
     if (!isSuccessStatus(result.status) || !result.data) return null;
     return result.data;
@@ -580,7 +602,9 @@ async function listFollowRelation(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -640,7 +664,9 @@ export async function listFollowRecommendations(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -788,7 +814,9 @@ export async function listEducationHistories(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -821,7 +849,9 @@ export async function listTrainingHistories(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -856,7 +886,9 @@ export async function listOrganizationExperiences(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -889,7 +921,9 @@ export async function listHonorAwards(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -922,7 +956,9 @@ export async function listWorkExperiences(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -955,7 +991,9 @@ export async function listPublications(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -988,7 +1026,9 @@ export async function listSocialMediaAccounts(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -1004,15 +1044,18 @@ export async function listUserActivity(
   if (!authToken) return { list: [], hasMore: false };
 
   const { page, pageSize } = options;
-  const result = await callApi<ListResponse<ActivityEntry>>("/api/v1/users/activity/list", {
-    method: "POST",
-    token: authToken,
-    body: {
-      username,
-      ...(page ? { page } : {}),
-      ...(pageSize ? { page_size: pageSize } : {}),
-    },
-  });
+  const result = await callApi<ListResponse<ActivityEntry>>(
+    "/api/v1/users/activity/list",
+    {
+      method: "POST",
+      token: authToken,
+      body: {
+        username,
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    }
+  );
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listUserActivity] request failed:", result);
@@ -1021,7 +1064,9 @@ export async function listUserActivity(
 
   const list = result.data?.list ?? [];
   const metapaging = result.data?.metapaging;
-  const hasMore = metapaging ? metapaging.current_page < metapaging.total_page : false;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
   return { list, hasMore };
 }
 
@@ -1039,14 +1084,20 @@ export async function createEducationHistory(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
-  return callApi<EducationHistoryEntry>("/api/v1/users/education-histories/create", {
-    method: "POST",
-    token: sessionToken,
-    body: payload,
-  });
+  return callApi<EducationHistoryEntry>(
+    "/api/v1/users/education-histories/create",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
 }
 
 export type UpdateEducationHistoryPayload = {
@@ -1064,21 +1115,30 @@ export async function updateEducationHistory(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
-  return callApi<EducationHistoryEntry>("/api/v1/users/education-histories/update", {
-    method: "POST",
-    token: sessionToken,
-    body: payload,
-  });
+  return callApi<EducationHistoryEntry>(
+    "/api/v1/users/education-histories/update",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
 }
 
 export async function deleteEducationHistory(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/education-histories/delete", {
@@ -1101,14 +1161,20 @@ export async function createTrainingHistory(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
-  return callApi<TrainingHistoryEntry>("/api/v1/users/training-histories/create", {
-    method: "POST",
-    token: sessionToken,
-    body: payload,
-  });
+  return callApi<TrainingHistoryEntry>(
+    "/api/v1/users/training-histories/create",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
 }
 
 export type UpdateTrainingHistoryPayload = {
@@ -1125,21 +1191,30 @@ export async function updateTrainingHistory(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
-  return callApi<TrainingHistoryEntry>("/api/v1/users/training-histories/update", {
-    method: "POST",
-    token: sessionToken,
-    body: payload,
-  });
+  return callApi<TrainingHistoryEntry>(
+    "/api/v1/users/training-histories/update",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
 }
 
 export async function deleteTrainingHistory(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/training-histories/delete", {
@@ -1163,7 +1238,10 @@ export async function createOrganizationExperience(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<OrganizationExperienceEntry>(
@@ -1191,7 +1269,10 @@ export async function updateOrganizationExperience(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<OrganizationExperienceEntry>(
@@ -1204,11 +1285,16 @@ export async function updateOrganizationExperience(
   );
 }
 
-export async function deleteOrganizationExperience(id: string): Promise<ApiEnvelope> {
+export async function deleteOrganizationExperience(
+  id: string
+): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/organization-experiences/delete", {
@@ -1232,7 +1318,10 @@ export async function createWorkExperience(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<WorkExperienceEntry>("/api/v1/users/work-experiences/create", {
@@ -1257,7 +1346,10 @@ export async function updateWorkExperience(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<WorkExperienceEntry>("/api/v1/users/work-experiences/update", {
@@ -1271,7 +1363,10 @@ export async function deleteWorkExperience(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/work-experiences/delete", {
@@ -1294,7 +1389,10 @@ export async function createHonorAward(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<HonorAwardEntry>("/api/v1/users/honor-awards/create", {
@@ -1318,7 +1416,10 @@ export async function updateHonorAward(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<HonorAwardEntry>("/api/v1/users/honor-awards/update", {
@@ -1332,7 +1433,10 @@ export async function deleteHonorAward(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/honor-awards/delete", {
@@ -1356,7 +1460,10 @@ export async function createPublication(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<PublicationEntry>("/api/v1/users/publications/create", {
@@ -1381,7 +1488,10 @@ export async function updatePublication(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<PublicationEntry>("/api/v1/users/publications/update", {
@@ -1395,7 +1505,10 @@ export async function deletePublication(id: string): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/publications/delete", {
@@ -1416,7 +1529,10 @@ export async function createSocialMediaAccount(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<SocialMediaAccountEntry>(
@@ -1441,7 +1557,10 @@ export async function updateSocialMediaAccount(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi<SocialMediaAccountEntry>(
@@ -1454,11 +1573,16 @@ export async function updateSocialMediaAccount(
   );
 }
 
-export async function deleteSocialMediaAccount(id: string): Promise<ApiEnvelope> {
+export async function deleteSocialMediaAccount(
+  id: string
+): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {
-    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
   }
 
   return callApi("/api/v1/users/social-media-accounts/delete", {

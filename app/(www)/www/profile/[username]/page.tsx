@@ -123,7 +123,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         coordinatingBodyName: profile.coordinating_body_name,
         organizationName: profile.organization_name,
         verificationStatus: profile.verification_status,
-        isSubscribe: profile.is_subscribe,
+        isAlumni: profile.is_alumni,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
         feedCount: profile.feed_count,

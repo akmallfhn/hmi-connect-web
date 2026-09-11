@@ -5,7 +5,7 @@ import type { VerificationStatusEnum } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
 import Avatar from "../common/Avatar";
-import VerifiedBadge from "../common/VerifiedBadge";
+import ProfileBadges from "../common/ProfileBadges";
 import FollowListModal from "../modals/FollowListModal";
 
 interface ProfileSidebarProps {
@@ -15,6 +15,7 @@ interface ProfileSidebarProps {
   headline?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
+  isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
   educationHistories?: EducationHistoryEntry[];
@@ -35,6 +36,7 @@ export default function ProfileSidebar({
   headline,
   username,
   verificationStatus,
+  isAlumni,
   followingCount,
   followersCount,
   educationHistories = [],
@@ -56,7 +58,11 @@ export default function ProfileSidebar({
           <div className="flex flex-col items-center">
             <p className="flex items-center justify-center gap-1 font-bold text-[#172033]">
               <span>{displayName}</span>
-              {verificationStatus === "verified" && <VerifiedBadge size={16} />}
+              <ProfileBadges
+                isVerified={verificationStatus === "verified"}
+                isAlumni={Boolean(isAlumni)}
+                size={16}
+              />
             </p>
             {username && (
               <p className="text-sm text-[#5f6573] xl:text-[15px]">
@@ -64,12 +70,12 @@ export default function ProfileSidebar({
               </p>
             )}
             {headline && (
-              <p className="text-sm text-[#5f6573] xl:text-[15px]">
+              <p className="text-sm text-[#172033] xl:text-[15px]">
                 {headline}
               </p>
             )}
             {latestEducation && (
-              <p className="truncate text-sm text-[#5f6573] xl:text-[15px]">
+              <p className="truncate text-sm text-[#172033] xl:text-[15px]">
                 {latestEducation.institution_name}
               </p>
             )}

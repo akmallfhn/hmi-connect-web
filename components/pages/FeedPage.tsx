@@ -17,6 +17,7 @@ interface FeedPageProps {
   userId?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
+  isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
   educationHistories?: EducationHistoryEntry[];
@@ -30,6 +31,7 @@ export default function FeedPage({
   userId,
   username,
   verificationStatus,
+  isAlumni,
   followingCount,
   followersCount,
   educationHistories,
@@ -67,6 +69,7 @@ export default function FeedPage({
               headline={headline}
               username={username}
               verificationStatus={verificationStatus}
+              isAlumni={isAlumni}
               followingCount={followingCount}
               followersCount={followersCount}
               educationHistories={educationHistories}

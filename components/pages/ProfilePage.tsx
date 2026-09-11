@@ -45,7 +45,7 @@ interface ProfileProps extends ViewerProps {
   coordinatingBodyName?: string;
   organizationName?: string;
   verificationStatus?: VerificationStatusEnum;
-  isSubscribe?: boolean;
+  isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
   feedCount?: number;
@@ -122,7 +122,7 @@ export default function ProfilePage({
               chapterName={profile.chapterName}
               branchName={profile.branchName}
               verificationStatus={profile.verificationStatus}
-              isSubscribe={profile.isSubscribe}
+              isAlumni={profile.isAlumni}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
               createdAt={profile.createdAt}

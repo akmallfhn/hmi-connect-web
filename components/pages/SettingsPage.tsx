@@ -36,6 +36,7 @@ interface SettingsPageProps {
   userId?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
+  isAlumni?: boolean;
   hasPassword?: boolean;
   headline?: string;
   followingCount?: number;
@@ -69,6 +70,7 @@ export default function SettingsPage({
   userId,
   username,
   verificationStatus,
+  isAlumni,
   hasPassword,
   headline,
   followingCount,
@@ -183,6 +185,7 @@ export default function SettingsPage({
                 headline={headline}
                 username={username}
                 verificationStatus={verificationStatus}
+                isAlumni={isAlumni}
                 followingCount={followingCount}
                 followersCount={followersCount}
                 educationHistories={educationHistories}

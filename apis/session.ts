@@ -41,6 +41,7 @@ export type SessionUser = {
   role_name?: string;
   status?: UserStatusEnum;
   verification_status?: VerificationStatusEnum;
+  is_alumni?: boolean;
   is_subscribe?: boolean;
   has_password?: boolean; // false for a Google-only account — decides between password/add and password/change
   access_token?: string;

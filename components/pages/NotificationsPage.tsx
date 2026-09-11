@@ -25,6 +25,7 @@ interface ProfileSummary {
   avatar?: string;
   headline?: string;
   verificationStatus?: VerificationStatusEnum;
+  isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
   educationHistories: EducationHistoryEntry[];
@@ -139,6 +140,7 @@ export default function NotificationsPage({
               headline={profile.headline}
               username={viewer.username}
               verificationStatus={profile.verificationStatus}
+              isAlumni={profile.isAlumni}
               followingCount={profile.followingCount}
               followersCount={profile.followersCount}
               educationHistories={profile.educationHistories}

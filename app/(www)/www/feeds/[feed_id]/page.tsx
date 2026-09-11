@@ -101,6 +101,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
                 headline={viewerProfile?.headline}
                 username={user?.username}
                 verificationStatus={user?.verification_status}
+                isAlumni={user?.is_alumni}
                 followingCount={viewerProfile?.following_count}
                 followersCount={viewerProfile?.followers_count}
                 educationHistories={educationHistories.list}

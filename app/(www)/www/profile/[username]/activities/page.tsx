@@ -50,6 +50,7 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
         avatar: profile.avatar,
         headline: profile.headline,
         verificationStatus: profile.verification_status,
+        isAlumni: profile.is_alumni,
         followingCount: profile.following_count,
         followersCount: profile.followers_count,
         educationHistories,

@@ -44,6 +44,7 @@ export default async function Notifications() {
         avatar: user?.avatar,
         headline: profile?.headline,
         verificationStatus: user?.verification_status,
+        isAlumni: user?.is_alumni,
         followingCount: profile?.following_count,
         followersCount: profile?.followers_count,
         educationHistories: educationHistories.list,

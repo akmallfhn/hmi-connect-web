@@ -32,6 +32,7 @@ export default async function Settings() {
       userId={user?.id}
       username={user?.username}
       verificationStatus={user?.verification_status}
+      isAlumni={user?.is_alumni}
       hasPassword={user?.has_password}
       headline={profile?.headline}
       followingCount={profile?.following_count}
