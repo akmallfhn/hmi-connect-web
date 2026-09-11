@@ -8,6 +8,7 @@ import {
   isSuccessStatus,
   type Degree,
   type GenderEnum,
+  type ProfileCompletionStageEnum,
   type TrainingResultEnum,
   type TrainingStatusEnum,
   type UserStatusEnum,
@@ -463,6 +464,33 @@ export const getMembershipDetail = cache(
       method: "POST",
       token,
     });
+
+    if (!isSuccessStatus(result.status) || !result.data) return null;
+    return result.data;
+  }
+);
+
+export type ProfileCompletionStage = {
+  stage: number;
+  name: ProfileCompletionStageEnum;
+  description: string;
+  is_completed: boolean;
+};
+
+export type ProfileCompletion = {
+  is_completed: boolean;
+  completed_stages: number;
+  total_stages: number;
+  stages: ProfileCompletionStage[];
+};
+
+// Caller-only — the backend reads the JWT subject, so this is never another user's checklist.
+export const getProfileCompletion = cache(
+  async (token: string): Promise<ProfileCompletion | null> => {
+    const result = await callApi<ProfileCompletion>(
+      "/api/v1/users/profile-completion",
+      { method: "POST", token }
+    );
 
     if (!isSuccessStatus(result.status) || !result.data) return null;
     return result.data;

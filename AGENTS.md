@@ -466,6 +466,7 @@ should be typed here, not left as `string`. Currently mirrors these Postgres enu
 - `TrainingResultEnum` — `passed | conditional_pass | failed`
 - `TrainingOrganizerTypeEnum` — `chapter | branch | coordinating_body | organization`
 - `Degree` — education degree levels (not a DB enum name 1:1, but same idea)
+- `ProfileCompletionStageEnum` — the six fixed `users/profile-completion` stage keys
 
 When the backend adds a new Postgres enum you need to model, add it here — don't
 inline a `string` union somewhere else in the tree.
@@ -1103,6 +1104,47 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   paginated history lives at `/profile/[username]/activities`
   (`components/pages/ProfileActivitiesPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
   shape as `FeedTimeline`, backed by the `loadMoreUserActivity` Server Action).
+  `ProfileCompletionCard` is the "Lengkapi Profil" nudge, backed by
+  `apis/users.ts#getProfileCompletion` (`users/profile-completion`): a title row with the percentage
+  on the right, a horizontal progress bar, a right-aligned `{completed}/{total} Selesai` line, the
+  six stages as a checklist. A completed stage renders a white check on a filled primary circle with
+  its label `line-through` in primary; an incomplete one keeps a hollow ring, gray label, and its own
+  `Lengkapi` text button on the right — there is deliberately no single CTA at the bottom,
+  since each stage is completed in a different form. The bar is
+  **recharts**, not a styled div — a one-row `layout="vertical"` `BarChart` whose single `Bar`
+  carries `background={{fill, radius}}` for the track, which is what gives the pill-on-pill look in
+  one element instead of a stacked pair whose seam rounds twice. Chart colors are literal hex, like
+  every other chart here (a `var(--primary)` in an SVG presentation attribute is not reliable), and
+  reuse `Label`'s existing blue pair — `#164ea6` on a `#e2f0ff` track. The card's surface borrows the
+  sibling `ailene-lms` project's Today's Focus *treatment* — a soft tint fading to white over a
+  matching border — but not its color: `bg-linear-to-br from-[#e2f0ff] to-35% to-white`, reusing the
+  same `Label` blue the progress bar already sits on. The `to-35%` stop is deliberate, so the tint
+  clears the top-left corner instead of washing across the whole card; keep it when touching that
+  line. It is the one surface in this app that deliberately sits outside the tosca palette, so the
+  nudge reads as a distinct card rather than another white one.
+  Each stage button opens its own `Edit*Form` **mounted by this card**, not by the profile card that
+  normally owns it — every profile card keeps its modal state private, and there is no shared modal
+  context in this codebase, so the card takes one `forms` prop (`ProfileCompletionForms`) carrying
+  what those five forms need and renders its own instances. `basic_profile` and
+  `social_media_accounts` both open `EditProfileForm`, where headline, phone, and social links all
+  live. That stage also needed a **Nomor HP field added to `EditProfileForm`** (threaded as
+  `phoneNumber` from the route through `ProfilePage`/`ProfileHeader`, sent as `phone_number` on
+  `update-my-profile`): the stage wants headline *and* phone, and without that field the button
+  opened a form that could never satisfy it. Three rules gate it, all resolved in the route, not the
+  component: **own profile only** (the endpoint reads the JWT subject, so it can never be another
+  user's checklist), **`verification_status === "verified"` only** (an unverified account has
+  verification to finish first, and `Header` is already nagging about that), and the route passes
+  `null` once `is_completed` is true — a "complete your profile" card on a finished profile is
+  noise. It renders **twice, one instance per breakpoint** rather than being repositioned by CSS,
+  the same treatment `SendMessageButton` gets: a `collapsible` copy in the main column just above
+  `AboutCard` for mobile, where the stage list hides behind "Lihat Selengkapnya", and a plain copy
+  at the top of the desktop `aside` above `SuggestedConnectionsCard`, where all six always show.
+  That aside became a `lg:flex lg:flex-col lg:gap-4` column to hold both cards. Stage labels come
+  from the card's own `STAGE_LABEL` map keyed on the response's stable `name`, **not** its
+  `description` — the backend reserves the right to reword that prose, and it is English.
+  `basic_profile` is labelled "Headline & Nomor HP" rather than a vague "Data Diri", since
+  `full_name`/`username` are `NOT NULL` from sign-up and those two are what the stage actually
+  waits on.
 - `components/entity/*` + the five public entity profile routes — the page every
   `entityProfileHref` link (feed author, quoted feed, activity entry, search posting row) points at.
   There are **five explicit gated routes**, not one `[entity_type]` catch-all:

@@ -4,6 +4,7 @@ import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
 import { getSocialMediaPlatforms } from "@/apis/social-media-platforms";
 import {
+  getProfileCompletion,
   getUserByUsername,
   listEducationHistories,
   listHonorAwards,
@@ -84,6 +85,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
     institutions,
     socialMediaPlatforms,
     viewerProfile,
+    profileCompletion,
   ] = await Promise.all([
     listEducationHistories(username),
     listTrainingHistories(username),
@@ -100,6 +102,12 @@ export default async function Profile({ params }: ProfileRouteProps) {
     viewer?.username
       ? getUserByUsername(viewer.username, sessionToken)
       : Promise.resolve(null),
+    // Caller-only endpoint, and the checklist is a nudge — unverified accounts have verification to do first.
+    isOwnProfile &&
+    sessionToken &&
+    profile.verification_status === "verified"
+      ? getProfileCompletion(sessionToken)
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -108,6 +116,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         fullName: profile.full_name,
         avatar: profile.avatar,
         headline: profile.headline,
+        phoneNumber: profile.phone_number,
         bio: profile.bio,
         chapterName: profile.chapter_name,
         branchName: profile.branch_name,
@@ -142,6 +151,9 @@ export default async function Profile({ params }: ProfileRouteProps) {
       isOwnProfile={isOwnProfile}
       institutions={institutions}
       socialMediaPlatforms={socialMediaPlatforms}
+      profileCompletion={
+        profileCompletion?.is_completed ? null : profileCompletion
+      }
     />
   );
 }

@@ -31,6 +31,14 @@ export type ActivityTypeEnum = "post" | "quote_repost" | "repost" | "comment";
 export type NotificationTypeEnum = "like" | "comment" | "comment_reply" | "follow";
 export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | "user";
 export type SearchTypeEnum = "people" | "posting";
+// The six fixed stages users/profile-completion returns — `name` is the stable key, `description` is prose.
+export type ProfileCompletionStageEnum =
+  | "training_histories"
+  | "education_histories"
+  | "basic_profile"
+  | "organization_experiences"
+  | "work_experiences"
+  | "social_media_accounts";
 export type RevelationPlaceEnum = "mekkah" | "madinah";
 export type MessageStatusEnum = "sent" | "read";
 // The five organization-hierarchy entities an access grant (and a structural period) can point at.

@@ -4,6 +4,7 @@ import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
   EducationHistoryEntry,
   HonorAwardEntry,
+  ProfileCompletion,
   OrganizationExperienceEntry,
   PublicationEntry,
   SocialMediaAccountEntry,
@@ -20,6 +21,7 @@ import ActivityCard from "../profile/ActivityCard";
 import EducationCard from "../profile/EducationCard";
 import HonorAwardCard from "../profile/HonorAwardCard";
 import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
+import ProfileCompletionCard from "../profile/ProfileCompletionCard";
 import ProfileHeader from "../profile/ProfileHeader";
 import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
@@ -36,6 +38,7 @@ interface ViewerProps {
 
 interface ProfileProps extends ViewerProps {
   headline?: string;
+  phoneNumber?: string;
   bio?: string;
   chapterName?: string;
   branchName?: string;
@@ -64,6 +67,8 @@ interface ProfilePageProps {
   isOwnProfile: boolean;
   institutions: Institution[];
   socialMediaPlatforms: SocialMediaPlatform[];
+  // Null unless this is the viewer's own, verified, still-incomplete profile.
+  profileCompletion: ProfileCompletion | null;
 }
 
 export default function ProfilePage({
@@ -72,7 +77,24 @@ export default function ProfilePage({
   isOwnProfile,
   institutions,
   socialMediaPlatforms,
+  profileCompletion,
 }: ProfilePageProps) {
+  const completionForms = {
+    userId: profile.userId,
+    username: profile.username,
+    fullName: profile.fullName,
+    headline: profile.headline,
+    phoneNumber: profile.phoneNumber,
+    bio: profile.bio,
+    institutions,
+    socialMediaPlatforms,
+    socialMediaAccounts: profile.socialMediaAccounts,
+    educationHistories: profile.educationHistories,
+    trainingHistories: profile.trainingHistories,
+    organizationExperiences: profile.organizationExperiences,
+    workExperiences: profile.workExperiences,
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
       <Header
@@ -95,6 +117,7 @@ export default function ProfilePage({
               fullName={profile.fullName}
               avatar={profile.avatar}
               headline={profile.headline}
+              phoneNumber={profile.phoneNumber}
               bio={profile.bio}
               chapterName={profile.chapterName}
               branchName={profile.branchName}
@@ -108,6 +131,15 @@ export default function ProfilePage({
               socialMediaAccounts={profile.socialMediaAccounts}
               socialMediaPlatforms={socialMediaPlatforms}
             />
+            {profileCompletion && (
+              <div className="lg:hidden">
+                <ProfileCompletionCard
+                  completion={profileCompletion}
+                  forms={completionForms}
+                  collapsible
+                />
+              </div>
+            )}
             <AboutCard bio={profile.bio} />
             <WorkExperienceCard
               userId={profile.userId}
@@ -150,7 +182,13 @@ export default function ProfilePage({
             />
           </div>
 
-          <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+          <aside className="hidden lg:sticky lg:top-20 lg:flex lg:flex-col lg:gap-4 lg:self-start">
+            {profileCompletion && (
+              <ProfileCompletionCard
+                completion={profileCompletion}
+                forms={completionForms}
+              />
+            )}
             <SuggestedConnectionsCard title="Orang yang Mungkin Kamu Kenal" />
           </aside>
         </div>

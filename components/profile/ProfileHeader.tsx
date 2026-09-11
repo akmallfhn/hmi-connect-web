@@ -36,6 +36,7 @@ interface ProfileHeaderProps {
   fullName?: string;
   avatar?: string;
   headline?: string;
+  phoneNumber?: string;
   bio?: string;
   chapterName?: string;
   branchName?: string;
@@ -131,6 +132,7 @@ export default function ProfileHeader({
   fullName,
   avatar,
   headline,
+  phoneNumber,
   bio,
   chapterName,
   branchName,
@@ -371,6 +373,7 @@ export default function ProfileHeader({
             username={username}
             fullName={fullName}
             headline={headline}
+            phoneNumber={phoneNumber}
             bio={bio}
             socialMediaAccounts={socialMediaAccounts}
             socialMediaPlatforms={socialMediaPlatforms}

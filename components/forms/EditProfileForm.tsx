@@ -34,11 +34,7 @@ type SocialMediaDraft = {
 };
 
 type UsernameAvailability =
-  | "idle"
-  | "checking"
-  | "available"
-  | "unavailable"
-  | "error";
+  "idle" | "checking" | "available" | "unavailable" | "error";
 
 function normalizeSocialUrl(url: string) {
   const trimmed = url.trim();
@@ -46,7 +42,9 @@ function normalizeSocialUrl(url: string) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
-function toSocialDrafts(entries: SocialMediaAccountEntry[]): SocialMediaDraft[] {
+function toSocialDrafts(
+  entries: SocialMediaAccountEntry[]
+): SocialMediaDraft[] {
   return entries.map((entry) => ({
     id: entry.id,
     platformId: entry.platform_id,
@@ -78,6 +76,7 @@ interface EditProfileFormProps {
   username?: string;
   fullName?: string;
   headline?: string;
+  phoneNumber?: string;
   bio?: string;
   socialMediaAccounts: SocialMediaAccountEntry[];
   socialMediaPlatforms: SocialMediaPlatform[];
@@ -91,6 +90,7 @@ export default function EditProfileForm({
   username,
   fullName,
   headline,
+  phoneNumber,
   bio,
   socialMediaAccounts,
   socialMediaPlatforms,
@@ -110,6 +110,7 @@ export default function EditProfileForm({
           username={username}
           fullName={fullName}
           headline={headline}
+          phoneNumber={phoneNumber}
           bio={bio}
           socialMediaAccounts={socialMediaAccounts}
           socialMediaPlatforms={socialMediaPlatforms}
@@ -126,6 +127,7 @@ interface ProfileFieldsProps {
   username?: string;
   fullName?: string;
   headline?: string;
+  phoneNumber?: string;
   bio?: string;
   socialMediaAccounts: SocialMediaAccountEntry[];
   socialMediaPlatforms: SocialMediaPlatform[];
@@ -139,6 +141,7 @@ function ProfileFields({
   username,
   fullName,
   headline,
+  phoneNumber,
   bio,
   socialMediaAccounts,
   socialMediaPlatforms,
@@ -147,6 +150,7 @@ function ProfileFields({
     username: username ?? "",
     fullName: fullName ?? "",
     headline: headline ?? "",
+    phoneNumber: phoneNumber ?? "",
     bio: bio ?? "",
   });
   const [socialDrafts, setSocialDrafts] = useState<SocialMediaDraft[]>(() =>
@@ -161,14 +165,18 @@ function ProfileFields({
   const usernameChanged = normalizedUsername !== initialUsername;
   const usernameHasValidFormat = isUsernameFormatValid(form.username);
 
-  const platformOptions: SelectOption[] = socialMediaPlatforms.map((platform) => ({
-    label: platform.name,
-    value: platform.id,
-    image: platform.logo_url ?? undefined,
-  }));
+  const platformOptions: SelectOption[] = socialMediaPlatforms.map(
+    (platform) => ({
+      label: platform.name,
+      value: platform.id,
+      image: platform.logo_url ?? undefined,
+    })
+  );
 
   for (const account of socialMediaAccounts) {
-    const exists = platformOptions.some((option) => option.value === account.platform_id);
+    const exists = platformOptions.some(
+      (option) => option.value === account.platform_id
+    );
     if (!exists) {
       platformOptions.push({
         label: account.platform_name,
@@ -236,7 +244,9 @@ function ProfileFields({
     value: SocialMediaDraft[K]
   ) {
     setSocialDrafts((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, [key]: value } : draft))
+      prev.map((draft) =>
+        draft.id === id ? { ...draft, [key]: value } : draft
+      )
     );
   }
 
@@ -282,7 +292,8 @@ function ProfileFields({
     }
 
     const platformIds = activeSocialDrafts.map((draft) => draft.platformId);
-    const hasDuplicatePlatform = new Set(platformIds).size !== platformIds.length;
+    const hasDuplicatePlatform =
+      new Set(platformIds).size !== platformIds.length;
     if (hasDuplicatePlatform) {
       toast.error("Satu platform hanya boleh ditautkan satu kali.");
       return;
@@ -294,12 +305,14 @@ function ProfileFields({
         ...(usernameChanged ? { username: normalizedUsername } : {}),
         full_name: form.fullName,
         headline: form.headline,
+        phone_number: form.phoneNumber,
         bio: form.bio,
       });
 
       if (!isSuccessStatus(profileResult.status)) {
         if (profileResult.status === "CONFLICT") {
-          const message = "Username ini sudah digunakan. Silakan pilih username lain.";
+          const message =
+            "Username ini sudah digunakan. Silakan pilih username lain.";
           setUsernameApiError(message);
           setUsernameAvailability("unavailable");
           toast.error(message);
@@ -364,7 +377,9 @@ function ProfileFields({
           label="Nama Lengkap"
           placeholder="Nama lengkap kamu"
           value={form.fullName}
-          onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, fullName: e.target.value }))
+          }
         />
         <Input
           inputId="edit-username"
@@ -405,14 +420,29 @@ function ProfileFields({
           label="Headline"
           placeholder="Contoh: Ketua Bidang"
           value={form.headline}
-          onChange={(e) => setForm((prev) => ({ ...prev, headline: e.target.value }))}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, headline: e.target.value }))
+          }
+        />
+        <Input
+          inputId="edit-phone-number"
+          label="Nomor HP"
+          type="tel"
+          inputMode="tel"
+          placeholder="Contoh: 081234567890"
+          value={form.phoneNumber}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+          }
         />
         <TextArea
           textAreaId="edit-bio"
           label="Bio"
           placeholder="Ceritakan sedikit tentang dirimu"
           value={form.bio}
-          onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, bio: e.target.value }))
+          }
           rows={4}
           characterLength={280}
         />
@@ -420,8 +450,10 @@ function ProfileFields({
 
       <section className="border-t border-[#e6e9ef] pt-5">
         <div>
-          <h3 className="text-sm font-semibold text-[#172033]">Sosial Media</h3>
-          <p className="mt-1 text-xs text-[#5f6573]">
+          <h3 className="text-[15px] font-semibold text-[#172033]">
+            Sosial Media
+          </h3>
+          <p className="mt-1 text-[13px] text-[#5f6573]">
             Tambahkan link akun yang ingin ditampilkan di profil.
           </p>
         </div>
@@ -476,7 +508,9 @@ function ProfileFields({
                 placeholder="https://instagram.com/username"
                 value={draft.url}
                 disabled={draft.removed}
-                onChange={(e) => updateSocialDraft(draft.id, "url", e.target.value)}
+                onChange={(e) =>
+                  updateSocialDraft(draft.id, "url", e.target.value)
+                }
                 required
               />
 
