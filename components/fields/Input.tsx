@@ -6,6 +6,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   inputId: string;
   label?: string;
   icon?: ReactNode;
+  trailing?: ReactNode;
   errorMessage?: string;
   characterLength?: number;
   patternErrorMessage?: string;
@@ -15,6 +16,7 @@ export default function Input({
   inputId,
   label,
   icon,
+  trailing,
   errorMessage,
   characterLength,
   patternErrorMessage,
@@ -85,11 +87,17 @@ export default function Input({
               ? "cursor-not-allowed disabled:border-[#e0e3e8] disabled:bg-[#f3f4f6] disabled:text-[#8a909d] disabled:opacity-100 disabled:[-webkit-text-fill-color:#8a909d]"
               : "bg-white",
             icon ? "pl-10" : "",
+            trailing ? "pr-10" : "",
             className,
           ]
             .filter(Boolean)
             .join(" ")}
         />
+        {trailing && (
+          <div className="absolute right-0 top-0 flex h-full items-center pr-2">
+            {trailing}
+          </div>
+        )}
       </div>
 
       {computedError && <p className="text-xs text-destructive">{computedError}</p>}

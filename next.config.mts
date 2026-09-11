@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
       // No session cookie on a protected path -> send to /auth/login
       {
         source:
-          "/:path((?!auth/login|api/auth/callback/google|profile/.*|trainings(?:/.*)?|invitations/.*|feeds/.*|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
+          "/:path((?!auth/login|auth/forget-password|reset-password/.*|api/auth/callback/google|profile/.*|trainings(?:/.*)?|invitations/.*|feeds/.*|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
         has: [
           {
             type: "header",

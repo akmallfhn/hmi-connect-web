@@ -79,6 +79,13 @@ import {
 } from "@/apis/structurals";
 import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
+  addPassword as addPasswordApi,
+  changePassword as changePasswordApi,
+  loginWithEmail as loginWithEmailApi,
+  requestPasswordReset as requestPasswordResetApi,
+  resetPassword as resetPasswordApi,
+} from "@/apis/auth";
+import {
   activateUser as activateUserApi,
   createEducationHistory as createEducationHistoryApi,
   createHonorAward as createHonorAwardApi,
@@ -542,6 +549,29 @@ export async function deleteSocialMediaAccount(id: string) {
 
 export async function logoutUser() {
   return logoutUserApi();
+}
+
+export async function loginWithEmail(identifier: string, password: string) {
+  return loginWithEmailApi(identifier, password);
+}
+
+export async function requestPasswordReset(email: string) {
+  return requestPasswordResetApi(email);
+}
+
+export async function resetPassword(sessionId: string, password: string) {
+  return resetPasswordApi(sessionId, password);
+}
+
+export async function addPassword(password: string) {
+  return addPasswordApi(password);
+}
+
+export async function changePassword(
+  oldPassword: string,
+  newPassword: string
+) {
+  return changePasswordApi(oldPassword, newPassword);
 }
 
 export async function createInstitution(

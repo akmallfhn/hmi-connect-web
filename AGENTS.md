@@ -59,7 +59,9 @@ holds the cookie-based redirect rules (no session → `/auth/login`, has session
 show login again). Paths listed in that first rule's negative lookahead opt out of it:
 `profile/*`, `trainings*`, and `feeds/*` because they're genuinely public, and
 `invitations/*` because it isn't — that route needs to redirect to login with its own
-`redirectTo` so the emailed link survives signing in, which a config-level redirect can't do. This is why almost every route lives under `app/(www)/www/...` even
+`redirectTo` so the emailed link survives signing in, which a config-level redirect can't do.
+`auth/forget-password` and `reset-password/*` are allowlisted for the plainest reason of all:
+someone who can't sign in is exactly who they're for. This is why almost every route lives under `app/(www)/www/...` even
 though the URLs you actually visit don't show `/www`.
 
 The admin hosts (`ADMIN_HOSTS`) are rewritten into `/admin` the same way (see `app/(admin)/admin/`),
@@ -254,6 +256,35 @@ the SK and Konfercab routes are currently hidden from the Cabang sidebar.
   browser won't match it — see `logoutUser()` in `apis/session.ts` and
   `GET /www/api/auth/clear-session` below.
 - `GET /www/api/auth/clear-session` deletes the cookie (logout), domain-aware as above.
+- **Password sign-in lives beside Google, not instead of it.** `apis/auth.ts` wraps the
+  rest of the backend's `auth/*` resource: `loginWithEmail` (`login-email`, an email **or**
+  username plus password), `requestPasswordReset` (`forget-password`),
+  `checkPasswordResetSession`/`resetPassword`, and `addPassword`/`changePassword`. The first
+  four are authorized by `CLIENT_SECRET`, not a session JWT — the caller has none yet — while
+  the password/add|change pair reads the session cookie like every other `apis/*.ts` file.
+  `loginWithEmail` is the only one that writes a cookie, through
+  `apis/session.ts#setSessionCookie` — **the one place the session cookie is written**, which
+  `POST /www/api/auth/callback/google` now also calls instead of rebuilding the options inline.
+  All five are wrapped as Server Actions in `lib/actions.ts`, since every caller is a Client
+  Component triggering a one-off mutation; `checkPasswordResetSession` stays a direct
+  `apis/*.ts` import, because only the reset route's Server Component calls it.
+- `SessionUser.has_password` (from `check-session`) is what decides between `password/add` and
+  `password/change` — `false` for an account that has only ever signed in with Google. Don't
+  infer it from anything else.
+- Three routes carry the flow, none of them gated: `/auth/login` (`AuthLoginPage` — the Google
+  button, then an `atau` divider, then the identifier/password form with a "Lupa password?"
+  link), `/auth/forget-password` (`AuthForgetPasswordPage` — one email field, then an
+  in-place "cek email kamu" state naming the address and the link's own
+  `expires_in_minutes`), and `/reset-password/[session_id]`, whose **Server Component calls
+  `reset-password/check` first** so a dead link renders a refusal rather than a form that will
+  fail on submit. That path is the one the backend's own email links at, so it lives on the
+  main site outside `(gated)`, and both it and `auth/forget-password` are allowlisted in
+  `next.config.mts`'s no-session redirect. All three render through
+  `components/auth/AuthSplitLayout.tsx`, the shared form-left/brand-right shell extracted from
+  the login page — don't re-inline that markup for a fourth auth screen.
+- Email login and the Google callback both **hard-navigate** (`window.location.href`) to
+  `redirectTo` on success, per the rule below: the destination's own access depends on the
+  cookie that was just set.
 - `apis/session.ts#getSession()` (wrapped in React's `cache()`, per-request only — not a
   cross-request cache) reads the cookie, calls the backend's `/api/v1/auth/check-session`,
   and returns `{ sessionToken, user }`. `SessionUser.status` is the source of truth for
@@ -281,6 +312,9 @@ Three layers, each with one job. Don't blend them.
    only — this deployment manages the one configured `ORGANIZATION_ID`, so there is no
    list/create/delete to wrap), `social-media-platforms.ts`, `users.ts`, `trainings.ts`
    (training events + materials + participants, distinct from user training histories), `session.ts`,
+   `auth.ts` (the rest of the `auth/*` resource — email/username login plus the whole
+   password add/change/forget/reset flow, see Auth & session flow above; `session.ts` keeps
+   `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
    `news.ts` (categories + articles — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
@@ -550,7 +584,12 @@ them "Akses Ditolak" (see the accept route below).
   `null` to `Select` while the URL status is empty so the placeholder remains visible; the
   `Semua Status` empty-value option stays in the dropdown as the explicit way to clear a selection.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
-  `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`). `CreateableSelect`/
+  `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`, `PasswordInput`).
+  `Input` takes an optional `trailing` node rendered inside the field's right edge (the
+  counterpart to its left-hand `icon`, minus the `pointer-events-none`, since a trailing node
+  is the interactive one); `PasswordInput` is the only caller today — a thin wrapper that puts
+  an eye/eye-off reveal toggle there and flips `type` between `password` and `text`. Every
+  password field in the app is a `PasswordInput`, so the toggle isn't re-hand-rolled per form. `CreateableSelect`/
   `SearchableSelect` take `loadOptions(inputValue, page)` + `defaultOptions` and handle
   their own debounce/pagination/loading state. Both portal their menu to `document.body` at
   `z-[110]` (the `styles.menuPortal` inline value wins over the `classNames.menuPortal` Tailwind
@@ -1180,6 +1219,10 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   cookie it just deleted. The account card above it holds only `Verifikasi Akun` (when
   `verification_status` is `"unverified"`) and `Super Admin`'s own dashboard row, so it
   renders as nothing at all for most people — `MenuCard` returns `null` on an empty list.
+  The exception is its password row, which every account gets: `Buat Password` when
+  `has_password` is `false`, `Ubah Password` once it's `true`, opening `PasswordForm` rather
+  than navigating — which is why `SettingsMenuItem.href` is optional and `MenuRow` renders a
+  `<button>` when a row carries an `onClick` instead.
   Profil Saya and E-KTA were deliberately dropped from it: both already have their own
   `BottomNav`/`Header` entry, and re-listing them here is a settings menu padding itself
   out. Whatever fills the rest is still undecided; a placeholder row that goes nowhere
@@ -1415,6 +1458,14 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   by `MasterLayout`/`BranchLayout`, exactly what that endpoint is still for. `EditProfileForm`
   also manages linked social media accounts using `users/social-media-accounts/*` and the
   `social-media-platforms/list` lookup.
+  `components/forms/PasswordForm.tsx` follows that same Modal-plus-mounted-only-while-open
+  `*Fields` shape and serves both halves of the password flow off one `hasPassword` prop:
+  `password/add` (new password + confirmation) or `password/change` (current password on top
+  of those two). It `router.refresh()`es on success so `has_password` — and therefore the
+  settings row's own label — re-reads from `check-session`. **Every flow that sets a new
+  password asks for it twice**, and that rule plus the backend's own 8–72 bound lives in
+  `lib/password.ts#validateNewPassword`, shared by this form and `ResetPasswordPage`; don't
+  re-spell either bound at a callsite.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments

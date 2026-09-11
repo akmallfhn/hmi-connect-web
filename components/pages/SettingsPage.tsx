@@ -12,6 +12,7 @@ import type { AccessEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
 import {
   BadgeCheck,
   ChevronRight,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
@@ -20,6 +21,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, type ComponentType, type ReactNode } from "react";
 import PageMargin from "../common/PageMargin";
+import PasswordForm from "../forms/PasswordForm";
 import ProfileSidebar from "../feeds/ProfileSidebar";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import BottomNav from "../navigations/BottomNav";
@@ -34,6 +36,7 @@ interface SettingsPageProps {
   userId?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
+  hasPassword?: boolean;
   headline?: string;
   followingCount?: number;
   followersCount?: number;
@@ -53,7 +56,8 @@ function formatEntityName(
 interface SettingsMenuItem {
   label: string;
   description: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
   external?: boolean;
 }
@@ -65,12 +69,14 @@ export default function SettingsPage({
   userId,
   username,
   verificationStatus,
+  hasPassword,
   headline,
   followingCount,
   followersCount,
   educationHistories,
 }: SettingsPageProps) {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const adminAccess = useHeaderAdminAccess();
 
@@ -115,6 +121,14 @@ export default function SettingsPage({
           },
         ]
       : []),
+    {
+      label: hasPassword ? "Ubah Password" : "Buat Password",
+      description: hasPassword
+        ? "Ganti password yang kamu pakai untuk login."
+        : "Buat password agar bisa login tanpa Google.",
+      onClick: () => setIsPasswordOpen(true),
+      icon: KeyRound,
+    },
     // Super Admin manages no single entity, so its dashboard is a plain row, not a per-entity card.
     ...(adminAccess?.roleName === "Super Admin"
       ? [
@@ -222,6 +236,12 @@ export default function SettingsPage({
         </div>
       </PageMargin>
 
+      <PasswordForm
+        open={isPasswordOpen}
+        onClose={() => setIsPasswordOpen(false)}
+        hasPassword={Boolean(hasPassword)}
+      />
+
       <AlertConfirmation
         open={isLogoutOpen}
         onClose={() => setIsLogoutOpen(false)}
@@ -253,7 +273,7 @@ function MenuCard({
       )}
       {items.map((item, index) => (
         <MenuRow
-          key={item.href}
+          key={item.label}
           item={item}
           className={index > 0 || header ? "border-t border-[#e6e9ef]" : ""}
         />
@@ -292,6 +312,26 @@ function MenuRow({
       <ChevronRight className="size-4 shrink-0 text-[#7b8190]" />
     </>
   );
+
+  if (!item.href) {
+    return (
+      <button type="button" onClick={item.onClick} className={`w-full cursor-pointer text-left ${rowClasses}`}>
+        {body}
+      </button>
+    );
+  }
+
+  if (!item.href) {
+    return (
+      <button
+        type="button"
+        onClick={item.onClick}
+        className={`w-full cursor-pointer text-left ${rowClasses}`}
+      >
+        {body}
+      </button>
+    );
+  }
 
   // The admin subdomain is a different origin, so it needs a real full navigation, not <Link>.
   if (item.external) {

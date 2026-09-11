@@ -1,9 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isSuccessStatus, type StatusName } from "@/lib/types";
-import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
-
-const SESSION_MAX_AGE = 60 * 60 * 24 * 365;
+import { setSessionCookie } from "@/apis/session";
 
 type AuthLoginResponse = {
   code?: number;
@@ -81,17 +78,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const cookieDomain = getSessionCookieDomain();
-
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  });
+  await setSessionCookie(sessionToken);
 
   return NextResponse.json({ message: authData.message ?? "Success" });
 }

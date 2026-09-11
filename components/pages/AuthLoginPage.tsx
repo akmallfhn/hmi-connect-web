@@ -1,12 +1,18 @@
 "use client";
 
 import { useGoogleLogin } from "@react-oauth/google";
+import { Loader2, Mail } from "lucide-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
+import { loginWithEmail } from "@/lib/actions";
+import { isSuccessStatus } from "@/lib/types";
+import AuthSplitLayout from "../auth/AuthSplitLayout";
 import Button from "../buttons/Button";
+import Input from "../fields/Input";
+import PasswordInput from "../fields/PasswordInput";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
-import LogoSilaturahmi from "../svg/LogoSilaturahmi";
 
 function getSafeRedirect(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -17,22 +23,22 @@ function getSafeRedirect(value: string | null) {
 }
 
 function LoginAction() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState(
-    "Login request failed. Please try again."
-  );
+  const [googleStatus, setGoogleStatus] = useState<"idle" | "loading">("idle");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const redirectTo = getSafeRedirect(searchParams.get("redirectTo"));
-  const isLoading = status === "loading";
+  const isGoogleLoading = googleStatus === "loading";
+  const isBusy = isGoogleLoading || submitting;
 
   const handleAuthAction = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("[AuthLoginPage] Google token response:", tokenResponse);
-
       try {
-        setStatus("loading");
+        setErrorMessage("");
+        setGoogleStatus("loading");
 
         const response = await fetch("/api/auth/callback/google", {
           method: "POST",
@@ -53,30 +59,50 @@ function LoginAction() {
           );
         }
 
-        router.push(redirectTo);
-        router.refresh();
+        // Hard navigation — the destination's access depends on the cookie just set.
+        window.location.href = redirectTo;
       } catch (err) {
         console.error("[AuthLoginPage] login callback failed:", err);
         setErrorMessage(
-          err instanceof Error
-            ? err.message
-            : "Login request failed. Please try again."
+          err instanceof Error ? err.message : "Login gagal. Silakan coba lagi."
         );
-        setStatus("error");
+        setGoogleStatus("idle");
       }
     },
     onError: (err) => {
       console.error("[AuthLoginPage] Google popup failed:", err);
-      setErrorMessage(
-        "Google sign-in was cancelled or failed. Please try again."
-      );
-      setStatus("error");
+      setErrorMessage("Login Google dibatalkan atau gagal. Silakan coba lagi.");
+      setGoogleStatus("idle");
     },
   });
 
+  async function handleEmailLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isBusy) return;
+
+    setErrorMessage("");
+    setSubmitting(true);
+
+    try {
+      const result = await loginWithEmail(identifier.trim(), password);
+
+      if (!isSuccessStatus(result.status)) {
+        setErrorMessage(result.message ?? "Email atau password salah.");
+        setSubmitting(false);
+        return;
+      }
+
+      window.location.href = redirectTo;
+    } catch (err) {
+      console.error("[AuthLoginPage] email login failed:", err);
+      setErrorMessage("Login gagal. Silakan coba lagi.");
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-[#172033] shadow-none lg:max-w-[420px] lg:px-8">
-      <div className="login-component mx-auto flex w-full flex-col items-center gap-8">
+      <div className="login-component mx-auto flex w-full flex-col items-center gap-6">
         <LogoHmiConnect className="h-22 w-auto" />
 
         <div className="login-head flex flex-col gap-2">
@@ -97,7 +123,7 @@ function LoginAction() {
             variant="dark"
             size="lg"
             onClick={() => handleAuthAction()}
-            disabled={isLoading}
+            disabled={isBusy}
             className="w-full font-bold"
           >
             <Image
@@ -107,17 +133,71 @@ function LoginAction() {
               height={24}
               className="size-5"
             />
-            <span>{isLoading ? "Connecting..." : "Login with Google"}</span>
+            <span>
+              {isGoogleLoading ? "Connecting..." : "Login with Google"}
+            </span>
           </Button>
-
-          {status === "error" ? (
-            <p className="text-xs font-semibold text-destructive">
-              {errorMessage}
-            </p>
-          ) : null}
         </div>
 
-        <p className="text-[11px] leading-5 text-[#7b8190] lg:text-sm">
+        <div className="flex w-full items-center gap-3">
+          <span className="h-px flex-1 bg-[#e6e9ef]" />
+          <span className="text-[13px] font-medium text-[#7b8190]">atau</span>
+          <span className="h-px flex-1 bg-[#e6e9ef]" />
+        </div>
+
+        <form
+          onSubmit={handleEmailLogin}
+          className="flex w-full flex-col gap-3 text-left"
+        >
+          <Input
+            inputId="login-identifier"
+            label="Email atau Username"
+            placeholder="nama@email.com"
+            icon={<Mail className="size-4" />}
+            autoComplete="username"
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+            disabled={isBusy}
+            required
+          />
+
+          <PasswordInput
+            inputId="login-password"
+            label="Password"
+            placeholder="Masukkan password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isBusy}
+            required
+          />
+
+          <Link
+            href="/auth/forget-password"
+            className="self-end text-sm font-semibold text-primary hover:underline"
+          >
+            Lupa password?
+          </Link>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={isBusy || !identifier.trim() || !password}
+            className="w-full font-bold"
+          >
+            {submitting && <Loader2 className="size-4 animate-spin" />}
+            <span>{submitting ? "Memproses..." : "Login"}</span>
+          </Button>
+        </form>
+
+        {errorMessage ? (
+          <p className="text-xs font-semibold text-destructive">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <p className="text-[13px] leading-5 text-[#7b8190] lg:text-sm">
           By logging in, you agree to HMI Connect privacy and usage terms.
         </p>
       </div>
@@ -127,28 +207,10 @@ function LoginAction() {
 
 export default function AuthLoginPage() {
   return (
-    <main className="root fixed inset-0 z-50 min-h-screen overflow-hidden bg-white">
-      <div className="relative flex h-full w-full items-start justify-center bg-white sm:items-center lg:flex-row-reverse">
-        <section className="relative z-20 flex w-full justify-center px-5 pt-12 sm:pt-0 lg:h-full lg:flex-1 lg:items-center lg:bg-white">
-          <Suspense fallback={<div className="h-96 w-full max-w-[340px]" />}>
-            <LoginAction />
-          </Suspense>
-        </section>
-
-        <section className="hidden lg:relative lg:flex lg:h-full lg:flex-1">
-          <div
-            className="h-full w-full bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.55)), url('https://i.pinimg.com/736x/3a/2b/60/3a2b60357003fb55a492c32118b86ada.jpg')",
-            }}
-          />
-
-          <div className="quotes absolute left-1/2 top-1/2 hidden w-max -translate-x-1/2 -translate-y-1/2 lg:block">
-            <LogoSilaturahmi className="h-auto w-[380px] text-white" />
-          </div>
-        </section>
-      </div>
-    </main>
+    <AuthSplitLayout>
+      <Suspense fallback={<div className="h-96 w-full max-w-[340px]" />}>
+        <LoginAction />
+      </Suspense>
+    </AuthSplitLayout>
   );
 }

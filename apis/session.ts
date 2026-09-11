@@ -42,8 +42,26 @@ export type SessionUser = {
   status?: UserStatusEnum;
   verification_status?: VerificationStatusEnum;
   is_subscribe?: boolean;
+  has_password?: boolean; // false for a Google-only account — decides between password/add and password/change
   access_token?: string;
 };
+
+const SESSION_MAX_AGE = 60 * 60 * 24 * 365;
+
+// The one place the session cookie is written — every login path goes through it.
+export async function setSessionCookie(token: string) {
+  const cookieStore = await cookies();
+  const cookieDomain = getSessionCookieDomain();
+
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  });
+}
 
 export const getSession = cache(async () => {
   const cookieStore = await cookies();
