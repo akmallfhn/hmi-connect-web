@@ -4,7 +4,7 @@ import { getUserByUsername, listEducationHistories } from "@/apis/users";
 import SettingsPage from "@/components/pages/SettingsPage";
 
 export const metadata: Metadata = {
-  title: "Pengaturan",
+  title: "Pengaturan & Admin",
   description: "Kelola akun kamu di HMI Connect.",
   robots: {
     index: false,

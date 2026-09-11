@@ -115,7 +115,7 @@ export default function SettingsPage({
           },
         ]
       : []),
-    // Super Admin manages no single entity, so its dashboard is a plain row, not a Kelola block.
+    // Super Admin manages no single entity, so its dashboard is a plain row, not a per-entity card.
     ...(adminAccess?.roleName === "Super Admin"
       ? [
           {
@@ -149,16 +149,15 @@ export default function SettingsPage({
         userId={userId}
         username={username}
         verificationStatus={verificationStatus}
-        mobileBackTitle="Pengaturan"
+        mobileBackTitle="Pengaturan & Admin"
       />
 
       <PageMargin className="py-6">
         <div className="mx-auto lg:max-w-[900px]">
           <div className="hidden lg:mb-4 lg:block">
-            <h1 className="text-xl font-bold text-[#172033]">Pengaturan</h1>
-            <p className="mt-1 text-sm text-[#5f6573]">
-              Kelola akun kamu di HMI Connect.
-            </p>
+            <h1 className="text-2xl font-bold text-[#172033]">
+              Pengaturan &amp; Admin
+            </h1>
           </div>
 
           <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[280px_minmax(0,600px)] lg:gap-4">

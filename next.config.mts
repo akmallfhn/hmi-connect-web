@@ -83,6 +83,33 @@ const nextConfig: NextConfig = {
         basePath: false,
         permanent: false,
       },
+      // The admin root has no page of its own — its index lives on the main site's /settings.
+      {
+        source: "/",
+        has: [
+          {
+            type: "header",
+            key: "host",
+            value: "admin\\.example\\.com:3000",
+          },
+        ],
+        destination: "https://www.example.com:3000/settings",
+        basePath: false,
+        permanent: false,
+      },
+      {
+        source: "/",
+        has: [
+          {
+            type: "header",
+            key: "host",
+            value: "admin\\.hmiconnect\\.id(:[0-9]+)?",
+          },
+        ],
+        destination: "https://www.hmiconnect.id/settings",
+        basePath: false,
+        permanent: false,
+      },
       // Already signed in -> don't show the login page again.
       {
         source: "/auth(.*)",

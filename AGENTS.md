@@ -119,12 +119,16 @@ truth for the five admin route segments and their Indonesian labels. It's a plai
 a client bundle. Don't re-derive a gate from session hierarchy ids — `user.branch_id` is the
 viewer's _membership_, not what they may manage, and conflating the two is exactly the bug the
 backend change fixed. Anyone failing the gate check renders `PageState` instead of the admin UI.
-`app/(admin)/admin/page.tsx` delegates straight to `components/pages/AdminIndexPage.tsx`, which
-renders **one card per accepted grant** (ordered by `ADMIN_ENTITY_ORDER`, titled
-`Kelola {label} {entity_name}`, linking to `adminEntityHref(...)`). `Super Admin` holds no grants,
-so it instead gets the fixed six-card set — Dashboard Super Admin, then Organisasi/Badko/Cabang/
-Korkom/Komisariat derived from its own session ids, falling back to the bare list route when an id
-is missing (the Organization card can use the server-side `ORGANIZATION_ID`). Each of those five
+**There is deliberately no `app/(admin)/admin/page.tsx`** — the admin root has no index of its
+own. That listing (one entry per accepted grant, plus `Super Admin`'s own dashboard row) lives on
+the main site's `/settings` instead, since a signed-in member already lands there and two separate
+"pick an entity" screens is one too many; `components/pages/AdminIndexPage.tsx` and its
+single-caller `components/buttons/AdminUserMenu.tsx` were deleted with it. `next.config.mts`
+redirects a bare admin-host `/` to `{mainSiteOrigin}/settings` — two rules, one per environment,
+the same absolute-destination split the admin login bounce already needs — so a bookmark to the
+admin subdomain still lands somewhere. Both sit **after** the no-session rules, so a logged-out
+visitor is still sent to `/auth/login` first. Every in-app link into admin already targets
+`/master` or `adminEntityHref(...)`, never the root. Each of the five
 `[id]` layouts re-checks access itself with `canManageEntity`, rather than trusting the outer
 `/admin` gate, since that gate only proves _some_ grant exists, not that it's for _this_ id —
 otherwise a chapter-only admin could reach another branch's page by URL. The scoped
@@ -585,29 +589,19 @@ iconSm`.
   the left of the bell — deliberately a lucide glyph like every other icon in that row (Bell,
   ChevronDown, Search, ...), not the custom bulk/outline `ChatIcon` (that one's reserved for
   `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
-  how the bell/avatar triggers next to it also don't. The avatar dropdown gets admin scope
-  from `HeaderAdminAccessContext`, populated once by `app/(www)/www/layout.tsx` from
-  `getSession()`, which passes `manageGrants(user)` through as `grants` (the context
-  no longer carries five `canManage*` booleans plus five id/name pairs). Under a `Kelola` subtitle
-  the dropdown renders **one block per grant**, sorted by `ADMIN_ENTITY_ORDER`: the entity's own
-  logo in a square `rounded-lg` badge (`LogoHmi` when it has none, same treatment as
-  `EntityChildrenCard`), its `{ADMIN_ENTITY_LABEL} {entity_name}` on one line, then two pill
-  `Button`s (`size="sm"`, `variant="primary"` and `variant="soft"` — the app's primary-light) sharing
-  one row (`flex-1`, never wrapping — which is also why this one `Dropdown` passes
-  `panelClassName="w-80"` instead of the default `w-72`: two labels this long don't fit side by side
-  in 288px) — `Dashboard`, a cross-subdomain link to
-  `adminEntityHref(grant.entity_type, grant.entity_id)`, and `Official Account`, a plain in-app
-  `<Link>` to `officialEntityHref(...)` (see the official-account routes below) — same-origin, so
-  unlike its neighbour it stays in the tab rather than opening the admin subdomain. Someone holding two Cabang gets two blocks, which
-  the old membership-derived version could never express. `Super Admin` is **not** in this section —
-  it manages no single entity, so it instead gets a plain `Dashboard Super Admin` item under
-  Pengaturan in the menu above, linking to the admin subdomain root. The absolute admin origin comes from
-  `lib/constants.ts#getAdminSiteOrigin`, so these links perform the required full
-  cross-origin navigation instead of resolving against the `www` host; each opens in a new tab with
-  `target="_blank"` and `rel="noopener noreferrer"`. `check-session` returns no logo on a grant, so
-  the layout backfills one: it calls `listMyAccessGrants` (which does carry `entity_image_url`) and
-  maps it in by `entity_id` — **only when the caller actually holds a grant**, so a plain member
-  and `Super Admin` never pay for that request on every www page load. The
+  how the bell/avatar triggers next to it also don't. **The avatar dropdown carries no admin
+  scope at all** — it is a short, fixed list (Profil Saya / E-KTA / `Pengaturan dan Admin` /
+  Keluar) and `Header` no longer reads `HeaderAdminAccessContext`. It used to render a `Kelola`
+  section with one block per grant (entity logo, name, and a `Dashboard` + `Official Account`
+  button pair) plus a `Dashboard Super Admin` item; all of that now lives on `/settings`, which
+  `Pengaturan dan Admin` points at — the label says so, rather than hiding an admin surface behind
+  a generic "Pengaturan". Don't reintroduce the section here: a dropdown panel is the wrong place
+  for a list that grows with however many entities someone administers, which is why it needed a
+  `w-80` panel to fit two buttons side by side in the first place.
+  `HeaderAdminAccessContext` and the `listMyAccessGrants` logo backfill in
+  `app/(www)/www/layout.tsx` stay, since `SettingsPage` reads them — note that leaves a sitewide
+  per-page-load fetch serving exactly one route, so if anything else moves, move that fetch into
+  the settings route instead. The
   "belum diverifikasi"/"sedang ditinjau admin" banners are siblings of that row (not nested
   inside it), so one still shows on mobile whenever `verificationStatus` is `"unverified"` or
   `"pending"`. The outer `<header>`'s own

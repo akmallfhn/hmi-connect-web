@@ -3,12 +3,10 @@
 import { logoutUser } from "@/lib/actions";
 import {
   ArrowLeft,
-  BadgeCheck,
   Bell,
   ChevronDown,
   CreditCard,
   EllipsisVertical,
-  LayoutDashboard,
   LogOut,
   MessageCircleMore,
   Search,
@@ -16,7 +14,6 @@ import {
   TriangleAlert,
   UserRound,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -29,15 +26,7 @@ import PageMargin from "../common/PageMargin";
 import VerifiedBadge from "../common/VerifiedBadge";
 import Button from "../buttons/Button";
 import NotificationsDropdownPanel from "../notifications/NotificationsDropdownPanel";
-import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
-import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
-import {
-  ADMIN_ENTITY_LABEL,
-  ADMIN_ENTITY_ORDER,
-  adminEntityHref,
-  officialEntityHref,
-} from "@/lib/access";
 
 interface HeaderProps {
   fullName?: string;
@@ -70,33 +59,9 @@ export default function Header({
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const adminAccess = useHeaderAdminAccess();
   const { notifications, unreadCount, handleRead, handleMarkAllRead } =
     useNotificationsBell(userId);
   const unreadChatCount = useUnreadChatCount(userId);
-  const adminEntities = adminAccess
-    ? adminAccess.grants
-        .slice()
-        .sort(
-          (a, b) =>
-            ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
-        )
-        .map((grant) => ({
-          key: grant.id,
-          name: grant.entity_name
-            ? `${ADMIN_ENTITY_LABEL[grant.entity_type]} ${grant.entity_name}`
-            : ADMIN_ENTITY_LABEL[grant.entity_type],
-          imageUrl: grant.entity_image_url,
-          adminHref: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
-          officialHref: officialEntityHref(grant.entity_type, grant.entity_id),
-        }))
-    : [];
-  // Super Admin manages no single entity, so its dashboard is a plain menu item, not a Kelola block.
-  const superAdminHref =
-    adminAccess?.roleName === "Super Admin"
-      ? `${adminAccess.adminOrigin}/master`
-      : null;
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
@@ -241,70 +206,9 @@ export default function Header({
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
                   >
                     <Settings className="size-4 text-[#5f6573]" />
-                    Pengaturan
+                    Pengaturan &amp; Admin
                   </Link>
-                  {superAdminHref && (
-                    <a
-                      href={superAdminHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                    >
-                      <LayoutDashboard className="size-4 text-[#5f6573]" />
-                      Dashboard Super Admin
-                    </a>
-                  )}
                 </div>
-                {adminEntities.length > 0 && (
-                  <div className="border-t border-[#e6e9ef] py-2">
-                    <p className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide text-[#5f6573]">
-                      Kelola
-                    </p>
-                    {adminEntities.map((entity) => (
-                      <div key={entity.key} className="px-4 py-2">
-                        <div className="flex items-center gap-2.5">
-                          <EntityBadge
-                            name={entity.name}
-                            imageUrl={entity.imageUrl}
-                          />
-                          <p className="min-w-0 truncate text-sm font-semibold text-[#172033]">
-                            {entity.name}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex gap-2">
-                          <a
-                            href={entity.adminHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="min-w-0 flex-1"
-                          >
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              className="w-full gap-1.5 px-2"
-                            >
-                              <LayoutDashboard className="size-3.5 shrink-0" />
-                              <span className="truncate">Dashboard</span>
-                            </Button>
-                          </a>
-                          <Link
-                            href={entity.officialHref}
-                            className="min-w-0 flex-1"
-                          >
-                            <Button
-                              variant="soft"
-                              size="sm"
-                              className="w-full gap-1.5 px-2"
-                            >
-                              <BadgeCheck className="size-3.5 shrink-0" />
-                              <span className="truncate">Official Account</span>
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <div className="border-t border-[#e6e9ef] py-1">
                   <button
                     type="button"
@@ -401,30 +305,5 @@ export default function Header({
         </div>
       )}
     </header>
-  );
-}
-
-// The entity's own logo, square like every admin list badge, falling back to the HMI emblem.
-function EntityBadge({
-  name,
-  imageUrl,
-}: {
-  name: string;
-  imageUrl?: string | null;
-}) {
-  return (
-    <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={name}
-          width={32}
-          height={32}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <LogoHmi className="size-4" />
-      )}
-    </span>
   );
 }
