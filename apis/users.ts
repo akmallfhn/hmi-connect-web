@@ -398,6 +398,7 @@ export type PublicationEntry = {
 // Mirrors POST /api/v1/users/detail's response 1:1 — some fields here are PII, opt in per field rather than spreading this whole object into UI.
 export type UserProfile = {
   id: string;
+  registration_number: number;
   organization_id?: string;
   organization_name?: string;
   coordinating_body_id?: string;

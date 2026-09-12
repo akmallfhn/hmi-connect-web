@@ -1275,13 +1275,19 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   destructive "Keluar" row behind an `AlertConfirmation`; logging out calls the same
   `logoutUser` Server Action + `window.location.href = "/auth/login"` hard navigation
   `Header`'s own menu item uses, since the destination's access depends on the session
-  cookie it just deleted. The account card above it holds only `Verifikasi Akun` (when
-  `verification_status` is `"unverified"`) and `Super Admin`'s own dashboard row, so it
-  renders as nothing at all for most people — `MenuCard` returns `null` on an empty list.
-  The exception is its password row, which every account gets: `Buat Password` when
-  `has_password` is `false`, `Ubah Password` once it's `true`, opening `PasswordForm` rather
-  than navigating — which is why `SettingsMenuItem.href` is optional and `MenuRow` renders a
-  `<button>` when a row carries an `onClick` instead.
+  cookie it just deleted. The account card above it is conditional past its first two rows:
+  `Verifikasi Akun` only when `verification_status` is `"unverified"`, and `Super Admin`'s own
+  dashboard row only for that role. Two rows every account gets: its password row
+  (`Buat Password` when `has_password` is `false`, `Ubah Password` once it's `true`, opening
+  `PasswordForm`) and `Tentang Saya` at the top, opening
+  `components/modals/AboutProfileModal.tsx` — three read-only rows (name + `@username` with the
+  avatar beside it, `{bulan tahun} · #{registration_number}` from `users/detail`, and the
+  province). Neither navigates, which is why `SettingsMenuItem.href` is optional and `MenuRow`
+  renders a `<button>` when a row carries an `onClick` instead. `registration_number` is the
+  backend's own `SERIAL` sign-up order, distinct from `member_card` (the KTA number, which
+  stays on `/membership`); the modal is the only place it's shown. It reads
+  `province_name` off `users/detail` rather than resolving the district chain itself — that
+  response already carries the whole district→city→province chain.
   Profil Saya and E-KTA were deliberately dropped from it: both already have their own
   `BottomNav`/`Header` entry, and re-listing them here is a settings menu padding itself
   out. Whatever fills the rest is still undecided; a placeholder row that goes nowhere
@@ -1461,7 +1467,12 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,
-  `AlertConfirmation.tsx`); it does not orchestrate anything itself.
+  `AlertConfirmation.tsx`); it does not orchestrate anything itself. Its optional
+  `variant="bottomSheet"` (default `"center"`) pins the panel to the bottom edge below `sm:`
+  — square bottom corners, full width, a grab handle above the title — and falls back to the
+  same centered dialog from `sm:` up, so a short informational sheet reads as native on a
+  phone without a second copy of the portal/scroll-lock/Escape chrome;
+  `AboutProfileModal.tsx` is its only caller today.
   `ReactionPickerModal.tsx` is the odd one out — it's _not_ built on `Modal`, it's a small
   self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
   `absolute bottom-full` next to whatever trigger renders it, so the trigger must sit

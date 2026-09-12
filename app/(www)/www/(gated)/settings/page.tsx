@@ -38,6 +38,9 @@ export default async function Settings() {
       followingCount={profile?.following_count}
       followersCount={profile?.followers_count}
       educationHistories={education.list}
+      createdAt={profile?.created_at}
+      registrationNumber={profile?.registration_number}
+      provinceName={profile?.province_name}
     />
   );
 }

@@ -35,6 +35,13 @@ export function formatShortDate(value: string) {
   return parsed.locale("id").format("D MMM YYYY");
 }
 
+// Month and year only — "Juli 2023", the joined/registered line on profiles and the about-me sheet.
+export function formatMonthYear(value: string) {
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return value;
+  return parsed.locale("id").format("MMMM YYYY");
+}
+
 // Same month → "17-29 Agu 2026"; same year → "31 Agu - 23 Sep 2026"; else → full dates both sides.
 export function formatDateRange(startDate: string, endDate: string) {
   const start = dayjs(startDate).locale("id");

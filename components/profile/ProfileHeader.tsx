@@ -28,6 +28,7 @@ import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
 import SendMessageButton from "./SendMessageButton";
+import { formatMonthYear } from "@/lib/time-manipulation";
 
 interface ProfileHeaderProps {
   viewerId?: string;
@@ -163,12 +164,7 @@ export default function ProfileHeader({
     .filter(Boolean)
     .join(" • ");
   const hasAffiliation = Boolean(affiliation);
-  const joinedLabel = createdAt
-    ? new Intl.DateTimeFormat("id-ID", {
-        month: "long",
-        year: "numeric",
-      }).format(new Date(createdAt))
-    : null;
+  const joinedLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   async function handleFollowToggle() {
     if (!userId || followLoading) return;

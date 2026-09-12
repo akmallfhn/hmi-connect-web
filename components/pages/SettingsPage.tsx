@@ -12,6 +12,7 @@ import type { AccessEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
 import {
   BadgeCheck,
   ChevronRight,
+  Info,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -23,6 +24,7 @@ import { useState, type ComponentType, type ReactNode } from "react";
 import PageMargin from "../common/PageMargin";
 import PasswordForm from "../forms/PasswordForm";
 import ProfileSidebar from "../feeds/ProfileSidebar";
+import AboutProfileModal from "../modals/AboutProfileModal";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
@@ -42,6 +44,9 @@ interface SettingsPageProps {
   followingCount?: number;
   followersCount?: number;
   educationHistories?: EducationHistoryEntry[];
+  createdAt?: string;
+  registrationNumber?: number;
+  provinceName?: string;
 }
 
 // An organization is named outright; the other four read as "Cabang Depok".
@@ -76,7 +81,11 @@ export default function SettingsPage({
   followingCount,
   followersCount,
   educationHistories,
+  createdAt,
+  registrationNumber,
+  provinceName,
 }: SettingsPageProps) {
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -113,6 +122,12 @@ export default function SettingsPage({
     : [];
 
   const accountItems: SettingsMenuItem[] = [
+    {
+      label: "Tentang Saya",
+      description: "Nama, tanggal bergabung, dan lokasi akun kamu.",
+      onClick: () => setIsAboutOpen(true),
+      icon: Info,
+    },
     ...(verificationStatus === "unverified"
       ? [
           {
@@ -224,10 +239,10 @@ export default function SettingsPage({
                       <LogOut className="size-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-destructive">
+                      <span className="block truncate text-[15px] font-semibold text-destructive">
                         Keluar
                       </span>
-                      <span className="block truncate text-xs text-[#5f6573]">
+                      <span className="block truncate text-[13px] text-[#5f6573]">
                         Keluar dari akun ini di perangkat ini.
                       </span>
                     </span>
@@ -238,6 +253,17 @@ export default function SettingsPage({
           </div>
         </div>
       </PageMargin>
+
+      <AboutProfileModal
+        open={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        fullName={fullName}
+        username={username}
+        avatar={avatar}
+        createdAt={createdAt}
+        registrationNumber={registrationNumber}
+        provinceName={provinceName}
+      />
 
       <PasswordForm
         open={isPasswordOpen}
@@ -305,24 +331,16 @@ function MenuRow({
         <item.icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-[#172033]">
+        <span className="block truncate text-[15px] font-semibold text-[#172033]">
           {item.label}
         </span>
-        <span className="block truncate text-xs text-[#5f6573]">
+        <span className="block truncate text-[13px] text-[#5f6573]">
           {item.description}
         </span>
       </span>
       <ChevronRight className="size-4 shrink-0 text-[#7b8190]" />
     </>
   );
-
-  if (!item.href) {
-    return (
-      <button type="button" onClick={item.onClick} className={`w-full cursor-pointer text-left ${rowClasses}`}>
-        {body}
-      </button>
-    );
-  }
 
   if (!item.href) {
     return (

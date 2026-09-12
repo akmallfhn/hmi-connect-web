@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { BranchTypeEnum } from "@/lib/types";
 import Label from "../common/Label";
 import LogoHmi from "../svg/LogoHmi";
+import { formatMonthYear } from "@/lib/time-manipulation";
 
 export type EntityStat = {
   label: string;
@@ -37,12 +38,7 @@ export default function EntityProfileHeader({
   createdAt,
   stats,
 }: EntityProfileHeaderProps) {
-  const registeredLabel = createdAt
-    ? new Intl.DateTimeFormat("id-ID", {
-        month: "long",
-        year: "numeric",
-      }).format(new Date(createdAt))
-    : null;
+  const registeredLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   return (
     <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x lg:shadow-sm">
