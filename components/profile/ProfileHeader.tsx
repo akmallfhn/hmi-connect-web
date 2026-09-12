@@ -6,17 +6,13 @@ import { followUser, unfollowUser } from "@/lib/actions";
 import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 import {
   Building2,
-  Calendar,
   Camera,
-  ExternalLink,
   Pencil,
-  Plus,
   Settings,
   TriangleAlert,
   UserCheck,
   UserPlus,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,7 +24,7 @@ import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
 import SendMessageButton from "./SendMessageButton";
-import { formatMonthYear } from "@/lib/time-manipulation";
+import SocialLinks from "./SocialLinks";
 
 interface ProfileHeaderProps {
   viewerId?: string;
@@ -45,85 +41,10 @@ interface ProfileHeaderProps {
   isAlumni?: boolean;
   followingCount?: number;
   followersCount?: number;
-  createdAt?: string;
   isFollowedByMe?: boolean;
   isOwnProfile?: boolean;
   socialMediaAccounts: SocialMediaAccountEntry[];
   socialMediaPlatforms: SocialMediaPlatform[];
-}
-
-function normalizeSocialUrl(url: string) {
-  const trimmed = url.trim();
-  if (!trimmed) return "#";
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-}
-
-function SocialLinks({
-  accounts,
-  isOwnProfile,
-  onAdd,
-  className,
-}: {
-  accounts: SocialMediaAccountEntry[];
-  isOwnProfile?: boolean;
-  onAdd: () => void;
-  className?: string;
-}) {
-  if (accounts.length === 0) {
-    if (!isOwnProfile) return null;
-
-    return (
-      <div
-        className={["flex flex-wrap gap-2", className]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <button
-          type="button"
-          onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#dbe3ef] bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-[#f5f7fb]"
-        >
-          <Plus className="size-3.5" />
-          Tambah sosial media
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}
-    >
-      {accounts.map((account) => (
-        <a
-          key={account.id}
-          href={normalizeSocialUrl(account.url)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#e6e9ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#172033] transition hover:bg-[#f5f7fb]"
-          title={account.url}
-        >
-          {account.logo_url ? (
-            <Image
-              src={account.logo_url}
-              alt={account.platform_name}
-              width={16}
-              height={16}
-              className="size-4 rounded-full object-cover"
-            />
-          ) : (
-            <span className="flex size-4 items-center justify-center rounded-full bg-primary-soft text-[10px] text-primary">
-              {account.platform_name.slice(0, 1)}
-            </span>
-          )}
-          <span className="max-w-[140px] truncate">
-            {account.platform_name}
-          </span>
-          <ExternalLink className="size-3 text-current/70" />
-        </a>
-      ))}
-    </div>
-  );
 }
 
 export default function ProfileHeader({
@@ -141,7 +62,6 @@ export default function ProfileHeader({
   isAlumni,
   followingCount,
   followersCount,
-  createdAt,
   isFollowedByMe,
   isOwnProfile,
   socialMediaAccounts,
@@ -164,7 +84,6 @@ export default function ProfileHeader({
     .filter(Boolean)
     .join(" • ");
   const hasAffiliation = Boolean(affiliation);
-  const joinedLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   async function handleFollowToggle() {
     if (!userId || followLoading) return;
@@ -305,19 +224,12 @@ export default function ProfileHeader({
             </span>
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <SocialLinks
-              accounts={socialMediaAccounts}
-              isOwnProfile={isOwnProfile}
-              onAdd={() => setIsEditOpen(true)}
-            />
-            {joinedLabel && (
-              <span className="flex items-center gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
-                <Calendar className="size-3.5" />
-                Bergabung {joinedLabel}
-              </span>
-            )}
-          </div>
+          <SocialLinks
+            className="mt-2"
+            accounts={socialMediaAccounts}
+            isOwnProfile={isOwnProfile}
+            onAdd={() => setIsEditOpen(true)}
+          />
 
           <div className="mt-3 flex items-center gap-4 text-sm">
             <button

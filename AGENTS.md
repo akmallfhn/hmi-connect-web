@@ -1078,9 +1078,18 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   it's still `omitempty` on the Go side). `ProfilePage` also renders
   `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` is an X/Twitter-
   style single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
-  button top-right, then name+badge/`@username`/headline/affiliation/social links+joined-date/
+  button top-right, then name+badge/`@username`/headline/affiliation/social links/
   stats flowing below) — deliberately doesn't show `coordinatingBodyName`/`organizationName`
   or a `feedCount` stat; affiliation renders as `"HMI Komisariat {chapterName} • Cabang {branchName}"`.
+  The "Bergabung {bulan tahun}" line is gone too, and with it the whole `createdAt` prop chain
+  down from the route — a member's join month now lives only in `/settings`' Tentang Saya sheet.
+  `components/profile/SocialLinks.tsx` carries its own `mt-2` rather than sitting in a wrapper,
+  since it returns `null` on someone else's account with no links and the wrapper would then be
+  an empty spacer. It shows at most 2 chips below `sm:` and 3 from `sm:` up, with the rest behind
+  a `+{N} lainnya` pill opening the whole list in `Modal`'s `bottomSheet` variant — the same sheet
+  treatment `/settings`' Tentang Saya uses. Both the cap and the two counters are pure CSS
+  (the third chip is `hidden sm:inline-flex`, and one counter is rendered per breakpoint), never a
+  `matchMedia` read, so the server output doesn't depend on a viewport it can't know.
   The badges beside the name come from `components/common/ProfileBadges.tsx`, shared with
   `ProfileSidebar` so one person is marked identically wherever their card appears: the blue
   `VerifiedBadge` when `verification_status` is `"verified"`, then the KAHMI emblem to its right when
@@ -1472,7 +1481,7 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   — square bottom corners, full width, a grab handle above the title — and falls back to the
   same centered dialog from `sm:` up, so a short informational sheet reads as native on a
   phone without a second copy of the portal/scroll-lock/Escape chrome;
-  `AboutProfileModal.tsx` is its only caller today.
+  `AboutProfileModal.tsx` and `components/profile/SocialLinks.tsx` are its callers today.
   `ReactionPickerModal.tsx` is the odd one out — it's _not_ built on `Modal`, it's a small
   self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
   `absolute bottom-full` next to whatever trigger renders it, so the trigger must sit
