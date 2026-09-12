@@ -145,7 +145,7 @@ export default function ProfileCompletionCard({
               <span
                 className={
                   stage.is_completed
-                    ? "min-w-0 flex-1 text-sm font-semibold text-primary line-through xl:text-[15px]"
+                    ? "min-w-0 flex-1 text-sm text-primary line-through xl:text-[15px]"
                     : "min-w-0 flex-1 text-sm text-[#5f6573] xl:text-[15px]"
                 }
               >
@@ -156,7 +156,7 @@ export default function ProfileCompletionCard({
                 <button
                   type="button"
                   onClick={() => setOpenForm(STAGE_FORM[stage.name])}
-                  className="shrink-0 cursor-pointer text-sm font-semibold text-primary hover:underline"
+                  className="shrink-0 cursor-pointer text-sm font-semibold text-primary hover:underline hover:underline-offset-2"
                 >
                   Lengkapi
                 </button>
