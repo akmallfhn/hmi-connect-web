@@ -18,7 +18,7 @@ export default function MobileGreetingBar({
   username,
   userId,
 }: MobileGreetingBarProps) {
-  const displayName = fullName ?? "Kader";
+  const displayName = fullName?.split(" ")[0] ?? "Kader";
   const profileHref = username ? `/profile/${username}` : "#";
   const { unreadCount } = useNotificationsBell(userId);
 
@@ -29,13 +29,15 @@ export default function MobileGreetingBar({
           <Avatar
             src={avatar}
             name={displayName}
-            size={44}
+            size={36}
             className="ring-2 ring-white/30"
           />
           <div className="min-w-0">
-            <p className="text-xs text-white/80">Welcome!</p>
-            <p className="truncate text-sm font-semibold text-white">
-              {displayName}
+            <p className="text-[15px] text-white font-semibold leading-snug">
+              Hi, {displayName}!
+            </p>
+            <p className="truncate text-[13px] text-white/80 leading-snug">
+              Let’s connect & grow.
             </p>
           </div>
         </Link>
