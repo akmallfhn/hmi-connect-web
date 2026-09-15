@@ -4,26 +4,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { Institution } from "@/apis/institutions";
 import { createChapter, createInstitution } from "@/lib/actions";
-import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { isSuccessStatus, type BranchTypeEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
   type SearchableOption as CreateableOption,
 } from "../fields/CreateableSelect";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
-import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
-import TextArea from "../fields/TextArea";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
   { label: "Persiapan (Provisional)", value: "provisional" },
-];
-
-const STATUS_OPTIONS: { label: string; value: StatusEnum }[] = [
-  { label: "Aktif", value: "active" },
-  { label: "Tidak Aktif", value: "inactive" },
 ];
 
 interface CreateChapterFormSheetProps {
@@ -74,11 +71,9 @@ function CreateChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
-  const [status, setStatus] = useState<StatusEnum>("active");
   const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
   const [institution, setInstitution] = useState<CreateableOption | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -120,7 +115,8 @@ function CreateChapterFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("chapter", name);
+    if (!sanitizedName) {
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
@@ -132,11 +128,10 @@ function CreateChapterFields({
     setIsSaving(true);
     try {
       const result = await createChapter({
-        name,
-        description,
+        name: sanitizedName,
         image_url: imageUrl,
         type,
-        status,
+        status: "active",
         branch_id: String(branch.value),
         ...(institution ? { institution_id: Number(institution.value) } : {}),
       });
@@ -168,7 +163,7 @@ function CreateChapterFields({
       <Input
         inputId="chapter-name"
         label="Nama Komisariat"
-        placeholder="Contoh: HMI Komisariat Fakultas Teknik USK"
+        placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -206,30 +201,13 @@ function CreateChapterFields({
         defaultOptions={institution ? [institution] : []}
         onCreateOption={createInstitutionOption}
       />
-      <TextArea
-        textAreaId="chapter-description"
-        label="Deskripsi"
-        placeholder="Ceritakan sekilas tentang Komisariat ini"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={6}
-      />
       <Select
         selectId="chapter-type"
-        label="Tipe"
-        placeholder="Pilih tipe"
+        label="Status"
+        placeholder="Pilih status"
         value={type}
         onChange={(value) => setType(value as BranchTypeEnum)}
         options={TYPE_OPTIONS}
-        required
-      />
-      <Select
-        selectId="chapter-status"
-        label="Status"
-        placeholder="Pilih status"
-        value={status}
-        onChange={(value) => setStatus(value as StatusEnum)}
-        options={STATUS_OPTIONS}
         required
       />
 

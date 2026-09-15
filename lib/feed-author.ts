@@ -28,13 +28,28 @@ const ENTITY_NAME_STRIP: Record<AccessEntityTypeEnum, RegExp | null> = {
   chapter: /^(?:hmi\s+)?komisariat\s+/i,
 };
 
-export function formatEntityAuthorName(
+// Strips every leading "HMI Badko"/"Cabang"/... the typist repeated, so only the bare name reaches the backend.
+export function stripEntityNamePrefix(
   entityType: AccessEntityTypeEnum,
   name: string
 ): string {
   const strip = ENTITY_NAME_STRIP[entityType];
-  const normalizedName = strip ? name.replace(strip, "").trim() : name.trim();
-  return `${ENTITY_NAME_PREFIX[entityType]}${normalizedName || name}`;
+  let normalized = name.trim();
+  if (!strip) return normalized;
+  while (strip.test(normalized)) {
+    const next = normalized.replace(strip, "").trim();
+    if (next === normalized) break;
+    normalized = next;
+  }
+  return normalized;
+}
+
+export function formatEntityAuthorName(
+  entityType: AccessEntityTypeEnum,
+  name: string
+): string {
+  const normalizedName = stripEntityNamePrefix(entityType, name);
+  return `${ENTITY_NAME_PREFIX[entityType]}${normalizedName || name.trim()}`;
 }
 
 export function entityProfileHref(

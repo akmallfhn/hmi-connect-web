@@ -944,7 +944,11 @@ iconSm`.
   `search/list`'s posting row satisfies too) and returns the display name
   (`HMI Cabang {name}`, `HMI Badko {name}`, ... — an organization is named outright, and an existing
   prefix in the stored name is stripped before one is added), the entity logo, an `isEntity` flag
-  marking it as an entity, and the profile href from `entityProfileHref` —
+  marking it as an entity, and the profile href from `entityProfileHref` (its
+  `stripEntityNamePrefix` half is exported too: **every create/edit form that writes an entity name
+  runs it first**, so a typist's "HMI Komisariat X" reaches the backend as the bare "X" and the
+  display prefix is never stored twice — the name placeholders in those forms are bare for the same
+  reason) —
   `/branches/{id}` and friends, the public entity profile pages described below. Every one of those
   four callers draws that author through `components/feeds/FeedAuthorAvatar.tsx` rather than
   `Avatar` directly — a personal feed still renders a plain `Avatar`, while an entity feed gets the
@@ -1292,7 +1296,9 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered
   by `components/pages/MembershipPage.tsx` for the `/membership` ("E-KTA") route, backed by
   `apis/users.ts#getMembershipDetail` (`users/membership-details`, session-JWT-only, no
-  request body — always the caller's own card). `member_card` is `null` until
+  request body — always the caller's own card). The card prints `ktp_full_name`, falling back to
+  `full_name` — a KTA carries the legal name off the KTP, not the one Google handed over.
+  `member_card` is `null` until
   `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
   `/verification` instead of a broken card when it's missing.
 - `components/pages/SettingsPage.tsx` (`/settings`, under `(gated)`) — the account menu.
@@ -1640,7 +1646,17 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   publishes a real lookup. The account card's
   "Status Verifikasi" field is a 3-state `Select` (`VerificationStatusEnum`: `unverified` |
   `pending` | `verified`, see the Verification flow section above) rather than a boolean
-  `Switch`, since the backend replaced `is_verified` with a reviewed-workflow enum. The
+  `Switch`, since the backend replaced `is_verified` with a reviewed-workflow enum. Beside it sits
+  **Status Keanggotaan** — `is_alumni` rendered as `components/labels/AlumniStatusLabel.tsx`
+  (blue `Alumni` behind the round-masked `LogoKahmi` emblem, gray `Kader` behind `LogoHmi`'s own —
+  the HMI crest is tall, not square, so it keeps its ratio instead of being masked into a circle),
+  and editable in `AdminEditUserAccountForm` as a two-option
+  `Select` that maps back to the boolean. It is **update-only**: `users/update` takes `is_alumni`
+  (`Super Admin` only, so `UpdateUserPayload` carries it) but `users/create` does not, so
+  `CreateUserPayload` and `AdminUserCreatePage` deliberately have no such field. The
+  read-only `AdminMemberDetailPage` shows the same label, but its account card is titled just
+  **"Akun"** and has **no Role field** — role is a Master concern, the same reason the scoped
+  rosters have no Role column. The
   Organisasi card also renders three `Switch` toggles (`components/buttons/Switch.tsx`) —
   a read-only "Hak Akses Admin" section below the four section cards, one card per **accepted**
   grant from `listAllUserAccessGrants(username)` — pending invitations are filtered out here, since
@@ -2018,6 +2034,9 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   an optional `TextArea` for `rejection_reason` — both call their respective `lib/actions.ts` Server
   Action on confirm and `router.refresh()` on success, which re-fetches the list server-side and
   hides the actions once a row's status has moved off `pending`.
+  `components/labels/UserVerifiedLabel.tsx`'s own verified pill draws the shared
+  `components/common/VerifiedBadge.tsx` (the `#3897f0` seal `ProfileHeader`'s name row shows),
+  rather than its own copy of that artwork, so one person is marked identically everywhere.
   `components/labels/VerificationRequestStatusLabel.tsx` maps `VerificationRequestStatusEnum` to a
   `Label` pill (orange `pending`, green `approved`, red `rejected`) — a new, separate label from
   `UserVerifiedLabel`, since a request's own review status and a user's `verification_status` are
@@ -2104,10 +2123,14 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
 ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.tsx`, uploads into the
   `chapters/` storage folder), Nama Komisariat, Cabang `SearchableSelect` — or fixed read-only text
   when the create sheet's `lockBranch` prop is set from a branch-scoped route, the same treatment
-  `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — Asal Universitas, Deskripsi, Tipe;
-  Create also has Status, Edit deliberately has neither Status nor Tipe, matching
+  `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — and Asal Universitas. Create also
+  has the `type` field, labelled **"Status"** rather than "Tipe" (label only — the values and the
+  payload field are still `full`/`provisional`); Edit deliberately has neither, matching
   `EditBranchFormSheet` — both only change through the detail page's own Suspend/Aktifkan and
-  Jadikan Penuh/Persiapan actions, and `chapters/update` now 400s on a `type` field. Unlike its first pass,
+  Jadikan Penuh/Persiapan actions, and `chapters/update` now 400s on a `type` field.
+  **No create sheet has a Deskripsi or an Aktif/Tidak Aktif Status field** — a new entity is always
+  created `status: "active"`, and suspension belongs to the level above it (see Suspension below);
+  Deskripsi is filled in later from the entity's own Pengaturan → Profil tab or the Edit sheet. Unlike its first pass,
   `EditChapterFormSheet` now does need the same detail-fetch loader Badko/Cabang's edit sheets use —
   `chapters/list` covers institution/type/branch but still omits `description` the same way
   `branches/list` does, so Edit fetches the real `chapters/detail` via the newly-added
@@ -2172,8 +2195,8 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   new `coordinating-chapters/` storage folder). `CreateCoordinatingChapterFormSheet.tsx`/
   `EditCoordinatingChapterFormSheet.tsx` mirror the Chapter pair field-for-field minus Tipe/institution
   (a Korkom has neither) — Edit needs the same detail-fetch loader Chapter's edit does, since
-  `coordinating-chapters/list` omits `description` the same way `chapters/list` does, and Edit
-  deliberately has no Status field either. `components/pages/CoordinatingChapterDetailPage.tsx`
+  `coordinating-chapters/list` omits `description` the same way `chapters/list` does, and neither
+  sheet has a Status field. `components/pages/CoordinatingChapterDetailPage.tsx`
   mirrors `BranchDetailPage.tsx`'s header-card-above-tabs shape but drops the Tipe badge (Korkom has
   no `full`/`provisional` concept) — its stat pills are Jumlah Komisariat
   (`apis/chapters.ts#listAllChaptersAdmin({ coordinatingChapterId }).length`) and Jumlah Kader
@@ -2293,7 +2316,8 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   only, in practice) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
   (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
   fetches the real detail via `getBranchDetail` before mounting its fields), each with a Badko
-  `SearchableSelect`, plus Tipe on Create only — fields Badko's own sheets don't have, since a Badko
+  `SearchableSelect`, plus the `type` field on Create only (labelled "Status", see the Komisariat
+  entry above) — fields Badko's own sheets don't have, since a Badko
   has no changeable parent and no `full`/`provisional` concept; Edit has no Tipe field, since
   `branches/update` now 400s on one. Both sheets also take an optional `lockCoordinatingBody` prop (threaded from
   `AdminBranchListPage`'s `hideCoordinatingBodyFilter` and from `BranchDetailPage`'s own same-named
@@ -2469,7 +2493,15 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `role="tooltip"` pill — `bg-[#172033]`, matching this app's near-black text color — fades in above
   it on hover with the position's full, unclamped name, the same `opacity-0`→`group-hover:opacity-100`
   transition pattern `IndonesiaBranchMap`'s point tooltips use, just styled dark/minimal instead of
-  that white informational-card treatment. A period Select switches
+  that white informational-card treatment. The roster renders in one of **two views**, picked by a
+  Bagan/Tabel toggle in the period header row (persisted to `localStorage` under
+  `structural_view_mode`, read after mount so the client's first render matches the server's, same
+  shape as the admin lists' own Tabel/Card toggle): the org chart above, or `OfficerTable`, a flat
+  No/Nama/Jabatan/Status/Aksi table fed `[root, ...tiers.flat()]` so both views read top-down by the
+  same seniority order. The toggle only renders once the period actually has officers. Both views
+  reach the same three per-officer actions through the shared `OfficerActionsMenu` — don't duplicate
+  that Dropdown per view. Since all five entity detail pages embed this component in their
+  Kepengurusan tab, the toggle is there too. A period Select switches
   between a chapter's `structural_periods` rows via `?period=` (server-refetched through
   `structurals/detail`, same query-param-drives-a-server-refetch pattern `NewsPage`/`SearchPage` use
   for `?q=`). With no (or an invalid/stale) `?period=`, the route defaults to the period with a null

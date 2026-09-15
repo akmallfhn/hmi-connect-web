@@ -686,6 +686,8 @@ export type UpdateUserPayload = {
   role_id?: number;
   status?: UserStatusEnum;
   verification_status?: VerificationStatusEnum;
+  // Marks a member who has left active membership (KAHMI) — Super Admin only, and update-only.
+  is_alumni?: boolean;
   date_of_birth?: string;
   gender?: GenderEnum;
   address_street?: string;

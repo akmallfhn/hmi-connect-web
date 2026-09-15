@@ -32,6 +32,7 @@ import {
   type AccessEntityTypeEnum,
   type UserStatusEnum,
 } from "@/lib/types";
+import AlumniStatusLabel from "../labels/AlumniStatusLabel";
 import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
@@ -267,6 +268,10 @@ export default function AdminUserDetailPage({
           <Field
             label="Terverifikasi"
             value={<UserVerifiedLabel status={user.verification_status} />}
+          />
+          <Field
+            label="Status Keanggotaan"
+            value={<AlumniStatusLabel isAlumni={user.is_alumni} />}
           />
         </SectionCard>
 

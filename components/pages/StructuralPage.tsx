@@ -3,16 +3,18 @@
 import {
   Loader2,
   MoreVertical,
+  Network,
   Pencil,
   Plus,
   PlusCircle,
   Power,
   PowerOff,
+  Table2,
   Trash2,
   UserPlus,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type {
   StructuralOfficer,
@@ -82,6 +84,10 @@ function isBendaharaUmum(positionName: string) {
 }
 
 const TIER_ROW_SIZE = 3;
+
+type StructuralViewMode = "chart" | "table";
+
+const VIEW_MODE_STORAGE_KEY = "structural_view_mode";
 
 // Root is Ketua Umum by name match; Sekretaris/Bendahara Umum form the next tier regardless of position_id; the rest chunk into rows of TIER_ROW_SIZE.
 function buildStructuralTiers(officers: StructuralOfficer[]): {
@@ -161,6 +167,20 @@ export default function StructuralPage({
 }: StructuralPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Always start on chart view so the client's first render matches the server's (no localStorage there).
+  const [viewMode, setViewMode] = useState<StructuralViewMode>("chart");
+  useEffect(() => {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored === "chart" || stored === "table") setViewMode(stored);
+  }, []);
+
+  // Persisted from the click handler itself, so the read-on-mount above never races a write that clobbers it.
+  function handleViewModeChange(mode: StructuralViewMode) {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  }
+
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showUpdatePeriod, setShowUpdatePeriod] = useState(false);
   const [showAddOfficer, setShowAddOfficer] = useState(false);
@@ -278,34 +298,77 @@ export default function StructuralPage({
                   }))}
                 />
               </div>
-              {canManage && selectedPeriod && (
-                <div className="flex w-fit shrink-0 items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowUpdatePeriod(true)}
-                    className="w-fit shrink-0"
-                  >
-                    <Pencil className="size-4" />
-                    Update Periode
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowAddOfficer(true)}
-                    className="w-fit shrink-0"
-                  >
-                    <UserPlus className="size-4" />
-                    Tambah Anggota
-                  </Button>
-                </div>
-              )}
+              <div className="flex w-fit shrink-0 flex-wrap items-center gap-2">
+                {root && (
+                  <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange("chart")}
+                      aria-pressed={viewMode === "chart"}
+                      title="Tampilan Bagan"
+                      className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+                        viewMode === "chart"
+                          ? "bg-primary-soft text-primary"
+                          : "text-[#5f6573] hover:text-[#172033]"
+                      }`}
+                    >
+                      <Network className="size-3.5" />
+                      <span className="hidden sm:inline">Bagan</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange("table")}
+                      aria-pressed={viewMode === "table"}
+                      title="Tampilan Tabel"
+                      className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+                        viewMode === "table"
+                          ? "bg-primary-soft text-primary"
+                          : "text-[#5f6573] hover:text-[#172033]"
+                      }`}
+                    >
+                      <Table2 className="size-3.5" />
+                      <span className="hidden sm:inline">Tabel</span>
+                    </button>
+                  </div>
+                )}
+
+                {canManage && selectedPeriod && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowUpdatePeriod(true)}
+                      className="w-fit shrink-0"
+                    >
+                      <Pencil className="size-4" />
+                      Update Periode
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setShowAddOfficer(true)}
+                      className="w-fit shrink-0"
+                    >
+                      <UserPlus className="size-4" />
+                      Tambah Anggota
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
             {!selectedPeriod || !root ? (
               <EmptyState
                 title="Belum ada anggota"
                 description="Anggota kepengurusan periode ini akan ditampilkan di sini."
+              />
+            ) : viewMode === "table" ? (
+              <OfficerTable
+                officers={[root, ...tiers.flat()]}
+                canManage={canManage}
+                onToggleStatus={setStatusTarget}
+                onUpdatePosition={setPositionTarget}
+                onDelete={setDeleteTarget}
               />
             ) : (
               <div className="flex flex-col items-center gap-2 overflow-x-auto p-6 sm:p-10">
@@ -535,50 +598,144 @@ function OfficerNode({
       </div>
 
       {canManage && (
-        <Dropdown
-          trigger={({ toggle }) => (
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label={`Aksi untuk ${officer.user_full_name}`}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
-            >
-              <MoreVertical className="size-4" />
-            </button>
-          )}
-        >
-          <button
-            type="button"
-            onClick={onToggleStatus}
-            className={`flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-[#f5f7fb] ${
-              isActive ? "text-destructive" : "text-primary"
-            }`}
-          >
-            {isActive ? (
-              <PowerOff className="size-4" />
-            ) : (
-              <Power className="size-4" />
-            )}
-            {isActive ? "Nonaktifkan" : "Aktifkan"}
-          </button>
-          <button
-            type="button"
-            onClick={onUpdatePosition}
-            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-[#172033] hover:bg-[#f5f7fb]"
-          >
-            <Pencil className="size-4" />
-            Update Jabatan
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-destructive hover:bg-[#f5f7fb]"
-          >
-            <Trash2 className="size-4" />
-            Hapus Anggota
-          </button>
-        </Dropdown>
+        <OfficerActionsMenu
+          officer={officer}
+          onToggleStatus={onToggleStatus}
+          onUpdatePosition={onUpdatePosition}
+          onDelete={onDelete}
+        />
       )}
+    </div>
+  );
+}
+
+// Shared by the chart's OfficerNode and the table's Aksi column, so both offer the same three actions.
+function OfficerActionsMenu({
+  officer,
+  onToggleStatus,
+  onUpdatePosition,
+  onDelete,
+}: {
+  officer: StructuralOfficer;
+  onToggleStatus: () => void;
+  onUpdatePosition: () => void;
+  onDelete: () => void;
+}) {
+  const isActive = officer.status === "active";
+
+  return (
+    <Dropdown
+      trigger={({ toggle }) => (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={`Aksi untuk ${officer.user_full_name}`}
+          className="flex size-7 shrink-0 items-center justify-center rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+        >
+          <MoreVertical className="size-4" />
+        </button>
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggleStatus}
+        className={`flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-[#f5f7fb] ${
+          isActive ? "text-destructive" : "text-primary"
+        }`}
+      >
+        {isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+        {isActive ? "Nonaktifkan" : "Aktifkan"}
+      </button>
+      <button
+        type="button"
+        onClick={onUpdatePosition}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-[#172033] hover:bg-[#f5f7fb]"
+      >
+        <Pencil className="size-4" />
+        Update Jabatan
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-destructive hover:bg-[#f5f7fb]"
+      >
+        <Trash2 className="size-4" />
+        Hapus Anggota
+      </button>
+    </Dropdown>
+  );
+}
+
+// The same roster the chart draws, flattened — ordered root-first so both views read top-down by seniority.
+function OfficerTable({
+  officers,
+  canManage,
+  onToggleStatus,
+  onUpdatePosition,
+  onDelete,
+}: {
+  officers: StructuralOfficer[];
+  canManage: boolean;
+  onToggleStatus: (officer: StructuralOfficer) => void;
+  onUpdatePosition: (officer: StructuralOfficer) => void;
+  onDelete: (officer: StructuralOfficer) => void;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-left text-sm">
+        <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+          <tr>
+            <th className="w-12 px-4 py-3">No</th>
+            <th className="px-4 py-3">Nama</th>
+            <th className="px-4 py-3">Jabatan</th>
+            <th className="px-4 py-3">Status</th>
+            {canManage && <th className="w-16 px-4 py-3 text-right">Aksi</th>}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#e6e9ef]">
+          {officers.map((officer, index) => {
+            const isActive = officer.status === "active";
+
+            return (
+              <tr key={officer.id} className="hover:bg-[#f9fafc]">
+                <td className="px-4 py-3 text-[#5f6573]">{index + 1}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={officer.user_avatar}
+                      name={officer.user_full_name}
+                      size={36}
+                    />
+                    <span className="font-medium text-[#172033]">
+                      {officer.user_full_name}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-[#172033]">
+                  {officer.position_name}
+                </td>
+                <td className="px-4 py-3">
+                  <Label variant={isActive ? "green" : "gray"} size="sm">
+                    {isActive ? "Aktif" : "Non-aktif"}
+                  </Label>
+                </td>
+                {canManage && (
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end">
+                      <OfficerActionsMenu
+                        officer={officer}
+                        onToggleStatus={() => onToggleStatus(officer)}
+                        onUpdatePosition={() => onUpdatePosition(officer)}
+                        onDelete={() => onDelete(officer)}
+                      />
+                    </div>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

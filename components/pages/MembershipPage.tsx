@@ -51,7 +51,7 @@ export default function MembershipPage({
         {membership?.member_card ? (
           <div className="mt-6 flex flex-col items-center gap-6 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start">
             <MembershipCard
-              fullName={membership.full_name}
+              fullName={membership.ktp_full_name || membership.full_name}
               memberCard={membership.member_card}
             />
             <MembershipInfoCard

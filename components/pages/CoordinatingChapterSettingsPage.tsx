@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  ShieldCheck,
-  Waypoints,
-  type LucideIcon,
-} from "lucide-react";
+import { ShieldCheck, Waypoints, type LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { CoordinatingChapterDetail } from "@/apis/coordinating-chapters";
-import {
-  updateCoordinatingChapter,
-} from "@/lib/actions";
+import { updateCoordinatingChapter } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -150,7 +145,8 @@ function ProfileTab({
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("coordinating_chapter", name);
+    if (!sanitizedName) {
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
@@ -159,7 +155,7 @@ function ProfileTab({
     try {
       const result = await updateCoordinatingChapter({
         id: coordinatingChapter.id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
       });
@@ -172,7 +168,10 @@ function ProfileTab({
       toast.success("Profil Korkom berhasil diperbarui.");
       router.refresh();
     } catch (err) {
-      console.error("[CoordinatingChapterSettingsPage] save profile threw:", err);
+      console.error(
+        "[CoordinatingChapterSettingsPage] save profile threw:",
+        err
+      );
       toast.error("Gagal menyimpan perubahan.");
     } finally {
       setIsSaving(false);
@@ -197,7 +196,7 @@ function ProfileTab({
           <Input
             inputId="coordinating-chapter-settings-name"
             label="Nama Korkom"
-            placeholder="Contoh: Korkom Wilayah Timur"
+            placeholder="Contoh: UI"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required

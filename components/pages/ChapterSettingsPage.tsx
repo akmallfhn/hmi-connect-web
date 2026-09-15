@@ -1,16 +1,13 @@
 "use client";
 
-import {
-  School,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+import { School, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { ChapterDetail } from "@/apis/chapters";
 import { updateChapter } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -137,7 +134,8 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("chapter", name);
+    if (!sanitizedName) {
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
@@ -146,7 +144,7 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
     try {
       const result = await updateChapter({
         id: chapter.id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
       });
@@ -184,7 +182,7 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
           <Input
             inputId="chapter-settings-name"
             label="Nama Komisariat"
-            placeholder="Contoh: HMI Komisariat Fakultas Teknik USK"
+            placeholder="Contoh: FEB Undip"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { BranchDetail, BranchListEntry } from "@/apis/branches";
 import { getBranchDetail, updateBranch } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -147,7 +148,8 @@ function EditBranchFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("branch", name);
+    if (!sanitizedName) {
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
@@ -160,7 +162,7 @@ function EditBranchFields({
     try {
       const result = await updateBranch({
         id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
         coordinating_body_id: String(coordinatingBody.value),
@@ -193,7 +195,7 @@ function EditBranchFields({
       <Input
         inputId="branch-name"
         label="Nama Cabang"
-        placeholder="Contoh: HMI Cabang Banda Aceh"
+        placeholder="Contoh: Banda Aceh"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required

@@ -7,6 +7,7 @@ import type {
   CoordinatingBodyListEntry,
 } from "@/apis/coordinating-bodies";
 import { getCoordinatingBodyDetail, updateCoordinatingBody } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -117,7 +118,8 @@ function EditCoordinatingBodyFields({
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("coordinating_body", name);
+    if (!sanitizedName) {
       toast.error("Nama Badko wajib diisi.");
       return;
     }
@@ -126,7 +128,7 @@ function EditCoordinatingBodyFields({
     try {
       const result = await updateCoordinatingBody({
         id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
       });

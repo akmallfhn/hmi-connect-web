@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { BranchDetail } from "@/apis/branches";
 import { updateBranch } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -137,7 +138,8 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("branch", name);
+    if (!sanitizedName) {
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
@@ -146,7 +148,7 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
     try {
       const result = await updateBranch({
         id: branch.id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
       });
@@ -184,7 +186,7 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
           <Input
             inputId="branch-settings-name"
             label="Nama Cabang"
-            placeholder="Contoh: HMI Cabang Banda Aceh"
+            placeholder="Contoh: Banda Aceh"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required

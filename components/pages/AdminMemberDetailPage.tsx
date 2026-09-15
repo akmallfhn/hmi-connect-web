@@ -15,7 +15,7 @@ import type { UserStatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
-import UserRoleLabel from "../labels/UserRoleLabel";
+import AlumniStatusLabel from "../labels/AlumniStatusLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 
@@ -39,7 +39,13 @@ function formatDate(value?: string) {
   });
 }
 
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <div className="rounded-xl border border-[#e6e9ef] bg-white p-5">
       <h2 className="text-base font-semibold text-[#172033]">{title}</h2>
@@ -109,9 +115,12 @@ export default function AdminMemberDetailPage({
               title={`Status: ${user.status}`}
             />
           </div>
-          <AdminPageTitle variant="compact" description={`@${user.username}`}>
-            {user.full_name}
-          </AdminPageTitle>
+          {/* AdminPageTitle is a fragment, so it needs its own block wrapper or the flex row lays the username out beside the name. */}
+          <div>
+            <AdminPageTitle variant="compact" description={`@${user.username}`}>
+              {user.full_name}
+            </AdminPageTitle>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:shrink-0">
@@ -135,23 +144,21 @@ export default function AdminMemberDetailPage({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <SectionCard title="Akun & Peran">
+        <SectionCard title="Akun">
           <Field label="Nama Lengkap" value={user.full_name} />
           <Field label="Username" value={`@${user.username}`} />
           <Field label="Email" value={user.email} />
-          <Field
-            label="Role"
-            value={
-              <UserRoleLabel roleId={user.role_id} roleName={user.role_name} />
-            }
-          />
           <Field
             label="Status"
             value={<UserStatusLabel status={user.status} />}
           />
           <Field
-            label="Terverifikasi"
+            label="Status Verifikasi"
             value={<UserVerifiedLabel status={user.verification_status} />}
+          />
+          <Field
+            label="Status Keanggotaan"
+            value={<AlumniStatusLabel isAlumni={user.is_alumni} />}
           />
         </SectionCard>
 

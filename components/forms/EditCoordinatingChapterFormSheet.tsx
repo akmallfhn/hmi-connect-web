@@ -10,10 +10,13 @@ import {
   getCoordinatingChapterDetail,
   updateCoordinatingChapter,
 } from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
-import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import CoordinatingChapterLogoField from "./CoordinatingChapterLogoField";
@@ -141,7 +144,8 @@ function EditCoordinatingChapterFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("coordinating_chapter", name);
+    if (!sanitizedName) {
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
@@ -154,7 +158,7 @@ function EditCoordinatingChapterFields({
     try {
       const result = await updateCoordinatingChapter({
         id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
         branch_id: String(branch.value),
@@ -187,7 +191,7 @@ function EditCoordinatingChapterFields({
       <Input
         inputId="coordinating-chapter-name"
         label="Nama Korkom"
-        placeholder="Contoh: Korkom Wilayah Timur"
+        placeholder="Contoh: UI"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required

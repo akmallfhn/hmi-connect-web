@@ -3,23 +3,18 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { createBranch } from "@/lib/actions";
-import { isSuccessStatus, type BranchTypeEnum, type StatusEnum } from "@/lib/types";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { isSuccessStatus, type BranchTypeEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
-import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
   { label: "Persiapan (Provisional)", value: "provisional" },
-];
-
-const STATUS_OPTIONS: { label: string; value: StatusEnum }[] = [
-  { label: "Aktif", value: "active" },
-  { label: "Tidak Aktif", value: "inactive" },
 ];
 
 interface CreateBranchFormSheetProps {
@@ -70,11 +65,9 @@ function CreateBranchFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
-  const [status, setStatus] = useState<StatusEnum>("active");
   const [coordinatingBody, setCoordinatingBody] =
     useState<SearchableOption | null>(defaultCoordinatingBody);
   const [isSaving, setIsSaving] = useState(false);
@@ -92,7 +85,8 @@ function CreateBranchFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("branch", name);
+    if (!sanitizedName) {
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
@@ -104,11 +98,10 @@ function CreateBranchFields({
     setIsSaving(true);
     try {
       const result = await createBranch({
-        name,
-        description,
+        name: sanitizedName,
         image_url: imageUrl,
         type,
-        status,
+        status: "active",
         coordinating_body_id: String(coordinatingBody.value),
       });
 
@@ -139,7 +132,7 @@ function CreateBranchFields({
       <Input
         inputId="branch-name"
         label="Nama Cabang"
-        placeholder="Contoh: HMI Cabang Banda Aceh"
+        placeholder="Contoh: Banda Aceh"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -167,32 +160,13 @@ function CreateBranchFields({
         />
       )}
 
-      <TextArea
-        textAreaId="branch-description"
-        label="Deskripsi"
-        placeholder="Ceritakan sekilas tentang Cabang ini"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={6}
-      />
-
       <Select
         selectId="branch-type"
-        label="Tipe"
-        placeholder="Pilih tipe"
+        label="Status"
+        placeholder="Pilih status"
         value={type}
         onChange={(value) => setType(value as BranchTypeEnum)}
         options={TYPE_OPTIONS}
-        required
-      />
-
-      <Select
-        selectId="branch-status"
-        label="Status"
-        placeholder="Pilih status"
-        value={status}
-        onChange={(value) => setStatus(value as StatusEnum)}
-        options={STATUS_OPTIONS}
         required
       />
 

@@ -40,6 +40,12 @@ const VERIFICATION_STATUS_OPTIONS: { label: string; value: VerificationStatusEnu
   { label: "Terverifikasi", value: "verified" },
 ];
 
+// is_alumni is a boolean on the backend; Select carries it as a string value.
+const MEMBERSHIP_STATUS_OPTIONS = [
+  { label: "Kader", value: "kader" },
+  { label: "Alumni", value: "alumni" },
+];
+
 interface AdminEditUserAccountFormProps {
   open: boolean;
   onClose: () => void;
@@ -81,6 +87,7 @@ function AccountFields({
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatusEnum>(
     user.verification_status,
   );
+  const [isAlumni, setIsAlumni] = useState(user.is_alumni);
   const [usernameError, setUsernameError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -161,6 +168,7 @@ function AccountFields({
         role_id: roleId,
         status,
         verification_status: verificationStatus,
+        is_alumni: isAlumni,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -289,15 +297,26 @@ function AccountFields({
         />
       </div>
 
-      <Select
-        selectId="admin-account-verification-status"
-        label="Status Verifikasi"
-        placeholder="Pilih status verifikasi"
-        value={verificationStatus}
-        onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
-        options={VERIFICATION_STATUS_OPTIONS}
-        required
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          selectId="admin-account-verification-status"
+          label="Status Verifikasi"
+          placeholder="Pilih status verifikasi"
+          value={verificationStatus}
+          onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
+          options={VERIFICATION_STATUS_OPTIONS}
+          required
+        />
+        <Select
+          selectId="admin-account-membership-status"
+          label="Status Keanggotaan"
+          placeholder="Pilih status keanggotaan"
+          value={isAlumni ? "alumni" : "kader"}
+          onChange={(value) => setIsAlumni(value === "alumni")}
+          options={MEMBERSHIP_STATUS_OPTIONS}
+          required
+        />
+      </div>
 
       <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>

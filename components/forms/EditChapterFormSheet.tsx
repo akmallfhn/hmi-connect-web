@@ -4,14 +4,21 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ChapterDetail, ChapterListEntry } from "@/apis/chapters";
 import type { Institution } from "@/apis/institutions";
-import { createInstitution, getChapterDetail, updateChapter } from "@/lib/actions";
+import {
+  createInstitution,
+  getChapterDetail,
+  updateChapter,
+} from "@/lib/actions";
+import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
   type SearchableOption as CreateableOption,
 } from "../fields/CreateableSelect";
 import Input from "../fields/Input";
-import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
+import SearchableSelect, {
+  type SearchableOption,
+} from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
@@ -38,7 +45,11 @@ export default function EditChapterFormSheet({
       description="Perbarui data Komisariat ini."
     >
       {open && chapter && (
-        <EditChapterLoader chapter={chapter} onClose={onClose} onSaved={onSaved} />
+        <EditChapterLoader
+          chapter={chapter}
+          onClose={onClose}
+          onSaved={onSaved}
+        />
       )}
     </Sheet>
   );
@@ -94,7 +105,7 @@ function EditChapterLoader({
       initialInstitution={
         (detail?.institution_id ?? chapter.institution_id)
           ? {
-              label: (detail?.institution_name ?? chapter.institution_name) ?? "",
+              label: detail?.institution_name ?? chapter.institution_name ?? "",
               value: (detail?.institution_id ?? chapter.institution_id)!,
               image: detail?.institution_avatar ?? chapter.institution_avatar,
             }
@@ -173,7 +184,8 @@ function EditChapterFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim()) {
+    const sanitizedName = stripEntityNamePrefix("chapter", name);
+    if (!sanitizedName) {
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
@@ -186,7 +198,7 @@ function EditChapterFields({
     try {
       const result = await updateChapter({
         id,
-        name,
+        name: sanitizedName,
         description,
         image_url: imageUrl,
         branch_id: String(branch.value),
@@ -220,7 +232,7 @@ function EditChapterFields({
       <Input
         inputId="chapter-name"
         label="Nama Komisariat"
-        placeholder="Contoh: HMI Komisariat Fakultas Teknik USK"
+        placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required

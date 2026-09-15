@@ -11,7 +11,7 @@ const VARIANT_CLASSNAME: Record<LabelVariant, string> = {
   red: "border-destructive/30 bg-destructive-soft text-destructive",
   // No design tokens for these yet — hardcoded tints, same approach AppBasedLabel uses.
   purple: "border-[#A19ACD] bg-[#EFEDF9] text-[#42359B]",
-  blue: "border-[#8BA7D3] bg-[#E2F0FF] text-[#164EA6]",
+  blue: "border-[#B6CBE9] bg-[#E2F0FF] text-[#164EA6]",
   yellow: "border-[#ECCF80] bg-[#FFF6E0] text-[#8A6300]",
   gray: "border-[#dbe3ef] bg-[#f5f7fb] text-[#41474E]",
   pink: "border-[#F3A6BC] bg-[#FDE7EE] text-[#BE2B5D]",
