@@ -681,61 +681,68 @@ function OfficerTable({
   onDelete: (officer: StructuralOfficer) => void;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-          <tr>
-            <th className="w-12 px-4 py-3">No</th>
-            <th className="px-4 py-3">Nama</th>
-            <th className="px-4 py-3">Jabatan</th>
-            <th className="px-4 py-3">Status</th>
-            {canManage && <th className="w-16 px-4 py-3 text-right">Aksi</th>}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#e6e9ef]">
-          {officers.map((officer, index) => {
-            const isActive = officer.status === "active";
-
-            return (
-              <tr key={officer.id} className="hover:bg-[#f9fafc]">
-                <td className="px-4 py-3 text-[#5f6573]">{index + 1}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={officer.user_avatar}
-                      name={officer.user_full_name}
-                      size={36}
-                    />
-                    <span className="font-medium text-[#172033]">
-                      {officer.user_full_name}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-[#172033]">
-                  {officer.position_name}
-                </td>
-                <td className="px-4 py-3">
-                  <Label variant={isActive ? "green" : "gray"} size="sm">
-                    {isActive ? "Aktif" : "Non-aktif"}
-                  </Label>
-                </td>
+    // Inset in its own bordered box, same treatment EntityAccessTab gives its table.
+    <div className="p-4 sm:p-6">
+      <div className="overflow-hidden rounded-xl border border-[#e6e9ef]">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+              <tr>
+                <th className="w-12 px-4 py-3">No</th>
+                <th className="px-4 py-3">Nama</th>
+                <th className="px-4 py-3">Jabatan</th>
+                <th className="px-4 py-3">Status</th>
                 {canManage && (
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end">
-                      <OfficerActionsMenu
-                        officer={officer}
-                        onToggleStatus={() => onToggleStatus(officer)}
-                        onUpdatePosition={() => onUpdatePosition(officer)}
-                        onDelete={() => onDelete(officer)}
-                      />
-                    </div>
-                  </td>
+                  <th className="w-16 px-4 py-3 text-right">Aksi</th>
                 )}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody className="divide-y divide-[#e6e9ef]">
+              {officers.map((officer, index) => {
+                const isActive = officer.status === "active";
+
+                return (
+                  <tr key={officer.id} className="hover:bg-[#f9fafc]">
+                    <td className="px-4 py-3 text-[#5f6573]">{index + 1}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={officer.user_avatar}
+                          name={officer.user_full_name}
+                          size={36}
+                        />
+                        <span className="font-medium text-[#172033]">
+                          {officer.user_full_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-[#172033]">
+                      {officer.position_name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Label variant={isActive ? "green" : "gray"} size="sm">
+                        {isActive ? "Aktif" : "Non-aktif"}
+                      </Label>
+                    </td>
+                    {canManage && (
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          <OfficerActionsMenu
+                            officer={officer}
+                            onToggleStatus={() => onToggleStatus(officer)}
+                            onUpdatePosition={() => onUpdatePosition(officer)}
+                            onDelete={() => onDelete(officer)}
+                          />
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

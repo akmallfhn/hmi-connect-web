@@ -36,13 +36,24 @@ const TRAINING_RESULTS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Tidak Lulus", value: "failed" },
 ];
 
-const EDUCATION_YEAR_OPTIONS = Array.from(
-  { length: 2026 - 1947 + 1 },
-  (_, index) => {
-    const year = String(2026 - index);
-    return { label: year, value: year };
-  }
+const EDUCATION_EARLIEST_YEAR = 1947;
+const EDUCATION_LATEST_START_YEAR = 2026;
+const EDUCATION_LATEST_END_YEAR = 2036;
+
+function buildYearOptions(latestYear: number) {
+  return Array.from(
+    { length: latestYear - EDUCATION_EARLIEST_YEAR + 1 },
+    (_, index) => {
+      const year = String(latestYear - index);
+      return { label: year, value: year };
+    }
+  );
+}
+
+const EDUCATION_START_YEAR_OPTIONS = buildYearOptions(
+  EDUCATION_LATEST_START_YEAR
 );
+const EDUCATION_END_YEAR_OPTIONS = buildYearOptions(EDUCATION_LATEST_END_YEAR);
 
 const STEPS = ["Profil", "Pendidikan", "Latihan Kader 1"];
 const ALLOWED_AVATAR_TYPES = [
@@ -54,11 +65,7 @@ const ALLOWED_AVATAR_TYPES = [
 const ALLOWED_AVATAR_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 type UsernameAvailability =
-  | "idle"
-  | "checking"
-  | "available"
-  | "unavailable"
-  | "error";
+  "idle" | "checking" | "available" | "unavailable" | "error";
 
 type FormData = {
   avatar: string;
@@ -195,10 +202,7 @@ export default function ActivationPage({
     }
 
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
-    if (
-      !fileExtension ||
-      !ALLOWED_AVATAR_EXTENSIONS.includes(fileExtension)
-    ) {
+    if (!fileExtension || !ALLOWED_AVATAR_EXTENSIONS.includes(fileExtension)) {
       toast.error("Ekstensi file tidak valid.");
       return;
     }
@@ -324,7 +328,7 @@ export default function ActivationPage({
         const isUsernameConflict = result.status === "CONFLICT";
         const message = isUsernameConflict
           ? "Username ini sudah digunakan. Silakan pilih username lain."
-          : result.message ?? "Aktivasi gagal. Coba lagi.";
+          : (result.message ?? "Aktivasi gagal. Coba lagi.");
         if (isUsernameConflict) {
           setUsernameApiError(message);
           setUsernameAvailability("unavailable");
@@ -594,18 +598,18 @@ export default function ActivationPage({
                     onChange={(value) =>
                       updateFormData("startYear", String(value ?? ""))
                     }
-                    options={EDUCATION_YEAR_OPTIONS}
+                    options={EDUCATION_START_YEAR_OPTIONS}
                     required
                   />
                   <Select
                     selectId="end-year"
-                    label="Tahun Keluar"
-                    placeholder="Pilih tahun keluar"
+                    label="Tahun Lulus (atau perkiraan)"
+                    placeholder="Pilih tahun lulus"
                     value={formData.endYear}
                     onChange={(value) =>
                       updateFormData("endYear", String(value ?? ""))
                     }
-                    options={EDUCATION_YEAR_OPTIONS}
+                    options={EDUCATION_END_YEAR_OPTIONS}
                     required
                   />
                 </div>
@@ -618,8 +622,8 @@ export default function ActivationPage({
                   Riwayat Latihan Kader 1
                 </h2>
                 <p className="text-sm text-[#5f6573]">
-                  Latihan Kader 1 adalah syarat minimal untuk mengaktifkan
-                  akun HMI Connect kamu.
+                  Latihan Kader 1 adalah syarat minimal untuk mengaktifkan akun
+                  HMI Connect kamu.
                 </p>
 
                 <Select
