@@ -245,6 +245,7 @@ export async function updateTraining(
   });
 }
 
+// Soft-delete: materials, participants, and evaluations stay; a locked training refuses with 409.
 export async function deleteTraining(id: string): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {

@@ -29,6 +29,7 @@ import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
+import NewsAttachmentCard from "../feeds/NewsAttachmentCard";
 import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
@@ -36,9 +37,10 @@ import { supabase } from "@/lib/supabase";
 import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
-  type FeedMediaTypeEnum,
+  type FeedAttachmentTypeEnum,
+  type FeedUploadAttachmentTypeEnum,
 } from "@/lib/types";
-import type { Feed } from "@/apis/feeds";
+import type { CreateFeedPayload, Feed, FeedNewsAttachment } from "@/apis/feeds";
 import LogoHmi from "../svg/LogoHmi";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
@@ -80,6 +82,17 @@ function ComposerAvatar({
   );
 }
 
+// What a "bagikan ke feed" hand-off carries: the article id the backend links, plus enough to preview it.
+export type ComposerNewsDraft = {
+  id: string;
+  title: string;
+  sourceUrl: string;
+  sourceName?: string;
+  sourceLogoUrl?: string;
+  imageUrl?: string;
+  summary?: string;
+};
+
 interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
@@ -87,7 +100,7 @@ interface CreateFeedFormsProps {
   authorEntity?: ComposerAuthorEntity;
   onCreated?: (feed: Feed) => void;
   forceOpenSignal?: number;
-  forceOpenUrl?: string;
+  forceOpenNews?: ComposerNewsDraft;
 }
 
 type PhotoDraft = {
@@ -181,6 +194,23 @@ async function uploadFeedMedia(
   return uploadPublicStorageFile(filePath, file);
 }
 
+// The composer previews through the same card the published feed renders, so the two can't drift.
+function newsPreviewAttachment(news: ComposerNewsDraft): FeedNewsAttachment {
+  return {
+    id: `news-draft-${news.id}`,
+    type: "news",
+    reference_id: news.id,
+    reference_index: 1,
+    reference_url: news.sourceUrl,
+    reference_title: news.title,
+    reference_description: news.summary ?? null,
+    reference_image_url: news.imageUrl ?? null,
+    reference_source_name: news.sourceName ?? null,
+    reference_source_logo_url: news.sourceLogoUrl ?? null,
+    reference_is_deleted: false,
+  };
+}
+
 export default function CreateFeedForms({
   fullName,
   avatar,
@@ -188,13 +218,14 @@ export default function CreateFeedForms({
   authorEntity,
   onCreated,
   forceOpenSignal,
-  forceOpenUrl,
+  forceOpenNews,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
-  const [initialMode, setInitialMode] = useState<FeedMediaTypeEnum | null>(
-    null,
+  const [initialMode, setInitialMode] =
+    useState<FeedUploadAttachmentTypeEnum | null>(null);
+  const [initialNews, setInitialNews] = useState<ComposerNewsDraft | undefined>(
+    undefined,
   );
-  const [initialUrl, setInitialUrl] = useState<string | undefined>(undefined);
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
@@ -202,16 +233,19 @@ export default function CreateFeedForms({
     ? "Bagikan sesuatu..."
     : `Apa yang ingin kamu bagikan, ${firstName}?`;
 
-  function openComposer(mode: FeedMediaTypeEnum | null = null, url?: string) {
+  function openComposer(
+    mode: FeedUploadAttachmentTypeEnum | null = null,
+    news?: ComposerNewsDraft,
+  ) {
     setInitialMode(mode);
-    setInitialUrl(url);
+    setInitialNews(news);
     setOpen(true);
   }
 
   if (forceOpenSignal !== seenForceOpenSignal) {
     setSeenForceOpenSignal(forceOpenSignal);
     if (forceOpenSignal) {
-      if (forceOpenUrl) openComposer("url", forceOpenUrl);
+      if (forceOpenNews) openComposer(null, forceOpenNews);
       else openComposer();
     }
   }
@@ -265,7 +299,7 @@ export default function CreateFeedForms({
         userId={userId}
         authorEntity={authorEntity}
         initialMode={initialMode}
-        initialUrl={initialUrl}
+        initialNews={initialNews}
         onCreated={onCreated}
       />
     </>
@@ -279,8 +313,8 @@ interface FeedComposerModalProps {
   avatar?: string;
   userId?: string;
   authorEntity?: ComposerAuthorEntity;
-  initialMode?: FeedMediaTypeEnum | null;
-  initialUrl?: string;
+  initialMode?: FeedUploadAttachmentTypeEnum | null;
+  initialNews?: ComposerNewsDraft;
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
@@ -294,7 +328,7 @@ export function FeedComposerModal({
   userId,
   authorEntity,
   initialMode,
-  initialUrl,
+  initialNews,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -311,7 +345,7 @@ export function FeedComposerModal({
           avatar={avatar}
           userId={userId}
           initialMode={initialMode}
-          initialUrl={initialUrl}
+          initialNews={initialNews}
           quoteFeed={quoteFeed}
           authorEntity={authorEntity}
           onClose={onClose}
@@ -327,8 +361,8 @@ interface FeedComposerFieldsProps {
   avatar?: string;
   userId?: string;
   authorEntity?: ComposerAuthorEntity;
-  initialMode?: FeedMediaTypeEnum | null;
-  initialUrl?: string;
+  initialMode?: FeedUploadAttachmentTypeEnum | null;
+  initialNews?: ComposerNewsDraft;
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -340,7 +374,7 @@ function FeedComposerFields({
   userId,
   authorEntity,
   initialMode,
-  initialUrl,
+  initialNews,
   quoteFeed,
   onClose,
   onCreated,
@@ -353,21 +387,24 @@ function FeedComposerFields({
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [compressingPhotos, setCompressingPhotos] = useState(false);
   const [video, setVideo] = useState<VideoDraft | null>(null);
-  const [urlValue, setUrlValue] = useState(initialUrl ?? "");
-  const [urlActive, setUrlActive] = useState(
-    initialMode === "url" || Boolean(initialUrl),
+  const [urlValue, setUrlValue] = useState("");
+  const [urlActive, setUrlActive] = useState(initialMode === "url");
+  const [news, setNews] = useState<ComposerNewsDraft | null>(
+    initialNews ?? null,
   );
   const [previewUrl, setPreviewUrl] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const emojiWrapperRef = useRef<HTMLDivElement>(null);
-  const attachmentMode: FeedMediaTypeEnum | null = photos.length
+  const attachmentMode: FeedAttachmentTypeEnum | null = photos.length
     ? "photo"
     : video
       ? "video"
       : urlActive
         ? "url"
-        : null;
+        : news
+          ? "news"
+          : null;
   const normalizedUrl = normalizeUrl(urlValue);
   const hasValidUrl = urlValue.trim() ? isValidUrl(urlValue) : false;
   const canSubmit =
@@ -430,16 +467,17 @@ function FeedComposerFields({
     setVideo(null);
   }
 
-  function clearAllMedia() {
+  function clearAttachment() {
     clearPhotos();
     clearVideo();
     setUrlValue("");
     setUrlActive(false);
     setPreviewUrl("");
+    setNews(null);
   }
 
   function handleClose() {
-    clearAllMedia();
+    clearAttachment();
     onClose();
   }
 
@@ -580,25 +618,27 @@ function FeedComposerFields({
 
     setSubmitting(true);
     try {
-      let media: { type: FeedMediaTypeEnum; urls: string[] } | undefined;
+      let attachment: NonNullable<CreateFeedPayload["attachment"]> | undefined;
 
       if (!quoteFeed) {
         if (photos.length > 0) {
           const urls = await Promise.all(
             photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo")),
           );
-          media = { type: "photo", urls };
+          attachment = { type: "photo", urls };
         } else if (video) {
           const url = await uploadFeedMedia(video.file, userId, "video");
-          media = { type: "video", urls: [url] };
+          attachment = { type: "video", urls: [url] };
         } else if (urlActive && urlValue.trim()) {
-          media = { type: "url", urls: [normalizedUrl] };
+          attachment = { type: "url", urls: [normalizedUrl] };
+        } else if (news) {
+          attachment = { type: "news", reference_id: news.id };
         }
       }
 
       const result = await createFeed({
         content: content.trim(),
-        ...(media ? { media } : {}),
+        ...(attachment ? { attachment } : {}),
         ...(quoteFeed ? { repost_of_id: quoteFeed.id } : {}),
         ...(authorEntity
           ? {
@@ -624,7 +664,7 @@ function FeedComposerFields({
           : "Postingan berhasil dibuat.",
       );
       onCreated?.(result.data);
-      clearAllMedia();
+      clearAttachment();
       setContent("");
       onClose();
     } catch (err) {
@@ -755,6 +795,21 @@ function FeedComposerFields({
 
       {previewUrl && <LinkPreviewCard url={previewUrl} />}
 
+      {news && (
+        <div className="relative">
+          <NewsAttachmentCard attachment={newsPreviewAttachment(news)} />
+          <button
+            type="button"
+            onClick={() => setNews(null)}
+            disabled={submitting}
+            className="absolute right-2 top-5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Hapus berita"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
       {quoteFeed && <QuotedFeed feed={quoteFeed} />}
 
       {!quoteFeed && (
@@ -768,7 +823,7 @@ function FeedComposerFields({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={clearAllMedia}
+                onClick={clearAttachment}
                 disabled={submitting}
                 className="text-destructive hover:bg-destructive-soft"
               >

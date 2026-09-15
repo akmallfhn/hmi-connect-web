@@ -3,7 +3,7 @@ import Link from "next/link";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
-import type { Feed } from "@/apis/feeds";
+import type { Feed, FeedUploadAttachment } from "@/apis/feeds";
 
 // The read-only preview of an original feed embedded in a quote repost — used both when
 // rendering an existing quote repost (FeedItemCard) and while composing one (CreateFeedForms).
@@ -15,7 +15,9 @@ export default function QuotedFeed({
   feed: Feed;
   linkToDetail?: boolean;
 }) {
-  const photo = feed.media?.find((item) => item.type === "photo");
+  const photo = feed.attachments?.find(
+    (item): item is FeedUploadAttachment => item.type === "photo",
+  );
   const author = resolveFeedAuthor(feed);
 
   const body = (
@@ -36,7 +38,7 @@ export default function QuotedFeed({
       </p>
       {photo && (
         <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-[#f5f7fb]">
-          <Image src={photo.url} alt="" fill className="object-cover" unoptimized />
+          <Image src={photo.reference_url} alt="" fill className="object-cover" unoptimized />
         </div>
       )}
     </>

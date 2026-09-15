@@ -4,8 +4,9 @@ import { Repeat2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import type { NewsArticle } from "@/apis/news";
-import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_URL_KEY } from "@/lib/constants";
+import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_NEWS_KEY } from "@/lib/constants";
 import Button, { type ButtonVariant } from "../buttons/Button";
+import type { ComposerNewsDraft } from "../forms/CreateFeedForms";
 
 interface RepostToFeedButtonProps {
   article: NewsArticle;
@@ -30,12 +31,20 @@ export default function RepostToFeedButton({
   const { button: buttonSize, icon: iconSize } = DIMENSIONS[size];
 
   function handleClick(event: MouseEvent) {
-    // The card itself is a link to the source article — stop that navigation, this button
-    // does something else (open the composer at home with the article's URL pre-filled).
+    // The whole card links out to the source — this button opens the composer instead.
     event.preventDefault();
     event.stopPropagation();
 
-    window.sessionStorage.setItem(COMPOSE_INTENT_URL_KEY, article.source_url);
+    const draft: ComposerNewsDraft = {
+      id: article.id,
+      title: article.title,
+      sourceUrl: article.source_url,
+      sourceName: article.source_name,
+      sourceLogoUrl: article.source_logo_url,
+      imageUrl: article.image_url,
+      summary: article.summary,
+    };
+    window.sessionStorage.setItem(COMPOSE_INTENT_NEWS_KEY, JSON.stringify(draft));
     window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
     window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
     router.push("/");

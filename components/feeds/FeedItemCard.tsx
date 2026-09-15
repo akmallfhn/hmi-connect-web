@@ -24,6 +24,8 @@ import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
+import NewsAttachmentCard from "./NewsAttachmentCard";
+import TrainingAttachmentCard from "./TrainingAttachmentCard";
 import QuotedFeed from "./QuotedFeed";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import EditFeedForm from "../forms/EditFeedForm";
@@ -33,7 +35,13 @@ import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
 import ShareModal from "../modals/ShareModal";
 import { useReaction } from "@/hooks/useReaction";
-import type { Feed, FeedComment, FeedMedia } from "@/apis/feeds";
+import type {
+  Feed,
+  FeedComment,
+  FeedNewsAttachment,
+  FeedTrainingAttachment,
+  FeedUploadAttachment,
+} from "@/apis/feeds";
 import {
   createFeedComment,
   deleteFeed,
@@ -59,14 +67,16 @@ interface FeedItemCardProps {
   onFeedCreated?: (feed: Feed) => void;
 }
 
-function MediaGrid({
-  media,
+function PhotoGrid({
+  photos: unsorted,
   onPreview,
 }: {
-  media: NonNullable<Feed["media"]>;
-  onPreview: (photo: FeedMedia) => void;
+  photos: FeedUploadAttachment[];
+  onPreview: (photo: FeedUploadAttachment) => void;
 }) {
-  const photos = [...media].sort((a, b) => a.index - b.index);
+  const photos = [...unsorted].sort(
+    (a, b) => a.reference_index - b.reference_index,
+  );
   const visible = photos.slice(0, 4);
   const overflow = photos.length - visible.length;
 
@@ -79,7 +89,7 @@ function MediaGrid({
         aria-label="Buka pratinjau gambar"
       >
         <Image
-          src={photos[0].url}
+          src={photos[0].reference_url}
           alt=""
           fill
           className="object-cover"
@@ -103,7 +113,7 @@ function MediaGrid({
             aria-label="Buka pratinjau gambar"
           >
             <Image
-              src={photo.url}
+              src={photo.reference_url}
               alt=""
               fill
               className="object-cover"
@@ -125,7 +135,7 @@ function ImagePreviewModal({
   photo,
   onClose,
 }: {
-  photo: FeedMedia | null;
+  photo: FeedUploadAttachment | null;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -173,7 +183,7 @@ function ImagePreviewModal({
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-8">
         <div className="relative max-h-full w-full max-w-6xl">
           <Image
-            src={photo.url}
+            src={photo.reference_url}
             alt=""
             width={1600}
             height={1200}
@@ -223,7 +233,7 @@ export default function FeedItemCard({
   const [content, setContent] = useState(feed.content);
   const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
   const isEdited = updatedAt !== feed.created_at;
-  const [previewPhoto, setPreviewPhoto] = useState<FeedMedia | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<FeedUploadAttachment | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
@@ -245,9 +255,22 @@ export default function FeedItemCard({
   const [commentText, setCommentText] = useState("");
   const [postingComment, startCommentTransition] = useTransition();
 
-  const photoMedia = feed.media?.filter((item) => item.type === "photo");
-  const videoMedia = feed.media?.find((item) => item.type === "video");
-  const urlMedia = feed.media?.find((item) => item.type === "url");
+  const attachments = feed.attachments ?? [];
+  const photoAttachments = attachments.filter(
+    (item): item is FeedUploadAttachment => item.type === "photo",
+  );
+  const videoAttachment = attachments.find(
+    (item): item is FeedUploadAttachment => item.type === "video",
+  );
+  const urlAttachment = attachments.find(
+    (item): item is FeedUploadAttachment => item.type === "url",
+  );
+  const newsAttachment = attachments.find(
+    (item): item is FeedNewsAttachment => item.type === "news",
+  );
+  const trainingAttachment = attachments.find(
+    (item): item is FeedTrainingAttachment => item.type === "training",
+  );
   const shareUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/feeds/${feed.id}`
@@ -429,17 +452,21 @@ export default function FeedItemCard({
         {content}
       </p>
 
-      {photoMedia && photoMedia.length > 0 && (
-        <MediaGrid media={photoMedia} onPreview={setPreviewPhoto} />
+      {photoAttachments.length > 0 && (
+        <PhotoGrid photos={photoAttachments} onPreview={setPreviewPhoto} />
       )}
-      {videoMedia && (
+      {videoAttachment && (
         <video
           controls
-          src={videoMedia.url}
+          src={videoAttachment.reference_url}
           className="mt-3 w-full rounded-xl bg-black"
         />
       )}
-      {urlMedia && <LinkPreviewCard url={urlMedia.url} />}
+      {urlAttachment && <LinkPreviewCard url={urlAttachment.reference_url} />}
+      {newsAttachment && <NewsAttachmentCard attachment={newsAttachment} />}
+      {trainingAttachment && (
+        <TrainingAttachmentCard attachment={trainingAttachment} />
+      )}
       {feed.repost_of ? (
         <QuotedFeed feed={feed.repost_of} linkToDetail />
       ) : (

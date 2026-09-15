@@ -31,8 +31,8 @@ export function getAdminSiteOrigin(): string {
 // sessionStorage key + window event name the bottom navbar's compose button uses to open the composer after navigating.
 export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 
-// Companion to COMPOSE_INTENT_KEY — when set (e.g. by RepostToFeedButton), the composer opens pre-filled with this URL.
-export const COMPOSE_INTENT_URL_KEY = "hmi-compose-intent-url";
+// Companion to COMPOSE_INTENT_KEY — a JSON news draft (RepostToFeedButton) the composer opens with as a news attachment.
+export const COMPOSE_INTENT_NEWS_KEY = "hmi-compose-intent-news";
 
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";

@@ -18,7 +18,17 @@ export type Degree =
   | "sarjana"
   | "magister"
   | "doktor";
-export type FeedMediaTypeEnum = "photo" | "video" | "url";
+export type FeedAttachmentTypeEnum =
+  | "photo"
+  | "video"
+  | "url"
+  | "news"
+  | "training";
+// The three the composer can actually produce — news/training are linked, never uploaded.
+export type FeedUploadAttachmentTypeEnum = Extract<
+  FeedAttachmentTypeEnum,
+  "photo" | "video" | "url"
+>;
 export type ReactionTypeEnum =
   | "like"
   | "love"

@@ -6,8 +6,10 @@ import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
   type ActivityTypeEnum,
-  type FeedMediaTypeEnum,
+  type FeedAttachmentTypeEnum,
+  type FeedUploadAttachmentTypeEnum,
   type ReactionTypeEnum,
+  type TrainingStatusEnum,
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
@@ -16,12 +18,47 @@ export type FeedReactionCount = {
   by_type?: Partial<Record<ReactionTypeEnum, number>>;
 };
 
-export type FeedMedia = {
+type FeedAttachmentBase = {
   id: string;
-  type: FeedMediaTypeEnum;
-  url: string;
-  index: number;
+  type: FeedAttachmentTypeEnum;
+  reference_index: number;
 };
+
+// Each type answers with its own fixed field set — switch on `type`, never read across shapes.
+export type FeedUploadAttachment = FeedAttachmentBase & {
+  type: FeedUploadAttachmentTypeEnum;
+  reference_url: string;
+};
+
+export type FeedNewsAttachment = FeedAttachmentBase & {
+  type: "news";
+  reference_id: string;
+  reference_url: string | null;
+  reference_title: string | null;
+  reference_description: string | null;
+  reference_image_url: string | null;
+  reference_source_name: string | null;
+  reference_source_logo_url: string | null;
+  reference_is_deleted: boolean;
+};
+
+// No reference_url — a training card opens in-app on reference_id, not out to a link.
+export type FeedTrainingAttachment = FeedAttachmentBase & {
+  type: "training";
+  reference_id: string;
+  reference_title: string | null;
+  reference_description: string | null;
+  reference_image_url: string | null;
+  reference_level: TrainingStatusEnum | null;
+  reference_start_date: string | null;
+  reference_end_date: string | null;
+  reference_is_deleted: boolean;
+};
+
+export type FeedAttachment =
+  | FeedUploadAttachment
+  | FeedNewsAttachment
+  | FeedTrainingAttachment;
 
 export type Feed = {
   id: string;
@@ -35,7 +72,7 @@ export type Feed = {
   author_entity_name?: string | null;
   author_entity_image_url?: string | null;
   content: string;
-  media?: FeedMedia[];
+  attachments?: FeedAttachment[];
   repost_of_id?: string;
   repost_of?: Feed;
   reaction_count: FeedReactionCount;
@@ -65,10 +102,10 @@ export type FeedTimelineItem =
 
 export type CreateFeedPayload = {
   content: string;
-  media?: {
-    type: FeedMediaTypeEnum;
-    urls: string[];
-  };
+  // Either the uploaded/linked urls, or a reference_id pointing at a news article or training — never both.
+  attachment?:
+    | { type: FeedUploadAttachmentTypeEnum; urls: string[] }
+    | { type: "news" | "training"; reference_id: string };
   repost_of_id?: string;
   // Sent as a pair to publish under an entity; the backend requires a manage grant at that exact entity.
   author_entity_type?: AccessEntityTypeEnum;
@@ -234,7 +271,7 @@ export type UpdateFeedPayload = {
   content: string;
 };
 
-// Only content can change — media cannot be added, removed, or replaced after creation.
+// Only content can change — the attachment cannot be added, removed, or replaced after creation.
 export async function updateFeed(
   payload: UpdateFeedPayload,
 ): Promise<ApiEnvelope<Feed>> {

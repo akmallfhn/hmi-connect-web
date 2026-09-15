@@ -112,3 +112,24 @@ export async function listNewsArticles(
     hasMore: hasMoreFromMetapaging(result.data?.metapaging),
   };
 }
+
+// The one read `list` can't serve: resolving a single article by id. A soft-deleted article answers 404.
+export async function getNewsArticleDetail(
+  id: string
+): Promise<NewsArticle | null> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) return null;
+
+  const result = await callApi<NewsArticle>("/api/v1/news-articles/detail", {
+    method: "POST",
+    token: sessionToken,
+    body: { id },
+  });
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[getNewsArticleDetail] request failed:", result);
+    return null;
+  }
+
+  return result.data ?? null;
+}

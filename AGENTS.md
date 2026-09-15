@@ -315,7 +315,10 @@ Three layers, each with one job. Don't blend them.
    `auth.ts` (the rest of the `auth/*` resource — email/username login plus the whole
    password add/change/forget/reset flow, see Auth & session flow above; `session.ts` keeps
    `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
-   `news.ts` (categories + articles — grouped together like locations.ts, since
+   `news.ts` (categories + articles, including `getNewsArticleDetail` — `news-articles/detail`
+   is the one read `list` can't serve, resolving a single article by id; a soft-deleted
+   article answers 404, while a feed attachment pointing at one renders as removed from the
+   feed response itself without ever calling it — grouped together like locations.ts, since
    `news-articles/list`'s `category_slug` filter makes them one cascading feature, not
    independent resources; there's no `news-sources` wrapper since no page here lists/filters
    by source), `access-grants.ts` (the `access-grants/*` resource — `listAccessGrants`/
@@ -698,10 +701,14 @@ iconSm`.
   bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
   modal in response. `components/news/RepostToFeedButton.tsx` (the `Repeat2` icon rendered
   on every `NewsArticleCard` variant, see below) rides the same mechanism plus a companion
-  `sessionStorage[COMPOSE_INTENT_URL_KEY]` — `FeedTimeline` reads both together and passes
-  the URL through as `forceOpenUrl` on `CreateFeedForms`, which opens the composer already
-  in URL-attachment mode with that value pre-filled, so reposting a news article to the feed
-  is a straight click-then-post instead of copy/pasting the link by hand. Since the button
+  `sessionStorage[COMPOSE_INTENT_NEWS_KEY]` — a JSON `ComposerNewsDraft` (the article id plus
+  enough to preview it). `FeedTimeline` reads both together and passes the draft through as
+  `forceOpenNews` on `CreateFeedForms`, which opens the composer with the article already
+  attached as a real `news` attachment, so reposting a news article to the feed is a straight
+  click-then-post instead of copy/pasting the link by hand. It deliberately links the article
+  rather than pasting its `source_url` as a plain `url` attachment: the backend never infers a
+  link from a url that happens to match an article, so an in-app news card only ever exists
+  because the composer asked for one. Since the button
   sits inside `NewsArticleCard`'s own outer `<a>` (the whole card links out to
   `article.source_url`), its `onClick` calls `preventDefault`/`stopPropagation` so it doesn't
   also trigger that outer link's navigation. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
@@ -958,9 +965,22 @@ iconSm`.
   already sit inside a link (or inside no navigable surface at all) and a nested `<a>` would break
   hydration.
   `FeedItemCard.tsx` renders a feed's
-  content/media (photo grid, video, or
-  `LinkPreviewCard.tsx` for `url` media, backed by the `/www/api/link-preview` Route
-  Handler that scrapes OG tags server-side) plus reactions/comments/repost/share actions.
+  content and its one attachment slot (photo grid, video,
+  `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
+  Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
+  `TrainingAttachmentCard.tsx` for the two linked types) plus
+  reactions/comments/repost/share actions. `feeds/*` answers with `attachments`, an array
+  whose items differ by `type`: `photo`/`video`/`url` carry only `reference_url` (and
+  `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training` carry a
+  `reference_id` plus that record's display fields resolved server-side. Every field a type
+  owns is always present (`null` when empty) and no field of another type ever appears — so
+  narrow on `type` (the `FeedUploadAttachment`/`FeedNewsAttachment`/`FeedTrainingAttachment`
+  union in `apis/feeds.ts`), never read across shapes. A `training` deliberately has no
+  `reference_url`: its card is an in-app `<Link>` to `/trainings/{reference_id}`, while a news
+  card opens out to the outlet's own `reference_url`. News articles and trainings are
+  soft-deleted, so a removed target still resolves and arrives with `reference_is_deleted`
+  true — both cards render a muted "sudah dihapus" strip rather than dropping the attachment,
+  the same reasoning `DeletedQuotedFeed` follows.
   The Repeat2 button is itself a `Dropdown` (not a direct toggle) with two entries: "Repost"
   (the plain toggleable repost, disabled for your own feed — unchanged `feeds/repost`/
   `feeds/unrepost` behavior, `text-secondary` while active) and "Quote Repost" (opens
@@ -1548,7 +1568,14 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
-  to the public Supabase `hmi-connect/feed_media` folder before submitting media URLs.
+  to the public Supabase `hmi-connect/feed_media` folder before submitting their URLs.
+  `feeds/create` takes one `attachment` object — `{type, urls}` for `photo`/`video`/`url`,
+  `{type, reference_id}` for `news`/`training`, never both — so the composer's own
+  `attachmentMode` is what keeps the three upload buttons locked once any slot is taken. The
+  only linked attachment it can produce today is `news`, handed in as `forceOpenNews` by
+  `RepostToFeedButton` (see `components/navigations/*` above); there's no in-composer picker
+  for browsing articles or trainings yet. Its preview renders through the same
+  `NewsAttachmentCard` the published feed uses, so the two can't drift.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
   run through `lib/compress-image.ts` — a plain Canvas API resize/re-encode (max 1920px
   edge, JPEG, quality stepped down from 0.8 to a 0.5 floor) — before they're staged or

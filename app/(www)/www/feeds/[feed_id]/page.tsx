@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getFeedById, listAllFeedComments } from "@/apis/feeds";
+import {
+  getFeedById,
+  listAllFeedComments,
+  type FeedUploadAttachment,
+} from "@/apis/feeds";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { getSession } from "@/apis/session";
 import { getUserByUsername, listEducationHistories } from "@/apis/users";
@@ -31,7 +35,9 @@ export async function generateMetadata({
     feed.content.length > 140
       ? `${feed.content.slice(0, 137)}...`
       : feed.content;
-  const image = feed.media?.find((item) => item.type === "photo")?.url;
+  const image = feed.attachments?.find(
+    (item): item is FeedUploadAttachment => item.type === "photo",
+  )?.reference_url;
   const authorName = resolveFeedAuthor(feed).name;
 
   return {

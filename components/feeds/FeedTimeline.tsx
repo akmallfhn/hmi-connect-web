@@ -2,10 +2,12 @@
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import FeedItemCard from "./FeedItemCard";
-import CreateFeedForms from "../forms/CreateFeedForms";
+import CreateFeedForms, {
+  type ComposerNewsDraft,
+} from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
-import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_URL_KEY } from "@/lib/constants";
+import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_NEWS_KEY } from "@/lib/constants";
 import type { VerificationStatusEnum } from "@/lib/types";
 
 interface FeedTimelineProps {
@@ -25,6 +27,17 @@ interface FeedTimelineProps {
 const NEWS_CARD_AFTER_INDEX = 2;
 const SUGGESTED_CONNECTIONS_AFTER_INDEX = 5;
 
+// Written by RepostToFeedButton; a malformed entry just opens an empty composer.
+function parseNewsIntent(raw: string | null): ComposerNewsDraft | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as ComposerNewsDraft;
+    return parsed.id && parsed.title ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedTimeline({
   initialItems,
   initialHasMore,
@@ -43,9 +56,9 @@ export default function FeedTimeline({
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
   const [composerSignal, setComposerSignal] = useState(0);
-  const [composerUrl, setComposerUrl] = useState<string | undefined>(
-    undefined
-  );
+  const [composerNews, setComposerNews] = useState<
+    ComposerNewsDraft | undefined
+  >(undefined);
 
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -86,10 +99,10 @@ export default function FeedTimeline({
       if (!window.sessionStorage.getItem(COMPOSE_INTENT_KEY)) return;
       window.sessionStorage.removeItem(COMPOSE_INTENT_KEY);
 
-      const url = window.sessionStorage.getItem(COMPOSE_INTENT_URL_KEY);
-      if (url) window.sessionStorage.removeItem(COMPOSE_INTENT_URL_KEY);
+      const raw = window.sessionStorage.getItem(COMPOSE_INTENT_NEWS_KEY);
+      if (raw) window.sessionStorage.removeItem(COMPOSE_INTENT_NEWS_KEY);
 
-      setComposerUrl(url ?? undefined);
+      setComposerNews(parseNewsIntent(raw));
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -125,7 +138,7 @@ export default function FeedTimeline({
         userId={currentUserId}
         onCreated={handleFeedCreated}
         forceOpenSignal={composerSignal}
-        forceOpenUrl={composerUrl}
+        forceOpenNews={composerNews}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}
