@@ -37,6 +37,8 @@ export type VerificationRequestDetail = VerificationRequestListEntry & {
   city_name?: string;
   province_id?: number;
   province_name?: string;
+  // What the applicant declared on submission, not the target user's current users.is_alumni.
+  is_alumni: boolean;
   updated_at: string;
 };
 

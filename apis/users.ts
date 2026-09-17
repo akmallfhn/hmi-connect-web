@@ -297,6 +297,8 @@ export type VerificationPayload = {
   gender: GenderEnum;
   address_street: string;
   district_id: number;
+  // The applicant's own alumni (KAHMI) declaration — only reaches users.is_alumni once the request is approved.
+  is_alumni?: boolean;
 };
 
 // Mirrors POST /api/v1/users/verification's response — a pending verification_requests row, not an immediate verification.
@@ -310,6 +312,7 @@ export type VerificationResult = {
   gender: GenderEnum;
   address_street: string;
   district_id: number;
+  is_alumni: boolean;
   status: VerificationRequestStatusEnum;
 };
 

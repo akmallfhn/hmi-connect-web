@@ -31,6 +31,7 @@ type FormData = {
   district: SearchableOption | null;
   branch: SearchableOption | null;
   chapter: SearchableOption | null;
+  isAlumni: boolean | null;
 };
 
 function emptyFormData(): FormData {
@@ -45,6 +46,7 @@ function emptyFormData(): FormData {
     district: null,
     branch: null,
     chapter: null,
+    isAlumni: null,
   };
 }
 
@@ -200,7 +202,10 @@ export default function VerificationPage({
     formData.city !== null &&
     formData.district !== null;
 
-  const isStep2Valid = formData.branch !== null && formData.chapter !== null;
+  const isStep2Valid =
+    formData.branch !== null &&
+    formData.chapter !== null &&
+    formData.isAlumni !== null;
 
   const canGoNext =
     (step === 0 && isStep0Valid) ||
@@ -222,6 +227,7 @@ export default function VerificationPage({
         gender: formData.gender as GenderEnum,
         address_street: formData.addressStreet,
         district_id: Number(formData.district?.value ?? 0),
+        is_alumni: formData.isAlumni === true,
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -457,6 +463,31 @@ export default function VerificationPage({
                   }
                   required
                 />
+
+                <div className="flex flex-col gap-1">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                    Apakah kamu sudah menjadi alumni HMI?
+                    <span className="text-destructive">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <RadioButton<boolean>
+                      radioName="is-alumni"
+                      label="Belum"
+                      description="Masih kader aktif HMI"
+                      value={false}
+                      selectedValue={formData.isAlumni}
+                      onChange={(value) => updateFormData("isAlumni", value)}
+                    />
+                    <RadioButton<boolean>
+                      radioName="is-alumni"
+                      label="Sudah"
+                      description="Alumni HMI (KAHMI)"
+                      value={true}
+                      selectedValue={formData.isAlumni}
+                      onChange={(value) => updateFormData("isAlumni", value)}
+                    />
+                  </div>
+                </div>
 
                 {status === "error" && (
                   <p className="text-xs font-semibold text-destructive">

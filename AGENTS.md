@@ -537,7 +537,13 @@ no link when `"pending"` — and only renders the verified badge next to the acc
    picker always passes `branchId`: a Komisariat pick with no Cabang context wouldn't make sense
    in this flow. The Korkom scope exists for the Daftar Kader Komisariat filter below. Only `chapter_id` is submitted
    to `users/verification`, branch/coordinating body and organization are derived server-side
-   from the chapter.
+   from the chapter. Below the Komisariat picker sits the one non-organizational question on this
+   step — "Apakah kamu sudah menjadi alumni HMI?", a Belum/Sudah `RadioButton<boolean>` pair
+   submitted as `users/verification`'s optional `is_alumni`. It's required here (the step won't
+   submit on `null`) even though the backend defaults it to `false`, so the answer is a deliberate
+   declaration rather than a field the applicant scrolled past. It is only the applicant's claim:
+   it lives on the `verification_requests` row for the reviewer to check against the KTP and
+   only reaches `users.is_alumni` when the request is approved.
 
 ## Transactional email
 
@@ -1128,9 +1134,9 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   `HMI Connect+` subscription pill that used to sit here is **gone** — don't reintroduce it;
   `is_subscribe` still drives `MembershipInfoCard`, which is where a subscription belongs.
   `is_alumni` is on `users/detail` and `check-session` alike, so `ProfileSidebar` reads it from the
-  session on most pages and from the viewed profile on `/profile/[username]/activities`. Note the
-  backend defaults it to `false` and **no endpoint sets it yet**, so the badge is wired but dormant
-  until one does.
+  session on most pages and from the viewed profile on `/profile/[username]/activities`. It defaults
+  to `false` and reaches a user two ways: the applicant declares it on `users/verification` and the
+  approval copies it across, or a `Super Admin` sets it afterwards through `users/update`.
   It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
   `followUser`/`unfollowUser` Server Actions for the button toggle; the Mengikuti/Pengikut
   counts open `FollowListModal`. When viewing someone else's profile while logged in
@@ -2016,11 +2022,15 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   modal's `Field` rows each carry a small icon badge (`bg-primary-soft
 text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) for Email/Nama
   Sesuai KTP/Nomor HP/Tanggal
-  Lahir/Jenis Kelamin/Komisariat, plus a header row above the grid with the applicant's real
+  Lahir/Jenis Kelamin/Status Keanggotaan/Komisariat, plus a header row above the grid with the applicant's real
   `Avatar` (not just initials) and `@username`. Alamat Lengkap is deliberately one `Field` with one
   `MapPin` icon, not four separate Kecamatan/Kota/Provinsi rows each with their own icon — its value
   is `[address_street, district_name, city_name, province_name].filter(Boolean).join(", ")`, one
-  flowing address string. `verification-requests/detail` returns `email` and the resolved
+  flowing address string.
+  Status Keanggotaan renders the request's own declared `is_alumni` through the shared
+  `AlumniStatusLabel` — the same Kader/Alumni pill the user detail pages show — since approving is
+  what copies that declaration onto the user, so the reviewer sees it before deciding.
+  `verification-requests/detail` returns `email` and the resolved
   `district_name`/`city_id`/`city_name`/`province_id`/`province_name` chain directly (mirrors
   `users/detail`'s own district→city→province resolution); `verification-requests/list`/`/detail`/
   `/approve`/`/reject` all now also return `avatar` on their shared base shape, so

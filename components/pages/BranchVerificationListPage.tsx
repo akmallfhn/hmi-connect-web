@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
   Search,
+  UserRound,
   VenusAndMars,
   X as XIcon,
 } from "lucide-react";
@@ -37,6 +38,7 @@ import SearchableSelect, {
   type SearchableOption,
 } from "../fields/SearchableSelect";
 import TextArea from "../fields/TextArea";
+import AlumniStatusLabel from "../labels/AlumniStatusLabel";
 import VerificationRequestStatusLabel from "../labels/VerificationRequestStatusLabel";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import Modal from "../modals/Modal";
@@ -485,6 +487,11 @@ export function VerificationRequestListPage({
                     ? GENDER_LABEL[detailData.gender]
                     : undefined
                 }
+              />
+              <Field
+                icon={UserRound}
+                label="Status Keanggotaan"
+                value={<AlumniStatusLabel isAlumni={detailData.is_alumni} />}
               />
               <Field
                 icon={GraduationCap}
