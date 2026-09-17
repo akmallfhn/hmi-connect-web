@@ -2121,13 +2121,21 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   the three and no Suspend/Aktifkan either (pure browse-only "Daftar Komisariat"). Create/edit are
   `components/forms/CreateChapterFormSheet.tsx`/`EditChapterFormSheet.tsx` — `components/forms/
 ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.tsx`, uploads into the
-  `chapters/` storage folder), Nama Komisariat, Cabang `SearchableSelect` — or fixed read-only text
+  `chapters/` storage folder), Nama Komisariat, Nama Resmi, Cabang `SearchableSelect` — or fixed read-only text
   when the create sheet's `lockBranch` prop is set from a branch-scoped route, the same treatment
   `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — and Asal Universitas. Create also
   has the `type` field, labelled **"Status"** rather than "Tipe" (label only — the values and the
   payload field are still `full`/`provisional`); Edit deliberately has neither, matching
   `EditBranchFormSheet` — both only change through the detail page's own Suspend/Aktifkan and
   Jadikan Penuh/Persiapan actions, and `chapters/update` now 400s on a `type` field.
+  **A Komisariat and a Korkom each carry two names**, and every form that writes either one asks for
+  both: `name` is the short label it goes by in lists and dropdowns (`FT UI`, `FEB Undip`), while
+  `legal_name` ("Nama Resmi") is the full official name that label stands for (`Fakultas Teknik
+Universitas Indonesia`). The backend requires both on `create` and accepts both on `update`, and
+  `list`'s `search` matches either, so a unit is findable by whichever form the caller knows.
+  `legal_name` is sent verbatim (trimmed only) — `stripEntityNamePrefix` applies to `name` alone,
+  since the `HMI Komisariat`/`HMI Korkom` display prefix is only ever added to the short label.
+  Badko and Cabang have no `legal_name`; this pair is Komisariat/Korkom only.
   **No create sheet has a Deskripsi or an Aktif/Tidak Aktif Status field** — a new entity is always
   created `status: "active"`, and suspension belongs to the level above it (see Suspension below);
   Deskripsi is filled in later from the entity's own Pengaturan → Profil tab or the Edit sheet. Unlike its first pass,
@@ -2193,8 +2201,8 @@ ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.
   now carries `description`/`image_url` (previously just id/branch/name/status/timestamps).
   `components/forms/CoordinatingChapterLogoField.tsx` mirrors `ChapterLogoField.tsx` (uploads into a
   new `coordinating-chapters/` storage folder). `CreateCoordinatingChapterFormSheet.tsx`/
-  `EditCoordinatingChapterFormSheet.tsx` mirror the Chapter pair field-for-field minus Tipe/institution
-  (a Korkom has neither) — Edit needs the same detail-fetch loader Chapter's edit does, since
+  `EditCoordinatingChapterFormSheet.tsx` mirror the Chapter pair field-for-field (Nama Resmi
+  included) minus Tipe/institution (a Korkom has neither) — Edit needs the same detail-fetch loader Chapter's edit does, since
   `coordinating-chapters/list` omits `description` the same way `chapters/list` does, and neither
   sheet has a Status field. `components/pages/CoordinatingChapterDetailPage.tsx`
   mirrors `BranchDetailPage.tsx`'s header-card-above-tabs shape but drops the Tipe badge (Korkom has
@@ -2352,10 +2360,11 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `CoordinatingChapterSettingsPage.tsx`, and `ChapterSettingsPage.tsx`. All four have the same two
   tabs: Profil (logo via `CoordinatingBodyLogoField`/`BranchLogoField`/
   `CoordinatingChapterLogoField`/`ChapterLogoField` at `size={160}` `layout="column"`, Nama,
-  Deskripsi — deliberately narrower than the Master/Organization Edit form, no Tipe/parent
+  Deskripsi — plus Nama Resmi on the Komisariat and Korkom pages, the only two scopes that have one
+  — deliberately narrower than the Master/Organization Edit form, no Tipe/parent
   picker/Status here, calling
   `updateCoordinatingBody`/`updateBranch`/`updateCoordinatingChapter`/`updateChapter` with just
-  `{id, name, description, image_url}`) and Akses (a table of that entity's own admins —
+  `{id, name, description, image_url}`, plus `legal_name` for those two) and Akses (a table of that entity's own admins —
   all four render the **one shared** `components/admin/EntityAccessTab.tsx`, parameterized by
   `entityType`/`entityId`, rather than four copies of the same table+modal pair. It's fed by
   `apis/access-grants.ts#listAllAccessGrants(entityType, entityId)`, which pages through
@@ -2538,7 +2547,27 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `app/(admin)/admin/api/structural-positions/search/route.ts` (same debounced-search-needs-a-
   Route-Handler reasoning as `institutions/search`, and the same admin-origin-duplicate reasoning as
   the branches/chapters/provinces/cities/districts search routes) — not the `www` origin, since only
-  these admin-only structural forms need it.
+  these admin-only structural forms need it. A fourth `canManage` action, "Kelola Massal"
+  (`ListChecks`, `soft`), swaps the whole chart/table area for `components/admin/StructuralBulkEditor.tsx`
+  — a **non-modal** inline editor, since editing a roster one `Dropdown`-then-`Modal` at a time is the
+  slow path this exists to replace. It is one table over the same seniority-ordered officer list the
+  Tabel view shows, each row carrying its own Jabatan `SearchableSelect` and Aktif/Non-aktif `Select`,
+  a trash toggle that *marks* an existing row for deletion (strikethrough + an undo button, so nothing
+  is destroyed before Simpan) and outright drops an unsaved new one, plus "Tambah Baris" for new
+  officers. An existing row's kader is fixed text, not a picker — `officers/update` takes only
+  `position_id`/`status`, so moving a seat to another person is a delete plus a create, not an edit;
+  a new row likewise shows a fixed "Aktif", since `officers/create` has no `status`. Saving diffs the
+  draft against the officers it was seeded with and fires exactly the changed rows —
+  `officers/delete`, a partial `officers/update` carrying only the fields that actually moved, and
+  `officers/create` — in one `Promise.all` over the existing Server Actions (there is no bulk endpoint
+  on the backend, and this needs no new `apis/*.ts` surface). It closes on save either way, success or
+  partial failure, and `router.refresh()`es, so the roster is read back from the server rather than
+  from drafts a failed call has made stale; the toast names whichever rows failed. While bulk editing
+  the period `Select` is disabled and the Bagan/Tabel toggle and other header actions are hidden, so
+  no competing action can discard the draft. Both this editor and `StructuralPage`'s own modals load
+  their kader/jabatan options through `lib/structural-options.ts#loadEntityUserOptions`/
+  `loadStructuralPositionOptions` (which owns `ENTITY_USER_SEARCH_PARAM`) rather than each keeping its
+  own copy.
 - `components/common/*` — small primitives reused across more than one of the folders
   above (`Avatar`, `Dropdown`, `PageMargin`). If something only has one caller, it belongs
   in that caller's own folder, not here — `ScrollToTop` is the one exception, since its

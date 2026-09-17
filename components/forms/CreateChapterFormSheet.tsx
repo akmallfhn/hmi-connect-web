@@ -71,6 +71,7 @@ function CreateChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [legalName, setLegalName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
@@ -120,6 +121,11 @@ function CreateChapterFields({
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Komisariat wajib diisi.");
+      return;
+    }
     if (!branch) {
       toast.error("Pilih Cabang terlebih dahulu.");
       return;
@@ -129,6 +135,7 @@ function CreateChapterFields({
     try {
       const result = await createChapter({
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         image_url: imageUrl,
         type,
         status: "active",
@@ -166,6 +173,15 @@ function CreateChapterFields({
         placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="chapter-legal-name"
+        label="Nama Resmi"
+        placeholder="Contoh: Fakultas Ekonomika dan Bisnis Universitas Diponegoro"
+        value={legalName}
+        onChange={(e) => setLegalName(e.target.value)}
         required
       />
 

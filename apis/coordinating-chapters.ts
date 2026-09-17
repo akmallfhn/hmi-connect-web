@@ -11,6 +11,8 @@ export type CoordinatingChapterListEntry = {
   branch_id: string;
   branch_name: string;
   name: string;
+  // The full official name the short `name` stands for, e.g. "Universitas Indonesia".
+  legal_name: string;
   image_url: string | null;
   status: StatusEnum;
 };
@@ -86,6 +88,7 @@ export type CoordinatingChapterDetail = {
   branch_id: string;
   branch_name: string;
   name: string;
+  legal_name: string;
   description: string | null;
   image_url: string | null;
   status: StatusEnum;
@@ -116,6 +119,8 @@ export async function getCoordinatingChapterDetail(
 export type CreateCoordinatingChapterPayload = {
   branch_id: string;
   name: string;
+  // Required by the backend alongside `name` — both are rejected as missing when empty.
+  legal_name: string;
   description?: string;
   image_url?: string;
   status?: StatusEnum;
@@ -147,6 +152,7 @@ export type UpdateCoordinatingChapterPayload = {
   id: string;
   branch_id?: string;
   name?: string;
+  legal_name?: string;
   description?: string;
   image_url?: string;
   status?: StatusEnum;

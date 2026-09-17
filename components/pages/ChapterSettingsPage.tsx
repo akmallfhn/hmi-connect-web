@@ -128,6 +128,7 @@ export default function ChapterSettingsPage({
 function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
   const router = useRouter();
   const [name, setName] = useState(chapter.name);
+  const [legalName, setLegalName] = useState(chapter.legal_name);
   const [description, setDescription] = useState(chapter.description ?? "");
   const [imageUrl, setImageUrl] = useState(chapter.image_url ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -139,12 +140,18 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Komisariat wajib diisi.");
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await updateChapter({
         id: chapter.id,
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
       });
@@ -185,6 +192,15 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
             placeholder="Contoh: FEB Undip"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <Input
+            inputId="chapter-settings-legal-name"
+            label="Nama Resmi"
+            placeholder="Contoh: Fakultas Ekonomika dan Bisnis Universitas Diponegoro"
+            value={legalName}
+            onChange={(e) => setLegalName(e.target.value)}
             required
           />
 

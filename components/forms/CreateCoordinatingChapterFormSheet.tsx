@@ -61,6 +61,7 @@ function CreateCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [legalName, setLegalName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
@@ -84,6 +85,11 @@ function CreateCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Korkom wajib diisi.");
+      return;
+    }
     if (!branch) {
       toast.error("Pilih Cabang terlebih dahulu.");
       return;
@@ -93,6 +99,7 @@ function CreateCoordinatingChapterFields({
     try {
       const result = await createCoordinatingChapter({
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         image_url: imageUrl,
         status: "active",
         branch_id: String(branch.value),
@@ -128,6 +135,15 @@ function CreateCoordinatingChapterFields({
         placeholder="Contoh: UI"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="coordinating-chapter-legal-name"
+        label="Nama Resmi"
+        placeholder="Contoh: Universitas Indonesia"
+        value={legalName}
+        onChange={(e) => setLegalName(e.target.value)}
         required
       />
 

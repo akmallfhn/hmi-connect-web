@@ -94,6 +94,9 @@ function EditCoordinatingChapterLoader({
     <EditCoordinatingChapterFields
       id={coordinatingChapter.id}
       initialName={detail?.name ?? coordinatingChapter.name}
+      initialLegalName={
+        detail?.legal_name ?? coordinatingChapter.legal_name
+      }
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? coordinatingChapter.image_url}
       initialBranch={{
@@ -110,6 +113,7 @@ function EditCoordinatingChapterLoader({
 function EditCoordinatingChapterFields({
   id,
   initialName,
+  initialLegalName,
   initialDescription,
   initialImageUrl,
   initialBranch,
@@ -118,6 +122,7 @@ function EditCoordinatingChapterFields({
 }: {
   id: string;
   initialName: string;
+  initialLegalName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
   initialBranch: SearchableOption;
@@ -125,6 +130,7 @@ function EditCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -149,6 +155,11 @@ function EditCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Korkom wajib diisi.");
+      return;
+    }
     if (!branch) {
       toast.error("Pilih Cabang terlebih dahulu.");
       return;
@@ -159,6 +170,7 @@ function EditCoordinatingChapterFields({
       const result = await updateCoordinatingChapter({
         id,
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
         branch_id: String(branch.value),
@@ -194,6 +206,14 @@ function EditCoordinatingChapterFields({
         placeholder="Contoh: UI"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <Input
+        inputId="coordinating-chapter-legal-name"
+        label="Nama Resmi"
+        placeholder="Contoh: Universitas Indonesia"
+        value={legalName}
+        onChange={(e) => setLegalName(e.target.value)}
         required
       />
       <SearchableSelect

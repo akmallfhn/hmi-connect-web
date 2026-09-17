@@ -137,6 +137,7 @@ function ProfileTab({
 }) {
   const router = useRouter();
   const [name, setName] = useState(coordinatingChapter.name);
+  const [legalName, setLegalName] = useState(coordinatingChapter.legal_name);
   const [description, setDescription] = useState(
     coordinatingChapter.description ?? ""
   );
@@ -150,12 +151,18 @@ function ProfileTab({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Korkom wajib diisi.");
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await updateCoordinatingChapter({
         id: coordinatingChapter.id,
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
       });
@@ -199,6 +206,15 @@ function ProfileTab({
             placeholder="Contoh: UI"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <Input
+            inputId="coordinating-chapter-settings-legal-name"
+            label="Nama Resmi"
+            placeholder="Contoh: Universitas Indonesia"
+            value={legalName}
+            onChange={(e) => setLegalName(e.target.value)}
             required
           />
 

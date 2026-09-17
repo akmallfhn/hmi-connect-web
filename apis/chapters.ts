@@ -83,6 +83,8 @@ export type ChapterListEntry = {
   coordinating_chapter_id: string | null;
   coordinating_chapter_name: string | null;
   name: string;
+  // The full official name the short `name` stands for, e.g. "Fakultas Teknik Universitas Syiah Kuala".
+  legal_name: string;
   image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
@@ -190,6 +192,7 @@ export type ChapterDetail = {
   coordinating_chapter_id: string | null;
   coordinating_chapter_name: string | null;
   name: string;
+  legal_name: string;
   description: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
@@ -221,6 +224,8 @@ export async function getChapterDetail(
 export type CreateChapterPayload = {
   branch_id: string;
   name: string;
+  // Required by the backend alongside `name` — both are rejected as missing when empty.
+  legal_name: string;
   description?: string;
   image_url?: string;
   type?: BranchTypeEnum;
@@ -253,6 +258,7 @@ export type UpdateChapterPayload = {
   id: string;
   branch_id?: string;
   name?: string;
+  legal_name?: string;
   description?: string;
   image_url?: string;
   status?: StatusEnum;

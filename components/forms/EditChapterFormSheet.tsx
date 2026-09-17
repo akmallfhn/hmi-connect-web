@@ -96,6 +96,7 @@ function EditChapterLoader({
     <EditChapterFields
       id={chapter.id}
       initialName={detail?.name ?? chapter.name}
+      initialLegalName={detail?.legal_name ?? chapter.legal_name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? chapter.image_url}
       initialBranch={{
@@ -121,6 +122,7 @@ function EditChapterLoader({
 function EditChapterFields({
   id,
   initialName,
+  initialLegalName,
   initialDescription,
   initialImageUrl,
   initialBranch,
@@ -130,6 +132,7 @@ function EditChapterFields({
 }: {
   id: string;
   initialName: string;
+  initialLegalName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
   initialBranch: SearchableOption;
@@ -138,6 +141,7 @@ function EditChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -189,6 +193,11 @@ function EditChapterFields({
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
+    const trimmedLegalName = legalName.trim();
+    if (!trimmedLegalName) {
+      toast.error("Nama resmi Komisariat wajib diisi.");
+      return;
+    }
     if (!branch) {
       toast.error("Pilih Cabang terlebih dahulu.");
       return;
@@ -199,6 +208,7 @@ function EditChapterFields({
       const result = await updateChapter({
         id,
         name: sanitizedName,
+        legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
         branch_id: String(branch.value),
@@ -235,6 +245,14 @@ function EditChapterFields({
         placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <Input
+        inputId="chapter-legal-name"
+        label="Nama Resmi"
+        placeholder="Contoh: Fakultas Ekonomika dan Bisnis Universitas Diponegoro"
+        value={legalName}
+        onChange={(e) => setLegalName(e.target.value)}
         required
       />
       <SearchableSelect

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ListChecks,
   Loader2,
   MoreVertical,
   Network,
@@ -28,7 +29,12 @@ import {
   updateStructuralOfficer,
   updateStructuralPeriod,
 } from "@/lib/actions";
+import {
+  loadEntityUserOptions,
+  loadStructuralPositionOptions,
+} from "@/lib/structural-options";
 import { isSuccessStatus, type StructuralEntityTypeEnum } from "@/lib/types";
+import StructuralBulkEditor from "../admin/StructuralBulkEditor";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
@@ -53,15 +59,6 @@ interface StructuralPageProps {
   // Drops the page padding and title/create-period row when nested inside another page's own tab.
   embedded?: boolean;
 }
-
-// /api/users/search's scoping param per entity type — organization has none, matching AdminMemberListPage's own org-wide roster.
-const ENTITY_USER_SEARCH_PARAM: Record<StructuralEntityTypeEnum, string | null> = {
-  organization: null,
-  coordinating_body: "coordinating_body_id",
-  branch: "branch_id",
-  coordinating_chapter: "coordinating_chapter_id",
-  chapter: "chapter_id",
-};
 
 function periodLabel(
   period: Pick<StructuralPeriodSummary, "start_year" | "end_year">
@@ -122,40 +119,6 @@ function buildStructuralTiers(officers: StructuralOfficer[]): {
   return { root, tiers };
 }
 
-async function loadEntityUserOptions(
-  entityType: StructuralEntityTypeEnum,
-  entityId: string,
-  inputValue: string,
-  page: number
-) {
-  const params = new URLSearchParams({ q: inputValue, page: String(page) });
-  const scopeParam = ENTITY_USER_SEARCH_PARAM[entityType];
-  if (scopeParam) params.set(scopeParam, entityId);
-  const response = await fetch(`/api/users/search?${params}`);
-  const json = await response.json();
-  const results: { id: string; full_name: string; avatar?: string }[] =
-    json.data ?? [];
-  return {
-    options: results.map((item) => ({
-      label: item.full_name,
-      value: item.id,
-      image: item.avatar,
-    })),
-    hasMore: Boolean(json.hasMore),
-  };
-}
-
-async function loadStructuralPositionOptions(inputValue: string, page: number) {
-  const params = new URLSearchParams({ q: inputValue, page: String(page) });
-  const response = await fetch(`/api/structural-positions/search?${params}`);
-  const json = await response.json();
-  const results: { id: number; name: string }[] = json.data ?? [];
-  return {
-    options: results.map((item) => ({ label: item.name, value: item.id })),
-    hasMore: Boolean(json.hasMore),
-  };
-}
-
 export default function StructuralPage({
   entityType,
   entityId,
@@ -181,6 +144,7 @@ export default function StructuralPage({
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
   }
 
+  const [isBulkEditing, setIsBulkEditing] = useState(false);
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showUpdatePeriod, setShowUpdatePeriod] = useState(false);
   const [showAddOfficer, setShowAddOfficer] = useState(false);
@@ -292,6 +256,7 @@ export default function StructuralPage({
                   placeholder="Pilih periode"
                   value={selectedPeriodId}
                   onChange={selectPeriod}
+                  disabled={isBulkEditing}
                   options={periods.map((period) => ({
                     label: `Periode ${periodLabel(period)}`,
                     value: period.id,
@@ -299,7 +264,7 @@ export default function StructuralPage({
                 />
               </div>
               <div className="flex w-fit shrink-0 flex-wrap items-center gap-2">
-                {root && (
+                {root && !isBulkEditing && (
                   <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5">
                     <button
                       type="button"
@@ -332,7 +297,7 @@ export default function StructuralPage({
                   </div>
                 )}
 
-                {canManage && selectedPeriod && (
+                {canManage && selectedPeriod && !isBulkEditing && (
                   <>
                     <Button
                       variant="outline"
@@ -342,6 +307,15 @@ export default function StructuralPage({
                     >
                       <Pencil className="size-4" />
                       Update Periode
+                    </Button>
+                    <Button
+                      variant="soft"
+                      size="sm"
+                      onClick={() => setIsBulkEditing(true)}
+                      className="w-fit shrink-0"
+                    >
+                      <ListChecks className="size-4" />
+                      Kelola Massal
                     </Button>
                     <Button
                       variant="secondary"
@@ -357,7 +331,21 @@ export default function StructuralPage({
               </div>
             </div>
 
-            {!selectedPeriod || !root ? (
+            {canManage && isBulkEditing && selectedPeriod ? (
+              <StructuralBulkEditor
+                entityType={entityType}
+                entityId={entityId}
+                periodId={selectedPeriod.id}
+                officers={[root, ...tiers.flat()].filter(
+                  (officer): officer is StructuralOfficer => Boolean(officer)
+                )}
+                onCancel={() => setIsBulkEditing(false)}
+                onSaved={() => {
+                  setIsBulkEditing(false);
+                  router.refresh();
+                }}
+              />
+            ) : !selectedPeriod || !root ? (
               <EmptyState
                 title="Belum ada anggota"
                 description="Anggota kepengurusan periode ini akan ditampilkan di sini."
