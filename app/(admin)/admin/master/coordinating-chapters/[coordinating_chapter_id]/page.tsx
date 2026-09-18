@@ -44,7 +44,7 @@ export default async function MasterCoordinatingChapterDetailPage({
     searchParams,
   ]);
   const coordinatingChapter = await getCoordinatingChapterDetail(
-    coordinating_chapter_id
+    coordinating_chapter_id,
   );
   if (!coordinatingChapter) notFound();
 
@@ -60,7 +60,7 @@ export default async function MasterCoordinatingChapterDetailPage({
       getStructuralOverview(
         "coordinating_chapter",
         coordinating_chapter_id,
-        query.period ? Number(query.period) : null
+        query.period ? Number(query.period) : null,
       ),
       listAllAccessGrants("coordinating_chapter", coordinating_chapter_id),
     ]);
@@ -73,14 +73,14 @@ export default async function MasterCoordinatingChapterDetailPage({
         organizerId: chapter.id,
         page: 1,
         pageSize: 100,
-      })
-    )
+      }),
+    ),
   );
   const trainings = trainingResults
     .flatMap((result) => result.list)
     .sort(
       (a, b) =>
-        new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+        new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
     );
 
   return (
@@ -99,6 +99,7 @@ export default async function MasterCoordinatingChapterDetailPage({
       backHref="/master/coordinating-chapters"
       allowEdit
       allowStatusChange
+      allowAddChapter
     />
   );
 }

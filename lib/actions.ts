@@ -53,13 +53,17 @@ import {
   type UpdateOrganizationPayload,
 } from "@/apis/organizations";
 import {
+  addChapterToCoordinatingChapter as addChapterToCoordinatingChapterApi,
   createCoordinatingChapter as createCoordinatingChapterApi,
   deleteCoordinatingChapter as deleteCoordinatingChapterApi,
   getCoordinatingChapterDetail as getCoordinatingChapterDetailApi,
+  removeChapterFromCoordinatingChapter as removeChapterFromCoordinatingChapterApi,
   updateCoordinatingChapter as updateCoordinatingChapterApi,
   suspendCoordinatingChapter as suspendCoordinatingChapterApi,
   activateCoordinatingChapter as activateCoordinatingChapterApi,
   type CreateCoordinatingChapterPayload,
+  type AddChapterToCoordinatingChapterPayload,
+  type RemoveChapterFromCoordinatingChapterPayload,
   type UpdateCoordinatingChapterPayload,
 } from "@/apis/coordinating-chapters";
 import {
@@ -268,7 +272,10 @@ export async function approveVerificationRequest(id: string) {
   return approveVerificationRequestApi(id);
 }
 
-export async function rejectVerificationRequest(id: string, rejectionReason?: string) {
+export async function rejectVerificationRequest(
+  id: string,
+  rejectionReason?: string
+) {
   return rejectVerificationRequestApi(id, rejectionReason);
 }
 
@@ -313,11 +320,15 @@ export async function getCoordinatingBodyDetail(id: string) {
   return getCoordinatingBodyDetailApi(id);
 }
 
-export async function createCoordinatingBody(payload: CreateCoordinatingBodyPayload) {
+export async function createCoordinatingBody(
+  payload: CreateCoordinatingBodyPayload
+) {
   return createCoordinatingBodyApi(payload);
 }
 
-export async function updateCoordinatingBody(payload: UpdateCoordinatingBodyPayload) {
+export async function updateCoordinatingBody(
+  payload: UpdateCoordinatingBodyPayload
+) {
   return updateCoordinatingBodyApi(payload);
 }
 
@@ -337,6 +348,18 @@ export async function createCoordinatingChapter(
   payload: CreateCoordinatingChapterPayload
 ) {
   return createCoordinatingChapterApi(payload);
+}
+
+export async function addChapterToCoordinatingChapter(
+  payload: AddChapterToCoordinatingChapterPayload
+) {
+  return addChapterToCoordinatingChapterApi(payload);
+}
+
+export async function removeChapterFromCoordinatingChapter(
+  payload: RemoveChapterFromCoordinatingChapterPayload
+) {
+  return removeChapterFromCoordinatingChapterApi(payload);
 }
 
 export async function updateCoordinatingChapter(
@@ -495,11 +518,15 @@ export async function deleteOrganizationExperience(id: string) {
   return deleteOrganizationExperienceApi(id);
 }
 
-export async function createWorkExperience(payload: CreateWorkExperiencePayload) {
+export async function createWorkExperience(
+  payload: CreateWorkExperiencePayload
+) {
   return createWorkExperienceApi(payload);
 }
 
-export async function updateWorkExperience(payload: UpdateWorkExperiencePayload) {
+export async function updateWorkExperience(
+  payload: UpdateWorkExperiencePayload
+) {
   return updateWorkExperienceApi(payload);
 }
 
@@ -567,10 +594,7 @@ export async function addPassword(password: string) {
   return addPasswordApi(password);
 }
 
-export async function changePassword(
-  oldPassword: string,
-  newPassword: string
-) {
+export async function changePassword(oldPassword: string, newPassword: string) {
   return changePasswordApi(oldPassword, newPassword);
 }
 
@@ -584,7 +608,10 @@ export async function loadMoreFeeds(page: number) {
   return listFeedsApi({ page, pageSize: 20 });
 }
 
-export async function loadMoreNewsArticles(page: number, categorySlug?: string) {
+export async function loadMoreNewsArticles(
+  page: number,
+  categorySlug?: string
+) {
   return listNewsArticlesApi({ page, pageSize: 12, categorySlug });
 }
 
@@ -596,10 +623,7 @@ export async function updateFeed(id: string, content: string) {
   return updateFeedApi({ id, content });
 }
 
-export async function listFeedComments(
-  feedId: string,
-  page?: number
-) {
+export async function listFeedComments(feedId: string, page?: number) {
   return listFeedCommentsApi(feedId, { page });
 }
 

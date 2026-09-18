@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
 import { isSuccessStatus, type StatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import type { ChapterDetail } from "./chapters";
 
 // Mirrors POST /api/v1/coordinating-chapters/list's response — the admin table shape (/master/coordinating-chapters).
 export type CoordinatingChapterListEntry = {
@@ -199,12 +200,70 @@ export async function deleteCoordinatingChapter(
   });
 }
 
+export type AddChapterToCoordinatingChapterPayload = {
+  coordinating_chapter_id: string;
+  chapter_id: string;
+};
+
+// A chapter may only be attached to a Korkom in its own branch. The backend
+// authorizes this against that branch, rather than either child entity.
+export async function addChapterToCoordinatingChapter(
+  payload: AddChapterToCoordinatingChapterPayload
+): Promise<ApiEnvelope<ChapterDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<ChapterDetail>("/api/v1/coordinating-chapters/add-chapter", {
+    method: "POST",
+    token: sessionToken,
+    body: payload,
+  });
+}
+
+export type RemoveChapterFromCoordinatingChapterPayload = {
+  coordinating_chapter_id: string;
+  chapter_id: string;
+};
+
+// Removing a chapter makes it ungrouped; it does not delete the chapter itself.
+export async function removeChapterFromCoordinatingChapter(
+  payload: RemoveChapterFromCoordinatingChapterPayload
+): Promise<ApiEnvelope<ChapterDetail>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Session expired. Please log in again.",
+    };
+  }
+
+  return callApi<ChapterDetail>(
+    "/api/v1/coordinating-chapters/remove-chapter",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
+}
+
 // Suspension answers to the level above, never to the row itself — hence its own endpoint rather than update({status}).
-export async function suspendCoordinatingChapter(id: string): Promise<ApiEnvelope<CoordinatingChapterDetail>> {
+export async function suspendCoordinatingChapter(
+  id: string
+): Promise<ApiEnvelope<CoordinatingChapterDetail>> {
   return setEntityStatusCoordinatingChapter("suspend", id);
 }
 
-export async function activateCoordinatingChapter(id: string): Promise<ApiEnvelope<CoordinatingChapterDetail>> {
+export async function activateCoordinatingChapter(
+  id: string
+): Promise<ApiEnvelope<CoordinatingChapterDetail>> {
   return setEntityStatusCoordinatingChapter("activate", id);
 }
 
@@ -221,9 +280,12 @@ async function setEntityStatusCoordinatingChapter(
     };
   }
 
-  return callApi<CoordinatingChapterDetail>(`/api/v1/coordinating-chapters/${action}`, {
-    method: "POST",
-    token: sessionToken,
-    body: { id },
-  });
+  return callApi<CoordinatingChapterDetail>(
+    `/api/v1/coordinating-chapters/${action}`,
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { id },
+    }
+  );
 }

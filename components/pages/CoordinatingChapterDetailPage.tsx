@@ -9,8 +9,10 @@ import {
   History,
   MapPin,
   Pencil,
+  PlusCircle,
   Power,
   ShieldCheck,
+  Trash2,
   Users,
   Waypoints,
   type LucideIcon,
@@ -30,6 +32,7 @@ import type {
 import type { TrainingListEntry } from "@/apis/trainings";
 import {
   activateCoordinatingChapter,
+  removeChapterFromCoordinatingChapter,
   suspendCoordinatingChapter,
 } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
@@ -37,6 +40,7 @@ import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
+import AddChapterToCoordinatingChapterSheet from "../forms/AddChapterToCoordinatingChapterSheet";
 import EditCoordinatingChapterFormSheet from "../forms/EditCoordinatingChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import StructuralPage from "./StructuralPage";
@@ -49,11 +53,7 @@ import {
 } from "../trainings/TrainingLabels";
 
 export type CoordinatingChapterDetailTab =
-  | "profile"
-  | "management"
-  | "chapters"
-  | "trainings"
-  | "access";
+  "profile" | "management" | "chapters" | "trainings" | "access";
 
 interface CoordinatingChapterDetailPageProps {
   coordinatingChapter: CoordinatingChapterDetail;
@@ -70,6 +70,7 @@ interface CoordinatingChapterDetailPageProps {
   // Master manages Korkom directly; Cabang can create/suspend its own but not edit them.
   allowEdit?: boolean;
   allowStatusChange?: boolean;
+  allowAddChapter?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
   accessGrants?: AccessGrantEntry[] | null;
   // Appointing reaches down the hierarchy, withdrawing does not — hence two flags.
@@ -153,6 +154,7 @@ export default function CoordinatingChapterDetailPage({
   backHref,
   allowEdit = false,
   allowStatusChange = false,
+  allowAddChapter = false,
   accessGrants = null,
   canInviteAccess = false,
   canRevokeAccess = false,
@@ -166,6 +168,10 @@ export default function CoordinatingChapterDetailPage({
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showAddChapterForm, setShowAddChapterForm] = useState(false);
+  const [removeChapterTarget, setRemoveChapterTarget] =
+    useState<ChapterListEntry | null>(null);
+  const [isRemovingChapter, setIsRemovingChapter] = useState(false);
 
   if (seenTab !== initialTab) {
     setSeenTab(initialTab);
@@ -199,7 +205,7 @@ export default function CoordinatingChapterDetailPage({
       if (!isSuccessStatus(result.status)) {
         toast.error(
           result.message ??
-            `Gagal ${nextStatus === "active" ? "mengaktifkan" : "menangguhkan"} Korkom.`
+            `Gagal ${nextStatus === "active" ? "mengaktifkan" : "menangguhkan"} Korkom.`,
         );
         return;
       }
@@ -207,15 +213,48 @@ export default function CoordinatingChapterDetailPage({
       toast.success(
         nextStatus === "active"
           ? "Korkom berhasil diaktifkan."
-          : "Korkom berhasil disuspend."
+          : "Korkom berhasil disuspend.",
       );
       setShowStatusConfirmation(false);
       router.refresh();
     } catch (error) {
-      console.error("[CoordinatingChapterDetailPage] status change threw:", error);
+      console.error(
+        "[CoordinatingChapterDetailPage] status change threw:",
+        error,
+      );
       toast.error("Gagal memperbarui status Korkom.");
     } finally {
       setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleRemoveChapter() {
+    if (!removeChapterTarget) return;
+
+    setIsRemovingChapter(true);
+    try {
+      const result = await removeChapterFromCoordinatingChapter({
+        coordinating_chapter_id: coordinatingChapter.id,
+        chapter_id: removeChapterTarget.id,
+      });
+      if (!isSuccessStatus(result.status)) {
+        toast.error(
+          result.message ?? "Gagal mengeluarkan Komisariat dari Korkom.",
+        );
+        return;
+      }
+
+      toast.success("Komisariat berhasil dikeluarkan dari Korkom.");
+      setRemoveChapterTarget(null);
+      router.refresh();
+    } catch (error) {
+      console.error(
+        "[CoordinatingChapterDetailPage] remove chapter threw:",
+        error,
+      );
+      toast.error("Gagal mengeluarkan Komisariat dari Korkom.");
+    } finally {
+      setIsRemovingChapter(false);
     }
   }
 
@@ -387,46 +426,94 @@ export default function CoordinatingChapterDetailPage({
               <EmptyState
                 title="Belum ada Komisariat"
                 description="Komisariat yang berada di bawah Korkom ini akan ditampilkan di sini."
+                action={
+                  allowAddChapter ? (
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowAddChapterForm(true)}
+                    >
+                      <PlusCircle className="size-4" />
+                      Tambah Komisariat
+                    </Button>
+                  ) : undefined
+                }
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-                    <tr>
-                      <th className="px-4 py-3">Nama Komisariat</th>
-                      <th className="px-4 py-3">Asal Universitas</th>
-                      <th className="px-4 py-3">Jumlah Kader</th>
-                      <th className="px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                    {chapters.map((chapter) => (
-                      <tr key={chapter.id}>
-                        <td className="px-4 py-3 font-semibold text-[#172033]">
-                          {formatChapterName(chapter.name)}
-                        </td>
-                        <td className="px-4 py-3 text-[#172033]">
-                          {chapter.institution_name || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-[#172033]">
-                          {chapter.user_count ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Label
-                            variant={
-                              chapter.status === "active" ? "green" : "red"
-                            }
-                          >
-                            {chapter.status === "active"
-                              ? "Aktif"
-                              : "Tidak Aktif"}
-                          </Label>
-                        </td>
+              <>
+                <div className="flex flex-col gap-3 border-b border-[#e6e9ef] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <h3 className="text-base font-semibold text-[#172033]">
+                    Daftar Komisariat
+                  </h3>
+                  {allowAddChapter && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setShowAddChapterForm(true)}
+                      className="w-fit"
+                    >
+                      <PlusCircle className="size-4" />
+                      Tambah Komisariat
+                    </Button>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-left text-sm">
+                    <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                      <tr>
+                        <th className="px-4 py-3">Nama Komisariat</th>
+                        <th className="px-4 py-3">Asal Universitas</th>
+                        <th className="px-4 py-3">Jumlah Kader</th>
+                        <th className="px-4 py-3">Status</th>
+                        {allowAddChapter && (
+                          <th className="px-4 py-3 text-right">Aksi</th>
+                        )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                      {chapters.map((chapter) => (
+                        <tr key={chapter.id}>
+                          <td className="px-4 py-3 font-semibold text-[#172033]">
+                            {formatChapterName(chapter.name)}
+                          </td>
+                          <td className="px-4 py-3 text-[#172033]">
+                            {chapter.institution_name || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-[#172033]">
+                            {chapter.user_count ?? "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Label
+                              variant={
+                                chapter.status === "active" ? "green" : "red"
+                              }
+                            >
+                              {chapter.status === "active"
+                                ? "Aktif"
+                                : "Tidak Aktif"}
+                            </Label>
+                          </td>
+                          {allowAddChapter && (
+                            <td className="px-4 py-3">
+                              <div className="flex justify-end">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() =>
+                                    setRemoveChapterTarget(chapter)
+                                  }
+                                >
+                                  <Trash2 className="size-4" />
+                                  Keluarkan
+                                </Button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </section>
         )}
@@ -476,7 +563,7 @@ export default function CoordinatingChapterDetailPage({
                         <CalendarDays className="size-4 shrink-0" />
                         {formatDateRange(
                           training.start_date,
-                          training.end_date
+                          training.end_date,
                         )}
                       </span>
                       <span className="flex items-center gap-2">
@@ -528,6 +615,17 @@ export default function CoordinatingChapterDetailPage({
         loading={isUpdatingStatus}
       />
 
+      <AlertConfirmation
+        open={removeChapterTarget !== null}
+        onClose={() => setRemoveChapterTarget(null)}
+        onConfirm={handleRemoveChapter}
+        title="Keluarkan Komisariat dari Korkom ini?"
+        message={`${formatChapterName(removeChapterTarget?.name ?? "")} akan tetap terdaftar di Cabang ${coordinatingChapter.branch_name}, tetapi tidak lagi berada di bawah Korkom ini.`}
+        confirmLabel="Keluarkan Komisariat"
+        confirmVariant="destructive"
+        loading={isRemovingChapter}
+      />
+
       {allowEdit && (
         <EditCoordinatingChapterFormSheet
           open={showEditForm}
@@ -537,6 +635,20 @@ export default function CoordinatingChapterDetailPage({
             router.refresh();
           }}
           coordinatingChapter={coordinatingChapter}
+        />
+      )}
+
+      {allowAddChapter && (
+        <AddChapterToCoordinatingChapterSheet
+          open={showAddChapterForm}
+          onClose={() => setShowAddChapterForm(false)}
+          onSaved={() => {
+            setShowAddChapterForm(false);
+            router.refresh();
+          }}
+          coordinatingChapterId={coordinatingChapter.id}
+          branchId={coordinatingChapter.branch_id}
+          branchName={coordinatingChapter.branch_name}
         />
       )}
     </div>

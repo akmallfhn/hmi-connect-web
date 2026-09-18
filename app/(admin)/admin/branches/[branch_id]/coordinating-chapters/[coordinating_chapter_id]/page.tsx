@@ -40,7 +40,7 @@ export default async function BranchCoordinatingChapterDetailPage({
     searchParams,
   ]);
   const coordinatingChapter = await getCoordinatingChapterDetail(
-    coordinating_chapter_id
+    coordinating_chapter_id,
   );
   if (!coordinatingChapter || coordinatingChapter.branch_id !== branch_id) {
     notFound();
@@ -58,7 +58,7 @@ export default async function BranchCoordinatingChapterDetailPage({
       getStructuralOverview(
         "coordinating_chapter",
         coordinating_chapter_id,
-        query.period ? Number(query.period) : null
+        query.period ? Number(query.period) : null,
       ),
       getSession(),
       listAllAccessGrants("coordinating_chapter", coordinating_chapter_id),
@@ -79,6 +79,7 @@ export default async function BranchCoordinatingChapterDetailPage({
       initialTab={parseTab(query.tab)}
       backHref={`/branches/${branch_id}/coordinating-chapters`}
       allowStatusChange
+      allowAddChapter
     />
   );
 }
