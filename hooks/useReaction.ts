@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { REACTIONS } from "@/components/modals/ReactionPickerModal";
 import { sendReaction, unsendReaction } from "@/lib/actions";
+import type { EntityAuthor } from "@/apis/feeds";
 import { isSuccessStatus, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
 
 type ReactionBreakdown = Partial<Record<ReactionTypeEnum, number>>;
@@ -27,6 +28,9 @@ interface UseReactionInitial {
   myReaction: ReactionTypeEnum | null;
   total: number;
   byType?: ReactionBreakdown;
+  // A personal reaction and an entity reaction are distinct. The timeline's
+  // `my_reaction` is personal, so it must not seed an official-account action.
+  authorEntity?: EntityAuthor;
 }
 
 export function useReaction(
@@ -35,7 +39,7 @@ export function useReaction(
   initial: UseReactionInitial
 ) {
   const [activeReaction, setActiveReaction] = useState<ReactionTypeEnum | null>(
-    initial.myReaction
+    initial.authorEntity ? null : initial.myReaction
   );
   const [reactionCount, setReactionCount] = useState(initial.total);
   const [reactionBreakdown, setReactionBreakdown] = useState<ReactionBreakdown>(
@@ -71,8 +75,8 @@ export function useReaction(
 
     startTransition(async () => {
       const result = nextType
-        ? await sendReaction(targetType, targetId, nextType)
-        : await unsendReaction(targetType, targetId);
+        ? await sendReaction(targetType, targetId, nextType, initial.authorEntity)
+        : await unsendReaction(targetType, targetId, initial.authorEntity);
 
       if (!isSuccessStatus(result.status)) {
         setActiveReaction(previousType);

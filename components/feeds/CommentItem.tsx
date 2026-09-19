@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { Heart, Reply } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
-import Avatar from "../common/Avatar";
 import CommentSubmitter from "./CommentSubmitter";
+import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
 import { useReaction } from "@/hooks/useReaction";
 import type { FeedComment } from "@/apis/feeds";
+import type { EntityAuthor } from "@/apis/feeds";
 import {
   createCommentReply,
   deleteComment,
@@ -19,6 +20,7 @@ import {
   listCommentReplies,
 } from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/time-manipulation";
+import { resolveCommentAuthor } from "@/lib/feed-author";
 import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
 
 interface CommentItemProps {
@@ -29,6 +31,7 @@ interface CommentItemProps {
   currentUserAvatar?: string;
   isReply?: boolean;
   onDeleted?: (commentId: string) => void;
+  authorEntity?: EntityAuthor;
 }
 
 export default function CommentItem({
@@ -39,12 +42,15 @@ export default function CommentItem({
   currentUserAvatar,
   isReply = false,
   onDeleted,
+  authorEntity,
 }: CommentItemProps) {
   const router = useRouter();
+  const author = resolveCommentAuthor(comment);
   const reaction = useReaction(isReply ? "comment_reply" : "comment", comment.id, {
     myReaction: comment.my_reaction,
     total: comment.reaction_count.total,
     byType: comment.reaction_count.by_type,
+    authorEntity,
   });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showReactorsModal, setShowReactorsModal] = useState(false);
@@ -102,7 +108,7 @@ export default function CommentItem({
     if (!trimmed) return;
 
     setPostingReply(true);
-    createCommentReply(comment.id, trimmed)
+    createCommentReply(comment.id, trimmed, authorEntity)
       .then((result) => {
         if (isSuccessStatus(result.status) && result.data) {
           setReplies((prev) => [...prev, result.data as FeedComment]);
@@ -141,20 +147,19 @@ export default function CommentItem({
   return (
     <div className="flex items-start gap-2">
       <Link
-        href={`/profile/${comment.username}`}
-        aria-label={`Lihat profil ${comment.full_name}`}
+        href={author.href}
+        aria-label={`Lihat profil ${author.name}`}
         className="shrink-0 rounded-full"
       >
-        <Avatar
-          src={comment.avatar}
-          name={comment.full_name}
+        <FeedAuthorAvatar
+          author={author}
           size={isReply ? 28 : 32}
         />
       </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-xl bg-[#f5f7fb] px-3 py-2">
           <p className="text-xs font-semibold text-[#172033] xl:text-[13px]">
-            {comment.full_name}
+            {author.name}
           </p>
           <p className="text-sm text-[#172033] xl:text-[15px]">
             {comment.message}
@@ -246,6 +251,7 @@ export default function CommentItem({
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 currentUserAvatar={currentUserAvatar}
+                authorEntity={authorEntity}
                 isReply
                 onDeleted={handleReplyDeleted}
               />

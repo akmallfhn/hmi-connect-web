@@ -110,6 +110,8 @@ export default function OfficialTimeline({
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
             verificationStatus={verificationStatus}
+            authorEntity={authorEntity}
+            initialReposted={item.type === "repost"}
             onDeleted={handleFeedDeleted}
             onFeedCreated={handleFeedCreated}
           />

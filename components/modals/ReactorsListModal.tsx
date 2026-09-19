@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Avatar from "../common/Avatar";
+import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import Modal from "./Modal";
 import type { Reactor } from "@/apis/reactions";
 import { listReactors } from "@/lib/actions";
 import type { ReactionTargetTypeEnum } from "@/lib/types";
+import { resolveEntityAuthor } from "@/lib/feed-author";
 
 interface ReactorsListModalProps {
   open: boolean;
@@ -64,22 +65,36 @@ export default function ReactorsListModal({
         {loaded && reactors.length === 0 && (
           <p className="py-4 text-center text-sm text-[#5f6573]">Belum ada reaksi.</p>
         )}
-        {reactors.map((reactor) => (
-          <Link
-            key={reactor.id}
-            href={`/profile/${reactor.username}`}
-            onClick={onClose}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
-          >
-            <Avatar src={reactor.avatar} name={reactor.full_name} size={40} />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#172033]">
-                {reactor.full_name}
-              </p>
-              <p className="truncate text-xs text-[#5f6573]">@{reactor.username}</p>
-            </div>
-          </Link>
-        ))}
+        {reactors.map((reactor) => {
+          const entityAuthor = resolveEntityAuthor(reactor);
+          const author = entityAuthor ?? {
+            name: reactor.full_name,
+            avatar: reactor.avatar,
+            href: `/profile/${reactor.username}`,
+            isEntity: false,
+          };
+
+          return (
+            <Link
+              key={reactor.id}
+              href={author.href}
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
+            >
+              <FeedAuthorAvatar author={author} size={40} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-[#172033]">
+                  {author.name}
+                </p>
+                {!entityAuthor && (
+                  <p className="truncate text-xs text-[#5f6573]">
+                    @{reactor.username}
+                  </p>
+                )}
+              </div>
+            </Link>
+          );
+        })}
         {hasMore && (
           <button
             type="button"

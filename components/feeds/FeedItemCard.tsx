@@ -29,7 +29,10 @@ import TrainingAttachmentCard from "./TrainingAttachmentCard";
 import QuotedFeed from "./QuotedFeed";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import EditFeedForm from "../forms/EditFeedForm";
-import { FeedComposerModal } from "../forms/CreateFeedForms";
+import {
+  FeedComposerModal,
+  type ComposerAuthorEntity,
+} from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
@@ -65,6 +68,9 @@ interface FeedItemCardProps {
   repostedBy?: { fullName: string; avatar?: string };
   onDeleted?: (feedId: string) => void;
   onFeedCreated?: (feed: Feed) => void;
+  // Official-account pages pass this to every interaction so the entity, not
+  // the human administrator, is the public actor.
+  authorEntity?: ComposerAuthorEntity;
 }
 
 function PhotoGrid({
@@ -216,6 +222,7 @@ export default function FeedItemCard({
   repostedBy,
   onDeleted,
   onFeedCreated,
+  authorEntity,
 }: FeedItemCardProps) {
   const router = useRouter();
   const author = resolveFeedAuthor(feed);
@@ -223,6 +230,7 @@ export default function FeedItemCard({
     myReaction: feed.my_reaction,
     total: feed.reaction_count.total,
     byType: feed.reaction_count.by_type,
+    authorEntity,
   });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showReactorsModal, setShowReactorsModal] = useState(false);
@@ -321,8 +329,8 @@ export default function FeedItemCard({
 
     startRepostTransition(async () => {
       const result = nextReposted
-        ? await repostFeed(feed.id)
-        : await unrepostFeed(feed.id);
+        ? await repostFeed(feed.id, authorEntity)
+        : await unrepostFeed(feed.id, authorEntity);
 
       if (!isSuccessStatus(result.status)) {
         setReposted(!nextReposted);
@@ -367,7 +375,7 @@ export default function FeedItemCard({
     if (!trimmed) return;
 
     startCommentTransition(async () => {
-      const result = await createFeedComment(feed.id, trimmed);
+      const result = await createFeedComment(feed.id, trimmed, authorEntity);
       if (isSuccessStatus(result.status) && result.data) {
         setComments((prev) => [...prev, result.data as FeedComment]);
         setCommentCount((prev) => prev + 1);
@@ -589,6 +597,7 @@ export default function FeedItemCard({
             currentUserId={currentUserId}
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
+            authorEntity={authorEntity}
             onDeleted={handleCommentDeleted}
           />
           {commentCount > 1 && (
@@ -623,6 +632,7 @@ export default function FeedItemCard({
               currentUserId={currentUserId}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}
+              authorEntity={authorEntity}
               onDeleted={handleCommentDeleted}
             />
           ))}
@@ -669,6 +679,7 @@ export default function FeedItemCard({
         avatar={currentUserAvatar}
         userId={currentUserId}
         quoteFeed={feed}
+        authorEntity={authorEntity}
         onCreated={(created) => {
           setShowQuoteRepost(false);
           onFeedCreated?.(created);

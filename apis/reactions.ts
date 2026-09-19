@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
+import { isSuccessStatus, type AccessEntityTypeEnum, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Reactor = {
@@ -10,6 +10,10 @@ export type Reactor = {
   full_name: string;
   username: string;
   avatar?: string;
+  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_id?: string | null;
+  author_entity_name?: string | null;
+  author_entity_image_url?: string | null;
 };
 
 type Metapaging = {
@@ -33,6 +37,7 @@ export async function sendReaction(payload: {
   targetType: ReactionTargetTypeEnum;
   targetId: string;
   type: ReactionTypeEnum;
+  authorEntity?: { type: AccessEntityTypeEnum; id: string };
 }): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -46,6 +51,12 @@ export async function sendReaction(payload: {
       target_type: payload.targetType,
       target_id: payload.targetId,
       type: payload.type,
+      ...(payload.authorEntity
+        ? {
+            author_entity_type: payload.authorEntity.type,
+            author_entity_id: payload.authorEntity.id,
+          }
+        : {}),
     },
   });
 }
@@ -53,6 +64,7 @@ export async function sendReaction(payload: {
 export async function unsendReaction(payload: {
   targetType: ReactionTargetTypeEnum;
   targetId: string;
+  authorEntity?: { type: AccessEntityTypeEnum; id: string };
 }): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -62,7 +74,16 @@ export async function unsendReaction(payload: {
   return callApi("/api/v1/reactions/unsend", {
     method: "POST",
     token: sessionToken,
-    body: { target_type: payload.targetType, target_id: payload.targetId },
+    body: {
+      target_type: payload.targetType,
+      target_id: payload.targetId,
+      ...(payload.authorEntity
+        ? {
+            author_entity_type: payload.authorEntity.type,
+            author_entity_id: payload.authorEntity.id,
+          }
+        : {}),
+    },
   });
 }
 

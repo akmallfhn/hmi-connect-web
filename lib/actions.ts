@@ -160,6 +160,7 @@ import {
   unrepostFeed as unrepostFeedApi,
   updateFeed as updateFeedApi,
   type CreateFeedPayload,
+  type EntityAuthor,
 } from "@/apis/feeds";
 import {
   listReactors as listReactorsApi,
@@ -627,16 +628,24 @@ export async function listFeedComments(feedId: string, page?: number) {
   return listFeedCommentsApi(feedId, { page });
 }
 
-export async function createFeedComment(feedId: string, message: string) {
-  return createFeedCommentApi({ feedId, message });
+export async function createFeedComment(
+  feedId: string,
+  message: string,
+  authorEntity?: EntityAuthor,
+) {
+  return createFeedCommentApi({ feedId, message, authorEntity });
 }
 
 export async function listCommentReplies(commentId: string, page?: number) {
   return listCommentRepliesApi(commentId, { page });
 }
 
-export async function createCommentReply(commentId: string, message: string) {
-  return createCommentReplyApi({ commentId, message });
+export async function createCommentReply(
+  commentId: string,
+  message: string,
+  authorEntity?: EntityAuthor,
+) {
+  return createCommentReplyApi({ commentId, message, authorEntity });
 }
 
 export async function deleteComment(commentId: string) {
@@ -651,27 +660,32 @@ export async function deleteFeed(feedId: string) {
   return deleteFeedApi(feedId);
 }
 
-export async function repostFeed(feedId: string) {
-  return repostFeedApi(feedId);
+export async function repostFeed(feedId: string, authorEntity?: EntityAuthor) {
+  return repostFeedApi(feedId, authorEntity);
 }
 
-export async function unrepostFeed(feedId: string) {
-  return unrepostFeedApi(feedId);
+export async function unrepostFeed(
+  feedId: string,
+  authorEntity?: EntityAuthor,
+) {
+  return unrepostFeedApi(feedId, authorEntity);
 }
 
 export async function sendReaction(
   targetType: ReactionTargetTypeEnum,
   targetId: string,
-  type: ReactionTypeEnum
+  type: ReactionTypeEnum,
+  authorEntity?: EntityAuthor,
 ) {
-  return sendReactionApi({ targetType, targetId, type });
+  return sendReactionApi({ targetType, targetId, type, authorEntity });
 }
 
 export async function unsendReaction(
   targetType: ReactionTargetTypeEnum,
-  targetId: string
+  targetId: string,
+  authorEntity?: EntityAuthor,
 ) {
-  return unsendReactionApi({ targetType, targetId });
+  return unsendReactionApi({ targetType, targetId, authorEntity });
 }
 
 export async function listNotifications(page?: number) {

@@ -112,6 +112,12 @@ export type CreateFeedPayload = {
   author_entity_id?: string;
 };
 
+// Used by every action that can speak as an official hierarchy account.
+export type EntityAuthor = {
+  type: AccessEntityTypeEnum;
+  id: string;
+};
+
 export type FeedComment = {
   id: string;
   feed_id?: string;
@@ -120,6 +126,12 @@ export type FeedComment = {
   full_name: string;
   username: string;
   avatar?: string;
+  // A comment/reply keeps its human audit author above, but renders as this
+  // entity when the entity pair is present.
+  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_id?: string | null;
+  author_entity_name?: string | null;
+  author_entity_image_url?: string | null;
   message: string;
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;
@@ -345,6 +357,7 @@ export async function listAllFeedComments(
 export async function createFeedComment(payload: {
   feedId: string;
   message: string;
+  authorEntity?: EntityAuthor;
 }): Promise<ApiEnvelope<FeedComment>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -357,7 +370,16 @@ export async function createFeedComment(payload: {
   return callApi<FeedComment>("/api/v1/feeds/comments/create", {
     method: "POST",
     token: sessionToken,
-    body: { feed_id: payload.feedId, message: payload.message },
+    body: {
+      feed_id: payload.feedId,
+      message: payload.message,
+      ...(payload.authorEntity
+        ? {
+            author_entity_type: payload.authorEntity.type,
+            author_entity_id: payload.authorEntity.id,
+          }
+        : {}),
+    },
   });
 }
 
@@ -392,6 +414,7 @@ export async function listCommentReplies(
 export async function createCommentReply(payload: {
   commentId: string;
   message: string;
+  authorEntity?: EntityAuthor;
 }): Promise<ApiEnvelope<FeedComment>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -404,7 +427,16 @@ export async function createCommentReply(payload: {
   return callApi<FeedComment>("/api/v1/feeds/comments/replies/create", {
     method: "POST",
     token: sessionToken,
-    body: { comment_id: payload.commentId, message: payload.message },
+    body: {
+      comment_id: payload.commentId,
+      message: payload.message,
+      ...(payload.authorEntity
+        ? {
+            author_entity_type: payload.authorEntity.type,
+            author_entity_id: payload.authorEntity.id,
+          }
+        : {}),
+    },
   });
 }
 
@@ -458,10 +490,16 @@ export async function deleteFeed(feedId: string): Promise<ApiEnvelope> {
   });
 }
 
-export type RepostResult = { feed_id: string; reposter_id: string };
+export type RepostResult = {
+  feed_id: string;
+  reposter_id: string;
+  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_id?: string | null;
+};
 
 export async function repostFeed(
   feedId: string,
+  authorEntity?: EntityAuthor,
 ): Promise<ApiEnvelope<RepostResult>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -474,12 +512,21 @@ export async function repostFeed(
   return callApi<RepostResult>("/api/v1/feeds/repost", {
     method: "POST",
     token: sessionToken,
-    body: { feed_id: feedId },
+    body: {
+      feed_id: feedId,
+      ...(authorEntity
+        ? {
+            author_entity_type: authorEntity.type,
+            author_entity_id: authorEntity.id,
+          }
+        : {}),
+    },
   });
 }
 
 export async function unrepostFeed(
   feedId: string,
+  authorEntity?: EntityAuthor,
 ): Promise<ApiEnvelope<RepostResult>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -492,6 +539,14 @@ export async function unrepostFeed(
   return callApi<RepostResult>("/api/v1/feeds/unrepost", {
     method: "POST",
     token: sessionToken,
-    body: { feed_id: feedId },
+    body: {
+      feed_id: feedId,
+      ...(authorEntity
+        ? {
+            author_entity_type: authorEntity.type,
+            author_entity_id: authorEntity.id,
+          }
+        : {}),
+    },
   });
 }
