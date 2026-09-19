@@ -14,10 +14,11 @@ import {
   type KeyboardEvent,
 } from "react";
 import { toast } from "sonner";
+import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 
 const MAX_TEXTAREA_HEIGHT = 120;
-const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+const CHAT_IMAGE_TARGET_BYTES = 500 * 1024;
 
 function getExtension(file: File) {
   return file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -127,10 +128,6 @@ export default function MessageComposer({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !file.type.startsWith("image/")) return;
-    if (file.size > MAX_ATTACHMENT_BYTES) {
-      toast.error("Ukuran gambar maksimal 8MB.");
-      return;
-    }
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
@@ -150,7 +147,15 @@ export default function MessageComposer({
     try {
       let attachmentUrl: string | undefined;
       if (imageFile) {
-        attachmentUrl = await uploadChatAttachment(imageFile, userId);
+        const compressed = await compressImage(imageFile, {
+          maxDimension: 1600,
+          targetBytes: CHAT_IMAGE_TARGET_BYTES,
+        });
+        if (compressed.size > CHAT_IMAGE_TARGET_BYTES) {
+          toast.error("Gambar tidak dapat dikompres hingga ukuran yang diizinkan.");
+          return;
+        }
+        attachmentUrl = await uploadChatAttachment(compressed, userId);
       }
       await onSend(trimmed, attachmentUrl);
       setText("");

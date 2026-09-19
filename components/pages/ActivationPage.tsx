@@ -16,6 +16,7 @@ import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
 import type { Institution } from "@/apis/institutions";
 import { createInstitution, activateUser, logoutUser } from "@/lib/actions";
+import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 import { DEGREE_OPTIONS } from "@/lib/education";
 import {
@@ -63,7 +64,7 @@ const ALLOWED_AVATAR_TYPES = [
   "image/avif",
 ];
 const ALLOWED_AVATAR_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_TARGET_BYTES = 300 * 1024;
 type UsernameAvailability =
   "idle" | "checking" | "available" | "unavailable" | "error";
 
@@ -192,10 +193,6 @@ export default function ActivationPage({
     event.target.value = "";
     if (!file) return;
 
-    if (file.size > MAX_AVATAR_BYTES) {
-      toast.error("Ukuran foto maksimal 2MB.");
-      return;
-    }
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
       toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
       return;
@@ -207,14 +204,23 @@ export default function ActivationPage({
       return;
     }
 
-    const ownerKey = userId ?? crypto.randomUUID();
-    const filePath = `avatars/${ownerKey}-${Date.now()}.${fileExtension}`;
-
     setUploadingAvatar(true);
     try {
+      const compressed = await compressImage(file, {
+        maxDimension: 512,
+        targetBytes: AVATAR_TARGET_BYTES,
+      });
+      if (compressed.size > AVATAR_TARGET_BYTES) {
+        toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
+        return;
+      }
+      const compressedExtension =
+        compressed.name.split(".").pop()?.toLowerCase() ?? fileExtension;
+      const ownerKey = userId ?? crypto.randomUUID();
+      const filePath = `avatars/${ownerKey}-${Date.now()}.${compressedExtension}`;
       const { error: uploadError } = await supabase.storage
         .from("hmi-connect")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
 
       if (uploadError) {
         console.error("[ActivationPage] avatar upload failed:", uploadError);

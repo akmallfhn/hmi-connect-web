@@ -6,6 +6,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import type { UserProfile } from "@/apis/users";
 import { updateUser } from "@/lib/actions";
+import { compressImage } from "@/lib/compress-image";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import {
@@ -26,7 +27,7 @@ import Modal from "../modals/Modal";
 
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const AVATAR_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const AVATAR_TARGET_BYTES = 300 * 1024;
 
 const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Pending", value: "pending" },
@@ -103,10 +104,6 @@ function AccountFields({
     event.target.value = "";
     if (!file) return;
 
-    if (file.size > AVATAR_MAX_BYTES) {
-      toast.error("Ukuran foto maksimal 2MB.");
-      return;
-    }
     if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
       toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
       return;
@@ -117,13 +114,22 @@ function AccountFields({
       return;
     }
 
-    const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
-
     setIsUploadingAvatar(true);
     try {
+      const compressed = await compressImage(file, {
+        maxDimension: 512,
+        targetBytes: AVATAR_TARGET_BYTES,
+      });
+      if (compressed.size > AVATAR_TARGET_BYTES) {
+        toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
+        return;
+      }
+      const compressedExt =
+        compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
+      const filePath = `avatars/${user.id}-${Date.now()}.${compressedExt}`;
       const { error: uploadError } = await supabase.storage
         .from("hmi-connect")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
 
       if (uploadError) {
         console.error("[AdminEditUserAccountForm] avatar upload error:", uploadError.message);

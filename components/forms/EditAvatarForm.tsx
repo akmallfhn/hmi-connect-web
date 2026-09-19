@@ -8,12 +8,13 @@ import Button from "../buttons/Button";
 import { getInitials } from "../common/Avatar";
 import Modal from "../modals/Modal";
 import { updateMyProfile } from "@/lib/actions";
+import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 import { isSuccessStatus } from "@/lib/types";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const AVATAR_TARGET_BYTES = 300 * 1024;
 
 interface EditAvatarFormProps {
   open: boolean;
@@ -107,10 +108,6 @@ function AvatarFields({
     event.target.value = "";
     if (!file) return;
 
-    if (file.size > MAX_FILE_BYTES) {
-      toast.error("Ukuran foto maksimal 2MB.");
-      return;
-    }
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
       return;
@@ -121,13 +118,22 @@ function AvatarFields({
       return;
     }
 
-    const filePath = `avatars/${userId}-${Date.now()}.${fileExt}`;
-
     setIsUploading(true);
     try {
+      const compressed = await compressImage(file, {
+        maxDimension: 512,
+        targetBytes: AVATAR_TARGET_BYTES,
+      });
+      if (compressed.size > AVATAR_TARGET_BYTES) {
+        toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
+        return;
+      }
+      const compressedExt =
+        compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
+      const filePath = `avatars/${userId}-${Date.now()}.${compressedExt}`;
       const { error: uploadError } = await supabase.storage
         .from("hmi-connect")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
 
       if (uploadError) {
         console.error("[EditAvatarForm] upload error:", uploadError.message);
