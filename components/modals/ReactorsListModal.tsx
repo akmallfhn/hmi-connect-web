@@ -76,7 +76,7 @@ export default function ReactorsListModal({
 
           return (
             <Link
-              key={reactor.id}
+              key={`${reactor.id}-${reactor.author_entity_type ?? "user"}-${reactor.author_entity_id ?? "self"}`}
               href={author.href}
               onClick={onClose}
               className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"

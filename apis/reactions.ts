@@ -10,10 +10,21 @@ export type Reactor = {
   full_name: string;
   username: string;
   avatar?: string;
-  author_entity_type?: AccessEntityTypeEnum | null;
-  author_entity_id?: string | null;
-  author_entity_name?: string | null;
-  author_entity_image_url?: string | null;
+  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_id: string | null;
+  author_entity_name: string | null;
+  author_entity_image_url: string | null;
+};
+
+// Present on a successful send; entity name and image are resolved live by the backend.
+export type SentReaction = {
+  target_type: ReactionTargetTypeEnum;
+  target_id: string;
+  type: ReactionTypeEnum;
+  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_id: string | null;
+  author_entity_name: string | null;
+  author_entity_image_url: string | null;
 };
 
 type Metapaging = {
@@ -38,7 +49,7 @@ export async function sendReaction(payload: {
   targetId: string;
   type: ReactionTypeEnum;
   authorEntity?: { type: AccessEntityTypeEnum; id: string };
-}): Promise<ApiEnvelope> {
+}): Promise<ApiEnvelope<SentReaction>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
     return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };

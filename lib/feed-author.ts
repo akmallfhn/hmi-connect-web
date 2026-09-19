@@ -101,14 +101,9 @@ export function resolveEntityAuthor(
 // Every feed-shaped payload the app renders an author for, including search's own posting row.
 export type FeedAuthorSource = Pick<
   Feed,
-  | "creator_full_name"
-  | "creator_username"
-  | "creator_avatar"
-  | "author_entity_type"
-  | "author_entity_id"
-  | "author_entity_name"
-  | "author_entity_image_url"
->;
+  "creator_full_name" | "creator_username" | "creator_avatar"
+> &
+  EntityAuthorSource;
 
 export function resolveFeedAuthor(feed: FeedAuthorSource): FeedAuthor {
   const entityAuthor = resolveEntityAuthor(feed);

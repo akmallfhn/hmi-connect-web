@@ -67,10 +67,10 @@ export type Feed = {
   creator_username: string;
   creator_avatar?: string;
   // Set when the feed was posted on behalf of an entity — render its name and logo instead of the creator's.
-  author_entity_type?: AccessEntityTypeEnum | null;
-  author_entity_id?: string | null;
-  author_entity_name?: string | null;
-  author_entity_image_url?: string | null;
+  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_id: string | null;
+  author_entity_name: string | null;
+  author_entity_image_url: string | null;
   content: string;
   attachments?: FeedAttachment[];
   repost_of_id?: string;
@@ -128,10 +128,10 @@ export type FeedComment = {
   avatar?: string;
   // A comment/reply keeps its human audit author above, but renders as this
   // entity when the entity pair is present.
-  author_entity_type?: AccessEntityTypeEnum | null;
-  author_entity_id?: string | null;
-  author_entity_name?: string | null;
-  author_entity_image_url?: string | null;
+  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_id: string | null;
+  author_entity_name: string | null;
+  author_entity_image_url: string | null;
   message: string;
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;

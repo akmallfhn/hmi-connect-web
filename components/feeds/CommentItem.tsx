@@ -7,12 +7,12 @@ import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 import CommentSubmitter from "./CommentSubmitter";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
+import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
 import { useReaction } from "@/hooks/useReaction";
 import type { FeedComment } from "@/apis/feeds";
-import type { EntityAuthor } from "@/apis/feeds";
 import {
   createCommentReply,
   deleteComment,
@@ -31,7 +31,7 @@ interface CommentItemProps {
   currentUserAvatar?: string;
   isReply?: boolean;
   onDeleted?: (commentId: string) => void;
-  authorEntity?: EntityAuthor;
+  authorEntity?: ComposerAuthorEntity;
 }
 
 export default function CommentItem({
@@ -259,8 +259,8 @@ export default function CommentItem({
 
             {currentUserId ? (
               <CommentSubmitter
-                avatar={currentUserAvatar}
-                name={currentUserName}
+                avatar={authorEntity?.imageUrl ?? currentUserAvatar}
+                name={authorEntity?.name ?? currentUserName}
                 avatarSize={28}
                 value={replyText}
                 onChange={setReplyText}

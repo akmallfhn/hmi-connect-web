@@ -247,8 +247,13 @@ export default function FeedItemCard({
   const [reposted, setReposted] = useState(Boolean(initialReposted));
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
-  // An entity feed speaks for the entity, not its author, so amplifying it is fair game.
   const isOwnPersonalFeed = isOwnFeed && !feed.author_entity_type;
+  const isOwnEntityFeed = Boolean(authorEntity) &&
+    feed.author_entity_type === authorEntity?.type &&
+    feed.author_entity_id === authorEntity?.id;
+  // A grant holder can manage all feeds written as this entity, including a predecessor's.
+  const canManageFeed = isOwnPersonalFeed || isOwnEntityFeed;
+  const cannotRepost = isOwnPersonalFeed || isOwnEntityFeed;
 
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState<FeedComment[]>(
@@ -322,7 +327,7 @@ export default function FeedItemCard({
 
   function toggleRepost() {
     if (!requireVerified()) return;
-    if (isOwnPersonalFeed) return;
+    if (cannotRepost) return;
 
     const nextReposted = !reposted;
     setReposted(nextReposted);
@@ -432,7 +437,7 @@ export default function FeedItemCard({
               <Eye className="size-4 text-[#5f6573]" />
               Lihat post
             </Link>
-            {isOwnFeed && (
+            {canManageFeed && (
               <>
                 <button
                   type="button"
@@ -559,9 +564,9 @@ export default function FeedItemCard({
             <button
               type="button"
               onClick={toggleRepost}
-              disabled={isOwnPersonalFeed}
+              disabled={cannotRepost}
               title={
-                isOwnPersonalFeed
+                cannotRepost
                   ? "Tidak bisa me-repost postingan sendiri"
                   : undefined
               }
@@ -639,8 +644,8 @@ export default function FeedItemCard({
 
           {currentUserId ? (
             <CommentSubmitter
-              avatar={currentUserAvatar}
-              name={currentUserName}
+              avatar={authorEntity?.imageUrl ?? currentUserAvatar}
+              name={authorEntity?.name ?? currentUserName}
               value={commentText}
               onChange={setCommentText}
               onSubmit={handleSubmitComment}
