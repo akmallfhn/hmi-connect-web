@@ -94,7 +94,7 @@ export default function QuranJuzDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}

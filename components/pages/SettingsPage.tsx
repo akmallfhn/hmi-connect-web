@@ -6,7 +6,6 @@ import {
   adminEntityHref,
   officialEntityHref,
 } from "@/lib/access";
-import type { EducationHistoryEntry } from "@/apis/users";
 import { logoutUser } from "@/lib/actions";
 import type { AccessEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
 import {
@@ -23,7 +22,6 @@ import Link from "next/link";
 import { useState, type ComponentType, type ReactNode } from "react";
 import PageMargin from "../common/PageMargin";
 import PasswordForm from "../forms/PasswordForm";
-import ProfileSidebar from "../feeds/ProfileSidebar";
 import AboutProfileModal from "../modals/AboutProfileModal";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import BottomNav from "../navigations/BottomNav";
@@ -38,12 +36,7 @@ interface SettingsPageProps {
   userId?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
-  isAlumni?: boolean;
   hasPassword?: boolean;
-  headline?: string;
-  followingCount?: number;
-  followersCount?: number;
-  educationHistories?: EducationHistoryEntry[];
   createdAt?: string;
   registrationNumber?: number;
   provinceName?: string;
@@ -75,12 +68,7 @@ export default function SettingsPage({
   userId,
   username,
   verificationStatus,
-  isAlumni,
   hasPassword,
-  headline,
-  followingCount,
-  followersCount,
-  educationHistories,
   createdAt,
   registrationNumber,
   provinceName,
@@ -172,7 +160,7 @@ export default function SettingsPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}
@@ -184,73 +172,56 @@ export default function SettingsPage({
       />
 
       <PageMargin className="py-6">
-        <div className="mx-auto lg:max-w-[900px]">
+        <div>
           <div className="hidden lg:mb-4 lg:block">
             <h1 className="text-2xl font-bold text-[#172033]">
               Pengaturan &amp; Admin
             </h1>
           </div>
 
-          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[280px_minmax(0,600px)] lg:gap-4">
-            <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
-              <ProfileSidebar
-                userId={userId}
-                fullName={fullName}
-                avatar={avatar}
-                headline={headline}
-                username={username}
-                verificationStatus={verificationStatus}
-                isAlumni={isAlumni}
-                followingCount={followingCount}
-                followersCount={followersCount}
-                educationHistories={educationHistories}
-              />
-            </aside>
+          <main className="min-w-0">
+            <div className="flex flex-col gap-4">
+              <MenuCard items={accountItems} />
 
-            <main className="min-w-0">
-              <div className="flex flex-col gap-4">
-                <MenuCard items={accountItems} />
+              {adminEntities.map((entity) => (
+                <MenuCard
+                  key={entity.key}
+                  items={entity.items}
+                  header={
+                    <>
+                      <EntityBadge
+                        name={entity.name}
+                        imageUrl={entity.imageUrl}
+                      />
+                      <p className="min-w-0 truncate text-sm font-semibold text-[#172033]">
+                        {entity.name}
+                      </p>
+                    </>
+                  }
+                />
+              ))}
 
-                {adminEntities.map((entity) => (
-                  <MenuCard
-                    key={entity.key}
-                    items={entity.items}
-                    header={
-                      <>
-                        <EntityBadge
-                          name={entity.name}
-                          imageUrl={entity.imageUrl}
-                        />
-                        <p className="min-w-0 truncate text-sm font-semibold text-[#172033]">
-                          {entity.name}
-                        </p>
-                      </>
-                    }
-                  />
-                ))}
-
-                <div className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white">
-                  <button
-                    type="button"
-                    onClick={() => setIsLogoutOpen(true)}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition hover:bg-destructive-soft"
-                  >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive-soft text-destructive">
-                      <LogOut className="size-4" />
+              <div className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white">
+                <button
+                  type="button"
+                  onClick={() => setIsLogoutOpen(true)}
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition hover:bg-destructive-soft"
+                >
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive-soft text-destructive">
+                    <LogOut className="size-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-semibold text-destructive">
+                      Keluar
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-semibold text-destructive">
-                        Keluar
-                      </span>
-                      <span className="block truncate text-[13px] text-[#5f6573]">
-                        Keluar dari akun ini di perangkat ini.
-                      </span>
+                    <span className="block truncate text-[13px] text-[#5f6573]">
+                      Keluar dari akun ini di perangkat ini.
                     </span>
-                  </button>
-                </div>
+                  </span>
+                </button>
               </div>
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
       </PageMargin>
 

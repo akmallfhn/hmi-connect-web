@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/apis/session";
 import {
   getUserByUsername,
-  listEducationHistories,
   listUserActivity,
 } from "@/apis/users";
 import ProfileActivitiesPage from "@/components/pages/ProfileActivitiesPage";
@@ -33,28 +32,16 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
 
   if (!profile || profile.status !== "active") return notFound();
 
-  const [{ list: activities, hasMore }, { list: educationHistories }] =
-    await Promise.all([
-      listUserActivity(username, { page: 1, pageSize: 20 }),
-      listEducationHistories(username),
-    ]);
+  const { list: activities, hasMore } = await listUserActivity(username, {
+    page: 1,
+    pageSize: 20,
+  });
 
   return (
     <ProfileActivitiesPage
       username={username}
       initialItems={activities}
       initialHasMore={hasMore}
-      profile={{
-        userId: profile.id,
-        fullName: profile.full_name,
-        avatar: profile.avatar,
-        headline: profile.headline,
-        verificationStatus: profile.verification_status,
-        isAlumni: profile.is_alumni,
-        followingCount: profile.following_count,
-        followersCount: profile.followers_count,
-        educationHistories,
-      }}
       viewer={{
         fullName: viewer?.full_name,
         avatar: viewer?.avatar,

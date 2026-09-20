@@ -150,7 +150,7 @@ export default function ProfileHeader({
   );
 
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x">
       <div className="relative h-28 bg-gradient-to-r from-primary to-secondary sm:h-40">
         {isOwnProfile && (
           <Link

@@ -28,7 +28,7 @@ export default function OfficialAccountPage({
   viewer,
 }: OfficialAccountPageProps) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={viewer?.full_name}
         avatar={viewer?.avatar}

@@ -254,7 +254,7 @@ export default function VerificationPage({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:bg-[#f7fbfa] lg:px-5 lg:py-12">
+    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
       <div className="hidden lg:block">
         <DecorativeBackground />
       </div>

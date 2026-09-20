@@ -23,7 +23,7 @@ interface TrainingPageShellProps {
 export default function TrainingPageShell({
   viewer,
   mobileBackTitle,
-  bgClassName = "bg-[#f5f7fb]",
+  bgClassName = "bg-white",
   hideBottomNav = false,
   children,
 }: TrainingPageShellProps) {

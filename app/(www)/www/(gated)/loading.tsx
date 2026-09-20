@@ -5,29 +5,17 @@ import {
   CardSkeleton,
   ComposerSkeleton,
   FeedItemSkeleton,
-  ProfileMiniCardSkeleton,
-  SidebarMenuSkeleton,
 } from "@/components/states/Skeleton";
 
 export default function GatedHomeLoading() {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header loading />
 
       <PageMargin
         noMobilePadding
-        className="grid animate-pulse grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[1fr_2fr] lg:gap-4 lg:pt-6 xl:grid-cols-[1fr_2fr_1fr]"
+        className="grid animate-pulse grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-8 lg:pt-6"
       >
-        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
-          <div className="flex flex-col gap-4">
-            <ProfileMiniCardSkeleton />
-            <SidebarMenuSkeleton />
-            <div className="xl:hidden">
-              <CardSkeleton />
-            </div>
-          </div>
-        </aside>
-
         <main className="min-w-0">
           <div className="flex flex-col gap-1.5 lg:gap-4">
             <ComposerSkeleton />
@@ -37,7 +25,7 @@ export default function GatedHomeLoading() {
           </div>
         </main>
 
-        <aside className="hidden xl:sticky xl:top-20 xl:block xl:self-start">
+        <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
           <CardSkeleton />
         </aside>
       </PageMargin>

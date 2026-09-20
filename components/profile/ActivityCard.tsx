@@ -17,7 +17,7 @@ export default function ActivityCard({
   emptyMessage = "Belum ada aktivitas.",
 }: ActivityCardProps) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
         {title}
       </h2>

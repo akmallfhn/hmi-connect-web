@@ -64,7 +64,7 @@ export default function TrainingCatalogPage({
     <TrainingPageShell
       viewer={viewer}
       mobileBackTitle="Training"
-      bgClassName="bg-white lg:bg-[#f5f7fb]"
+      bgClassName="bg-white"
     >
       <main>
         {/* Mobile-only: search + LK level filter below Header's back+title row. */}

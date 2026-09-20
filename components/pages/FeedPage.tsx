@@ -1,47 +1,31 @@
 import PageMargin from "../common/PageMargin";
-import DesktopSidebarMenu from "../feeds/DesktopSidebarMenu";
 import Feed from "../feeds/Feed";
 import MobileGreetingBar from "../feeds/MobileGreetingBar";
-import ProfileSidebar from "../feeds/ProfileSidebar";
 import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import type { EducationHistoryEntry } from "@/apis/users";
 import type { VerificationStatusEnum } from "@/lib/types";
 
 interface FeedPageProps {
   fullName?: string;
   avatar?: string;
-  email?: string;
-  headline?: string;
   userId?: string;
   username?: string;
   verificationStatus?: VerificationStatusEnum;
-  isAlumni?: boolean;
-  followingCount?: number;
-  followersCount?: number;
-  educationHistories?: EducationHistoryEntry[];
 }
 
 export default function FeedPage({
   fullName,
   avatar,
-  email,
-  headline,
   userId,
   username,
   verificationStatus,
-  isAlumni,
-  followingCount,
-  followersCount,
-  educationHistories,
 }: FeedPageProps) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}
-        email={email}
         userId={userId}
         username={username}
         verificationStatus={verificationStatus}
@@ -58,29 +42,8 @@ export default function FeedPage({
 
       <PageMargin
         noMobilePadding
-        className="grid grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[1fr_2fr] lg:gap-4 lg:pt-6 xl:grid-cols-[1fr_2fr_1fr]"
+        className="grid grid-cols-1 gap-1.5 pb-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-8 lg:pt-6"
       >
-        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
-          <div className="flex flex-col gap-4">
-            <ProfileSidebar
-              userId={userId}
-              fullName={fullName}
-              avatar={avatar}
-              headline={headline}
-              username={username}
-              verificationStatus={verificationStatus}
-              isAlumni={isAlumni}
-              followingCount={followingCount}
-              followersCount={followersCount}
-              educationHistories={educationHistories}
-            />
-            <DesktopSidebarMenu />
-            <div className="xl:hidden">
-              <RightSidebar />
-            </div>
-          </div>
-        </aside>
-
         <main className="min-w-0">
           <Feed
             fullName={fullName}
@@ -90,7 +53,7 @@ export default function FeedPage({
           />
         </main>
 
-        <aside className="hidden xl:sticky xl:top-20 xl:block xl:self-start">
+        <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
           <RightSidebar />
         </aside>
       </PageMargin>

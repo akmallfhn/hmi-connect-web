@@ -10,7 +10,7 @@ import {
 
 export default function ProfileLoading() {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header loading />
 
       <PageMargin noMobilePadding className="animate-pulse pb-6 lg:py-6">

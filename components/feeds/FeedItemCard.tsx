@@ -392,7 +392,7 @@ export default function FeedItemCard({
   }
 
   return (
-    <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       {repostedBy && (
         <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573] xl:text-[13px]">
           <Repeat2 className="size-3.5" />

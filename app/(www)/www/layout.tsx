@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { listMyAccessGrants } from "@/apis/access-grants";
 import { getSession } from "@/apis/session";
 import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
+import MainSiteDesktopShell from "@/components/navigations/MainSiteDesktopShell";
 import { manageGrants } from "@/lib/access";
 import { getAdminSiteOrigin, PROD_MAIN_SITE_URL } from "@/lib/constants";
 
@@ -68,7 +69,14 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
 
   return (
     <HeaderAdminAccessProvider value={adminAccess}>
-      {children}
+      <MainSiteDesktopShell
+        userId={user?.id}
+        fullName={user?.full_name}
+        avatar={user?.avatar}
+        username={user?.username}
+      >
+        {children}
+      </MainSiteDesktopShell>
     </HeaderAdminAccessProvider>
   );
 }
