@@ -37,15 +37,14 @@ export default function MembershipPage({
         userId={userId}
         username={username}
         verificationStatus={verificationStatus}
-        mobileBackTitle="E-KTA"
+        mobileBackTitle="E-Kartu Tanda Anggota"
       />
 
       <PageMargin className="py-6">
         <div className="hidden lg:block">
-          <h1 className="text-xl font-bold text-[#172033]">E-KTA</h1>
-          <p className="mt-1 text-sm text-[#5f6573]">
-            Kartu Tanda Anggota digital kamu di HMI Connect.
-          </p>
+          <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
+            E-Kartu Tanda Anggota
+          </h1>
         </div>
 
         {membership?.member_card ? (
@@ -59,17 +58,18 @@ export default function MembershipPage({
               branchName={membership.branch_name}
               chapterName={membership.chapter_name}
               isSubscribe={membership.is_subscribe}
-              subscriptionEndedAt={membership.subscription_ended_at}
             />
           </div>
         ) : (
           <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#dbe3ef] bg-white px-6 py-12 text-center">
             <ShieldAlert className="size-10 text-destructive" />
             <div>
-              <p className="font-semibold text-[#172033]">Belum Terverifikasi</p>
+              <p className="font-semibold text-[#172033]">
+                Belum Terverifikasi
+              </p>
               <p className="mt-1 max-w-sm text-sm text-[#5f6573]">
-                Verifikasi identitas kamu terlebih dahulu untuk mendapatkan Kartu Tanda
-                Anggota digital.
+                Verifikasi identitas kamu terlebih dahulu untuk mendapatkan
+                Kartu Tanda Anggota digital.
               </p>
             </div>
             <Link href="/verification">

@@ -9,6 +9,7 @@ import {
   IconListSearch,
   IconLogin,
   IconLogout,
+  IconMosque,
   IconPlus,
   IconSettings,
   IconSmartHome,
@@ -68,6 +69,13 @@ const NAV_ITEMS = [
     icon: IconArticle,
     matches: (pathname: string) =>
       pathname === "/news" || pathname.startsWith("/news/"),
+  },
+  {
+    label: "Al-Quran",
+    href: "/quran",
+    icon: IconMosque,
+    matches: (pathname: string) =>
+      pathname === "/quran" || pathname.startsWith("/quran/"),
   },
   {
     label: "E-KTA",
@@ -209,14 +217,14 @@ export default function MainSiteDesktopSidebar({
               type="button"
               onClick={toggle}
               aria-expanded={open}
-              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-[#424957] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-[#424957] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
             >
               <IconDots className="size-5" />
               More
             </button>
           )}
         >
-          <div className="py-1">
+          <div className="py-1 font-stack-sans-headline font-normal">
             <Link
               href="/settings"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
@@ -229,7 +237,7 @@ export default function MainSiteDesktopSidebar({
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <IconLogout className="size-4" />
                 {loggingOut ? "Keluar..." : "Keluar"}

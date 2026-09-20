@@ -1,4 +1,3 @@
-import { Users } from "lucide-react";
 import { listFollowRecommendations } from "@/apis/users";
 import FollowRecommendationRow from "./FollowRecommendationRow";
 

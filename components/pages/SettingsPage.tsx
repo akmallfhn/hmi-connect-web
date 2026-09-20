@@ -45,7 +45,7 @@ interface SettingsPageProps {
 // An organization is named outright; the other four read as "Cabang Depok".
 function formatEntityName(
   entityType: AccessEntityTypeEnum,
-  name?: string | null,
+  name?: string | null
 ) {
   if (!name) return ADMIN_ENTITY_LABEL[entityType];
   if (entityType === "organization") return name;
@@ -85,7 +85,7 @@ export default function SettingsPage({
         .sort(
           (a, b) =>
             ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-            ADMIN_ENTITY_ORDER.indexOf(b.entity_type),
+            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
         )
         .map((grant) => ({
           key: grant.id,
@@ -174,7 +174,7 @@ export default function SettingsPage({
       <PageMargin className="py-6">
         <div>
           <div className="hidden lg:mb-4 lg:block">
-            <h1 className="text-2xl font-bold text-[#172033]">
+            <h1 className="text-2xl font-medium font-stack-sans-headline text-[#172033]">
               Pengaturan &amp; Admin
             </h1>
           </div>

@@ -1,7 +1,7 @@
+import { listNewsArticles } from "@/apis/news";
+import { ChevronRight, Newspaper } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Newspaper, TrendingUp } from "lucide-react";
-import { listNewsArticles } from "@/apis/news";
 
 export default async function NewsCard() {
   const { list } = await listNewsArticles({ pageSize: 5 });

@@ -2,9 +2,9 @@ import PageMargin from "@/components/common/PageMargin";
 import Header from "@/components/navigations/Header";
 import BottomNav from "@/components/navigations/BottomNav";
 import {
-  CardSkeleton,
   ComposerSkeleton,
   FeedItemSkeleton,
+  HomeSidebarSkeleton,
 } from "@/components/states/Skeleton";
 
 export default function GatedHomeLoading() {
@@ -26,7 +26,7 @@ export default function GatedHomeLoading() {
         </main>
 
         <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-          <CardSkeleton />
+          <HomeSidebarSkeleton />
         </aside>
       </PageMargin>
 

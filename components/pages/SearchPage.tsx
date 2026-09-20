@@ -52,7 +52,7 @@ export default function SearchPage({
   const [postingPage, setPostingPage] = useState(1);
   const postingSentinelRef = useRef<HTMLDivElement>(null);
 
-  // Server sent fresh results for a new query (typed into Header's desktop box, a shared
+  // Server sends fresh results for a query submitted from Home, a shared
   // link, or back/forward) — reset local pagination state and the mobile input to match.
   const [seenQuery, setSeenQuery] = useState(initialQuery);
   if (initialQuery !== seenQuery) {

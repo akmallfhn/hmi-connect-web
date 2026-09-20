@@ -116,6 +116,19 @@ export default function NotificationsPage({
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
         <main className="min-w-0">
+          <div className="hidden items-center justify-between pb-5 lg:flex">
+            <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
+              Notifikasi
+            </h1>
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              disabled={unreadCount === 0}
+              className="cursor-pointer text-sm font-medium text-primary transition hover:text-primary-dark disabled:cursor-not-allowed disabled:text-[#9aa1ad]"
+            >
+              Tandai semua dibaca
+            </button>
+          </div>
           <div className="flex flex-col divide-y divide-[#e6e9ef] bg-white">
             {items.length === 0 && (
               <p className="px-5 py-10 text-center text-sm text-[#5f6573]">
@@ -124,7 +137,11 @@ export default function NotificationsPage({
             )}
 
             {items.map((item) => (
-              <NotificationRow key={item.id} notification={item} onRead={handleRead} />
+              <NotificationRow
+                key={item.id}
+                notification={item}
+                onRead={handleRead}
+              />
             ))}
 
             {(hasMore || loadingMore) && (

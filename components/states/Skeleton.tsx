@@ -21,7 +21,7 @@ export function CardSkeleton({
   titleWidth?: string;
 }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x">
       <Bar className={`h-3.5 ${titleWidth}`} />
       <div className="mt-3 flex flex-col gap-3">
         {Array.from({ length: rows }).map((_, index) => (
@@ -96,7 +96,7 @@ export function SectionCardSkeleton({
   rows?: number;
 }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
       <Bar className={`h-3.5 ${titleWidth}`} />
       <div className="mt-4 flex flex-col gap-4">
         {Array.from({ length: rows }).map((_, index) => (
@@ -115,7 +115,7 @@ export function SectionCardSkeleton({
 
 export function FeedItemSkeleton() {
   return (
-    <article className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <article className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-start gap-3">
         <Circle className="size-11" />
         <div className="flex flex-1 flex-col gap-2 pt-0.5">
@@ -143,7 +143,7 @@ export function FeedItemSkeleton() {
 
 export function ComposerSkeleton() {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x">
       <div className="flex items-center gap-3">
         <Circle className="size-11" />
         <div className="h-10 flex-1 rounded-full bg-[#e6e9ef]" />
@@ -194,7 +194,7 @@ export function ArticleRowSkeleton() {
 
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-[#eef1f5] lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-[#eef1f5] lg:rounded-2xl lg:border-x">
       <div className="h-28 bg-[#e6e9ef] sm:h-40" />
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
         <div className="flex items-start justify-between">
@@ -229,13 +229,40 @@ export function ActivityRowSkeleton() {
 
 export function ActivityListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
       <Bar className="h-3.5 w-24" />
       <div className="mt-3 flex flex-col gap-4">
         {Array.from({ length: rows }).map((_, index) => (
           <ActivityRowSkeleton key={index} />
         ))}
       </div>
+    </div>
+  );
+}
+
+export function HomeSidebarSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="h-10 rounded-xl border border-[#e6e9ef] bg-[#eef1f5]" />
+      <CardSkeleton rows={4} titleWidth="w-36" />
+      <CardSkeleton rows={3} titleWidth="w-24" />
+    </div>
+  );
+}
+
+export function NotificationListSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="flex flex-col divide-y divide-[#e6e9ef]">
+      {Array.from({ length: rows }).map((_, index) => (
+        <div key={index} className="flex gap-3 px-4 py-3">
+          <Circle className="size-9" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
+            <Bar className="h-3 w-11/12" />
+            <Bar className="h-3 w-3/4" />
+            <Bar className="h-2.5 w-16" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

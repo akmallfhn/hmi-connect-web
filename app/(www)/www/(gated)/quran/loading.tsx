@@ -6,26 +6,22 @@ import { Bar } from "@/components/states/Skeleton";
 export default function QuranLoading() {
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
-      <Header loading />
+      <Header loading mobileBackTitle="Al-Qur'an" />
 
-      <PageMargin className="lg:pb-10 lg:pt-6">
-        <div className="flex flex-col gap-3 lg:mx-auto lg:grid lg:max-w-[988px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
-          <div className="lg:sticky lg:top-20 lg:flex lg:flex-col lg:gap-4">
-            <div className="pt-4 lg:pt-0">
-              <div className="relative overflow-hidden rounded-2xl bg-[#eef1f5] p-5">
-                <div className="max-w-[60%] animate-pulse">
-                  <Bar className="h-5 w-full" />
-                  <Bar className="mt-2 h-5 w-4/5" />
-                  <Bar className="mt-3 h-3 w-full" />
-                </div>
-                <div className="absolute bottom-0 right-0 h-36 w-28 animate-pulse bg-[#e6e9ef]" />
-              </div>
+      <PageMargin className="pt-3 lg:pb-10 lg:pt-6">
+        <div className="flex flex-col gap-3 lg:gap-6">
+          <div className="relative overflow-hidden rounded-2xl bg-[#eef1f5] p-5 lg:flex lg:min-h-[120px] lg:items-center">
+            <div className="max-w-[60%] animate-pulse">
+              <Bar className="h-5 w-full lg:w-80" />
+              <Bar className="mt-2 h-5 w-4/5 lg:hidden" />
+              <Bar className="mt-3 hidden h-3 w-52 lg:block" />
             </div>
+            <div className="absolute bottom-0 right-0 h-32 w-40 animate-pulse bg-[#e6e9ef] lg:h-[213px] lg:w-[272px]" />
           </div>
 
           <div className="pb-6 lg:pb-0">
-            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6 animate-pulse">
-              <div className="h-11 w-full rounded-full bg-[#e6e9ef]" />
+            <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6 animate-pulse">
+              <div className="h-11 w-full flex-1 rounded-full bg-[#e6e9ef]" />
               <div className="flex gap-1 rounded-full bg-white p-1">
                 <Bar className="h-10 w-24 rounded-full bg-[#e6e9ef]" />
                 <Bar className="h-10 w-24 rounded-full bg-[#e6e9ef]" />
@@ -41,6 +37,7 @@ export default function QuranLoading() {
                       <Bar className="h-3.5 w-32" />
                       <Bar className="h-2.5 w-48" />
                     </div>
+                    <Bar className="hidden h-5 w-12 lg:block" />
                     <div className="size-7 shrink-0 rounded-full bg-[#e6e9ef]" />
                   </div>
                 ))}

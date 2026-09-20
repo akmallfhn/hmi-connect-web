@@ -1,20 +1,11 @@
-import { CheckCircle2, XCircle } from "lucide-react";
+import { IconCircleCheckFilled, IconCircleXFilled } from "@tabler/icons-react";
+import Label from "../common/Label";
 
 interface MembershipInfoCardProps {
   coordinatingBodyName?: string;
   branchName?: string;
   chapterName?: string;
   isSubscribe: boolean;
-  subscriptionEndedAt?: string;
-}
-
-function formatLongDate(value?: string) {
-  if (!value) return null;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
 }
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
@@ -35,13 +26,12 @@ export default function MembershipInfoCard({
   branchName,
   chapterName,
   isSubscribe,
-  subscriptionEndedAt,
 }: MembershipInfoCardProps) {
-  const validUntil = formatLongDate(subscriptionEndedAt);
-
   return (
-    <div className="w-full rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-[#172033]">Status Keanggotaan</p>
+    <div className="w-full rounded-2xl border border-[#e6e9ef] bg-white p-5">
+      <p className="font-stack-sans-headline text-base font-medium text-[#172033]">
+        Status Keanggotaan
+      </p>
 
       <div className="mt-4 flex flex-col gap-4">
         <InfoRow label="Badko" value={coordinatingBodyName} />
@@ -54,25 +44,21 @@ export default function MembershipInfoCard({
           Status Membership
         </p>
         {isSubscribe ? (
-          <>
-            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-              <CheckCircle2 className="size-3.5" />
-              Aktif
-            </span>
-            {validUntil && (
-              <p className="mt-2 text-sm text-[#5f6573]">
-                Berlaku sampai{" "}
-                <span className="font-semibold text-[#172033]">
-                  {validUntil}
-                </span>
-              </p>
-            )}
-          </>
+          <Label
+            variant="green"
+            icon={<IconCircleCheckFilled className="size-3.5" />}
+            className="mt-1.5"
+          >
+            Aktif
+          </Label>
         ) : (
-          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#f5f7fb] px-3 py-1 text-xs font-semibold text-[#5f6573]">
-            <XCircle className="size-3.5" />
+          <Label
+            variant="gray"
+            icon={<IconCircleXFilled className="size-3.5" />}
+            className="mt-1.5"
+          >
             Tidak Aktif
-          </span>
+          </Label>
         )}
       </div>
     </div>

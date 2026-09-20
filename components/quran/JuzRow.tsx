@@ -15,10 +15,10 @@ export default function JuzRow({ juz }: JuzRowProps) {
         {toArabicNumerals(juz.number)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#172033]">
+        <p className="font-stack-sans-headline truncate text-sm font-medium text-[#172033] lg:text-[15px]">
           Juz {juz.number}
         </p>
-        <p className="truncate text-xs text-[#5f6573]">
+        <p className="truncate text-xs text-[#5f6573] lg:text-[13px]">
           {readingMinutesLabel(juz.estimated_reading_seconds)}
         </p>
       </div>

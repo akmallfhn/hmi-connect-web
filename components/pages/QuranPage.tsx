@@ -41,6 +41,27 @@ function tabClassName(active: boolean): string {
   ].join(" ");
 }
 
+function QuranSearchInput({
+  query,
+  onChange,
+}: {
+  query: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="relative block">
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Cari surah atau juz..."
+        className="h-11 w-full rounded-full border border-[#dbe3ef] bg-white pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:ring-2 focus:ring-primary/15"
+      />
+    </label>
+  );
+}
+
 export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
   const [tab, setTab] = useState<QuranTab>("surah");
   const [query, setQuery] = useState("");
@@ -128,48 +149,37 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
         mobileBackTitle="Al-Qur'an"
       />
 
-      <PageMargin className="lg:pb-10 lg:pt-6">
-        <div className="flex flex-col gap-3 lg:mx-auto lg:grid lg:max-w-[988px] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
-          <div className="lg:sticky lg:top-20 lg:flex lg:flex-col lg:gap-4">
-            <div className="pt-4 lg:pt-0">
-              <div className="relative overflow-hidden rounded-2xl bg-[#013334] p-5 text-white lg:min-h-[300px]">
-                <div className="relative z-10 max-w-[60%]">
-                  <h1 className="text-xl font-bold leading-snug">
-                    Yuk, luangkan waktu membaca{" "}
-                    <span className="text-secondary">Al-Quran</span>
-                  </h1>
-                  <p className="mt-2 text-sm text-white/70">
-                    Jadikan Al-Quran sebagai penuntun hidup.
-                  </p>
-                </div>
-                <div className="pointer-events-none absolute bottom-0 right-0">
-                  <div className="relative inline-flex">
-                    <Image
-                      src={BANNER_ILLUSTRATION_URL}
-                      alt="Ilustrasi Al-Qur'an"
-                      width={1417}
-                      height={1110}
-                      className="block h-36 w-auto lg:h-44"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#013334]" />
-                  </div>
-                </div>
+      <PageMargin className="pt-3 lg:pb-10 lg:pt-6">
+        <div className="flex flex-col gap-3 lg:gap-6">
+          <div className="relative overflow-hidden rounded-2xl bg-[#013334] p-5 text-white lg:flex lg:min-h-[120px] lg:items-center">
+            <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
+              <h1 className="text-xl font-medium leading-snug">
+                Yuk, luangkan waktu membaca{" "}
+                <span className="text-secondary">Al-Quran</span>
+              </h1>
+              <p className="hidden mt-1 lg:flex text-base text-white/70">
+                Jadikan Al-Quran sebagai penuntun hidup.
+              </p>
+            </div>
+            <div className="pointer-events-none absolute bottom-0 right-0">
+              <div className="relative inline-flex">
+                <Image
+                  src={BANNER_ILLUSTRATION_URL}
+                  alt="Ilustrasi Al-Qur'an"
+                  width={1417}
+                  height={1110}
+                  className="block h-32 w-auto lg:w-[272px] lg:h-auto"
+                />
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#013334]" />
               </div>
             </div>
           </div>
 
           <div className={playingSurah ? "pb-24 lg:pb-0" : "pb-6 lg:pb-0"}>
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
-              <label className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#7b8190]" />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Cari surah atau juz..."
-                  className="h-11 w-full rounded-full border border-[#dbe3ef] bg-white pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-              </label>
+              <div className="flex-1">
+                <QuranSearchInput query={query} onChange={setQuery} />
+              </div>
 
               <div className="flex gap-1 rounded-full border border-[#e6e9ef] bg-white p-1">
                 <button
