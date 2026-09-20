@@ -2,14 +2,16 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import type { VerificationStatusEnum } from "@/lib/types";
 import MainSiteDesktopSidebar from "./MainSiteDesktopSidebar";
 
 interface MainSiteDesktopShellProps {
   children: ReactNode;
   userId?: string;
-  fullName?: string;
   avatar?: string;
   username?: string;
+  verificationStatus?: VerificationStatusEnum;
+  isAlumni?: boolean;
 }
 
 // Authentication and activation are intentionally distraction-free. Every other www
@@ -21,9 +23,10 @@ function hidesDesktopSidebar(pathname: string) {
 export default function MainSiteDesktopShell({
   children,
   userId,
-  fullName,
   avatar,
   username,
+  verificationStatus,
+  isAlumni,
 }: MainSiteDesktopShellProps) {
   const pathname = usePathname() ?? "";
   const hidden = hidesDesktopSidebar(pathname);
@@ -33,9 +36,10 @@ export default function MainSiteDesktopShell({
       {!hidden && (
         <MainSiteDesktopSidebar
           userId={userId}
-          fullName={fullName}
           avatar={avatar}
           username={username}
+          verificationStatus={verificationStatus}
+          isAlumni={isAlumni}
         />
       )}
       {children}

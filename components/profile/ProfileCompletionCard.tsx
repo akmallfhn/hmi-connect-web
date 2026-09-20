@@ -66,7 +66,7 @@ const STAGE_FORM: Record<ProfileCompletionStageEnum, string> = {
 };
 
 const TRACK_COLOR = "#e2f0ff";
-const BAR_COLOR = "#164ea6";
+const BAR_COLOR = "#ff5c53";
 const BAR_SIZE = 10;
 
 export default function ProfileCompletionCard({
@@ -93,9 +93,11 @@ export default function ProfileCompletionCard({
   }
 
   return (
-    <div className="border border-x-0 border-[#e2f0ff] bg-linear-to-br from-[#e2f0ff] to-35% to-white p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-[#e2f0ff] bg-linear-to-br from-secondary/20 to-35% to-white p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-bold text-[#172033]">Lengkapi Profil</h2>
+        <h2 className="text-base font-stack-sans-headline font-medium text-[#172033]">
+          Lengkapi Profil
+        </h2>
         <span className="shrink-0 text-sm font-medium text-[#5f6573]">
           {completed_stages}/{total_stages} Selesai
         </span>
