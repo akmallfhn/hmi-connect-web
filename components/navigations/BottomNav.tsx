@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  IconBrandHipchat,
+  IconPlus,
+  IconSearch,
+  IconSmartHome,
+  IconUserCircle,
+} from "@tabler/icons-react";
 import { COMPOSE_INTENT_KEY } from "@/lib/constants";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
-import ChatIcon from "../icons/ChatIcon";
-import HomeIcon from "../icons/HomeIcon";
-import PlusIcon from "../icons/PlusIcon";
-import ProfileIcon from "../icons/ProfileIcon";
-import SearchIcon from "../icons/SearchIcon";
 
 const PULSE_DURATION = 350;
 
@@ -85,7 +87,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         ].join(" ")}
       >
         <NavIconPulse pressed={homePressed}>
-          <HomeIcon variant={isHome ? "bulk" : "outline"} className="size-5" />
+          <IconSmartHome className="size-5" stroke={isHome ? 2.4 : 2} />
         </NavIconPulse>
         Beranda
       </Link>
@@ -99,7 +101,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         ].join(" ")}
       >
         <NavIconPulse pressed={searchPressed}>
-          <SearchIcon variant={isSearch ? "bulk" : "outline"} className="size-5" />
+          <IconSearch className="size-5" stroke={isSearch ? 2.4 : 2} />
         </NavIconPulse>
         Cari
       </Link>
@@ -110,7 +112,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
       >
         <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
-          <PlusIcon className="size-5" />
+          <IconPlus className="size-5" stroke={2.4} />
         </span>
         Posting
       </Link>
@@ -124,7 +126,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         ].join(" ")}
       >
         <NavIconPulse pressed={chatsPressed}>
-          <ChatIcon variant={isChats ? "bulk" : "outline"} className="size-5" />
+          <IconBrandHipchat className="size-5" stroke={isChats ? 2.4 : 2} />
           {unreadChatCount > 0 && (
             <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-secondary" />
           )}
@@ -141,7 +143,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         ].join(" ")}
       >
         <NavIconPulse pressed={profilePressed}>
-          <ProfileIcon variant={isProfile ? "bulk" : "outline"} className="size-5" />
+          <IconUserCircle className="size-5" stroke={isProfile ? 2.4 : 2} />
         </NavIconPulse>
         Profil
       </Link>

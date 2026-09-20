@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { IconBell } from "@tabler/icons-react";
 import Link from "next/link";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import Avatar from "../common/Avatar";
@@ -47,7 +47,7 @@ export default function MobileGreetingBar({
           aria-label="Notifikasi"
           className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/10"
         >
-          <Bell className="size-5" fill="#FFFFFF" />
+          <IconBell className="size-5" stroke={2} />
           {unreadCount > 0 && (
             <span className="absolute right-1.5 top-1.5 flex size-3.5 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-white ring-2 ring-primary">
               {unreadCount}
