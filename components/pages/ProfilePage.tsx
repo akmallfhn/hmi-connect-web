@@ -106,7 +106,7 @@ export default function ProfilePage({
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:py-6">
-        <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
+        <div className="grid grid-cols-1 gap-1.5 lg:items-start lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
           <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
             <ProfileHeader
               key={`${profile.userId}-${profile.isFollowedByMe}-${profile.followersCount}`}
@@ -180,14 +180,14 @@ export default function ProfilePage({
             />
           </div>
 
-          <aside className="hidden lg:sticky lg:top-20 lg:flex lg:flex-col lg:gap-4 lg:self-start">
+          <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">
             {profileCompletion && (
               <ProfileCompletionCard
                 completion={profileCompletion}
                 forms={completionForms}
               />
             )}
-            <SuggestedConnectionsCard title="Orang yang Mungkin Kamu Kenal" />
+            <SuggestedConnectionsCard />
           </aside>
         </div>
       </PageMargin>

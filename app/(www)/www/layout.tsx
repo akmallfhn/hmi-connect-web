@@ -71,9 +71,10 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
     <HeaderAdminAccessProvider value={adminAccess}>
       <MainSiteDesktopShell
         userId={user?.id}
-        fullName={user?.full_name}
         avatar={user?.avatar}
         username={user?.username}
+        verificationStatus={user?.verification_status}
+        isAlumni={user?.is_alumni}
       >
         {children}
       </MainSiteDesktopShell>

@@ -252,7 +252,7 @@ export default function CreateFeedForms({
 
   return (
     <>
-      <div className="-mt-16 mx-4 rounded-2xl border border-[#e6e9ef] bg-white p-4 shadow-sm lg:mx-0 lg:mt-0">
+      <div className="-mt-16 mx-4 rounded-2xl border border-[#e6e9ef] bg-white p-4 lg:mx-0 lg:mt-0">
         <div className="flex items-center gap-3">
           <div className="hidden lg:block">
             <ComposerAvatar

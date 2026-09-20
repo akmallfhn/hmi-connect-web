@@ -13,7 +13,7 @@ export default function PromoBanner() {
             <Sparkles className="size-5" />
           </div>
           <div>
-            <p className="font-bold">Lengkapi Profil Kaderisasi Kamu</p>
+            <p className="font-stack-sans-headline font-medium">Lengkapi Profil Kaderisasi Kamu</p>
             <p className="mt-0.5 max-w-md text-sm text-white/85">
               Tambahkan riwayat pendidikan dan pelatihanmu supaya makin gampang
               terhubung dengan sesama kader.

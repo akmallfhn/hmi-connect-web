@@ -10,8 +10,7 @@ export default async function NewsCard() {
 
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x">
-      <div className="flex items-center gap-2 text-sm font-semibold text-[#172033] xl:text-[15px]">
-        <TrendingUp className="size-4 text-primary" />
+      <div className="flex items-center gap-2 text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
         Kabar Trending
       </div>
 
