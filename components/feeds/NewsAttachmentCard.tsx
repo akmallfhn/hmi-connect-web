@@ -21,7 +21,7 @@ export default function NewsAttachmentCard({
     <>
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 p-4">
         <div className="min-w-0">
-          <p className="line-clamp-2 text-sm font-semibold leading-5 text-white sm:text-[15px]">
+          <p className="line-clamp-2 text-sm font-semibold font-stack-sans-headline leading-5 text-white sm:text-base">
             {attachment.reference_title ?? "Berita"}
           </p>
           {attachment.reference_description && (
@@ -71,7 +71,7 @@ export default function NewsAttachmentCard({
 
   if (!attachment.reference_url) {
     return (
-      <div className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428] shadow-sm">
+      <div className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428]">
         {body}
       </div>
     );
@@ -82,7 +82,7 @@ export default function NewsAttachmentCard({
       href={attachment.reference_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428] shadow-sm transition"
+      className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428] transition"
     >
       {body}
     </a>

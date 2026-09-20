@@ -359,7 +359,7 @@ export default function ActivationPage({
 
   if (!started) {
     return (
-      <main className="relative flex min-h-screen flex-col overflow-hidden bg-white lg:items-center lg:justify-center lg:bg-[#f7fbfa] lg:px-5 lg:py-12">
+      <main className="relative flex min-h-screen flex-col overflow-hidden bg-white lg:items-center lg:justify-center lg:px-5 lg:py-12">
         <div className="hidden lg:block">
           <DecorativeBackground />
         </div>
@@ -403,7 +403,7 @@ export default function ActivationPage({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:bg-[#f7fbfa] lg:px-5 lg:py-12">
+    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
       <div className="hidden lg:block">
         <DecorativeBackground />
       </div>

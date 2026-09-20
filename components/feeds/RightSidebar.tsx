@@ -3,7 +3,7 @@ import SuggestedConnectionsCard from "./SuggestedConnectionsCard";
 
 export default function RightSidebar() {
   return (
-    <div className="flex flex-col gap-1.5 lg:gap-4">
+    <div className="flex flex-col gap-1.5 lg:gap-6">
       {/* UpcomingEventsCard hidden for now — no backing endpoint yet */}
       <SuggestedConnectionsCard />
       <NewsCard />

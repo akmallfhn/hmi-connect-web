@@ -48,7 +48,7 @@ export default function AccessInvitationPage({
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-[#f5f7fb] px-5 py-12">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-white px-5 py-12">
       <section className="w-full max-w-md rounded-2xl border border-[#e6e9ef] bg-white p-6 text-center sm:p-8">
         <LogoHmiConnectHorizontal className="mx-auto h-8 w-auto" />
 

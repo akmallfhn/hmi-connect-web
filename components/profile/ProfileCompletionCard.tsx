@@ -93,7 +93,7 @@ export default function ProfileCompletionCard({
   }
 
   return (
-    <div className="border border-x-0 border-[#e2f0ff] bg-linear-to-br from-[#e2f0ff] to-35% to-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e2f0ff] bg-linear-to-br from-[#e2f0ff] to-35% to-white p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-bold text-[#172033]">Lengkapi Profil</h2>
         <span className="shrink-0 text-sm font-medium text-[#5f6573]">

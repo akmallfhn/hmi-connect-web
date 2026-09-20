@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
-import { getUserByUsername, listEducationHistories } from "@/apis/users";
+import { getUserByUsername } from "@/apis/users";
 import SettingsPage from "@/components/pages/SettingsPage";
 
 export const metadata: Metadata = {
@@ -14,15 +14,9 @@ export const metadata: Metadata = {
 
 export default async function Settings() {
   const { sessionToken, user } = await getSession();
-  // check-session carries no email/headline/counts, and the sidebar needs all of them.
-  const [profile, education] = await Promise.all([
-    user?.username
-      ? getUserByUsername(user.username, sessionToken)
-      : Promise.resolve(null),
-    user?.username
-      ? listEducationHistories(user.username)
-      : Promise.resolve({ list: [] }),
-  ]);
+  const profile = user?.username
+    ? await getUserByUsername(user.username, sessionToken)
+    : null;
 
   return (
     <SettingsPage
@@ -32,12 +26,7 @@ export default async function Settings() {
       userId={user?.id}
       username={user?.username}
       verificationStatus={user?.verification_status}
-      isAlumni={user?.is_alumni}
       hasPassword={user?.has_password}
-      headline={profile?.headline}
-      followingCount={profile?.following_count}
-      followersCount={profile?.followers_count}
-      educationHistories={education.list}
       createdAt={profile?.created_at}
       registrationNumber={profile?.registration_number}
       provinceName={profile?.province_name}

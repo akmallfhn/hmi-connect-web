@@ -145,7 +145,7 @@ export default function FeedTimeline({
 
       <div className="flex flex-col gap-1.5 lg:gap-4">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
+          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573]">
             Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
           </div>
         )}

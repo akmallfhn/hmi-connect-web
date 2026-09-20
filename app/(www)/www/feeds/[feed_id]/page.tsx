@@ -80,7 +80,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
   const hasViewer = Boolean(user?.id);
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={user?.full_name}
         avatar={user?.avatar}

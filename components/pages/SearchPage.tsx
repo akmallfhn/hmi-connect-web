@@ -3,12 +3,10 @@
 import { Search as SearchIconLucide } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { EducationHistoryEntry } from "@/apis/users";
 import type { SearchPersonResult, SearchPostingResult } from "@/apis/search";
 import { loadMoreSearchPeople, loadMoreSearchPostings } from "@/lib/actions";
 import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
-import ProfileSidebar from "../feeds/ProfileSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import SearchPersonRow from "../search/SearchPersonRow";
@@ -22,18 +20,6 @@ interface ViewerProps {
   verificationStatus?: VerificationStatusEnum;
 }
 
-interface ProfileSummary {
-  userId?: string;
-  fullName?: string;
-  avatar?: string;
-  headline?: string;
-  verificationStatus?: VerificationStatusEnum;
-  isAlumni?: boolean;
-  followingCount?: number;
-  followersCount?: number;
-  educationHistories: EducationHistoryEntry[];
-}
-
 interface SearchResult<T> {
   list: T[];
   hasMore: boolean;
@@ -44,7 +30,6 @@ interface SearchPageProps {
   initialQuery: string;
   initialPeople: SearchResult<SearchPersonResult>;
   initialPostings: SearchResult<SearchPostingResult>;
-  profile: ProfileSummary;
 }
 
 export default function SearchPage({
@@ -52,7 +37,6 @@ export default function SearchPage({
   initialQuery,
   initialPeople,
   initialPostings,
-  profile,
 }: SearchPageProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState(initialQuery);
@@ -142,7 +126,7 @@ export default function SearchPage({
   const hasKeyword = keyword.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-16 lg:pb-0">
+    <div className="min-h-screen bg-white pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -152,38 +136,21 @@ export default function SearchPage({
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-        <div className="mx-auto grid grid-cols-1 gap-1.5 lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)] lg:gap-4">
-          <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
-            <ProfileSidebar
-              userId={profile.userId}
-              fullName={profile.fullName}
-              avatar={profile.avatar}
-              headline={profile.headline}
-              username={viewer.username}
-              verificationStatus={profile.verificationStatus}
-              isAlumni={profile.isAlumni}
-              followingCount={profile.followingCount}
-              followersCount={profile.followersCount}
-              educationHistories={profile.educationHistories}
-            />
-          </aside>
-
-          <main className="min-w-0">
-            {/* Desktop typing lives in Header's navbar search box instead — see Header.tsx. */}
-            <div className="border border-x-0 border-[#e6e9ef] bg-white px-5 py-4 lg:hidden">
-              <label className="relative block">
-                <span className="sr-only">Cari</span>
-                <SearchIconLucide className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
-                <input
-                  type="search"
-                  value={keyword}
-                  onChange={(event) => setKeyword(event.target.value)}
-                  placeholder="Cari orang atau postingan..."
-                  autoFocus
-                  className="h-11 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
-                />
-              </label>
-            </div>
+        <main className="min-w-0">
+          <div className="border border-x-0 border-[#e6e9ef] bg-white px-5 py-4 lg:rounded-2xl lg:border-x lg:shadow-sm">
+            <label className="relative block">
+              <span className="sr-only">Cari</span>
+              <SearchIconLucide className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+              <input
+                type="search"
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="Cari orang atau postingan..."
+                autoFocus
+                className="h-11 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+              />
+            </label>
+          </div>
 
             {!hasKeyword ? (
               <div className="mt-1.5 border border-x-0 border-[#e6e9ef] bg-white lg:mt-0 lg:rounded-2xl lg:border-x lg:shadow-sm">
@@ -244,8 +211,7 @@ export default function SearchPage({
                 </section>
               </>
             )}
-          </main>
-        </div>
+        </main>
       </PageMargin>
 
       <BottomNav userId={viewer.userId} username={viewer.username} />

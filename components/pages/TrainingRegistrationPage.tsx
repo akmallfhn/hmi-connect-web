@@ -748,7 +748,7 @@ export default function TrainingRegistrationPage({
     <TrainingPageShell
       viewer={viewer}
       mobileBackTitle="Pendaftaran Training"
-      bgClassName="bg-[#f4f6f9]"
+      bgClassName="bg-white"
     >
       <main>
         <PageMargin className="py-4 lg:py-8">
