@@ -14,10 +14,23 @@ fix the rule, not just the code.
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
   `@react-email/components` (installed, but unused — every transactional email is sent by the Go
-  backend, see Transactional email below).
+  backend, see Transactional email below), `sanitize-html` (server-side only, and used by exactly
+  one module — `lib/article-body.ts`, which scrubs user-authored article body HTML before it is
+  rendered; see `/articles/[article_slug]/[article_id]` below).
+- **Two icon sets, split by surface.** `lucide-react` stays the default everywhere — admin,
+  forms, cards, labels, page chrome. `@tabler/icons-react` is used only by the main site's own
+  navigation and the few main-site widgets that sit beside it: `MainSiteDesktopSidebar`,
+  `BottomNav`, `MobileGreetingBar`'s bell, `ExploreSearchBar`, and `MembershipInfoCard`'s
+  status pill. Tabler's `stroke` prop is what carries the active state there (`2.4` active,
+  `2` idle), which is why those five don't use lucide. Don't reach for Tabler outside main-site
+  nav; don't reach for lucide inside it.
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
-  Stack Sans Headline is exposed as `font-stack-sans-headline` and reserved for admin
-  page titles plus all admin sidebar chrome (including scoped entity names in `EntitySidebar`).
+  Stack Sans Headline is exposed as `font-stack-sans-headline`. On the **admin** side it is
+  reserved for page titles plus all sidebar chrome (including scoped entity names in
+  `EntitySidebar`). On the **main site** it now also carries the desktop sidebar's nav labels,
+  every page `<h1>`, and each sidebar/feed card's own heading row (`NewsCard`,
+  `SuggestedConnectionsCard`, `ProfileCompletionCard`, `MembershipInfoCard`, `PromoBanner`,
+  `SurahRow`/`JuzRow` titles) — those headings are `font-medium`, not `font-bold`.
   Every admin page title renders via
   `components/common/AdminPageTitle.tsx`, which owns the semantic `<h1>`, optional
   `description` paragraph (also Stack Sans Headline), shared font/color/weight/spacing, and its
@@ -305,7 +318,14 @@ the SK and Konfercab routes are currently hidden from the Cabang sidebar.
 Three layers, each with one job. Don't blend them.
 
 1. **`apis/*.ts`** — the data-access layer, one file per backend resource
-   (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `coordinating-chapters.ts`,
+   (`institutions.ts`, `coordinating-bodies.ts`, `branches.ts`, `coordinating-chapters.ts`
+   (its CRUD plus `addChapterToCoordinatingChapter`/`removeChapterFromCoordinatingChapter`,
+   wrapping `coordinating-chapters/add-chapter`/`remove-chapter` — the Korkom↔Komisariat link
+   is **owned by the Korkom side**, not by `chapters/update`, and the backend authorizes both
+   against the **branch** the two share rather than against either child. Both return the
+   affected `ChapterDetail`, not the Korkom. Removing only ungroups the Komisariat, which stays
+   registered under its Cabang; a Komisariat already linked to another Korkom is refused with
+   `already belongs to a coordinating chapter`, since a Komisariat belongs to at most one),
    `chapters.ts`, `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
    not independent resources), `organizations.ts` (`organizations/detail`+`organizations/update`
@@ -315,6 +335,17 @@ Three layers, each with one job. Don't blend them.
    `auth.ts` (the rest of the `auth/*` resource — email/username login plus the whole
    password add/change/forget/reset flow, see Auth & session flow above; `session.ts` keeps
    `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
+   `articles.ts` (the **editorial** `articles/*` + `article-categories/list` resource — entirely
+   separate from `news.ts`, which wraps the third-party aggregator tables; don't conflate them.
+   `listArticles`/`getArticleDetail`/`listArticleCategories`, all reading through the server-only
+   `CLIENT_SECRET` with the session cookie as a fallback (the same `getArticleReadToken` shape
+   `trainings.ts` uses) so a logged-out visitor can read one. `articles/detail` answers 404 for a
+   missing, soft-deleted, **or merely unpublished** article alike, and all three surface here as
+   `null` — there is no way to tell them apart, and a draft must not be distinguishable from a
+   nonexistent id. `ArticleDetail.body_content` is an ordered `ArticleBodyBlock[]`, each block
+   carrying an optional `sub_heading`, an optional `image_path`/`image_desc` pair, and `content`
+   holding raw **HTML** — see the security note under `/articles/[article_slug]/[article_id]`
+   below before rendering it),
    `news.ts` (categories + articles, including `getNewsArticleDetail` — `news-articles/detail`
    is the one read `list` can't serve, resolving a single article by id; a soft-deleted
    article answers 404, while a feed attachment pointing at one renders as removed from the
@@ -630,33 +661,48 @@ iconSm`.
   checkbox. Its `can_manage_*` scope toggle chips on the admin user detail page were removed when
   `access_grants` replaced those booleans — granting now names an entity, so it lives on each
   entity's own Pengaturan → Akses tab instead (see `EntityAccessTab` below).
-- `components/navigations/*` — site chrome shown on every page: `Header.tsx` and
-  `BottomNav.tsx` (`lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil).
-  `Header`'s logo/search/bell/avatar row is `lg:`-only — `BottomNav` already covers Beranda/
-  Cari/Pesan/Profil on mobile, so that full row would just be redundant chrome there. Desktop's
-  row also carries a plain `lucide-react` `MessageCircleMore` link to `/chats` immediately to
-  the left of the bell — deliberately a lucide glyph like every other icon in that row (Bell,
-  ChevronDown, Search, ...), not the custom bulk/outline `ChatIcon` (that one's reserved for
-  `BottomNav`, see below), and it doesn't swap look based on the active route either, matching
-  how the bell/avatar triggers next to it also don't. **The avatar dropdown carries no admin
-  scope at all** — it is a short, fixed list (Profil Saya / E-KTA / `Pengaturan dan Admin` /
-  Keluar) and `Header` no longer reads `HeaderAdminAccessContext`. It used to render a `Kelola`
-  section with one block per grant (entity logo, name, and a `Dashboard` + `Official Account`
-  button pair) plus a `Dashboard Super Admin` item; all of that now lives on `/settings`, which
-  `Pengaturan dan Admin` points at — the label says so, rather than hiding an admin surface behind
-  a generic "Pengaturan". Don't reintroduce the section here: a dropdown panel is the wrong place
-  for a list that grows with however many entities someone administers, which is why it needed a
-  `w-80` panel to fit two buttons side by side in the first place.
+- `components/navigations/*` — site chrome shown on every page. **The main site's desktop
+  navigation is a fixed left rail, not a top navbar.** `MainSiteDesktopSidebar.tsx` is that rail
+  (`fixed inset-y-0 left-0 w-64`, `hidden lg:flex`): the horizontal wordmark linking home, then
+  seven nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
+  News `/news`, Al-Quran `/quran`, E-KTA `/membership`), then a Profile row, a secondary-variant
+  "Create" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
+  Labels are English here, unlike the Indonesian copy everywhere else in the app, and are set in
+  `font-stack-sans-headline`. Each item carries its own `matches(pathname)` predicate rather than a
+  shared `startsWith` rule, since Home must match exactly while Chat/News/Quran must also match
+  their detail routes. The active item is `bg-primary-soft text-primary` with a heavier Tabler
+  `stroke`. Chat and Notifications each carry their own unread badge, from
+  `hooks/useUnreadChatCount.ts` and `hooks/useNotificationsBell.ts` — the Notifications entry is a
+  plain `Link`, **not** a dropdown, so `useNotificationsBell`'s `handleRead`/`handleMarkAllRead`
+  half now goes unused by both of its callers and `components/notifications/
+NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
+  only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
+  they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
+  `/auth/login` when logged out. Its "Create" button rides the same compose-intent mechanism
+  `BottomNav`'s "Posting" does (see below), and its Keluar calls `logoutUser` then hard-navigates,
+  the same reason `SettingsPage`'s own row does.
+  `MainSiteDesktopShell.tsx` is the thin client wrapper `app/(www)/www/layout.tsx` puts around
+  every `(www)` route: it renders the rail and pads the content with `lg:pl-64`, except on the
+  distraction-free routes its own `hidesDesktopSidebar` lists (`/activation`, `/auth/*`,
+  `/reset-password/*`). Being mounted at the layout means the rail survives navigation instead of
+  remounting per page, and means public routes (`/profile/[username]`, `/feeds/[feed_id]`,
+  `/trainings`) get it too. It reads identity straight off the layout's own `getSession()`, so no
+  page passes nav props down.
+  **`Header.tsx` no longer renders any desktop row.** Its logo, centered search form, chat link,
+  bell dropdown, and avatar dropdown all moved into the rail above; what's left is a `sticky top-0`
+  stack of optional strips: the "belum diverifikasi"/"sedang ditinjau admin" banners, the
+  `lg:`-only `desktopFilterBar`, and the `lg:hidden` `mobileBackTitle`/`mobileMenu` row. The
+  `<header>` itself now paints no border or background of its own — with no desktop row left to
+  frame, those would just be a stray strip. It still accepts `fullName`/`avatar`/`email`/`username`/
+  `loading`, but only `userId` and `verificationStatus` are actually read; the rest are kept so the
+  dozens of existing callsites didn't all have to change at once. Don't add new chrome to `Header`
+  that belongs in the rail.
   `HeaderAdminAccessContext` and the `listMyAccessGrants` logo backfill in
   `app/(www)/www/layout.tsx` stay, since `SettingsPage` reads them — note that leaves a sitewide
   per-page-load fetch serving exactly one route, so if anything else moves, move that fetch into
-  the settings route instead. The
-  "belum diverifikasi"/"sedang ditinjau admin" banners are siblings of that row (not nested
-  inside it), so one still shows on mobile whenever `verificationStatus` is `"unverified"` or
-  `"pending"`. The outer `<header>`'s own
-  `border-b`/`bg-white/90`/`backdrop-blur` are pushed behind `lg:` too — without that,
-  they'd render as a bare 1px border strip on mobile on pages with no banner, since the row
-  being `hidden` doesn't stop the header element itself from painting its own border/background.
+  the settings route instead. **The rail carries no admin scope at all**, for the same reason the
+  old avatar dropdown didn't: a list that grows with however many entities someone administers
+  belongs on `/settings`, which is where "Settings" under More points.
   There is deliberately no mobile notification affordance in `Header` itself — the bell only
   shows up on mobile inside `MobileGreetingBar` (see below), so it doesn't need a second,
   sitewide top-right-corner bar competing for space on every page. `Header` also takes three optional props for pages reached by drilling in rather than
@@ -669,35 +715,33 @@ iconSm`.
   rather than as separately `sticky`-positioned siblings — a second independently-sticky
   element needs to know `Header`'s real rendered height to offset against, and that height
   is dynamic (0, banner-only, or more), so a hardcoded offset silently leaves a gap once you
-  scroll. Being one sticky block sidesteps that entirely. Beranda (`/`) is always a real link. Cari, Pesan, and Profil
+  scroll. Being one sticky block sidesteps that entirely.
+  `BottomNav.tsx` is the `lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil. It stays
+  mobile-only; the rail above covers desktop, so the two never render together.
+  Beranda (`/`) is always a real link. Cari, Pesan, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
   `/search`, Pesan to `/chats`, Profil to `/profile/[username]`. The middle
-  slot is a "Posting" button (`PlusIcon`, always the raised filled-circle style, no
-  outline/bulk swap) instead of a plain link — see the compose-intent paragraph below.
-  Home/Cari/Pesan/Profil use the matching icon component from `components/icons/`
-  (`HomeIcon`/`SearchIcon`/`ChatIcon`/`ProfileIcon`, `PlusIcon` for the middle
-  button) instead of raw `lucide-react` icons — each has an `outline` variant (default,
-  `currentColor`, so the existing `text-primary`/`text-[#5f6573]` classes still drive its
-  color) and a `bulk` variant (two-tone: dominant shape in `var(--primary)`, accent shape
-  in `color-mix(in srgb, var(--secondary-foreground) 40%, white)` — lightened further
-  toward white rather than the vivid `--secondary`, and green stays dominant rather than
-  orange since orange competing with the tab label's own `text-primary` read as two big
-  color blocks fighting each other; `ChatIcon`'s source asset originally baked a fade
-  (`opacity="0.4"`) onto the big bubble shape, but that's dropped in this codebase's version —
-  the bulk variant renders the bubble in solid, full-opacity `primaryColor` like every other
-  icon's dominant shape, so the active Pesan tab reads as clearly "on" rather than washed out;
-  only the three "typing dots" use `secondaryColor`). `BottomNav` swaps a tab to `bulk` when that tab's
-  route is the current page (Pesan matches both `/chats` and any `/chats/[conversation_id]`).
-  Profil always renders `ProfileIcon`, never the caller's actual
+  slot is a "Posting" button (always the raised filled-circle style) instead of a plain link —
+  see the compose-intent paragraph below.
+  All five tabs now use `@tabler/icons-react` glyphs
+  (`IconSmartHome`/`IconSearch`/`IconPlus`/`IconBrandHipchat`/`IconUserCircle`), with the active
+  tab marked by a heavier `stroke` (`2.4` vs `2`) rather than by a separate icon variant — the
+  same treatment `MainSiteDesktopSidebar` uses, so one nav idea is expressed one way.
+  This replaced the custom `components/icons/{Home,Search,Chat,Profile,Plus,Notification}Icon.tsx`
+  set and its two-tone `outline`/`bulk` variants; **those six files still exist but have no callers
+  left** — delete them or bring them back deliberately, don't assume they're live. (The four
+  colorful `MobileQuickMenu` illustrations in the same folder — `NewsIcon`/`EKTAIcon`/`EventIcon`/
+  `AlQuranIcon` — are unaffected and still in use.) Pesan matches both `/chats` and any
+  `/chats/[conversation_id]`. Profil always renders the generic glyph, never the caller's actual
   avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only `username`,
   for the active-route check and the `/profile/[username]` href, and `userId`, which now
   keys `hooks/useUnreadChatCount.ts` for the Pesan tab's badge rather than the old
   notifications realtime subscription the Notifikasi tab used to need before it became
-  Pesan). The Pesan tab shows a small unread dot (no count, unlike `Header`'s bell — there's
+  Pesan). The Pesan tab shows a small unread dot (no count — there's
   no room for a number next to a 20px icon) driven by that hook — see the
   `components/chats/*` entry below for the real backend/realtime this reads from.
-  Since real `:active` is too short-lived on a tap to render its transition, both the
-  pill highlight behind each icon and the icon's own bulk/outline swap are driven by a
+  Since real `:active` is too short-lived on a tap to render its transition, the
+  pill highlight behind each icon is driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
   than a CSS pseudo-class — see that file before changing the tap-feedback timing/size.
   Clicking "Posting" from any page sets `sessionStorage[COMPOSE_INTENT_KEY]` (see
@@ -717,18 +761,21 @@ iconSm`.
   because the composer asked for one. Since the button
   sits inside `NewsArticleCard`'s own outer `<a>` (the whole card links out to
   `article.source_url`), its `onClick` calls `preventDefault`/`stopPropagation` so it doesn't
-  also trigger that outer link's navigation. `Header`'s bell is real-API-backed — it's a Client Component (unlike the rest of the
+  also trigger that outer link's navigation. The unread-notification badge is real-API-backed — it
+  lives in Client Components (unlike the rest of the
   server-first pages) since it's shared by every route without a common data-fetching
-  ancestor. Both it and `MobileGreetingBar`'s own bell (see below) share
+  ancestor. Its two callers — `MainSiteDesktopSidebar`'s Notifications item and
+  `MobileGreetingBar`'s bell — share
   `hooks/useNotificationsBell.ts` — a small hook (same idea as `useReaction`, just for the
   bell instead of reactions) that fetches the list via the `listNotifications` Server Action
   on mount (`apis/notifications.ts#listNotifications`, `notifications/list`,
   session-cookie-scoped like `feeds.ts`), exposes the unread count, and wires up
-  `handleRead`/`handleMarkAllRead` — so neither caller re-implements that fetch/mark-as-read
-  logic on its own. The dropdown itself renders via the shared
-  `components/notifications/NotificationsDropdownPanel.tsx`, capped to the 5 most recent
-  (its own internal `DROPDOWN_LIMIT`) plus a "Lihat semua notifikasi" link to
-  `/notifications` for the rest. Both bells stay
+  `handleRead`/`handleMarkAllRead`. **Both callers read only `unreadCount` now**, since neither
+  renders a list — the `handleRead`/`handleMarkAllRead` half and
+  `components/notifications/NotificationsDropdownPanel.tsx` (5 most recent via its own
+  `DROPDOWN_LIMIT`, plus a "Lihat semua notifikasi" link) are both left without a caller by the
+  desktop-rail redesign. Keep them only if a dropdown is coming back; otherwise the full
+  `/notifications` page is the one place notifications are listed. Both badges stay
   live via `hooks/useNotificationsRealtime.ts`, which subscribes to the Supabase Realtime
   Broadcast channel `notifications:<userId>` — the backend's `notifications` table (this is
   the one exception to "no direct DB usage," see Stack above: the Go backend's Postgres
@@ -744,11 +791,15 @@ iconSm`.
   entity_type/entity_id/read_at/created_at), not the enriched actor/entity fields
   `notifications/list` returns, so the hook is a "something changed, refetch" signal —
   both callers respond by re-running `listNotifications(1)` rather than reading the payload
-  directly. `NotificationRow.tsx` (`components/notifications/`) is
-  shared between that dropdown and the full `/notifications` page
+  directly. `NotificationRow.tsx` (`components/notifications/`) renders each row on the full
+  `/notifications` page
   (`components/pages/NotificationsPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
   shape as `FeedTimeline`/`ProfileActivitiesPage`, backed by the `loadMoreNotifications`
-  Server Action) — clicking an unread row (or "Tandai semua dibaca") calls the
+  Server Action; it takes only `viewer` plus the initial page now — its `ProfileSidebar` aside and
+  the `profile` prop feeding it are gone, and the page is a single plain-white column under a
+  `font-stack-sans-headline` "Notifikasi" title, with "Tandai semua dibaca" rendered always and
+  `disabled` at zero unread rather than conditionally mounted) — clicking an unread row (or
+  "Tandai semua dibaca") calls the
   `markNotificationsAsRead` Server Action (`notifications/mark-as-read`) and updates local
   state optimistically, no rollback since the backend call is fire-and-forget for this one.
   A row only renders as a `Link` when `feed_id` is present (→ `/feeds/[feed_id]`, resolved
@@ -856,7 +907,10 @@ iconSm`.
   pattern `Dropdown.tsx` already uses — and a real image attachment upload straight to the
   public `hmi-connect` bucket's `chat_media/` folder, same direct-to-storage convention as
   `feed_media` — unlike a mock feature, a real message needs a real, shareable URL, not a
-  same-tab-only blob URL). The composer's send button is
+  same-tab-only blob URL. That image runs through `lib/compress-image.ts` at
+  `{maxDimension: 1600, targetBytes: 500KB}` on send rather than on pick, so the preview appears
+  instantly; there is deliberately no raw pre-compression size cap any more — see the
+  `compress-image` note under `CreateFeedForms` below). The composer's send button is
   always the same button, just `disabled` while there's nothing to send or a send is in
   flight — there's no separate quick-heart button (that was the reaction feature, disabled).
   `MessageBubble.tsx` caps each bubble at `w-fit max-w-[min(75%,480px)]` (a percentage that
@@ -917,24 +971,41 @@ iconSm`.
   scroll container — an auto-loading sentinel there would fire while the user is just
   scrolling past it to reach postings. "Postingan" gets the usual
   infinite-scroll-via-`IntersectionObserver` treatment since it's the last thing on the
-  page. `q` is the only thing that's URL state (`?q=...`). `SearchPage` itself only renders
-  its own keyword input on mobile (`lg:hidden`, debounces 400ms into a `router.replace` to
-  `/search?q=...`) — on desktop, typing lives entirely in `Header`'s navbar search box
-  (`hidden lg:flex`) instead, so there's no duplicate input competing for the same state.
-  That box is a real `<form>` submitted by its magnifying-glass button or Enter — no
-  debounce there, it only navigates (`router.push`, from any page, not just `/search`) on
-  explicit submit. Since a debounced mobile `router.replace` would otherwise remount the
+  page. `q` is the only thing that's URL state (`?q=...`). `SearchPage` now renders **one**
+  keyword input at every breakpoint (debounced 400ms into a `router.replace` to `/search?q=...`),
+  since `Header`'s desktop navbar search box is gone with the rest of that row. The other way in
+  is `components/feeds/ExploreSearchBar.tsx`, which sits at the top of the home feed's right
+  sidebar: a real `<form>` on the shared `Input` primitive that only navigates
+  (`router.push("/search?q=")`) on explicit submit, no debounce. Since a debounced
+  `router.replace` would otherwise remount the
   input and drop focus mid-keystroke, `SearchPage` isn't remounted via `key` — instead it
   compares the incoming `initialQuery` prop against a locally-tracked `seenQuery` state
   during render (the "adjust state during render" pattern, not a `useEffect`, since this
   project's `eslint-plugin-react-hooks` flags `setState` inside an effect body) to reset
-  pagination state (and resync the mobile input's own value) only when the server actually
-  returns results for a new query — covers both someone searching from the desktop box and
+  pagination state (and resync the input's own value) only when the server actually
+  returns results for a new query — covers both someone arriving from `ExploreSearchBar` and
   back/forward navigation. `SearchPersonRow`/`SearchPostingRow` (`components/search/`) render the two
   result types; `SearchPersonRow` has no follow button (unlike `FollowRecommendationRow`)
-  since `search/list`'s people result doesn't include `is_followed_by_me`. Desktop also gets
-  the `ProfileSidebar` in an `aside`, same two-column shape as `/notifications`.
+  since `search/list`'s people result doesn't include `is_followed_by_me`. It is a single
+  centered column at every breakpoint now — the `ProfileSidebar` aside and the `profile` prop
+  feeding it are gone, along with the route's own `getUserByUsername`/`listEducationHistories`
+  fetches.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
+  `FeedPage.tsx` is a **two-column** grid now (`lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]`):
+  the timeline, then `RightSidebar` as the only aside. The old left column — `ProfileSidebar`
+  above `DesktopSidebarMenu`, with `RightSidebar` tucked under it below `xl:` — is gone, and
+  `DesktopSidebarMenu.tsx` was **deleted**: `MainSiteDesktopSidebar` now owns desktop navigation,
+  so an in-page icon list duplicating News/E-KTA/Al-Qur'an/Latihan Kader was the same nav twice.
+  `MobileQuickMenu` survives untouched, since mobile has no rail. `FeedPage` correspondingly
+  takes only `fullName`/`avatar`/`userId`/`username`/`verificationStatus`, and the home route no
+  longer fetches the profile or education histories at all.
+  The whole main site also moved off the `#f5f7fb` page tint to a plain white `min-h-screen`
+  background, and every card in it dropped its `lg:shadow-sm` — the rail's own `border-r` and each
+  card's `border` carry the separation now, so a new card should not reintroduce a shadow.
+  Home lives in its own `(home)` route group (`app/(www)/www/(gated)/(home)/`) purely so its
+  `loading.tsx` — a full composer + six `FeedItemSkeleton`s + `HomeSidebarSkeleton` in the real
+  two-column grid — is scoped to `/` instead of flashing a feed skeleton over every gated route
+  the way a `(gated)/loading.tsx` did.
   `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
   header, prepends a new feed via `handleFeedCreated` (passed to both `CreateFeedForms`'s
@@ -943,7 +1014,9 @@ iconSm`.
   state when `FeedItemCard`'s `onDeleted` fires. A feed can be posted **as an entity** — `feeds/create` takes
   `author_entity_type`/`author_entity_id`, and every feed item then carries
   `author_entity_name`/`author_entity_image_url` resolved live (`null` on a personal feed;
-  `creator_*` still names the human who pressed post, always). `lib/feed-author.ts#resolveFeedAuthor`
+  `creator_*` still names the human who pressed post, always — the four `author_entity_*` fields are
+  typed **required-and-nullable**, not optional, since the backend always sends the keys).
+  `lib/feed-author.ts#resolveFeedAuthor`
   is the single place that decides which of the two a feed renders under, so `FeedItemCard`,
   `QuotedFeed`, `ActivityEntryCard`, `SearchPostingRow`, and `/feeds/[feed_id]`'s own metadata never
   branch on it themselves: it takes a `FeedAuthorSource` (the author-bearing subset of `Feed`, which
@@ -967,6 +1040,22 @@ iconSm`.
   blue `Official Account` `Label` pill beside the name anywhere: the badge already says it, and an
   earlier revision that rendered both read as the same claim made twice. `isEntity` therefore only
   drives the avatar treatment now, not a pill — don't reintroduce one.
+  **Speaking as an entity is not limited to posting.** `feeds/comments/create`,
+  `feeds/comments/replies/create`, `feeds/repost`, `feeds/unrepost`, `reactions/send`, and
+  `reactions/unsend` all take the same optional `author_entity_type`/`author_entity_id` pair, and
+  every comment, reply, and reactor row comes back carrying the four resolved `author_entity_*`
+  fields alongside its human `user_id`/`username` (which stays as audit trail, never as the rendered
+  author). `apis/feeds.ts#EntityAuthor` (`{type, id}`) is the one shape every such call takes;
+  `lib/actions.ts` threads it through as a trailing optional argument on each wrapper, and omitting
+  it is what keeps an action personal. `lib/feed-author.ts` splits into three: `resolveEntityAuthor`
+  (the entity half alone, returning `null` for a personal actor — used directly by
+  `ReactorsListModal`), `resolveFeedAuthor`, and `resolveCommentAuthor`, the last two being that
+  helper plus their own personal fallback. A comment/reply/reactor response may carry the entity
+  **ids** without the resolved name yet, so `resolveEntityAuthor` falls back to the literal
+  `"Akun resmi"` rather than to the administrator's own name — showing the human there would be a
+  factual misattribution, which an unresolved label is not. A reactor row renders no `@username`
+  line when it resolved to an entity, and its React key mixes in the entity pair, since one person
+  may react to the same target both personally and as each entity they administer.
   A quote repost whose original was deleted comes back as `repost_of_id` set with `repost_of` null;
   both `FeedItemCard` and `ActivityEntryCard` render "Postingan yang dibagikan sudah dihapus" there
   rather than silently dropping the quote, since the quote repost keeps its own words either way.
@@ -978,19 +1067,41 @@ iconSm`.
   content and its one attachment slot (photo grid, video,
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
-  `TrainingAttachmentCard.tsx` for the two linked types) plus
+  `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
   reactions/comments/repost/share actions. `feeds/*` answers with `attachments`, an array
   whose items differ by `type`: `photo`/`video`/`url` carry only `reference_url` (and
-  `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training` carry a
-  `reference_id` plus that record's display fields resolved server-side. Every field a type
+  `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training`/`article` carry a
+  target id plus that record's display fields resolved server-side. Every field a type
   owns is always present (`null` when empty) and no field of another type ever appears — so
-  narrow on `type` (the `FeedUploadAttachment`/`FeedNewsAttachment`/`FeedTrainingAttachment`
-  union in `apis/feeds.ts`), never read across shapes. A `training` deliberately has no
-  `reference_url`: its card is an in-app `<Link>` to `/trainings/{reference_id}`, while a news
-  card opens out to the outlet's own `reference_url`. News articles and trainings are
+  narrow on `type` (the `FeedUploadAttachment`/`FeedNewsAttachment`/`FeedTrainingAttachment`/
+  `FeedArticleAttachment` union in `apis/feeds.ts`), never read across shapes. **`article` is the
+  one type whose target id is `article_id`, not `reference_id`** — that asymmetry is the
+  backend's (see `docs/api/feed.md` in the `ordina` repo), so mirror it rather than renaming the
+  field on this side; `feeds/create` likewise takes `article_id` for an `article` and 400s if
+  `urls` or `reference_id` comes along with it. A `training` and an `article` deliberately have no
+  `reference_url`: their cards are in-app `<Link>`s to `/trainings/{reference_id}` and
+  `/articles/{reference_slug_url}/{article_id}`, while a news
+  card opens out to the outlet's own `reference_url`. An `article`'s
+  `reference_slug_url` fills the decorative first segment of that route and falls back to the
+  literal `"artikel"` when absent — the id is what resolves, since `articles/detail` keys on `id`
+  alone. News articles, trainings, and editorial
+  articles are all
   soft-deleted, so a removed target still resolves and arrives with `reference_is_deleted`
-  true — both cards render a muted "sudah dihapus" strip rather than dropping the attachment,
-  the same reasoning `DeletedQuotedFeed` follows.
+  true — all three cards render a muted "sudah dihapus" strip rather than dropping the attachment,
+  the same reasoning `DeletedQuotedFeed` follows. `ArticleAttachmentCard` is deliberately the
+  large image-led card (16/9 cover above a dark `#202428` band carrying the author avatar +
+  byline, the `font-stack-sans-headline` title, and the description) rather than the compact
+  horizontal strip `NewsAttachmentCard` uses: an editorial article is first-party long-form
+  content, a news item is an external link-out, and the two shouldn't read as the same thing.
+  (`NewsAttachmentCard` itself was reworked into that dark strip — `bg-[#202428]`, title and
+  source on the left, the cover bled into the right ~38% behind a left-to-right gradient that
+  fades it into the card, so the photo reads as texture rather than as a competing thumbnail; it
+  no longer has a hover tint.) `ArticleAttachmentCard`'s
+  byline falls back from `reference_author_name` to `reference_category_name`, since an article
+  can be published without an author. Nothing produces an `article`
+  attachment on this side yet: `CreateFeedForms` still only makes `photo`/`video`/`url`/
+  `news`, so these cards only render for feeds created elsewhere — but the destination route is
+  real, see `/articles/[article_slug]/[article_id]` below.
   The Repeat2 button is itself a `Dropdown` (not a direct toggle) with two entries: "Repost"
   (the plain toggleable repost, disabled for your own feed — unchanged `feeds/repost`/
   `feeds/unrepost` behavior, `text-secondary` while active) and "Quote Repost" (opens
@@ -1007,22 +1118,31 @@ iconSm`.
   recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
   (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
-  is expanded. `ProfileSidebar.tsx` (rendered by `FeedPage.tsx`, the gated home page's
-  Client Component) is real-API-backed: identity, `headline`, verified badge,
+  is expanded. `ProfileSidebar.tsx` is real-API-backed: identity, `headline`, verified badge,
   `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
   `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
   most-recent end year / highest training level) all come from `getUserByUsername` +
-  those two list calls in `app/(www)/www/(gated)/page.tsx`. `NewsCard.tsx`
+  those two list calls in its route. **Its only remaining caller is `/feeds/[feed_id]`** — the
+  desktop-rail redesign dropped it from the home feed, `/search`, `/notifications`, `/settings`,
+  and `/profile/[username]/activities`, and each of those five routes lost the
+  `getUserByUsername`/`listEducationHistories` fetches that fed it (`/settings` still fetches
+  `getUserByUsername` for its own email/`registration_number`/province, just not the education
+  list). The rail already shows who you are on every page, so repeating it per route was the same
+  identity stated twice. Don't re-add it to a page without a reason the rail doesn't already
+  cover. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar Trending") is real-API-backed — an async Server
   Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5 })` directly (no
   category filter, just the 5 most-recently-published articles) and renders nothing if the
   list comes back empty; its "Lihat Semua Berita" link goes to `/news`. `UpcomingEventsCard`
-  is still fully backed by `mockData.ts`, not a real API, and is currently commented out of
-  `RightSidebar` (no backing endpoint yet). `SuggestedConnectionsCard.tsx` (rendered by both
-  `RightSidebar` and `ProfilePage`, titled "Mungkin Kamu Kenal"/"Orang yang Mungkin Kamu Kenal"
-  via its `title` prop) is real-API-backed — an async Server Component that calls
+  is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
+  `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
+  `ExploreSearchBar` → `SuggestedConnectionsCard` → `NewsCard` → the footer note, and it is the
+  home feed's only aside. `SuggestedConnectionsCard.tsx` (rendered by both
+  `RightSidebar` and `ProfilePage`) is real-API-backed — an async Server Component that calls
   `apis/users.ts#listFollowRecommendations({ pageSize: 5 })` and renders nothing if the list
-  comes back empty; it has no "see all" link, just the raw list. Each row is
+  comes back empty; it has no "see all" link, just the raw list. Its `title` prop still exists but
+  both callers now take the default "Mungkin Kamu Kenal" — `ProfilePage` dropped its longer
+  "Orang yang Mungkin Kamu Kenal" override once the card sat in a narrower column. Each row is
   `FollowRecommendationRow.tsx` (client), which shows a plain affiliation subtitle —
   "Cabang {branch_name}", falling back to `coordinating_body_name` then `chapter_name` —
   rather than surfacing the raw `closeness_score` the API ranks by, and calls the
@@ -1042,9 +1162,10 @@ iconSm`.
   `BottomNav` already covers that — but it does render a notification bell, right-aligned
   opposite the avatar/name; this is deliberately the _only_ place the bell shows up on mobile
   (see `components/navigations/*` above for why `Header` itself doesn't repeat it, now that
-  `BottomNav`'s own tab is Pesan rather than Notifikasi). Unlike `Header`'s desktop bell, it's
+  `BottomNav`'s own tab is Pesan rather than Notifikasi). It's
   a plain `Link` straight to `/notifications`, not a `Dropdown` — a mobile-width dropdown panel
-  right under the greeting card had nowhere good to breathe, so it just navigates instead. It
+  right under the greeting card had nowhere good to breathe, so it just navigates instead (the
+  desktop rail's own Notifications entry ended up doing the same thing, for its own reasons). It
   only pulls the `unreadCount` half of `hooks/useNotificationsBell.ts` for the badge (not the
   `handleRead`/`handleMarkAllRead` half, which only a rendered list needs), and needs `userId`
   threaded down from `FeedPage` (alongside `fullName`/`avatar`/`username`) purely for that. Its `bg-primary` block is
@@ -1074,6 +1195,11 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
   `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
   returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
+  Its optional `authorEntity` is what makes a reaction the entity's rather than the caller's, and
+  it **also suppresses the seeded `my_reaction`**: a feed row's `my_reaction` is the viewer's own
+  personal reaction, so seeding it while acting as an entity would light the button up for a
+  reaction the entity never sent. There is no per-entity `my_reaction` on the response, so an
+  entity's reaction state starts empty each load rather than being guessed.
 - `hooks/useNotificationsRealtime.ts` — subscribes a `userId` to the Supabase Realtime
   Broadcast channel `notifications:<userId>` and calls the given `onChange` callback on every
   insert/update/delete broadcast for that user; used by `Header` and `BottomNav` (see
@@ -1297,9 +1423,25 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   "Bagikan sesuatu..." rather than the personal composer's "Apa yang ingin kamu bagikan, {firstName}?"
   — an entity has no first name, and repeating its full name back at it reads oddly. Omit the prop
   and the composer stays personal, exactly as on `/`.
+  `OfficialTimeline` passes that same `ComposerAuthorEntity` down to every `FeedItemCard` as its own
+  `authorEntity` prop, which is what makes **every** interaction on this page the entity's rather
+  than the administrator's: `FeedItemCard` forwards it into `useReaction`, `createFeedComment`,
+  `repostFeed`/`unrepostFeed`, the quote-repost composer, and each `CommentItem` (which forwards it
+  again to its own replies and nested reactions). The comment/reply boxes also swap their avatar and
+  name for the entity's. Two consequences worth knowing: ownership of a feed's edit/delete menu is
+  `isOwnPersonalFeed || isOwnEntityFeed` — a grant holder may edit or delete **any** feed written as
+  the entity they hold, including one a predecessor posted, since the feed belongs to the entity and
+  not to whoever pressed post; and the same pair disables repost, so an entity can't amplify its own
+  post any more than a person can. `OfficialTimeline` also seeds `initialReposted` from
+  `item.type === "repost"`, since an entity's activity feed is where its own reposts come back.
+  Omitting `authorEntity` anywhere leaves that surface personal, which is exactly what `/`,
+  `/profile/[username]`, and `/feeds/[feed_id]` do.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
-  (Badko/Cabang/Komisariat + Aktif/Tidak Aktif status + "Berlaku sampai" date), both rendered
+  (Badko/Cabang/Komisariat + an Aktif/Tidak Aktif `Label` pill — green/gray, with a Tabler
+  `IconCircleCheckFilled`/`IconCircleXFilled`; the "Berlaku sampai" date and its
+  `subscriptionEndedAt` prop were dropped, so `MembershipInfoCard` no longer formats a date at
+  all), both rendered
   by `components/pages/MembershipPage.tsx` for the `/membership` ("E-KTA") route, backed by
   `apis/users.ts#getMembershipDetail` (`users/membership-details`, session-JWT-only, no
   request body — always the caller's own card). The card prints `ktp_full_name`, falling back to
@@ -1332,18 +1474,14 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   Profil Saya and E-KTA were deliberately dropped from it: both already have their own
   `BottomNav`/`Header` entry, and re-listing them here is a settings menu padding itself
   out. Whatever fills the rest is still undecided; a placeholder row that goes nowhere
-  reads as a broken page rather than a coming-soon one. On `lg:` it's the same centered
-  two-column shell `ProfileActivitiesPage` uses — `mx-auto lg:max-w-[900px]
-  lg:grid-cols-[280px_minmax(0,600px)]` with the shared `ProfileSidebar` in a sticky `aside`
-  — rather than a left-aligned single column, so a settings page with two short cards on it
-  doesn't sit alone against a wide empty right side. The page title sits **above** that grid,
-  not inside the `main` column, so both columns start at the same top edge and the sidebar
-  lines up with the first `MenuCard` — a title inside `main` pushes the cards down and leaves
-  the sidebar hanging above them. Mobile is unchanged (one column, `PageMargin`'s own
-  gutters). Its route fetches `getUserByUsername` for the viewer's `email` (which `Header`'s
-  dropdown shows and `check-session` doesn't return, same as `/profile/[username]` already
-  does) plus the `headline`/follow counts the sidebar needs, and `listEducationHistories`
-  alongside it for the sidebar's "Informasi" block. Below that first card it renders the
+  reads as a broken page rather than a coming-soon one. It is a single column at every
+  breakpoint now, under a `font-stack-sans-headline` page title — the centered two-column shell
+  with `ProfileSidebar` in a sticky `aside` went away with the desktop-rail redesign, along with
+  the `isAlumni`/`headline`/follow-count/`educationHistories` props that fed it and the route's
+  own `listEducationHistories` call. Its route still fetches `getUserByUsername`, but only for
+  the viewer's `email` (which `check-session` doesn't return), `created_at`,
+  `registration_number`, and `province_name` — the four things `AboutProfileModal` and the
+  account card actually show. Below that first card it renders the
   caller's **access grants**, the page's own take on the same `Kelola` block `Header`'s
   dropdown carries: it reads `useHeaderAdminAccess()` directly rather than taking grants as
   a prop, since `app/(www)/www/layout.tsx` already populates that context (logo backfill
@@ -1446,9 +1584,51 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
   categories remounts it with fresh pagination state instead of leaking the previous
   category's items in.
+- `/articles/[article_slug]/[article_id]`
+  (`app/(www)/www/articles/[article_slug]/[article_id]/page.tsx` →
+  `components/pages/ArticleDetailPage.tsx`) — the Medium-style reader for an **editorial**
+  article, the destination every `ArticleAttachmentCard` points at. **Two segments, only one of
+  which resolves anything**: `article_id` is what `getArticleDetail` looks up, while
+  `article_slug` exists purely so the URL reads, exactly like Medium's own
+  `/title-slug-{hash}`. The route therefore never validates the slug or 404s on a wrong one — a
+  stale or hand-edited slug still renders the right article — and `generateMetadata` instead
+  points `alternates.canonical` at the article's own real `slug_url`, so search engines collapse
+  every slug variant onto one URL. Don't "fix" this by comparing the slug and redirecting; the
+  canonical tag is the fix, and a redirect would only add a round trip.
+  It sits **outside `(gated)`**, like `/trainings` and `/profile/[username]`, with
+  `articles/.*` added to `next.config.mts`'s no-session allowlist — an editorial article is
+  public, and the data layer reads it with `CLIENT_SECRET` so no session is needed. It still
+  calls `getSession()` in parallel, purely to give `Header`/`BottomNav` a viewer.
+  **`body_content[].content` is untrusted HTML and must never reach `dangerouslySetInnerHTML`
+  raw.** `articles/create` lets *any verified user* author as themselves — not just admins — so
+  a body is stored user input, and rendering it unsanitized is stored XSS against every reader's
+  session. `lib/article-body.ts` (`import "server-only"`) is the only place that HTML is allowed
+  to pass through: `prepareArticleBody` sorts blocks by `index_order`, runs each `content`
+  through `sanitizeArticleHtml` (`sanitize-html`, strict **allowlist** of tags/attributes,
+  schemes limited to http/https/mailto, and a `transformTags` rule forcing every `<a>` to
+  `target="_blank" rel="noopener noreferrer nofollow"`), and drops blocks left with nothing in
+  them. Sanitizing happens server-side, once, so the client never sees the raw string. If you add
+  a block type or widen the allowlist, re-check it against the `script`/`onerror`/`javascript:`/
+  `onclick`/`iframe`/`svg onload` cases — those are the ones the current list is verified
+  against. `articleReadingMinutes` derives the "N menit baca" line from the sanitized text at 200
+  wpm, floored at 1.
+  The page is a Server Component: a centered `max-w-[720px]` column with the category `Label`,
+  the title in `font-stack-sans-headline`, the `description` as a deck, an author row
+  (avatar, name, `formatShortDate(published_at)` · reading time) between two rules, the cover
+  image, then the blocks — each optionally a sub-heading, an image with `image_desc` as its
+  `figcaption`, and the sanitized HTML. Body typography lives in one `PROSE_CLASS` constant of
+  Tailwind arbitrary descendant variants (`[&_p]:mt-6`, `[&_blockquote]:…`) rather than a
+  `@tailwindcss/typography` `prose` class, since that plugin isn't installed — extend that
+  constant instead of adding one. `keywords` is a single comma-separated string, not an array, so
+  it's split before rendering as tag pills. There is deliberately no reaction/comment/share bar:
+  an article is not a feed post, and none of those endpoints accept an article target.
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
-  here instead of `href="#"`) — mobile-only for now, by explicit instruction: no `lg:`
-  layout/styling has been done for it yet, unlike every other page in this file. Backed by
+  here instead of `href="#"`) — **no longer mobile-only**: `/quran` itself now has a real `lg:`
+  treatment (the `#013334` banner became a short full-width strip with the illustration pinned
+  right, and the search field + Surah/Juz toggle share one row above a single full-width list —
+  deliberately one column, not a grid, since a surah row is a short label that gains nothing from
+  extra width). The two detail routes below are still mobile-first, and
+  `QuranMiniPlayer` stays `lg:hidden`. Backed by
   `apis/quran.ts` (`quran-surahs/list`, `quran-juz/list` — read-only, seeded reference data,
   no create/update/delete per the API's own README). Both are small, fixed datasets (114
   surahs, 30 juz) capped at `page_size: 100` server-side, so `listAllQuranSurahs`/
@@ -1477,8 +1657,9 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `/quran/juz/{id}` (the juz's `id`, not its `number` — that's what `quran-juz/detail`
   actually keys on, and the two aren't guaranteed to always match even though they do in the
   seeded data today).
-- `components/pages/QuranSurahDetailPage.tsx` (`/quran/[surah_slug]`) — same mobile-only
-  scope as `QuranPage`. Backed by `apis/quran.ts#getQuranSurahDetail` (`quran-surahs/detail`),
+- `components/pages/QuranSurahDetailPage.tsx` (`/quran/[surah_slug]`) — still mobile-first, no
+  `lg:` pass of its own yet (unlike `/quran` itself, which got one).
+  Backed by `apis/quran.ts#getQuranSurahDetail` (`quran-surahs/detail`),
   fetched once in `generateMetadata` and again in the page component (same accepted
   double-fetch as `/feeds/[feed_id]`'s `getFeedById`, not deduped — `getSession()` is the only
   request-scoped-cached fetcher in this codebase). `notFound()` on a `slug` that doesn't
@@ -1589,15 +1770,26 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   for browsing articles or trainings yet. Its preview renders through the same
   `NewsAttachmentCard` the published feed uses, so the two can't drift.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
-  run through `lib/compress-image.ts` — a plain Canvas API resize/re-encode (max 1920px
-  edge, JPEG, quality stepped down from 0.8 to a 0.5 floor) — before they're staged or
-  uploaded, targeting ~500KB per photo. `MAX_PHOTO_BYTES` (5MB) is checked _after_
-  compression, not before — the whole point of the client-side pass is to shrink what
-  actually hits Supabase, so gating on the raw pre-compression size would reject large
-  photos that compression could otherwise have handled fine. GIFs are skipped (canvas
-  would flatten the animation to one frame), and a photo whose compressed output isn't
-  actually smaller than the original falls back to the original file — which is also why
-  the post-compression check still exists, as a safety net for those cases.
+  run through `lib/compress-image.ts` before they're staged or uploaded.
+  **That module is now shared by every image upload in the app**, not just the composer, and takes
+  an options object (`{maxDimension, targetBytes}`, defaulting to 1920px / 500KB): avatars pass
+  `{512, 300KB}` from all four places one can be set (`EditAvatarForm`, `ActivationPage`,
+  `AdminEditUserAccountForm`, `AdminUserCreatePage`), chat images pass `{1600, 500KB}`, and the
+  five entity-logo fields plus `TrainingFormSheet` take the defaults. Every caller that passes
+  options also **rejects the file when the compressed result still exceeds its target**, which is
+  why the raw pre-upload size caps those forms used to have (`MAX_AVATAR_BYTES` 2MB,
+  `MAX_ATTACHMENT_BYTES` 8MB) are gone — gating on the raw size rejects large photos that
+  compression could have handled fine, the same reasoning `MAX_PHOTO_BYTES` (5MB) is checked
+  _after_ compression in the composer.
+  The algorithm is a plain Canvas resize/re-encode to JPEG, but it is now **two nested loops**:
+  quality steps down from 0.82 to a 0.35 floor, and if that still misses `targetBytes` the
+  dimensions shrink by 0.75 and the whole quality sweep runs again, down to a 256px floor. It
+  short-circuits and returns the original untouched when the file is already under target at its
+  native size. GIFs are still skipped (canvas
+  would flatten the animation to one frame). Note the old "fall back to the original if the
+  compressed output isn't smaller" guard is **gone** — with dimension stepping the output is
+  reliably smaller, and keeping the guard would have let an already-large file through the
+  size check its caller then enforces.
   `handlePhotoFiles` awaits `compressImage` one file at a time (not
   `Promise.all`) so selecting several photos at once doesn't spike the main thread all at
   once — the Foto button shows a spinner and disables via `compressingPhotos` while that
@@ -2224,7 +2416,17 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   Deskripsi card, since a Korkom has no other profile fields worth a structured grid), Kepengurusan
   (the same read-only-embedded `StructuralPage` pattern as Badko/Cabang, scoped
   `"coordinating_chapter"`/`coordinatingChapter.id`, fetched via `getStructuralOverview` by both this
-  component's routes), Daftar Komisariat (the chapters under this Korkom), and
+  component's routes), Daftar Komisariat (the chapters under this Korkom — gated by its own
+  `allowAddChapter` flag, passed by the Master and the branch-scoped detail routes but not by any
+  read-only scope, which adds a "Tambah Komisariat" button in the tab's header row, the same CTA
+  inside `EmptyState` when the Korkom has none yet, and a per-row "Keluarkan" action behind an
+  `AlertConfirmation`. Both call the `addChapterToCoordinatingChapter`/
+  `removeChapterFromCoordinatingChapter` Server Actions. The picker searches
+  `/admin/api/chapters/search` scoped to the Korkom's **own `branch_id`**, since a Komisariat may
+  only join a Korkom in its own Cabang; a Komisariat already taken by another Korkom comes back as
+  a backend error, which the sheet translates into a plain Indonesian "keluarkan dari Korkom
+  tersebut terlebih dahulu" rather than surfacing the raw message. The confirmation copy says the
+  Komisariat stays registered under its Cabang, because removing only ungroups it), and
   Latihan Kader — `TrainingOrganizerTypeEnum` has no `coordinating_chapter` value (a Korkom never
   organizes its own training events; LK1 is always organized per Komisariat), so this tab instead
   fetches `trainings/list` once per chapter under the Korkom (`organizerType: "chapter"`) via
