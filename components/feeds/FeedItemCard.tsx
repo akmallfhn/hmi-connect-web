@@ -24,6 +24,7 @@ import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
 import LinkPreviewCard from "./LinkPreviewCard";
+import ArticleAttachmentCard from "./ArticleAttachmentCard";
 import NewsAttachmentCard from "./NewsAttachmentCard";
 import TrainingAttachmentCard from "./TrainingAttachmentCard";
 import QuotedFeed from "./QuotedFeed";
@@ -40,6 +41,7 @@ import ShareModal from "../modals/ShareModal";
 import { useReaction } from "@/hooks/useReaction";
 import type {
   Feed,
+  FeedArticleAttachment,
   FeedComment,
   FeedNewsAttachment,
   FeedTrainingAttachment,
@@ -284,6 +286,9 @@ export default function FeedItemCard({
   const trainingAttachment = attachments.find(
     (item): item is FeedTrainingAttachment => item.type === "training",
   );
+  const articleAttachment = attachments.find(
+    (item): item is FeedArticleAttachment => item.type === "article",
+  );
   const shareUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/feeds/${feed.id}`
@@ -477,6 +482,9 @@ export default function FeedItemCard({
       )}
       {urlAttachment && <LinkPreviewCard url={urlAttachment.reference_url} />}
       {newsAttachment && <NewsAttachmentCard attachment={newsAttachment} />}
+      {articleAttachment && (
+        <ArticleAttachmentCard attachment={articleAttachment} />
+      )}
       {trainingAttachment && (
         <TrainingAttachmentCard attachment={trainingAttachment} />
       )}

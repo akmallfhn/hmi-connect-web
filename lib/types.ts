@@ -23,12 +23,14 @@ export type FeedAttachmentTypeEnum =
   | "video"
   | "url"
   | "news"
-  | "training";
-// The three the composer can actually produce — news/training are linked, never uploaded.
+  | "training"
+  | "article";
+// The three the composer can actually produce — news/training/article are linked, never uploaded.
 export type FeedUploadAttachmentTypeEnum = Extract<
   FeedAttachmentTypeEnum,
   "photo" | "video" | "url"
 >;
+export type ArticleStatusEnum = "draft" | "published" | "unpublished";
 export type ReactionTypeEnum =
   | "like"
   | "love"

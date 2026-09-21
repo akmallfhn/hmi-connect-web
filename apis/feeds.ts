@@ -55,10 +55,27 @@ export type FeedTrainingAttachment = FeedAttachmentBase & {
   reference_is_deleted: boolean;
 };
 
+// The one type keyed by `article_id` rather than `reference_id` — mirror the backend, don't rename.
+export type FeedArticleAttachment = FeedAttachmentBase & {
+  type: "article";
+  article_id: string;
+  reference_title: string | null;
+  reference_description: string | null;
+  reference_image_url: string | null;
+  reference_slug_url: string | null;
+  reference_category_id: number | null;
+  reference_category_name: string | null;
+  reference_author_id: string | null;
+  reference_author_name: string | null;
+  reference_author_avatar: string | null;
+  reference_is_deleted: boolean;
+};
+
 export type FeedAttachment =
   | FeedUploadAttachment
   | FeedNewsAttachment
-  | FeedTrainingAttachment;
+  | FeedTrainingAttachment
+  | FeedArticleAttachment;
 
 export type Feed = {
   id: string;
@@ -102,10 +119,11 @@ export type FeedTimelineItem =
 
 export type CreateFeedPayload = {
   content: string;
-  // Either the uploaded/linked urls, or a reference_id pointing at a news article or training — never both.
+  // Exactly one of urls / reference_id / article_id — the backend 400s on any two together.
   attachment?:
     | { type: FeedUploadAttachmentTypeEnum; urls: string[] }
-    | { type: "news" | "training"; reference_id: string };
+    | { type: "news" | "training"; reference_id: string }
+    | { type: "article"; article_id: string };
   repost_of_id?: string;
   // Sent as a pair to publish under an entity; the backend requires a manage grant at that exact entity.
   author_entity_type?: AccessEntityTypeEnum;
