@@ -1713,13 +1713,15 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Further pages come from the `loadMoreArticles` Server Action through the usual
   infinite-scroll-via-`IntersectionObserver` shape. A `draft`/`unpublished` row shows a `Label`
   pill beside its author, since the Saya tab is the only place a caller's own unpublished work is
-  listed, and each row the viewer authored also gets a `Pencil` button beside its thumbnail linking
-  to `{articleHref}/edit`. That button is gated on `article.author_id === viewerId`, not on the Saya
-  tab, so your own article is editable wherever it shows up; it navigates with `router.push` (which
-  is why the row is a Client Component) because a nested `<a>` inside the row's own `<Link>` would
-  break hydration. The button sits **below** the meta row inside the text column, not beside the
-  thumbnail, and is a squared `rounded-lg` chip carrying the word "Edit" rather than a bare round
-  icon — an unlabelled circle next to a date read as decoration. It sits **outside `(gated)`**, like the reader below: reading articles is public,
+  listed, and every row carries a `MoreHorizontal` `Dropdown` directly below its meta line — the same overflow menu
+  `FeedItemCard` carries, so a row looks identical whoever is reading it. It holds "Lihat artikel"
+  always and "Edit artikel" only when `article.author_id === viewerId`, which is gated on authorship
+  rather than on the Saya tab, so your own article is editable wherever it shows up. Both items
+  navigate with `router.push` (which is why the row is a Client Component) and the trigger
+  `preventDefault`s, because the whole row is itself a `<Link>` and a nested `<a>` would break
+  hydration. It sits inside the text column, `align="left"` so the panel opens flush under the
+  button rather than off to one side. This replaced a `Pencil` chip that only appeared on your own
+  rows, which made those rows a different shape from every other one. It sits **outside `(gated)`**, like the reader below: reading articles is public,
   and `next.config.mts`'s allowlist entry is `articles(?:/.*)?` — the bare path included — so a
   logged-out visitor lands on the list rather than on a login screen. The two personal tabs are what
   needs a session, so the route hides the whole tablist (`showTabs`) and pins `activeTab` to `all`
@@ -1756,9 +1758,14 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   hidden, so without that fade there is nothing telling a touch user the row continues. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
   superscript, subscript, inline image insertion, blockquote, code block, bullet/numbered lists,
   and horizontal rule. Its first step contains the title (single-line behavior, auto-growing
-  wrap, hard limit 70 — `text-[26px]` on phones stepping up to `sm:text-[38px]`/`lg:text-[54px]`,
+  wrap, hard limit `MAX_TITLE_LENGTH` (100) — `text-[26px]` on phones stepping up to `sm:text-[38px]`/`lg:text-[54px]`,
   since one desktop-sized display face shipped to a 360px screen left barely three words a line),
-  deck (hard limit 170, `text-base` up to `lg:text-2xl` on the same reasoning), required cover
+  deck (hard limit `MAX_DESCRIPTION_LENGTH` (250) — both limits are the composer's own, not the
+  backend's, and live in one constant each at the top of the file rather than repeated across the
+  field, the counter, and its warning). The deck carries no type scale of its own: it takes the
+  `.article-deck` class, which `app/globals.css` sizes in the **same rule** as `.article-editor`
+  (18px, 17px below `sm`), so the summary and the body it introduces always read at one size and
+  can't drift apart when one is retuned, required cover
   upload. **Both the title and the deck are auto-growing `<textarea>`s, never an `<input>`** — they
   show every line they hold, sized off their own `scrollHeight` by the shared `autoGrow`, which runs
   on change, on mount (edit mode arrives pre-filled, so a two-line title would otherwise open

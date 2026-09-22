@@ -127,7 +127,7 @@ export default function ArticlesPage({
                     role="tab"
                     aria-selected={active}
                     scroll={false}
-                    className={`min-w-[96px] flex-1 rounded-full px-4 py-2 text-center text-sm font-semibold transition lg:flex-none ${
+                    className={`min-w-[96px] flex-1 rounded-full px-3 py-1.5 text-center text-sm font-semibold transition lg:flex-none ${
                       active ? "bg-primary text-white" : "text-[#5f6573]"
                     }`}
                   >

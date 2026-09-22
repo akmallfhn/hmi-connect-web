@@ -50,6 +50,8 @@ const ARTICLE_IMAGE_TYPES = [
   "image/gif",
 ];
 const ARTICLE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif", "gif"];
+const MAX_TITLE_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 250;
 const MAX_ARTICLE_IMAGE_RAW_BYTES = 20 * 1024 * 1024;
 const MAX_ARTICLE_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -487,13 +489,13 @@ export default function ArticleComposerPage({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={openPublishModal}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-secondary px-4 text-sm font-semibold text-white transition hover:bg-[#e6534b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 sm:px-6"
             >
               {isEditing ? "Perbarui" : "Lanjutkan"}
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -529,43 +531,53 @@ export default function ArticleComposerPage({
           ref={titleRef}
           rows={1}
           value={title}
-          maxLength={70}
+          maxLength={MAX_TITLE_LENGTH}
           onChange={updateTitle}
           onKeyDown={handleSingleLineKeyDown}
           placeholder="Judul artikel"
           aria-label="Judul artikel"
           aria-describedby="article-title-limit"
-          className="font-stack-sans-headline block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[26px] font-medium leading-[1.15] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[38px] sm:leading-[1.1] lg:text-[54px]"
+          className="font-stack-sans-headline block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[26px] font-medium leading-[1.15] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[38px] sm:leading-[1.1] lg:text-[40px]"
         />
         <div
           id="article-title-limit"
           className={`mt-2 flex min-h-5 items-center justify-end gap-2 text-xs ${
-            title.length >= 70 ? "text-destructive" : "text-[#9aa0ab]"
+            title.length >= MAX_TITLE_LENGTH
+              ? "text-destructive"
+              : "text-[#9aa0ab]"
           }`}
         >
-          {title.length >= 70 && <span>Judul maksimal 70 karakter.</span>}
-          <span>{title.length}/70</span>
+          {title.length >= MAX_TITLE_LENGTH && (
+            <span>Judul maksimal {MAX_TITLE_LENGTH} karakter.</span>
+          )}
+          <span>
+            {title.length}/{MAX_TITLE_LENGTH}
+          </span>
         </div>
         <textarea
           ref={subtitleRef}
           rows={1}
           value={subtitle}
-          maxLength={170}
+          maxLength={MAX_DESCRIPTION_LENGTH}
           onChange={updateSubtitle}
           onKeyDown={handleSingleLineKeyDown}
           placeholder="Tambahkan ringkasan singkat..."
           aria-label="Ringkasan artikel"
-          className="mt-3 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-base leading-relaxed text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:mt-4 sm:text-xl lg:text-2xl"
+          className="article-deck mt-3 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:mt-4"
         />
         <div
           className={`mt-1 text-right text-xs ${
-            subtitle.length >= 170 ? "text-destructive" : "text-[#9aa0ab]"
+            subtitle.length >= MAX_DESCRIPTION_LENGTH
+              ? "text-destructive"
+              : "text-[#9aa0ab]"
           }`}
         >
-          {subtitle.length >= 170 && (
-            <span className="mr-2">Ringkasan maksimal 170 karakter.</span>
+          {subtitle.length >= MAX_DESCRIPTION_LENGTH && (
+            <span className="mr-2">
+              Ringkasan maksimal {MAX_DESCRIPTION_LENGTH} karakter.
+            </span>
           )}
-          {subtitle.length}/170
+          {subtitle.length}/{MAX_DESCRIPTION_LENGTH}
         </div>
 
         <section className="mt-7">

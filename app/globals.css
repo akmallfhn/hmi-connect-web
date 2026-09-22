@@ -84,6 +84,11 @@ body {
 /* Tiptap article composer. */
 .article-editor {
   color: #242832;
+}
+
+/* The composer's deck reads at the body's own size, so the two can't drift apart. */
+.article-editor,
+.article-deck {
   font-size: 18px;
   line-height: 1.8;
 }
@@ -204,7 +209,8 @@ body {
 }
 
 @media (max-width: 640px) {
-  .article-editor {
+  .article-editor,
+  .article-deck {
     font-size: 17px;
   }
 

@@ -36,7 +36,7 @@ const SURAH_SEARCH_DEBOUNCE_MS = 400;
 
 function tabClassName(active: boolean): string {
   return [
-    "flex-1 min-w-[96px] rounded-full py-2 px-4 text-sm font-semibold transition lg:flex-none",
+    "flex-1 min-w-[96px] rounded-full py-1.5 px-3 text-sm font-semibold transition lg:flex-none",
     active ? "bg-primary text-white" : "text-[#5f6573]",
   ].join(" ");
 }

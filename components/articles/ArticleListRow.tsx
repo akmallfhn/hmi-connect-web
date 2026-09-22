@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,12 @@ import type { ArticleListEntry } from "@/apis/articles";
 import { formatShortDate } from "@/lib/time-manipulation";
 import type { ArticleStatusEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
+import Button from "../buttons/Button";
+import Dropdown from "../common/Dropdown";
 import Label, { type LabelVariant } from "../common/Label";
+
+const MENU_ITEM_CLASS =
+  "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]";
 
 const STATUS_LABEL: Partial<
   Record<ArticleStatusEnum, { variant: LabelVariant; text: string }>
@@ -45,11 +50,13 @@ export default function ArticleListRow({
   const keywords = parseKeywords(article.keywords);
   const canEdit = Boolean(viewerId) && article.author_id === viewerId;
 
-  // A nested <a> inside the row's own link would break hydration, so edit navigates by router.
-  function handleEdit(event: React.MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    router.push(`${articleHref(article)}/edit`);
+  // A nested <a> inside the row's own link would break hydration, so menu items navigate by router.
+  function go(path: string) {
+    return (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      router.push(path);
+    };
   }
 
   return (
@@ -87,17 +94,47 @@ export default function ArticleListRow({
           ))}
         </div>
 
-        {canEdit && (
-          <button
-            type="button"
-            onClick={handleEdit}
-            aria-label={`Edit artikel ${article.title}`}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#dbe3ef] px-2.5 py-1.5 text-[13px] font-medium text-[#454b57] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+        <div className="mt-3">
+          <Dropdown
+            align="left"
+            trigger={({ toggle }) => (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  toggle();
+                }}
+                aria-label={`Opsi artikel ${article.title}`}
+                className="-ml-2 size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            )}
           >
-            <Pencil className="size-3.5" />
-            Edit
-          </button>
-        )}
+            <div className="flex flex-col py-1">
+              <button
+                type="button"
+                onClick={go(articleHref(article))}
+                className={MENU_ITEM_CLASS}
+              >
+                <Eye className="size-4 text-[#5f6573]" />
+                Lihat artikel
+              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={go(`${articleHref(article)}/edit`)}
+                  className={MENU_ITEM_CLASS}
+                >
+                  <Pencil className="size-4 text-[#5f6573]" />
+                  Edit artikel
+                </button>
+              )}
+            </div>
+          </Dropdown>
+        </div>
       </div>
 
       {article.image_url && (
