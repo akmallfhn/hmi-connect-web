@@ -3,11 +3,16 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms, {
+  type ComposerArticleDraft,
   type ComposerNewsDraft,
 } from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
-import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_NEWS_KEY } from "@/lib/constants";
+import {
+  COMPOSE_INTENT_ARTICLE_KEY,
+  COMPOSE_INTENT_KEY,
+  COMPOSE_INTENT_NEWS_KEY,
+} from "@/lib/constants";
 import type { VerificationStatusEnum } from "@/lib/types";
 
 interface FeedTimelineProps {
@@ -38,6 +43,18 @@ function parseNewsIntent(raw: string | null): ComposerNewsDraft | undefined {
   }
 }
 
+function parseArticleIntent(
+  raw: string | null
+): ComposerArticleDraft | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as ComposerArticleDraft;
+    return parsed.id && parsed.title ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedTimeline({
   initialItems,
   initialHasMore,
@@ -58,6 +75,9 @@ export default function FeedTimeline({
   const [composerSignal, setComposerSignal] = useState(0);
   const [composerNews, setComposerNews] = useState<
     ComposerNewsDraft | undefined
+  >(undefined);
+  const [composerArticle, setComposerArticle] = useState<
+    ComposerArticleDraft | undefined
   >(undefined);
 
   const loadNextPage = useCallback(async () => {
@@ -102,7 +122,15 @@ export default function FeedTimeline({
       const raw = window.sessionStorage.getItem(COMPOSE_INTENT_NEWS_KEY);
       if (raw) window.sessionStorage.removeItem(COMPOSE_INTENT_NEWS_KEY);
 
+      const rawArticle = window.sessionStorage.getItem(
+        COMPOSE_INTENT_ARTICLE_KEY
+      );
+      if (rawArticle) {
+        window.sessionStorage.removeItem(COMPOSE_INTENT_ARTICLE_KEY);
+      }
+
       setComposerNews(parseNewsIntent(raw));
+      setComposerArticle(parseArticleIntent(rawArticle));
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -139,6 +167,7 @@ export default function FeedTimeline({
         onCreated={handleFeedCreated}
         forceOpenSignal={composerSignal}
         forceOpenNews={composerNews}
+        forceOpenArticle={composerArticle}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}

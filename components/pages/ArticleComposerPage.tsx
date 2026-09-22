@@ -38,7 +38,7 @@ import Avatar from "@/components/common/Avatar";
 import Input from "@/components/fields/Input";
 import Select from "@/components/fields/Select";
 import Modal from "@/components/modals/Modal";
-import { createArticle } from "@/lib/actions";
+import { createArticle, updateArticle } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 
@@ -161,6 +161,13 @@ function ArticleBodyImage({
   );
 }
 
+// A textarea will not reflow on its own, so its height is driven off its own scrollHeight.
+function autoGrow(element: HTMLTextAreaElement | null) {
+  if (!element) return;
+  element.style.height = "auto";
+  element.style.height = `${element.scrollHeight}px`;
+}
+
 const ArticleImageExtension = ImageExtension.extend({
   addNodeView() {
     return ReactNodeViewRenderer(ArticleBodyImage);
@@ -173,29 +180,47 @@ export type ArticleAuthor = {
   avatar?: string;
 };
 
-interface ArticleCreatePageProps {
+// What edit mode seeds from; the body arrives already sanitized by lib/article-body.ts.
+export type ArticleDraft = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  bodyHtml: string;
+  categoryId: number | null;
+  keywords: string[];
+};
+
+interface ArticleComposerPageProps {
   author: ArticleAuthor;
   categories: ArticleCategory[];
+  draft?: ArticleDraft;
 }
 
-export default function ArticleCreatePage({
+export default function ArticleComposerPage({
   author,
   categories,
-}: ArticleCreatePageProps) {
+  draft,
+}: ArticleComposerPageProps) {
   const router = useRouter();
+  const isEditing = Boolean(draft);
   // Alphabetical, since the endpoint's own order is by id and means nothing to the author.
   const categoryOptions = categories
     .map((item) => ({ label: item.name, value: item.id }))
     .sort((a, b) => a.label.localeCompare(b.label, "id"));
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const subtitleRef = useRef<HTMLTextAreaElement>(null);
   const bodyImageInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [title, setTitle] = useState("");
-  const [subtitle, setSubtitle] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [title, setTitle] = useState(draft?.title ?? "");
+  const [subtitle, setSubtitle] = useState(draft?.description ?? "");
+  const [categoryId, setCategoryId] = useState<number | null>(
+    draft?.categoryId ?? null
+  );
   const [keywordInput, setKeywordInput] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [coverUrl, setCoverUrl] = useState("");
+  const [keywords, setKeywords] = useState<string[]>(draft?.keywords ?? []);
+  const [coverUrl, setCoverUrl] = useState(draft?.imageUrl ?? "");
   const [isCoverUploading, setIsCoverUploading] = useState(false);
   const [isBodyImageUploading, setIsBodyImageUploading] = useState(false);
   const [isSaved, setIsSaved] = useState(true);
@@ -218,6 +243,7 @@ export default function ArticleCreatePage({
         placeholder: "Mulai menulis artikelmu...",
       }),
     ],
+    content: draft?.bodyHtml,
     editorProps: {
       attributes: {
         class: "article-editor min-h-[380px] focus:outline-none",
@@ -246,16 +272,33 @@ export default function ArticleCreatePage({
     };
   }, []);
 
+  useEffect(() => {
+    function growBoth() {
+      autoGrow(titleRef.current);
+      autoGrow(subtitleRef.current);
+    }
+
+    growBoth();
+    window.addEventListener("resize", growBoth);
+    return () => window.removeEventListener("resize", growBoth);
+  }, []);
+
   function updateTitle(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextTitle = event.target.value.replace(/[\r\n]+/g, " ");
-    event.target.value = nextTitle;
     setTitle(nextTitle);
-    event.target.style.height = "auto";
-    event.target.style.height = `${event.target.scrollHeight}px`;
+    autoGrow(event.target);
     markAsChanged();
   }
 
-  function handleTitleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  function updateSubtitle(event: ChangeEvent<HTMLTextAreaElement>) {
+    const nextSubtitle = event.target.value.replace(/[\r\n]+/g, " ");
+    setSubtitle(nextSubtitle);
+    autoGrow(event.target);
+    markAsChanged();
+  }
+
+  // Both stay one paragraph, so a newline would only add height the value cannot keep.
+  function handleSingleLineKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter") event.preventDefault();
   }
 
@@ -309,7 +352,7 @@ export default function ArticleCreatePage({
       markAsChanged();
       toast.success("Cover berhasil diunggah.", { id: toastId });
     } catch (error) {
-      console.error("[ArticleCreatePage] cover upload threw:", error);
+      console.error("[ArticleComposerPage] cover upload threw:", error);
       toast.error(articleUploadMessage(error, "Cover gagal diunggah."), {
         id: toastId,
       });
@@ -333,7 +376,7 @@ export default function ArticleCreatePage({
       editor.chain().focus().setImage({ src: url, alt: file.name }).run();
       toast.success("Gambar berhasil disisipkan.", { id: toastId });
     } catch (error) {
-      console.error("[ArticleCreatePage] body image upload threw:", error);
+      console.error("[ArticleComposerPage] body image upload threw:", error);
       toast.error(articleUploadMessage(error, "Gambar gagal diunggah."), {
         id: toastId,
       });
@@ -375,17 +418,25 @@ export default function ArticleCreatePage({
     }
 
     setIsPublishing(true);
-    const toastId = toast.loading("Menerbitkan artikel...");
-    const result = await createArticle({
+    const toastId = toast.loading(
+      isEditing ? "Menyimpan artikel..." : "Menerbitkan artikel..."
+    );
+    const fields = {
       title: title.trim(),
       image_url: coverUrl,
       body_content: bodyContent,
       category_id: categoryId,
-      author_id: author.id,
-      status: "published",
-      ...(subtitle.trim() ? { description: subtitle.trim() } : {}),
-      ...(keywords.length ? { keywords: keywords.join(", ") } : {}),
-    });
+      description: subtitle.trim(),
+      keywords: keywords.join(", "),
+    };
+    // Editing deliberately leaves `status` alone, so saving can't publish a draft by accident.
+    const result = draft
+      ? await updateArticle({ id: draft.id, ...fields })
+      : await createArticle({
+          ...fields,
+          author_id: author.id,
+          status: "published",
+        });
 
     if (!result.ok) {
       setIsPublishing(false);
@@ -393,7 +444,12 @@ export default function ArticleCreatePage({
       return;
     }
 
-    toast.success("Artikel berhasil diterbitkan.", { id: toastId });
+    toast.success(
+      isEditing
+        ? "Perubahan artikel tersimpan."
+        : "Artikel berhasil diterbitkan.",
+      { id: toastId }
+    );
     setIsPublishModalOpen(false);
     const { slug_url, id } = result.article;
     router.push(`/articles/${slug_url || "artikel"}/${id}`);
@@ -436,7 +492,7 @@ export default function ArticleCreatePage({
               onClick={openPublishModal}
               className="inline-flex h-10 items-center justify-center rounded-xl bg-secondary px-4 text-sm font-semibold text-white transition hover:bg-[#e6534b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 sm:px-6"
             >
-              Lanjutkan
+              {isEditing ? "Perbarui" : "Lanjutkan"}
             </button>
           </div>
         </div>
@@ -468,17 +524,18 @@ export default function ArticleCreatePage({
         }}
       />
 
-      <div className="mx-auto w-full max-w-[900px] px-5 pb-28 pt-10 sm:px-8 sm:pt-14">
+      <div className="mx-auto w-full max-w-[900px] px-4 pb-28 pt-6 sm:px-8 sm:pt-14">
         <textarea
+          ref={titleRef}
           rows={1}
           value={title}
           maxLength={70}
           onChange={updateTitle}
-          onKeyDown={handleTitleKeyDown}
+          onKeyDown={handleSingleLineKeyDown}
           placeholder="Judul artikel"
           aria-label="Judul artikel"
           aria-describedby="article-title-limit"
-          className="font-stack-sans-headline block min-h-[58px] w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[42px] font-medium leading-[1.1] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[54px]"
+          className="font-stack-sans-headline block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[26px] font-medium leading-[1.15] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[38px] sm:leading-[1.1] lg:text-[54px]"
         />
         <div
           id="article-title-limit"
@@ -489,17 +546,16 @@ export default function ArticleCreatePage({
           {title.length >= 70 && <span>Judul maksimal 70 karakter.</span>}
           <span>{title.length}/70</span>
         </div>
-        <input
-          type="text"
+        <textarea
+          ref={subtitleRef}
+          rows={1}
           value={subtitle}
           maxLength={170}
-          onChange={(event) => {
-            setSubtitle(event.target.value);
-            markAsChanged();
-          }}
+          onChange={updateSubtitle}
+          onKeyDown={handleSingleLineKeyDown}
           placeholder="Tambahkan ringkasan singkat..."
           aria-label="Ringkasan artikel"
-          className="mt-4 block w-full border-0 bg-transparent p-0 text-xl leading-relaxed text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:text-2xl"
+          className="mt-3 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-base leading-relaxed text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:mt-4 sm:text-xl lg:text-2xl"
         />
         <div
           className={`mt-1 text-right text-xs ${
@@ -579,7 +635,7 @@ export default function ArticleCreatePage({
           )}
         </section>
 
-        <div className="mt-10">
+        <div className="mt-7 sm:mt-10">
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -587,7 +643,7 @@ export default function ArticleCreatePage({
       <Modal
         open={isPublishModalOpen}
         onClose={() => setIsPublishModalOpen(false)}
-        title="Siapkan publikasi"
+        title={isEditing ? "Perbarui artikel" : "Siapkan publikasi"}
         panelClassName="max-w-xl"
       >
         <p className="text-sm leading-relaxed text-[#6b7280]">
@@ -702,7 +758,11 @@ export default function ArticleCreatePage({
             disabled={isPublishing}
             onClick={() => void publishArticle()}
           >
-            {isPublishing ? "Menerbitkan..." : "Publish"}
+            {isPublishing
+              ? "Menyimpan..."
+              : isEditing
+                ? "Simpan Perubahan"
+                : "Publish"}
           </Button>
         </div>
       </Modal>

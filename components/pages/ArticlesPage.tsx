@@ -39,6 +39,7 @@ interface ViewerProps {
 interface ArticlesPageProps {
   viewer: ViewerProps;
   activeTab: ArticleFeedTab;
+  showTabs: boolean;
   initialItems: ArticleListEntry[];
   initialHasMore: boolean;
 }
@@ -46,6 +47,7 @@ interface ArticlesPageProps {
 export default function ArticlesPage({
   viewer,
   activeTab,
+  showTabs,
   initialItems,
   initialHasMore,
 }: ArticlesPageProps) {
@@ -104,39 +106,39 @@ export default function ArticlesPage({
         mobileBackTitle="Artikel"
       />
 
-      <PageMargin className="pb-6 lg:pt-6">
+      <PageMargin className="pt-4 pb-6 lg:pt-6">
         <main className="min-w-0">
           <h1 className="font-stack-sans-headline hidden pb-4 text-2xl font-medium text-[#172033] lg:block">
             Artikel
           </h1>
 
-          <div
-            role="tablist"
-            aria-label="Filter artikel"
-            className="flex items-center gap-6 border-b border-[#e6e9ef]"
-          >
-            {TABS.map(({ tab, label }) => {
-              const active = tab === activeTab;
-              return (
-                <Link
-                  key={tab}
-                  href={tab === "all" ? "/articles" : `/articles?tab=${tab}`}
-                  role="tab"
-                  aria-selected={active}
-                  scroll={false}
-                  className={`-mb-px border-b-2 px-0.5 pb-3 pt-2 text-sm font-medium transition ${
-                    active
-                      ? "border-primary text-primary"
-                      : "border-transparent text-[#5f6573] hover:text-[#172033]"
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
+          {showTabs && (
+            <div
+              role="tablist"
+              aria-label="Filter artikel"
+              className="flex gap-1 rounded-full border border-[#e6e9ef] bg-white p-1 lg:w-fit"
+            >
+              {TABS.map(({ tab, label }) => {
+                const active = tab === activeTab;
+                return (
+                  <Link
+                    key={tab}
+                    href={tab === "all" ? "/articles" : `/articles?tab=${tab}`}
+                    role="tab"
+                    aria-selected={active}
+                    scroll={false}
+                    className={`min-w-[96px] flex-1 rounded-full px-4 py-2 text-center text-sm font-semibold transition lg:flex-none ${
+                      active ? "bg-primary text-white" : "text-[#5f6573]"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
-          <div className="flex flex-col divide-y divide-[#e6e9ef]">
+          <div className="mt-2 flex flex-col divide-y divide-[#e6e9ef]">
             {items.length === 0 && (
               <p className="py-12 text-center text-sm text-[#5f6573] lg:text-[15px]">
                 {emptyMessage}
@@ -144,7 +146,11 @@ export default function ArticlesPage({
             )}
 
             {items.map((article) => (
-              <ArticleListRow key={article.id} article={article} />
+              <ArticleListRow
+                key={article.id}
+                article={article}
+                viewerId={viewer.userId}
+              />
             ))}
           </div>
 

@@ -34,6 +34,9 @@ export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 // Companion to COMPOSE_INTENT_KEY — a JSON news draft (RepostToFeedButton) the composer opens with as a news attachment.
 export const COMPOSE_INTENT_NEWS_KEY = "hmi-compose-intent-news";
 
+// Same companion shape for an editorial article, which the composer attaches as type "article".
+export const COMPOSE_INTENT_ARTICLE_KEY = "hmi-compose-intent-article";
+
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
 

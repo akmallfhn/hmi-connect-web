@@ -236,10 +236,35 @@ export async function createArticle(
   return { ok: true, article: result.data };
 }
 
+export type UpdateArticlePayload = Partial<
+  Omit<CreateArticlePayload, "author_id">
+> & { id: string };
+
+// Same authority as create: Super Admin, or the verified author of that article.
+export async function updateArticle(
+  payload: UpdateArticlePayload
+): Promise<CreateArticleResult> {
+  const token = await getSessionToken();
+  if (!token) return { ok: false, message: "Sesi kamu sudah berakhir." };
+
+  const result = await callApi<ArticleDetail>("/api/v1/articles/update", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+
+  if (!isSuccessStatus(result.status) || !result.data) {
+    return { ok: false, message: createArticleMessage(result.status) };
+  }
+  return { ok: true, article: result.data };
+}
+
 function createArticleMessage(status: StatusName | undefined): string {
   switch (status) {
     case "FORBIDDEN":
       return "Akun kamu harus terverifikasi sebelum bisa menerbitkan artikel.";
+    case "NOT_FOUND":
+      return "Artikel tidak ditemukan.";
     case "CONFLICT":
       return "Sudah ada artikel dengan slug yang sama. Ubah judulnya sedikit.";
     case "BAD_REQUEST":

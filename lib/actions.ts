@@ -170,8 +170,10 @@ import {
 import {
   createArticle as createArticleApi,
   listArticleFeed as listArticleFeedApi,
+  updateArticle as updateArticleApi,
   type ArticleFeedTab,
   type CreateArticlePayload,
+  type UpdateArticlePayload,
 } from "@/apis/articles";
 import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
 import {
@@ -816,4 +818,8 @@ export async function createArticle(payload: CreateArticlePayload) {
 
 export async function loadMoreArticles(tab: ArticleFeedTab, page: number) {
   return listArticleFeedApi({ tab, page });
+}
+
+export async function updateArticle(payload: UpdateArticlePayload) {
+  return updateArticleApi(payload);
 }

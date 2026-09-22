@@ -1,7 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ArticleDetail } from "@/apis/articles";
 import { formatShortDate } from "@/lib/time-manipulation";
 import type { VerificationStatusEnum } from "@/lib/types";
+import ArticleDetailActions from "../articles/ArticleDetailActions";
 import Avatar from "../common/Avatar";
 import Label from "../common/Label";
 import BottomNav from "../navigations/BottomNav";
@@ -50,6 +52,40 @@ const PROSE_CLASS = [
   "[&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-[#7b8190]",
 ].join(" ");
 
+function AuthorIdentity({
+  authorName,
+  authorAvatar,
+  profileHref,
+  meta,
+}: {
+  authorName: string;
+  authorAvatar?: string;
+  profileHref: string | null;
+  meta: string;
+}) {
+  const body = (
+    <>
+      <Avatar src={authorAvatar} name={authorName} size={44} />
+      <div className="min-w-0">
+        <p className="truncate text-[15px] font-semibold text-[#172033]">
+          {authorName}
+        </p>
+        <p className="mt-0.5 truncate text-[13px] text-[#7b8190]">{meta}</p>
+      </div>
+    </>
+  );
+
+  if (!profileHref) {
+    return <div className="flex min-w-0 items-center gap-3">{body}</div>;
+  }
+
+  return (
+    <Link href={profileHref} className="flex min-w-0 items-center gap-3">
+      {body}
+    </Link>
+  );
+}
+
 export default function ArticleDetailPage({
   article,
   body,
@@ -57,6 +93,12 @@ export default function ArticleDetailPage({
   viewer,
 }: ArticleDetailPageProps) {
   const keywords = parseKeywords(article.keywords);
+  const isOwnArticle =
+    Boolean(viewer.userId) && article.author_id === viewer.userId;
+  const canEdit = isOwnArticle;
+  // articles/* answers with author_id but no author_username, so only the viewer's own resolves.
+  const authorProfileHref =
+    isOwnArticle && viewer.username ? `/profile/${viewer.username}` : null;
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
@@ -71,7 +113,7 @@ export default function ArticleDetailPage({
 
       <article className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-6 lg:px-0 lg:pt-12">
         {article.category_name && (
-          <Label variant="blue" className="mb-4">
+          <Label variant="gray" className="mb-4">
             {article.category_name}
           </Label>
         )}
@@ -86,21 +128,19 @@ export default function ArticleDetailPage({
           </p>
         )}
 
-        <div className="mt-7 flex items-center gap-3 border-y border-[#e6e9ef] py-4">
-          <Avatar
-            src={article.author_avatar}
-            name={article.author_name}
-            size={44}
+        <div className="mt-7 flex items-center justify-between gap-3 border-y border-[#e6e9ef] py-4">
+          <AuthorIdentity
+            authorName={article.author_name}
+            authorAvatar={article.author_avatar}
+            profileHref={authorProfileHref}
+            meta={`${formatShortDate(article.published_at)} · ${readingMinutes} menit baca`}
           />
-          <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold text-[#172033]">
-              {article.author_name}
-            </p>
-            <p className="mt-0.5 truncate text-[13px] text-[#7b8190]">
-              {formatShortDate(article.published_at)} · {readingMinutes} menit
-              baca
-            </p>
-          </div>
+
+          <ArticleDetailActions
+            article={article}
+            canEdit={canEdit}
+            isSignedIn={Boolean(viewer.userId)}
+          />
         </div>
 
         {article.image_url && (

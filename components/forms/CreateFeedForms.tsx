@@ -29,6 +29,7 @@ import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
+import ArticleAttachmentCard from "../feeds/ArticleAttachmentCard";
 import NewsAttachmentCard from "../feeds/NewsAttachmentCard";
 import QuotedFeed from "../feeds/QuotedFeed";
 import { createFeed } from "@/lib/actions";
@@ -40,7 +41,12 @@ import {
   type FeedAttachmentTypeEnum,
   type FeedUploadAttachmentTypeEnum,
 } from "@/lib/types";
-import type { CreateFeedPayload, Feed, FeedNewsAttachment } from "@/apis/feeds";
+import type {
+  CreateFeedPayload,
+  Feed,
+  FeedArticleAttachment,
+  FeedNewsAttachment,
+} from "@/apis/feeds";
 import LogoHmi from "../svg/LogoHmi";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
@@ -93,6 +99,18 @@ export type ComposerNewsDraft = {
   summary?: string;
 };
 
+// The article twin of the above — article_id is what feeds/create links, the rest only previews it.
+export type ComposerArticleDraft = {
+  id: string;
+  title: string;
+  slugUrl?: string;
+  imageUrl?: string;
+  description?: string;
+  categoryName?: string;
+  authorName?: string;
+  authorAvatar?: string;
+};
+
 interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
@@ -101,6 +119,7 @@ interface CreateFeedFormsProps {
   onCreated?: (feed: Feed) => void;
   forceOpenSignal?: number;
   forceOpenNews?: ComposerNewsDraft;
+  forceOpenArticle?: ComposerArticleDraft;
 }
 
 type PhotoDraft = {
@@ -211,6 +230,28 @@ function newsPreviewAttachment(news: ComposerNewsDraft): FeedNewsAttachment {
   };
 }
 
+// Previewed through the same card the published feed renders, same reasoning as news above.
+function articlePreviewAttachment(
+  article: ComposerArticleDraft,
+): FeedArticleAttachment {
+  return {
+    id: `article-draft-${article.id}`,
+    type: "article",
+    article_id: article.id,
+    reference_index: 1,
+    reference_title: article.title,
+    reference_description: article.description ?? null,
+    reference_image_url: article.imageUrl ?? null,
+    reference_slug_url: article.slugUrl ?? null,
+    reference_category_id: null,
+    reference_category_name: article.categoryName ?? null,
+    reference_author_id: null,
+    reference_author_name: article.authorName ?? null,
+    reference_author_avatar: article.authorAvatar ?? null,
+    reference_is_deleted: false,
+  };
+}
+
 export default function CreateFeedForms({
   fullName,
   avatar,
@@ -219,6 +260,7 @@ export default function CreateFeedForms({
   onCreated,
   forceOpenSignal,
   forceOpenNews,
+  forceOpenArticle,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] =
@@ -226,6 +268,9 @@ export default function CreateFeedForms({
   const [initialNews, setInitialNews] = useState<ComposerNewsDraft | undefined>(
     undefined,
   );
+  const [initialArticle, setInitialArticle] = useState<
+    ComposerArticleDraft | undefined
+  >(undefined);
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
@@ -236,9 +281,11 @@ export default function CreateFeedForms({
   function openComposer(
     mode: FeedUploadAttachmentTypeEnum | null = null,
     news?: ComposerNewsDraft,
+    article?: ComposerArticleDraft,
   ) {
     setInitialMode(mode);
     setInitialNews(news);
+    setInitialArticle(article);
     setOpen(true);
   }
 
@@ -246,6 +293,7 @@ export default function CreateFeedForms({
     setSeenForceOpenSignal(forceOpenSignal);
     if (forceOpenSignal) {
       if (forceOpenNews) openComposer(null, forceOpenNews);
+      else if (forceOpenArticle) openComposer(null, undefined, forceOpenArticle);
       else openComposer();
     }
   }
@@ -300,6 +348,7 @@ export default function CreateFeedForms({
         authorEntity={authorEntity}
         initialMode={initialMode}
         initialNews={initialNews}
+        initialArticle={initialArticle}
         onCreated={onCreated}
       />
     </>
@@ -315,6 +364,7 @@ interface FeedComposerModalProps {
   authorEntity?: ComposerAuthorEntity;
   initialMode?: FeedUploadAttachmentTypeEnum | null;
   initialNews?: ComposerNewsDraft;
+  initialArticle?: ComposerArticleDraft;
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
@@ -329,6 +379,7 @@ export function FeedComposerModal({
   authorEntity,
   initialMode,
   initialNews,
+  initialArticle,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -346,6 +397,7 @@ export function FeedComposerModal({
           userId={userId}
           initialMode={initialMode}
           initialNews={initialNews}
+          initialArticle={initialArticle}
           quoteFeed={quoteFeed}
           authorEntity={authorEntity}
           onClose={onClose}
@@ -363,6 +415,7 @@ interface FeedComposerFieldsProps {
   authorEntity?: ComposerAuthorEntity;
   initialMode?: FeedUploadAttachmentTypeEnum | null;
   initialNews?: ComposerNewsDraft;
+  initialArticle?: ComposerArticleDraft;
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -375,6 +428,7 @@ function FeedComposerFields({
   authorEntity,
   initialMode,
   initialNews,
+  initialArticle,
   quoteFeed,
   onClose,
   onCreated,
@@ -392,6 +446,9 @@ function FeedComposerFields({
   const [news, setNews] = useState<ComposerNewsDraft | null>(
     initialNews ?? null,
   );
+  const [article, setArticle] = useState<ComposerArticleDraft | null>(
+    initialArticle ?? null,
+  );
   const [previewUrl, setPreviewUrl] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -404,7 +461,9 @@ function FeedComposerFields({
         ? "url"
         : news
           ? "news"
-          : null;
+          : article
+            ? "article"
+            : null;
   const normalizedUrl = normalizeUrl(urlValue);
   const hasValidUrl = urlValue.trim() ? isValidUrl(urlValue) : false;
   const canSubmit =
@@ -633,6 +692,8 @@ function FeedComposerFields({
           attachment = { type: "url", urls: [normalizedUrl] };
         } else if (news) {
           attachment = { type: "news", reference_id: news.id };
+        } else if (article) {
+          attachment = { type: "article", article_id: article.id };
         }
       }
 
@@ -804,6 +865,21 @@ function FeedComposerFields({
             disabled={submitting}
             className="absolute right-2 top-5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
             aria-label="Hapus berita"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
+      {article && (
+        <div className="relative">
+          <ArticleAttachmentCard attachment={articlePreviewAttachment(article)} />
+          <button
+            type="button"
+            onClick={() => setArticle(null)}
+            disabled={submitting}
+            className="absolute right-2 top-5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Hapus artikel"
           >
             <X className="size-4" />
           </button>

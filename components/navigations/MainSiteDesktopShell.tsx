@@ -14,11 +14,14 @@ interface MainSiteDesktopShellProps {
   isAlumni?: boolean;
 }
 
-// Auth, activation, and the article composer are deliberately distraction-free; every other www route keeps the frame.
+const ARTICLE_EDIT_PATH = /^\/articles\/[^/]+\/[^/]+\/edit$/;
+
+// Auth, activation, and both article composer routes are distraction-free; every other www route keeps the frame.
 function hidesDesktopSidebar(pathname: string) {
   return (
     pathname === "/activation" ||
     pathname === "/articles/create" ||
+    ARTICLE_EDIT_PATH.test(pathname) ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/reset-password/")
   );

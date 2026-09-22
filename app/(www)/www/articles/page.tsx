@@ -18,12 +18,12 @@ export default async function ArticlesRoute({
   searchParams,
 }: ArticlesRouteProps) {
   const { tab } = await searchParams;
-  const activeTab = FEED_TABS.find((entry) => entry === tab) ?? "all";
-
-  const [{ user }, articles] = await Promise.all([
-    getSession(),
-    listArticleFeed({ tab: activeTab }),
-  ]);
+  const { user } = await getSession();
+  // Mengikuti/Saya need a session to mean anything, so a logged-out visitor only gets Semua.
+  const activeTab = user?.id
+    ? (FEED_TABS.find((entry) => entry === tab) ?? "all")
+    : "all";
+  const articles = await listArticleFeed({ tab: activeTab });
 
   return (
     <ArticlesPage
@@ -36,6 +36,7 @@ export default async function ArticlesRoute({
         verificationStatus: user?.verification_status,
       }}
       activeTab={activeTab}
+      showTabs={Boolean(user?.id)}
       initialItems={articles.list}
       initialHasMore={articles.hasMore}
     />

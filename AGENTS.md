@@ -358,8 +358,8 @@ Three layers, each with one job. Don't blend them.
    session cookie. Those two are **not** interchangeable — `list-filter` is `requireAuth` and always
    also returns the caller's own drafts and unpublished articles regardless of `status`, which is
    right for `me` and wrong for an "all" tab, so don't collapse them into one call. The backend takes
-   both flags at once (and a `status`), which nothing here needs yet. `createArticle` is the one
-   write here: authorized by the session JWT (`articles/create` is `requireAuth`, and a non-admin
+   both flags at once (and a `status`), which nothing here needs yet. `createArticle`/`updateArticle` are the writes
+   here: both authorized by the session JWT (`articles/create` is `requireAuth`, and a non-admin
    author must be verified and may only pass their own `author_id`), it returns a
    `{ok: true, article} | {ok: false, message}` result rather than throwing, mapping the backend's
    403/409/400 onto Indonesian copy — the composer's only failure surface is a toast, and
@@ -1147,10 +1147,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   fades it into the card, so the photo reads as texture rather than as a competing thumbnail; it
   no longer has a hover tint.) `ArticleAttachmentCard`'s
   byline falls back from `reference_author_name` to `reference_category_name`, since an article
-  can be published without an author. Nothing produces an `article`
-  attachment on this side yet: `CreateFeedForms` still only makes `photo`/`video`/`url`/
-  `news`, so these cards only render for feeds created elsewhere — but the destination route is
-  real, see `/articles/[article_slug]/[article_id]` below.
+  can be published without an author. The composer now produces this attachment too — the reader's
+  own Repeat2 button hands one over, see `ArticleDetailActions` under
+  `/articles/[article_slug]/[article_id]` below.
   The Repeat2 button is itself a `Dropdown` (not a direct toggle) with two entries: "Repost"
   (the plain toggleable repost, disabled for your own feed — unchanged `feeds/repost`/
   `feeds/unrepost` behavior, `text-secondary` while active) and "Quote Repost" (opens
@@ -1648,8 +1647,11 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   hand-rolled pill — with a square thumbnail on the right. `articles/list` carries **no
   `description`**, unlike `articles/detail`, which is why the row's secondary line is keywords and
   not a deck — don't fetch the detail per row to fill one.
-  Three tabs — Semua, Mengikuti, Saya — are URL state (`?tab=following`/`?tab=me`, absent for
-  Semua) rendered as plain `<Link>`s, so switching one is a server refetch through
+  Three tabs — Semua, Mengikuti, Saya — reuse `/quran`'s segmented-pill treatment (one
+  `rounded-full border` track holding `bg-primary text-white` for the active pill), but as URL state
+  (`?tab=following`/`?tab=me`, absent for
+  Semua) rendered as plain `<Link>`s rather than `useState`, so switching one is a server refetch
+  through
   `listArticleFeed` the same way `?q=` drives `/search`; the route passes `key={activeTab}` so
   `ArticlesPage` remounts with fresh pagination instead of leaking the previous tab's rows in.
   `scroll={false}` on those links keeps the viewport still while switching. Each tab carries its own
@@ -1657,18 +1659,58 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Further pages come from the `loadMoreArticles` Server Action through the usual
   infinite-scroll-via-`IntersectionObserver` shape. A `draft`/`unpublished` row shows a `Label`
   pill beside its author, since the Saya tab is the only place a caller's own unpublished work is
-  listed. It sits **inside `(gated)`**, unlike the public reader below — the two personal tabs need
-  a session, and bare `/articles` is not matched by `next.config.mts`'s `articles/.*` allowlist
-  entry (that pattern needs a segment after the slash), so a logged-out visitor is bounced to
-  `/auth/login` by the config rule with no per-route check needed.
-- `/articles/create` (`app/(www)/www/(gated)/articles/create/page.tsx` →
-  `components/pages/ArticleCreatePage.tsx`) — the distraction-free article
-  composer. `MainSiteDesktopShell` hides the normal desktop sidebar on this exact path; the
+  listed, and each row the viewer authored also gets a `Pencil` button beside its thumbnail linking
+  to `{articleHref}/edit`. That button is gated on `article.author_id === viewerId`, not on the Saya
+  tab, so your own article is editable wherever it shows up; it navigates with `router.push` (which
+  is why the row is a Client Component) because a nested `<a>` inside the row's own `<Link>` would
+  break hydration. The button sits **below** the meta row inside the text column, not beside the
+  thumbnail, and is a squared `rounded-lg` chip carrying the word "Edit" rather than a bare round
+  icon — an unlabelled circle next to a date read as decoration. It sits **outside `(gated)`**, like the reader below: reading articles is public,
+  and `next.config.mts`'s allowlist entry is `articles(?:/.*)?` — the bare path included — so a
+  logged-out visitor lands on the list rather than on a login screen. The two personal tabs are what
+  needs a session, so the route hides the whole tablist (`showTabs`) and pins `activeTab` to `all`
+  when `getSession()` has no `id`; without that pin a hand-typed `?tab=me` would call `list-filter`
+  tokenless and render an empty list that just looks broken.
+- `/articles/create` and `/articles/[article_slug]/[article_id]/edit` both render
+  `components/pages/ArticleComposerPage.tsx` — one distraction-free composer serving both, since
+  "edit" here means the same page with its fields already filled. An optional `draft`
+  (`{id, title, description, imageUrl, bodyHtml, categoryId, keywords}`) is what puts it in edit
+  mode: it seeds every `useState` and Tiptap's own `content`, swaps the header action to "Perbarui"
+  and the modal's to "Simpan Perubahan", and routes the submit to `updateArticle` instead of
+  `createArticle`. Editing deliberately sends **no `status`**, so saving can never publish a draft
+  by accident — which also means this UI cannot promote a draft to published, and nothing here
+  creates drafts today, so that only matters for articles made elsewhere.
+  **Both routes live under `(gated)`** — writing an article always needs an account, while reading
+  one never does, which is the line `/articles` and `/articles/[slug]/[id]` sit on the other side
+  of. The edit route nests inside the group at
+  `(gated)/articles/[article_slug]/[article_id]/edit`, which Next allows beside the ungated reader
+  on the same slug names since only the final paths have to be unique. That group's layout only
+  covers the `pending` → `/activation` case, and `articles(?:/.*)?` is allowlisted in
+  `next.config.mts`, so each route still owns its own `/auth/login?redirectTo=...` bounce — which is
+  the point: a config-level redirect cannot carry `redirectTo` and would drop the author on the feed
+  instead of back in the editor. Edit also `notFound()`s on a missing article and renders
+  `PageState` `forbidden` unless the caller is the author or a `Super Admin`, mirroring
+  `articles/update`'s own rule. It runs the stored body through `prepareArticleBody` before handing
+  it over, so another author's raw HTML never reaches the editor's parser — `<img onerror>` in a
+  detached parse tree is a real hazard, and sanitizing server-side costs nothing here. `MainSiteDesktopShell` hides the
+  normal desktop sidebar on both — `/articles/create` by exact match and the editor through an
+  `ARTICLE_EDIT_PATH` regex rather than a bare `endsWith("/edit")`, which would silently strip the
+  frame off every future `/edit` route; the
   composer owns a sticky close/status/action bar and a second sticky, horizontally scrollable
-  Tiptap toolbar. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
+  Tiptap toolbar (`components/articles/ArticleEditorToolbar.tsx`) whose buttons are `size-10` on
+  phones and `sm:size-9` above, with a right-edge white gradient below `sm:` — its scrollbar is
+  hidden, so without that fade there is nothing telling a touch user the row continues. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
   superscript, subscript, inline image insertion, blockquote, code block, bullet/numbered lists,
   and horizontal rule. Its first step contains the title (single-line behavior, auto-growing
-  wrap, hard limit 70), deck (hard limit 170), required cover upload — both its empty dropzone and
+  wrap, hard limit 70 — `text-[26px]` on phones stepping up to `sm:text-[38px]`/`lg:text-[54px]`,
+  since one desktop-sized display face shipped to a 360px screen left barely three words a line),
+  deck (hard limit 170, `text-base` up to `lg:text-2xl` on the same reasoning), required cover
+  upload. **Both the title and the deck are auto-growing `<textarea>`s, never an `<input>`** — they
+  show every line they hold, sized off their own `scrollHeight` by the shared `autoGrow`, which runs
+  on change, on mount (edit mode arrives pre-filled, so a two-line title would otherwise open
+  clipped), and on window resize (a narrower viewport wraps to more lines). The deck used to be an
+  `<input>`, which could only scroll a long summary sideways. Both strip newlines from their value
+  and swallow Enter, since each is one paragraph however many lines it wraps to — both its empty dropzone and
   its uploaded preview are `aspect-[16/9]`, matching the "rasio 16:9 disarankan" hint and the 16:9
   box `ArticleAttachmentCard` and the reader both crop to, so the author frames the cover once —
   and body; `Lanjutkan`
@@ -1752,7 +1794,22 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Tailwind arbitrary descendant variants (`[&_p]:mt-6`, `[&_blockquote]:…`) rather than a
   `@tailwindcss/typography` `prose` class, since that plugin isn't installed — extend that
   constant instead of adding one. `keywords` is a single comma-separated string, not an array, so
-  it's split before rendering as tag pills. The keyword pills are the page's last row — an earlier
+  it's split before rendering as tag pills. The author row is a `justify-between` strip: identity on
+  the left, `components/articles/ArticleDetailActions.tsx` on the right — three squared
+  (`rounded-lg`, never `rounded-full`) icon controls, all `size-9`. Edit is a `<Link>` to
+  `{path}/edit` shown only to the author; Repeat2 hands a `ComposerArticleDraft` to the feed
+  composer through the same `sessionStorage` compose-intent mechanism news uses (bouncing a
+  logged-out visitor to `/auth/login?redirectTo=` first, since the composer needs an account); and
+  Share2 opens the same `ShareModal` the feed's own share button uses, on a
+  `window.location.origin`-built URL, exactly as `FeedItemCard` builds its own. That file is the
+  page's only Client Component — the reader itself stays a Server Component.
+  **The author identity is only a profile link for the viewer's own article.** `articles/*` returns
+  `author_id`/`author_name`/`author_avatar` but **no `author_username`**, and `/profile/[username]`
+  is username-keyed with no lookup-by-id endpoint anywhere, so another author's handle simply cannot
+  be resolved here. Don't fake it by searching `users/list` on the display name. The fix belongs on
+  the backend — add `author_username` to the article list/detail responses the same way feeds gained
+  `creator_username` for this exact reason — after which `authorProfileHref` is the one line to
+  change. The keyword pills are the page's last row — an earlier
   revision closed with a "← Kembali ke Berita" link to `/news`, which was wrong twice over: an
   editorial article isn't a news-aggregator item, and the nav rail plus `BottomNav` already own
   going anywhere. There is deliberately no reaction/comment/share bar:
@@ -1900,10 +1957,15 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `feeds/create` takes one `attachment` object — `{type, urls}` for `photo`/`video`/`url`,
   `{type, reference_id}` for `news`/`training`, never both — so the composer's own
   `attachmentMode` is what keeps the three upload buttons locked once any slot is taken. The
-  only linked attachment it can produce today is `news`, handed in as `forceOpenNews` by
-  `RepostToFeedButton` (see `components/navigations/*` above); there's no in-composer picker
-  for browsing articles or trainings yet. Its preview renders through the same
-  `NewsAttachmentCard` the published feed uses, so the two can't drift.
+  two linked attachments it can produce are `news`, handed in as `forceOpenNews` by
+  `RepostToFeedButton`, and `article`, handed in as `forceOpenArticle` by the article reader's own
+  share-to-feed button (see `components/navigations/*` above for the shared compose-intent
+  mechanism); `training` still has no producer, and there's no in-composer picker for browsing
+  either. The two follow the same shape end to end — a `ComposerNewsDraft`/`ComposerArticleDraft` in
+  `sessionStorage`, a `news`/`article` branch in `attachmentMode` that locks the upload buttons, and
+  a `{type: "news", reference_id}`/`{type: "article", article_id}` payload (note the asymmetric
+  field, which is the backend's). Both preview through the very card the published feed renders
+  (`NewsAttachmentCard`/`ArticleAttachmentCard`), so composer and feed can't drift.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
   run through `lib/compress-image.ts` before they're staged or uploaded.
   **That module is now shared by every image upload in the app**, not just the composer, and takes

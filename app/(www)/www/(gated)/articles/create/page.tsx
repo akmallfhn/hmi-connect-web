@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { listArticleCategories } from "@/apis/articles";
 import { getSession } from "@/apis/session";
-import ArticleCreatePage from "@/components/pages/ArticleCreatePage";
+import ArticleComposerPage from "@/components/pages/ArticleComposerPage";
 
 export const metadata: Metadata = {
   title: "Tulis Artikel",
@@ -19,7 +19,7 @@ export default async function CreateArticleRoute() {
   if (!user?.id) redirect("/auth/login?redirectTo=/articles/create");
 
   return (
-    <ArticleCreatePage
+    <ArticleComposerPage
       author={{
         id: user.id,
         fullName: user.full_name ?? "Penulis",
