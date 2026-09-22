@@ -14,10 +14,14 @@ interface MainSiteDesktopShellProps {
   isAlumni?: boolean;
 }
 
-// Authentication and activation are intentionally distraction-free. Every other www
-// route shares the same desktop frame, including public profile and feed-detail routes.
+// Auth, activation, and the article composer are deliberately distraction-free; every other www route keeps the frame.
 function hidesDesktopSidebar(pathname: string) {
-  return pathname === "/activation" || pathname.startsWith("/auth/") || pathname.startsWith("/reset-password/");
+  return (
+    pathname === "/activation" ||
+    pathname === "/articles/create" ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/reset-password/")
+  );
 }
 
 export default function MainSiteDesktopShell({

@@ -80,3 +80,139 @@ body {
       transparent 52px
     );
 }
+
+/* Tiptap article composer. */
+.article-editor {
+  color: #242832;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.article-editor > *:first-child {
+  margin-top: 0;
+}
+
+.article-editor p {
+  margin-top: 1.25rem;
+}
+
+.article-editor h1,
+.article-editor h2,
+.article-editor h3,
+.article-editor h4 {
+  color: #172033;
+  font-family: var(--font-stack-sans-headline), Arial, sans-serif;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.article-editor h1 {
+  margin-top: 2.5rem;
+  font-size: 2.25rem;
+}
+
+.article-editor h2 {
+  margin-top: 2.25rem;
+  font-size: 1.875rem;
+}
+
+.article-editor h3 {
+  margin-top: 2rem;
+  font-size: 1.5rem;
+}
+
+.article-editor h4 {
+  margin-top: 1.75rem;
+  font-size: 1.25rem;
+}
+
+.article-editor ul,
+.article-editor ol {
+  margin-top: 1.25rem;
+  padding-left: 1.75rem;
+}
+
+.article-editor ul {
+  list-style: disc;
+}
+
+.article-editor ol {
+  list-style: decimal;
+}
+
+.article-editor li {
+  margin-top: 0.35rem;
+  padding-left: 0.25rem;
+}
+
+.article-editor blockquote {
+  margin-top: 1.75rem;
+  border-left: 3px solid var(--primary);
+  padding: 0.35rem 0 0.35rem 1.25rem;
+  color: #5f6573;
+  font-style: italic;
+}
+
+.article-editor code:not(pre code) {
+  border-radius: 0.35rem;
+  background: #f1f3f5;
+  padding: 0.15rem 0.4rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.88em;
+}
+
+.article-editor pre {
+  margin-top: 1.75rem;
+  overflow-x: auto;
+  border-radius: 0.875rem;
+  background: #202428;
+  padding: 1.1rem 1.25rem;
+  color: #f8fafc;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.article-editor hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid #dfe3e8;
+}
+
+.article-editor img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 1.75rem;
+  border-radius: 0.875rem;
+}
+
+.article-editor .article-body-image-node {
+  margin-top: 1.75rem;
+}
+
+.article-editor .article-body-image-node img {
+  margin-top: 0;
+}
+
+.article-editor p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: #b7bbc3;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .article-editor {
+    font-size: 17px;
+  }
+
+  .article-editor h1 {
+    font-size: 2rem;
+  }
+
+  .article-editor h2 {
+    font-size: 1.65rem;
+  }
+}

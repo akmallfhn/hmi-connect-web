@@ -12,6 +12,7 @@ fix the rule, not just the code.
 - **Tailwind CSS v4** (`app/globals.css`, `@theme inline` tokens — brand colors are
   `--primary` (tosca) and `--secondary` (orange)).
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
+  `@tiptap/react` + Tiptap extensions for the frontend article composer,
   `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
   `@react-email/components` (installed, but unused — every transactional email is sent by the Go
   backend, see Transactional email below), `sanitize-html` (server-side only, and used by exactly
@@ -1584,6 +1585,23 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
   categories remounts it with fresh pagination state instead of leaking the previous
   category's items in.
+- `/articles/create` (`app/(www)/www/(gated)/articles/create/page.tsx` →
+  `components/pages/ArticleCreatePage.tsx`) — the frontend-only, distraction-free article
+  composer. `MainSiteDesktopShell` hides the normal desktop sidebar on this exact path; the
+  composer owns a sticky close/status/action bar and a second sticky, horizontally scrollable
+  Tiptap toolbar. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
+  superscript, subscript, inline image insertion, blockquote, code block, bullet/numbered lists,
+  and horizontal rule. Its first step contains the title (single-line behavior, auto-growing
+  wrap, hard limit 70), deck (hard limit 170), 16:9 cover upload, and body; `Lanjutkan` validates
+  the title/body and opens a dedicated publication-details step containing the required category
+  plus keyword chips (eight maximum). The final publish control is intentionally frontend-only —
+  no API call or publish mutation exists yet. Image files are read as data URLs so the local
+  cover preview and inserted editor images work before storage/backend wiring. An uploaded cover
+  exposes adjacent replace/delete controls over the image. Body images use a custom React Tiptap
+  node view: clicking one gives it a blue selection ring, while hover or selection reveals its
+  top-right destructive `Button` with a trash icon; those editor-only controls are not emitted
+  into the saved HTML. Shared editor typography lives under `.article-editor` in
+  `app/globals.css`.
 - `/articles/[article_slug]/[article_id]`
   (`app/(www)/www/articles/[article_slug]/[article_id]/page.tsx` →
   `components/pages/ArticleDetailPage.tsx`) — the Medium-style reader for an **editorial**
