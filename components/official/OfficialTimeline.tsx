@@ -7,7 +7,7 @@ import CreateFeedForms, {
 } from "../forms/CreateFeedForms";
 import FeedItemCard from "../feeds/FeedItemCard";
 import { loadMoreEntityActivity } from "@/lib/actions";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface OfficialTimelineProps {
   authorEntity: ComposerAuthorEntity;
@@ -16,6 +16,7 @@ interface OfficialTimelineProps {
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
 }
 
@@ -26,6 +27,7 @@ export default function OfficialTimeline({
   currentUserId,
   currentUserName,
   currentUserAvatar,
+  userStatus,
   verificationStatus,
 }: OfficialTimelineProps) {
   const [items, setItems] = useState(initialItems);
@@ -109,6 +111,7 @@ export default function OfficialTimeline({
             currentUserId={currentUserId}
             currentUserName={currentUserName}
             currentUserAvatar={currentUserAvatar}
+            userStatus={userStatus}
             verificationStatus={verificationStatus}
             authorEntity={authorEntity}
             initialReposted={item.type === "repost"}

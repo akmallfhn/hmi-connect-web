@@ -56,6 +56,7 @@ export default function OfficialAccountPage({
               currentUserId={viewer?.id}
               currentUserName={viewer?.full_name}
               currentUserAvatar={viewer?.avatar}
+              userStatus={viewer?.status}
               verificationStatus={viewer?.verification_status}
             />
           </main>

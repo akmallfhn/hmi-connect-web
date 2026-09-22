@@ -707,7 +707,15 @@ iconSm`.
 NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
   only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
   they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
-  `/auth/login` when logged out. Its "Posting" button is a `Dropdown` (an `IconChevronDown` beside
+  `/auth/login` when logged out. **Posting is disabled unless the account can actually post** —
+  signed in, `status !== "pending"`, and `verification_status === "verified"`, the same bar
+  reactions and comments sit behind. A pending or unverified caller gets the button `disabled` with
+  a `title` naming the missing step (activation or verification), while a logged-out one keeps a
+  live button that pushes `/auth/login`, since signing in is the step there. That needs `userStatus`
+  threaded from `app/(www)/www/layout.tsx` through `MainSiteDesktopShell`. `BottomNav`'s own Posting
+  tab is deliberately left alone: its Feed option navigates to `/`, and the `(gated)` layout already
+  sends a pending account to `/activation` from there.
+  Its "Posting" button is a `Dropdown` (an `IconChevronDown` beside
   the `IconPlus` rotates 180° while open, so the chevron is the affordance) whose panel is the
   shared `components/navigations/CreateOptionList.tsx` — Feed or Artikel, see the compose-intent
   paragraph below; logged out it stays a plain button pushing `/auth/login`, since there is
@@ -1241,6 +1249,19 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   first tile keeps its original `NewsIcon` artwork even though it now opens `/articles` rather than
   `/news` — that glyph reads as "something to read" either way, and the hand-converted set has no
   article illustration of its own.
+- `hooks/useInteractionGuard.ts` — the one gate every feed interaction runs through, shared by
+  `FeedItemCard` and `CommentItem` (it replaced a `requireVerified` copy in each, so the rule lives
+  in one place). `verification_status === "verified"` passes; no session pushes `/auth/login`; an
+  `unverified` account pushes `/verification`. The other two states **toast instead of navigating**,
+  because `/verification` refuses them both and sends them back — `status === "pending"` to
+  `/activation`, `verification_status === "pending"` to `/`. That second case is the one a caller
+  actually hits, since an account-pending user never reaches the home feed in the first place, and
+  the old unconditional push there made clicking like look like a dead button: the route bounced
+  straight back to where they already were. Reachable because `/feeds/[feed_id]`,
+  `/profile/[username]`, and the article reader are public, so an unactivated account can genuinely
+  see a like button. `userStatus` is threaded to both components from the three `FeedItemCard`
+  callsites — `FeedTimeline` (via `Feed`/`FeedPage`), `OfficialTimeline`, and
+  `/feeds/[feed_id]`.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a

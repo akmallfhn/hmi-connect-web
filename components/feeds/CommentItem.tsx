@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Heart, Reply } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -21,10 +20,16 @@ import {
 } from "@/lib/actions";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import { resolveCommentAuthor } from "@/lib/feed-author";
-import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
+import { useInteractionGuard } from "@/hooks/useInteractionGuard";
+import {
+  isSuccessStatus,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 
 interface CommentItemProps {
   comment: FeedComment;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   currentUserId?: string;
   currentUserName?: string;
@@ -36,6 +41,7 @@ interface CommentItemProps {
 
 export default function CommentItem({
   comment,
+  userStatus,
   verificationStatus,
   currentUserId,
   currentUserName,
@@ -44,7 +50,11 @@ export default function CommentItem({
   onDeleted,
   authorEntity,
 }: CommentItemProps) {
-  const router = useRouter();
+  const requireVerified = useInteractionGuard({
+    userId: currentUserId,
+    userStatus,
+    verificationStatus,
+  });
   const author = resolveCommentAuthor(comment);
   const reaction = useReaction(isReply ? "comment_reply" : "comment", comment.id, {
     myReaction: comment.my_reaction,
@@ -65,16 +75,6 @@ export default function CommentItem({
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [postingReply, setPostingReply] = useState(false);
-
-  function requireVerified(): boolean {
-    if (!currentUserId) {
-      router.push("/auth/login");
-      return false;
-    }
-    if (verificationStatus === "verified") return true;
-    router.push("/verification");
-    return false;
-  }
 
   function handleReactionButtonClick() {
     if (!requireVerified()) return;
@@ -247,6 +247,7 @@ export default function CommentItem({
               <CommentItem
                 key={reply.id}
                 comment={reply}
+                userStatus={userStatus}
                 verificationStatus={verificationStatus}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}

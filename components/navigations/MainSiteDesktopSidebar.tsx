@@ -22,7 +22,7 @@ import { useState } from "react";
 import { logoutUser } from "@/lib/actions";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
@@ -34,6 +34,7 @@ interface MainSiteDesktopSidebarProps {
   userId?: string;
   avatar?: string;
   username?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   isAlumni?: boolean;
 }
@@ -91,6 +92,7 @@ export default function MainSiteDesktopSidebar({
   userId,
   avatar,
   username,
+  userStatus,
   verificationStatus,
   isAlumni,
 }: MainSiteDesktopSidebarProps) {
@@ -99,6 +101,17 @@ export default function MainSiteDesktopSidebar({
   const unreadChatCount = useUnreadChatCount(userId);
   const { unreadCount } = useNotificationsBell(userId);
   const [loggingOut, setLoggingOut] = useState(false);
+  // Posting needs an activated, verified account — the same bar reactions and comments sit behind.
+  const canPost =
+    Boolean(userId) &&
+    userStatus !== "pending" &&
+    verificationStatus === "verified";
+  const postingHint =
+    userStatus === "pending"
+      ? "Selesaikan aktivasi akun dulu untuk bisa membuat postingan."
+      : verificationStatus === "pending"
+        ? "Verifikasi akunmu masih ditinjau admin."
+        : "Verifikasi akunmu dulu untuk bisa membuat postingan.";
   const profileHref = username ? `/profile/${username}` : "/auth/login";
   const profileIsActive = username
     ? pathname === profileHref || pathname.startsWith(`${profileHref}/`)
@@ -185,7 +198,7 @@ export default function MainSiteDesktopSidebar({
           />
         </Link>
 
-        {userId ? (
+        {canPost ? (
           <Dropdown
             align="left"
             panelClassName="w-60 rounded-xl"
@@ -213,7 +226,11 @@ export default function MainSiteDesktopSidebar({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => router.push("/auth/login")}
+            disabled={Boolean(userId)}
+            title={userId ? postingHint : undefined}
+            onClick={() => {
+              if (!userId) router.push("/auth/login");
+            }}
             className="mt-3 h-11 w-full rounded-xl"
           >
             <IconPlus className="size-5" />

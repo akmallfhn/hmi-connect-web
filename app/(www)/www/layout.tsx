@@ -73,6 +73,7 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
         userId={user?.id}
         avatar={user?.avatar}
         username={user?.username}
+        userStatus={user?.status}
         verificationStatus={user?.verification_status}
         isAlumni={user?.is_alumni}
       >

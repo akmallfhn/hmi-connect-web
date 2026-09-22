@@ -31,6 +31,7 @@ export default async function HomePage() {
       avatar={user?.avatar}
       userId={user?.id}
       username={user?.username}
+      userStatus={user?.status}
       verificationStatus={user?.verification_status}
     />
   );

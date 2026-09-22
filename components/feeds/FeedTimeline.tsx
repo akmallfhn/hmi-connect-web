@@ -13,7 +13,7 @@ import {
   COMPOSE_INTENT_KEY,
   COMPOSE_INTENT_NEWS_KEY,
 } from "@/lib/constants";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface FeedTimelineProps {
   initialItems: FeedTimelineItem[];
@@ -21,6 +21,7 @@ interface FeedTimelineProps {
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   newsCard?: ReactNode;
   suggestedConnectionsCard?: ReactNode;
@@ -61,6 +62,7 @@ export default function FeedTimeline({
   currentUserId,
   currentUserName,
   currentUserAvatar,
+  userStatus,
   verificationStatus,
   newsCard,
   suggestedConnectionsCard,
@@ -189,6 +191,7 @@ export default function FeedTimeline({
               currentUserId={currentUserId}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}
+              userStatus={userStatus}
               verificationStatus={verificationStatus}
               initialReposted={repostedFeedIds.has(item.feed.id)}
               repostedBy={

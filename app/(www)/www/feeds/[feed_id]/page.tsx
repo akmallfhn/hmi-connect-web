@@ -121,6 +121,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
               currentUserId={user?.id}
               currentUserName={user?.full_name}
               currentUserAvatar={user?.avatar}
+              userStatus={user?.status}
               verificationStatus={user?.verification_status}
               initialComments={comments}
               defaultShowComments

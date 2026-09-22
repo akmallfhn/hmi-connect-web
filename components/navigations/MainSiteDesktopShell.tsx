@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import MainSiteDesktopSidebar from "./MainSiteDesktopSidebar";
 
 interface MainSiteDesktopShellProps {
@@ -10,6 +10,7 @@ interface MainSiteDesktopShellProps {
   userId?: string;
   avatar?: string;
   username?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   isAlumni?: boolean;
 }
@@ -32,6 +33,7 @@ export default function MainSiteDesktopShell({
   userId,
   avatar,
   username,
+  userStatus,
   verificationStatus,
   isAlumni,
 }: MainSiteDesktopShellProps) {
@@ -45,6 +47,7 @@ export default function MainSiteDesktopShell({
           userId={userId}
           avatar={avatar}
           username={username}
+          userStatus={userStatus}
           verificationStatus={verificationStatus}
           isAlumni={isAlumni}
         />

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Ban,
   Eye,
@@ -56,13 +55,19 @@ import {
 } from "@/lib/actions";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
-import { isSuccessStatus, type VerificationStatusEnum } from "@/lib/types";
+import { useInteractionGuard } from "@/hooks/useInteractionGuard";
+import {
+  isSuccessStatus,
+  type UserStatusEnum,
+  type VerificationStatusEnum,
+} from "@/lib/types";
 
 interface FeedItemCardProps {
   feed: Feed;
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   initialComments?: FeedComment[];
   defaultShowComments?: boolean;
@@ -217,6 +222,7 @@ export default function FeedItemCard({
   currentUserId,
   currentUserName,
   currentUserAvatar,
+  userStatus,
   verificationStatus,
   initialComments,
   defaultShowComments = false,
@@ -226,7 +232,11 @@ export default function FeedItemCard({
   onFeedCreated,
   authorEntity,
 }: FeedItemCardProps) {
-  const router = useRouter();
+  const requireVerified = useInteractionGuard({
+    userId: currentUserId,
+    userStatus,
+    verificationStatus,
+  });
   const author = resolveFeedAuthor(feed);
   const reaction = useReaction("feed", feed.id, {
     myReaction: feed.my_reaction,
@@ -294,16 +304,6 @@ export default function FeedItemCard({
       ? `${window.location.origin}/feeds/${feed.id}`
       : "";
   const totalCommentCount = commentCount + feed.comment_reply_count;
-
-  function requireVerified(): boolean {
-    if (!currentUserId) {
-      router.push("/auth/login");
-      return false;
-    }
-    if (verificationStatus === "verified") return true;
-    router.push("/verification");
-    return false;
-  }
 
   function handleReactionButtonClick() {
     if (!requireVerified()) return;
@@ -612,6 +612,7 @@ export default function FeedItemCard({
         <div className="mt-3 border-t border-[#e6e9ef] pt-3">
           <CommentItem
             comment={feed.top_comment}
+            userStatus={userStatus}
             verificationStatus={verificationStatus}
             currentUserId={currentUserId}
             currentUserName={currentUserName}
@@ -647,6 +648,7 @@ export default function FeedItemCard({
             <CommentItem
               key={comment.id}
               comment={comment}
+              userStatus={userStatus}
               verificationStatus={verificationStatus}
               currentUserId={currentUserId}
               currentUserName={currentUserName}

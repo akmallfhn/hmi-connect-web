@@ -4,13 +4,14 @@ import MobileGreetingBar from "../feeds/MobileGreetingBar";
 import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface FeedPageProps {
   fullName?: string;
   avatar?: string;
   userId?: string;
   username?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
 }
 
@@ -19,6 +20,7 @@ export default function FeedPage({
   avatar,
   userId,
   username,
+  userStatus,
   verificationStatus,
 }: FeedPageProps) {
   return (
@@ -49,6 +51,7 @@ export default function FeedPage({
             fullName={fullName}
             avatar={avatar}
             currentUserId={userId}
+            userStatus={userStatus}
             verificationStatus={verificationStatus}
           />
         </main>
