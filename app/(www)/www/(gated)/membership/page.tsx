@@ -16,9 +16,16 @@ export const metadata: Metadata = {
 export default async function Membership() {
   const { sessionToken, user } = await getSession();
 
-  if (user?.verification_status !== "verified") redirect("/verification");
+  const verificationStatus = user?.verification_status;
+  // A review in progress still gets the page, just locked — /verification would only bounce them back to /.
+  if (verificationStatus !== "verified" && verificationStatus !== "pending") {
+    redirect("/verification");
+  }
 
-  const membership = sessionToken ? await getMembershipDetail(sessionToken) : null;
+  const membership =
+    verificationStatus === "verified" && sessionToken
+      ? await getMembershipDetail(sessionToken)
+      : null;
 
   return (
     <MembershipPage

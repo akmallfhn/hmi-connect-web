@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { logoutUser } from "@/lib/actions";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
@@ -117,6 +118,26 @@ export default function MainSiteDesktopSidebar({
     ? pathname === profileHref || pathname.startsWith(`${profileHref}/`)
     : false;
 
+  // Posting stays clickable when it can't run — a disabled button never says why.
+  function handleBlockedPost() {
+    if (!userId) {
+      router.push("/auth/login");
+      return;
+    }
+    const nextStep =
+      userStatus === "pending"
+        ? "/activation"
+        : verificationStatus === "unverified"
+          ? "/verification"
+          : null;
+    toast.error(
+      postingHint,
+      nextStep
+        ? { action: { label: "Lanjutkan", onClick: () => router.push(nextStep) } }
+        : undefined,
+    );
+  }
+
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -129,7 +150,7 @@ export default function MainSiteDesktopSidebar({
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-[#e6e9ef] bg-white px-3 py-5 lg:flex">
+    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-[#e6e9ef] bg-white px-3 py-5 lg:flex">
       <Link href="/" className="mb-7 flex items-center px-2">
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>
@@ -226,11 +247,8 @@ export default function MainSiteDesktopSidebar({
           <Button
             type="button"
             variant="secondary"
-            disabled={Boolean(userId)}
             title={userId ? postingHint : undefined}
-            onClick={() => {
-              if (!userId) router.push("/auth/login");
-            }}
+            onClick={handleBlockedPost}
             className="mt-3 h-11 w-full rounded-xl"
           >
             <IconPlus className="size-5" />

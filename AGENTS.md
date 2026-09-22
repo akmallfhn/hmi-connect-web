@@ -565,10 +565,14 @@ gated/mandatory — `app/(www)/www/verification/page.tsx` redirects away pending
 users (to `/activation`) and anyone whose `verification_status` is already `"pending"` or
 `"verified"` (to `/`, since the backend 409s on resubmission for either state); anyone else
 (`"unverified"`) can reach it any time, and the page itself offers a "Nanti saja" (skip) link
-back to `/`. `Header` shows two distinct banners keyed off `verificationStatus` — a red one
-linking to `/verification` when `"unverified"`, and a yellow "sedang ditinjau admin" one with
-no link when `"pending"` — and only renders the verified badge next to the account name when
-`"verified"`.
+back to `/`. `components/navigations/VerificationBanner.tsx` shows two distinct banners keyed
+off `verificationStatus` — a red one linking to `/verification` when `"unverified"`, and a yellow
+"sedang ditinjau admin" one with no link when `"pending"` — and `ProfileBadges` only renders the
+verified badge next to the account name when `"verified"`. The banner is rendered by
+`MainSiteDesktopShell`, **above** the desktop rail rather than inside each page's `Header`, so one
+account-wide notice spans the whole site instead of only the content column; `/verification`
+itself is one of the routes that shell skips entirely, since nagging about verification on the
+verification form is the same instruction twice.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
    Google), phone number, date of birth, gender.
@@ -682,7 +686,9 @@ iconSm`.
   entity's own Pengaturan → Akses tab instead (see `EntityAccessTab` below).
 - `components/navigations/*` — site chrome shown on every page. **The main site's desktop
   navigation is a fixed left rail, not a top navbar.** `MainSiteDesktopSidebar.tsx` is that rail
-  (`fixed inset-y-0 left-0 w-64`, `hidden lg:flex`): the horizontal wordmark linking home, then
+  (`sticky top-0 h-dvh w-64 self-start`, `hidden lg:flex` — an in-flow flex column of the shell,
+  not a `fixed` overlay, so the verification banner above it can push it down): the horizontal
+  wordmark linking home, then
   seven nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
   Articles `/articles`, Al-Quran `/quran`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
@@ -707,11 +713,14 @@ iconSm`.
 NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
   only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
   they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
-  `/auth/login` when logged out. **Posting is disabled unless the account can actually post** —
+  `/auth/login` when logged out. **Posting only works for an account that can actually post** —
   signed in, `status !== "pending"`, and `verification_status === "verified"`, the same bar
-  reactions and comments sit behind. A pending or unverified caller gets the button `disabled` with
-  a `title` naming the missing step (activation or verification), while a logged-out one keeps a
-  live button that pushes `/auth/login`, since signing in is the step there. That needs `userStatus`
+  reactions and comments sit behind. A caller who fails that bar still gets a **live** button, not a
+  `disabled` one: clicking it toasts the missing step (activation or verification), with a
+  "Lanjutkan" toast action pushing `/activation` or `/verification` when there's somewhere to go —
+  a `verification_status` of `"pending"` has none, so that one is copy only. A disabled button
+  never says why, which is the same reasoning `useInteractionGuard` follows for likes and comments;
+  a logged-out caller still just pushes `/auth/login`, since signing in is the step there. That needs `userStatus`
   threaded from `app/(www)/www/layout.tsx` through `MainSiteDesktopShell`. `BottomNav`'s own Posting
   tab is deliberately left alone: its Feed option navigates to `/`, and the `(gated)` layout already
   sends a pending account to `/activation` from there.
@@ -722,21 +731,28 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   nothing to choose between yet. Its Keluar calls `logoutUser` then hard-navigates,
   the same reason `SettingsPage`'s own row does.
   `MainSiteDesktopShell.tsx` is the thin client wrapper `app/(www)/www/layout.tsx` puts around
-  every `(www)` route: it renders the rail and pads the content with `lg:pl-64`, except on the
-  distraction-free routes its own `hidesDesktopSidebar` lists (`/activation`, `/auth/*`,
-  `/reset-password/*`). Being mounted at the layout means the rail survives navigation instead of
+  every `(www)` route: a `flex min-h-dvh flex-col` shell holding `VerificationBanner` above a
+  `flex flex-1` row of the rail plus a `flex min-w-0 flex-1 flex-col` content column. On the
+  distraction-free routes its own `hidesDesktopSidebar` lists (`/activation`, `/verification`,
+  `/articles/create`, the article edit route, `/auth/*`, `/reset-password/*`) it renders `children`
+  bare — no rail, and no banner either. The rail sits **in flow** rather than `fixed`, and the
+  banner is a plain flow element rather than a second `sticky` strip, which is what keeps it from
+  needing to know `Header`'s own dynamic height (see `Header` below). Being mounted at the layout means the rail survives navigation instead of
   remounting per page, and means public routes (`/profile/[username]`, `/feeds/[feed_id]`,
   `/trainings`) get it too. It reads identity straight off the layout's own `getSession()`, so no
   page passes nav props down.
   **`Header.tsx` no longer renders any desktop row.** Its logo, centered search form, chat link,
-  bell dropdown, and avatar dropdown all moved into the rail above; what's left is a `sticky top-0`
-  stack of optional strips: the "belum diverifikasi"/"sedang ditinjau admin" banners, the
-  `lg:`-only `desktopFilterBar`, and the `lg:hidden` `mobileBackTitle`/`mobileMenu` row. The
+  bell dropdown, and avatar dropdown all moved into the rail above; the two verification banners
+  moved out too, up to `MainSiteDesktopShell` (see above). What's left is a `sticky top-0` stack of
+  optional strips: the `lg:`-only `desktopFilterBar` and the `lg:hidden`
+  `mobileBackTitle`/`mobileMenu` row. The
   `<header>` itself now paints no border or background of its own — with no desktop row left to
-  frame, those would just be a stray strip. It still accepts `fullName`/`avatar`/`email`/`username`/
-  `loading`, but only `userId` and `verificationStatus` are actually read; the rest are kept so the
-  dozens of existing callsites didn't all have to change at once. Don't add new chrome to `Header`
-  that belongs in the rail.
+  frame, those would just be a stray strip. It still accepts
+  `fullName`/`avatar`/`email`/`userId`/`username`/`verificationStatus`/`loading`, **none** of which
+  it reads any more; they're kept so the dozens of existing callsites didn't all have to change at
+  once. Don't add new chrome to `Header` that belongs in the rail — and don't put a second
+  `sticky top-0` strip above it, which is exactly why the banner is a plain flow element in the
+  shell: `Header` would otherwise have to offset itself against that strip's dynamic height.
   `HeaderAdminAccessContext` and the `listMyAccessGrants` logo backfill in
   `app/(www)/www/layout.tsx` stay, since `SettingsPage` reads them — note that leaves a sitewide
   per-page-load fetch serving exactly one route, so if anything else moves, move that fetch into
@@ -746,12 +762,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   There is deliberately no mobile notification affordance in `Header` itself — the bell only
   shows up on mobile inside `MobileGreetingBar` (see below), so it doesn't need a second,
   sitewide top-right-corner bar competing for space on every page. `Header` also takes three optional props for pages reached by drilling in rather than
-  top-level nav (news, membership, notifications, ...): `mobileBackTitle` renders a
+  top-level nav (news, membership, notifications, `/feeds/[feed_id]`, ...): `mobileBackTitle` renders a
   `lg:hidden` back-arrow (`router.back()`) + title row; `mobileMenu`/`mobileMenuLabel` add an
   "⋮" overflow-menu trigger next to it (a `Dropdown`, only rendered when `mobileMenu` is
   passed); `desktopFilterBar` renders a `lg:`-only bar for page-level filters (e.g. news
   category pills) that should live in the sticky navbar. All three render as extra rows
-  inside `Header`'s own `sticky top-0` `<header>` element (after the verification banner)
+  inside `Header`'s own `sticky top-0` `<header>` element
   rather than as separately `sticky`-positioned siblings — a second independently-sticky
   element needs to know `Header`'s real rendered height to offset against, and that height
   is dynamic (0, banner-only, or more), so a hardcoded offset silently leaves a gap once you
@@ -916,7 +932,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `{children}` row. Inside that, `ConversationList` is the persistent sidebar, and
   `{children}` is the swappable pane — mobile shows exactly one of {list, thread} at a time
   via responsive classes keyed off `usePathname()`, desktop always shows both side by side,
-  Instagram-web style. The shell is pinned to `h-dvh` with `overflow-hidden` (unlike every
+  Instagram-web style. The shell fills the layout's own remaining height
+  (`flex min-h-0 flex-1 flex-col` inside `MainSiteDesktopShell`'s `min-h-dvh` column, rather than
+  its own `h-dvh`, so the verification banner above it doesn't push the page into scrolling) with
+  `overflow-hidden` (unlike every
   other page's normal scrolling document flow) since only the list and the open thread
   scroll internally, and `BottomNav` is hidden entirely while a thread is open on mobile
   (immersive, no bottom tab bar, matching Instagram/WhatsApp) rather than just collapsing
@@ -1165,7 +1184,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   attachment UI and renders the quoted feed via `QuotedFeed.tsx` — shared between here and
   `FeedItemCard`'s own repost-of preview — then submits `feeds/create` with `repost_of_id`).
   The feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
-  page (`/feeds/[feed_id]`) only happens through the "..." menu. That menu (`Dropdown`,
+  page (`/feeds/[feed_id]`) only happens through the "..." menu. That paragraph carries
+  `break-words`, as does every other surface that renders user-authored body text (`QuotedFeed`,
+  `ActivityEntryCard`, `SearchPostingRow`, `CommentItem`): a pasted URL is one long unbreakable
+  word and spills past the card's own padding without it. That menu (`Dropdown`,
   see `components/common/*` below) always renders and always has "Lihat post" (links to
   `/feeds/[feed.id]`); "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)
   and "Delete post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on
@@ -1521,6 +1543,17 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   `member_card` is `null` until
   `users/verification` sets it, so the page shows a "Belum Terverifikasi" prompt linking to
   `/verification` instead of a broken card when it's missing.
+  **A `verification_status` of `"pending"` reaches this route and renders a locked card instead of
+  being redirected.** The route only bounces `"unverified"` to `/verification`; sending a pending
+  account there would just bounce it on to `/` (see the Verification flow above), so E-KTA used to
+  be a dead nav item for exactly the people waiting on it. It skips `getMembershipDetail`
+  altogether for them — there is no card to fetch — and passes `locked` to both cards instead:
+  `MembershipCard` blurs its number/name block behind a Tabler `IconLock` chip reading "Menunggu
+  verifikasi admin" while the card's own chrome stays crisp, and `MembershipInfoCard` swaps every
+  value for placeholder dots under the same blur, adds a yellow `Terkunci` `Label` beside its
+  heading, and renders that same pill in place of the Aktif/Tidak Aktif one. The locked rows show
+  dots rather than a blurred real value on purpose — a blur is a visual, not a redaction, and
+  there's nothing real to show a pending account anyway.
 - `components/pages/SettingsPage.tsx` (`/settings`, under `(gated)`) — the account menu.
   Reached from `Header`'s desktop profile dropdown ("Pengaturan", previously a dead
   `href="#"`) and, on mobile, from a `lg:hidden` gear button `ProfileHeader` renders in the
@@ -1817,8 +1850,11 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   constant instead of adding one. `keywords` is a single comma-separated string, not an array, so
   it's split before rendering as tag pills. The author row is a `justify-between` strip: identity on
   the left, `components/articles/ArticleDetailActions.tsx` on the right — three squared
-  (`rounded-lg`, never `rounded-full`) icon controls, all `size-9`. Edit is a `<Link>` to
-  `{path}/edit` shown only to the author; Repeat2 hands a `ComposerArticleDraft` to the feed
+  (`rounded-lg`, never `rounded-full`) icon controls, all `size-9` `Button`s at
+  `variant="secondarySoft"`, so the three read as one row. Edit is shown only to the author and
+  navigates to `{path}/edit` with `router.push` rather than being a `<Link>` — the `Button`
+  primitive only renders a `<button>`, and matching its two siblings won out over link semantics
+  here, the same call `ArticleListRow`'s own edit button already makes; Repeat2 hands a `ComposerArticleDraft` to the feed
   composer through the same `sessionStorage` compose-intent mechanism news uses (bouncing a
   logged-out visitor to `/auth/login?redirectTo=` first, since the composer needs an account); and
   Share2 opens the same `ShareModal` the feed's own share button uses, on a

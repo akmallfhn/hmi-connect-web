@@ -161,7 +161,7 @@ export default function CommentItem({
           <p className="text-xs font-semibold text-[#172033] xl:text-[13px]">
             {author.name}
           </p>
-          <p className="text-sm text-[#172033] xl:text-[15px]">
+          <p className="break-words text-sm text-[#172033] xl:text-[15px]">
             {comment.message}
           </p>
         </div>

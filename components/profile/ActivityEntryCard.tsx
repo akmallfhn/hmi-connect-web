@@ -42,7 +42,7 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
 
       {type === "comment" && comment ? (
         <>
-          <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-[#172033] xl:text-[15px]">
+          <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033] xl:text-[15px]">
             {comment.message}
           </p>
           <div className="mt-2 rounded-xl border border-[#e6e9ef] p-3">
@@ -52,7 +52,7 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
                 {author.name}
               </p>
             </div>
-            <p className="mt-1 line-clamp-2 text-xs text-[#5f6573] xl:text-sm">
+            <p className="mt-1 line-clamp-2 break-words text-xs text-[#5f6573] xl:text-sm">
               {feed.content}
             </p>
           </div>

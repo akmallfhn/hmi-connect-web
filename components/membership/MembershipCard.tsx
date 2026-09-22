@@ -1,3 +1,4 @@
+import { IconLock } from "@tabler/icons-react";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import LogoHmiOutline from "../svg/LogoHmiOutline";
 
@@ -13,6 +14,7 @@ const CARD_BACKGROUND_URL = CARD_BACKGROUND_ALT_3;
 interface MembershipCardProps {
   fullName: string;
   memberCard?: string;
+  locked?: boolean;
 }
 
 function formatCardNumber(memberCard?: string) {
@@ -23,6 +25,7 @@ function formatCardNumber(memberCard?: string) {
 export default function MembershipCard({
   fullName,
   memberCard,
+  locked,
 }: MembershipCardProps) {
   return (
     <div
@@ -57,13 +60,24 @@ export default function MembershipCard({
           <div className="h-8 w-10 rounded-md bg-gradient-to-br from-yellow-200 to-yellow-400 sm:h-9 sm:w-12" />
         </div>
 
-        <div>
-          <p className="font-mono text-lg tracking-[0.15em] text-white sm:text-xl">
-            {formatCardNumber(memberCard)}
-          </p>
-          <p className="mt-2 truncate text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
-            {fullName}
-          </p>
+        <div className="relative">
+          <div className={locked ? "select-none blur-[6px]" : undefined}>
+            <p className="font-mono text-lg tracking-[0.15em] text-white sm:text-xl">
+              {formatCardNumber(memberCard)}
+            </p>
+            <p className="mt-2 truncate text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
+              {fullName}
+            </p>
+          </div>
+
+          {locked && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 text-[13px] font-semibold text-white ring-1 ring-white/25 lg:text-sm">
+                <IconLock className="size-4 shrink-0" stroke={2} />
+                Menunggu verifikasi admin
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

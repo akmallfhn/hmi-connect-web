@@ -23,11 +23,7 @@ interface ChatsPageProps {
   children: ReactNode;
 }
 
-// Instagram-web-style DM shell: a persistent conversation list + a thread pane that swaps
-// via nested routing (children), rather than each page remounting its own list — so
-// switching conversations never re-fetches or re-scrolls the sidebar. Fixed to the
-// viewport (h-dvh, no page scroll) since a chat surface behaves like an app, not a
-// document — only the list and the message thread scroll internally.
+// Fills the shell's remaining height rather than its own h-dvh, so only the list and the open thread scroll.
 export default function ChatsPage({ viewer, children }: ChatsPageProps) {
   const pathname = usePathname();
   const isThreadRoute = pathname !== "/chats";
@@ -35,7 +31,7 @@ export default function ChatsPage({ viewer, children }: ChatsPageProps) {
 
   return (
     <ChatConversationsProvider userId={viewer.userId}>
-      <div className="flex h-dvh flex-col overflow-hidden bg-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
         <div className={isThreadRoute ? "hidden lg:block lg:shrink-0" : "shrink-0"}>
           <Header
             fullName={viewer.fullName}

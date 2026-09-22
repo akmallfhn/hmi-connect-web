@@ -1,7 +1,6 @@
 "use client";
 
 import { Pencil, Repeat2, Share2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArticleDetail } from "@/apis/articles";
@@ -64,14 +63,17 @@ export default function ArticleDetailActions({
     <>
       <div className="flex items-center gap-2">
         {canEdit && (
-          <Link
-            href={`${articlePath}/edit`}
+          <Button
+            type="button"
+            variant="secondarySoft"
+            size="icon"
+            onClick={() => router.push(`${articlePath}/edit`)}
             aria-label="Edit artikel"
             title="Edit artikel"
-            className={`${ACTION_CLASS} flex items-center justify-center border border-[#dbe3ef] text-[#454b57] transition hover:bg-[#f5f7fb] hover:text-[#172033]`}
+            className={ACTION_CLASS}
           >
             <Pencil className="size-4" />
-          </Link>
+          </Button>
         )}
 
         <Button

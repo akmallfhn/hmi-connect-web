@@ -472,7 +472,7 @@ export default function FeedItemCard({
         </Dropdown>
       </div>
 
-      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#172033] xl:text-[15px]">
+      <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033] xl:text-[15px]">
         {content}
       </p>
 

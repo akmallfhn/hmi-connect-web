@@ -19,7 +19,7 @@ export default function SearchPostingRow({ posting }: { posting: SearchPostingRe
           <p className="text-xs text-[#5f6573]">{formatRelativeTime(posting.created_at)}</p>
         </div>
       </div>
-      <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-[#172033]">
+      <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033]">
         {posting.content}
       </p>
     </Link>

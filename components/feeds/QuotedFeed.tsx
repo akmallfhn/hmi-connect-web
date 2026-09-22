@@ -33,7 +33,7 @@ export default function QuotedFeed({
           </p>
         </div>
       </div>
-      <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-[#172033]">
+      <p className="mt-2 line-clamp-4 whitespace-pre-line break-words text-sm text-[#172033]">
         {feed.content}
       </p>
       {photo && (

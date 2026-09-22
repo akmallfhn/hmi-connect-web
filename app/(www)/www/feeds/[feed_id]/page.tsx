@@ -88,6 +88,7 @@ export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
         userId={user?.id}
         username={user?.username}
         verificationStatus={user?.verification_status}
+        mobileBackTitle="Postingan"
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
