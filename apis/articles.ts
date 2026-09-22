@@ -161,6 +161,45 @@ export async function listArticleCategories(
   return mapPage(result.data, page);
 }
 
+// The three tabs of /articles. "all" is the public published feed; the other two are viewer-scoped.
+export type ArticleFeedTab = "all" | "following" | "me";
+
+type ListArticleFeedOptions = {
+  tab: ArticleFeedTab;
+  page?: number;
+  pageSize?: number;
+};
+
+// One entry point for the tabbed feed, so which endpoint serves which tab is decided in one place.
+export async function listArticleFeed({
+  tab,
+  page = 1,
+  pageSize = 10,
+}: ListArticleFeedOptions): Promise<PagedArticleResult<ArticleListEntry>> {
+  if (tab === "all") return listArticles({ page, pageSize });
+
+  const token = await getSessionToken();
+  if (!token) return mapPage<ArticleListEntry>(undefined, page);
+
+  const result = await callApi<ListResponse<ArticleListEntry>>(
+    "/api/v1/articles/list-filter",
+    {
+      method: "POST",
+      token,
+      body: {
+        ...(tab === "following" ? { is_following: true } : { is_mine: true }),
+        page,
+        page_size: pageSize,
+      },
+    }
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    return mapPage<ArticleListEntry>(undefined, page);
+  }
+  return mapPage(result.data, page);
+}
+
 export type CreateArticlePayload = {
   title: string;
   image_url: string;

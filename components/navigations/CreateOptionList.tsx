@@ -15,13 +15,13 @@ const CREATE_OPTIONS: {
   {
     kind: "feed",
     label: "Feed",
-    description: "Bagikan kabar singkat, foto, atau tautan.",
+    description: "Kabar singkat, foto, atau tautan.",
     icon: IconMessage2,
   },
   {
     kind: "article",
     label: "Artikel",
-    description: "Tulis artikel panjang dengan cover sendiri.",
+    description: "Tulisan panjang dengan cover.",
     icon: IconArticle,
   },
 ];
@@ -63,16 +63,12 @@ export default function CreateOptionList({
           key={kind}
           type="button"
           onClick={() => handleSelect(kind)}
-          className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[#f5f7fb]"
+          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#f5f7fb]"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
-            <Icon className="size-5" stroke={2} />
-          </span>
+          <Icon className="size-4 shrink-0 text-[#5f6573]" stroke={2} />
           <span className="min-w-0">
-            <span className="block text-sm font-medium text-[#172033]">
-              {label}
-            </span>
-            <span className="mt-0.5 block text-xs text-[#8a909d]">
+            <span className="block text-sm text-[#172033]">{label}</span>
+            <span className="block truncate text-xs text-[#8a909d]">
               {description}
             </span>
           </span>

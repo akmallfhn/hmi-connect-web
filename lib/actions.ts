@@ -169,6 +169,8 @@ import {
 } from "@/apis/reactions";
 import {
   createArticle as createArticleApi,
+  listArticleFeed as listArticleFeedApi,
+  type ArticleFeedTab,
   type CreateArticlePayload,
 } from "@/apis/articles";
 import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
@@ -810,4 +812,8 @@ export async function setChapterType(id: string, type: BranchTypeEnum) {
 
 export async function createArticle(payload: CreateArticlePayload) {
   return createArticleApi(payload);
+}
+
+export async function loadMoreArticles(tab: ArticleFeedTab, page: number) {
+  return listArticleFeedApi({ tab, page });
 }

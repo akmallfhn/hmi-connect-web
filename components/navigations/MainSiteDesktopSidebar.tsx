@@ -65,11 +65,12 @@ const NAV_ITEMS = [
     matches: (pathname: string) => pathname === "/notifications",
   },
   {
-    label: "News",
-    href: "/news",
+    label: "Articles",
+    href: "/articles",
     icon: IconArticle,
+    // /articles/create has no nav entry of its own, so it lights this one up too.
     matches: (pathname: string) =>
-      pathname === "/news" || pathname.startsWith("/news/"),
+      pathname === "/articles" || pathname.startsWith("/articles/"),
   },
   {
     label: "Al-Quran",
@@ -197,7 +198,7 @@ export default function MainSiteDesktopSidebar({
                 className="mt-3 h-11 w-full rounded-xl"
               >
                 <IconPlus className="size-5" />
-                Create
+                Posting
                 <IconChevronDown
                   className={`size-4 transition-transform ${
                     open ? "rotate-180" : ""
@@ -216,7 +217,7 @@ export default function MainSiteDesktopSidebar({
             className="mt-3 h-11 w-full rounded-xl"
           >
             <IconPlus className="size-5" />
-            Create
+            Posting
           </Button>
         )}
       </div>

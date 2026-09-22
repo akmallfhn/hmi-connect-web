@@ -514,7 +514,7 @@ export default function ArticleCreatePage({
 
         <section className="mt-7">
           {coverUrl ? (
-            <div className="group relative aspect-[16/7] w-full overflow-hidden rounded-2xl bg-[#f3f5f7]">
+            <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[#f3f5f7]">
               <Image
                 src={coverUrl}
                 alt="Cover artikel"
@@ -557,7 +557,7 @@ export default function ArticleCreatePage({
               onClick={() => coverInputRef.current?.click()}
               onDragOver={(event) => event.preventDefault()}
               onDrop={handleCoverDrop}
-              className="flex aspect-[16/5] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd2dc] bg-[#fbfcfd] px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              className="flex aspect-[16/9] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd2dc] bg-[#fbfcfd] px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary">
                 <FileImage className="size-5" />

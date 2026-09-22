@@ -5,7 +5,7 @@ import EventIcon from "../icons/EventIcon";
 import NewsIcon from "../icons/NewsIcon";
 
 const MENU_ITEMS = [
-  { label: "News", href: "/news", icon: NewsIcon },
+  { label: "Artikel", href: "/articles", icon: NewsIcon },
   { label: "E-KTA", href: "/membership", icon: EKTAIcon },
   { label: "Latihan Kader", href: "/trainings", icon: EventIcon },
   { label: "Al-Qur'an", href: "/quran", icon: AlQuranIcon },

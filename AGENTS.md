@@ -338,7 +338,8 @@ Three layers, each with one job. Don't blend them.
    `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
    `articles.ts` (the **editorial** `articles/*` + `article-categories/list` resource — entirely
    separate from `news.ts`, which wraps the third-party aggregator tables; don't conflate them.
-   `listArticles`/`getArticleDetail`/`listArticleCategories`/`createArticle`. The two read
+   `listArticles`/`listArticleFeed`/`getArticleDetail`/`listArticleCategories`/`createArticle`. The
+   two public read
    endpoints go through the server-only `CLIENT_SECRET` with the session cookie as a fallback (the
    same `getArticleReadToken` shape `trainings.ts` uses) so a logged-out visitor can read one —
    but **`listArticleCategories` is deliberately session-cookie-only**, since
@@ -350,7 +351,14 @@ Three layers, each with one job. Don't blend them.
    `ArticleBodyBlock[]` an earlier revision of the backend returned — it is a JSONB column holding
    a JSON string, and the backend's own `validBodyContent` now **rejects** a block array outright,
    so don't reintroduce the block shape. See the security note under
-   `/articles/[article_slug]/[article_id]` below before rendering it. `createArticle` is the one
+   `/articles/[article_slug]/[article_id]` below before rendering it. `listArticleFeed` is the single entry point
+   behind `/articles`' three tabs and the one place that decides which endpoint serves which: `all`
+   delegates to `listArticles` (`articles/list`, published only, client secret), while `following`
+   and `me` post to `articles/list-filter` with `is_following: true` / `is_mine: true` and the
+   session cookie. Those two are **not** interchangeable — `list-filter` is `requireAuth` and always
+   also returns the caller's own drafts and unpublished articles regardless of `status`, which is
+   right for `me` and wrong for an "all" tab, so don't collapse them into one call. The backend takes
+   both flags at once (and a `status`), which nothing here needs yet. `createArticle` is the one
    write here: authorized by the session JWT (`articles/create` is `requireAuth`, and a non-admin
    author must be verified and may only pass their own `author_id`), it returns a
    `{ok: true, article} | {ok: false, message}` result rather than throwing, mapping the backend's
@@ -676,12 +684,22 @@ iconSm`.
   navigation is a fixed left rail, not a top navbar.** `MainSiteDesktopSidebar.tsx` is that rail
   (`fixed inset-y-0 left-0 w-64`, `hidden lg:flex`): the horizontal wordmark linking home, then
   seven nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
-  News `/news`, Al-Quran `/quran`, E-KTA `/membership`), then a Profile row, a secondary-variant
-  "Create" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
-  Labels are English here, unlike the Indonesian copy everywhere else in the app, and are set in
+  Articles `/articles`, Al-Quran `/quran`, E-KTA `/membership`), then a Profile row, a
+  secondary-variant
+  "Posting" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
+  **News is deliberately absent from the rail** — `/news` and `/news/[category_slug]` stay real, it
+  is simply unlinked here, the same way the Cabang sidebar hides its SK/Konfercab routes. Articles
+  took its slot, and with News gone there is no longer a second claimant on `IconArticle`.
+  `MobileQuickMenu`'s first tile was repointed at `/articles` too, so the only remaining way in is
+  `NewsCard`'s own "Lihat Semua Berita" link in the home feed's right sidebar — check that before
+  assuming `/news` is unreachable, and don't delete the route thinking nothing links there.
+  Labels are English here, unlike the Indonesian copy everywhere else in the app — except the
+  "Posting" button, which matches `BottomNav`'s own Indonesian label for the same action, since one
+  action named two ways in two navs reads as two features. They are set in
   `font-stack-sans-headline`. Each item carries its own `matches(pathname)` predicate rather than a
-  shared `startsWith` rule, since Home must match exactly while Chat/News/Quran must also match
-  their detail routes. The active item is `bg-primary-soft text-primary` with a heavier Tabler
+  shared `startsWith` rule, since Home must match exactly while Chat/Quran/Articles must also
+  match their detail routes — Articles deliberately also covers `/articles/create`, which has no
+  nav entry of its own. The active item is `bg-primary-soft text-primary` with a heavier Tabler
   `stroke`. Chat and Notifications each carry their own unread badge, from
   `hooks/useUnreadChatCount.ts` and `hooks/useNotificationsBell.ts` — the Notifications entry is a
   plain `Link`, **not** a dropdown, so `useNotificationsBell`'s `handleRead`/`handleMarkAllRead`
@@ -689,7 +707,7 @@ iconSm`.
 NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
   only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
   they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
-  `/auth/login` when logged out. Its "Create" button is a `Dropdown` (an `IconChevronDown` beside
+  `/auth/login` when logged out. Its "Posting" button is a `Dropdown` (an `IconChevronDown` beside
   the `IconPlus` rotates 180° while open, so the chevron is the affordance) whose panel is the
   shared `components/navigations/CreateOptionList.tsx` — Feed or Artikel, see the compose-intent
   paragraph below; logged out it stays a plain button pushing `/auth/login`, since there is
@@ -761,13 +779,15 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   pill highlight behind each icon is driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
   than a CSS pseudo-class — see that file before changing the tap-feedback timing/size.
-  Both entry points into composing — the rail's Create dropdown and `BottomNav`'s Posting sheet —
+  Both entry points into composing — the rail's Posting dropdown and `BottomNav`'s Posting sheet —
   render the same `components/navigations/CreateOptionList.tsx`, which owns both choices and the
   navigation for each, so "what can I create" is answered in one file rather than once per nav.
   Feed keeps the compose-intent mechanism below; Artikel is a plain `router.push` to
-  `/articles/create`. Each row is a Tabler glyph in a `primary-soft` circle (`IconMessage2` for a
-  feed, `IconArticle` for an article — the same glyph the News nav item uses, since "artikel" is
-  exactly what it depicts) above a label and a one-line description. Picking Feed sets
+  `/articles/create`. Each row is a flat single-color Tabler glyph (`IconMessage2` for a feed,
+  `IconArticle` for an article) beside a label and a `truncate`d one-line description — the same
+  `size-4 text-[#5f6573]` treatment the "More" dropdown's own rows use, deliberately not a tinted
+  `primary-soft` circle, so the two menus hanging off the same rail read as one menu style. The
+  descriptions are kept short enough to survive that single line in a `w-60` panel. Picking Feed sets
   `sessionStorage[COMPOSE_INTENT_KEY]` (see
   `lib/constants.ts`) and dispatches a same-named `window` event, then navigates to `/`;
   `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
@@ -1088,6 +1108,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   already sit inside a link (or inside no navigable surface at all) and a nested `<a>` would break
   hydration.
   `FeedItemCard.tsx` renders a feed's
+  author avatar at 40px below `lg:` and 44px from `lg:` up, as **two `FeedAuthorAvatar` instances**
+  behind `lg:hidden`/`hidden lg:block` rather than one CSS-scaled node — `Avatar` sizes itself with
+  inline `width`/`height`, which a Tailwind size class cannot override — the same
+  one-instance-per-breakpoint pattern `SendMessageButton` and `ProfileCompletionCard` already use.
+  It renders its
   content and its one attachment slot (photo grid, video,
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
@@ -1212,8 +1237,11 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   nav-bar active-state icons, just static menu glyphs) converted 1:1 from designer-provided
   SVGs; `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset as a module-level
   `PATTERN_DATA_URI` constant rather than a `public/` file, since nothing else needed it
-  optimized or reused. Berita (`/news`), E-KTA (`/membership`), Latihan Kader
-  (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage` below) all route through `Link`.
+  optimized or reused. Artikel (`/articles`), E-KTA (`/membership`), Latihan Kader
+  (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage` below) all route through `Link`. The
+  first tile keeps its original `NewsIcon` artwork even though it now opens `/articles` rather than
+  `/news` — that glyph reads as "something to read" either way, and the hand-converted set has no
+  article illustration of its own.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
   total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
@@ -1608,6 +1636,31 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
   categories remounts it with fresh pagination state instead of leaking the previous
   category's items in.
+- `/articles` (`app/(www)/www/(gated)/articles/page.tsx` →
+  `components/pages/ArticlesPage.tsx`) — the editorial article index, a Medium/Substack-style
+  single column of `divide-y` rows rather than the card grid `/news` uses: an
+  editorial article is read in a list, not browsed as a gallery. Its `<main>` is a plain
+  `min-w-0` and takes its width from `PageMargin` alone, like `/notifications`, `/settings`, and
+  `/search` — a page-local `max-w` here made this one column narrower than every sibling page. Each row is
+  `components/articles/ArticleListRow.tsx` — a 20px author `Avatar` and name, the title in
+  `font-stack-sans-headline` (`line-clamp-2`), then a date · category · keyword meta line — the
+  category rides the shared `Label` primitive at `variant="gray" size="sm"` rather than a
+  hand-rolled pill — with a square thumbnail on the right. `articles/list` carries **no
+  `description`**, unlike `articles/detail`, which is why the row's secondary line is keywords and
+  not a deck — don't fetch the detail per row to fill one.
+  Three tabs — Semua, Mengikuti, Saya — are URL state (`?tab=following`/`?tab=me`, absent for
+  Semua) rendered as plain `<Link>`s, so switching one is a server refetch through
+  `listArticleFeed` the same way `?q=` drives `/search`; the route passes `key={activeTab}` so
+  `ArticlesPage` remounts with fresh pagination instead of leaking the previous tab's rows in.
+  `scroll={false}` on those links keeps the viewport still while switching. Each tab carries its own
+  empty copy, since "no published articles yet" and "you haven't written one" are different facts.
+  Further pages come from the `loadMoreArticles` Server Action through the usual
+  infinite-scroll-via-`IntersectionObserver` shape. A `draft`/`unpublished` row shows a `Label`
+  pill beside its author, since the Saya tab is the only place a caller's own unpublished work is
+  listed. It sits **inside `(gated)`**, unlike the public reader below — the two personal tabs need
+  a session, and bare `/articles` is not matched by `next.config.mts`'s `articles/.*` allowlist
+  entry (that pattern needs a segment after the slash), so a logged-out visitor is bounced to
+  `/auth/login` by the config rule with no per-route check needed.
 - `/articles/create` (`app/(www)/www/(gated)/articles/create/page.tsx` →
   `components/pages/ArticleCreatePage.tsx`) — the distraction-free article
   composer. `MainSiteDesktopShell` hides the normal desktop sidebar on this exact path; the
@@ -1615,7 +1668,10 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   Tiptap toolbar. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
   superscript, subscript, inline image insertion, blockquote, code block, bullet/numbered lists,
   and horizontal rule. Its first step contains the title (single-line behavior, auto-growing
-  wrap, hard limit 70), deck (hard limit 170), required 16:9 cover upload, and body; `Lanjutkan`
+  wrap, hard limit 70), deck (hard limit 170), required cover upload — both its empty dropzone and
+  its uploaded preview are `aspect-[16/9]`, matching the "rasio 16:9 disarankan" hint and the 16:9
+  box `ArticleAttachmentCard` and the reader both crop to, so the author frames the cover once —
+  and body; `Lanjutkan`
   validates the title/body/cover and only then opens the shared `Modal` as the publication sheet,
   containing the required category, keyword chips (eight maximum), a preview card, and explicit
   `Publish`/`Cancel` actions. Category and keyword entry use the shared `fields/Select` and

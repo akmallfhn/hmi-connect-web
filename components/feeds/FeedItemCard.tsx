@@ -411,7 +411,13 @@ export default function FeedItemCard({
       )}
       <div className="flex items-start justify-between gap-3">
         <Link href={author.href} className="flex min-w-0 items-start gap-3">
-          <FeedAuthorAvatar author={author} size={44} />
+          {/* Two instances, not one CSS-scaled node: Avatar sizes itself with inline width/height. */}
+          <span className="lg:hidden">
+            <FeedAuthorAvatar author={author} size={40} />
+          </span>
+          <span className="hidden lg:block">
+            <FeedAuthorAvatar author={author} size={44} />
+          </span>
           <div className="min-w-0">
             <p className="font-semibold text-[#172033]">{author.name}</p>
             <p className="text-xs text-[#5f6573] xl:text-[13px]">
