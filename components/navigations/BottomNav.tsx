@@ -10,8 +10,9 @@ import {
   IconSmartHome,
   IconUserCircle,
 } from "@tabler/icons-react";
-import { COMPOSE_INTENT_KEY } from "@/lib/constants";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
+import Modal from "../modals/Modal";
+import CreateOptionList from "./CreateOptionList";
 
 const PULSE_DURATION = 350;
 
@@ -67,86 +68,112 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
   const [profilePressed, triggerProfile] = usePressPulse();
 
   const unreadChatCount = useUnreadChatCount(userId);
+  const [composeOpen, setComposeOpen] = useState(false);
 
-  function handleComposeClick() {
-    window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
-    window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
-  }
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-[#e6e9ef] bg-white/95 backdrop-blur lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <Link
-        href="/"
-        onClick={triggerHome}
-        className={[
-          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-          isHome ? "text-primary" : "text-[#5f6573]",
-        ].join(" ")}
+    <>
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-[#e6e9ef] bg-white/95 backdrop-blur lg:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <NavIconPulse pressed={homePressed}>
-          <IconSmartHome className="size-5" stroke={isHome ? 2.4 : 2} />
-        </NavIconPulse>
-        Beranda
-      </Link>
+        <Link
+          href="/"
+          onClick={triggerHome}
+          className={[
+            "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+            isHome ? "text-primary" : "text-[#5f6573]",
+          ].join(" ")}
+        >
+          <NavIconPulse pressed={homePressed}>
+            <IconSmartHome className="size-5" stroke={isHome ? 2.4 : 2} />
+          </NavIconPulse>
+          Beranda
+        </Link>
 
-      <Link
-        href={username ? "/search" : "/auth/login"}
-        onClick={triggerSearch}
-        className={[
-          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-          isSearch ? "text-primary" : "text-[#5f6573]",
-        ].join(" ")}
-      >
-        <NavIconPulse pressed={searchPressed}>
-          <IconSearch className="size-5" stroke={isSearch ? 2.4 : 2} />
-        </NavIconPulse>
-        Cari
-      </Link>
+        <Link
+          href={username ? "/search" : "/auth/login"}
+          onClick={triggerSearch}
+          className={[
+            "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+            isSearch ? "text-primary" : "text-[#5f6573]",
+          ].join(" ")}
+        >
+          <NavIconPulse pressed={searchPressed}>
+            <IconSearch className="size-5" stroke={isSearch ? 2.4 : 2} />
+          </NavIconPulse>
+          Cari
+        </Link>
 
-      <Link
-        href={username ? "/" : "/auth/login"}
-        onClick={username ? handleComposeClick : undefined}
-        className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
-      >
-        <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
-          <IconPlus className="size-5" stroke={2.4} />
-        </span>
-        Posting
-      </Link>
+        {username ? (
+          <button
+            type="button"
+            onClick={() => setComposeOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={composeOpen}
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
+          >
+            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
+              <IconPlus className="size-5" stroke={2.4} />
+            </span>
+            Posting
+          </button>
+        ) : (
+          <Link
+            href="/auth/login"
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
+          >
+            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
+              <IconPlus className="size-5" stroke={2.4} />
+            </span>
+            Posting
+          </Link>
+        )}
 
-      <Link
-        href={username ? "/chats" : "/auth/login"}
-        onClick={triggerChats}
-        className={[
-          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-          isChats ? "text-primary" : "text-[#5f6573]",
-        ].join(" ")}
-      >
-        <NavIconPulse pressed={chatsPressed}>
-          <IconBrandHipchat className="size-5" stroke={isChats ? 2.4 : 2} />
-          {unreadChatCount > 0 && (
-            <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-secondary" />
-          )}
-        </NavIconPulse>
-        Pesan
-      </Link>
+        <Link
+          href={username ? "/chats" : "/auth/login"}
+          onClick={triggerChats}
+          className={[
+            "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+            isChats ? "text-primary" : "text-[#5f6573]",
+          ].join(" ")}
+        >
+          <NavIconPulse pressed={chatsPressed}>
+            <IconBrandHipchat className="size-5" stroke={isChats ? 2.4 : 2} />
+            {unreadChatCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-secondary" />
+            )}
+          </NavIconPulse>
+          Pesan
+        </Link>
 
-      <Link
-        href={username ? `/profile/${username}` : "/auth/login"}
-        onClick={triggerProfile}
-        className={[
-          "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-          isProfile ? "text-primary" : "text-[#5f6573]",
-        ].join(" ")}
+        <Link
+          href={username ? `/profile/${username}` : "/auth/login"}
+          onClick={triggerProfile}
+          className={[
+            "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
+            isProfile ? "text-primary" : "text-[#5f6573]",
+          ].join(" ")}
+        >
+          <NavIconPulse pressed={profilePressed}>
+            <IconUserCircle className="size-5" stroke={isProfile ? 2.4 : 2} />
+          </NavIconPulse>
+          Profil
+        </Link>
+      </nav>
+
+      <Modal
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        title="Buat baru"
+        variant="bottomSheet"
+        panelClassName="max-w-md"
       >
-        <NavIconPulse pressed={profilePressed}>
-          <IconUserCircle className="size-5" stroke={isProfile ? 2.4 : 2} />
-        </NavIconPulse>
-        Profil
-      </Link>
-    </nav>
+        <CreateOptionList
+          className="-mx-5 flex flex-col"
+          onSelected={() => setComposeOpen(false)}
+        />
+      </Modal>
+    </>
   );
 }

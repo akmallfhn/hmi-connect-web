@@ -1,7 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { ArticleDetail } from "@/apis/articles";
-import type { RenderableArticleBlock } from "@/lib/article-body";
 import { formatShortDate } from "@/lib/time-manipulation";
 import type { VerificationStatusEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
@@ -19,7 +17,7 @@ interface ArticleViewer {
 
 interface ArticleDetailPageProps {
   article: ArticleDetail;
-  blocks: RenderableArticleBlock[];
+  body: string | null;
   readingMinutes: number;
   viewer: ArticleViewer;
 }
@@ -54,7 +52,7 @@ const PROSE_CLASS = [
 
 export default function ArticleDetailPage({
   article,
-  blocks,
+  body,
   readingMinutes,
   viewer,
 }: ArticleDetailPageProps) {
@@ -120,52 +118,17 @@ export default function ArticleDetailPage({
           </figure>
         )}
 
-        <div className="mt-8">
-          {blocks.length === 0 ? (
-            <p className="text-[15px] text-[#7b8190]">
-              Artikel ini belum memiliki isi.
-            </p>
-          ) : (
-            blocks.map((block) => (
-              <section key={block.key} className="mt-8 first:mt-0">
-                {block.subHeading && (
-                  <h2 className="font-stack-sans-headline text-2xl font-medium leading-snug text-[#172033]">
-                    {block.subHeading}
-                  </h2>
-                )}
-
-                {block.imagePath && (
-                  <figure className={block.subHeading ? "mt-5" : ""}>
-                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-[#f5f7fb]">
-                      <Image
-                        src={block.imagePath}
-                        alt={block.imageDesc ?? ""}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    {block.imageDesc && (
-                      <figcaption className="mt-2 text-center text-sm text-[#7b8190]">
-                        {block.imageDesc}
-                      </figcaption>
-                    )}
-                  </figure>
-                )}
-
-                {block.html && (
-                  <div
-                    className={`${PROSE_CLASS} ${
-                      block.subHeading || block.imagePath ? "mt-5" : ""
-                    }`}
-                    // Sanitized server-side by lib/article-body.ts — never pass raw body HTML here.
-                    dangerouslySetInnerHTML={{ __html: block.html }}
-                  />
-                )}
-              </section>
-            ))
-          )}
-        </div>
+        {body ? (
+          <div
+            className={`mt-8 ${PROSE_CLASS}`}
+            // Sanitized server-side by lib/article-body.ts — never pass raw body HTML here.
+            dangerouslySetInnerHTML={{ __html: body }}
+          />
+        ) : (
+          <p className="mt-8 text-[15px] text-[#7b8190]">
+            Artikel ini belum memiliki isi.
+          </p>
+        )}
 
         {keywords.length > 0 && (
           <div className="mt-12 flex flex-wrap gap-2 border-t border-[#e6e9ef] pt-6">
@@ -192,15 +155,6 @@ export default function ArticleDetailPage({
               {article.author_name}
             </p>
           </div>
-        </div>
-
-        <div className="mt-8">
-          <Link
-            href="/news"
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            ← Kembali ke Berita
-          </Link>
         </div>
       </article>
 

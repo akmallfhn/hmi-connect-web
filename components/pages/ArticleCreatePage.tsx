@@ -31,29 +31,75 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import type { ArticleCategory } from "@/apis/articles";
 import ArticleEditorToolbar from "@/components/articles/ArticleEditorToolbar";
 import Button from "@/components/buttons/Button";
+import Avatar from "@/components/common/Avatar";
+import Input from "@/components/fields/Input";
+import Select from "@/components/fields/Select";
+import Modal from "@/components/modals/Modal";
+import { createArticle } from "@/lib/actions";
+import { compressImage } from "@/lib/compress-image";
+import { supabase } from "@/lib/supabase";
 
-const ARTICLE_CATEGORIES = [
-  "Berita",
-  "Opini",
-  "Kajian",
-  "Organisasi",
-  "Kaderisasi",
+const ARTICLE_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
 ];
+const ARTICLE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif", "gif"];
+const MAX_ARTICLE_IMAGE_RAW_BYTES = 20 * 1024 * 1024;
+const MAX_ARTICLE_IMAGE_BYTES = 5 * 1024 * 1024;
 
-type ComposerStep = "write" | "details";
+type ArticleImageFolder = "covers" | "content";
 
-function readImage(file: File, callback: (url: string) => void) {
-  if (!file.type.startsWith("image/")) {
-    toast.error("File yang dipilih harus berupa gambar.");
-    return;
+// Same RLS-rejection signature every other bucket-folder upload in this app detects.
+function isStoragePolicyError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.toLowerCase().includes("row-level security")
+  );
+}
+
+async function uploadArticleImage(
+  file: File,
+  folder: ArticleImageFolder
+): Promise<string> {
+  if (!ARTICLE_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("Format gambar harus JPG, PNG, WebP, AVIF, atau GIF.");
+  }
+  const pickedExtension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!ARTICLE_IMAGE_EXTENSIONS.includes(pickedExtension)) {
+    throw new Error("Ekstensi file tidak valid.");
+  }
+  if (file.size > MAX_ARTICLE_IMAGE_RAW_BYTES) {
+    throw new Error("Ukuran gambar maksimal 20 MB.");
   }
 
-  const reader = new FileReader();
-  reader.onload = () => callback(String(reader.result));
-  reader.onerror = () => toast.error("Gambar tidak dapat dibaca.");
-  reader.readAsDataURL(file);
+  const compressed = await compressImage(file);
+  if (compressed.size > MAX_ARTICLE_IMAGE_BYTES) {
+    throw new Error("Gambar masih terlalu besar setelah dikompres.");
+  }
+  const extension =
+    compressed.name.split(".").pop()?.toLowerCase() ?? pickedExtension;
+
+  const filePath = `articles/${folder}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage
+    .from("hmi-connect")
+    .upload(filePath, compressed, {
+      cacheControl: "3600",
+      contentType: compressed.type,
+      upsert: false,
+    });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
+  if (!data?.publicUrl) throw new Error("missing public url");
+
+  return data.publicUrl;
 }
 
 function ArticleBodyImage({
@@ -121,19 +167,40 @@ const ArticleImageExtension = ImageExtension.extend({
   },
 });
 
-export default function ArticleCreatePage() {
+export type ArticleAuthor = {
+  id: string;
+  fullName: string;
+  avatar?: string;
+};
+
+interface ArticleCreatePageProps {
+  author: ArticleAuthor;
+  categories: ArticleCategory[];
+}
+
+export default function ArticleCreatePage({
+  author,
+  categories,
+}: ArticleCreatePageProps) {
   const router = useRouter();
+  // Alphabetical, since the endpoint's own order is by id and means nothing to the author.
+  const categoryOptions = categories
+    .map((item) => ({ label: item.name, value: item.id }))
+    .sort((a, b) => a.label.localeCompare(b.label, "id"));
   const bodyImageInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [keywordInput, setKeywordInput] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [coverUrl, setCoverUrl] = useState("");
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
+  const [isBodyImageUploading, setIsBodyImageUploading] = useState(false);
   const [isSaved, setIsSaved] = useState(true);
-  const [step, setStep] = useState<ComposerStep>("write");
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -144,7 +211,7 @@ export default function ArticleCreatePage() {
       SuperscriptExtension,
       SubscriptExtension,
       ArticleImageExtension.configure({
-        allowBase64: true,
+        allowBase64: false,
         HTMLAttributes: { class: "article-body-image" },
       }),
       Placeholder.configure({
@@ -159,6 +226,13 @@ export default function ArticleCreatePage() {
     },
     onUpdate: markAsChanged,
   });
+
+  function articleUploadMessage(error: unknown, fallback: string) {
+    if (isStoragePolicyError(error)) {
+      return "Upload ditolak Supabase. Izinkan folder articles di bucket hmi-connect.";
+    }
+    return error instanceof Error ? error.message : fallback;
+  }
 
   function markAsChanged() {
     setIsSaved(false);
@@ -224,27 +298,55 @@ export default function ArticleCreatePage() {
     markAsChanged();
   }
 
-  function setCoverFile(file?: File) {
+  async function setCoverFile(file?: File) {
     if (!file) return;
-    readImage(file, (url) => {
+
+    setIsCoverUploading(true);
+    const toastId = toast.loading("Mengunggah cover...");
+    try {
+      const url = await uploadArticleImage(file, "covers");
       setCoverUrl(url);
       markAsChanged();
-    });
+      toast.success("Cover berhasil diunggah.", { id: toastId });
+    } catch (error) {
+      console.error("[ArticleCreatePage] cover upload threw:", error);
+      toast.error(articleUploadMessage(error, "Cover gagal diunggah."), {
+        id: toastId,
+      });
+    } finally {
+      setIsCoverUploading(false);
+    }
   }
 
   function handleCoverDrop(event: DragEvent<HTMLButtonElement>) {
     event.preventDefault();
-    setCoverFile(event.dataTransfer.files[0]);
+    void setCoverFile(event.dataTransfer.files[0]);
   }
 
-  function insertBodyImage(file?: File) {
+  async function insertBodyImage(file?: File) {
     if (!file || !editor) return;
-    readImage(file, (url) => {
+
+    setIsBodyImageUploading(true);
+    const toastId = toast.loading("Mengunggah gambar...");
+    try {
+      const url = await uploadArticleImage(file, "content");
       editor.chain().focus().setImage({ src: url, alt: file.name }).run();
-    });
+      toast.success("Gambar berhasil disisipkan.", { id: toastId });
+    } catch (error) {
+      console.error("[ArticleCreatePage] body image upload threw:", error);
+      toast.error(articleUploadMessage(error, "Gambar gagal diunggah."), {
+        id: toastId,
+      });
+    } finally {
+      setIsBodyImageUploading(false);
+    }
   }
 
-  function continueToDetails() {
+  function openPublishModal() {
+    if (isCoverUploading || isBodyImageUploading) {
+      toast.error("Tunggu sampai semua gambar selesai diunggah.");
+      return;
+    }
     if (!title.trim()) {
       toast.error("Tambahkan judul artikel terlebih dahulu.");
       return;
@@ -253,28 +355,51 @@ export default function ArticleCreatePage() {
       toast.error("Isi artikel belum boleh kosong.");
       return;
     }
+    if (!coverUrl) {
+      toast.error("Unggah cover artikel terlebih dahulu.");
+      return;
+    }
 
-    setStep("details");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsPublishModalOpen(true);
   }
 
-  function publishArticle() {
-    if (!category) {
+  async function publishArticle() {
+    if (!categoryId) {
       toast.error("Pilih kategori artikel terlebih dahulu.");
       return;
     }
+    const bodyContent = editor?.getHTML().trim();
+    if (!bodyContent) {
+      toast.error("Isi artikel belum boleh kosong.");
+      return;
+    }
 
-    toast.info(
-      "Artikel sudah siap. Integrasi publish akan ditambahkan bersama backend."
-    );
+    setIsPublishing(true);
+    const toastId = toast.loading("Menerbitkan artikel...");
+    const result = await createArticle({
+      title: title.trim(),
+      image_url: coverUrl,
+      body_content: bodyContent,
+      category_id: categoryId,
+      author_id: author.id,
+      status: "published",
+      ...(subtitle.trim() ? { description: subtitle.trim() } : {}),
+      ...(keywords.length ? { keywords: keywords.join(", ") } : {}),
+    });
+
+    if (!result.ok) {
+      setIsPublishing(false);
+      toast.error(result.message, { id: toastId });
+      return;
+    }
+
+    toast.success("Artikel berhasil diterbitkan.", { id: toastId });
+    setIsPublishModalOpen(false);
+    const { slug_url, id } = result.article;
+    router.push(`/articles/${slug_url || "artikel"}/${id}`);
   }
 
   function goBack() {
-    if (step === "details") {
-      setStep("write");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
     router.back();
   }
 
@@ -308,21 +433,19 @@ export default function ArticleCreatePage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
-              onClick={step === "write" ? continueToDetails : publishArticle}
+              onClick={openPublishModal}
               className="inline-flex h-10 items-center justify-center rounded-xl bg-secondary px-4 text-sm font-semibold text-white transition hover:bg-[#e6534b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 sm:px-6"
             >
-              {step === "write" ? "Lanjutkan" : "Publikasikan"}
+              Lanjutkan
             </button>
           </div>
         </div>
       </header>
 
-      {step === "write" && (
-        <ArticleEditorToolbar
-          editor={editor}
-          onInsertImage={() => bodyImageInputRef.current?.click()}
-        />
-      )}
+      <ArticleEditorToolbar
+        editor={editor}
+        onInsertImage={() => bodyImageInputRef.current?.click()}
+      />
 
       <input
         ref={bodyImageInputRef}
@@ -330,7 +453,7 @@ export default function ArticleCreatePage() {
         accept="image/*"
         className="hidden"
         onChange={(event) => {
-          insertBodyImage(event.target.files?.[0]);
+          void insertBodyImage(event.target.files?.[0]);
           event.target.value = "";
         }}
       />
@@ -340,159 +463,175 @@ export default function ArticleCreatePage() {
         accept="image/*"
         className="hidden"
         onChange={(event) => {
-          setCoverFile(event.target.files?.[0]);
+          void setCoverFile(event.target.files?.[0]);
           event.target.value = "";
         }}
       />
 
-      {step === "write" ? (
-        <div className="mx-auto w-full max-w-[900px] px-5 pb-28 pt-10 sm:px-8 sm:pt-14">
-          <textarea
-            rows={1}
-            value={title}
-            maxLength={70}
-            onChange={updateTitle}
-            onKeyDown={handleTitleKeyDown}
-            placeholder="Judul artikel"
-            aria-label="Judul artikel"
-            aria-describedby="article-title-limit"
-            className="font-stack-sans-headline block min-h-[58px] w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[42px] font-medium leading-[1.1] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[54px]"
-          />
-          <div
-            id="article-title-limit"
-            className={`mt-2 flex min-h-5 items-center justify-end gap-2 text-xs ${
-              title.length >= 70 ? "text-destructive" : "text-[#9aa0ab]"
-            }`}
-          >
-            {title.length >= 70 && <span>Judul maksimal 70 karakter.</span>}
-            <span>{title.length}/70</span>
-          </div>
-          <input
-            type="text"
-            value={subtitle}
-            maxLength={170}
-            onChange={(event) => {
-              setSubtitle(event.target.value);
-              markAsChanged();
-            }}
-            placeholder="Tambahkan ringkasan singkat..."
-            aria-label="Ringkasan artikel"
-            className="mt-4 block w-full border-0 bg-transparent p-0 text-xl leading-relaxed text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:text-2xl"
-          />
-          <div
-            className={`mt-1 text-right text-xs ${
-              subtitle.length >= 170 ? "text-destructive" : "text-[#9aa0ab]"
-            }`}
-          >
-            {subtitle.length >= 170 && (
-              <span className="mr-2">Ringkasan maksimal 170 karakter.</span>
-            )}
-            {subtitle.length}/170
-          </div>
+      <div className="mx-auto w-full max-w-[900px] px-5 pb-28 pt-10 sm:px-8 sm:pt-14">
+        <textarea
+          rows={1}
+          value={title}
+          maxLength={70}
+          onChange={updateTitle}
+          onKeyDown={handleTitleKeyDown}
+          placeholder="Judul artikel"
+          aria-label="Judul artikel"
+          aria-describedby="article-title-limit"
+          className="font-stack-sans-headline block min-h-[58px] w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[42px] font-medium leading-[1.1] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[54px]"
+        />
+        <div
+          id="article-title-limit"
+          className={`mt-2 flex min-h-5 items-center justify-end gap-2 text-xs ${
+            title.length >= 70 ? "text-destructive" : "text-[#9aa0ab]"
+          }`}
+        >
+          {title.length >= 70 && <span>Judul maksimal 70 karakter.</span>}
+          <span>{title.length}/70</span>
+        </div>
+        <input
+          type="text"
+          value={subtitle}
+          maxLength={170}
+          onChange={(event) => {
+            setSubtitle(event.target.value);
+            markAsChanged();
+          }}
+          placeholder="Tambahkan ringkasan singkat..."
+          aria-label="Ringkasan artikel"
+          className="mt-4 block w-full border-0 bg-transparent p-0 text-xl leading-relaxed text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:text-2xl"
+        />
+        <div
+          className={`mt-1 text-right text-xs ${
+            subtitle.length >= 170 ? "text-destructive" : "text-[#9aa0ab]"
+          }`}
+        >
+          {subtitle.length >= 170 && (
+            <span className="mr-2">Ringkasan maksimal 170 karakter.</span>
+          )}
+          {subtitle.length}/170
+        </div>
 
-          <section className="mt-7">
-            {coverUrl ? (
-              <div className="group relative aspect-[16/7] w-full overflow-hidden rounded-2xl bg-[#f3f5f7]">
-                <Image
-                  src={coverUrl}
-                  alt="Cover artikel"
-                  fill
-                  unoptimized
-                  className="object-cover transition duration-300 group-hover:scale-[1.01]"
-                />
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15 opacity-100 transition sm:bg-black/0 sm:opacity-0 sm:group-hover:bg-black/25 sm:group-hover:opacity-100 sm:group-focus-within:bg-black/25 sm:group-focus-within:opacity-100">
-                  <div className="pointer-events-auto flex items-center gap-2">
-                    <Button
-                      variant="light"
-                      size="default"
-                      onClick={() => coverInputRef.current?.click()}
-                      className="h-10 rounded-xl border-0 px-4 shadow-lg"
-                    >
-                      <ImagePlus className="size-4" /> Ganti cover
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="default"
-                      aria-label="Hapus cover"
-                      title="Hapus cover"
-                      onClick={() => {
-                        setCoverUrl("");
-                        markAsChanged();
-                      }}
-                      className="h-10 rounded-xl px-4 shadow-lg"
-                    >
-                      <Trash2 className="size-4" /> Hapus
-                    </Button>
-                  </div>
+        <section className="mt-7">
+          {coverUrl ? (
+            <div className="group relative aspect-[16/7] w-full overflow-hidden rounded-2xl bg-[#f3f5f7]">
+              <Image
+                src={coverUrl}
+                alt="Cover artikel"
+                fill
+                unoptimized
+                className="object-cover transition duration-300 group-hover:scale-[1.01]"
+              />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15 opacity-100 transition sm:bg-black/0 sm:opacity-0 sm:group-hover:bg-black/25 sm:group-hover:opacity-100 sm:group-focus-within:bg-black/25 sm:group-focus-within:opacity-100">
+                <div className="pointer-events-auto flex items-center gap-2">
+                  <Button
+                    variant="light"
+                    size="default"
+                    disabled={isCoverUploading}
+                    onClick={() => coverInputRef.current?.click()}
+                    className="h-10 rounded-xl border-0 px-4 shadow-lg"
+                  >
+                    <ImagePlus className="size-4" /> Ganti cover
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="default"
+                    disabled={isCoverUploading}
+                    aria-label="Hapus cover"
+                    title="Hapus cover"
+                    onClick={() => {
+                      setCoverUrl("");
+                      markAsChanged();
+                    }}
+                    className="h-10 rounded-xl px-4 shadow-lg"
+                  >
+                    <Trash2 className="size-4" /> Hapus
+                  </Button>
                 </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => coverInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleCoverDrop}
-                className="flex aspect-[16/5] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd2dc] bg-[#fbfcfd] px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              >
-                <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary">
-                  <FileImage className="size-5" />
-                </span>
-                <span className="mt-3 text-sm font-semibold text-[#343a46] lg:text-[15px]">
-                  Unggah cover artikel
-                </span>
-                <span className="mt-1 text-xs text-[#8a909d] lg:text-[13px]">
-                  Klik atau tarik gambar ke sini · rasio 16:9 disarankan
-                </span>
-              </button>
-            )}
-          </section>
-
-          <div className="mt-10">
-            <EditorContent editor={editor} />
-          </div>
-        </div>
-      ) : (
-        <section className="mx-auto w-full max-w-[680px] px-5 pb-28 pt-12 sm:px-8 sm:pt-16">
-          <p className="text-sm font-semibold text-primary">Langkah 2 dari 2</p>
-          <h1 className="mt-2 font-stack-sans-headline text-3xl font-medium text-[#172033] sm:text-4xl">
-            Siapkan publikasi
-          </h1>
-          <p className="mt-3 text-base leading-relaxed text-[#6b7280]">
-            Pilih kategori dan tambahkan keyword agar artikel lebih mudah
-            ditemukan.
-          </p>
-
-          <div className="mt-9 rounded-2xl border border-[#e6e9ef] bg-[#fbfcfd] p-5 sm:p-6">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-[#454b57]">
-                Kategori <span className="text-destructive">*</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={isCoverUploading}
+              onClick={() => coverInputRef.current?.click()}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleCoverDrop}
+              className="flex aspect-[16/5] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd2dc] bg-[#fbfcfd] px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <FileImage className="size-5" />
               </span>
-              <select
-                value={category}
-                onChange={(event) => {
-                  setCategory(event.target.value);
-                  markAsChanged();
-                }}
-                className="h-12 w-full rounded-xl border border-[#dbe3ef] bg-white px-3.5 text-base text-[#172033] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-              >
-                <option value="">Pilih kategori</option>
-                {ARTICLE_CATEGORIES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <span className="mt-3 text-sm font-semibold text-[#343a46] lg:text-[15px]">
+                {isCoverUploading ? (
+                  "Mengunggah cover..."
+                ) : (
+                  <>
+                    Unggah cover artikel{" "}
+                    <span className="text-destructive">*</span>
+                  </>
+                )}
+              </span>
+              <span className="mt-1 text-xs text-[#8a909d] lg:text-[13px]">
+                Klik atau tarik gambar ke sini · rasio 16:9 disarankan
+              </span>
+            </button>
+          )}
+        </section>
 
-            <div className="mt-6">
-              <label
-                htmlFor="article-keywords"
-                className="mb-2 block text-sm font-medium text-[#454b57]"
-              >
-                Keyword{" "}
-                <span className="font-normal text-[#8a909d]">(maks. 8)</span>
-              </label>
-              <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-xl border border-[#dbe3ef] bg-white px-3 py-2 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+        <div className="mt-10">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
+
+      <Modal
+        open={isPublishModalOpen}
+        onClose={() => setIsPublishModalOpen(false)}
+        title="Siapkan publikasi"
+        panelClassName="max-w-xl"
+      >
+        <p className="text-sm leading-relaxed text-[#6b7280]">
+          Pilih kategori dan tambahkan keyword agar artikel lebih mudah
+          ditemukan.
+        </p>
+
+        <div className="mt-6">
+          <Select
+            selectId="article-category"
+            label="Kategori"
+            placeholder={
+              categoryOptions.length === 0
+                ? "Belum ada kategori"
+                : "Pilih kategori"
+            }
+            value={categoryId}
+            required
+            disabled={categoryOptions.length === 0}
+            options={categoryOptions}
+            onChange={(value) => {
+              setCategoryId(typeof value === "number" ? value : null);
+              markAsChanged();
+            }}
+          />
+
+          <div className="mt-5">
+            <Input
+              inputId="article-keywords"
+              label="Keyword (maks. 8)"
+              value={keywordInput}
+              onChange={(event) => setKeywordInput(event.target.value)}
+              onKeyDown={handleKeywordKeyDown}
+              onBlur={addKeyword}
+              placeholder={
+                keywords.length === 0
+                  ? "Ketik lalu tekan Enter..."
+                  : "Tambah keyword..."
+              }
+              disabled={keywords.length >= 8}
+              className="h-12"
+            />
+            {keywords.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
                 {keywords.map((keyword) => (
                   <span
                     key={keyword}
@@ -509,41 +648,64 @@ export default function ArticleCreatePage() {
                     </button>
                   </span>
                 ))}
-                <input
-                  id="article-keywords"
-                  value={keywordInput}
-                  onChange={(event) => setKeywordInput(event.target.value)}
-                  onKeyDown={handleKeywordKeyDown}
-                  onBlur={addKeyword}
-                  placeholder={
-                    keywords.length === 0
-                      ? "Ketik lalu tekan Enter..."
-                      : "Tambah keyword..."
-                  }
-                  className="h-7 min-w-[170px] flex-1 border-0 bg-transparent px-1 text-base text-[#172033] outline-none placeholder:text-[#9aa0ab]"
-                />
               </div>
-              <p className="mt-2 text-xs text-[#8a909d]">
-                Gunakan keyword yang spesifik dan relevan dengan isi artikel.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-[#e6e9ef] p-5">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#8a909d]">
-              Artikel
+            )}
+            <p className="mt-2 text-xs text-[#8a909d]">
+              Gunakan keyword yang spesifik dan relevan dengan isi artikel.
             </p>
-            <p className="mt-2 font-stack-sans-headline text-xl font-medium text-[#172033]">
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-xl bg-[#202428]">
+          {coverUrl && (
+            <div className="relative aspect-[16/9] w-full bg-black/20">
+              <Image
+                src={coverUrl}
+                alt="Pratinjau cover artikel"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            </div>
+          )}
+          <div className="p-4">
+            <p className="font-stack-sans-headline text-xl font-medium text-white">
               {title}
             </p>
             {subtitle && (
-              <p className="mt-1.5 line-clamp-2 text-sm text-[#6b7280]">
+              <p className="mt-1.5 line-clamp-2 text-sm text-white/65">
                 {subtitle}
               </p>
             )}
+            <div className="mt-3 flex items-center gap-2.5 border-t border-white/10 pt-3">
+              <Avatar src={author.avatar} name={author.fullName} size={32} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white">
+                  {author.fullName}
+                </p>
+                <p className="text-xs text-white/70">Penulis</p>
+              </div>
+            </div>
           </div>
-        </section>
-      )}
+        </div>
+
+        <div className="mt-6 flex flex-col-reverse gap-2 border-t border-[#e6e9ef] pt-4 sm:flex-row sm:justify-end">
+          <Button
+            variant="light"
+            disabled={isPublishing}
+            onClick={() => setIsPublishModalOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={isPublishing}
+            onClick={() => void publishArticle()}
+          >
+            {isPublishing ? "Menerbitkan..." : "Publish"}
+          </Button>
+        </div>
+      </Modal>
     </main>
   );
 }

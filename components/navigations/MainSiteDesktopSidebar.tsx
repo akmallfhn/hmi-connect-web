@@ -4,6 +4,7 @@ import {
   IconArticle,
   IconBell,
   IconBrandHipchat,
+  IconChevronDown,
   IconCreditCard,
   IconDots,
   IconListSearch,
@@ -19,11 +20,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { logoutUser } from "@/lib/actions";
-import { COMPOSE_INTENT_KEY } from "@/lib/constants";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import type { VerificationStatusEnum } from "@/lib/types";
 import Avatar from "../common/Avatar";
+import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
 import ProfileBadges from "../common/ProfileBadges";
 import Button from "../buttons/Button";
@@ -101,20 +102,6 @@ export default function MainSiteDesktopSidebar({
   const profileIsActive = username
     ? pathname === profileHref || pathname.startsWith(`${profileHref}/`)
     : false;
-
-  function handleCreate() {
-    if (!userId) {
-      router.push("/auth/login");
-      return;
-    }
-
-    window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
-    if (pathname === "/") {
-      window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
-      return;
-    }
-    router.push("/");
-  }
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -197,15 +184,41 @@ export default function MainSiteDesktopSidebar({
           />
         </Link>
 
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleCreate}
-          className="mt-3 h-11 w-full rounded-xl"
-        >
-          <IconPlus className="size-5" />
-          Create
-        </Button>
+        {userId ? (
+          <Dropdown
+            align="left"
+            panelClassName="w-60 rounded-xl"
+            trigger={({ open, toggle }) => (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={toggle}
+                aria-expanded={open}
+                className="mt-3 h-11 w-full rounded-xl"
+              >
+                <IconPlus className="size-5" />
+                Create
+                <IconChevronDown
+                  className={`size-4 transition-transform ${
+                    open ? "rotate-180" : ""
+                  }`}
+                />
+              </Button>
+            )}
+          >
+            <CreateOptionList className="flex flex-col py-1" />
+          </Dropdown>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push("/auth/login")}
+            className="mt-3 h-11 w-full rounded-xl"
+          >
+            <IconPlus className="size-5" />
+            Create
+          </Button>
+        )}
       </div>
 
       <div className="mt-auto">

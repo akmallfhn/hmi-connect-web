@@ -338,15 +338,25 @@ Three layers, each with one job. Don't blend them.
    `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
    `articles.ts` (the **editorial** `articles/*` + `article-categories/list` resource — entirely
    separate from `news.ts`, which wraps the third-party aggregator tables; don't conflate them.
-   `listArticles`/`getArticleDetail`/`listArticleCategories`, all reading through the server-only
-   `CLIENT_SECRET` with the session cookie as a fallback (the same `getArticleReadToken` shape
-   `trainings.ts` uses) so a logged-out visitor can read one. `articles/detail` answers 404 for a
+   `listArticles`/`getArticleDetail`/`listArticleCategories`/`createArticle`. The two read
+   endpoints go through the server-only `CLIENT_SECRET` with the session cookie as a fallback (the
+   same `getArticleReadToken` shape `trainings.ts` uses) so a logged-out visitor can read one —
+   but **`listArticleCategories` is deliberately session-cookie-only**, since
+   `article-categories/list` sits behind the backend's `requireAuth` rather than
+   `requireClientSecret` and would 401 on a client secret. `articles/detail` answers 404 for a
    missing, soft-deleted, **or merely unpublished** article alike, and all three surface here as
    `null` — there is no way to tell them apart, and a draft must not be distinguishable from a
-   nonexistent id. `ArticleDetail.body_content` is an ordered `ArticleBodyBlock[]`, each block
-   carrying an optional `sub_heading`, an optional `image_path`/`image_desc` pair, and `content`
-   holding raw **HTML** — see the security note under `/articles/[article_slug]/[article_id]`
-   below before rendering it),
+   nonexistent id. `ArticleDetail.body_content` is **one raw HTML string**, not the ordered
+   `ArticleBodyBlock[]` an earlier revision of the backend returned — it is a JSONB column holding
+   a JSON string, and the backend's own `validBodyContent` now **rejects** a block array outright,
+   so don't reintroduce the block shape. See the security note under
+   `/articles/[article_slug]/[article_id]` below before rendering it. `createArticle` is the one
+   write here: authorized by the session JWT (`articles/create` is `requireAuth`, and a non-admin
+   author must be verified and may only pass their own `author_id`), it returns a
+   `{ok: true, article} | {ok: false, message}` result rather than throwing, mapping the backend's
+   403/409/400 onto Indonesian copy — the composer's only failure surface is a toast, and
+   "verify your identity first" versus "slug already exists" are different instructions to the
+   author),
    `news.ts` (categories + articles, including `getNewsArticleDetail` — `news-articles/detail`
    is the one read `list` can't serve, resolving a single article by id; a soft-deleted
    article answers 404, while a feed attachment pointing at one renders as removed from the
@@ -679,8 +689,11 @@ iconSm`.
 NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
   only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
   they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
-  `/auth/login` when logged out. Its "Create" button rides the same compose-intent mechanism
-  `BottomNav`'s "Posting" does (see below), and its Keluar calls `logoutUser` then hard-navigates,
+  `/auth/login` when logged out. Its "Create" button is a `Dropdown` (an `IconChevronDown` beside
+  the `IconPlus` rotates 180° while open, so the chevron is the affordance) whose panel is the
+  shared `components/navigations/CreateOptionList.tsx` — Feed or Artikel, see the compose-intent
+  paragraph below; logged out it stays a plain button pushing `/auth/login`, since there is
+  nothing to choose between yet. Its Keluar calls `logoutUser` then hard-navigates,
   the same reason `SettingsPage`'s own row does.
   `MainSiteDesktopShell.tsx` is the thin client wrapper `app/(www)/www/layout.tsx` puts around
   every `(www)` route: it renders the rail and pads the content with `lg:pl-64`, except on the
@@ -722,8 +735,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   Beranda (`/`) is always a real link. Cari, Pesan, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
   `/search`, Pesan to `/chats`, Profil to `/profile/[username]`. The middle
-  slot is a "Posting" button (always the raised filled-circle style) instead of a plain link —
-  see the compose-intent paragraph below.
+  slot is a "Posting" button (always the raised filled-circle style) instead of a plain link: for a
+  signed-in caller it is a real `<button>` opening a `Modal` in its `bottomSheet` variant over the
+  shared `CreateOptionList`, and only the logged-out copy stays a `Link` to `/auth/login`. The
+  `<nav>` therefore sits inside a fragment beside that `Modal`, which portals to `document.body`
+  and so is unaffected by the bar's own `fixed`/`z-40` chrome. See the compose-intent paragraph below.
   All five tabs now use `@tabler/icons-react` glyphs
   (`IconSmartHome`/`IconSearch`/`IconPlus`/`IconBrandHipchat`/`IconUserCircle`), with the active
   tab marked by a heavier `stroke` (`2.4` vs `2`) rather than by a separate icon variant — the
@@ -745,7 +761,14 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   pill highlight behind each icon is driven by a
   JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
   than a CSS pseudo-class — see that file before changing the tap-feedback timing/size.
-  Clicking "Posting" from any page sets `sessionStorage[COMPOSE_INTENT_KEY]` (see
+  Both entry points into composing — the rail's Create dropdown and `BottomNav`'s Posting sheet —
+  render the same `components/navigations/CreateOptionList.tsx`, which owns both choices and the
+  navigation for each, so "what can I create" is answered in one file rather than once per nav.
+  Feed keeps the compose-intent mechanism below; Artikel is a plain `router.push` to
+  `/articles/create`. Each row is a Tabler glyph in a `primary-soft` circle (`IconMessage2` for a
+  feed, `IconArticle` for an article — the same glyph the News nav item uses, since "artikel" is
+  exactly what it depicts) above a label and a one-line description. Picking Feed sets
+  `sessionStorage[COMPOSE_INTENT_KEY]` (see
   `lib/constants.ts`) and dispatches a same-named `window` event, then navigates to `/`;
   `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
   live listener, so it also fires when "Posting" is clicked while already on `/` — and
@@ -1586,17 +1609,49 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   categories remounts it with fresh pagination state instead of leaking the previous
   category's items in.
 - `/articles/create` (`app/(www)/www/(gated)/articles/create/page.tsx` →
-  `components/pages/ArticleCreatePage.tsx`) — the frontend-only, distraction-free article
+  `components/pages/ArticleCreatePage.tsx`) — the distraction-free article
   composer. `MainSiteDesktopShell` hides the normal desktop sidebar on this exact path; the
   composer owns a sticky close/status/action bar and a second sticky, horizontally scrollable
   Tiptap toolbar. Its Tiptap schema exposes paragraph plus H1–H4, bold, italic, underline,
   superscript, subscript, inline image insertion, blockquote, code block, bullet/numbered lists,
   and horizontal rule. Its first step contains the title (single-line behavior, auto-growing
-  wrap, hard limit 70), deck (hard limit 170), 16:9 cover upload, and body; `Lanjutkan` validates
-  the title/body and opens a dedicated publication-details step containing the required category
-  plus keyword chips (eight maximum). The final publish control is intentionally frontend-only —
-  no API call or publish mutation exists yet. Image files are read as data URLs so the local
-  cover preview and inserted editor images work before storage/backend wiring. An uploaded cover
+  wrap, hard limit 70), deck (hard limit 170), required 16:9 cover upload, and body; `Lanjutkan`
+  validates the title/body/cover and only then opens the shared `Modal` as the publication sheet,
+  containing the required category, keyword chips (eight maximum), a preview card, and explicit
+  `Publish`/`Cancel` actions. Category and keyword entry use the shared `fields/Select` and
+  `fields/Input` primitives. There is deliberately **no "Langkah 2 dari 2"** line and no `Cover
+  artikel` field label — a two-state flow doesn't need to be numbered, and the upload CTA
+  ("Unggah cover artikel \*") carries the required-field asterisk itself rather than a label above
+  an image that is its own affordance. The preview card sits below the keyword field and is the
+  one place the author sees the article as a reader would: the cover, the title, the deck, then
+  an author row with the caller's own `Avatar` and name — and no "Pratinjau" caption over it,
+  since a card shaped like the article says that by itself. It sits on the matte near-black
+  `#202428` (the same surface `ArticleAttachmentCard`/`NewsAttachmentCard` use, borderless here)
+  with white copy, so the preview reads as the published card rather than as another white panel
+  inside a white modal; `Avatar`'s own light `primary-soft` initials fallback stays legible on it. The route is a Server Component that
+  fetches `getSession()` and `listArticleCategories({pageSize: 100})` in parallel and passes an
+  `author` (`id`/`fullName`/`avatar`) plus `categories` down — categories are a small fixed list,
+  so they are server-fetched props rather than a client `loadOptions` call, sorted alphabetically
+  by the composer (the endpoint orders by id, which means nothing to an author), and the `author.id` is
+  what `articles/create` requires as `author_id`. It `redirect`s to `/auth/login` when the session
+  carries no `id`, since there would be no author to attribute.
+  `Publish` calls the `createArticle` Server Action with `status: "published"`, the Tiptap
+  `editor.getHTML()` as `body_content`, the deck as `description`, and the keyword chips joined
+  into the single comma-separated `keywords` string the backend expects, then `router.push`es to
+  the new article's own `/articles/{slug_url}/{id}` — a plain push is right here, unlike
+  activation's hard navigation, because the reader's access doesn't depend on anything the
+  mutation changed. The cover and every inserted body image are
+  real uploads: both go straight to the public `hmi-connect` bucket's `articles/covers/` and
+  `articles/content/` folders (same direct-to-storage convention as `feed_media`/`chat_media`), keyed
+  by `crypto.randomUUID()`, and only the resulting public URL is held in state — there are no
+  data-URL previews any more, so an image survives the eventual publish call instead of being
+  inlined into the body HTML. Both run through `lib/compress-image.ts` at its defaults, with a raw
+  20MB sanity cap before compression and a 5MB rejection after it (never a raw-size gate, see
+  `CreateFeedForms` above), and take their extension/`contentType` from the compressed file, since
+  compression re-encodes to JPEG. A Supabase RLS rejection is detected by the same
+  `isStoragePolicyError` signature every other upload callsite uses and surfaces as a toast naming
+  the `articles` folder, since a missing storage policy is otherwise indistinguishable from a
+  generic failure. An uploaded cover
   exposes adjacent replace/delete controls over the image. Body images use a custom React Tiptap
   node view: clicking one gives it a blue selection ring, while hover or selection reveals its
   top-right destructive `Button` with a trash icon; those editor-only controls are not emitted
@@ -1617,28 +1672,34 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `articles/.*` added to `next.config.mts`'s no-session allowlist — an editorial article is
   public, and the data layer reads it with `CLIENT_SECRET` so no session is needed. It still
   calls `getSession()` in parallel, purely to give `Header`/`BottomNav` a viewer.
-  **`body_content[].content` is untrusted HTML and must never reach `dangerouslySetInnerHTML`
+  **`body_content` is untrusted HTML and must never reach `dangerouslySetInnerHTML`
   raw.** `articles/create` lets *any verified user* author as themselves — not just admins — so
   a body is stored user input, and rendering it unsanitized is stored XSS against every reader's
   session. `lib/article-body.ts` (`import "server-only"`) is the only place that HTML is allowed
-  to pass through: `prepareArticleBody` sorts blocks by `index_order`, runs each `content`
+  to pass through: `prepareArticleBody` runs the whole string
   through `sanitizeArticleHtml` (`sanitize-html`, strict **allowlist** of tags/attributes,
-  schemes limited to http/https/mailto, and a `transformTags` rule forcing every `<a>` to
-  `target="_blank" rel="noopener noreferrer nofollow"`), and drops blocks left with nothing in
-  them. Sanitizing happens server-side, once, so the client never sees the raw string. If you add
-  a block type or widen the allowlist, re-check it against the `script`/`onerror`/`javascript:`/
+  schemes limited to http/https/mailto, and `transformTags` rules forcing every `<a>` to
+  `target="_blank" rel="noopener noreferrer nofollow"` and demoting an authored `<h1>` to `<h2>`,
+  since the page title already owns the document's only `h1` and the allowlist would otherwise
+  discard the tag and flatten that heading to plain text), and returns `null` for an empty body.
+  Sanitizing happens server-side, once, so the client never sees the raw string. If you widen the
+  allowlist, re-check it against the `script`/`onerror`/`javascript:`/
   `onclick`/`iframe`/`svg onload` cases — those are the ones the current list is verified
   against. `articleReadingMinutes` derives the "N menit baca" line from the sanitized text at 200
   wpm, floored at 1.
   The page is a Server Component: a centered `max-w-[720px]` column with the category `Label`,
   the title in `font-stack-sans-headline`, the `description` as a deck, an author row
   (avatar, name, `formatShortDate(published_at)` · reading time) between two rules, the cover
-  image, then the blocks — each optionally a sub-heading, an image with `image_desc` as its
-  `figcaption`, and the sanitized HTML. Body typography lives in one `PROSE_CLASS` constant of
+  image, then the sanitized body as a single `dangerouslySetInnerHTML` block — the per-block
+  sub-heading/image/`figcaption` rendering is gone with the block contract, and an authored
+  `<figure><img><figcaption>` now carries a caption instead. Body typography lives in one `PROSE_CLASS` constant of
   Tailwind arbitrary descendant variants (`[&_p]:mt-6`, `[&_blockquote]:…`) rather than a
   `@tailwindcss/typography` `prose` class, since that plugin isn't installed — extend that
   constant instead of adding one. `keywords` is a single comma-separated string, not an array, so
-  it's split before rendering as tag pills. There is deliberately no reaction/comment/share bar:
+  it's split before rendering as tag pills. The keyword pills are the page's last row — an earlier
+  revision closed with a "← Kembali ke Berita" link to `/news`, which was wrong twice over: an
+  editorial article isn't a news-aggregator item, and the nav rail plus `BottomNav` already own
+  going anywhere. There is deliberately no reaction/comment/share bar:
   an article is not a feed post, and none of those endpoints accept an article target.
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
   here instead of `href="#"`) — **no longer mobile-only**: `/quran` itself now has a real `lg:`

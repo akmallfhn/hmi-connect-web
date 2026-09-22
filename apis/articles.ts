@@ -2,17 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
-import { isSuccessStatus, type ArticleStatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type ArticleStatusEnum,
+  type StatusName,
+} from "@/lib/types";
 import { callApi } from "./api";
-
-// One block of the article body — ordered by index_order, every field nullable but `content`.
-export type ArticleBodyBlock = {
-  index_order: number;
-  sub_heading: string | null;
-  image_path: string | null;
-  image_desc: string | null;
-  content: string | null;
-};
 
 export type ArticleListEntry = {
   id: string;
@@ -33,7 +28,8 @@ export type ArticleListEntry = {
 
 export type ArticleDetail = ArticleListEntry & {
   description: string | null;
-  body_content: ArticleBodyBlock[];
+  // Raw author-authored HTML — sanitize through lib/article-body.ts before rendering.
+  body_content: string;
   created_at: string;
 };
 
@@ -138,11 +134,12 @@ export async function getArticleDetail(
   return result.data ?? null;
 }
 
+// Unlike articles/list, article-categories/list is JWT-only on the backend — no client-secret fallback.
 export async function listArticleCategories(
   options: { search?: string; page?: number; pageSize?: number } = {}
 ): Promise<PagedArticleResult<ArticleCategory>> {
   const page = options.page ?? 1;
-  const token = await getArticleReadToken();
+  const token = await getSessionToken();
   if (!token) return mapPage<ArticleCategory>(undefined, page);
 
   const result = await callApi<ListResponse<ArticleCategory>>(
@@ -162,4 +159,55 @@ export async function listArticleCategories(
     return mapPage<ArticleCategory>(undefined, page);
   }
   return mapPage(result.data, page);
+}
+
+export type CreateArticlePayload = {
+  title: string;
+  image_url: string;
+  body_content: string;
+  category_id: number;
+  author_id: string;
+  description?: string;
+  keywords?: string;
+  status?: ArticleStatusEnum;
+  slug_url?: string;
+  published_at?: string;
+};
+
+export type CreateArticleResult =
+  | { ok: true; article: ArticleDetail }
+  | { ok: false; message: string };
+
+// Authorized by the session JWT: a non-admin author must be verified and may only create as themselves.
+export async function createArticle(
+  payload: CreateArticlePayload
+): Promise<CreateArticleResult> {
+  const token = await getSessionToken();
+  if (!token) return { ok: false, message: "Sesi kamu sudah berakhir." };
+
+  const result = await callApi<ArticleDetail>("/api/v1/articles/create", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+
+  if (!isSuccessStatus(result.status) || !result.data) {
+    return { ok: false, message: createArticleMessage(result.status) };
+  }
+  return { ok: true, article: result.data };
+}
+
+function createArticleMessage(status: StatusName | undefined): string {
+  switch (status) {
+    case "FORBIDDEN":
+      return "Akun kamu harus terverifikasi sebelum bisa menerbitkan artikel.";
+    case "CONFLICT":
+      return "Sudah ada artikel dengan slug yang sama. Ubah judulnya sedikit.";
+    case "BAD_REQUEST":
+      return "Data artikel belum lengkap atau kategori tidak valid.";
+    case "UNAUTHORIZED":
+      return "Sesi kamu sudah berakhir. Masuk ulang lalu coba lagi.";
+    default:
+      return "Artikel gagal diterbitkan. Coba lagi.";
+  }
 }

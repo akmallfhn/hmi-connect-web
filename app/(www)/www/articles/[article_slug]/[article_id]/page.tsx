@@ -66,13 +66,13 @@ export default async function ArticleRoute({ params }: ArticleRouteProps) {
 
   if (!article) notFound();
 
-  const blocks = prepareArticleBody(article.body_content);
+  const body = prepareArticleBody(article.body_content);
 
   return (
     <ArticleDetailPage
       article={article}
-      blocks={blocks}
-      readingMinutes={articleReadingMinutes(blocks)}
+      body={body}
+      readingMinutes={articleReadingMinutes(body)}
       viewer={{
         fullName: user?.full_name,
         avatar: user?.avatar,

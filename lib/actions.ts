@@ -167,6 +167,10 @@ import {
   sendReaction as sendReactionApi,
   unsendReaction as unsendReactionApi,
 } from "@/apis/reactions";
+import {
+  createArticle as createArticleApi,
+  type CreateArticlePayload,
+} from "@/apis/articles";
 import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
 import {
   listNotifications as listNotificationsApi,
@@ -802,4 +806,8 @@ export async function setBranchType(id: string, type: BranchTypeEnum) {
 
 export async function setChapterType(id: string, type: BranchTypeEnum) {
   return setChapterTypeApi(id, type);
+}
+
+export async function createArticle(payload: CreateArticlePayload) {
+  return createArticleApi(payload);
 }
