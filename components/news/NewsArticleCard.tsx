@@ -6,11 +6,7 @@ import { formatRelativeTime } from "@/lib/time-manipulation";
 import RepostToFeedButton from "./RepostToFeedButton";
 
 type NewsArticleCardVariant =
-  | "grid"
-  | "mobileBig"
-  | "mobileList"
-  | "heroMain"
-  | "heroSide";
+  "grid" | "mobileBig" | "mobileList" | "heroMain" | "heroSide" | "carousel";
 
 interface NewsArticleCardProps {
   article: NewsArticle;
@@ -88,7 +84,7 @@ function SourceRow({ article }: { article: NewsArticle }) {
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <SourceLogo article={article} />
-      <span className="truncate text-xs font-semibold text-[#172033]">
+      <span className="truncate text-xs text-[#5F6573]">
         {article.source_name}
       </span>
     </div>
@@ -125,6 +121,32 @@ export default function NewsArticleCard({
   article,
   variant = "grid",
 }: NewsArticleCardProps) {
+  // Home-timeline strip card: cover on top, then source over a two-line title beside the repost action.
+  if (variant === "carousel") {
+    return (
+      <a
+        href={article.source_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-[#e6e9ef] bg-white"
+      >
+        <ArticleImage article={article} className="aspect-[4/3] w-full" />
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          <SourceRow article={article} />
+          <div className="flex items-start gap-1">
+            <p className="line-clamp-2 min-w-0 flex-1 text-sm font-stack-sans-headline font-medium leading-snug text-[#172033] transition lg:text-[15px]">
+              {article.title}
+            </p>
+            <RepostToFeedButton
+              article={article}
+              className="shrink-0 text-[#5f6573]"
+            />
+          </div>
+        </div>
+      </a>
+    );
+  }
+
   // Google-News-style "big thumbnail" mobile row: source on top, full-width image, title, timestamp.
   if (variant === "mobileBig") {
     return (

@@ -3,15 +3,21 @@ import { ChevronRight, Newspaper } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+// Desktop-only card, so it narrows to HMI's own news; the timeline strip stays unfiltered.
+const CATEGORY_SLUG = "hmi";
+
 export default async function NewsCard() {
-  const { list } = await listNewsArticles({ pageSize: 5 });
+  const { list } = await listNewsArticles({
+    pageSize: 5,
+    categorySlug: CATEGORY_SLUG,
+  });
 
   if (list.length === 0) return null;
 
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x">
       <div className="flex items-center gap-2 text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
-        Kabar Trending
+        Kabar HMI
       </div>
 
       <div className="mt-3 flex flex-col gap-3">

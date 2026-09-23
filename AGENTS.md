@@ -1102,12 +1102,23 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   deliberately **not a modulo**: the pools behind these cards are finite, so a repeating cycle
   would replay rows the reader already scrolled past — the same reason `/news` places its
   `categoryPreviews` by `groupIndex < length` rather than by a cycle. Today's plan is follow
-  suggestions after index 1, `NewsCard` (`mobileOnly`, since the sidebar carries it at `lg+`)
-  after 6, then follow suggestions again after 13. `listFollowRecommendations` is fetched
+  suggestions after index 1, news after 6, news again after 13, then follow suggestions again
+  after 20. Every slot renders at **all** breakpoints: the two news strips are unfiltered, while
+  `RightSidebar`'s own card narrows to one category, so the sidebar and the timeline are never
+  showing the same articles. Two slots can't share an `after`, since the lookup is a `Map` keyed
+  by it. `listFollowRecommendations` and `listNewsArticles` are each fetched
   **once at double the slot size and sliced**, never a page per slot:
   `follow-recommendations/list` ranks rather than lists, so its page 2 can hand back someone
   page 1 already returned. A slot whose slice comes back empty is left out of the plan
-  entirely. `FeedTimeline` keeps a `Map` keyed by `after` and, once `hasMore` is false, renders
+  entirely, and the array is built in reading order because an unreached slot renders below the
+  last post. Both news slots render `components/feeds/NewsCarousel.tsx` — the same heading-above-
+  a-snap-strip shell as the suggestions carousel, filled with `NewsArticleCard`'s own
+  `carousel` variant (a `w-64` card: 4/3 cover, then the source row over a two-line title beside
+  `RepostToFeedButton` — there is no bookmark action anywhere in this app to put there instead).
+  The shape lives as a variant there rather than as a second card component, so every news card
+  in the app still renders from one file. The strip keeps the name **"Kabar Trending"**, which
+  is what this same unfiltered query was already called before it moved off the sidebar.
+  `FeedTimeline` keeps a `Map` keyed by `after` and, once `hasMore` is false, renders
   any slot the timeline was too short to reach below the last post — otherwise a new account
   with four posts would never see a suggestion at all. Both slots render
   `components/feeds/SuggestedConnectionsCarousel.tsx` (client): a heading row above a
@@ -1259,10 +1270,13 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   list). The rail already shows who you are on every page, so repeating it per route was the same
   identity stated twice. Don't re-add it to a page without a reason the rail doesn't already
   cover. `NewsCard.tsx`
-  (rendered by `RightSidebar`, titled "Kabar Trending") is real-API-backed — an async Server
-  Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5 })` directly (no
-  category filter, just the 5 most-recently-published articles) and renders nothing if the
-  list comes back empty; its "Lihat Semua Berita" link goes to `/news`. `UpcomingEventsCard`
+  (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
+  Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5, categorySlug })` directly
+  and renders nothing if the list comes back empty; its "Lihat Semua Berita" link goes to
+  `/news`. Its `CATEGORY_SLUG` (`"hmi"`) is deliberately **local to this file**, not a shared
+  constant: narrowing to HMI's own news is this desktop card's job alone, and the timeline's news
+  strips stay unfiltered so the two surfaces don't show the same articles side by side. `/news`
+  itself is unaffected: it still lists every category behind its own pills. `UpcomingEventsCard`
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
   `ExploreSearchBar` → `FollowingCard` → `NewsCard` → the footer note, and it is the
