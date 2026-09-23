@@ -64,7 +64,7 @@ export default function FollowRecommendationRow({
         </p>
       </div>
       <Button
-        variant={isFollowing ? "outline" : "primary"}
+        variant={isFollowing ? "outline" : "soft"}
         size="sm"
         onClick={handleFollowToggle}
         disabled={loading}

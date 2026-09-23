@@ -1,14 +1,13 @@
 import { listNewsArticles } from "@/apis/news";
-import { ChevronRight, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 // Desktop-only card, so it narrows to HMI's own news; the timeline strip stays unfiltered.
 const CATEGORY_SLUG = "hmi";
 
 export default async function NewsCard() {
   const { list } = await listNewsArticles({
-    pageSize: 5,
+    pageSize: 4,
     categorySlug: CATEGORY_SLUG,
   });
 
@@ -54,14 +53,6 @@ export default async function NewsCard() {
           </a>
         ))}
       </div>
-
-      <Link
-        href="/news"
-        className="mt-3 flex items-center justify-between border-t border-[#e6e9ef] pt-3 text-sm font-medium text-primary xl:text-[15px]"
-      >
-        Lihat Semua Berita
-        <ChevronRight className="size-4" />
-      </Link>
     </div>
   );
 }

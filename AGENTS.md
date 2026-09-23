@@ -714,9 +714,11 @@ iconSm`.
   **News is deliberately absent from the rail** — `/news` and `/news/[category_slug]` stay real, it
   is simply unlinked here, the same way the Cabang sidebar hides its SK/Konfercab routes. Articles
   took its slot, and with News gone there is no longer a second claimant on `IconArticle`.
-  `MobileQuickMenu`'s first tile was repointed at `/articles` too, so the only remaining way in is
-  `NewsCard`'s own "Lihat Semua Berita" link in the home feed's right sidebar — check that before
-  assuming `/news` is unreachable, and don't delete the route thinking nothing links there.
+  `MobileQuickMenu`'s first tile was repointed at `/articles` too, and `NewsCard`'s own
+  "Lihat Semua Berita" link is gone, so **nothing in the UI links to `/news` any more** — both
+  routes still render for anyone who types or bookmarks the URL, and the news data still reaches
+  readers through `NewsCard` and the timeline's `NewsCarousel`. Don't delete the routes assuming
+  they're dead, and if News is ever meant to be browsable again it needs a new entry point.
   Labels are English here, unlike the Indonesian copy everywhere else in the app — except the
   "Posting" button, which matches `BottomNav`'s own Indonesian label for the same action, since one
   action named two ways in two navs reads as two features. They are set in
@@ -1124,7 +1126,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `components/feeds/SuggestedConnectionsCarousel.tsx` (client): a heading row above a
   horizontally snap-scrolling strip of `w-40`/`sm:w-44` cards, each an avatar over the name,
   the same subtitle `FollowRecommendationRow` shows (reserved at `h-8` so every
-  card's button lands on one line), a full-width `secondary` Ikuti button on the same
+  card's button lands on one line), a full-width `soft` Ikuti button that flips to `outline` once
+  following — the same pair `FollowRecommendationRow` uses, so one action doesn't wear two colors
+  between the timeline strip and a profile — on the same
   optimistic-with-rollback actions, and an `X` that drops the card. **That dismissal is local
   to the mount** — there is no endpoint to remember it — so don't document it as a preference.
   It has no "see all" link either: nothing routes to a full recommendations list.
@@ -1271,9 +1275,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   identity stated twice. Don't re-add it to a page without a reason the rail doesn't already
   cover. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
-  Component that calls `apis/news.ts#listNewsArticles({ pageSize: 5, categorySlug })` directly
-  and renders nothing if the list comes back empty; its "Lihat Semua Berita" link goes to
-  `/news`. Its `CATEGORY_SLUG` (`"hmi"`) is deliberately **local to this file**, not a shared
+  Component that calls `apis/news.ts#listNewsArticles({ pageSize: 4, categorySlug })` directly
+  and renders nothing if the list comes back empty. It has no "see all" footer link, which is
+  what leaves `/news` unlinked from the whole UI (see the rail's own note above).
+  Its `CATEGORY_SLUG` (`"hmi"`) is deliberately **local to this file**, not a shared
   constant: narrowing to HMI's own news is this desktop card's job alone, and the timeline's news
   strips stay unfiltered so the two surfaces don't show the same articles side by side. `/news`
   itself is unaffected: it still lists every category behind its own pills. `UpcomingEventsCard`
@@ -1308,7 +1313,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `FollowRecommendationRow.tsx` (client), which shows the subtitle
   `lib/follow-recommendation.ts#followRecommendationSubtitle` returns — never the raw
   `closeness_score` the API ranks by — and calls the
-  `followUser`/`unfollowUser` Server Actions for its own Ikuti/Mengikuti toggle —
+  `followUser`/`unfollowUser` Server Actions for its own `soft`/`outline` Ikuti/Mengikuti toggle —
   same optimistic-with-rollback shape as `ProfileHeader`'s follow button, just without the
   `router.refresh()` (this card doesn't own any follower-count display to keep in sync).
   `MobileGreetingBar.tsx` and `MobileQuickMenu.tsx` are `FeedPage.tsx`/`Feed.tsx`-only,
