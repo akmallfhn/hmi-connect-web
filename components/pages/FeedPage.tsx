@@ -57,7 +57,7 @@ export default function FeedPage({
         </main>
 
         <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-          <RightSidebar />
+          <RightSidebar userId={userId} />
         </aside>
       </PageMargin>
 

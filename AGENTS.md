@@ -1265,10 +1265,26 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   list comes back empty; its "Lihat Semua Berita" link goes to `/news`. `UpcomingEventsCard`
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
-  `ExploreSearchBar` → `NewsCard` → the footer note, and it is the
+  `ExploreSearchBar` → `FollowingCard` → `NewsCard` → the footer note, and it is the
   home feed's only aside — `SuggestedConnectionsCard` left it when the follow suggestions moved
   into the timeline at every breakpoint (see `Feed.tsx`'s insertion plan below); repeating them
-  beside a timeline that already carries them is the same list twice.
+  beside a timeline that already carries them is the same list twice. It takes a `userId`,
+  threaded from `FeedPage`, purely for `FollowingCard`.
+  `FollowingCard.tsx` is an async Server Component over
+  `apis/users.ts#listFollowing(userId, {pageSize: 12})`, rendering `null` without a session or
+  with an empty list: a `w-[78px]` snap-scroll strip of `rounded-3xl` 78px tiles, each a link to
+  `/profile/{username}` with the name `line-clamp-2`'d underneath and a `ring-secondary` ring on
+  `group-hover`. It is desktop-only by placement — `FeedPage`'s `<aside>` is already
+  `hidden lg:block` — so the component carries no breakpoint class of its own. It deliberately
+  does **not** use the shared `Avatar`: that component hardcodes `rounded-full`, and since both
+  are `border-radius` utilities a `rounded-3xl` passed through `className` loses on Tailwind's
+  own output order rather than winning on class order. It renders the image itself and imports
+  `Avatar`'s exported `getInitials` so the fallback still reads the same everywhere. There is no
+  "see all" link: the following list only exists behind `FollowListModal`, which has no route.
+  Both this strip and `SuggestedConnectionsCarousel` pair `px-4` with **`scroll-px-4`** — with
+  `snap-mandatory`, the snapport is measured from the padding box, so the browser scrolls the
+  first item flush to the container edge and the left padding visibly disappears, leaving the
+  first tile hanging left of the card's own heading. Don't drop that class.
   `SuggestedConnectionsCard.tsx` (now rendered by
   `ProfilePage` and `EntityProfilePage`, not the home feed) is real-API-backed — an async Server Component that calls
   `apis/users.ts#listFollowRecommendations({ pageSize: 5 })` and renders nothing if the list

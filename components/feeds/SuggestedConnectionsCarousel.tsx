@@ -34,7 +34,8 @@ export default function SuggestedConnectionsCarousel({
         {title}
       </h2>
 
-      <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Without scroll-px-4 the snap pulls the first card flush left, past the heading. */}
+      <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visible.map((connection) => (
           <ConnectionCard
             key={connection.id}
