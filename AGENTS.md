@@ -579,14 +579,7 @@ verification form is the same instruction twice.
 
 1. **Data KTP** — legal name (`ktp_full_name`, distinct from `full_name` which comes from
    Google), phone number, date of birth, gender.
-2. **Alamat** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
-   backed by `/www/api/provinces/search`, `/www/api/cities/search`,
-   `/www/api/districts/search`), plus street address. City/District `SearchableSelect`s
-   are remounted via a `key` keyed off the parent selection so their internal option list
-   resets when the parent changes — don't try to reset them by clearing `value` alone,
-   `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
-   are derived server-side from it.
-3. **Asal Organisasi** — cascading Branch (Cabang HMI) → Chapter (Komisariat)
+2. **Asal Organisasi** — cascading Branch (Cabang HMI) → Chapter (Komisariat)
    (`apis/branches.ts` + `apis/chapters.ts`, backed by `/www/api/branches/search` and
    `/www/api/chapters/search`). `searchChapters` takes a scope object (`branchId` or
    `coordinatingChapterId` — it returns nothing when given neither, since an unscoped
@@ -594,13 +587,35 @@ verification form is the same instruction twice.
    picker always passes `branchId`: a Komisariat pick with no Cabang context wouldn't make sense
    in this flow. The Korkom scope exists for the Daftar Kader Komisariat filter below. Only `chapter_id` is submitted
    to `users/verification`, branch/coordinating body and organization are derived server-side
-   from the chapter. Below the Komisariat picker sits the one non-organizational question on this
+   from the chapter. Cabang options are the bare branch name with **no `Cabang ` prefix** — the
+   field's own label already says Asal Cabang, and the prefix used to appear on searched options
+   but not on the server-rendered `defaultOptions`, so the list changed shape as soon as anyone
+   typed. Komisariat options do keep their prefix. Below the Komisariat picker sits the one non-organizational question on this
    step — "Apakah kamu sudah menjadi alumni HMI?", a Belum/Sudah `RadioButton<boolean>` pair
    submitted as `users/verification`'s optional `is_alumni`. It's required here (the step won't
    submit on `null`) even though the backend defaults it to `false`, so the answer is a deliberate
    declaration rather than a field the applicant scrolled past. It is only the applicant's claim:
    it lives on the `verification_requests` row for the reviewer to check against the KTP and
    only reaches `users.is_alumni` when the request is approved.
+3. **Alamat (Opsional)** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
+   backed by `/www/api/provinces/search`, `/www/api/cities/search`,
+   `/www/api/districts/search`), plus street address. City/District `SearchableSelect`s
+   are remounted via a `key` keyed off the parent selection so their internal option list
+   resets when the parent changes — don't try to reset them by clearing `value` alone,
+   `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
+   are derived server-side from it.
+   **This step is last precisely because nothing on it is required.** `users/verification` takes
+   `address_street` and `district_id` as independently optional, and `verification_requests`
+   holds both as `NULL`, so every field here carries no asterisk, the step gates no `canGoNext`,
+   and each half is spread into the payload only when actually filled — never sent as `""` or
+   `district_id: 0`, which would fail the backend's own districts lookup. An omitted half stays
+   `null` on the request, and approval then leaves the target's existing
+   `users.address_street`/`users.district_id` untouched rather than clearing it. Consequently
+   `VerificationRequestDetail`'s `address_street`/`district_id` **and** the whole derived
+   `district_name`/`city_*`/`province_*` chain are typed required-and-nullable, and the admin
+   review modal's single "Alamat Lengkap" `Field` coalesces its joined value to `undefined` when
+   every part is null — `Field` only falls back to its em dash on a nullish value, so an empty
+   join would otherwise render a blank line.
 
 ## Transactional email
 
@@ -1080,7 +1095,40 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `loading.tsx` — a full composer + six `FeedItemSkeleton`s + `HomeSidebarSkeleton` in the real
   two-column grid — is scoped to `/` instead of flashing a feed skeleton over every gated route
   the way a `(gated)/loading.tsx` did.
-  `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`;
+  `Feed.tsx` (Server Component) fetches the first page via `apis/feeds.ts#listFeeds`, and is
+  also where the timeline's **insertion plan** is built — the ordered list of cards spliced
+  between posts, handed to `FeedTimeline` as one `insertions: TimelineInsertion[]` prop
+  (`{after, node, mobileOnly?}`, `after` being a 0-based index counting posts only). It is
+  deliberately **not a modulo**: the pools behind these cards are finite, so a repeating cycle
+  would replay rows the reader already scrolled past — the same reason `/news` places its
+  `categoryPreviews` by `groupIndex < length` rather than by a cycle. Today's plan is follow
+  suggestions after index 1, `NewsCard` (`mobileOnly`, since the sidebar carries it at `lg+`)
+  after 6, then follow suggestions again after 13. `listFollowRecommendations` is fetched
+  **once at double the slot size and sliced**, never a page per slot:
+  `follow-recommendations/list` ranks rather than lists, so its page 2 can hand back someone
+  page 1 already returned. A slot whose slice comes back empty is left out of the plan
+  entirely. `FeedTimeline` keeps a `Map` keyed by `after` and, once `hasMore` is false, renders
+  any slot the timeline was too short to reach below the last post — otherwise a new account
+  with four posts would never see a suggestion at all. Both slots render
+  `components/feeds/SuggestedConnectionsCarousel.tsx` (client): a heading row above a
+  horizontally snap-scrolling strip of `w-40`/`sm:w-44` cards, each an avatar over the name,
+  the same subtitle `FollowRecommendationRow` shows (reserved at `h-8` so every
+  card's button lands on one line), a full-width `secondary` Ikuti button on the same
+  optimistic-with-rollback actions, and an `X` that drops the card. **That dismissal is local
+  to the mount** — there is no endpoint to remember it — so don't document it as a preference.
+  It has no "see all" link either: nothing routes to a full recommendations list.
+  **Both of them introduce a person through the one shared
+  `lib/follow-recommendation.ts#followRecommendationSubtitle`**, so the same face never reads
+  two ways between the timeline strip and a profile sidebar. Its order is `headline` →
+  `Cabang {branch_name}` → `education_institution_name` → the literal `Pengguna HMI Connect`,
+  and it is typed to return a `string`, not `string | undefined` — a card whose second line is
+  blank reads as a rendering bug rather than as a quiet profile, so there is deliberately no
+  empty case for a caller to guard. `headline` and the six `education_*` fields are real parts
+  of `follow-recommendations/list`'s own response (the query `LEFT JOIN LATERAL`s the
+  candidate's single most recent education row); an earlier revision of
+  `FollowRecommendationEntry` omitted them and fell back through
+  `coordinating_body_name`/`chapter_name` instead — don't reinstate that chain, and mirror the
+  whole documented response rather than only the fields one subtitle happens to read.
   `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
   header, prepends a new feed via `handleFeedCreated` (passed to both `CreateFeedForms`'s
   `onCreated` and each `FeedItemCard`'s `onFeedCreated` — the latter fires from quote
@@ -1217,16 +1265,19 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   list comes back empty; its "Lihat Semua Berita" link goes to `/news`. `UpcomingEventsCard`
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
-  `ExploreSearchBar` → `SuggestedConnectionsCard` → `NewsCard` → the footer note, and it is the
-  home feed's only aside. `SuggestedConnectionsCard.tsx` (rendered by both
-  `RightSidebar` and `ProfilePage`) is real-API-backed — an async Server Component that calls
+  `ExploreSearchBar` → `NewsCard` → the footer note, and it is the
+  home feed's only aside — `SuggestedConnectionsCard` left it when the follow suggestions moved
+  into the timeline at every breakpoint (see `Feed.tsx`'s insertion plan below); repeating them
+  beside a timeline that already carries them is the same list twice.
+  `SuggestedConnectionsCard.tsx` (now rendered by
+  `ProfilePage` and `EntityProfilePage`, not the home feed) is real-API-backed — an async Server Component that calls
   `apis/users.ts#listFollowRecommendations({ pageSize: 5 })` and renders nothing if the list
   comes back empty; it has no "see all" link, just the raw list. Its `title` prop still exists but
   both callers now take the default "Mungkin Kamu Kenal" — `ProfilePage` dropped its longer
   "Orang yang Mungkin Kamu Kenal" override once the card sat in a narrower column. Each row is
-  `FollowRecommendationRow.tsx` (client), which shows a plain affiliation subtitle —
-  "Cabang {branch_name}", falling back to `coordinating_body_name` then `chapter_name` —
-  rather than surfacing the raw `closeness_score` the API ranks by, and calls the
+  `FollowRecommendationRow.tsx` (client), which shows the subtitle
+  `lib/follow-recommendation.ts#followRecommendationSubtitle` returns — never the raw
+  `closeness_score` the API ranks by — and calls the
   `followUser`/`unfollowUser` Server Actions for its own Ikuti/Mengikuti toggle —
   same optimistic-with-rollback shape as `ProfileHeader`'s follow button, just without the
   `router.refresh()` (this card doesn't own any follower-count display to keep in sync).
@@ -1260,9 +1311,8 @@ lg:block` — the overlapping card reads better without one competing with the g
   predictably. Its shadow is a flat `shadow-sm` at every breakpoint now, not a heavier
   mobile-only value — a floating overlapped card still reads as elevated without needing
   much shadow weight.
-  `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (same shape as
-  `newsCard`/`suggestedConnectionsCard` — an unscoped `ReactNode`, wrapped in `lg:hidden` by
-  `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
+  `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (an unscoped
+  `ReactNode`, wrapped in `lg:hidden` by `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
   above the timeline. Its four entries use `components/icons/{NewsIcon,EKTAIcon,EventIcon,
 AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`SearchIcon`/
   `NotificationIcon`/`ProfileIcon`, these have no `outline`/`bulk` variant since they're not

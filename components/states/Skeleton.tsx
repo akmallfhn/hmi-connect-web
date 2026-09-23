@@ -244,8 +244,7 @@ export function HomeSidebarSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <div className="h-10 rounded-xl border border-[#e6e9ef] bg-[#eef1f5]" />
-      <CardSkeleton rows={4} titleWidth="w-36" />
-      <CardSkeleton rows={3} titleWidth="w-24" />
+      <CardSkeleton rows={5} titleWidth="w-28" />
     </div>
   );
 }

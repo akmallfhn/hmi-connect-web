@@ -23,15 +23,18 @@ interface FeedTimelineProps {
   currentUserAvatar?: string;
   userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
-  newsCard?: ReactNode;
-  suggestedConnectionsCard?: ReactNode;
+  insertions?: TimelineInsertion[];
   quickMenu?: ReactNode;
 }
 
-// Index (0-based) after which each inline card is inserted into the feed — after the 3rd and 6th posts.
-// Mobile-only (lg:hidden): at lg+ these same cards render as a persistent sidebar via RightSidebar instead.
-const NEWS_CARD_AFTER_INDEX = 2;
-const SUGGESTED_CONNECTIONS_AFTER_INDEX = 5;
+// One ordered pass, never a modulo — the pool is finite, so a cycle would replay old rows.
+export type TimelineInsertion = {
+  // 0-based feed index this card is rendered after, counting posts only.
+  after: number;
+  node: ReactNode;
+  // For a card the lg+ RightSidebar already shows permanently.
+  mobileOnly?: boolean;
+};
 
 // Written by RepostToFeedButton; a malformed entry just opens an empty composer.
 function parseNewsIntent(raw: string | null): ComposerNewsDraft | undefined {
@@ -64,8 +67,7 @@ export default function FeedTimeline({
   currentUserAvatar,
   userStatus,
   verificationStatus,
-  newsCard,
-  suggestedConnectionsCard,
+  insertions = [],
   quickMenu,
 }: FeedTimelineProps) {
   const [items, setItems] = useState(initialItems);
@@ -152,6 +154,14 @@ export default function FeedTimeline({
     ]);
   }
 
+  const insertionsByIndex = new Map(
+    insertions.map((insertion) => [insertion.after, insertion])
+  );
+  // A thin timeline never reaches the later slots, so they land after the last post instead.
+  const trailingInsertions = insertions.filter(
+    (insertion) => insertion.after >= items.length
+  );
+
   const repostedFeedIds = new Set(
     items
       .filter(
@@ -205,15 +215,16 @@ export default function FeedTimeline({
               onDeleted={handleFeedDeleted}
               onFeedCreated={handleFeedCreated}
             />
-            {index === NEWS_CARD_AFTER_INDEX && newsCard && (
-              <div className="lg:hidden">{newsCard}</div>
-            )}
-            {index === SUGGESTED_CONNECTIONS_AFTER_INDEX &&
-              suggestedConnectionsCard && (
-                <div className="lg:hidden">{suggestedConnectionsCard}</div>
-              )}
+            {renderInsertion(insertionsByIndex.get(index))}
           </div>
         ))}
+
+        {!hasMore &&
+          trailingInsertions.map((insertion) => (
+            <div key={`trailing-${insertion.after}`} className="contents">
+              {renderInsertion(insertion)}
+            </div>
+          ))}
 
         {(hasMore || loadingMore) && (
           <div
@@ -226,4 +237,10 @@ export default function FeedTimeline({
       </div>
     </div>
   );
+}
+
+function renderInsertion(insertion: TimelineInsertion | undefined) {
+  if (!insertion) return null;
+  if (!insertion.mobileOnly) return insertion.node;
+  return <div className="lg:hidden">{insertion.node}</div>;
 }

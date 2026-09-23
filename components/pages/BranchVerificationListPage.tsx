@@ -513,14 +513,17 @@ export function VerificationRequestListPage({
                 <Field
                   icon={MapPin}
                   label="Alamat Lengkap"
-                  value={[
-                    detailData.address_street,
-                    detailData.district_name,
-                    detailData.city_name,
-                    detailData.province_name,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
+                  // An applicant may skip the address entirely, and "" is not nullish enough for Field's dash.
+                  value={
+                    [
+                      detailData.address_street,
+                      detailData.district_name,
+                      detailData.city_name,
+                      detailData.province_name,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || undefined
+                  }
                 />
               </div>
             </div>

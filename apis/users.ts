@@ -295,8 +295,8 @@ export type VerificationPayload = {
   phone_number: string;
   date_of_birth: string;
   gender: GenderEnum;
-  address_street: string;
-  district_id: number;
+  address_street?: string;
+  district_id?: number;
   // The applicant's own alumni (KAHMI) declaration — only reaches users.is_alumni once the request is approved.
   is_alumni?: boolean;
 };
@@ -310,8 +310,8 @@ export type VerificationResult = {
   phone_number: string;
   date_of_birth: string;
   gender: GenderEnum;
-  address_street: string;
-  district_id: number;
+  address_street: string | null;
+  district_id: number | null;
   is_alumni: boolean;
   status: VerificationRequestStatusEnum;
 };
@@ -639,6 +639,14 @@ export type FollowRecommendationEntry = {
   coordinating_body_id?: string;
   coordinating_body_name?: string;
   closeness_score: number;
+  headline?: string;
+  // The candidate's most recent education only — the full history stays behind the profile endpoints.
+  education_institution_id?: number;
+  education_institution_name?: string;
+  education_degree?: string;
+  education_major?: string;
+  education_start_year?: number;
+  education_end_year?: number;
 };
 
 export async function listFollowRecommendations(

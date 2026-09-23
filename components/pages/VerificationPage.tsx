@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
@@ -18,7 +18,7 @@ import type { Province } from "@/apis/locations";
 import { verifyUser } from "@/lib/actions";
 import { isSuccessStatus, type GenderEnum } from "@/lib/types";
 
-const STEPS = ["Data KTP", "Alamat", "Cabang & Komisariat"];
+const STEPS = ["Data KTP", "Cabang & Komisariat", "Alamat"];
 
 type FormData = {
   ktpFullName: string;
@@ -160,10 +160,7 @@ export default function VerificationPage({
     const results: { id: string; name: string }[] = json.data ?? [];
 
     return {
-      options: results.map((item) => ({
-        label: `Cabang ${item.name}`,
-        value: item.id,
-      })),
+      options: results.map((item) => ({ label: item.name, value: item.id })),
       hasMore: Boolean(json.hasMore),
     };
   }
@@ -197,23 +194,16 @@ export default function VerificationPage({
     formData.gender !== null;
 
   const isStep1Valid =
-    formData.addressStreet.trim() !== "" &&
-    formData.province !== null &&
-    formData.city !== null &&
-    formData.district !== null;
-
-  const isStep2Valid =
     formData.branch !== null &&
     formData.chapter !== null &&
     formData.isAlumni !== null;
 
+  // Step 2 is the optional address, so it gates nothing.
   const canGoNext =
-    (step === 0 && isStep0Valid) ||
-    (step === 1 && isStep1Valid) ||
-    (step === 2 && isStep2Valid);
+    (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid) || step === 2;
 
   async function handleSubmit() {
-    if (!isStep0Valid || !isStep1Valid || !isStep2Valid) return;
+    if (!isStep0Valid || !isStep1Valid) return;
 
     setStatus("submitting");
     setErrorMessage("");
@@ -225,8 +215,12 @@ export default function VerificationPage({
         phone_number: formData.phoneNumber,
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender as GenderEnum,
-        address_street: formData.addressStreet,
-        district_id: Number(formData.district?.value ?? 0),
+        ...(formData.addressStreet.trim()
+          ? { address_street: formData.addressStreet.trim() }
+          : {}),
+        ...(formData.district
+          ? { district_id: Number(formData.district.value) }
+          : {}),
         is_alumni: formData.isAlumni === true,
       });
 
@@ -372,66 +366,6 @@ export default function VerificationPage({
             {step === 1 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
-                  Alamat sesuai KTP kamu
-                </h2>
-
-                <SearchableSelect
-                  selectId="province"
-                  label="Provinsi"
-                  placeholder="Cari provinsi..."
-                  value={formData.province}
-                  onChange={handleProvinceChange}
-                  loadOptions={loadProvinceOptions}
-                  defaultOptions={provinceOptions}
-                  debounceMs={400}
-                  required
-                />
-                <SearchableSelect
-                  key={`city-${formData.province?.value ?? "none"}`}
-                  selectId="city"
-                  label="Kota/Kabupaten"
-                  placeholder="Cari kota/kabupaten..."
-                  value={formData.city}
-                  onChange={handleCityChange}
-                  loadOptions={loadCityOptions}
-                  debounceMs={400}
-                  disabled={!formData.province}
-                  required
-                />
-                <SearchableSelect
-                  key={`district-${formData.city?.value ?? "none"}`}
-                  selectId="district"
-                  label="Kecamatan"
-                  placeholder="Cari kecamatan..."
-                  value={formData.district}
-                  onChange={(option) => updateFormData("district", option)}
-                  loadOptions={loadDistrictOptions}
-                  debounceMs={400}
-                  disabled={!formData.city}
-                  required
-                />
-                <Input
-                  inputId="address-street"
-                  label="Alamat (Jalan)"
-                  placeholder="Jl. Merdeka No. 10"
-                  value={formData.addressStreet}
-                  onChange={(e) =>
-                    updateFormData("addressStreet", e.target.value)
-                  }
-                  required
-                />
-
-                {status === "error" && (
-                  <p className="text-xs font-semibold text-destructive">
-                    {errorMessage}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
                   Pilih Cabang dan Komisariat
                 </h2>
 
@@ -496,6 +430,63 @@ export default function VerificationPage({
                 )}
               </div>
             )}
+
+            {step === 2 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-[#172033]">
+                  Alamat sesuai KTP kamu{" "}
+                  <span className="font-medium text-[#5f6573]">(Opsional)</span>
+                </h2>
+
+                <SearchableSelect
+                  selectId="province"
+                  label="Provinsi"
+                  placeholder="Cari provinsi..."
+                  value={formData.province}
+                  onChange={handleProvinceChange}
+                  loadOptions={loadProvinceOptions}
+                  defaultOptions={provinceOptions}
+                  debounceMs={400}
+                />
+                <SearchableSelect
+                  key={`city-${formData.province?.value ?? "none"}`}
+                  selectId="city"
+                  label="Kota/Kabupaten"
+                  placeholder="Cari kota/kabupaten..."
+                  value={formData.city}
+                  onChange={handleCityChange}
+                  loadOptions={loadCityOptions}
+                  debounceMs={400}
+                  disabled={!formData.province}
+                />
+                <SearchableSelect
+                  key={`district-${formData.city?.value ?? "none"}`}
+                  selectId="district"
+                  label="Kecamatan"
+                  placeholder="Cari kecamatan..."
+                  value={formData.district}
+                  onChange={(option) => updateFormData("district", option)}
+                  loadOptions={loadDistrictOptions}
+                  debounceMs={400}
+                  disabled={!formData.city}
+                />
+                <Input
+                  inputId="address-street"
+                  label="Alamat (Jalan)"
+                  placeholder="Jl. Merdeka No. 10"
+                  value={formData.addressStreet}
+                  onChange={(e) =>
+                    updateFormData("addressStreet", e.target.value)
+                  }
+                />
+
+                {status === "error" && (
+                  <p className="text-xs font-semibold text-destructive">
+                    {errorMessage}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="shrink-0 flex flex-col gap-4">
@@ -519,7 +510,6 @@ export default function VerificationPage({
                   onClick={() => setStep((s) => s + 1)}
                 >
                   Lanjut
-                  <ArrowRight className="size-4" />
                 </Button>
               ) : (
                 <Button

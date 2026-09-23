@@ -30,13 +30,14 @@ export type VerificationRequestDetail = VerificationRequestListEntry & {
   phone_number: string;
   date_of_birth: string;
   gender: GenderEnum;
-  address_street: string;
-  district_id: number;
-  district_name?: string;
-  city_id?: number;
-  city_name?: string;
-  province_id?: number;
-  province_name?: string;
+  // Both halves of the address are optional on submission; the derived chain is null with district_id.
+  address_street: string | null;
+  district_id: number | null;
+  district_name: string | null;
+  city_id: number | null;
+  city_name: string | null;
+  province_id: number | null;
+  province_name: string | null;
   // What the applicant declared on submission, not the target user's current users.is_alumni.
   is_alumni: boolean;
   updated_at: string;
