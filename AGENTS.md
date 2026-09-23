@@ -32,6 +32,9 @@ fix the rule, not just the code.
   every page `<h1>`, and each sidebar/feed card's own heading row (`NewsCard`,
   `SuggestedConnectionsCard`, `ProfileCompletionCard`, `MembershipInfoCard`, `PromoBanner`,
   `SurahRow`/`JuzRow` titles) — those headings are `font-medium`, not `font-bold`.
+  Dialog titles are the same face and weight, and they live in exactly two places —
+  `components/modals/Modal.tsx` and `components/modals/Sheet.tsx`, each owning its own `<h2>`
+  — so `AlertConfirmation` and every other caller inherits it rather than restyling a title.
   Every admin page title renders via
   `components/common/AdminPageTitle.tsx`, which owns the semantic `<h1>`, optional
   `description` paragraph (also Stack Sans Headline), shared font/color/weight/spacing, and its
@@ -1966,7 +1969,15 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.
   `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
-  does not require `verificationStatus === "verified"`. `AlertConfirmation.tsx` is the generic
+  does not require `verificationStatus === "verified"`. Its five platform glyphs are the
+  brand tiles in the public `hmi-connect` bucket's `assets/` folder, resolved through
+  `lib/constants.ts#socialIconUrl` — the same set the backend's own `lookup_social_media`
+  rows point `logo_url` at, which is why `SocialLinks` needs no icon table of its own. Each
+  tile already carries its brand fill, so the button renders the image alone, never a
+  hand-picked colored circle behind a lucide glyph; a `ring-inset ring-black/5` hairline is
+  what keeps the near-white Gmail tile off a white panel. `PublicTrainingDetailPage`'s
+  contact-person WhatsApp button reads the same helper — don't reach for a Font Awesome
+  brand icon for a network that has a tile there. `AlertConfirmation.tsx` is the generic
   title/message/confirm/cancel dialog for destructive actions (currently just feed
   delete) — takes `onConfirm` + `loading`, caller owns the async call and closes it itself.
 - `components/forms/Edit*Form.tsx` — one file per editable slice (`EditProfileForm`,

@@ -1,8 +1,7 @@
 "use client";
 
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { TrainingDetail } from "@/apis/trainings";
+import { socialIconUrl } from "@/lib/constants";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRange } from "@/lib/time-manipulation";
 import {
@@ -100,9 +99,15 @@ function ContactPersonSection({
             target="_blank"
             rel="noreferrer"
             aria-label={`Hubungi ${training.contact_person_name} via WhatsApp`}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
+            className="shrink-0 transition hover:opacity-90"
           >
-            <FontAwesomeIcon icon={faWhatsapp} />
+            <Image
+              src={socialIconUrl("whatsapp")}
+              alt=""
+              width={36}
+              height={36}
+              className="size-9 rounded-full object-cover"
+            />
           </a>
         )}
       </div>

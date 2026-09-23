@@ -1,6 +1,8 @@
 "use client";
 
-import { Check, Copy, Mail, MessageCircle, Send, Share2 } from "lucide-react";
+import { socialIconUrl } from "@/lib/constants";
+import { Check, Copy, Share2 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import Modal from "./Modal";
@@ -14,44 +16,39 @@ interface ShareModalProps {
 
 type SharePlatform = {
   name: string;
-  bg: string;
-  render: () => React.ReactNode;
+  icon: string;
   buildHref: (url: string, text: string) => string;
 };
 
+// Each assets/ tile already carries its own brand fill, so the button needs no colored circle of its own.
 const PLATFORMS: SharePlatform[] = [
   {
     name: "WhatsApp",
-    bg: "#25D366",
-    render: () => <MessageCircle className="size-5 text-white" />,
+    icon: "whatsapp",
     buildHref: (url, text) =>
       `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`,
   },
   {
     name: "Facebook",
-    bg: "#1877F2",
-    render: () => <span className="text-lg font-bold text-white">f</span>,
+    icon: "facebook",
     buildHref: (url) =>
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
   },
   {
     name: "X",
-    bg: "#000000",
-    render: () => <span className="text-lg font-bold text-white">X</span>,
+    icon: "x",
     buildHref: (url, text) =>
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
   },
   {
     name: "Telegram",
-    bg: "#26A5E4",
-    render: () => <Send className="size-5 text-white" />,
+    icon: "telegram",
     buildHref: (url, text) =>
       `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
   },
   {
     name: "Email",
-    bg: "#5f6573",
-    render: () => <Mail className="size-5 text-white" />,
+    icon: "gmail",
     buildHref: (url, text) =>
       `mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(url)}`,
   },
@@ -87,12 +84,14 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5"
           >
-            <span
-              className="flex size-11 items-center justify-center rounded-full"
-              style={{ backgroundColor: platform.bg }}
-            >
-              {platform.render()}
-            </span>
+            <Image
+              src={socialIconUrl(platform.icon)}
+              alt={platform.name}
+              width={44}
+              height={44}
+              // A hairline keeps the near-white Gmail tile from bleeding into the modal.
+              className="size-11 rounded-full object-cover ring-1 ring-inset ring-black/5"
+            />
             <span className="text-xs text-[#5f6573]">{platform.name}</span>
           </a>
         ))}

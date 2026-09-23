@@ -77,7 +77,7 @@ export default function Modal({
           />
         )}
         <div className="flex shrink-0 items-center justify-between border-b border-[#e6e9ef] px-5 pb-2 pt-4">
-          <h2 className="text-base font-semibold text-[#172033] xl:text-lg">
+          <h2 className="font-stack-sans-headline text-base font-medium text-[#172033] xl:text-lg">
             {title}
           </h2>
           <Button
