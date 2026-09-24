@@ -1254,8 +1254,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `break-words`, as does every other surface that renders user-authored body text (`QuotedFeed`,
   `ActivityEntryCard`, `SearchPostingRow`, `CommentItem`): a pasted URL is one long unbreakable
   word and spills past the card's own padding without it. That menu (`Dropdown`,
-  see `components/common/*` below) always renders and always has "Lihat post" (links to
-  `/feeds/[feed.id]`); "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)
+  see `components/common/*` below) has "Lihat post" (links to
+  `/feeds/[feed.id]`) unless `showViewPostAction={false}` — only `/feeds/[feed_id]` passes that,
+  since linking a post to itself is a dead action, and the "..." trigger is hidden once no item is left; "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)
   and "Delete post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on
   confirm) only show up when the caller owns the feed (`creator_id === currentUserId`).
   `CommentItem.tsx` renders one comment (or,
@@ -1266,9 +1267,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
   `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
   most-recent end year / highest training level) all come from `getUserByUsername` +
-  those two list calls in its route. **Its only remaining caller is `/feeds/[feed_id]`** — the
+  those two list calls in its route. **It currently has no caller at all** — the
   desktop-rail redesign dropped it from the home feed, `/search`, `/notifications`, `/settings`,
-  and `/profile/[username]/activities`, and each of those five routes lost the
+  `/profile/[username]/activities`, and finally `/feeds/[feed_id]` (now a single centered
+  `max-w-[600px]` column), and each of those routes lost the
   `getUserByUsername`/`listEducationHistories` fetches that fed it (`/settings` still fetches
   `getUserByUsername` for its own email/`registration_number`/province, just not the education
   list). The rail already shows who you are on every page, so repeating it per route was the same
@@ -1335,9 +1337,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   desktop rail's own Notifications entry ended up doing the same thing, for its own reasons). It
   only pulls the `unreadCount` half of `hooks/useNotificationsBell.ts` for the badge (not the
   `handleRead`/`handleMarkAllRead` half, which only a rendered list needs), and needs `userId`
-  threaded down from `FeedPage` (alongside `fullName`/`avatar`/`username`) purely for that. Its `bg-primary` block is
-  taller (`pb-20`) than its own content needs, on purpose: `CreateFeedForms`'s composer card
-  is pulled up into that green area on mobile via `-mt-16` (reset with `lg:mt-0` on desktop,
+  threaded down from `FeedPage` (alongside `fullName`/`avatar`/`username`) purely for that. Its block is white with
+  two blurred `primary`/`secondary` glow blobs behind the content (text in `text-tertiary`/gray, the
+  bell a white pill), and is taller (`pb-20`) than its own content needs, on purpose:
+  `CreateFeedForms`'s composer card (`relative z-20`, so it paints above those blobs) is pulled up
+  into that area on mobile via `-mt-16` (reset with `lg:mt-0` on desktop,
   where there's no greeting bar to overlap) and hides its own avatar there too (`hidden
 lg:block` — the overlapping card reads better without one competing with the greeting
   bar's own avatar right above it), the same "float a card up over a colored band" idea as

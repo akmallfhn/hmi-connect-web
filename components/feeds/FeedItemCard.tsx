@@ -71,6 +71,7 @@ interface FeedItemCardProps {
   verificationStatus?: VerificationStatusEnum;
   initialComments?: FeedComment[];
   defaultShowComments?: boolean;
+  showViewPostAction?: boolean;
   initialReposted?: boolean;
   repostedBy?: { fullName: string; avatar?: string };
   onDeleted?: (feedId: string) => void;
@@ -88,7 +89,7 @@ function PhotoGrid({
   onPreview: (photo: FeedUploadAttachment) => void;
 }) {
   const photos = [...unsorted].sort(
-    (a, b) => a.reference_index - b.reference_index,
+    (a, b) => a.reference_index - b.reference_index
   );
   const visible = photos.slice(0, 4);
   const overflow = photos.length - visible.length;
@@ -226,6 +227,7 @@ export default function FeedItemCard({
   verificationStatus,
   initialComments,
   defaultShowComments = false,
+  showViewPostAction = true,
   initialReposted,
   repostedBy,
   onDeleted,
@@ -253,19 +255,23 @@ export default function FeedItemCard({
   const [content, setContent] = useState(feed.content);
   const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
   const isEdited = updatedAt !== feed.created_at;
-  const [previewPhoto, setPreviewPhoto] = useState<FeedUploadAttachment | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<FeedUploadAttachment | null>(
+    null
+  );
   const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
   const isOwnPersonalFeed = isOwnFeed && !feed.author_entity_type;
-  const isOwnEntityFeed = Boolean(authorEntity) &&
+  const isOwnEntityFeed =
+    Boolean(authorEntity) &&
     feed.author_entity_type === authorEntity?.type &&
     feed.author_entity_id === authorEntity?.id;
   // A grant holder can manage all feeds written as this entity, including a predecessor's.
   const canManageFeed = isOwnPersonalFeed || isOwnEntityFeed;
   const cannotRepost = isOwnPersonalFeed || isOwnEntityFeed;
+  const hasOverflowActions = showViewPostAction || canManageFeed;
 
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState<FeedComment[]>(
@@ -282,22 +288,22 @@ export default function FeedItemCard({
 
   const attachments = feed.attachments ?? [];
   const photoAttachments = attachments.filter(
-    (item): item is FeedUploadAttachment => item.type === "photo",
+    (item): item is FeedUploadAttachment => item.type === "photo"
   );
   const videoAttachment = attachments.find(
-    (item): item is FeedUploadAttachment => item.type === "video",
+    (item): item is FeedUploadAttachment => item.type === "video"
   );
   const urlAttachment = attachments.find(
-    (item): item is FeedUploadAttachment => item.type === "url",
+    (item): item is FeedUploadAttachment => item.type === "url"
   );
   const newsAttachment = attachments.find(
-    (item): item is FeedNewsAttachment => item.type === "news",
+    (item): item is FeedNewsAttachment => item.type === "news"
   );
   const trainingAttachment = attachments.find(
-    (item): item is FeedTrainingAttachment => item.type === "training",
+    (item): item is FeedTrainingAttachment => item.type === "training"
   );
   const articleAttachment = attachments.find(
-    (item): item is FeedArticleAttachment => item.type === "article",
+    (item): item is FeedArticleAttachment => item.type === "article"
   );
   const shareUrl =
     typeof window !== "undefined"
@@ -426,50 +432,54 @@ export default function FeedItemCard({
             </p>
           </div>
         </Link>
-        <Dropdown
-          align="right"
-          trigger={({ toggle }) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggle}
-              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
-              aria-label="Opsi lainnya"
-            >
-              <MoreHorizontal className="size-4" />
-            </Button>
-          )}
-        >
-          <div className="flex flex-col py-1">
-            <Link
-              href={`/feeds/${feed.id}`}
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
-            >
-              <Eye className="size-4 text-[#5f6573]" />
-              Lihat post
-            </Link>
-            {canManageFeed && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setShowEditForm(true)}
+        {hasOverflowActions && (
+          <Dropdown
+            align="right"
+            trigger={({ toggle }) => (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggle}
+                className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+                aria-label="Opsi lainnya"
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            )}
+          >
+            <div className="flex flex-col py-1">
+              {showViewPostAction && (
+                <Link
+                  href={`/feeds/${feed.id}`}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
                 >
-                  <Pencil className="size-4 text-[#5f6573]" />
-                  Edit post
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft xl:text-[15px]"
-                >
-                  <Trash2 className="size-4" />
-                  Delete post
-                </button>
-              </>
-            )}
-          </div>
-        </Dropdown>
+                  <Eye className="size-4 text-[#5f6573]" />
+                  Lihat post
+                </Link>
+              )}
+              {canManageFeed && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditForm(true)}
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
+                  >
+                    <Pencil className="size-4 text-[#5f6573]" />
+                    Edit post
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft xl:text-[15px]"
+                  >
+                    <Trash2 className="size-4" />
+                    Delete post
+                  </button>
+                </>
+              )}
+            </div>
+          </Dropdown>
+        )}
       </div>
 
       <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033] xl:text-[15px]">
@@ -640,7 +650,7 @@ export default function FeedItemCard({
             </p>
           )}
           {!loadingComments && commentsLoaded && comments.length === 0 && (
-            <p className="py-4 text-center text-xs text-[#5f6573] xl:text-[13px]">
+            <p className="py-4 text-center text-[13px] text-[#5f6573] xl:text-sm">
               Jadilah yang pertama berkomentar!
             </p>
           )}
