@@ -1263,19 +1263,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
   (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
-  is expanded. `ProfileSidebar.tsx` is real-API-backed: identity, `headline`, verified badge,
-  `following_count`/`followers_count`/`feed_count`, and the "Informasi" block (latest entry from
-  `apis/users.ts#listEducationHistories`/`listTrainingHistories`, picked client-side by
-  most-recent end year / highest training level) all come from `getUserByUsername` +
-  those two list calls in its route. **It currently has no caller at all** — the
-  desktop-rail redesign dropped it from the home feed, `/search`, `/notifications`, `/settings`,
-  `/profile/[username]/activities`, and finally `/feeds/[feed_id]` (now a single centered
-  `max-w-[600px]` column), and each of those routes lost the
-  `getUserByUsername`/`listEducationHistories` fetches that fed it (`/settings` still fetches
-  `getUserByUsername` for its own email/`registration_number`/province, just not the education
-  list). The rail already shows who you are on every page, so repeating it per route was the same
-  identity stated twice. Don't re-add it to a page without a reason the rail doesn't already
-  cover. `NewsCard.tsx`
+  is expanded. The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
+  **deleted** — the desktop-rail redesign dropped it from the home feed, `/search`,
+  `/notifications`, `/settings`, `/profile/[username]/activities`, and finally `/feeds/[feed_id]`
+  (now a single centered `max-w-[600px]` column), each of which lost the
+  `getUserByUsername`/`listEducationHistories` fetches that fed it. The rail already shows who you
+  are on every page, so don't bring a per-page identity card back. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
   Component that calls `apis/news.ts#listNewsArticles({ pageSize: 4, categorySlug })` directly
   and renders nothing if the list comes back empty. It has no "see all" footer link, which is
@@ -1433,7 +1426,7 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   (the third chip is `hidden sm:inline-flex`, and one counter is rendered per breakpoint), never a
   `matchMedia` read, so the server output doesn't depend on a viewport it can't know.
   The badges beside the name come from `components/common/ProfileBadges.tsx`, shared with
-  `ProfileSidebar` so one person is marked identically wherever their card appears: the blue
+  `MainSiteDesktopSidebar`'s Profile row so one person is marked identically wherever they appear: the blue
   `VerifiedBadge` when `verification_status` is `"verified"`, then the KAHMI emblem to its right when
   `is_alumni` is true. **One badge, one tooltip** — each carries its own `lg:`-only
   `role="tooltip"` pill (`bg-black/70` + `backdrop-blur-sm`) repeating its own icon beside its own
@@ -1445,8 +1438,8 @@ AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`Se
   overlaps it. The
   `HMI Connect+` subscription pill that used to sit here is **gone** — don't reintroduce it;
   `is_subscribe` still drives `MembershipInfoCard`, which is where a subscription belongs.
-  `is_alumni` is on `users/detail` and `check-session` alike, so `ProfileSidebar` reads it from the
-  session on most pages and from the viewed profile on `/profile/[username]/activities`. It defaults
+  `is_alumni` is on `users/detail` and `check-session` alike, so the rail reads it from the
+  session while `ProfileHeader` reads it from the viewed profile. It defaults
   to `false` and reaches a user two ways: the applicant declares it on `users/verification` and the
   approval copies it across, or a `Super Admin` sets it afterwards through `users/update`.
   It uses `users/detail.is_followed_by_me` for the initial follow state, then calls the
@@ -1564,7 +1557,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   while the full history lives at `{entityProfileHref}/activities`, five explicit routes mirroring
   the five profile routes. Those render `components/pages/EntityActivitiesPage.tsx`, the twin of
   `ProfileActivitiesPage.tsx` — same two-column shell, but with
-  `components/entity/EntitySummarySidebar.tsx` in the aside instead of `ProfileSidebar`: the logo,
+  `components/entity/EntitySummarySidebar.tsx` in the aside: the logo,
   the name, and a link back — nothing else. No counts, since an entity's own live on its *parent's*
   list row and a sidebar isn't worth refetching them for, and no level line either, since the name
   already reads `HMI Korkom {name}`. Unlike the profile twin it does pass `mobileBackTitle`,

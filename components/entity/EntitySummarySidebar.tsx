@@ -9,7 +9,7 @@ interface EntitySummarySidebarProps {
   href: string;
 }
 
-// The sidebar twin of ProfileSidebar for an entity — identity and a way back, no counts an entity page would have to refetch.
+// An entity's sidebar — identity and a way back, no counts an entity page would have to refetch.
 export default function EntitySummarySidebar({
   name,
   imageUrl,
