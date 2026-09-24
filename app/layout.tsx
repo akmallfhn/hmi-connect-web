@@ -7,6 +7,7 @@ import {
   Google_Sans,
   Stack_Sans_Headline,
 } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import "@fortawesome/fontawesome-svg-core/styles.css";
@@ -44,6 +45,11 @@ const amiriQuran = Amiri_Quran({
   weight: "400",
 });
 
+const crayonize = localFont({
+  src: "./fonts/PintassilgoPrints-Crayonize-Bold.otf",
+  variable: "--font-crayonize",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} h-full scroll-smooth antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} ${crayonize.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col scroll-smooth">
         <ScrollToTop />

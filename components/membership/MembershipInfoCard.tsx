@@ -11,6 +11,7 @@ interface MembershipInfoCardProps {
   chapterName?: string;
   isSubscribe: boolean;
   locked?: boolean;
+  className?: string;
 }
 
 function InfoRow({
@@ -48,9 +49,17 @@ export default function MembershipInfoCard({
   chapterName,
   isSubscribe,
   locked,
+  className,
 }: MembershipInfoCardProps) {
   return (
-    <div className="w-full rounded-2xl border border-[#e6e9ef] bg-white p-5">
+    <div
+      className={[
+        "w-full rounded-2xl border border-[#e6e9ef] bg-white p-5",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <p className="font-stack-sans-headline text-base font-medium text-[#172033]">
         Status Keanggotaan
       </p>

@@ -13,6 +13,7 @@ import {
   UserCheck,
   UserPlus,
 } from "lucide-react";
+import { IconShare3 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import ProfileBadges from "../common/ProfileBadges";
+import UserShareModal from "../common/UserShareModal";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
@@ -32,6 +34,8 @@ interface ProfileHeaderProps {
   username?: string;
   fullName?: string;
   avatar?: string;
+  memberCard?: string;
+  registrationNumber?: number;
   headline?: string;
   phoneNumber?: string;
   bio?: string;
@@ -53,6 +57,8 @@ export default function ProfileHeader({
   username,
   fullName,
   avatar,
+  memberCard,
+  registrationNumber,
   headline,
   phoneNumber,
   bio,
@@ -117,13 +123,55 @@ export default function ProfileHeader({
     }
   }
 
+  const desktopShareButton = (
+    <UserShareModal
+      fullName={displayName}
+      username={username}
+      avatar={avatar}
+      memberCard={memberCard}
+      registrationNumber={registrationNumber}
+      renderTrigger={(openModal) => (
+        <Button
+          variant="light"
+          className="hidden lg:inline-flex"
+          onClick={openModal}
+        >
+          <IconShare3 className="size-4" stroke={2} />
+          Bagikan
+        </Button>
+      )}
+    />
+  );
+  const mobileShareButton = (
+    <UserShareModal
+      fullName={displayName}
+      username={username}
+      avatar={avatar}
+      memberCard={memberCard}
+      registrationNumber={registrationNumber}
+      renderTrigger={(openModal) => (
+        <Button
+          variant="light"
+          className="w-full lg:hidden"
+          onClick={openModal}
+        >
+          <IconShare3 className="size-4" stroke={2} />
+          Bagikan
+        </Button>
+      )}
+    />
+  );
+
   const actionButton = isOwnProfile ? (
-    <Button variant="light" onClick={() => setIsEditOpen(true)}>
-      <Pencil className="size-3.5" />
-      Edit Profil
-    </Button>
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <Button variant="light" onClick={() => setIsEditOpen(true)}>
+        <Pencil className="size-3.5" />
+        Edit Profil
+      </Button>
+      {desktopShareButton}
+    </div>
   ) : (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       {viewerId && userId && (
         <div className="hidden lg:block">
           <SendMessageButton
@@ -146,6 +194,7 @@ export default function ProfileHeader({
         )}
         {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
       </Button>
+      {desktopShareButton}
     </div>
   );
 
@@ -263,6 +312,8 @@ export default function ProfileHeader({
               />
             </div>
           )}
+
+          <div className="mt-3 lg:hidden">{mobileShareButton}</div>
         </div>
       </div>
 

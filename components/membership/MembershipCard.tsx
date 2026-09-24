@@ -2,22 +2,18 @@ import { IconLock } from "@tabler/icons-react";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import LogoHmiOutline from "../svg/LogoHmiOutline";
 
-const CARD_BACKGROUND_ALT_1 =
-  "https://i.pinimg.com/control1/1200x/e3/ca/0c/e3ca0cc8f9286a48d5a6a3ca7f197595.jpg";
-const CARD_BACKGROUND_ALT_2 =
-  "https://i.pinimg.com/control1/1200x/0f/bb/4a/0fbb4a69d0a22bfed97a44f59a67539e.jpg";
-const CARD_BACKGROUND_ALT_3 =
-  "https://i.pinimg.com/1200x/57/d6/dc/57d6dc0ea08d6cf6ba5d1e21d4d7db9c.jpg";
-
-const CARD_BACKGROUND_URL = CARD_BACKGROUND_ALT_3;
+export const CARD_BACKGROUND_URL =
+  "/images/share/membership-card-background.jpg";
 
 interface MembershipCardProps {
   fullName: string;
   memberCard?: string;
   locked?: boolean;
+  className?: string;
+  variant?: "default" | "compact" | "share";
 }
 
-function formatCardNumber(memberCard?: string) {
+export function formatCardNumber(memberCard?: string) {
   if (!memberCard) return "•••• •••• •••• ••••";
   return memberCard.replace(/(.{4})/g, "$1 ").trim();
 }
@@ -26,10 +22,23 @@ export default function MembershipCard({
   fullName,
   memberCard,
   locked,
+  className,
+  variant = "default",
 }: MembershipCardProps) {
+  const isCompact = variant !== "default";
+  const isShare = variant === "share";
+
   return (
     <div
-      className="relative aspect-[85.6/54] w-full max-w-[420px] overflow-hidden rounded-2xl bg-cover bg-center p-6 text-white shadow-xl shadow-primary/20"
+      className={[
+        "relative aspect-[85.6/54] w-full overflow-hidden bg-cover bg-center text-white shadow-xl shadow-primary/20",
+        isCompact
+          ? "max-w-none rounded-xl p-4"
+          : "max-w-[420px] rounded-2xl p-6",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{
         backgroundImage: `url('${CARD_BACKGROUND_URL}')`,
       }}
@@ -41,31 +50,61 @@ export default function MembershipCard({
           <LogoHmiConnectHorizontal
             colorPrimary="white"
             colorSecondary="white"
-            className="h-6 w-auto opacity-95"
+            className={["w-auto opacity-95", isCompact ? "h-4" : "h-6"].join(
+              " "
+            )}
           />
           <div className="flex items-center gap-2">
-            <span className="text-right text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 sm:text-xs">
+            <span
+              className={[
+                "text-right font-semibold uppercase tracking-[0.2em] text-white/80",
+                isCompact ? "text-[8px]" : "text-[10px] sm:text-xs",
+              ].join(" ")}
+            >
               Kartu Tanda
               <br />
               Anggota HMI
             </span>
             <LogoHmiOutline
               color="white"
-              className="h-11 w-auto opacity-95 sm:h-12"
+              className={[
+                "w-auto opacity-95",
+                isCompact ? "h-8" : "h-11 sm:h-12",
+              ].join(" ")}
             />
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-8 w-10 rounded-md bg-gradient-to-br from-yellow-200 to-yellow-400 sm:h-9 sm:w-12" />
+          <div
+            className={[
+              "rounded-md bg-gradient-to-br from-yellow-200 to-yellow-400",
+              isShare ? "lg:rounded-sm" : "",
+              isShare
+                ? "h-6 w-8 lg:h-4 lg:w-6"
+                : isCompact
+                  ? "h-6 w-8"
+                  : "h-8 w-10 sm:h-9 sm:w-12",
+            ].join(" ")}
+          />
         </div>
 
         <div className="relative">
           <div className={locked ? "select-none blur-[6px]" : undefined}>
-            <p className="font-mono text-lg tracking-[0.15em] text-white sm:text-xl">
+            <p
+              className={[
+                "font-mono tracking-[0.15em] text-white",
+                isCompact ? "text-sm" : "text-lg sm:text-xl",
+              ].join(" ")}
+            >
               {formatCardNumber(memberCard)}
             </p>
-            <p className="mt-2 truncate text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
+            <p
+              className={[
+                "truncate font-semibold uppercase tracking-wide text-white",
+                isCompact ? "mt-1.5 text-xs" : "mt-2 text-sm sm:text-base",
+              ].join(" ")}
+            >
               {fullName}
             </p>
           </div>

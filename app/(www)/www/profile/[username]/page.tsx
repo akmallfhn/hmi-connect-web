@@ -115,6 +115,8 @@ export default async function Profile({ params }: ProfileRouteProps) {
       profile={{
         fullName: profile.full_name,
         avatar: profile.avatar,
+        memberCard: profile.member_card,
+        registrationNumber: profile.registration_number,
         headline: profile.headline,
         phoneNumber: profile.phone_number,
         bio: profile.bio,

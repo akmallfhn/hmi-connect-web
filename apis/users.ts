@@ -466,6 +466,7 @@ export const getUserByUsername = cache(
 // Mirrors POST /api/v1/users/membership-details's response — the caller's own membership card.
 export type MembershipDetail = {
   id: string;
+  registration_number: number;
   full_name: string;
   ktp_full_name?: string;
   username: string;

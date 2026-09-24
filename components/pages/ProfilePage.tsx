@@ -30,6 +30,8 @@ import WorkExperienceCard from "../profile/WorkExperienceCard";
 interface ViewerProps {
   fullName?: string;
   avatar?: string;
+  memberCard?: string;
+  registrationNumber?: number;
   email?: string;
   userId?: string;
   username?: string;
@@ -115,6 +117,8 @@ export default function ProfilePage({
               username={profile.username}
               fullName={profile.fullName}
               avatar={profile.avatar}
+              memberCard={profile.memberCard}
+              registrationNumber={profile.registrationNumber}
               headline={profile.headline}
               phoneNumber={profile.phoneNumber}
               bio={profile.bio}
