@@ -198,12 +198,16 @@ export default function VerificationPage({
     formData.chapter !== null &&
     formData.isAlumni !== null;
 
-  // Step 2 is the optional address, so it gates nothing.
+  const isStep2Valid =
+    formData.district !== null && formData.addressStreet.trim() !== "";
+
   const canGoNext =
-    (step === 0 && isStep0Valid) || (step === 1 && isStep1Valid) || step === 2;
+    (step === 0 && isStep0Valid) ||
+    (step === 1 && isStep1Valid) ||
+    (step === 2 && isStep2Valid);
 
   async function handleSubmit() {
-    if (!isStep0Valid || !isStep1Valid) return;
+    if (!isStep0Valid || !isStep1Valid || !isStep2Valid) return;
 
     setStatus("submitting");
     setErrorMessage("");
@@ -215,12 +219,8 @@ export default function VerificationPage({
         phone_number: formData.phoneNumber,
         date_of_birth: formData.dateOfBirth,
         gender: formData.gender as GenderEnum,
-        ...(formData.addressStreet.trim()
-          ? { address_street: formData.addressStreet.trim() }
-          : {}),
-        ...(formData.district
-          ? { district_id: Number(formData.district.value) }
-          : {}),
+        address_street: formData.addressStreet.trim(),
+        district_id: Number(formData.district?.value ?? 0),
         is_alumni: formData.isAlumni === true,
       });
 
@@ -434,8 +434,7 @@ export default function VerificationPage({
             {step === 2 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
-                  Alamat sesuai KTP kamu{" "}
-                  <span className="font-medium text-[#5f6573]">(Opsional)</span>
+                  Alamat sesuai KTP kamu
                 </h2>
 
                 <SearchableSelect
@@ -447,6 +446,7 @@ export default function VerificationPage({
                   loadOptions={loadProvinceOptions}
                   defaultOptions={provinceOptions}
                   debounceMs={400}
+                  required
                 />
                 <SearchableSelect
                   key={`city-${formData.province?.value ?? "none"}`}
@@ -458,6 +458,7 @@ export default function VerificationPage({
                   loadOptions={loadCityOptions}
                   debounceMs={400}
                   disabled={!formData.province}
+                  required
                 />
                 <SearchableSelect
                   key={`district-${formData.city?.value ?? "none"}`}
@@ -469,6 +470,7 @@ export default function VerificationPage({
                   loadOptions={loadDistrictOptions}
                   debounceMs={400}
                   disabled={!formData.city}
+                  required
                 />
                 <Input
                   inputId="address-street"
@@ -478,6 +480,7 @@ export default function VerificationPage({
                   onChange={(e) =>
                     updateFormData("addressStreet", e.target.value)
                   }
+                  required
                 />
 
                 {status === "error" && (

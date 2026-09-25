@@ -612,22 +612,19 @@ verification form is the same instruction twice.
    declaration rather than a field the applicant scrolled past. It is only the applicant's claim:
    it lives on the `verification_requests` row for the reviewer to check against the KTP and
    only reaches `users.is_alumni` when the request is approved.
-3. **Alamat (Opsional)** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
+3. **Alamat** — cascading Province → City → District (kecamatan) (`apis/locations.ts`,
    backed by `/www/api/provinces/search`, `/www/api/cities/search`,
    `/www/api/districts/search`), plus street address. City/District `SearchableSelect`s
    are remounted via a `key` keyed off the parent selection so their internal option list
    resets when the parent changes — don't try to reset them by clearing `value` alone,
    `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
    are derived server-side from it.
-   **This step is last precisely because nothing on it is required.** `users/verification` takes
-   `address_street` and `district_id` as independently optional, and `verification_requests`
-   holds both as `NULL`, so every field here carries no asterisk, the step gates no `canGoNext`,
-   and each half is spread into the payload only when actually filled — never sent as `""` or
-   `district_id: 0`, which would fail the backend's own districts lookup. An omitted half stays
-   `null` on the request, and approval then leaves the target's existing
-   `users.address_street`/`users.district_id` untouched rather than clearing it. Consequently
+   **Every field here is required**, as are `date_of_birth` on step 1: `users/verification`
+   now demands `date_of_birth`, `address_street`, and `district_id`, since this page is where a
+   member fills in what `users/activation-verification` left out (activation asks for none of
+   the three). A request filed by activation still carries them as `null`, so
    `VerificationRequestDetail`'s `address_street`/`district_id` **and** the whole derived
-   `district_name`/`city_*`/`province_*` chain are typed required-and-nullable, and the admin
+   `district_name`/`city_*`/`province_*` chain stay typed required-and-nullable, and the admin
    review modal's single "Alamat Lengkap" `Field` coalesces its joined value to `undefined` when
    every part is null — `Field` only falls back to its em dash on a nullish value, so an empty
    join would otherwise render a blank line.
