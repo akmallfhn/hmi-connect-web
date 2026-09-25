@@ -529,20 +529,33 @@ inline a `string` union somewhere else in the tree.
 
 ## Activation flow (`components/pages/ActivationPage.tsx`)
 
-Three-step onboarding gated on `user.status === "pending"`, submitted via the
-`activateUser` Server Action → `POST /api/v1/users/activation`:
+Four-step onboarding gated on `user.status === "pending"`, submitted via the
+`activateAndVerifyUser` Server Action → `POST /api/v1/users/activation-verification`, which
+activates the account **and** files the KTP verification request in one backend transaction
+(`status` → `active`, `verification_status` → `pending`). It replaced the old
+`users/activation` call so a new member no longer walks through `/verification` as a second
+flow. That endpoint 409s unless the caller is still `unverified`, and only its
+`username is already taken` conflict sends the form back to step 1.
 
 1. **Profile** — avatar and full name are seeded from `getSession()` and remain editable;
    username is required and only accepts letters, numbers, periods, and underscores.
    Before this step can continue, the client debounces a request to
    `/www/api/users/check-username`, which delegates to the backend's
-   `users/check-username`; only `is_available: true` unlocks the next step.
-2. **University** — institution (searchable + creatable, backed by
+   `users/check-username`; only `is_available: true` unlocks the next step. Phone number
+   and gender sit here too (`date_of_birth` is optional on the endpoint and not asked). **There is no separate KTP-name field** — the
+   backend saves `full_name` as the request's `ktp_full_name` too, which is why the name
+   field is labelled "sesuai KTP".
+2. **Cabang & Komisariat** — the same cascading Branch → Chapter picker plus Belum/Sudah
+   `is_alumni` question as the Verification flow's step 2; only `chapter_id` is sent.
+3. **University** — institution (searchable + creatable, backed by
    `/www/api/institutions/search` + `createInstitution` action), major, degree, start/end
    year.
-3. **Riwayat Latihan Kader 1** — LK1 is a hard prerequisite for activation, not a
+4. **Riwayat Latihan Kader 1** — LK1 is a hard prerequisite for activation, not a
    yes/no question, so its fields (result/organizer/year) are always shown and required
-   — no "have you done LK1" gate. Branch is not part of the activation request.
+   — no "have you done LK1" gate.
+
+The address (`address_street`/`district_id`) is deliberately **not** collected here, even
+though the endpoint accepts it — it stays optional and is left for later.
 
 Institution values are the numeric `id` (the backend wants `education_institution_id`,
 not a name) — don't regress that to the display name.
@@ -558,7 +571,9 @@ an unactivated account, check `status === "pending"`, not username presence/abse
 `pending` | `verified`) replaced the old `is_verified` boolean — verification is a
 Super-Admin/branch-admin-reviewed workflow, not an instant flip. Three-step KTP
 (Indonesian ID card) identity check, submitted via the `verifyUser` Server Action →
-`POST /api/v1/users/verification`, which now just creates a `pending` `verification_requests`
+`POST /api/v1/users/verification`. Since activation now files the first request itself (see
+Activation flow above), this page is the **resubmission** path — reached by a member whose
+request was rejected and who is back to `unverified`. The endpoint creates a `pending` `verification_requests`
 row (a separate reviewable entity, `VerificationRequestStatusEnum`: `pending` | `approved` |
 `rejected`) and bumps `User.verification_status` to `"pending"` — it no longer sets
 `verification_status` to `"verified"` directly; that only happens once an admin approves the

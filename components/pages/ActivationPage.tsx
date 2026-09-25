@@ -7,21 +7,31 @@ import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
+import RadioButton from "../fields/RadioButton";
 import Select from "../fields/Select";
 import CreateableSelect, {
   type SearchableOption,
 } from "../fields/CreateableSelect";
+import SearchableSelect, {
+  type SearchableOption as OrganizationOption,
+} from "../fields/SearchableSelect";
 import DecorativeBackground from "../common/DecorativeBackground";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnect from "../svg/LogoHmiConnect";
+import type { Branch } from "@/apis/branches";
 import type { Institution } from "@/apis/institutions";
-import { createInstitution, activateUser, logoutUser } from "@/lib/actions";
+import {
+  activateAndVerifyUser,
+  createInstitution,
+  logoutUser,
+} from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
 import { DEGREE_OPTIONS } from "@/lib/education";
 import {
   isSuccessStatus,
   type Degree,
+  type GenderEnum,
   type StatusName,
   type TrainingResultEnum,
 } from "@/lib/types";
@@ -56,7 +66,12 @@ const EDUCATION_START_YEAR_OPTIONS = buildYearOptions(
 );
 const EDUCATION_END_YEAR_OPTIONS = buildYearOptions(EDUCATION_LATEST_END_YEAR);
 
-const STEPS = ["Profil", "Pendidikan", "Latihan Kader 1"];
+const STEPS = [
+  "Profil",
+  "Cabang & Komisariat",
+  "Pendidikan",
+  "Latihan Kader 1",
+];
 const ALLOWED_AVATAR_TYPES = [
   "image/jpeg",
   "image/png",
@@ -72,6 +87,11 @@ type FormData = {
   avatar: string;
   fullName: string;
   username: string;
+  phoneNumber: string;
+  gender: GenderEnum | null;
+  branch: OrganizationOption | null;
+  chapter: OrganizationOption | null;
+  isAlumni: boolean | null;
   institution: SearchableOption | null;
   degree: Degree | null;
   major: string;
@@ -87,6 +107,11 @@ function emptyFormData(fullName?: string, avatar?: string): FormData {
     avatar: avatar ?? "",
     fullName: fullName ?? "",
     username: "",
+    phoneNumber: "",
+    gender: null,
+    branch: null,
+    chapter: null,
+    isAlumni: null,
     institution: null,
     degree: null,
     major: "",
@@ -103,6 +128,7 @@ interface ActivationPageProps {
   fullName?: string;
   avatar?: string;
   institutions: Institution[];
+  branches: Branch[];
 }
 
 export default function ActivationPage({
@@ -110,6 +136,7 @@ export default function ActivationPage({
   fullName,
   avatar,
   institutions,
+  branches,
 }: ActivationPageProps) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [started, setStarted] = useState(false);
@@ -186,6 +213,10 @@ export default function ActivationPage({
     value: FormData[K]
   ) {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleBranchChange(option: OrganizationOption | null) {
+    setFormData((prev) => ({ ...prev, branch: option, chapter: null }));
   }
 
   async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
@@ -270,6 +301,47 @@ export default function ActivationPage({
     };
   }
 
+  const branchOptions: OrganizationOption[] = branches.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  async function loadBranchOptions(inputValue: string, page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/branches/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+
+    return {
+      options: results.map((item) => ({ label: item.name, value: item.id })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
+  async function loadChapterOptions(inputValue: string, page: number) {
+    if (!formData.branch) return { options: [], hasMore: false };
+
+    const params = new URLSearchParams({
+      page: String(page),
+      branch_id: String(formData.branch.value),
+    });
+    if (inputValue) params.set("q", inputValue);
+
+    const response = await fetch(`/api/chapters/search?${params}`);
+    const json = await response.json();
+    const results: { id: string; name: string }[] = json.data ?? [];
+
+    return {
+      options: results.map((item) => ({
+        label: `Komisariat ${item.name}`,
+        value: item.id,
+      })),
+      hasMore: Boolean(json.hasMore),
+    };
+  }
+
   async function createInstitutionOption(
     name: string
   ): Promise<SearchableOption | null> {
@@ -286,7 +358,14 @@ export default function ActivationPage({
   const isProfileStepValid =
     formData.fullName.trim() !== "" &&
     usernameHasValidFormat &&
-    usernameAvailability === "available";
+    usernameAvailability === "available" &&
+    formData.phoneNumber.trim() !== "" &&
+    formData.gender !== null;
+
+  const isOrganizationStepValid =
+    formData.branch !== null &&
+    formData.chapter !== null &&
+    formData.isAlumni !== null;
 
   const isEducationStepValid =
     formData.institution !== null &&
@@ -302,12 +381,18 @@ export default function ActivationPage({
 
   const canGoNext =
     ((step === 0 && isProfileStepValid) ||
-      (step === 1 && isEducationStepValid) ||
-      (step === 2 && isTrainingStepValid)) &&
+      (step === 1 && isOrganizationStepValid) ||
+      (step === 2 && isEducationStepValid) ||
+      (step === 3 && isTrainingStepValid)) &&
     !uploadingAvatar;
 
   async function handleSubmit() {
-    if (!isProfileStepValid || !isEducationStepValid || !isTrainingStepValid) {
+    if (
+      !isProfileStepValid ||
+      !isOrganizationStepValid ||
+      !isEducationStepValid ||
+      !isTrainingStepValid
+    ) {
       return;
     }
 
@@ -315,7 +400,7 @@ export default function ActivationPage({
     setErrorMessage("");
 
     try {
-      const result = await activateUser({
+      const result = await activateAndVerifyUser({
         username: formData.username.trim(),
         full_name: formData.fullName.trim(),
         ...(formData.avatar ? { avatar: formData.avatar } : {}),
@@ -327,11 +412,18 @@ export default function ActivationPage({
         education_major: formData.major,
         education_start_year: Number(formData.startYear),
         education_end_year: Number(formData.endYear),
+        chapter_id: String(formData.chapter?.value ?? ""),
+        phone_number: formData.phoneNumber.trim(),
+        gender: formData.gender as GenderEnum,
+        is_alumni: formData.isAlumni === true,
       });
 
       if (!isSuccessStatus(result.status)) {
-        console.error("[ActivationPage] activateUser rejected:", result);
-        const isUsernameConflict = result.status === "CONFLICT";
+        console.error("[ActivationPage] activateAndVerifyUser rejected:", result);
+        // This endpoint answers CONFLICT for three reasons; only this one is the username's.
+        const isUsernameConflict =
+          result.status === "CONFLICT" &&
+          result.message === "username is already taken";
         const message = isUsernameConflict
           ? "Username ini sudah digunakan. Silakan pilih username lain."
           : (result.message ?? "Aktivasi gagal. Coba lagi.");
@@ -348,7 +440,7 @@ export default function ActivationPage({
 
       window.location.href = "/";
     } catch (err) {
-      console.error("[ActivationPage] activateUser threw:", err);
+      console.error("[ActivationPage] activateAndVerifyUser threw:", err);
       setErrorMessage("Aktivasi gagal. Coba lagi.");
       setStatus("error");
       toast.error("Aktivasi gagal. Coba lagi.", {
@@ -454,14 +546,9 @@ export default function ActivationPage({
           <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:p-1">
             {step === 0 && (
               <div className="flex flex-col gap-4">
-                <div>
-                  <h2 className="text-xl font-bold text-[#172033]">
-                    Lengkapi profil kamu
-                  </h2>
-                  <p className="mt-1 text-sm text-[#5f6573]">
-                    Kamu bisa menyesuaikan foto dan nama dari akun Google kamu.
-                  </p>
-                </div>
+                <h2 className="text-xl font-bold text-[#172033]">
+                  Lengkapi profil kamu
+                </h2>
 
                 <div className="flex flex-col items-center gap-3 rounded-2xl bg-[#f7fbfa] p-5">
                   <Avatar
@@ -501,8 +588,8 @@ export default function ActivationPage({
 
                 <Input
                   inputId="full-name"
-                  label="Nama Lengkap"
-                  placeholder="Masukkan nama lengkap"
+                  label="Nama Lengkap (sesuai KTP)"
+                  placeholder="Nama lengkap sesuai KTP"
                   value={formData.fullName}
                   onChange={(event) =>
                     updateFormData("fullName", event.target.value)
@@ -552,10 +639,105 @@ export default function ActivationPage({
                     Ketersediaan username gagal diperiksa. Coba lagi.
                   </p>
                 )}
+                <NumberInput
+                  inputId="phone-number"
+                  label="Nomor HP"
+                  placeholder="081234567890"
+                  mode="numeric"
+                  value={formData.phoneNumber}
+                  onValueChange={(value) =>
+                    updateFormData("phoneNumber", value)
+                  }
+                  required
+                />
+                <div className="flex flex-col gap-1">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                    Jenis Kelamin
+                    <span className="text-destructive">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <RadioButton<GenderEnum>
+                      radioName="gender"
+                      label="Laki-laki"
+                      value="male"
+                      selectedValue={formData.gender}
+                      onChange={(value) => updateFormData("gender", value)}
+                    />
+                    <RadioButton<GenderEnum>
+                      radioName="gender"
+                      label="Perempuan"
+                      value="female"
+                      selectedValue={formData.gender}
+                      onChange={(value) => updateFormData("gender", value)}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
             {step === 1 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-[#172033]">
+                  Pilih Cabang dan Komisariat
+                </h2>
+
+                <SearchableSelect
+                  selectId="branch"
+                  label="Asal Cabang"
+                  placeholder="Cari cabang..."
+                  value={formData.branch}
+                  onChange={handleBranchChange}
+                  loadOptions={loadBranchOptions}
+                  defaultOptions={branchOptions}
+                  debounceMs={400}
+                  required
+                />
+                <SearchableSelect
+                  key={`chapter-${formData.branch?.value ?? "none"}`}
+                  selectId="chapter"
+                  label="Asal Komisariat"
+                  placeholder="Cari komisariat..."
+                  value={formData.chapter}
+                  onChange={(option) => updateFormData("chapter", option)}
+                  loadOptions={loadChapterOptions}
+                  debounceMs={400}
+                  disabled={!formData.branch}
+                  noOptionsMessage={
+                    formData.branch
+                      ? "Komisariat tidak ditemukan."
+                      : "Pilih cabang terlebih dahulu."
+                  }
+                  required
+                />
+
+                <div className="flex flex-col gap-1">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                    Apakah kamu sudah menjadi alumni HMI?
+                    <span className="text-destructive">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <RadioButton<boolean>
+                      radioName="is-alumni"
+                      label="Belum"
+                      description="Masih kader aktif HMI"
+                      value={false}
+                      selectedValue={formData.isAlumni}
+                      onChange={(value) => updateFormData("isAlumni", value)}
+                    />
+                    <RadioButton<boolean>
+                      radioName="is-alumni"
+                      label="Sudah"
+                      description="Alumni HMI (KAHMI)"
+                      value={true}
+                      selectedValue={formData.isAlumni}
+                      onChange={(value) => updateFormData("isAlumni", value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
                   Kamu berkuliah dimana?
@@ -622,15 +804,11 @@ export default function ActivationPage({
               </div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <div className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold text-[#172033]">
                   Riwayat Latihan Kader 1
                 </h2>
-                <p className="text-sm text-[#5f6573]">
-                  Latihan Kader 1 adalah syarat minimal untuk mengaktifkan akun
-                  HMI Connect kamu.
-                </p>
 
                 <Select
                   selectId="training-result"

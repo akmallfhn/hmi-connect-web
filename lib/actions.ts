@@ -90,7 +90,7 @@ import {
   resetPassword as resetPasswordApi,
 } from "@/apis/auth";
 import {
-  activateUser as activateUserApi,
+  activateAndVerifyUser as activateAndVerifyUserApi,
   createEducationHistory as createEducationHistoryApi,
   createHonorAward as createHonorAwardApi,
   createOrganizationExperience as createOrganizationExperienceApi,
@@ -124,7 +124,7 @@ import {
   updateWorkExperience as updateWorkExperienceApi,
   unfollowUser as unfollowUserApi,
   verifyUser as verifyUserApi,
-  type ActivationPayload,
+  type ActivationVerificationPayload,
   type CreateEducationHistoryPayload,
   type CreateHonorAwardPayload,
   type CreateOrganizationExperiencePayload,
@@ -219,8 +219,10 @@ import type {
   ReactionTypeEnum,
 } from "@/lib/types";
 
-export async function activateUser(payload: ActivationPayload) {
-  return activateUserApi(payload);
+export async function activateAndVerifyUser(
+  payload: ActivationVerificationPayload
+) {
+  return activateAndVerifyUserApi(payload);
 }
 
 export async function verifyUser(payload: VerificationPayload) {

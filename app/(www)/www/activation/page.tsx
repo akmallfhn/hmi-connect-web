@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getBranches } from "@/apis/branches";
 import { getInstitutions } from "@/apis/institutions";
 import { getSession } from "@/apis/session";
 import ActivationPage from "@/components/pages/ActivationPage";
 
 const description =
-  "Lengkapi profil, data pendidikan, dan Latihan Kader 1 untuk mengaktifkan akun HMI Connect.";
+  "Lengkapi profil, asal Cabang dan Komisariat, data pendidikan, dan Latihan Kader 1 untuk mengaktifkan akun HMI Connect.";
 
 export const metadata: Metadata = {
   title: "Aktivasi Akun",
@@ -31,7 +32,10 @@ export default async function Activation() {
 
   if (user?.status !== "pending") redirect("/");
 
-  const institutions = await getInstitutions();
+  const [institutions, branches] = await Promise.all([
+    getInstitutions(),
+    getBranches(),
+  ]);
 
   return (
     <ActivationPage
@@ -39,6 +43,7 @@ export default async function Activation() {
       fullName={user?.full_name}
       avatar={user?.avatar}
       institutions={institutions}
+      branches={branches}
     />
   );
 }

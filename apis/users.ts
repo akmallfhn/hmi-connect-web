@@ -17,27 +17,37 @@ import {
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
-export type ActivationPayload = {
+// Mirrors POST /api/v1/users/activation-verification — activates the caller and files their verification request in one transaction.
+export type ActivationVerificationPayload = {
   username: string;
-  full_name?: string;
+  // Saved as both users.full_name and the verification request's ktp_full_name.
+  full_name: string;
   avatar?: string;
   training_result: TrainingResultEnum;
   training_organizer_name: string;
   training_year: number;
   education_institution_id: number;
   education_degree: Degree;
-  education_major: string;
+  education_major?: string;
   education_start_year: number;
-  education_end_year: number;
+  education_end_year?: number;
+  chapter_id: string;
+  phone_number: string;
+  date_of_birth?: string;
+  gender: GenderEnum;
+  is_alumni?: boolean;
 };
 
-export type ActivationResult = {
+export type ActivationVerificationResult = {
   user_id: string;
   full_name: string;
   avatar?: string;
   username: string;
   user_email: string;
   status: UserStatusEnum;
+  verification_status: VerificationStatusEnum;
+  verification_request_id: string;
+  verification_request_status: VerificationRequestStatusEnum;
 };
 
 export type CheckUsernameResult = {
@@ -269,9 +279,9 @@ export async function checkUsernameAvailability(
   });
 }
 
-export async function activateUser(
-  payload: ActivationPayload
-): Promise<ApiEnvelope<ActivationResult>> {
+export async function activateAndVerifyUser(
+  payload: ActivationVerificationPayload
+): Promise<ApiEnvelope<ActivationVerificationResult>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -282,11 +292,14 @@ export async function activateUser(
     };
   }
 
-  return callApi<ActivationResult>("/api/v1/users/activation", {
-    method: "POST",
-    token: sessionToken,
-    body: payload,
-  });
+  return callApi<ActivationVerificationResult>(
+    "/api/v1/users/activation-verification",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: payload,
+    }
+  );
 }
 
 export type VerificationPayload = {
