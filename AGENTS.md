@@ -1961,8 +1961,15 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   here, the same call `ArticleListRow`'s own edit button already makes; Repeat2 hands a `ComposerArticleDraft` to the feed
   composer through the same `sessionStorage` compose-intent mechanism news uses (bouncing a
   logged-out visitor to `/auth/login?redirectTo=` first, since the composer needs an account); and
-  Share2 opens the same `ShareModal` the feed's own share button uses, on a
-  `window.location.origin`-built URL, exactly as `FeedItemCard` builds its own. That file is the
+  Share2 opens `components/articles/ArticleShareModal.tsx`, the article twin of `UserShareModal`:
+  a 720×1280 PNG drawn on a canvas (the cover blurred behind, then a white card with cover, title,
+  and author, then "Baca selengkapnya di" over the HMI Connect wordmark) previewed from the very
+  blob that downloads, plus copy-link and the `ShareModal` platforms (`SHARE_PLATFORMS`) — a
+  horizontal scroll strip below the preview on mobile, a side column on `lg:`. The blur is a
+  tiny-canvas upscale rather than `context.filter`, which Safari's canvas lacks. The title is
+  clamped to 4 lines with an ellipsis and drawn top-anchored below the cover, and the line under
+  the author's name is `author_headline` (nullable on every `articles/*` row), omitted when `null`.
+  Canvas/download helpers shared with `UserShareModal` live in `lib/share-canvas.ts`. That file is the
   page's only Client Component — the reader itself stays a Server Component.
   **The author identity is only a profile link for the viewer's own article.** `articles/*` returns
   `author_id`/`author_name`/`author_avatar` but **no `author_username`**, and `/profile/[username]`

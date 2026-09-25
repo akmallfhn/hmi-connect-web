@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArticleDetail } from "@/apis/articles";
 import Button from "@/components/buttons/Button";
-import ShareModal from "@/components/modals/ShareModal";
 import type { ComposerArticleDraft } from "@/components/forms/CreateFeedForms";
+import ArticleShareModal from "./ArticleShareModal";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,
@@ -101,11 +101,11 @@ export default function ArticleDetailActions({
         </Button>
       </div>
 
-      <ShareModal
+      <ArticleShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}
+        article={article}
         url={shareUrl}
-        text={`Baca artikel ini di HMI Connect: ${article.title}`}
       />
     </>
   );

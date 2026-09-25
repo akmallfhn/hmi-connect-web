@@ -21,6 +21,7 @@ export type ArticleListEntry = {
   author_id: string;
   author_name: string;
   author_avatar?: string;
+  author_headline: string | null;
   slug_url: string;
   published_at: string;
   updated_at: string;

@@ -14,14 +14,14 @@ interface ShareModalProps {
   text?: string;
 }
 
-type SharePlatform = {
+export type SharePlatform = {
   name: string;
   icon: string;
   buildHref: (url: string, text: string) => string;
 };
 
 // Each assets/ tile already carries its own brand fill, so the button needs no colored circle of its own.
-const PLATFORMS: SharePlatform[] = [
+export const SHARE_PLATFORMS: SharePlatform[] = [
   {
     name: "WhatsApp",
     icon: "whatsapp",
@@ -76,7 +76,7 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
   return (
     <Modal open={open} onClose={onClose} title="Bagikan Postingan">
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
-        {PLATFORMS.map((platform) => (
+        {SHARE_PLATFORMS.map((platform) => (
           <a
             key={platform.name}
             href={platform.buildHref(url, text)}

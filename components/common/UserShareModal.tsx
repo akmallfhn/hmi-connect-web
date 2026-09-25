@@ -9,6 +9,17 @@ import MembershipCard, {
   formatCardNumber,
 } from "../membership/MembershipCard";
 import Modal from "../modals/Modal";
+import {
+  canShareImageFile,
+  canvasToPngBlob,
+  coverImage,
+  downloadImageBlob,
+  fontFromVariable,
+  loadCanvasFonts,
+  loadImage,
+  roundRect,
+  truncateText,
+} from "@/lib/share-canvas";
 import Avatar, { getInitials } from "./Avatar";
 
 const SHARE_BACKGROUND_URL = "/images/share/share-background.jpg";
@@ -34,77 +45,6 @@ function profileUrl(username?: string) {
   return `${window.location.origin}/profile/${username}`;
 }
 
-function roundRect(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  const safeRadius = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + safeRadius, y);
-  context.arcTo(x + width, y, x + width, y + height, safeRadius);
-  context.arcTo(x + width, y + height, x, y + height, safeRadius);
-  context.arcTo(x, y + height, x, y, safeRadius);
-  context.arcTo(x, y, x + width, y, safeRadius);
-  context.closePath();
-}
-
-function coverImage(
-  context: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) {
-  const scale = Math.max(width / image.width, height / image.height);
-  const drawWidth = image.width * scale;
-  const drawHeight = image.height * scale;
-  context.drawImage(
-    image,
-    x + (width - drawWidth) / 2,
-    y + (height - drawHeight) / 2,
-    drawWidth,
-    drawHeight
-  );
-}
-
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
-}
-
-function truncateText(
-  context: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number
-) {
-  let nextText = text;
-  while (
-    context.measureText(nextText).width > maxWidth &&
-    nextText.length > 4
-  ) {
-    nextText = `${nextText.slice(0, -4)}...`;
-  }
-  return nextText;
-}
-
-function fontFromVariable(variable: string, size: number, weight: number) {
-  const fontFamily = getComputedStyle(document.documentElement)
-    .getPropertyValue(variable)
-    .trim();
-
-  return `${weight} ${size}px ${fontFamily || "Arial, sans-serif"}`;
-}
-
 function crayonizeFont(size: number) {
   return fontFromVariable("--font-crayonize", size, 700);
 }
@@ -117,21 +57,17 @@ function monoFont(size: number, weight: number) {
   return fontFromVariable("--font-geist-mono", size, weight);
 }
 
-async function loadShareFonts() {
-  if (!document.fonts) return;
-
-  await Promise.allSettled([
-    document.fonts.load(crayonizeFont(42)),
-    document.fonts.load(interfaceFont(30, 700)),
-    document.fonts.load(interfaceFont(22, 400)),
-    document.fonts.load(interfaceFont(18, 400)),
-    document.fonts.load(interfaceFont(18, 500)),
-    document.fonts.load(interfaceFont(18, 700)),
-    document.fonts.load(interfaceFont(12, 600)),
-    document.fonts.load(monoFont(24, 700)),
+function loadShareFonts() {
+  return loadCanvasFonts([
+    crayonizeFont(42),
+    interfaceFont(30, 700),
+    interfaceFont(22, 400),
+    interfaceFont(18, 400),
+    interfaceFont(18, 500),
+    interfaceFont(18, 700),
+    interfaceFont(12, 600),
+    monoFont(24, 700),
   ]);
-
-  await document.fonts.ready;
 }
 
 async function createShareImage({
@@ -188,7 +124,7 @@ async function createShareImage({
     avatarY + avatarSize / 2,
     avatarSize / 2 + 8,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   context.fillStyle = "#ffffff";
   context.fill();
@@ -201,7 +137,7 @@ async function createShareImage({
     avatarY + avatarSize / 2,
     avatarSize / 2,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   context.clip();
   if (avatar) {
@@ -213,7 +149,7 @@ async function createShareImage({
         avatarX,
         avatarY,
         avatarSize,
-        avatarSize
+        avatarSize,
       );
     } catch {
       drawAvatarFallback(
@@ -221,7 +157,7 @@ async function createShareImage({
         avatarX + avatarSize / 2,
         avatarY + avatarSize / 2,
         avatarSize / 2,
-        fullName
+        fullName,
       );
     }
   } else {
@@ -230,7 +166,7 @@ async function createShareImage({
       avatarX + avatarSize / 2,
       avatarY + avatarSize / 2,
       avatarSize / 2,
-      fullName
+      fullName,
     );
   }
   context.restore();
@@ -248,7 +184,7 @@ async function createShareImage({
   context.fillText(
     truncateText(context, fullName, panelWidth - 64),
     width / 2,
-    panelY + 150
+    panelY + 150,
   );
 
   context.fillStyle = "#8a909d";
@@ -257,10 +193,10 @@ async function createShareImage({
     truncateText(
       context,
       username ? `@${username}` : "@hmiconnect",
-      panelWidth - 64
+      panelWidth - 64,
     ),
     width / 2,
-    panelY + 188
+    panelY + 188,
   );
 
   context.fillStyle = "#8a909d";
@@ -271,10 +207,10 @@ async function createShareImage({
       registrationNumber
         ? `User ke-${registrationNumber.toLocaleString("id-ID")} HMI Connect`
         : "User HMI Connect",
-      panelWidth - 64
+      panelWidth - 64,
     ),
     width / 2,
-    panelY + 220
+    panelY + 220,
   );
 
   await drawMembershipCard(
@@ -284,7 +220,7 @@ async function createShareImage({
     panelWidth - 92,
     290,
     fullName,
-    memberCard
+    memberCard,
   );
 
   context.fillStyle = "#ffffff";
@@ -293,15 +229,10 @@ async function createShareImage({
   context.fillText(
     "Registrasi Keanggotaan HMI hanya di hmiconnect.id",
     width / 2,
-    panelY + panelHeight + 64
+    panelY + panelHeight + 64,
   );
 
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("Gagal membuat gambar."));
-    }, "image/png");
-  });
+  return canvasToPngBlob(canvas);
 }
 
 function drawAvatarFallback(
@@ -309,7 +240,7 @@ function drawAvatarFallback(
   centerX: number,
   centerY: number,
   radius: number,
-  name: string
+  name: string,
 ) {
   context.fillStyle = "#e3f6f6";
   context.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
@@ -328,7 +259,7 @@ async function drawMembershipCard(
   width: number,
   height: number,
   fullName: string,
-  memberCard?: string
+  memberCard?: string,
 ) {
   roundRect(context, x, y, width, height, 14);
   try {
@@ -376,7 +307,7 @@ async function drawMembershipCard(
     x + 26,
     y + 95,
     x + 82,
-    y + 137
+    y + 137,
   );
   chipGradient.addColorStop(0, "#fff4b8");
   chipGradient.addColorStop(1, "#d7a920");
@@ -391,11 +322,11 @@ async function drawMembershipCard(
   context.fillText(
     fullName.toUpperCase().slice(0, 26),
     x + 26,
-    y + height - 32
+    y + height - 32,
   );
 }
 
-function DesktopAction({
+export function DesktopAction({
   icon,
   title,
   description,
@@ -454,7 +385,7 @@ export default function UserShareModal({
         memberCard,
         registrationNumber,
       ]),
-    [avatar, displayName, memberCard, registrationNumber, username]
+    [avatar, displayName, memberCard, registrationNumber, username],
   );
   const [preparedImage, setPreparedImage] = useState<{
     key: string;
@@ -506,47 +437,16 @@ export default function UserShareModal({
     });
   }
 
-  function canShareImageFile(file: File) {
-    const nav = navigator as Omit<Navigator, "share"> & {
-      canShare?: (data: ShareData) => boolean;
-      share?: (data?: ShareData) => Promise<void>;
-    };
-
-    return Boolean(nav.share && nav.canShare?.({ files: [file] }));
-  }
-
-  function isIOSBrowser() {
-    return (
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-    );
-  }
-
   async function handleDownload() {
     if (!imageBlob) return;
 
     setBusy("download");
     try {
-      const file = createImageFile(imageBlob);
-
-      // iOS ignores Blob URL downloads. Its share sheet exposes Save Image.
-      if (isIOSBrowser() && canShareImageFile(file)) {
-        await navigator.share({
-          title: `${displayName} di HMI Connect`,
-          files: [file],
-        });
-        return;
-      }
-
-      const url = URL.createObjectURL(imageBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `hmi-connect-${username ?? "profile"}.png`;
-      link.rel = "noopener";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await downloadImageBlob(
+        imageBlob,
+        `hmi-connect-${username ?? "profile"}.png`,
+        `${displayName} di HMI Connect`,
+      );
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
         console.error("[UserShareModal] download failed:", error);
