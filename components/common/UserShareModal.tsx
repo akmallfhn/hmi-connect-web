@@ -395,6 +395,39 @@ async function drawMembershipCard(
   );
 }
 
+function DesktopAction({
+  icon,
+  title,
+  description,
+  onClick,
+  disabled,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 rounded-xl border border-[#e6e9ef] p-3 text-left transition hover:border-[#bfe6e7] hover:bg-[#e3f6f6]/50 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e3f6f6] text-[#0f6f72]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-[#172033]">
+          {title}
+        </span>
+        <span className="block text-xs text-[#8a909d]">{description}</span>
+      </span>
+    </button>
+  );
+}
+
 export default function UserShareModal({
   fullName,
   username,
@@ -572,6 +605,9 @@ export default function UserShareModal({
   }
 
   const imagePreparing = open && !imageBlob && failedImageKey !== imageKey;
+  const registrationLabel = registrationNumber
+    ? `User ke-${registrationNumber.toLocaleString("id-ID")} HMI Connect`
+    : "User HMI Connect";
 
   function handleOpen() {
     setFailedImageKey(null);
@@ -598,48 +634,40 @@ export default function UserShareModal({
         onClose={() => setOpen(false)}
         title="Bagikan"
         variant="bottomSheet"
-        panelClassName="rounded-t-xl sm:rounded-xl lg:max-w-[560px]"
+        panelClassName="rounded-t-xl sm:rounded-xl lg:max-w-[760px]"
       >
-        <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center">
+        <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
           <div
-            className="relative aspect-[9/16] w-full max-w-[330px] overflow-hidden rounded-lg bg-cover bg-center p-4 shadow-2xl lg:w-[min(225px,calc((85vh-6rem)*9/16))]"
+            className="relative aspect-[9/16] w-full max-w-[330px] overflow-hidden rounded-lg bg-cover bg-center p-4 shadow-2xl lg:w-[288px] lg:shrink-0"
             style={{ backgroundImage: `url('${SHARE_BACKGROUND_URL}')` }}
           >
             <div className="absolute inset-0 bg-black/25" />
-            <div className="relative flex h-full flex-col px-2 pb-6 pt-7 lg:px-1 lg:pb-3 lg:pt-4">
+            <div className="relative flex h-full flex-col px-2 pb-6 pt-7">
               <p
-                className="text-center text-2xl leading-tight text-white drop-shadow-md lg:text-base"
+                className="text-center text-2xl leading-tight text-white drop-shadow-md lg:text-lg"
                 style={{ fontFamily: "var(--font-crayonize)" }}
               >
                 <span className="block">Gue Udah Terdaftar di</span>
                 <span className="block">HMI Connect</span>
               </p>
 
-              <div className="relative mt-16 rounded-xl bg-white px-5 pb-6 pt-14 text-[#172033] shadow-lg lg:mt-12 lg:px-3 lg:pb-4 lg:pt-12">
+              <div className="relative mt-16 rounded-xl bg-white px-5 pb-6 pt-14 text-[#172033] shadow-lg">
                 <Avatar
                   src={avatar}
                   name={displayName}
                   size={96}
-                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 border-4 border-white lg:hidden"
-                />
-                <Avatar
-                  src={avatar}
-                  name={displayName}
-                  size={56}
-                  className="absolute left-1/2 top-0 hidden -translate-x-1/2 -translate-y-1/2 border-2 border-white lg:block"
+                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 border-4 border-white"
                 />
 
                 <div className="flex flex-col items-center">
-                  <h3 className="truncate text-lg font-bold leading-tight lg:text-xs">
+                  <h3 className="max-w-full truncate text-lg font-bold leading-tight">
                     {displayName}
                   </h3>
-                  <p className="mt-1 truncate text-sm text-[#8a909d] lg:text-xs">
+                  <p className="mt-1 max-w-full truncate text-sm text-[#8a909d]">
                     {username ? `@${username}` : "@hmiconnect"}
                   </p>
-                  <p className="mt-1 text-xs text-[#8a909d] lg:text-[10px]">
-                    {registrationNumber
-                      ? `User ke-${registrationNumber.toLocaleString("id-ID")} HMI Connect`
-                      : "User HMI Connect"}
+                  <p className="mt-1 text-xs text-[#8a909d]">
+                    {registrationLabel}
                   </p>
                 </div>
 
@@ -647,24 +675,24 @@ export default function UserShareModal({
                   fullName={displayName}
                   memberCard={memberCard}
                   variant="share"
-                  className="mt-4 rounded-xl shadow-none lg:mt-3 lg:rounded-lg lg:p-3 lg:[&_span]:text-[6px] lg:[&_p:first-child]:text-[8px] lg:[&_p:last-child]:text-[8px]"
+                  className="mt-4 rounded-xl shadow-none"
                 />
               </div>
 
-              <p className="mt-4 text-center text-[11px] font-medium leading-relaxed text-white drop-shadow-md lg:mt-3 lg:text-[9px]">
+              <p className="mt-4 text-center text-[11px] font-medium leading-relaxed text-white drop-shadow-md lg:text-[10px]">
                 Registrasi Keanggotaan HMI hanya di hmiconnect.id
               </p>
             </div>
           </div>
 
-          <div className="grid w-full max-w-[320px] grid-cols-3 gap-1 lg:w-[136px] lg:grid-cols-1 lg:gap-2">
+          <div className="grid w-full max-w-[320px] grid-cols-3 gap-1 lg:hidden">
             <button
               type="button"
               aria-label="Salin tautan profil"
               title="Salin tautan"
               onClick={handleCopyLink}
               disabled={!username || busy !== null}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 lg:h-[68px]"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconLink className="size-6" stroke={2} />
               {busy === "copy" ? "Menyalin..." : "Copy Link"}
@@ -675,7 +703,7 @@ export default function UserShareModal({
               title="Download"
               onClick={handleDownload}
               disabled={busy !== null || !imageBlob}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 lg:h-[68px]"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconDownload className="size-6" stroke={2} />
               {busy === "download" || imagePreparing
@@ -688,11 +716,76 @@ export default function UserShareModal({
               title="Bagikan"
               onClick={handleNativeShare}
               disabled={busy !== null || !imageBlob}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 lg:h-[68px]"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconShare3 className="size-6" stroke={2} />
               {busy === "share" || imagePreparing ? "Menyiapkan..." : "Share"}
             </button>
+          </div>
+
+          <div className="hidden min-w-0 flex-1 flex-col lg:flex">
+            <h3 className="font-stack-sans-headline text-xl font-semibold text-[#172033]">
+              Bagikan profil kamu
+            </h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-[#5f6573]">
+              Unduh kartu ini untuk Story atau postingan, atau kirim tautan
+              profil ke teman seperjuangan.
+            </p>
+
+            {username && (
+              <div className="mt-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+                  Tautan profil
+                </p>
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#e6e9ef] bg-[#f8fafc] py-1.5 pl-3 pr-1.5">
+                  <IconLink
+                    className="size-4 shrink-0 text-[#8a909d]"
+                    stroke={2}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm text-[#172033]">
+                    {profileShareUrl.replace(/^https?:\/\//, "")}
+                  </span>
+                  <Button
+                    variant="primary"
+                    onClick={handleCopyLink}
+                    disabled={busy !== null}
+                    className="h-9 shrink-0 rounded-lg px-4 text-sm"
+                  >
+                    {busy === "copy" ? "Menyalin..." : "Salin"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+                Gambar
+              </p>
+              <div className="mt-2 flex flex-col gap-2">
+                <DesktopAction
+                  icon={<IconDownload className="size-5" stroke={2} />}
+                  title={
+                    busy === "download" || imagePreparing
+                      ? "Menyiapkan..."
+                      : "Download gambar"
+                  }
+                  description="PNG 720 × 1280, pas untuk Story"
+                  onClick={handleDownload}
+                  disabled={busy !== null || !imageBlob}
+                />
+                <DesktopAction
+                  icon={<IconShare3 className="size-5" stroke={2} />}
+                  title={
+                    busy === "share" || imagePreparing
+                      ? "Menyiapkan..."
+                      : "Bagikan ke aplikasi lain"
+                  }
+                  description="Buka menu berbagi di perangkat kamu"
+                  onClick={handleNativeShare}
+                  disabled={busy !== null || !imageBlob}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

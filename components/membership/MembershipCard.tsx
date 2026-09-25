@@ -58,7 +58,11 @@ export default function MembershipCard({
             <span
               className={[
                 "text-right font-semibold uppercase tracking-[0.2em] text-white/80",
-                isCompact ? "text-[8px]" : "text-[10px] sm:text-xs",
+                isShare
+                  ? "text-[8px] lg:text-[6px] lg:tracking-[0.15em]"
+                  : isCompact
+                    ? "text-[8px]"
+                    : "text-[10px] sm:text-xs",
               ].join(" ")}
             >
               Kartu Tanda
@@ -94,7 +98,11 @@ export default function MembershipCard({
             <p
               className={[
                 "font-mono tracking-[0.15em] text-white",
-                isCompact ? "text-sm" : "text-lg sm:text-xl",
+                isShare
+                  ? "text-sm lg:text-[11px] lg:tracking-widest"
+                  : isCompact
+                    ? "text-sm"
+                    : "text-lg sm:text-xl",
               ].join(" ")}
             >
               {formatCardNumber(memberCard)}
@@ -102,7 +110,11 @@ export default function MembershipCard({
             <p
               className={[
                 "truncate font-semibold uppercase tracking-wide text-white",
-                isCompact ? "mt-1.5 text-xs" : "mt-2 text-sm sm:text-base",
+                isShare
+                  ? "mt-1.5 text-xs lg:mt-0 lg:text-[9px]"
+                  : isCompact
+                    ? "mt-1.5 text-xs"
+                    : "mt-2 text-sm sm:text-base",
               ].join(" ")}
             >
               {fullName}
