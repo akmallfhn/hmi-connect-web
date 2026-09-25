@@ -1,7 +1,7 @@
 "use client";
 
 import { IconDownload, IconLink, IconShare3 } from "@tabler/icons-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
 import MembershipCard, {
@@ -117,6 +117,23 @@ function monoFont(size: number, weight: number) {
   return fontFromVariable("--font-geist-mono", size, weight);
 }
 
+async function loadShareFonts() {
+  if (!document.fonts) return;
+
+  await Promise.allSettled([
+    document.fonts.load(crayonizeFont(42)),
+    document.fonts.load(interfaceFont(30, 700)),
+    document.fonts.load(interfaceFont(22, 400)),
+    document.fonts.load(interfaceFont(18, 400)),
+    document.fonts.load(interfaceFont(18, 500)),
+    document.fonts.load(interfaceFont(18, 700)),
+    document.fonts.load(interfaceFont(12, 600)),
+    document.fonts.load(monoFont(24, 700)),
+  ]);
+
+  await document.fonts.ready;
+}
+
 async function createShareImage({
   fullName,
   username,
@@ -136,17 +153,7 @@ async function createShareImage({
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas tidak tersedia.");
 
-  await Promise.all([
-    document.fonts.load(crayonizeFont(42)),
-    document.fonts.load(interfaceFont(30, 700)),
-    document.fonts.load(interfaceFont(22, 400)),
-    document.fonts.load(interfaceFont(18, 400)),
-    document.fonts.load(interfaceFont(18, 500)),
-    document.fonts.load(interfaceFont(18, 700)),
-    document.fonts.load(interfaceFont(12, 600)),
-    document.fonts.load(monoFont(24, 700)),
-  ]);
-  await document.fonts.ready;
+  await loadShareFonts();
 
   try {
     const background = await loadImage(SHARE_BACKGROUND_URL);
@@ -405,16 +412,60 @@ export default function UserShareModal({
   const displayName = fullName ?? "Kader HMI";
   const profileShareUrl = useMemo(() => profileUrl(username), [username]);
   const resolvedShareUrl = shareUrl ?? profileShareUrl;
+  const imageKey = useMemo(
+    () =>
+      JSON.stringify([
+        displayName,
+        username,
+        avatar,
+        memberCard,
+        registrationNumber,
+      ]),
+    [avatar, displayName, memberCard, registrationNumber, username]
+  );
+  const [preparedImage, setPreparedImage] = useState<{
+    key: string;
+    blob: Blob;
+  } | null>(null);
+  const [failedImageKey, setFailedImageKey] = useState<string | null>(null);
+  const imageBlob = preparedImage?.key === imageKey ? preparedImage.blob : null;
 
-  async function getImageBlob() {
-    return createShareImage({
+  useEffect(() => {
+    if (!open || imageBlob || failedImageKey === imageKey) return;
+
+    let cancelled = false;
+    void createShareImage({
       fullName: displayName,
       username,
       avatar,
       memberCard,
       registrationNumber,
-    });
-  }
+    })
+      .then((blob) => {
+        if (!cancelled) setPreparedImage({ key: imageKey, blob });
+      })
+      .catch((error) => {
+        console.error("[UserShareModal] image preparation failed:", error);
+        if (!cancelled) {
+          setFailedImageKey(imageKey);
+          toast.error("Gagal menyiapkan gambar. Tutup lalu coba lagi.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    avatar,
+    displayName,
+    failedImageKey,
+    imageBlob,
+    imageKey,
+    memberCard,
+    open,
+    registrationNumber,
+    username,
+  ]);
 
   function createImageFile(blob: Blob) {
     return new File([blob], `hmi-connect-${username ?? "profile"}.png`, {
@@ -428,30 +479,33 @@ export default function UserShareModal({
       share?: (data?: ShareData) => Promise<void>;
     };
 
-    return Boolean(nav.share && (!nav.canShare || nav.canShare({ files: [file] })));
+    return Boolean(nav.share && nav.canShare?.({ files: [file] }));
+  }
+
+  function isIOSBrowser() {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
   }
 
   async function handleDownload() {
+    if (!imageBlob) return;
+
     setBusy("download");
     try {
-      const blob = await getImageBlob();
-      const file = createImageFile(blob);
+      const file = createImageFile(imageBlob);
 
-      // Mobile browsers ignore `download` on Blob URLs; the native share sheet can save the image.
-      if (window.matchMedia("(pointer: coarse)").matches && canShareImageFile(file)) {
-        try {
-          await navigator.share({
-            title: `${displayName} di HMI Connect`,
-            files: [file],
-          });
-          return;
-        } catch (error) {
-          if ((error as Error).name === "AbortError") return;
-          console.warn("[UserShareModal] native image save failed:", error);
-        }
+      // iOS ignores Blob URL downloads. Its share sheet exposes Save Image.
+      if (isIOSBrowser() && canShareImageFile(file)) {
+        await navigator.share({
+          title: `${displayName} di HMI Connect`,
+          files: [file],
+        });
+        return;
       }
 
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(imageBlob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `hmi-connect-${username ?? "profile"}.png`;
@@ -461,8 +515,10 @@ export default function UserShareModal({
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (error) {
-      console.error("[UserShareModal] download failed:", error);
-      toast.error("Gagal mengunduh gambar. Coba lagi.");
+      if ((error as Error).name !== "AbortError") {
+        console.error("[UserShareModal] download failed:", error);
+        toast.error("Gagal mengunduh gambar. Coba lagi.");
+      }
     } finally {
       setBusy(null);
     }
@@ -484,15 +540,15 @@ export default function UserShareModal({
   }
 
   async function handleNativeShare() {
+    if (!imageBlob) return;
+
     setBusy("share");
     try {
-      const blob = await getImageBlob();
-      const file = createImageFile(blob);
+      const file = createImageFile(imageBlob);
       if (canShareImageFile(file)) {
         await navigator.share({
           title: `${displayName} di HMI Connect`,
           text: `Lihat profil ${displayName} di HMI Connect.`,
-          url: resolvedShareUrl,
           files: [file],
         });
       } else if (navigator.share) {
@@ -515,14 +571,21 @@ export default function UserShareModal({
     }
   }
 
+  const imagePreparing = open && !imageBlob && failedImageKey !== imageKey;
+
+  function handleOpen() {
+    setFailedImageKey(null);
+    setOpen(true);
+  }
+
   return (
     <>
       {renderTrigger ? (
-        renderTrigger(() => setOpen(true))
+        renderTrigger(handleOpen)
       ) : (
         <Button
           variant={buttonVariant}
-          onClick={() => setOpen(true)}
+          onClick={handleOpen}
           className={buttonClassName}
         >
           <IconShare3 className="size-4" stroke={2} />
@@ -611,22 +674,24 @@ export default function UserShareModal({
               aria-label="Download gambar"
               title="Download"
               onClick={handleDownload}
-              disabled={busy !== null}
+              disabled={busy !== null || !imageBlob}
               className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 lg:h-[68px]"
             >
               <IconDownload className="size-6" stroke={2} />
-              {busy === "download" ? "Menyiapkan..." : "Download"}
+              {busy === "download" || imagePreparing
+                ? "Menyiapkan..."
+                : "Download"}
             </button>
             <button
               type="button"
               aria-label="Bagikan gambar"
               title="Bagikan"
               onClick={handleNativeShare}
-              disabled={busy !== null}
+              disabled={busy !== null || !imageBlob}
               className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 lg:h-[68px]"
             >
               <IconShare3 className="size-6" stroke={2} />
-              {busy === "share" ? "Menyiapkan..." : "Share"}
+              {busy === "share" || imagePreparing ? "Menyiapkan..." : "Share"}
             </button>
           </div>
         </div>
