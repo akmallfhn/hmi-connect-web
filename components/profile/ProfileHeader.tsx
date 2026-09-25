@@ -123,44 +123,40 @@ export default function ProfileHeader({
     }
   }
 
-  const desktopShareButton = (
-    <UserShareModal
-      fullName={displayName}
-      username={username}
-      avatar={avatar}
-      memberCard={memberCard}
-      registrationNumber={registrationNumber}
-      renderTrigger={(openModal) => (
-        <Button
-          variant="light"
-          className="hidden lg:inline-flex"
-          onClick={openModal}
-        >
-          <IconShare3 className="size-4" stroke={2} />
-          Bagikan
-        </Button>
-      )}
-    />
-  );
-  const mobileShareButton = (
-    <UserShareModal
-      fullName={displayName}
-      username={username}
-      avatar={avatar}
-      memberCard={memberCard}
-      registrationNumber={registrationNumber}
-      renderTrigger={(openModal) => (
-        <Button
-          variant="light"
-          className="w-full lg:hidden"
-          onClick={openModal}
-        >
-          <IconShare3 className="size-4" stroke={2} />
-          Bagikan
-        </Button>
-      )}
-    />
-  );
+  const desktopShareButton = isOwnProfile ? (
+    <div className="hidden lg:block">
+      <UserShareModal
+        fullName={displayName}
+        username={username}
+        avatar={avatar}
+        memberCard={memberCard}
+        registrationNumber={registrationNumber}
+        renderTrigger={(openModal) => (
+          <Button variant="light" onClick={openModal}>
+            <IconShare3 className="size-4" stroke={2} />
+            Bagikan
+          </Button>
+        )}
+      />
+    </div>
+  ) : null;
+  const mobileShareButton = isOwnProfile ? (
+    <div className="lg:hidden">
+      <UserShareModal
+        fullName={displayName}
+        username={username}
+        avatar={avatar}
+        memberCard={memberCard}
+        registrationNumber={registrationNumber}
+        renderTrigger={(openModal) => (
+          <Button variant="light" className="w-full" onClick={openModal}>
+            <IconShare3 className="size-4" stroke={2} />
+            Bagikan
+          </Button>
+        )}
+      />
+    </div>
+  ) : null;
 
   const actionButton = isOwnProfile ? (
     <div className="flex flex-wrap items-center justify-end gap-2">
@@ -194,7 +190,6 @@ export default function ProfileHeader({
         )}
         {followLoading ? "Memproses..." : isFollowing ? "Mengikuti" : "Ikuti"}
       </Button>
-      {desktopShareButton}
     </div>
   );
 
@@ -301,6 +296,10 @@ export default function ProfileHeader({
             </button>
           </div>
 
+          {isOwnProfile && (
+            <div className="mt-3 lg:hidden">{mobileShareButton}</div>
+          )}
+
           {!isOwnProfile && viewerId && userId && (
             <div className="mt-3 lg:hidden">
               <SendMessageButton
@@ -312,8 +311,6 @@ export default function ProfileHeader({
               />
             </div>
           )}
-
-          <div className="mt-3 lg:hidden">{mobileShareButton}</div>
         </div>
       </div>
 

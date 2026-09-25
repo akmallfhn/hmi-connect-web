@@ -416,14 +416,46 @@ export default function UserShareModal({
     });
   }
 
+  function createImageFile(blob: Blob) {
+    return new File([blob], `hmi-connect-${username ?? "profile"}.png`, {
+      type: "image/png",
+    });
+  }
+
+  function canShareImageFile(file: File) {
+    const nav = navigator as Omit<Navigator, "share"> & {
+      canShare?: (data: ShareData) => boolean;
+      share?: (data?: ShareData) => Promise<void>;
+    };
+
+    return Boolean(nav.share && (!nav.canShare || nav.canShare({ files: [file] })));
+  }
+
   async function handleDownload() {
     setBusy("download");
     try {
       const blob = await getImageBlob();
+      const file = createImageFile(blob);
+
+      // Mobile browsers ignore `download` on Blob URLs; the native share sheet can save the image.
+      if (window.matchMedia("(pointer: coarse)").matches && canShareImageFile(file)) {
+        try {
+          await navigator.share({
+            title: `${displayName} di HMI Connect`,
+            files: [file],
+          });
+          return;
+        } catch (error) {
+          if ((error as Error).name === "AbortError") return;
+          console.warn("[UserShareModal] native image save failed:", error);
+        }
+      }
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `hmi-connect-${username ?? "profile"}.png`;
+      link.rel = "noopener";
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -455,17 +487,8 @@ export default function UserShareModal({
     setBusy("share");
     try {
       const blob = await getImageBlob();
-      const file = new File(
-        [blob],
-        `hmi-connect-${username ?? "profile"}.png`,
-        {
-          type: "image/png",
-        }
-      );
-      const nav = navigator as Navigator & {
-        canShare?: (data: ShareData) => boolean;
-      };
-      if (navigator.share && nav.canShare?.({ files: [file] })) {
+      const file = createImageFile(blob);
+      if (canShareImageFile(file)) {
         await navigator.share({
           title: `${displayName} di HMI Connect`,
           text: `Lihat profil ${displayName} di HMI Connect.`,
