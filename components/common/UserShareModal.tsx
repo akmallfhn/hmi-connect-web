@@ -2,9 +2,10 @@
 
 import { IconDownload, IconLink, IconShare3 } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import Button from "../buttons/Button";
-import MembershipCard, {
+import {
   CARD_BACKGROUND_URL,
   formatCardNumber,
 } from "../membership/MembershipCard";
@@ -20,7 +21,7 @@ import {
   roundRect,
   truncateText,
 } from "@/lib/share-canvas";
-import Avatar, { getInitials } from "./Avatar";
+import { getInitials } from "./Avatar";
 
 const SHARE_BACKGROUND_URL = "/images/share/share-background.jpg";
 const HMI_CONNECT_LOGO_URL = "/images/share/logo-hmi-connect-white.svg";
@@ -390,9 +391,17 @@ export default function UserShareModal({
   const [preparedImage, setPreparedImage] = useState<{
     key: string;
     blob: Blob;
+    url: string;
   } | null>(null);
   const [failedImageKey, setFailedImageKey] = useState<string | null>(null);
   const imageBlob = preparedImage?.key === imageKey ? preparedImage.blob : null;
+  const previewUrl = preparedImage?.key === imageKey ? preparedImage.url : null;
+  const preparedUrl = preparedImage?.url;
+
+  useEffect(() => {
+    if (!preparedUrl) return;
+    return () => URL.revokeObjectURL(preparedUrl);
+  }, [preparedUrl]);
 
   useEffect(() => {
     if (!open || imageBlob || failedImageKey === imageKey) return;
@@ -406,7 +415,13 @@ export default function UserShareModal({
       registrationNumber,
     })
       .then((blob) => {
-        if (!cancelled) setPreparedImage({ key: imageKey, blob });
+        if (!cancelled) {
+          setPreparedImage({
+            key: imageKey,
+            blob,
+            url: URL.createObjectURL(blob),
+          });
+        }
       })
       .catch((error) => {
         console.error("[UserShareModal] image preparation failed:", error);
@@ -505,9 +520,6 @@ export default function UserShareModal({
   }
 
   const imagePreparing = open && !imageBlob && failedImageKey !== imageKey;
-  const registrationLabel = registrationNumber
-    ? `User ke-${registrationNumber.toLocaleString("id-ID")} HMI Connect`
-    : "User HMI Connect";
 
   function handleOpen() {
     setFailedImageKey(null);
@@ -537,55 +549,28 @@ export default function UserShareModal({
         panelClassName="rounded-t-xl sm:rounded-xl lg:max-w-[760px]"
       >
         <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
-          <div
-            className="relative aspect-[9/16] w-full max-w-[330px] overflow-hidden rounded-lg bg-cover bg-center p-4 shadow-2xl lg:w-[288px] lg:shrink-0"
-            style={{ backgroundImage: `url('${SHARE_BACKGROUND_URL}')` }}
-          >
-            <div className="absolute inset-0 bg-black/25" />
-            <div className="relative flex h-full flex-col px-2 pb-6 pt-7">
-              <p
-                className="text-center text-2xl leading-tight text-white drop-shadow-md lg:text-lg"
-                style={{ fontFamily: "var(--font-crayonize)" }}
-              >
-                <span className="block">Gue Udah Terdaftar di</span>
-                <span className="block">HMI Connect</span>
-              </p>
-
-              <div className="relative mt-16 rounded-xl bg-white px-5 pb-6 pt-14 text-[#172033] shadow-lg">
-                <Avatar
-                  src={avatar}
-                  name={displayName}
-                  size={96}
-                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 border-4 border-white"
-                />
-
-                <div className="flex flex-col items-center">
-                  <h3 className="max-w-full truncate text-lg font-bold leading-tight">
-                    {displayName}
-                  </h3>
-                  <p className="mt-1 max-w-full truncate text-sm text-[#8a909d]">
-                    {username ? `@${username}` : "@hmiconnect"}
-                  </p>
-                  <p className="mt-1 text-xs text-[#8a909d]">
-                    {registrationLabel}
-                  </p>
-                </div>
-
-                <MembershipCard
-                  fullName={displayName}
-                  memberCard={memberCard}
-                  variant="share"
-                  className="mt-4 rounded-xl shadow-none"
-                />
+          {/* The exact PNG that downloads, so it scales down whole when the sheet is short. */}
+          <div className="relative aspect-[9/16] h-[min(587px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-[#e6e9ef] shadow-2xl sm:h-[min(587px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt={`Kartu profil ${displayName} di HMI Connect`}
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-[#7b8190]">
+                {imagePreparing ? (
+                  <span className="animate-pulse">Menyiapkan gambar...</span>
+                ) : (
+                  "Gambar tidak tersedia"
+                )}
               </div>
-
-              <p className="mt-4 text-center text-[11px] font-medium leading-relaxed text-white drop-shadow-md lg:text-[10px]">
-                Registrasi Keanggotaan HMI hanya di hmiconnect.id
-              </p>
-            </div>
+            )}
           </div>
 
-          <div className="grid w-full max-w-[320px] grid-cols-3 gap-1 lg:hidden">
+          <div className="grid w-full max-w-[320px] shrink-0 grid-cols-3 gap-1 lg:hidden">
             <button
               type="button"
               aria-label="Salin tautan profil"

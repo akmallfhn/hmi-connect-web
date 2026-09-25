@@ -413,10 +413,11 @@ export default function ArticleShareModal({
       onClose={handleClose}
       title="Bagikan Artikel"
       variant="bottomSheet"
-      panelClassName="rounded-t-xl sm:rounded-xl sm:max-w-lg lg:max-w-[760px]"
+      panelClassName="rounded-t-xl sm:max-w-lg sm:rounded-xl lg:max-w-[760px]"
     >
       <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
-        <div className="relative aspect-[9/16] w-full max-w-[260px] shrink-0 overflow-hidden rounded-lg bg-[#e6e9ef] shadow-2xl sm:max-w-[300px] lg:w-[288px] lg:max-w-none">
+        {/* Natural size when it fits; on a short phone it shrinks so the share row below stays visible. */}
+        <div className="relative aspect-[9/16] h-[min(533px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-[#e6e9ef] shadow-2xl sm:h-[min(533px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
           {ready ? (
             // A blob URL needs no optimizer, and the preview must be the exact PNG that downloads.
             <Image
@@ -437,7 +438,7 @@ export default function ArticleShareModal({
           )}
         </div>
 
-        <div className="-mx-5 w-[calc(100%+2.5rem)] lg:hidden">
+        <div className="-mx-5 w-[calc(100%+2.5rem)] shrink-0 lg:hidden">
           <div className="flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <MobileAction
               icon={<IconLink className="size-5" stroke={2} />}

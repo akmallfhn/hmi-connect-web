@@ -1818,7 +1818,10 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `preventDefault`s, because the whole row is itself a `<Link>` and a nested `<a>` would break
   hydration. It sits inside the text column, `align="left"` so the panel opens flush under the
   button rather than off to one side. This replaced a `Pencil` chip that only appeared on your own
-  rows, which made those rows a different shape from every other one. It sits **outside `(gated)`**, like the reader below: reading articles is public,
+  rows, which made those rows a different shape from every other one. A `Share2` icon button sits left of that
+  trigger and opens the same `ArticleShareModal` the reader uses; the modal renders as a sibling of
+  the row's `<Link>`, not inside it, since React events bubble through the portal and a click in
+  the modal would otherwise navigate to the article. It sits **outside `(gated)`**, like the reader below: reading articles is public,
   and `next.config.mts`'s allowlist entry is `articles(?:/.*)?` — the bare path included — so a
   logged-out visitor lands on the list rather than on a login screen. The two personal tabs are what
   needs a session, so the route hides the whole tablist (`showTabs`) and pins `activeTab` to `all`
@@ -2054,7 +2057,13 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   — square bottom corners, full width, a grab handle above the title — and falls back to the
   same centered dialog from `sm:` up, so a short informational sheet reads as native on a
   phone without a second copy of the portal/scroll-lock/Escape chrome;
-  `AboutProfileModal.tsx` and `components/profile/SocialLinks.tsx` are its callers today.
+  `AboutProfileModal.tsx` and `components/profile/SocialLinks.tsx` are its callers today. Below
+  `sm:` a sheet caps at `100dvh - 1.5rem` rather than the dialog's `85vh`, so a tall sheet can rise
+  to just under the top edge while a short one keeps its own height. `UserShareModal` and
+  `ArticleShareModal` size their 9:16 preview as `min(natural, viewport - chrome)`, so the sheet
+  hugs the preview and the preview only shrinks when the share row below would otherwise be cut
+  off. Both previews are the generated PNG itself (a blob URL), since a scaled-down HTML replica
+  with fixed type sizes would clip.
   `ReactionPickerModal.tsx` is the odd one out — it's _not_ built on `Modal`, it's a small
   self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
   `absolute bottom-full` next to whatever trigger renders it, so the trigger must sit

@@ -10,7 +10,6 @@ interface MembershipCardProps {
   memberCard?: string;
   locked?: boolean;
   className?: string;
-  variant?: "default" | "compact" | "share";
 }
 
 export function formatCardNumber(memberCard?: string) {
@@ -23,18 +22,12 @@ export default function MembershipCard({
   memberCard,
   locked,
   className,
-  variant = "default",
 }: MembershipCardProps) {
-  const isCompact = variant !== "default";
-  const isShare = variant === "share";
-
   return (
     <div
       className={[
         "relative aspect-[85.6/54] w-full overflow-hidden bg-cover bg-center text-white shadow-xl shadow-primary/20",
-        isCompact
-          ? "max-w-none rounded-xl p-4"
-          : "max-w-[420px] rounded-2xl p-6",
+        "max-w-[420px] rounded-2xl p-6",
         className,
       ]
         .filter(Boolean)
@@ -50,73 +43,31 @@ export default function MembershipCard({
           <LogoHmiConnectHorizontal
             colorPrimary="white"
             colorSecondary="white"
-            className={["w-auto opacity-95", isCompact ? "h-4" : "h-6"].join(
-              " "
-            )}
+            className="h-6 w-auto opacity-95"
           />
           <div className="flex items-center gap-2">
-            <span
-              className={[
-                "text-right font-semibold uppercase tracking-[0.2em] text-white/80",
-                isShare
-                  ? "text-[8px] lg:text-[6px] lg:tracking-[0.15em]"
-                  : isCompact
-                    ? "text-[8px]"
-                    : "text-[10px] sm:text-xs",
-              ].join(" ")}
-            >
+            <span className="text-right text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 sm:text-xs">
               Kartu Tanda
               <br />
               Anggota HMI
             </span>
             <LogoHmiOutline
               color="white"
-              className={[
-                "w-auto opacity-95",
-                isCompact ? "h-8" : "h-11 sm:h-12",
-              ].join(" ")}
+              className="h-11 w-auto opacity-95 sm:h-12"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div
-            className={[
-              "rounded-md bg-gradient-to-br from-yellow-200 to-yellow-400",
-              isShare ? "lg:rounded-sm" : "",
-              isShare
-                ? "h-6 w-8 lg:h-4 lg:w-6"
-                : isCompact
-                  ? "h-6 w-8"
-                  : "h-8 w-10 sm:h-9 sm:w-12",
-            ].join(" ")}
-          />
+          <div className="h-8 w-10 rounded-md bg-gradient-to-br from-yellow-200 to-yellow-400 sm:h-9 sm:w-12" />
         </div>
 
         <div className="relative">
           <div className={locked ? "select-none blur-[6px]" : undefined}>
-            <p
-              className={[
-                "font-mono tracking-[0.15em] text-white",
-                isShare
-                  ? "text-sm lg:text-[11px] lg:tracking-widest"
-                  : isCompact
-                    ? "text-sm"
-                    : "text-lg sm:text-xl",
-              ].join(" ")}
-            >
+            <p className="font-mono text-lg tracking-[0.15em] text-white sm:text-xl">
               {formatCardNumber(memberCard)}
             </p>
-            <p
-              className={[
-                "truncate font-semibold uppercase tracking-wide text-white",
-                isShare
-                  ? "mt-1.5 text-xs lg:mt-0 lg:text-[9px]"
-                  : isCompact
-                    ? "mt-1.5 text-xs"
-                    : "mt-2 text-sm sm:text-base",
-              ].join(" ")}
-            >
+            <p className="mt-2 truncate text-sm font-semibold uppercase tracking-wide text-white sm:text-base">
               {fullName}
             </p>
           </div>

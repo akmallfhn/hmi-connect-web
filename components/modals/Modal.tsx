@@ -62,8 +62,11 @@ export default function Modal({
       />
       <div
         className={[
-          "relative flex max-h-[85vh] w-full flex-col overflow-hidden bg-white shadow-xl",
-          isSheet ? "rounded-t-2xl sm:rounded-2xl" : "rounded-2xl",
+          "relative flex w-full flex-col overflow-hidden bg-white shadow-xl",
+          // A phone sheet may rise to just under the top edge; a dialog keeps its 85vh cap.
+          isSheet
+            ? "max-h-[calc(100dvh-1.5rem)] rounded-t-2xl sm:max-h-[85vh] sm:rounded-2xl"
+            : "max-h-[85vh] rounded-2xl",
           panelClassName ?? "max-w-lg",
         ]
           .filter(Boolean)
@@ -90,7 +93,7 @@ export default function Modal({
             <X className="size-4" />
           </Button>
         </div>
-        <div className="overflow-y-auto overscroll-contain px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           {children}
         </div>
       </div>
