@@ -1538,8 +1538,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `listAllBranchesAdmin({coordinatingBodyId})`, Komisariat in `listAllChaptersAdmin({branchId})` —
   rather than calling `stat/summary/*`, which needs a manage grant a plain member doesn't have.
   `lib/entity-profile.ts` holds only what all five genuinely share and nothing per-entity:
-  `ENTITY_TYPE_LABEL` (`Penuh`/`Persiapan`), `entityLevelField`, `kaderMeta`, and
-  `entityProfileMetadata` (title/description/canonical/robots, so five `generateMetadata`s don't
+  `kaderMeta`, `entityActivitiesMetadata`, and `entityProfileMetadata` (title/description/canonical/robots, so five `generateMetadata`s don't
   each rebuild the same object).
   `components/pages/EntityProfilePage.tsx` mirrors `ProfilePage.tsx`'s shell exactly (`Header`,
   `PageMargin` two-column grid, `SuggestedConnectionsCard` aside, `BottomNav`) and takes the
@@ -1549,15 +1548,16 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   an entity logo is round rather than the square `rounded-lg` badge the admin lists use — name via
   `formatEntityAuthorName`, `Penuh`/`Persiapan` label, parent-chain links, "Terdaftar {bulan tahun}",
   and a stat row), the shared `AboutCard` (an
-  organization has no `description`, so it renders nothing there), `EntityInfoCard`,
-  `EntityStructuralCard` (the entity's current `structurals` period via
-  `getStructuralOverview(..., null)` — a flat officer list, not `StructuralPage`'s admin org chart),
-  and `EntityChildrenCard` (Daftar Badko/Cabang/Komisariat, each linking to its own entity profile;
+  organization has no `description`, so it renders nothing there), and `EntityChildrenCard` (Daftar Badko/Cabang/Komisariat, each linking to its own entity profile;
   a Komisariat is a leaf and passes `null`). The `Official Account` marker is a primary-colored check
   badge pinned to the logo's bottom-right — the same marker `FeedAuthorAvatar` puts on every entity
   avatar in the feed, just larger — revealing that text as a `role="tooltip"` pill on hover (same
   `group-hover`/`opacity-0` treatment as `StructuralPage`'s `OfficerNode` position tooltip); the
-  badge carries its own `aria-label`, since a tooltip alone says nothing on touch.
+  badge carries its own `aria-label`, since a tooltip alone says nothing on touch. The old
+  `EntityInfoCard` (Tingkat/parent/Status Kepengurusan grid) and `EntityStructuralCard` (current
+  officer list) were **deleted** — the header already names the level and parents, and the routes
+  no longer fetch `getStructuralOverview` at all. Header and children cards carry a `border`, no
+  shadow, and the aside's sticky offset is `lg:top-6`, matching `ProfilePage`.
   Last comes the entity's own feed activity from `apis/feeds.ts#listEntityActivity` — the
   entity-side twin of `users/activity/list`, registered by the backend under all five resources
   (`/organizations/activity/list`, `/coordinating-bodies/activity/list`, ...) but implemented in its
@@ -1597,15 +1597,21 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   a wrong id can't confirm what exists. That gate mirrors the backend's own rule for
   `feeds/create`'s author pair exactly ("a grant above it does not reach down, and `Super Admin`
   alone does not qualify"), which is what this page is for. All five render the shared
-  `components/pages/OfficialAccountPage.tsx`, deliberately built to the same three-column shape as
-  the `/` home feed (`FeedPage`) — `EntitySummarySidebar` on the left, `components/official/
-OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s **centered**
-  two-column grid (`mx-auto lg:max-w-[900px] lg:grid-cols-[280px_minmax(0,600px)]`) rather than the
-  home feed's three-column one. There is deliberately no right rail: nothing has been decided for
-  it, and a page with two columns should center them rather than reserve an empty third track. The timeline is `FeedTimeline`'s
-  entity twin: the same `CreateFeedForms` composer above the same `FeedItemCard` list, but fed by
-  `listEntityActivity`/`loadMoreEntityActivity` (an `ActivityEntry[]`, so each row renders
-  `entry.feed`) rather than `feeds/list`, and with no news/suggested/quick-menu inserts. Posting as
+  `components/pages/OfficialAccountPage.tsx`: a single centered `lg:max-w-[600px]` column holding
+  `components/official/OfficialTimeline.tsx`, with no profile sidebar. What orients the admin is
+  the desktop rail instead — `MainSiteDesktopSidebar` detects an `/official/{segment}/{id}` path
+  through `lib/access.ts#parseOfficialEntityPath` (the inverse of `officialEntityHref`) and swaps
+  its whole nav for two items: **Timeline** (this page) and **Profile** (the entity's public
+  `entityProfileHref`). Above them sits a bordered identity card — the entity's logo (`LogoHmi`
+  fallback) and its `formatEntityAuthorName` name under an "Akun Resmi" line — read from
+  `useHeaderAdminAccess()`'s grant for that entity rather than fetched, since reaching the route
+  already requires holding that grant. The personal Profile row and the Posting button are hidden
+  there, since the page carries its own entity composer, and More is replaced by a destructive
+  **Mode User** link to `/settings`, the way back to the personal account.
+  The timeline is `FeedTimeline`'s entity twin: the same `CreateFeedForms` composer above the same
+  `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (reposts
+  keep their "X membagikan ulang" header), with no news/suggested/quick-menu inserts. The entity's
+  own posts live on its profile, via `listEntityActivity`. Posting as
   the entity is what `CreateFeedForms`' `authorEntity` prop does — it sends `feeds/create`'s
   `author_entity_type`/`author_entity_id` pair and swaps the composer's own avatar and name for the
   entity's. That avatar is deliberately a **plain** circle (logo, `LogoHmi` fallback, no
@@ -1623,8 +1629,8 @@ OfficialTimeline.tsx` in the middle — but laid out on `EntityActivitiesPage`'s
   `isOwnPersonalFeed || isOwnEntityFeed` — a grant holder may edit or delete **any** feed written as
   the entity they hold, including one a predecessor posted, since the feed belongs to the entity and
   not to whoever pressed post; and the same pair disables repost, so an entity can't amplify its own
-  post any more than a person can. `OfficialTimeline` also seeds `initialReposted` from
-  `item.type === "repost"`, since an entity's activity feed is where its own reposts come back.
+  post any more than a person can.`feeds/list` carries no per-entity repost state, so an
+  entity's repost button starts unlit on every load.
   Omitting `authorEntity` anywhere leaves that surface personal, which is exactly what `/`,
   `/profile/[username]`, and `/feeds/[feed_id]` do.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient

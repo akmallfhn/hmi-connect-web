@@ -4,13 +4,8 @@ import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
-import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
-import {
-  entityLevelField,
-  entityProfileMetadata,
-  kaderMeta,
-} from "@/lib/entity-profile";
+import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingChapterProfileRouteProps {
@@ -22,17 +17,14 @@ export async function generateMetadata({
 }: CoordinatingChapterProfileRouteProps): Promise<Metadata> {
   const { coordinating_chapter_id } = await params;
   const coordinatingChapter = await getCoordinatingChapterDetail(
-    coordinating_chapter_id
+    coordinating_chapter_id,
   );
 
   return entityProfileMetadata({
     entityType: "coordinating_chapter",
     entityId: coordinating_chapter_id,
     name: coordinatingChapter
-      ? formatEntityAuthorName(
-          "coordinating_chapter",
-          coordinatingChapter.name
-        )
+      ? formatEntityAuthorName("coordinating_chapter", coordinatingChapter.name)
       : null,
     description: coordinatingChapter?.description,
     status: coordinatingChapter?.status,
@@ -51,16 +43,11 @@ export default async function CoordinatingChapterProfile({
   if (!coordinatingChapter || coordinatingChapter.status !== "active")
     return notFound();
 
-  const [chapters, structural, activity] = await Promise.all([
+  const [chapters, activity] = await Promise.all([
     listAllChaptersAdmin({
       coordinatingChapterId: coordinating_chapter_id,
       status: "active",
     }),
-    getStructuralOverview(
-      "coordinating_chapter",
-      coordinating_chapter_id,
-      null
-    ),
     listEntityActivity("coordinating_chapter", coordinating_chapter_id, {
       pageSize: 3,
     }),
@@ -75,7 +62,7 @@ export default async function CoordinatingChapterProfile({
         entityId: coordinating_chapter_id,
         name: formatEntityAuthorName(
           "coordinating_chapter",
-          coordinatingChapter.name
+          coordinatingChapter.name,
         ),
         imageUrl: coordinatingChapter.image_url,
         description: coordinatingChapter.description,
@@ -84,16 +71,8 @@ export default async function CoordinatingChapterProfile({
           {
             label: formatEntityAuthorName(
               "branch",
-              coordinatingChapter.branch_name
+              coordinatingChapter.branch_name,
             ),
-            href: branchHref,
-          },
-        ],
-        infoFields: [
-          entityLevelField("coordinating_chapter"),
-          {
-            label: "Cabang",
-            value: coordinatingChapter.branch_name,
             href: branchHref,
           },
         ],
@@ -103,11 +82,10 @@ export default async function CoordinatingChapterProfile({
             label: "Kader",
             value: chapters.reduce(
               (total, row) => total + (row.user_count ?? 0),
-              0
+              0,
             ),
           },
         ],
-        structuralPeriod: structural.selectedPeriod,
         activities: activity.list,
         children: {
           title: "Daftar Komisariat",

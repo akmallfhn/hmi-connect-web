@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBranchDetail } from "@/apis/branches";
-import { listEntityActivity } from "@/apis/feeds";
+import { listFeeds } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import PageState from "@/components/states/PageState";
@@ -31,10 +31,7 @@ export default async function BranchOfficialAccount({
   const branch = await getBranchDetail(branch_id);
   if (!branch || branch.status !== "active") return notFound();
 
-  const activity = await listEntityActivity("branch", branch_id, {
-    page: 1,
-    pageSize: 20,
-  });
+  const timeline = await listFeeds({ page: 1, pageSize: 20 });
 
   return (
     <OfficialAccountPage
@@ -42,8 +39,8 @@ export default async function BranchOfficialAccount({
       entityId={branch_id}
       name={formatEntityAuthorName("branch", branch.name)}
       imageUrl={branch.image_url}
-      initialItems={activity.list}
-      initialHasMore={activity.hasMore}
+      initialItems={timeline.list}
+      initialHasMore={timeline.hasMore}
       viewer={user}
     />
   );

@@ -7,13 +7,8 @@ import {
   listCoordinatingBodiesAdmin,
 } from "@/apis/coordinating-bodies";
 import { getSession } from "@/apis/session";
-import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
-import {
-  entityLevelField,
-  entityProfileMetadata,
-  kaderMeta,
-} from "@/lib/entity-profile";
+import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingBodyProfileRouteProps {
@@ -24,9 +19,8 @@ export async function generateMetadata({
   params,
 }: CoordinatingBodyProfileRouteProps): Promise<Metadata> {
   const { coordinating_body_id } = await params;
-  const coordinatingBody = await getCoordinatingBodyDetail(
-    coordinating_body_id
-  );
+  const coordinatingBody =
+    await getCoordinatingBodyDetail(coordinating_body_id);
 
   return entityProfileMetadata({
     entityType: "coordinating_body",
@@ -52,13 +46,12 @@ export default async function CoordinatingBodyProfile({
     return notFound();
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
-  const [siblings, branches, structural, activity] = await Promise.all([
+  const [siblings, branches, activity] = await Promise.all([
     listCoordinatingBodiesAdmin({ status: "active", pageSize: 100 }),
     listAllBranchesAdmin({
       coordinatingBodyId: coordinating_body_id,
       status: "active",
     }),
-    getStructuralOverview("coordinating_body", coordinating_body_id, null),
     listEntityActivity("coordinating_body", coordinating_body_id, {
       pageSize: 3,
     }),
@@ -74,30 +67,23 @@ export default async function CoordinatingBodyProfile({
         entityId: coordinating_body_id,
         name: formatEntityAuthorName(
           "coordinating_body",
-          coordinatingBody.name
+          coordinatingBody.name,
         ),
         imageUrl: coordinatingBody.image_url,
         description: coordinatingBody.description,
         createdAt: coordinatingBody.created_at,
         affiliations: organizationName ? [{ label: organizationName }] : [],
-        infoFields: [
-          entityLevelField("coordinating_body"),
-          ...(organizationName
-            ? [{ label: "Organisasi", value: organizationName }]
-            : []),
-        ],
         stats: [
           { label: "Cabang", value: self?.branch_count ?? branches.length },
           {
             label: "Komisariat",
             value: branches.reduce(
               (total, row) => total + (row.chapter_count ?? 0),
-              0
+              0,
             ),
           },
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
-        structuralPeriod: structural.selectedPeriod,
         activities: activity.list,
         children: {
           title: "Daftar Cabang",

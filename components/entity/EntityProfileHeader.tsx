@@ -41,7 +41,7 @@ export default function EntityProfileHeader({
   const registeredLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x">
       <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">

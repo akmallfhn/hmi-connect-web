@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  IconArrowBackUp,
   IconArticle,
   IconBell,
   IconBrandHipchat,
@@ -16,11 +17,14 @@ import {
   IconSmartHome,
   IconUserCircle,
 } from "@tabler/icons-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { officialEntityHref, parseOfficialEntityPath } from "@/lib/access";
 import { logoutUser } from "@/lib/actions";
+import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
@@ -29,7 +33,9 @@ import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
 import ProfileBadges from "../common/ProfileBadges";
 import Button from "../buttons/Button";
+import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
+import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 
 interface MainSiteDesktopSidebarProps {
   userId?: string;
@@ -89,6 +95,37 @@ const NAV_ITEMS = [
   },
 ] as const;
 
+type RailNavItem = {
+  label: string;
+  href: string;
+  icon: typeof IconSmartHome;
+  matches: (pathname: string) => boolean;
+};
+
+// On an official-account page the rail speaks for that entity: its timeline and its public profile.
+function officialNavItems(
+  official: NonNullable<ReturnType<typeof parseOfficialEntityPath>>
+): RailNavItem[] {
+  const timelineHref = officialEntityHref(
+    official.entityType,
+    official.entityId
+  );
+  return [
+    {
+      label: "Timeline",
+      href: timelineHref,
+      icon: IconSmartHome,
+      matches: (pathname) => pathname === timelineHref,
+    },
+    {
+      label: "Profile",
+      href: entityProfileHref(official.entityType, official.entityId),
+      icon: IconUserCircle,
+      matches: () => false,
+    },
+  ];
+}
+
 export default function MainSiteDesktopSidebar({
   userId,
   avatar,
@@ -102,6 +139,19 @@ export default function MainSiteDesktopSidebar({
   const unreadChatCount = useUnreadChatCount(userId);
   const { unreadCount } = useNotificationsBell(userId);
   const [loggingOut, setLoggingOut] = useState(false);
+  const official = parseOfficialEntityPath(pathname);
+  const navItems: readonly RailNavItem[] = official
+    ? officialNavItems(official)
+    : NAV_ITEMS;
+  // The official route requires a grant at this entity, so the layout's grant list already names it.
+  const adminAccess = useHeaderAdminAccess();
+  const officialGrant = official
+    ? adminAccess?.grants.find(
+        (grant) =>
+          grant.entity_type === official.entityType &&
+          grant.entity_id === official.entityId
+      )
+    : undefined;
   // Posting needs an activated, verified account — the same bar reactions and comments sit behind.
   const canPost =
     Boolean(userId) &&
@@ -133,8 +183,13 @@ export default function MainSiteDesktopSidebar({
     toast.error(
       postingHint,
       nextStep
-        ? { action: { label: "Lanjutkan", onClick: () => router.push(nextStep) } }
-        : undefined,
+        ? {
+            action: {
+              label: "Lanjutkan",
+              onClick: () => router.push(nextStep),
+            },
+          }
+        : undefined
     );
   }
 
@@ -155,8 +210,37 @@ export default function MainSiteDesktopSidebar({
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>
 
+      {official && (
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#e6e9ef] p-3">
+          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+            {officialGrant?.entity_image_url ? (
+              <Image
+                src={officialGrant.entity_image_url}
+                alt=""
+                width={40}
+                height={40}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <LogoHmi className="size-5" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="line-clamp-2 font-stack-sans-headline text-sm font-medium leading-snug text-[#172033]">
+              {officialGrant?.entity_name
+                ? formatEntityAuthorName(
+                    official.entityType,
+                    officialGrant.entity_name
+                  )
+                : "Official Account"}
+            </p>
+            <p className="text-xs text-[#7b8190]">Official Account</p>
+          </div>
+        </div>
+      )}
+
       <nav className="flex flex-col gap-1" aria-label="Navigasi utama">
-        {NAV_ITEMS.map(({ label, href, icon: Icon, matches }) => {
+        {navItems.map(({ label, href, icon: Icon, matches }) => {
           const active = matches(pathname);
           return (
             <Link
@@ -188,120 +272,134 @@ export default function MainSiteDesktopSidebar({
         })}
       </nav>
 
-      <div className="mt-1">
-        <Link
-          href={profileHref}
-          className={[
-            "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
-            profileIsActive
-              ? "bg-primary-soft text-primary"
-              : "text-[#424957] hover:bg-[#f5f7fb] hover:text-[#172033]",
-          ].join(" ")}
-        >
-          {userId && avatar ? (
-            <Avatar
-              src={avatar}
-              name={username ?? "Profil"}
-              size={20}
-              className="border border-current"
-            />
-          ) : (
-            <IconUserCircle
-              className="size-5 shrink-0"
-              stroke={profileIsActive ? 2.4 : 2}
-            />
-          )}
-          Profile
-          <ProfileBadges
-            isVerified={verificationStatus === "verified"}
-            isAlumni={Boolean(isAlumni)}
-            size={14}
-          />
-        </Link>
-
-        {canPost ? (
-          <Dropdown
-            align="left"
-            panelClassName="w-60 rounded-xl"
-            trigger={({ open, toggle }) => (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={toggle}
-                aria-expanded={open}
-                className="mt-3 h-11 w-full rounded-xl"
-              >
-                <IconPlus className="size-5" />
-                Posting
-                <IconChevronDown
-                  className={`size-4 transition-transform ${
-                    open ? "rotate-180" : ""
-                  }`}
-                />
-              </Button>
+      {/* The official page has its own composer, and the personal profile isn't who's speaking there. */}
+      {!official && (
+        <div className="mt-1">
+          <Link
+            href={profileHref}
+            className={[
+              "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
+              profileIsActive
+                ? "bg-primary-soft text-primary"
+                : "text-[#424957] hover:bg-[#f5f7fb] hover:text-[#172033]",
+            ].join(" ")}
+          >
+            {userId && avatar ? (
+              <Avatar
+                src={avatar}
+                name={username ?? "Profil"}
+                size={20}
+                className="border border-current"
+              />
+            ) : (
+              <IconUserCircle
+                className="size-5 shrink-0"
+                stroke={profileIsActive ? 2.4 : 2}
+              />
             )}
-          >
-            <CreateOptionList className="flex flex-col py-1" />
-          </Dropdown>
-        ) : (
-          <Button
-            type="button"
-            variant="secondary"
-            title={userId ? postingHint : undefined}
-            onClick={handleBlockedPost}
-            className="mt-3 h-11 w-full rounded-xl"
-          >
-            <IconPlus className="size-5" />
-            Posting
-          </Button>
-        )}
-      </div>
+            Profile
+            <ProfileBadges
+              isVerified={verificationStatus === "verified"}
+              isAlumni={Boolean(isAlumni)}
+              size={14}
+            />
+          </Link>
+
+          {canPost ? (
+            <Dropdown
+              align="left"
+              panelClassName="w-60 rounded-xl"
+              trigger={({ open, toggle }) => (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={toggle}
+                  aria-expanded={open}
+                  className="mt-3 h-11 w-full rounded-xl"
+                >
+                  <IconPlus className="size-5" />
+                  Posting
+                  <IconChevronDown
+                    className={`size-4 transition-transform ${
+                      open ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+              )}
+            >
+              <CreateOptionList className="flex flex-col py-1" />
+            </Dropdown>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              title={userId ? postingHint : undefined}
+              onClick={handleBlockedPost}
+              className="mt-3 h-11 w-full rounded-xl"
+            >
+              <IconPlus className="size-5" />
+              Posting
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="mt-auto">
-        <Dropdown
-          align="left"
-          panelClassName="w-56 rounded-xl"
-          trigger={({ open, toggle }) => (
-            <button
-              type="button"
-              onClick={toggle}
-              aria-expanded={open}
-              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-[#424957] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
-            >
-              <IconDots className="size-5" />
-              More
-            </button>
-          )}
-        >
-          <div className="py-1 font-stack-sans-headline font-normal">
-            <Link
-              href="/settings"
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-            >
-              <IconSettings className="size-4 text-[#5f6573]" />
-              Settings
-            </Link>
-            {userId ? (
+        {official ? (
+          // Leaving the entity's voice goes through Settings, where the personal account lives.
+          <Link
+            href="/settings"
+            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive transition hover:bg-destructive-soft"
+          >
+            <IconArrowBackUp className="size-5" />
+            Mode User
+          </Link>
+        ) : (
+          <Dropdown
+            align="left"
+            panelClassName="w-56 rounded-xl"
+            trigger={({ open, toggle }) => (
               <button
                 type="button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={toggle}
+                aria-expanded={open}
+                className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-[#424957] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
               >
-                <IconLogout className="size-4" />
-                {loggingOut ? "Keluar..." : "Keluar"}
+                <IconDots className="size-5" />
+                More
               </button>
-            ) : (
+            )}
+          >
+            <div className="py-1 font-stack-sans-headline font-normal">
               <Link
-                href="/auth/login"
+                href="/settings"
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
               >
-                <IconLogin className="size-4 text-[#5f6573]" />
-                Masuk
+                <IconSettings className="size-4 text-[#5f6573]" />
+                Settings
               </Link>
-            )}
-          </div>
-        </Dropdown>
+              {userId ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <IconLogout className="size-4" />
+                  {loggingOut ? "Keluar..." : "Keluar"}
+                </button>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                >
+                  <IconLogin className="size-4 text-[#5f6573]" />
+                  Masuk
+                </Link>
+              )}
+            </div>
+          </Dropdown>
+        )}
       </div>
     </aside>
   );

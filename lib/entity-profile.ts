@@ -1,22 +1,8 @@
 import type { Metadata } from "next";
-import { ADMIN_ENTITY_LABEL } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
-import type {
-  AccessEntityTypeEnum,
-  BranchTypeEnum,
-  StatusEnum,
-} from "@/lib/types";
+import type { AccessEntityTypeEnum, StatusEnum } from "@/lib/types";
 
 // The pieces every one of the five entity profile routes shares; the per-entity fetching stays in its own route.
-export const ENTITY_TYPE_LABEL: Record<BranchTypeEnum, string> = {
-  full: "Penuh",
-  provisional: "Persiapan",
-};
-
-export function entityLevelField(entityType: AccessEntityTypeEnum) {
-  return { label: "Tingkat", value: ADMIN_ENTITY_LABEL[entityType] };
-}
-
 export function kaderMeta(userCount?: number): string | undefined {
   return userCount === undefined ? undefined : `${userCount} kader`;
 }

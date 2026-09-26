@@ -4,13 +4,8 @@ import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
 import { listEntityActivity } from "@/apis/feeds";
 import { getOrganizationDetail } from "@/apis/organizations";
 import { getSession } from "@/apis/session";
-import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
-import {
-  entityLevelField,
-  entityProfileMetadata,
-  kaderMeta,
-} from "@/lib/entity-profile";
+import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface OrganizationProfileRouteProps {
@@ -44,13 +39,12 @@ export default async function OrganizationProfile({
 
   if (!organization || organization.status !== "active") return notFound();
 
-  const [coordinatingBodies, structural, activity] = await Promise.all([
+  const [coordinatingBodies, activity] = await Promise.all([
     listCoordinatingBodiesAdmin({
       organizationId: organization_id,
       status: "active",
       pageSize: 100,
     }),
-    getStructuralOverview("organization", organization_id, null),
     listEntityActivity("organization", organization_id, { pageSize: 3 }),
   ]);
 
@@ -65,25 +59,23 @@ export default async function OrganizationProfile({
         description: null,
         createdAt: organization.created_at,
         affiliations: [],
-        infoFields: [entityLevelField("organization")],
         stats: [
           { label: "Badko", value: coordinatingBodies.list.length },
           {
             label: "Cabang",
             value: coordinatingBodies.list.reduce(
               (total, row) => total + (row.branch_count ?? 0),
-              0
+              0,
             ),
           },
           {
             label: "Kader",
             value: coordinatingBodies.list.reduce(
               (total, row) => total + (row.user_count ?? 0),
-              0
+              0,
             ),
           },
         ],
-        structuralPeriod: structural.selectedPeriod,
         activities: activity.list,
         children: {
           title: "Daftar Badko",

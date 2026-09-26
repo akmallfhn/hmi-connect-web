@@ -42,6 +42,22 @@ export function officialEntityHref(
   return `/official${adminEntityHref(entityType, entityId)}`;
 }
 
+// The inverse of officialEntityHref, so the desktop rail can tell which entity page it sits on.
+export function parseOfficialEntityPath(
+  pathname: string,
+): { entityType: AccessEntityTypeEnum; entityId: string } | null {
+  const match = pathname.match(/^\/official(\/[^/]+)\/([^/]+)/);
+  if (!match) return null;
+  const entry = Object.entries(ADMIN_ENTITY_BASE_PATH).find(
+    ([, basePath]) => basePath === match[1],
+  );
+  if (!entry) return null;
+  return {
+    entityType: entry[0] as AccessEntityTypeEnum,
+    entityId: decodeURIComponent(match[2]),
+  };
+}
+
 // Super Admin sits outside access_grants entirely — it is the root of the grant chain.
 export function isSuperAdmin(user: SessionUser | null | undefined): boolean {
   return user?.role_name === "Super Admin";

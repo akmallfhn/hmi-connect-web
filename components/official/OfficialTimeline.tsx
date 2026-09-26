@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ActivityEntry, Feed } from "@/apis/feeds";
+import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import CreateFeedForms, {
   type ComposerAuthorEntity,
 } from "../forms/CreateFeedForms";
 import FeedItemCard from "../feeds/FeedItemCard";
-import { loadMoreEntityActivity } from "@/lib/actions";
+import { loadMoreFeeds } from "@/lib/actions";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface OfficialTimelineProps {
   authorEntity: ComposerAuthorEntity;
-  initialItems: ActivityEntry[];
+  initialItems: FeedTimelineItem[];
   initialHasMore: boolean;
   currentUserId?: string;
   currentUserName?: string;
@@ -44,11 +44,7 @@ export default function OfficialTimeline({
     setLoadingMore(true);
     try {
       const nextPage = pageRef.current + 1;
-      const result = await loadMoreEntityActivity(
-        authorEntity.type,
-        authorEntity.id,
-        nextPage,
-      );
+      const result = await loadMoreFeeds(nextPage);
       setItems((prev) => [...prev, ...result.list]);
       setHasMore(result.hasMore);
       pageRef.current = nextPage;
@@ -56,7 +52,7 @@ export default function OfficialTimeline({
       loadingRef.current = false;
       setLoadingMore(false);
     }
-  }, [authorEntity.id, authorEntity.type, hasMore]);
+  }, [hasMore]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -79,10 +75,9 @@ export default function OfficialTimeline({
     setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
   }
 
-  // A quote repost posted from here lands under the entity too, so it belongs at the top of this list.
   function handleFeedCreated(feed: Feed) {
     setItems((prev) => [
-      { type: "post", created_at: feed.created_at, feed, comment: null },
+      { type: "feed", created_at: feed.created_at, feed },
       ...prev,
     ]);
   }
@@ -99,14 +94,14 @@ export default function OfficialTimeline({
 
       <div className="flex flex-col gap-1.5 lg:gap-4">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573] shadow-sm">
+          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573]">
             Belum ada postingan. Bagikan kabar pertama dari akun resmi ini!
           </div>
         )}
 
         {items.map((item, index) => (
           <FeedItemCard
-            key={`${item.feed.id}-${index}`}
+            key={`${item.type}-${item.feed.id}-${index}`}
             feed={item.feed}
             currentUserId={currentUserId}
             currentUserName={currentUserName}
@@ -114,7 +109,14 @@ export default function OfficialTimeline({
             userStatus={userStatus}
             verificationStatus={verificationStatus}
             authorEntity={authorEntity}
-            initialReposted={item.type === "repost"}
+            repostedBy={
+              item.type === "repost"
+                ? {
+                    fullName: item.reposter_full_name,
+                    avatar: item.reposter_avatar,
+                  }
+                : undefined
+            }
             onDeleted={handleFeedDeleted}
             onFeedCreated={handleFeedCreated}
           />

@@ -5,14 +5,8 @@ import { listAllChaptersAdmin } from "@/apis/chapters";
 import { listCoordinatingChaptersAdmin } from "@/apis/coordinating-chapters";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
-import { getStructuralOverview } from "@/apis/structurals";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
-import {
-  ENTITY_TYPE_LABEL,
-  entityLevelField,
-  entityProfileMetadata,
-  kaderMeta,
-} from "@/lib/entity-profile";
+import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface BranchProfileRouteProps {
@@ -46,7 +40,7 @@ export default async function BranchProfile({
   if (!branch || branch.status !== "active") return notFound();
 
   // A Cabang's own kader/Komisariat counts are only exposed on its Badko's branch list row.
-  const [siblings, chapters, coordinatingChapters, structural, activity] =
+  const [siblings, chapters, coordinatingChapters, activity] =
     await Promise.all([
       listAllBranchesAdmin({
         coordinatingBodyId: branch.coordinating_body_id,
@@ -58,7 +52,6 @@ export default async function BranchProfile({
         status: "active",
         pageSize: 1,
       }),
-      getStructuralOverview("branch", branch_id, null),
       listEntityActivity("branch", branch_id, { pageSize: 3 }),
     ]);
   const self = siblings.find((row) => row.id === branch_id);
@@ -66,7 +59,7 @@ export default async function BranchProfile({
   const coordinatingBodyName = branch.coordinating_body?.name;
   const coordinatingBodyHref = entityProfileHref(
     "coordinating_body",
-    branch.coordinating_body_id
+    branch.coordinating_body_id,
   );
 
   return (
@@ -84,34 +77,20 @@ export default async function BranchProfile({
               {
                 label: formatEntityAuthorName(
                   "coordinating_body",
-                  coordinatingBodyName
+                  coordinatingBodyName,
                 ),
                 href: coordinatingBodyHref,
               },
             ]
           : [],
-        infoFields: [
-          entityLevelField("branch"),
-          ...(coordinatingBodyName
-            ? [
-                {
-                  label: "Badko",
-                  value: coordinatingBodyName,
-                  href: coordinatingBodyHref,
-                },
-              ]
-            : []),
-          {
-            label: "Status Kepengurusan",
-            value: ENTITY_TYPE_LABEL[branch.type],
-          },
-        ],
         stats: [
-          { label: "Komisariat", value: self?.chapter_count ?? chapters.length },
+          {
+            label: "Komisariat",
+            value: self?.chapter_count ?? chapters.length,
+          },
           { label: "Korkom", value: coordinatingChapters.totalData },
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
-        structuralPeriod: structural.selectedPeriod,
         activities: activity.list,
         children: {
           title: "Daftar Komisariat",

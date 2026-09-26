@@ -22,7 +22,7 @@ export default function EntityChildrenCard({
   emptyMessage,
 }: EntityChildrenCardProps) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x lg:shadow-sm">
+    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-[#172033] xl:text-[15px]">
           {title}
