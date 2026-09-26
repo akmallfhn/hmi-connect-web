@@ -2137,11 +2137,20 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   re-spell either bound at a callsite.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
-  of local timeline state, uses `emoji-picker-react`, and uploads photo/video attachments
-  to the public Supabase `hmi-connect/feed_media` folder before submitting their URLs.
+  of local timeline state, uses `emoji-picker-react`, and uploads photos to the public
+  Supabase `hmi-connect/feed_media` folder before submitting their URLs. **A video is a YouTube
+  link, never an upload**: the composer takes a pasted URL, `lib/youtube.ts#parseYouTubeId`
+  validates it (watch, youtu.be, shorts, embed, live), and it is sent as a canonical
+  `youtube.com/watch?v=` url on a `video` attachment. `FeedItemCard` renders a YouTube `video`
+  through `components/feeds/YouTubeEmbed.tsx` (a `youtube-nocookie.com` iframe) and falls back to
+  a plain `<video>` for feeds posted back when files were uploaded. Attachment controls are a
+  Substack-style row of Tabler icon buttons (photo, YouTube, link, emoji) beside Batal/Posting —
+  no text labels. The feed-card prompt's own Foto/Video/URL quick actions keep their labels. The emoji
+  picker sits in a portaled `Dropdown`, so the modal's scroll area can't clip it.
   `feeds/create` takes one `attachment` object — `{type, urls}` for `photo`/`video`/`url`,
   `{type, reference_id}` for `news`/`training`, never both — so the composer's own
-  `attachmentMode` is what keeps the three upload buttons locked once any slot is taken. The
+  `attachmentMode` is what locks the buttons: photos keep the photo button live up to five, while
+  any other attachment (video, url, news, article) disables all three until its own X clears it. The
   two linked attachments it can produce are `news`, handed in as `forceOpenNews` by
   `RepostToFeedButton`, and `article`, handed in as `forceOpenArticle` by the article reader's own
   share-to-feed button (see `components/navigations/*` above for the shared compose-intent

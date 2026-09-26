@@ -22,6 +22,8 @@ import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
+import YouTubeEmbed from "./YouTubeEmbed";
+import { parseYouTubeId } from "@/lib/youtube";
 import LinkPreviewCard from "./LinkPreviewCard";
 import ArticleAttachmentCard from "./ArticleAttachmentCard";
 import NewsAttachmentCard from "./NewsAttachmentCard";
@@ -89,7 +91,7 @@ function PhotoGrid({
   onPreview: (photo: FeedUploadAttachment) => void;
 }) {
   const photos = [...unsorted].sort(
-    (a, b) => a.reference_index - b.reference_index
+    (a, b) => a.reference_index - b.reference_index,
   );
   const visible = photos.slice(0, 4);
   const overflow = photos.length - visible.length;
@@ -256,7 +258,7 @@ export default function FeedItemCard({
   const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
   const isEdited = updatedAt !== feed.created_at;
   const [previewPhoto, setPreviewPhoto] = useState<FeedUploadAttachment | null>(
-    null
+    null,
   );
   const [deleting, setDeleting] = useState(false);
 
@@ -275,10 +277,10 @@ export default function FeedItemCard({
 
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState<FeedComment[]>(
-    initialComments ?? []
+    initialComments ?? [],
   );
   const [commentsLoaded, setCommentsLoaded] = useState(
-    initialComments !== undefined
+    initialComments !== undefined,
   );
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentCount, setCommentCount] = useState(feed.comment_count);
@@ -288,22 +290,25 @@ export default function FeedItemCard({
 
   const attachments = feed.attachments ?? [];
   const photoAttachments = attachments.filter(
-    (item): item is FeedUploadAttachment => item.type === "photo"
+    (item): item is FeedUploadAttachment => item.type === "photo",
   );
   const videoAttachment = attachments.find(
-    (item): item is FeedUploadAttachment => item.type === "video"
+    (item): item is FeedUploadAttachment => item.type === "video",
   );
+  const videoYouTubeId = videoAttachment
+    ? parseYouTubeId(videoAttachment.reference_url)
+    : null;
   const urlAttachment = attachments.find(
-    (item): item is FeedUploadAttachment => item.type === "url"
+    (item): item is FeedUploadAttachment => item.type === "url",
   );
   const newsAttachment = attachments.find(
-    (item): item is FeedNewsAttachment => item.type === "news"
+    (item): item is FeedNewsAttachment => item.type === "news",
   );
   const trainingAttachment = attachments.find(
-    (item): item is FeedTrainingAttachment => item.type === "training"
+    (item): item is FeedTrainingAttachment => item.type === "training",
   );
   const articleAttachment = attachments.find(
-    (item): item is FeedArticleAttachment => item.type === "article"
+    (item): item is FeedArticleAttachment => item.type === "article",
   );
   const shareUrl =
     typeof window !== "undefined"
@@ -489,13 +494,17 @@ export default function FeedItemCard({
       {photoAttachments.length > 0 && (
         <PhotoGrid photos={photoAttachments} onPreview={setPreviewPhoto} />
       )}
-      {videoAttachment && (
-        <video
-          controls
-          src={videoAttachment.reference_url}
-          className="mt-3 w-full rounded-xl bg-black"
-        />
-      )}
+      {videoAttachment &&
+        (videoYouTubeId ? (
+          <YouTubeEmbed videoId={videoYouTubeId} className="mt-3" />
+        ) : (
+          // Feeds posted before the YouTube-only composer still carry an uploaded file.
+          <video
+            controls
+            src={videoAttachment.reference_url}
+            className="mt-3 w-full rounded-xl bg-black"
+          />
+        ))}
       {urlAttachment && <LinkPreviewCard url={urlAttachment.reference_url} />}
       {newsAttachment && <NewsAttachmentCard attachment={newsAttachment} />}
       {articleAttachment && (

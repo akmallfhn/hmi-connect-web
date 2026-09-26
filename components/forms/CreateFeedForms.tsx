@@ -6,16 +6,13 @@ import EmojiPicker, {
   Theme,
 } from "emoji-picker-react";
 import {
-  ImageIcon,
-  Link2,
-  Loader2,
-  Play,
-  Send,
-  SmilePlus,
-  Trash2,
-  Video,
-  X,
-} from "lucide-react";
+  IconBrandYoutube,
+  IconLink,
+  IconLoader2,
+  IconMoodSmile,
+  IconPhoto,
+  IconX,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import {
   FormEvent,
@@ -23,18 +20,22 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
+import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import Modal from "../modals/Modal";
 import LinkPreviewCard from "../feeds/LinkPreviewCard";
 import ArticleAttachmentCard from "../feeds/ArticleAttachmentCard";
 import NewsAttachmentCard from "../feeds/NewsAttachmentCard";
 import QuotedFeed from "../feeds/QuotedFeed";
+import YouTubeEmbed from "../feeds/YouTubeEmbed";
 import { createFeed } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
+import { parseYouTubeId, youTubeWatchUrl } from "@/lib/youtube";
 import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
@@ -128,35 +129,37 @@ type PhotoDraft = {
   previewUrl: string;
 };
 
-type VideoDraft = {
-  file: File;
-  previewUrl: string;
-};
-
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
-const VIDEO_EXTENSIONS = ["mp4", "webm", "mov"];
 const MAX_PHOTOS = 5;
 const MAX_RAW_PHOTO_BYTES = 20 * 1024 * 1024;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
+// The feed card's quick actions keep their labels; only the open composer goes icon-only.
 const ACTIONS = [
   {
     label: "Foto",
     mode: "photo" as const,
-    icon: ImageIcon,
+    icon: IconPhoto,
     color: "text-primary",
   },
   {
     label: "Video",
     mode: "video" as const,
-    icon: Video,
+    icon: IconBrandYoutube,
     color: "text-secondary",
   },
-  { label: "URL", mode: "url" as const, icon: Link2, color: "text-[#5f6573]" },
+  {
+    label: "URL",
+    mode: "url" as const,
+    icon: IconLink,
+    color: "text-[#5f6573]",
+  },
 ];
+
+// Layered on Button's ghost/icon variant: a round, muted glyph that stays flat while disabled.
+const TOOL_BUTTON_CLASS =
+  "size-9 rounded-full text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033] disabled:hover:bg-transparent";
 
 function getExtension(file: File) {
   return file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -202,13 +205,9 @@ function isStoragePolicyError(error: unknown) {
   );
 }
 
-async function uploadFeedMedia(
-  file: File,
-  userId: string | undefined,
-  kind: "photo" | "video",
-) {
+async function uploadFeedPhoto(file: File, userId: string | undefined) {
   const extension = getExtension(file);
-  const fileName = `${kind}-${Date.now()}-${randomId()}.${extension}`;
+  const fileName = `photo-${Date.now()}-${randomId()}.${extension}`;
   const filePath = `feed_media/${userId ?? "anonymous"}/${fileName}`;
   return uploadPublicStorageFile(filePath, file);
 }
@@ -293,7 +292,8 @@ export default function CreateFeedForms({
     setSeenForceOpenSignal(forceOpenSignal);
     if (forceOpenSignal) {
       if (forceOpenNews) openComposer(null, forceOpenNews);
-      else if (forceOpenArticle) openComposer(null, undefined, forceOpenArticle);
+      else if (forceOpenArticle)
+        openComposer(null, undefined, forceOpenArticle);
       else openComposer();
     }
   }
@@ -327,12 +327,13 @@ export default function CreateFeedForms({
         <div className="mt-3 flex items-center justify-around border-t border-[#e6e9ef] pt-3">
           {ACTIONS.map(({ label, mode, icon: Icon, color }) => (
             <Button
-              key={label}
+              key={mode}
+              type="button"
               variant="ghost"
               onClick={() => openComposer(mode)}
               className="gap-2 rounded-lg px-3 py-1.5 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
             >
-              <Icon className={`size-4 ${color}`} />
+              <Icon className={`size-4 ${color}`} stroke={2} />
               {label}
             </Button>
           ))}
@@ -434,13 +435,13 @@ function FeedComposerFields({
   onCreated,
 }: FeedComposerFieldsProps) {
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewUrlsRef = useRef(new Set<string>());
   const [content, setContent] = useState("");
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [compressingPhotos, setCompressingPhotos] = useState(false);
-  const [video, setVideo] = useState<VideoDraft | null>(null);
+  const [youtubeValue, setYoutubeValue] = useState("");
+  const [youtubeActive, setYoutubeActive] = useState(initialMode === "video");
   const [urlValue, setUrlValue] = useState("");
   const [urlActive, setUrlActive] = useState(initialMode === "url");
   const [news, setNews] = useState<ComposerNewsDraft | null>(
@@ -450,12 +451,10 @@ function FeedComposerFields({
     initialArticle ?? null,
   );
   const [previewUrl, setPreviewUrl] = useState("");
-  const [showEmoji, setShowEmoji] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const emojiWrapperRef = useRef<HTMLDivElement>(null);
   const attachmentMode: FeedAttachmentTypeEnum | null = photos.length
     ? "photo"
-    : video
+    : youtubeActive
       ? "video"
       : urlActive
         ? "url"
@@ -466,13 +465,16 @@ function FeedComposerFields({
             : null;
   const normalizedUrl = normalizeUrl(urlValue);
   const hasValidUrl = urlValue.trim() ? isValidUrl(urlValue) : false;
+  const youtubeId = parseYouTubeId(youtubeValue);
   const canSubmit =
     Boolean(content.trim()) &&
     !submitting &&
-    !(attachmentMode === "url" && !hasValidUrl);
+    !(attachmentMode === "url" && !hasValidUrl) &&
+    !(attachmentMode === "video" && !youtubeId);
+  // Photos stack up to five; video, url, news, and article each fill the one slot alone.
   const isPhotoLocked = attachmentMode !== null && attachmentMode !== "photo";
-  const isVideoLocked = attachmentMode !== null && attachmentMode !== "video";
-  const isUrlLocked = attachmentMode !== null && attachmentMode !== "url";
+  const isVideoLocked = attachmentMode !== null;
+  const isUrlLocked = attachmentMode !== null;
 
   useEffect(() => {
     const previewUrls = previewUrlsRef.current;
@@ -492,19 +494,6 @@ function FeedComposerFields({
     return () => window.clearTimeout(timeoutId);
   }, [hasValidUrl, normalizedUrl, urlActive]);
 
-  useEffect(() => {
-    if (!showEmoji) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (!emojiWrapperRef.current?.contains(event.target as Node)) {
-        setShowEmoji(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showEmoji]);
-
   function createPreviewUrl(file: File) {
     const previewUrl = URL.createObjectURL(file);
     previewUrlsRef.current.add(previewUrl);
@@ -521,18 +510,23 @@ function FeedComposerFields({
     setPhotos([]);
   }
 
-  function clearVideo() {
-    if (video) revokePreviewUrl(video.previewUrl);
-    setVideo(null);
+  function clearYouTube() {
+    setYoutubeValue("");
+    setYoutubeActive(false);
+  }
+
+  function clearUrl() {
+    setUrlValue("");
+    setUrlActive(false);
+    setPreviewUrl("");
   }
 
   function clearAttachment() {
     clearPhotos();
-    clearVideo();
-    setUrlValue("");
-    setUrlActive(false);
-    setPreviewUrl("");
+    clearYouTube();
+    clearUrl();
     setNews(null);
+    setArticle(null);
   }
 
   function handleClose() {
@@ -544,7 +538,6 @@ function FeedComposerFields({
     const textarea = textareaRef.current;
     if (!textarea) {
       setContent((prev) => `${prev}${emojiData.emoji}`);
-      setShowEmoji(false);
       return;
     }
 
@@ -557,7 +550,6 @@ function FeedComposerFields({
         start + emojiData.emoji.length;
       textarea.focus();
     }, 0);
-    setShowEmoji(false);
   }
 
   function handleContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
@@ -620,40 +612,8 @@ function FeedComposerFields({
     }
 
     if (accepted.length > 0) {
-      clearVideo();
-      setUrlValue("");
-      setUrlActive(false);
       setPhotos((prev) => [...prev, ...accepted]);
     }
-  }
-
-  function handleVideoFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    if (isVideoLocked) {
-      toast.error("Hapus lampiran lain dulu sebelum menambah video.");
-      return;
-    }
-
-    const extension = getExtension(file);
-    if (
-      !VIDEO_TYPES.includes(file.type) ||
-      !VIDEO_EXTENSIONS.includes(extension)
-    ) {
-      toast.error("Format video hanya MP4, WEBM, atau MOV.");
-      return;
-    }
-    if (file.size > MAX_VIDEO_BYTES) {
-      toast.error("Ukuran video maksimal 50MB.");
-      return;
-    }
-
-    clearPhotos();
-    setUrlValue("");
-    setUrlActive(false);
-    if (video) revokePreviewUrl(video.previewUrl);
-    setVideo({ file, previewUrl: createPreviewUrl(file) });
   }
 
   function removePhoto(id: string) {
@@ -674,6 +634,10 @@ function FeedComposerFields({
       toast.error("URL belum valid.");
       return;
     }
+    if (attachmentMode === "video" && !youtubeId) {
+      toast.error("Link YouTube belum valid.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -682,12 +646,11 @@ function FeedComposerFields({
       if (!quoteFeed) {
         if (photos.length > 0) {
           const urls = await Promise.all(
-            photos.map((photo) => uploadFeedMedia(photo.file, userId, "photo")),
+            photos.map((photo) => uploadFeedPhoto(photo.file, userId)),
           );
           attachment = { type: "photo", urls };
-        } else if (video) {
-          const url = await uploadFeedMedia(video.file, userId, "video");
-          attachment = { type: "video", urls: [url] };
+        } else if (youtubeActive && youtubeId) {
+          attachment = { type: "video", urls: [youTubeWatchUrl(youtubeId)] };
         } else if (urlActive && urlValue.trim()) {
           attachment = { type: "url", urls: [normalizedUrl] };
         } else if (news) {
@@ -766,46 +729,17 @@ function FeedComposerFields({
         </div>
       </div>
 
-      <div className="relative">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={handleContentChange}
-          placeholder={
-            quoteFeed ? "Tambahkan komentar..." : "Apa yang ingin kamu bagikan?"
-          }
-          rows={5}
-          disabled={submitting}
-          className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-white px-0 py-2 text-base leading-7 text-[#172033] placeholder:text-[#5f6573]/70 focus:outline-none disabled:cursor-not-allowed disabled:text-[#5f6573]"
-        />
-        <div className="relative" ref={emojiWrapperRef}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowEmoji((prev) => !prev)}
-            disabled={submitting}
-            className="size-9 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
-            aria-label="Tambah emoji"
-          >
-            <SmilePlus className="size-5" />
-          </Button>
-          {showEmoji && (
-            <div className="absolute bottom-full left-0 z-[120] mb-2 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white shadow-xl">
-              <EmojiPicker
-                open={showEmoji}
-                onEmojiClick={handleEmojiClick}
-                height={240}
-                width={320}
-                emojiStyle={EmojiStyle.NATIVE}
-                theme={Theme.LIGHT}
-                searchDisabled
-                previewConfig={{ showPreview: false }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      <textarea
+        ref={textareaRef}
+        value={content}
+        onChange={handleContentChange}
+        placeholder={
+          quoteFeed ? "Tambahkan komentar..." : "Apa yang ingin kamu bagikan?"
+        }
+        rows={5}
+        disabled={submitting}
+        className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-white px-0 py-2 text-base leading-7 text-[#172033] placeholder:text-[#5f6573]/70 focus:outline-none disabled:cursor-not-allowed disabled:text-[#5f6573]"
+      />
 
       {photos.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -821,217 +755,257 @@ function FeedComposerFields({
                 unoptimized
                 className="object-cover"
               />
-              <button
+              <Button
                 type="button"
                 onClick={() => removePhoto(photo.id)}
                 disabled={submitting}
-                className="absolute right-2 top-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
+                variant="dark"
+                size="iconSm"
+                className="absolute right-2 top-2"
                 aria-label="Hapus foto"
               >
-                <X className="size-4" />
-              </button>
+                <IconX className="size-4" stroke={2} />
+              </Button>
             </div>
           ))}
         </div>
       )}
 
-      {video && (
-        <div className="relative overflow-hidden rounded-xl bg-black">
-          <video
-            src={video.previewUrl}
-            controls
-            className="max-h-80 w-full bg-black"
-          />
-          <button
-            type="button"
-            onClick={clearVideo}
-            disabled={submitting}
-            className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
-            aria-label="Hapus video"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+      {attachmentMode === "video" && (
+        <AttachmentInput
+          icon={<IconBrandYoutube className="size-5" stroke={1.75} />}
+          value={youtubeValue}
+          onChange={setYoutubeValue}
+          onRemove={clearYouTube}
+          placeholder="Tempel link YouTube"
+          invalidMessage={
+            youtubeValue.trim() && !youtubeId
+              ? "Link YouTube belum valid."
+              : undefined
+          }
+          removeLabel="Hapus video"
+          disabled={submitting}
+        />
+      )}
+      {attachmentMode === "video" && youtubeId && (
+        <YouTubeEmbed videoId={youtubeId} />
       )}
 
+      {attachmentMode === "url" && (
+        <AttachmentInput
+          icon={<IconLink className="size-5" stroke={1.75} />}
+          value={urlValue}
+          onChange={setUrlValue}
+          onRemove={clearUrl}
+          placeholder="https://contoh.com/artikel"
+          invalidMessage={
+            urlValue.trim() && !hasValidUrl ? "URL belum valid." : undefined
+          }
+          removeLabel="Hapus tautan"
+          disabled={submitting}
+        />
+      )}
       {previewUrl && <LinkPreviewCard url={previewUrl} />}
 
       {news && (
         <div className="relative">
           <NewsAttachmentCard attachment={newsPreviewAttachment(news)} />
-          <button
+          <Button
             type="button"
             onClick={() => setNews(null)}
             disabled={submitting}
-            className="absolute right-2 top-5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
+            variant="dark"
+            size="iconSm"
+            className="absolute right-2 top-5"
             aria-label="Hapus berita"
           >
-            <X className="size-4" />
-          </button>
+            <IconX className="size-4" stroke={2} />
+          </Button>
         </div>
       )}
 
       {article && (
         <div className="relative">
-          <ArticleAttachmentCard attachment={articlePreviewAttachment(article)} />
-          <button
+          <ArticleAttachmentCard
+            attachment={articlePreviewAttachment(article)}
+          />
+          <Button
             type="button"
             onClick={() => setArticle(null)}
             disabled={submitting}
-            className="absolute right-2 top-5 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-60"
+            variant="dark"
+            size="iconSm"
+            className="absolute right-2 top-5"
             aria-label="Hapus artikel"
           >
-            <X className="size-4" />
-          </button>
+            <IconX className="size-4" stroke={2} />
+          </Button>
         </div>
       )}
 
       {quoteFeed && <QuotedFeed feed={quoteFeed} />}
 
-      {!quoteFeed && (
-        <div className="rounded-xl border border-[#e6e9ef] p-3">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-[#172033]">
-              Tambahkan lampiran
-            </p>
-            {attachmentMode && (
+      <div className="flex items-center justify-between gap-3 border-t border-[#e6e9ef] pt-3">
+        <div className="flex items-center gap-1">
+          {!quoteFeed && (
+            <>
               <Button
                 type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={
+                  submitting ||
+                  isPhotoLocked ||
+                  photos.length >= MAX_PHOTOS ||
+                  compressingPhotos
+                }
+                aria-label="Tambah foto"
+                title="Tambah foto"
                 variant="ghost"
-                size="sm"
-                onClick={clearAttachment}
-                disabled={submitting}
-                className="text-destructive hover:bg-destructive-soft"
+                size="icon"
+                className={TOOL_BUTTON_CLASS}
               >
-                <Trash2 className="size-3.5" />
-                Hapus
+                {compressingPhotos ? (
+                  <IconLoader2 className="size-5 animate-spin" stroke={1.75} />
+                ) : (
+                  <IconPhoto className="size-5" stroke={1.75} />
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setYoutubeActive(true)}
+                disabled={submitting || isVideoLocked}
+                aria-label="Tambah video YouTube"
+                title="Tambah video YouTube"
+                variant="ghost"
+                size="icon"
+                className={TOOL_BUTTON_CLASS}
+              >
+                <IconBrandYoutube className="size-5" stroke={1.75} />
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setUrlActive(true)}
+                disabled={submitting || isUrlLocked}
+                aria-label="Tambah tautan"
+                title="Tambah tautan"
+                variant="ghost"
+                size="icon"
+                className={TOOL_BUTTON_CLASS}
+              >
+                <IconLink className="size-5" stroke={1.75} />
+              </Button>
+            </>
+          )}
+          {/* Portaled, so the picker isn't clipped by the modal's own scroll area. */}
+          <Dropdown
+            align="left"
+            trigger={({ toggle }) => (
+              <Button
+                type="button"
+                onClick={toggle}
+                disabled={submitting}
+                aria-label="Tambah emoji"
+                title="Tambah emoji"
+                variant="ghost"
+                size="icon"
+                className={TOOL_BUTTON_CLASS}
+              >
+                <IconMoodSmile className="size-5" stroke={1.75} />
               </Button>
             )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => photoInputRef.current?.click()}
-              disabled={
-                submitting ||
-                isPhotoLocked ||
-                photos.length >= MAX_PHOTOS ||
-                compressingPhotos
-              }
-              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-            >
-              {compressingPhotos ? (
-                <Loader2 className="size-4 animate-spin text-primary" />
-              ) : (
-                <ImageIcon className="size-4 text-primary" />
-              )}
-              {compressingPhotos ? "Memproses..." : "Foto"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => videoInputRef.current?.click()}
-              disabled={submitting || isVideoLocked}
-              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-            >
-              <Video className="size-4 text-secondary" />
-              Video
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                if (!isUrlLocked) setUrlActive(true);
-              }}
-              disabled={submitting || isUrlLocked}
-              className="h-11 rounded-lg border border-[#e6e9ef] text-[#5f6573] hover:bg-[#f5f7fb]"
-            >
-              <Link2 className="size-4 text-[#5f6573]" />
-              URL
-            </Button>
-          </div>
-
-          {attachmentMode === "url" && (
-            <div className="mt-3">
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-[#5f6573]">
-                  URL yang dibagikan
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUrlValue("");
-                    setUrlActive(false);
-                    setPreviewUrl("");
-                  }}
-                  disabled={submitting}
-                  className="flex size-7 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033] disabled:cursor-not-allowed disabled:opacity-60"
-                  aria-label="Hapus URL"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-              <input
-                type="url"
-                value={urlValue}
-                onChange={(event) => setUrlValue(event.target.value)}
-                disabled={submitting}
-                placeholder="https://contoh.com/artikel"
-                className="w-full rounded-lg border border-[#dbe3ef] px-3 py-2 text-sm text-[#172033] outline-none transition placeholder:text-[#5f6573]/60 focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[#f5f7fb]"
-              />
-              {urlValue.trim() && !hasValidUrl && (
-                <p className="mt-1 text-xs text-destructive">
-                  URL belum valid.
-                </p>
-              )}
-            </div>
-          )}
-
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp,.avif"
-            multiple
-            className="hidden"
-            onChange={handlePhotoFiles}
-          />
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept=".mp4,.webm,.mov"
-            className="hidden"
-            onChange={handleVideoFile}
-          />
+          >
+            <EmojiPicker
+              onEmojiClick={handleEmojiClick}
+              height={320}
+              width="100%"
+              emojiStyle={EmojiStyle.NATIVE}
+              theme={Theme.LIGHT}
+              searchDisabled
+              previewConfig={{ showPreview: false }}
+            />
+          </Dropdown>
         </div>
-      )}
 
-      <div className="flex justify-end gap-2 border-t border-[#e6e9ef] pt-4">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleClose}
+            disabled={submitting}
+            className="text-[#5f6573]"
+          >
+            Batal
+          </Button>
+          <Button type="submit" disabled={!canSubmit}>
+            {submitting && <IconLoader2 className="size-4 animate-spin" />}
+            {submitting
+              ? "Memposting..."
+              : quoteFeed
+                ? "Quote Repost"
+                : "Posting"}
+          </Button>
+        </div>
+      </div>
+
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,.avif"
+        multiple
+        className="hidden"
+        onChange={handlePhotoFiles}
+      />
+    </form>
+  );
+}
+
+function AttachmentInput({
+  icon,
+  value,
+  onChange,
+  onRemove,
+  placeholder,
+  invalidMessage,
+  removeLabel,
+  disabled,
+}: {
+  icon: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  onRemove: () => void;
+  placeholder: string;
+  invalidMessage?: string;
+  removeLabel: string;
+  disabled: boolean;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 rounded-xl border border-[#dbe3ef] py-1 pl-3 pr-1 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+        <span className="shrink-0 text-[#5f6573]">{icon}</span>
+        <input
+          type="url"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          autoFocus
+          className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[#172033] outline-none placeholder:text-[#5f6573]/60 disabled:cursor-not-allowed"
+        />
         <Button
           type="button"
+          onClick={onRemove}
+          disabled={disabled}
+          aria-label={removeLabel}
           variant="ghost"
-          onClick={handleClose}
-          disabled={submitting}
-          className="text-[#5f6573]"
+          size="iconSm"
+          className="size-8 shrink-0 text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033]"
         >
-          Batal
-        </Button>
-        <Button type="submit" disabled={!canSubmit}>
-          {submitting ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : attachmentMode === "video" ? (
-            <Play className="size-4" />
-          ) : (
-            <Send className="size-4" />
-          )}
-          {submitting
-            ? "Memposting..."
-            : quoteFeed
-              ? "Quote Repost"
-              : "Posting"}
+          <IconX className="size-4" stroke={2} />
         </Button>
       </div>
-    </form>
+      {invalidMessage && (
+        <p className="mt-1 text-xs text-destructive">{invalidMessage}</p>
+      )}
+    </div>
   );
 }
