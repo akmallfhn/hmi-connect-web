@@ -16,9 +16,10 @@ export const metadata: Metadata = {
     url: "/auth/login",
     siteName: "HMI Connect",
   },
+  // Listed in the sitemap, so it must be indexable — a noindex there contradicts the submission.
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 

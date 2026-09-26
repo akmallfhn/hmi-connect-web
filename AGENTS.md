@@ -251,6 +251,35 @@ Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage
 by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything under `/master`;
 the SK and Konfercab routes are currently hidden from the Cabang sidebar.
 
+## Sitemap & robots
+
+Split per content type, the same shape as the sibling `sevenpreneur` project's `(sitemap)` group:
+`app/(sitemap)/sitemap.xml/route.ts` is a **sitemap index** naming one sitemap per type —
+`/basic/sitemap.xml` (the fixed public pages: `/auth/login`, `/articles`, `/trainings`),
+`/articles/sitemap.xml` (every published article at its real `slug_url`, `lastmod` from
+`updated_at`, cover as a sitemap image), and `/trainings/sitemap.xml` (every training, poster as
+an image, deliberately **no** `lastmod`, since `trainings/list` has no `updated_at` and a wrong one
+is worse than none). Anything with a dynamic id gets its own file rather than joining `basic`. They
+are route handlers at the app root, not under `(www)`: root routes resolve before
+`next.config.mts`'s `afterFiles` rewrites, and every `*/sitemap.xml` path already passes the
+no-session redirect (its allowlist skips any path containing a dot), so a crawler reaches them
+without a cookie. `lib/sitemap.ts` (`server-only`) owns the XML — `urlsetResponse`,
+`sitemapIndexResponse`, XML escaping, and `collectPages`, which walks a paged list at 100 rows,
+capped at 200 pages, well under the 50,000-URL limit. `changefreq`/`priority` are left out on
+purpose (Google ignores both). URLs follow `getMainSiteOrigin()`, the same `DOMAIN_MODE` switch as
+the rest of the app. The two dynamic sitemaps are `force-dynamic`, so a build never depends on the
+backend. `/auth/login`'s metadata was flipped to `index: true` so it can be listed — a noindex page
+in a sitemap is a contradiction Search Console flags.
+**`/profile/*` and `/feeds/*` are not listed yet**, and not by oversight: both are public, but no
+endpoint enumerates users or feeds without a session (`users/list` needs a grant, `feeds/list` and
+`search/list` need a session — only the per-item `detail` reads take the client secret). Once the
+backend exposes a listing behind `requireClientSecret`, each becomes its own
+`app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
+`app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
+activation, verification, settings, chats, notifications, `/official/`, invitations, reset links,
+forget-password, the article composer and editors) plus any `?as=` URL, whose canonical is the
+plain page anyway.
+
 ## Auth & session flow
 
 - Session cookie name: **`SESSION_COOKIE_NAME`** lives in **`lib/constants.ts`** and
