@@ -1607,7 +1607,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `useHeaderAdminAccess()`'s grant for that entity rather than fetched, since reaching the route
   already requires holding that grant. The personal Profile row and the Posting button are hidden
   there, since the page carries its own entity composer, and More is replaced by a destructive
-  **Mode User** link to `/settings`, the way back to the personal account.
+  **Mode User** link to `/settings`, the way back to the personal account. Mobile gets the same split:
+  `OfficialAccountPage` renders **no** personal `Header` or `BottomNav`, and instead opens with
+  `components/official/OfficialGreetingBar.tsx` — `MobileGreetingBar`'s shape (the composer's
+  `-mt-16` still floats up into its `pb-20`) but on `bg-tertiary` navy with white copy, greeting the
+  entity by name, so speaking as the entity reads differently from home at a glance — and closes
+  with `components/official/OfficialBottomNav.tsx`: Beranda (this timeline), Profil HMI (the
+  entity profile), and a destructive Mode User tab to `/settings`. It reuses `BottomNav`'s exported
+  `usePressPulse`/`NavIconPulse`, so the tap feedback matches.
   The timeline is `FeedTimeline`'s entity twin: the same `CreateFeedForms` composer above the same
   `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (reposts
   keep their "X membagikan ulang" header), with no news/suggested/quick-menu inserts. The entity's

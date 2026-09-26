@@ -17,7 +17,7 @@ import CreateOptionList from "./CreateOptionList";
 const PULSE_DURATION = 350;
 
 // :active is too short-lived on a real tap to be visible, so hold the pulse on a timer instead.
-function usePressPulse(duration = PULSE_DURATION) {
+export function usePressPulse(duration = PULSE_DURATION) {
   const [pressed, setPressed] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,7 +36,13 @@ function usePressPulse(duration = PULSE_DURATION) {
   return [pressed, trigger] as const;
 }
 
-function NavIconPulse({ pressed, children }: { pressed: boolean; children: ReactNode }) {
+export function NavIconPulse({
+  pressed,
+  children,
+}: {
+  pressed: boolean;
+  children: ReactNode;
+}) {
   return (
     <span className="relative inline-flex items-center justify-center">
       <span
@@ -59,7 +65,8 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";
-  const isChats = pathname === "/chats" || (pathname?.startsWith("/chats/") ?? false);
+  const isChats =
+    pathname === "/chats" || (pathname?.startsWith("/chats/") ?? false);
   const isProfile = username ? pathname === `/profile/${username}` : false;
 
   const [homePressed, triggerHome] = usePressPulse();
@@ -69,7 +76,6 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
 
   const unreadChatCount = useUnreadChatCount(userId);
   const [composeOpen, setComposeOpen] = useState(false);
-
 
   return (
     <>
