@@ -2143,7 +2143,13 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   validates it (watch, youtu.be, shorts, embed, live), and it is sent as a canonical
   `youtube.com/watch?v=` url on a `video` attachment. `FeedItemCard` renders a YouTube `video`
   through `components/feeds/YouTubeEmbed.tsx` (a `youtube-nocookie.com` iframe) and falls back to
-  a plain `<video>` for feeds posted back when files were uploaded. Attachment controls are a
+  `components/feeds/AutoplayVideo.tsx` for feeds posted back when files were uploaded. Both
+  autoplay **muted** once 60% of the player is in the viewport and pause when it leaves, through
+  `hooks/useInViewport.ts` — muted because browsers refuse unmuted autoplay — and skip it under
+  `prefers-reduced-motion`. The YouTube one drives the iframe over the IFrame API's postMessage
+  channel (`enablejsapi=1`), replaying the wanted state on the player's `onReady`, since a command
+  sent before then is dropped. Only `FeedItemCard` opts in (`autoPlayInView`); the composer's
+  preview embed stays still. Attachment controls are a
   Substack-style row of Tabler icon buttons (photo, YouTube, link, emoji) beside Batal/Posting —
   no text labels. The feed-card prompt's own Foto/Video/URL quick actions keep their labels. The emoji
   picker sits in a portaled `Dropdown`, so the modal's scroll area can't clip it.

@@ -22,6 +22,7 @@ import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
+import AutoplayVideo from "./AutoplayVideo";
 import YouTubeEmbed from "./YouTubeEmbed";
 import { parseYouTubeId } from "@/lib/youtube";
 import LinkPreviewCard from "./LinkPreviewCard";
@@ -496,11 +497,14 @@ export default function FeedItemCard({
       )}
       {videoAttachment &&
         (videoYouTubeId ? (
-          <YouTubeEmbed videoId={videoYouTubeId} className="mt-3" />
+          <YouTubeEmbed
+            videoId={videoYouTubeId}
+            className="mt-3"
+            autoPlayInView
+          />
         ) : (
           // Feeds posted before the YouTube-only composer still carry an uploaded file.
-          <video
-            controls
+          <AutoplayVideo
             src={videoAttachment.reference_url}
             className="mt-3 w-full rounded-xl bg-black"
           />
