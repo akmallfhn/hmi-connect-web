@@ -7,11 +7,14 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { officialEntityHref, withActingEntity } from "@/lib/access";
+import { entityProfileHref } from "@/lib/feed-author";
+import type { AccessEntityTypeEnum } from "@/lib/types";
 import { NavIconPulse, usePressPulse } from "../navigations/BottomNav";
 
 interface OfficialBottomNavProps {
-  timelineHref: string;
-  profileHref: string;
+  entityType: AccessEntityTypeEnum;
+  entityId: string;
 }
 
 const TAB_CLASS =
@@ -19,11 +22,14 @@ const TAB_CLASS =
 
 // Mobile twin of the official desktop rail: the entity's timeline, its profile, and the way back out.
 export default function OfficialBottomNav({
-  timelineHref,
-  profileHref,
+  entityType,
+  entityId,
 }: OfficialBottomNavProps) {
   const pathname = usePathname();
+  const timelineHref = officialEntityHref(entityType, entityId);
+  const profileHref = entityProfileHref(entityType, entityId);
   const isTimeline = pathname === timelineHref;
+  const isProfile = pathname === profileHref;
   const [homePressed, triggerHome] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
   const [exitPressed, triggerExit] = usePressPulse();
@@ -45,12 +51,12 @@ export default function OfficialBottomNav({
       </Link>
 
       <Link
-        href={profileHref}
+        href={withActingEntity(profileHref, { entityType, entityId })}
         onClick={triggerProfile}
-        className={`${TAB_CLASS} text-[#5f6573]`}
+        className={`${TAB_CLASS} ${isProfile ? "text-primary" : "text-[#5f6573]"}`}
       >
         <NavIconPulse pressed={profilePressed}>
-          <IconUserCircle className="size-5" stroke={2} />
+          <IconUserCircle className="size-5" stroke={isProfile ? 2.4 : 2} />
         </NavIconPulse>
         Profil HMI
       </Link>

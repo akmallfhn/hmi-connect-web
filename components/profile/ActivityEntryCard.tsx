@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   FileText,
@@ -12,6 +14,7 @@ import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import QuotedFeed from "../feeds/QuotedFeed";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 const TYPE_LABEL: Record<ActivityTypeEnum, string> = {
   post: "Memposting",
@@ -28,12 +31,13 @@ const TYPE_ICON: Record<ActivityTypeEnum, typeof FileText> = {
 };
 
 export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
+  const actingHref = useActingHref();
   const { type, feed, comment } = entry;
   const Icon = TYPE_ICON[type];
   const author = resolveFeedAuthor(feed);
 
   return (
-    <Link href={`/feeds/${feed.id}`} className="block rounded-xl">
+    <Link href={actingHref(`/feeds/${feed.id}`)} className="block rounded-xl">
       <div className="flex items-center gap-1.5 text-xs font-medium text-[#5f6573] xl:text-[13px]">
         <Icon className="size-3.5" />
         {TYPE_LABEL[type]}

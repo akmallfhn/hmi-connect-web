@@ -6,6 +6,7 @@ import Avatar from "../common/Avatar";
 import Modal from "./Modal";
 import type { FollowUserEntry } from "@/apis/users";
 import { listFollowers, listFollowing } from "@/lib/actions";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface FollowListModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ export default function FollowListModal({
   userId,
   type,
 }: FollowListModalProps) {
+  const actingHref = useActingHref();
   const [users, setUsers] = useState<FollowUserEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState(1);
@@ -69,13 +71,15 @@ export default function FollowListModal({
         )}
         {loaded && users.length === 0 && (
           <p className="py-4 text-center text-sm text-[#5f6573]">
-            {type === "following" ? "Belum mengikuti siapa pun." : "Belum ada pengikut."}
+            {type === "following"
+              ? "Belum mengikuti siapa pun."
+              : "Belum ada pengikut."}
           </p>
         )}
         {users.map((user) => (
           <Link
             key={user.id}
-            href={`/profile/${user.username}`}
+            href={actingHref(`/profile/${user.username}`)}
             onClick={onClose}
             className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
           >
@@ -84,7 +88,9 @@ export default function FollowListModal({
               <p className="truncate text-sm font-medium text-[#172033]">
                 {user.full_name}
               </p>
-              <p className="truncate text-xs text-[#5f6573]">@{user.username}</p>
+              <p className="truncate text-xs text-[#5f6573]">
+                @{user.username}
+              </p>
             </div>
           </Link>
         ))}

@@ -58,6 +58,54 @@ export function parseOfficialEntityPath(
   };
 }
 
+// `?as=branch:{id}` lets /feeds/* and /profile/* render from an official account's point of view.
+export const ACTING_ENTITY_PARAM = "as";
+
+export type ActingEntityRef = {
+  entityType: AccessEntityTypeEnum;
+  entityId: string;
+};
+
+export function formatActingEntityParam(entity: ActingEntityRef): string {
+  return `${entity.entityType}:${entity.entityId}`;
+}
+
+export function parseActingEntityParam(
+  value: string | string[] | null | undefined,
+): ActingEntityRef | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  const separator = raw.indexOf(":");
+  const entityType = raw.slice(0, separator);
+  const entityId = raw.slice(separator + 1);
+  if (separator < 1 || !entityId || !(entityType in ADMIN_ENTITY_BASE_PATH)) {
+    return null;
+  }
+  return { entityType: entityType as AccessEntityTypeEnum, entityId };
+}
+
+// Feed detail, user profiles, and the five entity profiles understand the param; nothing else does.
+const ACTING_ENTITY_PATH = new RegExp(
+  `^/(feeds|profile|${Object.values(ADMIN_ENTITY_BASE_PATH)
+    .map((path) => path.slice(1))
+    .join("|")})/`,
+);
+
+export function supportsActingEntity(pathname: string): boolean {
+  return ACTING_ENTITY_PATH.test(pathname);
+}
+
+export function withActingEntity(
+  href: string,
+  entity: ActingEntityRef | null | undefined,
+): string {
+  if (!entity || !supportsActingEntity(href)) return href;
+  const separator = href.includes("?") ? "&" : "?";
+  return `${href}${separator}${ACTING_ENTITY_PARAM}=${encodeURIComponent(
+    formatActingEntityParam(entity),
+  )}`;
+}
+
 // Super Admin sits outside access_grants entirely — it is the root of the grant chain.
 export function isSuperAdmin(user: SessionUser | null | undefined): boolean {
   return user?.role_name === "Super Admin";

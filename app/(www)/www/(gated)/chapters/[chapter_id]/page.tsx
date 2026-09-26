@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getChapterDetail, listAllChaptersAdmin } from "@/apis/chapters";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { entityProfileMetadata } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface ChapterProfileRouteProps {
   params: Promise<{ chapter_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -28,6 +30,7 @@ export async function generateMetadata({
 
 export default async function ChapterProfile({
   params,
+  searchParams,
 }: ChapterProfileRouteProps) {
   const { chapter_id } = await params;
   const [{ user: viewer }, chapter] = await Promise.all([
@@ -36,6 +39,12 @@ export default async function ChapterProfile({
   ]);
 
   if (!chapter || chapter.status !== "active") return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   // A Komisariat's own kader count is only exposed on its Cabang's chapter list row.
   const [siblings, activity] = await Promise.all([
@@ -80,6 +89,7 @@ export default async function ChapterProfile({
         activities: activity.list,
         children: null,
       }}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

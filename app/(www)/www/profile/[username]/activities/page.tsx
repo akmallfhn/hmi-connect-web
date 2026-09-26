@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSession } from "@/apis/session";
-import {
-  getUserByUsername,
-  listUserActivity,
-} from "@/apis/users";
+import { getUserByUsername, listUserActivity } from "@/apis/users";
 import ProfileActivitiesPage from "@/components/pages/ProfileActivitiesPage";
+import { resolveActingEntity } from "@/lib/acting-entity";
 
 interface ActivitiesRouteProps {
   params: Promise<{ username: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -16,7 +15,9 @@ export async function generateMetadata({
 }: ActivitiesRouteProps): Promise<Metadata> {
   const { username } = await params;
   const profile = await getUserByUsername(username);
-  const title = profile ? `Aktivitas ${profile.full_name}` : "Profil Tidak Ditemukan";
+  const title = profile
+    ? `Aktivitas ${profile.full_name}`
+    : "Profil Tidak Ditemukan";
 
   return {
     title,
@@ -25,10 +26,17 @@ export async function generateMetadata({
   };
 }
 
-export default async function Activities({ params }: ActivitiesRouteProps) {
+export default async function Activities({
+  params,
+  searchParams,
+}: ActivitiesRouteProps) {
   const { username } = await params;
+  const { as } = (await searchParams) ?? {};
   const { sessionToken, user: viewer } = await getSession();
-  const profile = await getUserByUsername(username, sessionToken);
+  const [profile, actingEntity] = await Promise.all([
+    getUserByUsername(username, sessionToken),
+    resolveActingEntity(viewer, as),
+  ]);
 
   if (!profile || profile.status !== "active") return notFound();
 
@@ -42,6 +50,7 @@ export default async function Activities({ params }: ActivitiesRouteProps) {
       username={username}
       initialItems={activities}
       initialHasMore={hasMore}
+      actingEntity={actingEntity}
       viewer={{
         fullName: viewer?.full_name,
         avatar: viewer?.avatar,

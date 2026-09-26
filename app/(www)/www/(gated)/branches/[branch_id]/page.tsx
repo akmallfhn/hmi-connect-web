@@ -5,12 +5,14 @@ import { listAllChaptersAdmin } from "@/apis/chapters";
 import { listCoordinatingChaptersAdmin } from "@/apis/coordinating-chapters";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface BranchProfileRouteProps {
   params: Promise<{ branch_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -30,6 +32,7 @@ export async function generateMetadata({
 
 export default async function BranchProfile({
   params,
+  searchParams,
 }: BranchProfileRouteProps) {
   const { branch_id } = await params;
   const [{ user: viewer }, branch] = await Promise.all([
@@ -38,6 +41,12 @@ export default async function BranchProfile({
   ]);
 
   if (!branch || branch.status !== "active") return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   // A Cabang's own kader/Komisariat counts are only exposed on its Badko's branch list row.
   const [siblings, chapters, coordinatingChapters, activity] =
@@ -104,6 +113,7 @@ export default async function BranchProfile({
           })),
         },
       }}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

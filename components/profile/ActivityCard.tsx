@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { ActivityEntry } from "@/apis/feeds";
 import ActivityEntryCard from "./ActivityEntryCard";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface ActivityCardProps {
   entries: ActivityEntry[];
@@ -16,6 +19,7 @@ export default function ActivityCard({
   title = "Aktivitas",
   emptyMessage = "Belum ada aktivitas.",
 }: ActivityCardProps) {
+  const actingHref = useActingHref();
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       <h2 className="text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
@@ -41,7 +45,7 @@ export default function ActivityCard({
 
       {seeAllHref && entries.length > 0 && (
         <Link
-          href={seeAllHref}
+          href={actingHref(seeAllHref)}
           className="mt-4 block border-t border-[#e6e9ef] pt-3 text-center text-xs font-semibold text-primary hover:underline xl:text-sm"
         >
           Lihat semua

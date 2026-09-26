@@ -5,15 +5,18 @@ import {
   listAllFeedComments,
   type FeedUploadAttachment,
 } from "@/apis/feeds";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { getSession } from "@/apis/session";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
 import PageMargin from "@/components/common/PageMargin";
-import BottomNav from "@/components/navigations/BottomNav";
+import ActingAwareBottomNav from "@/components/official/ActingAwareBottomNav";
+import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import Header from "@/components/navigations/Header";
 
 interface FeedDetailRouteProps {
   params: Promise<{ feed_id: string }>;
+  searchParams: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -58,47 +61,59 @@ export async function generateMetadata({
   };
 }
 
-export default async function FeedDetailPage({ params }: FeedDetailRouteProps) {
-  const { feed_id } = await params;
+export default async function FeedDetailPage({
+  params,
+  searchParams,
+}: FeedDetailRouteProps) {
+  const [{ feed_id }, { as }] = await Promise.all([params, searchParams]);
   const { sessionToken, user } = await getSession();
 
-  const [feed, comments] = await Promise.all([
+  const [feed, comments, actingEntity] = await Promise.all([
     getFeedById(feed_id, sessionToken),
     listAllFeedComments(feed_id, { token: sessionToken }),
+    resolveActingEntity(user, as),
   ]);
 
   if (!feed) return notFound();
 
+  // With a valid ?as=, every like, comment, and repost here is the entity's, not the viewer's.
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
-      <Header
-        fullName={user?.full_name}
-        avatar={user?.avatar}
-        userId={user?.id}
-        username={user?.username}
-        verificationStatus={user?.verification_status}
-        mobileBackTitle="Postingan"
-      />
+    <ActingEntityProvider entity={actingEntity}>
+      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+        <Header
+          fullName={user?.full_name}
+          avatar={user?.avatar}
+          userId={user?.id}
+          username={user?.username}
+          verificationStatus={user?.verification_status}
+          mobileBackTitle="Postingan"
+        />
 
-      <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-        <div className="mx-auto grid max-w-[600px] grid-cols-1 gap-1.5 lg:gap-4">
-          <main className="min-w-0">
-            <FeedItemCard
-              feed={feed}
-              currentUserId={user?.id}
-              currentUserName={user?.full_name}
-              currentUserAvatar={user?.avatar}
-              userStatus={user?.status}
-              verificationStatus={user?.verification_status}
-              initialComments={comments}
-              defaultShowComments
-              showViewPostAction={false}
-            />
-          </main>
-        </div>
-      </PageMargin>
+        <PageMargin noMobilePadding className="pb-6 lg:pt-6">
+          <div className="mx-auto grid max-w-[600px] grid-cols-1 gap-1.5 lg:gap-4">
+            <main className="min-w-0">
+              <FeedItemCard
+                feed={feed}
+                currentUserId={user?.id}
+                currentUserName={user?.full_name}
+                currentUserAvatar={user?.avatar}
+                userStatus={user?.status}
+                verificationStatus={user?.verification_status}
+                initialComments={comments}
+                defaultShowComments
+                showViewPostAction={false}
+                authorEntity={actingEntity ?? undefined}
+              />
+            </main>
+          </div>
+        </PageMargin>
 
-      <BottomNav userId={user?.id} username={user?.username} />
-    </div>
+        <ActingAwareBottomNav
+          actingEntity={actingEntity}
+          userId={user?.id}
+          username={user?.username}
+        />
+      </div>
+    </ActingEntityProvider>
   );
 }

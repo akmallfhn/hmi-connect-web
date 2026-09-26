@@ -4,12 +4,14 @@ import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingChapterProfileRouteProps {
   params: Promise<{ coordinating_chapter_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -33,6 +35,7 @@ export async function generateMetadata({
 
 export default async function CoordinatingChapterProfile({
   params,
+  searchParams,
 }: CoordinatingChapterProfileRouteProps) {
   const { coordinating_chapter_id } = await params;
   const [{ user: viewer }, coordinatingChapter] = await Promise.all([
@@ -42,6 +45,12 @@ export default async function CoordinatingChapterProfile({
 
   if (!coordinatingChapter || coordinatingChapter.status !== "active")
     return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   const [chapters, activity] = await Promise.all([
     listAllChaptersAdmin({
@@ -99,6 +108,7 @@ export default async function CoordinatingChapterProfile({
           })),
         },
       }}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

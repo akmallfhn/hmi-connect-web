@@ -1615,6 +1615,34 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   with `components/official/OfficialBottomNav.tsx`: Beranda (this timeline), Profil HMI (the
   entity profile), and a destructive Mode User tab to `/settings`. It reuses `BottomNav`'s exported
   `usePressPulse`/`NavIconPulse`, so the tap feedback matches.
+  **Leaving the timeline keeps the entity's point of view through `?as={entity_type}:{entity_id}`.**
+  `/feeds/[feed_id]`, `/profile/[username]`, `/profile/[username]/activities`, and the five entity
+  profile routes plus their `/activities` twins read that param
+  through `lib/acting-entity.ts#resolveActingEntity` (`server-only`), which applies the official
+  pages' own gate — `holdsGrantAtEntity`, so `Super Admin` alone does not qualify — and resolves
+  the name from the session grant and the logo from the same `listGrantEntityLogos` lookup the
+  `(www)` layout uses (`cache`d, so layout and page share one request). An invalid or unheld param
+  is simply ignored and the page renders personally. When it resolves, the feed detail passes it as
+  `FeedItemCard`'s `authorEntity`, so like/comment/repost all go out as the entity; the profile is
+  read-only — `isOwnProfile` is forced `false` even on your own profile, and `ProfileHeader`'s
+  `readOnly` drops follow, chat, edit, share, and the settings gear, while `SuggestedConnectionsCard`
+  and the completion card disappear. The entity profile pages drop `SuggestedConnectionsCard` the same
+  way, and the rail's Profile item, `OfficialBottomNav`'s Profil HMI tab, and the official greeting
+  all link to the entity's profile **with** `?as=`, so opening it keeps entity mode. Edit/delete
+  follow the mode too: acting as an entity, `FeedItemCard` only offers them on feeds written as that
+  entity (`isOwnPersonalFeed` is forced `false`), and `CommentItem` hides personal comment delete —
+  those actions come back only in user mode. Both swap `BottomNav` for `OfficialBottomNav` via
+  `components/official/ActingAwareBottomNav.tsx`, and the desktop rail enters its entity mode too:
+  it reads the param with `useSearchParams` (hence the `Suspense` around it in
+  `MainSiteDesktopShell`) and only switches when the viewer's grant list actually holds that
+  entity. The param is carried from link to link by
+  `hooks/useActingEntity.tsx`: `ActingEntityProvider` wraps the official
+  timeline and every page rendered as the entity, and `useActingHref()` — used by `FeedItemCard`,
+  `CommentItem`, `QuotedFeed`, `ActivityEntryCard`, `ActivityCard`, `ReactorsListModal`, and
+  `FollowListModal`, `EntityChildrenCard`, `EntityProfileHeader`, `EntitySummarySidebar` — appends it
+  through `lib/access.ts#withActingEntity`, which only touches `/feeds/`, `/profile/`, and the five
+  entity profile paths (`supportsActingEntity`) and passes every other link through untouched. Add
+  `useActingHref` to any new component that links to either inside a feed card.
   The timeline is `FeedTimeline`'s entity twin: the same `CreateFeedForms` composer above the same
   `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (reposts
   keep their "X membagikan ulang" header), with no news/suggested/quick-menu inserts. The entity's

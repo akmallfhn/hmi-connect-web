@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getOrganizationDetail } from "@/apis/organizations";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityActivitiesPage from "@/components/pages/EntityActivitiesPage";
 import { entityActivitiesMetadata } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface OrganizationActivitiesRouteProps {
   params: Promise<{ organization_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -28,6 +30,7 @@ export async function generateMetadata({
 
 export default async function OrganizationActivities({
   params,
+  searchParams,
 }: OrganizationActivitiesRouteProps) {
   const { organization_id } = await params;
   const [{ user: viewer }, organization] = await Promise.all([
@@ -36,6 +39,12 @@ export default async function OrganizationActivities({
   ]);
 
   if (!organization || organization.status !== "active") return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   const activity = await listEntityActivity("organization", organization_id, {
     page: 1,
@@ -53,6 +62,7 @@ export default async function OrganizationActivities({
       }}
       initialItems={activity.list}
       initialHasMore={activity.hasMore}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

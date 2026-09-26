@@ -26,6 +26,7 @@ import {
   type UserStatusEnum,
   type VerificationStatusEnum,
 } from "@/lib/types";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface CommentItemProps {
   comment: FeedComment;
@@ -50,23 +51,32 @@ export default function CommentItem({
   onDeleted,
   authorEntity,
 }: CommentItemProps) {
+  const actingHref = useActingHref();
   const requireVerified = useInteractionGuard({
     userId: currentUserId,
     userStatus,
     verificationStatus,
   });
   const author = resolveCommentAuthor(comment);
-  const reaction = useReaction(isReply ? "comment_reply" : "comment", comment.id, {
-    myReaction: comment.my_reaction,
-    total: comment.reaction_count.total,
-    byType: comment.reaction_count.by_type,
-    authorEntity,
-  });
+  const reaction = useReaction(
+    isReply ? "comment_reply" : "comment",
+    comment.id,
+    {
+      myReaction: comment.my_reaction,
+      total: comment.reaction_count.total,
+      byType: comment.reaction_count.by_type,
+      authorEntity,
+    },
+  );
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isOwnComment = Boolean(currentUserId) && comment.user_id === currentUserId;
+  // Personal delete only in user mode — acting as an entity isn't acting as yourself.
+  const isOwnComment =
+    !authorEntity &&
+    Boolean(currentUserId) &&
+    comment.user_id === currentUserId;
 
   const [expanded, setExpanded] = useState(false);
   const [replies, setReplies] = useState<FeedComment[]>([]);
@@ -124,7 +134,9 @@ export default function CommentItem({
 
   function handleDelete() {
     setDeleting(true);
-    const request = isReply ? deleteCommentReply(comment.id) : deleteComment(comment.id);
+    const request = isReply
+      ? deleteCommentReply(comment.id)
+      : deleteComment(comment.id);
     request
       .then((result) => {
         if (isSuccessStatus(result.status)) {
@@ -147,14 +159,11 @@ export default function CommentItem({
   return (
     <div className="flex items-start gap-2">
       <Link
-        href={author.href}
+        href={actingHref(author.href)}
         aria-label={`Lihat profil ${author.name}`}
         className="shrink-0 rounded-full"
       >
-        <FeedAuthorAvatar
-          author={author}
-          size={isReply ? 28 : 32}
-        />
+        <FeedAuthorAvatar author={author} size={isReply ? 28 : 32} />
       </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-xl bg-[#f5f7fb] px-3 py-2">
@@ -202,7 +211,9 @@ export default function CommentItem({
               open={showReactionPicker}
               onClose={() => setShowReactionPicker(false)}
               activeReaction={reaction.activeReaction}
-              onSelect={(type) => reaction.apply(reaction.activeReaction === type ? null : type)}
+              onSelect={(type) =>
+                reaction.apply(reaction.activeReaction === type ? null : type)
+              }
             />
           </span>
 
@@ -222,7 +233,9 @@ export default function CommentItem({
               onClick={handleToggleExpanded}
               className="cursor-pointer font-semibold text-secondary underline-offset-2 hover:underline"
             >
-              {expanded ? `Sembunyikan ${replyCount} balasan` : `Tampilkan ${replyCount} balasan`}
+              {expanded
+                ? `Sembunyikan ${replyCount} balasan`
+                : `Tampilkan ${replyCount} balasan`}
             </button>
           )}
           {isOwnComment && (

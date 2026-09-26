@@ -1,3 +1,5 @@
+"use client";
+
 import { Building2, CalendarDays, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,6 +7,7 @@ import type { BranchTypeEnum } from "@/lib/types";
 import Label from "../common/Label";
 import LogoHmi from "../svg/LogoHmi";
 import { formatMonthYear } from "@/lib/time-manipulation";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 export type EntityStat = {
   label: string;
@@ -38,6 +41,7 @@ export default function EntityProfileHeader({
   createdAt,
   stats,
 }: EntityProfileHeaderProps) {
+  const actingHref = useActingHref();
   const registeredLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   return (
@@ -98,7 +102,7 @@ export default function EntityProfileHeader({
                     {index > 0 && " • "}
                     {affiliation.href ? (
                       <Link
-                        href={affiliation.href}
+                        href={actingHref(affiliation.href)}
                         className="hover:text-primary hover:underline"
                       >
                         {affiliation.label}

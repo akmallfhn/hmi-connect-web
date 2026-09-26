@@ -64,6 +64,7 @@ import {
   type UserStatusEnum,
   type VerificationStatusEnum,
 } from "@/lib/types";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface FeedItemCardProps {
   feed: Feed;
@@ -266,7 +267,9 @@ export default function FeedItemCard({
   const [reposted, setReposted] = useState(Boolean(initialReposted));
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
-  const isOwnPersonalFeed = isOwnFeed && !feed.author_entity_type;
+  // Acting as an entity, your personal posts aren't the entity's to edit or delete.
+  const isOwnPersonalFeed =
+    !authorEntity && isOwnFeed && !feed.author_entity_type;
   const isOwnEntityFeed =
     Boolean(authorEntity) &&
     feed.author_entity_type === authorEntity?.type &&
@@ -290,6 +293,7 @@ export default function FeedItemCard({
   const [postingComment, startCommentTransition] = useTransition();
 
   const attachments = feed.attachments ?? [];
+  const actingHref = useActingHref();
   const photoAttachments = attachments.filter(
     (item): item is FeedUploadAttachment => item.type === "photo",
   );
@@ -422,7 +426,10 @@ export default function FeedItemCard({
         </div>
       )}
       <div className="flex items-start justify-between gap-3">
-        <Link href={author.href} className="flex min-w-0 items-start gap-3">
+        <Link
+          href={actingHref(author.href)}
+          className="flex min-w-0 items-start gap-3"
+        >
           {/* Two instances, not one CSS-scaled node: Avatar sizes itself with inline width/height. */}
           <span className="lg:hidden">
             <FeedAuthorAvatar author={author} size={40} />
@@ -456,7 +463,7 @@ export default function FeedItemCard({
             <div className="flex flex-col py-1">
               {showViewPostAction && (
                 <Link
-                  href={`/feeds/${feed.id}`}
+                  href={actingHref(`/feeds/${feed.id}`)}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
                 >
                   <Eye className="size-4 text-[#5f6573]" />

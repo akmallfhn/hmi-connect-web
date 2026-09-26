@@ -1,9 +1,10 @@
 import type { FeedTimelineItem } from "@/apis/feeds";
 import type { SessionUser } from "@/apis/session";
-import { officialEntityHref } from "@/lib/access";
+import { withActingEntity } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
+import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import OfficialBottomNav from "../official/OfficialBottomNav";
 import OfficialGreetingBar from "../official/OfficialGreetingBar";
 import OfficialTimeline from "../official/OfficialTimeline";
@@ -27,39 +28,45 @@ export default function OfficialAccountPage({
   initialHasMore,
   viewer,
 }: OfficialAccountPageProps) {
-  const profileHref = entityProfileHref(entityType, entityId);
+  const profileHref = withActingEntity(
+    entityProfileHref(entityType, entityId),
+    {
+      entityType,
+      entityId,
+    },
+  );
+  const authorEntity = { type: entityType, id: entityId, name, imageUrl };
 
   // No personal Header or BottomNav here: on mobile the entity gets its own greeting and tab bar.
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
-      <OfficialGreetingBar
-        name={name}
-        imageUrl={imageUrl}
-        profileHref={profileHref}
-      />
+    <ActingEntityProvider entity={authorEntity}>
+      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+        <OfficialGreetingBar
+          name={name}
+          imageUrl={imageUrl}
+          profileHref={profileHref}
+        />
 
-      <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-        {/* The desktop rail carries Timeline and Profile here, so the page is one centered column. */}
-        <div className="mx-auto lg:max-w-[600px]">
-          <main className="min-w-0">
-            <OfficialTimeline
-              authorEntity={{ type: entityType, id: entityId, name, imageUrl }}
-              initialItems={initialItems}
-              initialHasMore={initialHasMore}
-              currentUserId={viewer?.id}
-              currentUserName={viewer?.full_name}
-              currentUserAvatar={viewer?.avatar}
-              userStatus={viewer?.status}
-              verificationStatus={viewer?.verification_status}
-            />
-          </main>
-        </div>
-      </PageMargin>
+        <PageMargin noMobilePadding className="pb-6 lg:pt-6">
+          {/* The desktop rail carries Timeline and Profile here, so the page is one centered column. */}
+          <div className="mx-auto lg:max-w-[600px]">
+            <main className="min-w-0">
+              <OfficialTimeline
+                authorEntity={authorEntity}
+                initialItems={initialItems}
+                initialHasMore={initialHasMore}
+                currentUserId={viewer?.id}
+                currentUserName={viewer?.full_name}
+                currentUserAvatar={viewer?.avatar}
+                userStatus={viewer?.status}
+                verificationStatus={viewer?.verification_status}
+              />
+            </main>
+          </div>
+        </PageMargin>
 
-      <OfficialBottomNav
-        timelineHref={officialEntityHref(entityType, entityId)}
-        profileHref={profileHref}
-      />
-    </div>
+        <OfficialBottomNav entityType={entityType} entityId={entityId} />
+      </div>
+    </ActingEntityProvider>
   );
 }

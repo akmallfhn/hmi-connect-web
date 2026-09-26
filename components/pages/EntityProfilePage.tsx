@@ -11,7 +11,9 @@ import EntityProfileHeader, {
   type EntityStat,
 } from "../entity/EntityProfileHeader";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
-import BottomNav from "../navigations/BottomNav";
+import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
+import ActingAwareBottomNav from "../official/ActingAwareBottomNav";
+import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
 import ActivityCard from "../profile/ActivityCard";
@@ -41,56 +43,65 @@ interface EntityProfilePageProps {
   entity: EntityProfileData;
   // The session user as-is — every entity route renders the same chrome, so mapping it here keeps five routes from repeating it.
   viewer: SessionUser | null;
+  // Set by a valid ?as=: browsing as an official account, so personal suggestions and the tab bar go.
+  actingEntity?: ComposerAuthorEntity | null;
 }
 
 export default function EntityProfilePage({
   entity,
   viewer,
+  actingEntity,
 }: EntityProfilePageProps) {
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
-      <Header
-        fullName={viewer?.full_name}
-        avatar={viewer?.avatar}
-        userId={viewer?.id}
-        username={viewer?.username}
-        verificationStatus={viewer?.verification_status}
-      />
+    <ActingEntityProvider entity={actingEntity ?? null}>
+      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+        <Header
+          fullName={viewer?.full_name}
+          avatar={viewer?.avatar}
+          userId={viewer?.id}
+          username={viewer?.username}
+          verificationStatus={viewer?.verification_status}
+        />
 
-      <PageMargin noMobilePadding className="pb-6 lg:py-6">
-        <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
-          <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
-            <EntityProfileHeader
-              name={entity.name}
-              imageUrl={entity.imageUrl}
-              type={entity.type}
-              affiliations={entity.affiliations}
-              createdAt={entity.createdAt}
-              stats={entity.stats}
-            />
-            <AboutCard bio={entity.description ?? undefined} />
-            {entity.children && (
-              <EntityChildrenCard
-                title={entity.children.title}
-                items={entity.children.items}
-                emptyMessage={entity.children.emptyMessage}
+        <PageMargin noMobilePadding className="pb-6 lg:py-6">
+          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
+            <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
+              <EntityProfileHeader
+                name={entity.name}
+                imageUrl={entity.imageUrl}
+                type={entity.type}
+                affiliations={entity.affiliations}
+                createdAt={entity.createdAt}
+                stats={entity.stats}
               />
-            )}
-            <ActivityCard
-              entries={entity.activities}
-              seeAllHref={`${entityProfileHref(entity.entityType, entity.entityId)}/activities`}
-              title="Postingan"
-              emptyMessage="Belum ada postingan."
-            />
+              <AboutCard bio={entity.description ?? undefined} />
+              {entity.children && (
+                <EntityChildrenCard
+                  title={entity.children.title}
+                  items={entity.children.items}
+                  emptyMessage={entity.children.emptyMessage}
+                />
+              )}
+              <ActivityCard
+                entries={entity.activities}
+                seeAllHref={`${entityProfileHref(entity.entityType, entity.entityId)}/activities`}
+                title="Postingan"
+                emptyMessage="Belum ada postingan."
+              />
+            </div>
+
+            <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+              {!actingEntity && <SuggestedConnectionsCard />}
+            </aside>
           </div>
+        </PageMargin>
 
-          <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-            <SuggestedConnectionsCard />
-          </aside>
-        </div>
-      </PageMargin>
-
-      <BottomNav userId={viewer?.id} username={viewer?.username} />
-    </div>
+        <ActingAwareBottomNav
+          actingEntity={actingEntity}
+          userId={viewer?.id}
+          username={viewer?.username}
+        />
+      </div>
+    </ActingEntityProvider>
   );
 }

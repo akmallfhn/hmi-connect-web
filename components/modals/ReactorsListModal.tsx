@@ -8,6 +8,7 @@ import type { Reactor } from "@/apis/reactions";
 import { listReactors } from "@/lib/actions";
 import type { ReactionTargetTypeEnum } from "@/lib/types";
 import { resolveEntityAuthor } from "@/lib/feed-author";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface ReactorsListModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ export default function ReactorsListModal({
   targetType,
   targetId,
 }: ReactorsListModalProps) {
+  const actingHref = useActingHref();
   const [reactors, setReactors] = useState<Reactor[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState(1);
@@ -63,7 +65,9 @@ export default function ReactorsListModal({
           <p className="py-4 text-center text-sm text-[#5f6573]">Memuat...</p>
         )}
         {loaded && reactors.length === 0 && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">Belum ada reaksi.</p>
+          <p className="py-4 text-center text-sm text-[#5f6573]">
+            Belum ada reaksi.
+          </p>
         )}
         {reactors.map((reactor) => {
           const entityAuthor = resolveEntityAuthor(reactor);
@@ -77,7 +81,7 @@ export default function ReactorsListModal({
           return (
             <Link
               key={`${reactor.id}-${reactor.author_entity_type ?? "user"}-${reactor.author_entity_id ?? "self"}`}
-              href={author.href}
+              href={actingHref(author.href)}
               onClick={onClose}
               className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
             >

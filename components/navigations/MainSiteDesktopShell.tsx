@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import MainSiteDesktopSidebar from "./MainSiteDesktopSidebar";
 import VerificationBanner from "./VerificationBanner";
@@ -52,14 +52,17 @@ export default function MainSiteDesktopShell({
       />
 
       <div className="flex flex-1">
-        <MainSiteDesktopSidebar
-          userId={userId}
-          avatar={avatar}
-          username={username}
-          userStatus={userStatus}
-          verificationStatus={verificationStatus}
-          isAlumni={isAlumni}
-        />
+        {/* The rail reads ?as=, and useSearchParams needs a boundary on statically rendered routes. */}
+        <Suspense fallback={null}>
+          <MainSiteDesktopSidebar
+            userId={userId}
+            avatar={avatar}
+            username={username}
+            userStatus={userStatus}
+            verificationStatus={verificationStatus}
+            isAlumni={isAlumni}
+          />
+        </Suspense>
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </div>

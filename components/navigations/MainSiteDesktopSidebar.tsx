@@ -19,10 +19,17 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { officialEntityHref, parseOfficialEntityPath } from "@/lib/access";
+import {
+  ACTING_ENTITY_PARAM,
+  officialEntityHref,
+  parseActingEntityParam,
+  parseOfficialEntityPath,
+  supportsActingEntity,
+  withActingEntity,
+} from "@/lib/access";
 import { logoutUser } from "@/lib/actions";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
@@ -104,12 +111,13 @@ type RailNavItem = {
 
 // On an official-account page the rail speaks for that entity: its timeline and its public profile.
 function officialNavItems(
-  official: NonNullable<ReturnType<typeof parseOfficialEntityPath>>
+  official: NonNullable<ReturnType<typeof parseOfficialEntityPath>>,
 ): RailNavItem[] {
   const timelineHref = officialEntityHref(
     official.entityType,
-    official.entityId
+    official.entityId,
   );
+  const profileHref = entityProfileHref(official.entityType, official.entityId);
   return [
     {
       label: "Timeline",
@@ -119,9 +127,10 @@ function officialNavItems(
     },
     {
       label: "Profile",
-      href: entityProfileHref(official.entityType, official.entityId),
+      // Carries ?as= so the entity's own profile opens in entity mode too.
+      href: withActingEntity(profileHref, official),
       icon: IconUserCircle,
-      matches: () => false,
+      matches: (pathname) => pathname === profileHref,
     },
   ];
 }
@@ -139,19 +148,26 @@ export default function MainSiteDesktopSidebar({
   const unreadChatCount = useUnreadChatCount(userId);
   const { unreadCount } = useNotificationsBell(userId);
   const [loggingOut, setLoggingOut] = useState(false);
-  const official = parseOfficialEntityPath(pathname);
+  const searchParams = useSearchParams();
+  const adminAccess = useHeaderAdminAccess();
+  // Feed detail and profile pages opened with ?as= are viewed as the entity, so the rail follows.
+  const requested =
+    parseOfficialEntityPath(pathname) ??
+    (supportsActingEntity(pathname)
+      ? parseActingEntityParam(searchParams.get(ACTING_ENTITY_PARAM))
+      : null);
+  // Reaching either surface as an entity requires a grant at it, so the layout's grant list names it.
+  const officialGrant = requested
+    ? adminAccess?.grants.find(
+        (grant) =>
+          grant.entity_type === requested.entityType &&
+          grant.entity_id === requested.entityId,
+      )
+    : undefined;
+  const official = officialGrant ? requested : null;
   const navItems: readonly RailNavItem[] = official
     ? officialNavItems(official)
     : NAV_ITEMS;
-  // The official route requires a grant at this entity, so the layout's grant list already names it.
-  const adminAccess = useHeaderAdminAccess();
-  const officialGrant = official
-    ? adminAccess?.grants.find(
-        (grant) =>
-          grant.entity_type === official.entityType &&
-          grant.entity_id === official.entityId
-      )
-    : undefined;
   // Posting needs an activated, verified account — the same bar reactions and comments sit behind.
   const canPost =
     Boolean(userId) &&
@@ -189,7 +205,7 @@ export default function MainSiteDesktopSidebar({
               onClick: () => router.push(nextStep),
             },
           }
-        : undefined
+        : undefined,
     );
   }
 
@@ -230,7 +246,7 @@ export default function MainSiteDesktopSidebar({
               {officialGrant?.entity_name
                 ? formatEntityAuthorName(
                     official.entityType,
-                    officialGrant.entity_name
+                    officialGrant.entity_name,
                   )
                 : "Official Account"}
             </p>

@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import type { Feed, FeedUploadAttachment } from "@/apis/feeds";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 // The read-only preview of an original feed embedded in a quote repost — used both when
 // rendering an existing quote repost (FeedItemCard) and while composing one (CreateFeedForms).
@@ -15,6 +18,7 @@ export default function QuotedFeed({
   feed: Feed;
   linkToDetail?: boolean;
 }) {
+  const actingHref = useActingHref();
   const photo = feed.attachments?.find(
     (item): item is FeedUploadAttachment => item.type === "photo",
   );
@@ -38,7 +42,13 @@ export default function QuotedFeed({
       </p>
       {photo && (
         <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-[#f5f7fb]">
-          <Image src={photo.reference_url} alt="" fill className="object-cover" unoptimized />
+          <Image
+            src={photo.reference_url}
+            alt=""
+            fill
+            className="object-cover"
+            unoptimized
+          />
         </div>
       )}
     </>
@@ -47,7 +57,7 @@ export default function QuotedFeed({
   if (linkToDetail) {
     return (
       <Link
-        href={`/feeds/${feed.id}`}
+        href={actingHref(`/feeds/${feed.id}`)}
         className="mt-3 block rounded-xl border border-[#e6e9ef] p-3 transition hover:bg-[#f5f7fb]"
       >
         {body}

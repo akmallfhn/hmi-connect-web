@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getBranchDetail } from "@/apis/branches";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityActivitiesPage from "@/components/pages/EntityActivitiesPage";
 import { entityActivitiesMetadata } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface BranchActivitiesRouteProps {
   params: Promise<{ branch_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -26,6 +28,7 @@ export async function generateMetadata({
 
 export default async function BranchActivities({
   params,
+  searchParams,
 }: BranchActivitiesRouteProps) {
   const { branch_id } = await params;
   const [{ user: viewer }, branch] = await Promise.all([
@@ -34,6 +37,12 @@ export default async function BranchActivities({
   ]);
 
   if (!branch || branch.status !== "active") return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   const activity = await listEntityActivity("branch", branch_id, {
     page: 1,
@@ -51,6 +60,7 @@ export default async function BranchActivities({
       }}
       initialItems={activity.list}
       initialHasMore={activity.hasMore}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

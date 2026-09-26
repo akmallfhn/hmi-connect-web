@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 export type EntityChildItem = {
   id: string;
@@ -21,6 +24,7 @@ export default function EntityChildrenCard({
   items,
   emptyMessage,
 }: EntityChildrenCardProps) {
+  const actingHref = useActingHref();
   return (
     <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -43,7 +47,7 @@ export default function EntityChildrenCard({
           {items.map((item) => (
             <Link
               key={item.id}
-              href={item.href}
+              href={actingHref(item.href)}
               className="flex min-w-0 items-center gap-3 rounded-xl border border-[#e6e9ef] p-3 transition hover:bg-[#f5f7fb]"
             >
               <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">

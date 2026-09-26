@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityActivitiesPage from "@/components/pages/EntityActivitiesPage";
 import { entityActivitiesMetadata } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingBodyActivitiesRouteProps {
   params: Promise<{ coordinating_body_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -29,6 +31,7 @@ export async function generateMetadata({
 
 export default async function CoordinatingBodyActivities({
   params,
+  searchParams,
 }: CoordinatingBodyActivitiesRouteProps) {
   const { coordinating_body_id } = await params;
   const [{ user: viewer }, coordinatingBody] = await Promise.all([
@@ -38,6 +41,12 @@ export default async function CoordinatingBodyActivities({
 
   if (!coordinatingBody || coordinatingBody.status !== "active")
     return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   const activity = await listEntityActivity(
     "coordinating_body",
@@ -62,6 +71,7 @@ export default async function CoordinatingBodyActivities({
       }}
       initialItems={activity.list}
       initialHasMore={activity.hasMore}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

@@ -1,7 +1,10 @@
+"use client";
+
 import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
+import { useActingHref } from "@/hooks/useActingEntity";
 
 interface EntitySummarySidebarProps {
   name: string;
@@ -15,10 +18,11 @@ export default function EntitySummarySidebar({
   imageUrl,
   href,
 }: EntitySummarySidebarProps) {
+  const actingHref = useActingHref();
   return (
     <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
       <Link
-        href={href}
+        href={actingHref(href)}
         className="flex flex-col items-center gap-2 text-center"
       >
         <span className="relative block size-[72px]">

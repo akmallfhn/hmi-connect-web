@@ -7,12 +7,14 @@ import {
   listCoordinatingBodiesAdmin,
 } from "@/apis/coordinating-bodies";
 import { getSession } from "@/apis/session";
+import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingBodyProfileRouteProps {
   params: Promise<{ coordinating_body_id: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -35,6 +37,7 @@ export async function generateMetadata({
 
 export default async function CoordinatingBodyProfile({
   params,
+  searchParams,
 }: CoordinatingBodyProfileRouteProps) {
   const { coordinating_body_id } = await params;
   const [{ user: viewer }, coordinatingBody] = await Promise.all([
@@ -44,6 +47,12 @@ export default async function CoordinatingBodyProfile({
 
   if (!coordinatingBody || coordinatingBody.status !== "active")
     return notFound();
+
+  const actingEntity = await resolveActingEntity(
+    viewer,
+
+    (await searchParams)?.as,
+  );
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
   const [siblings, branches, activity] = await Promise.all([
@@ -97,6 +106,7 @@ export default async function CoordinatingBodyProfile({
           })),
         },
       }}
+      actingEntity={actingEntity}
       viewer={viewer}
     />
   );

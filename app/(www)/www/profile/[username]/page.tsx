@@ -16,9 +16,11 @@ import {
   listWorkExperiences,
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
+import { resolveActingEntity } from "@/lib/acting-entity";
 
 interface ProfileRouteProps {
   params: Promise<{ username: string }>;
+  searchParams?: Promise<{ as?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -63,14 +65,23 @@ export async function generateMetadata({
   };
 }
 
-export default async function Profile({ params }: ProfileRouteProps) {
+export default async function Profile({
+  params,
+  searchParams,
+}: ProfileRouteProps) {
   const { username } = await params;
+  const { as } = (await searchParams) ?? {};
   const { sessionToken, user: viewer } = await getSession();
-  const profile = await getUserByUsername(username, sessionToken);
+  const [profile, actingEntity] = await Promise.all([
+    getUserByUsername(username, sessionToken),
+    resolveActingEntity(viewer, as),
+  ]);
 
   if (!profile || profile.status !== "active") return notFound();
 
-  const isOwnProfile = Boolean(viewer?.id && viewer.id === profile.id);
+  // Viewed as an entity, even your own profile is someone else's: nothing personal to edit or follow.
+  const isOwnProfile =
+    !actingEntity && Boolean(viewer?.id && viewer.id === profile.id);
 
   // These list* calls are client-secret gated (like getUserByUsername), so they work for anonymous visitors too.
   const [
@@ -103,9 +114,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
       ? getUserByUsername(viewer.username, sessionToken)
       : Promise.resolve(null),
     // Caller-only endpoint, and the checklist is a nudge — unverified accounts have verification to do first.
-    isOwnProfile &&
-    sessionToken &&
-    profile.verification_status === "verified"
+    isOwnProfile && sessionToken && profile.verification_status === "verified"
       ? getProfileCompletion(sessionToken)
       : Promise.resolve(null),
   ]);
@@ -150,6 +159,7 @@ export default async function Profile({ params }: ProfileRouteProps) {
         verificationStatus: viewer?.verification_status,
       }}
       isOwnProfile={isOwnProfile}
+      actingEntity={actingEntity}
       institutions={institutions}
       socialMediaPlatforms={socialMediaPlatforms}
       profileCompletion={

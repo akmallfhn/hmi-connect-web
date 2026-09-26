@@ -30,6 +30,8 @@ import SocialLinks from "./SocialLinks";
 
 interface ProfileHeaderProps {
   viewerId?: string;
+  // Viewed as an official account: follow, chat, and edit all belong to a person, so none render.
+  readOnly?: boolean;
   userId?: string;
   username?: string;
   fullName?: string;
@@ -53,6 +55,7 @@ interface ProfileHeaderProps {
 
 export default function ProfileHeader({
   viewerId,
+  readOnly = false,
   userId,
   username,
   fullName,
@@ -230,7 +233,7 @@ export default function ProfileHeader({
             />
           )}
 
-          <div className="mt-3">{actionButton}</div>
+          {!readOnly && <div className="mt-3">{actionButton}</div>}
         </div>
 
         <div className="mt-3">
