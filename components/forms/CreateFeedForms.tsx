@@ -47,8 +47,10 @@ import type {
   Feed,
   FeedArticleAttachment,
   FeedNewsAttachment,
+  FeedTrainingAttachment,
 } from "@/apis/feeds";
 import LogoHmi from "../svg/LogoHmi";
+import TrainingAttachmentCard from "../feeds/TrainingAttachmentCard";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
 export type ComposerAuthorEntity = {
@@ -112,6 +114,17 @@ export type ComposerArticleDraft = {
   authorAvatar?: string;
 };
 
+// reference_id links the published feed; the remaining fields only make the draft look like the published attachment.
+export type ComposerTrainingDraft = {
+  id: string;
+  name: string;
+  level: "LK1" | "LK2" | "LK3";
+  startDate: string;
+  endDate: string;
+  imageUrl?: string;
+  description?: string;
+};
+
 interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
@@ -121,6 +134,7 @@ interface CreateFeedFormsProps {
   forceOpenSignal?: number;
   forceOpenNews?: ComposerNewsDraft;
   forceOpenArticle?: ComposerArticleDraft;
+  forceOpenTraining?: ComposerTrainingDraft;
 }
 
 type PhotoDraft = {
@@ -231,7 +245,7 @@ function newsPreviewAttachment(news: ComposerNewsDraft): FeedNewsAttachment {
 
 // Previewed through the same card the published feed renders, same reasoning as news above.
 function articlePreviewAttachment(
-  article: ComposerArticleDraft,
+  article: ComposerArticleDraft
 ): FeedArticleAttachment {
   return {
     id: `article-draft-${article.id}`,
@@ -251,6 +265,24 @@ function articlePreviewAttachment(
   };
 }
 
+function trainingPreviewAttachment(
+  training: ComposerTrainingDraft
+): FeedTrainingAttachment {
+  return {
+    id: `training-draft-${training.id}`,
+    type: "training",
+    reference_id: training.id,
+    reference_index: 1,
+    reference_title: training.name,
+    reference_description: training.description ?? null,
+    reference_image_url: training.imageUrl ?? null,
+    reference_level: training.level,
+    reference_start_date: training.startDate,
+    reference_end_date: training.endDate,
+    reference_is_deleted: false,
+  };
+}
+
 export default function CreateFeedForms({
   fullName,
   avatar,
@@ -260,15 +292,19 @@ export default function CreateFeedForms({
   forceOpenSignal,
   forceOpenNews,
   forceOpenArticle,
+  forceOpenTraining,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] =
     useState<FeedUploadAttachmentTypeEnum | null>(null);
   const [initialNews, setInitialNews] = useState<ComposerNewsDraft | undefined>(
-    undefined,
+    undefined
   );
   const [initialArticle, setInitialArticle] = useState<
     ComposerArticleDraft | undefined
+  >(undefined);
+  const [initialTraining, setInitialTraining] = useState<
+    ComposerTrainingDraft | undefined
   >(undefined);
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
@@ -281,10 +317,12 @@ export default function CreateFeedForms({
     mode: FeedUploadAttachmentTypeEnum | null = null,
     news?: ComposerNewsDraft,
     article?: ComposerArticleDraft,
+    training?: ComposerTrainingDraft
   ) {
     setInitialMode(mode);
     setInitialNews(news);
     setInitialArticle(article);
+    setInitialTraining(training);
     setOpen(true);
   }
 
@@ -294,6 +332,8 @@ export default function CreateFeedForms({
       if (forceOpenNews) openComposer(null, forceOpenNews);
       else if (forceOpenArticle)
         openComposer(null, undefined, forceOpenArticle);
+      else if (forceOpenTraining)
+        openComposer(null, undefined, undefined, forceOpenTraining);
       else openComposer();
     }
   }
@@ -350,6 +390,7 @@ export default function CreateFeedForms({
         initialMode={initialMode}
         initialNews={initialNews}
         initialArticle={initialArticle}
+        initialTraining={initialTraining}
         onCreated={onCreated}
       />
     </>
@@ -366,6 +407,7 @@ interface FeedComposerModalProps {
   initialMode?: FeedUploadAttachmentTypeEnum | null;
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
+  initialTraining?: ComposerTrainingDraft;
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
@@ -381,6 +423,7 @@ export function FeedComposerModal({
   initialMode,
   initialNews,
   initialArticle,
+  initialTraining,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -399,6 +442,7 @@ export function FeedComposerModal({
           initialMode={initialMode}
           initialNews={initialNews}
           initialArticle={initialArticle}
+          initialTraining={initialTraining}
           quoteFeed={quoteFeed}
           authorEntity={authorEntity}
           onClose={onClose}
@@ -417,6 +461,7 @@ interface FeedComposerFieldsProps {
   initialMode?: FeedUploadAttachmentTypeEnum | null;
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
+  initialTraining?: ComposerTrainingDraft;
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -430,6 +475,7 @@ function FeedComposerFields({
   initialMode,
   initialNews,
   initialArticle,
+  initialTraining,
   quoteFeed,
   onClose,
   onCreated,
@@ -445,10 +491,13 @@ function FeedComposerFields({
   const [urlValue, setUrlValue] = useState("");
   const [urlActive, setUrlActive] = useState(initialMode === "url");
   const [news, setNews] = useState<ComposerNewsDraft | null>(
-    initialNews ?? null,
+    initialNews ?? null
   );
   const [article, setArticle] = useState<ComposerArticleDraft | null>(
-    initialArticle ?? null,
+    initialArticle ?? null
+  );
+  const [training, setTraining] = useState<ComposerTrainingDraft | null>(
+    initialTraining ?? null
   );
   const [previewUrl, setPreviewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -462,7 +511,9 @@ function FeedComposerFields({
           ? "news"
           : article
             ? "article"
-            : null;
+            : training
+              ? "training"
+              : null;
   const normalizedUrl = normalizeUrl(urlValue);
   const hasValidUrl = urlValue.trim() ? isValidUrl(urlValue) : false;
   const youtubeId = parseYouTubeId(youtubeValue);
@@ -489,7 +540,7 @@ function FeedComposerFields({
     const delay = nextPreviewUrl ? 900 : 0;
     const timeoutId = window.setTimeout(
       () => setPreviewUrl(nextPreviewUrl),
-      delay,
+      delay
     );
     return () => window.clearTimeout(timeoutId);
   }, [hasValidUrl, normalizedUrl, urlActive]);
@@ -527,6 +578,7 @@ function FeedComposerFields({
     clearUrl();
     setNews(null);
     setArticle(null);
+    setTraining(null);
   }
 
   function handleClose() {
@@ -646,7 +698,7 @@ function FeedComposerFields({
       if (!quoteFeed) {
         if (photos.length > 0) {
           const urls = await Promise.all(
-            photos.map((photo) => uploadFeedPhoto(photo.file, userId)),
+            photos.map((photo) => uploadFeedPhoto(photo.file, userId))
           );
           attachment = { type: "photo", urls };
         } else if (youtubeActive && youtubeId) {
@@ -657,6 +709,8 @@ function FeedComposerFields({
           attachment = { type: "news", reference_id: news.id };
         } else if (article) {
           attachment = { type: "article", article_id: article.id };
+        } else if (training) {
+          attachment = { type: "training", reference_id: training.id };
         }
       }
 
@@ -677,7 +731,7 @@ function FeedComposerFields({
           result.message ??
             (quoteFeed
               ? "Gagal membuat quote repost."
-              : "Gagal membuat postingan."),
+              : "Gagal membuat postingan.")
         );
         return;
       }
@@ -685,7 +739,7 @@ function FeedComposerFields({
       toast.success(
         quoteFeed
           ? "Quote repost berhasil dibuat."
-          : "Postingan berhasil dibuat.",
+          : "Postingan berhasil dibuat."
       );
       onCreated?.(result.data);
       clearAttachment();
@@ -695,13 +749,13 @@ function FeedComposerFields({
       console.error("[CreateFeedForms] create feed threw:", err);
       if (isStoragePolicyError(err)) {
         toast.error(
-          "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect.",
+          "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect."
         );
       } else {
         toast.error(
           quoteFeed
             ? "Gagal membuat quote repost. Coba lagi."
-            : "Gagal membuat postingan. Coba lagi.",
+            : "Gagal membuat postingan. Coba lagi."
         );
       }
     } finally {
@@ -837,6 +891,25 @@ function FeedComposerFields({
             size="iconSm"
             className="absolute right-2 top-5"
             aria-label="Hapus artikel"
+          >
+            <IconX className="size-4" stroke={2} />
+          </Button>
+        </div>
+      )}
+
+      {training && (
+        <div className="relative">
+          <TrainingAttachmentCard
+            attachment={trainingPreviewAttachment(training)}
+          />
+          <Button
+            type="button"
+            onClick={() => setTraining(null)}
+            disabled={submitting}
+            variant="dark"
+            size="iconSm"
+            className="absolute right-2 top-5"
+            aria-label="Hapus training"
           >
             <IconX className="size-4" stroke={2} />
           </Button>

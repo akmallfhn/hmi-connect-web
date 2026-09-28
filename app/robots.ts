@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
         "/reset-password/",
         "/auth/forget-password",
         "/articles/create",
+        "/trainings/create",
         "/*/edit",
         "/*?as=",
       ],

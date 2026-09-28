@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, MoreHorizontal, Pencil, Share2 } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Repeat2, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,11 @@ import Button from "../buttons/Button";
 import Dropdown from "../common/Dropdown";
 import Label, { type LabelVariant } from "../common/Label";
 import ArticleShareModal from "./ArticleShareModal";
+import { articleComposeDraft } from "./article-compose-draft";
+import {
+  COMPOSE_INTENT_ARTICLE_KEY,
+  COMPOSE_INTENT_KEY,
+} from "@/lib/constants";
 
 const MENU_ITEM_CLASS =
   "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]";
@@ -28,7 +33,6 @@ function articleHref(article: ArticleListEntry) {
   return `/articles/${article.slug_url || "artikel"}/${article.id}`;
 }
 
-// articles/list carries no description, so keywords stand in as the row's secondary line.
 function parseKeywords(keywords?: string) {
   if (!keywords) return [];
   return keywords
@@ -64,6 +68,19 @@ export default function ArticleListRow({
       event.stopPropagation();
       router.push(path);
     };
+  }
+
+  function repostToFeed(event: React.MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const draft = articleComposeDraft(article);
+    window.sessionStorage.setItem(
+      COMPOSE_INTENT_ARTICLE_KEY,
+      JSON.stringify(draft),
+    );
+    window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
+    window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
+    router.push(viewerId ? "/" : "/auth/login?redirectTo=%2F");
   }
 
   return (
@@ -103,6 +120,16 @@ export default function ArticleListRow({
           </div>
 
           <div className="-ml-2 mt-3 flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={repostToFeed}
+              aria-label={`Repost artikel ${article.title} ke feed`}
+              title="Repost ke feed"
+              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+            >
+              <Repeat2 className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

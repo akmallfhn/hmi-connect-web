@@ -14,9 +14,10 @@ export type TrainingListEntry = {
   id: string;
   name: string;
   level: TrainingStatusEnum;
-  organizer_type: TrainingOrganizerTypeEnum;
-  organizer_id: string;
-  organizer_name?: string;
+  // The organizer pair is optional; organizer_name is free text stored as sent, never derived from it.
+  organizer_type: TrainingOrganizerTypeEnum | null;
+  organizer_id: string | null;
+  organizer_name?: string | null;
   start_date: string;
   end_date: string;
   is_registration_open: boolean;
@@ -180,16 +181,16 @@ export async function registerTraining(
   });
 }
 
+// The caller becomes the contact person and registration starts open; change either through updateTraining.
 export type CreateTrainingPayload = {
   name: string;
   description?: string;
   level: TrainingStatusEnum;
-  organizer_type: TrainingOrganizerTypeEnum;
-  organizer_id: string;
-  contact_person_id: string;
+  organizer_type?: TrainingOrganizerTypeEnum;
+  organizer_id?: string;
+  organizer_name?: string;
   start_date: string;
   end_date: string;
-  is_registration_open?: boolean;
   location_name?: string;
   location_url?: string;
   image_url?: string;
@@ -219,6 +220,7 @@ export type UpdateTrainingPayload = {
   level?: TrainingStatusEnum;
   organizer_type?: TrainingOrganizerTypeEnum;
   organizer_id?: string;
+  organizer_name?: string;
   contact_person_id?: string;
   start_date?: string;
   end_date?: string;

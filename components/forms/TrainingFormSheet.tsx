@@ -4,10 +4,12 @@ import { ImageOff, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
-import type { TrainingDetail } from "@/apis/trainings";
+import type { CreateTrainingPayload, TrainingDetail } from "@/apis/trainings";
 import { createTraining, updateTraining } from "@/lib/actions";
-import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import {
+  TRAINING_POSTER_ACCEPT,
+  uploadTrainingPoster,
+} from "@/lib/training-poster";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Switch from "../buttons/Switch";
@@ -36,26 +38,6 @@ function isValidHttpUrl(value: string) {
   }
 }
 
-const IMAGE_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const IMAGE_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const IMAGE_MAX_RAW_BYTES = 20 * 1024 * 1024;
-const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-
-async function uploadTrainingImage(file: File, fileExt: string) {
-  const filePath = `training/${Date.now()}.${fileExt}`;
-
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("missing public url");
-
-  return data.publicUrl;
-}
-
 export default function TrainingFormSheet({
   open,
   onClose,
@@ -79,6 +61,7 @@ export default function TrainingFormSheet({
       {open && (
         <TrainingFields
           branchId={branchId}
+          branchName={branchName}
           training={training}
           onClose={onClose}
           onSaved={onSaved}
@@ -90,10 +73,11 @@ export default function TrainingFormSheet({
 
 function TrainingFields({
   branchId,
+  branchName,
   training,
   onClose,
   onSaved,
-}: Omit<TrainingFormSheetProps, "open">) {
+}: Omit<TrainingFormSheetProps, "open"> & { branchName: string }) {
   const [name, setName] = useState(training?.name ?? "");
   const [description, setDescription] = useState(training?.description ?? "");
   const [startDate, setStartDate] = useState(training?.start_date ?? "");
@@ -152,6 +136,23 @@ function TrainingFields({
     };
   }
 
+  // trainings/create always makes the caller the contact person with registration open, so apply both after.
+  async function createBranchTraining(payload: CreateTrainingPayload) {
+    const created = await createTraining(payload);
+    if (!isSuccessStatus(created.status) || !created.data) return created;
+
+    const contactPersonId = String(contactPerson?.value ?? "");
+    const needsContactPerson =
+      contactPersonId && contactPersonId !== created.data.contact_person_id;
+    if (!needsContactPerson && isRegistrationOpen) return created;
+
+    return updateTraining({
+      id: created.data.id,
+      ...(needsContactPerson ? { contact_person_id: contactPersonId } : {}),
+      is_registration_open: isRegistrationOpen,
+    });
+  }
+
   function handleImagePickClick() {
     imageInputRef.current?.click();
   }
@@ -161,36 +162,11 @@ function TrainingFields({
     event.target.value = "";
     if (!file) return;
 
-    if (!IMAGE_ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
-      return;
-    }
-    const fileExt = file.name.split(".").pop()?.toLowerCase();
-    if (!fileExt || !IMAGE_ALLOWED_EXTENSIONS.includes(fileExt)) {
-      toast.error("Ekstensi file tidak valid.");
-      return;
-    }
-    if (file.size > IMAGE_MAX_RAW_BYTES) {
-      toast.error("Ukuran gambar maksimal 20MB.");
-      return;
-    }
-
     setIsUploadingImage(true);
-    try {
-      const compressed = await compressImage(file);
-      if (compressed.size > IMAGE_MAX_BYTES) {
-        toast.error("Gambar masih terlalu besar setelah dikompres.");
-        return;
-      }
-      const compressedExt = compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
-      const publicUrl = await uploadTrainingImage(compressed, compressedExt);
-      setImageUrl(publicUrl);
-    } catch (error) {
-      console.error("[TrainingFormSheet] image upload threw:", error);
-      toast.error("Gagal mengunggah gambar. Coba lagi.");
-    } finally {
-      setIsUploadingImage(false);
-    }
+    const result = await uploadTrainingPoster(file);
+    setIsUploadingImage(false);
+    if (result.ok) setImageUrl(result.url);
+    else toast.error(result.message);
   }
 
   async function handleSubmit() {
@@ -226,16 +202,15 @@ function TrainingFields({
             location_url: locationUrl.trim(),
             image_url: imageUrl,
           })
-        : await createTraining({
+        : await createBranchTraining({
             name: name.trim(),
             ...(description.trim() ? { description: description.trim() } : {}),
             level: "LK2",
             organizer_type: "branch",
             organizer_id: branchId,
-            contact_person_id: String(contactPerson.value),
+            organizer_name: branchName,
             start_date: startDate,
             end_date: endDate,
-            is_registration_open: isRegistrationOpen,
             ...(locationName.trim()
               ? { location_name: locationName.trim() }
               : {}),
@@ -287,7 +262,7 @@ function TrainingFields({
             <input
               ref={imageInputRef}
               type="file"
-              accept=".jpg,.jpeg,.png,.webp,.avif"
+              accept={TRAINING_POSTER_ACCEPT}
               className="hidden"
               onChange={handleImageFileChange}
             />

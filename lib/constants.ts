@@ -37,6 +37,9 @@ export const COMPOSE_INTENT_NEWS_KEY = "hmi-compose-intent-news";
 // Same companion shape for an editorial article, which the composer attaches as type "article".
 export const COMPOSE_INTENT_ARTICLE_KEY = "hmi-compose-intent-article";
 
+// Training twin of the news and article compose intents; it carries the preview for a training attachment.
+export const COMPOSE_INTENT_TRAINING_KEY = "hmi-compose-intent-training";
+
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
 

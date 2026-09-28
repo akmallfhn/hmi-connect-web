@@ -277,7 +277,7 @@ backend exposes a listing behind `requireClientSecret`, each becomes its own
 `app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
 `app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
 activation, verification, settings, chats, notifications, `/official/`, invitations, reset links,
-forget-password, the article composer and editors) plus any `?as=` URL, whose canonical is the
+forget-password, the article composer and editors, `/trainings/create`) plus any `?as=` URL, whose canonical is the
 plain page anyway.
 
 ## Auth & session flow
@@ -748,8 +748,9 @@ iconSm`.
   (`sticky top-0 h-dvh w-64 self-start`, `hidden lg:flex` — an in-flow flex column of the shell,
   not a `fixed` overlay, so the verification banner above it can push it down): the horizontal
   wordmark linking home, then
-  seven nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
-  Articles `/articles`, Al-Quran `/quran`, E-KTA `/membership`), then a Profile row, a
+  eight nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
+  Articles `/articles`, LK Center `/trainings` (matching every `/trainings/*` route), Al-Quran
+  `/quran`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
   "Posting" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
   **News is deliberately absent from the rail** — `/news` and `/news/[category_slug]` stay real, it
@@ -787,7 +788,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   sends a pending account to `/activation` from there.
   Its "Posting" button is a `Dropdown` (an `IconChevronDown` beside
   the `IconPlus` rotates 180° while open, so the chevron is the affordance) whose panel is the
-  shared `components/navigations/CreateOptionList.tsx` — Feed or Artikel, see the compose-intent
+  shared `components/navigations/CreateOptionList.tsx` — Feed, Artikel, or Event, see the compose-intent
   paragraph below; logged out it stays a plain button pushing `/auth/login`, since there is
   nothing to choose between yet. Its Keluar calls `logoutUser` then hard-navigates,
   the same reason `SettingsPage`'s own row does.
@@ -867,9 +868,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   Both entry points into composing — the rail's Posting dropdown and `BottomNav`'s Posting sheet —
   render the same `components/navigations/CreateOptionList.tsx`, which owns both choices and the
   navigation for each, so "what can I create" is answered in one file rather than once per nav.
-  Feed keeps the compose-intent mechanism below; Artikel is a plain `router.push` to
-  `/articles/create`. Each row is a flat single-color Tabler glyph (`IconMessage2` for a feed,
-  `IconArticle` for an article) beside a label and a `truncate`d one-line description — the same
+  Feed keeps the compose-intent mechanism below; Artikel and Event are plain `router.push`es to
+  `/articles/create` and `/trainings/create`. Each row is a flat single-color Tabler glyph
+  (`IconMessage2` for a feed, `IconArticle` for an article, `IconCalendarEvent` for an event) beside a label and a `truncate`d one-line description — the same
   `size-4 text-[#5f6573]` treatment the "More" dropdown's own rows use, deliberately not a tinted
   `primary-soft` circle, so the two menus hanging off the same rail read as one menu style. The
   descriptions are kept short enough to survive that single line in a `w-60` panel. Picking Feed sets
@@ -1865,9 +1866,12 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `components/articles/ArticleListRow.tsx` — a 20px author `Avatar` and name, the title in
   `font-stack-sans-headline` (`line-clamp-2`), then a date · category · keyword meta line — the
   category rides the shared `Label` primitive at `variant="gray" size="sm"` rather than a
-  hand-rolled pill — with a square thumbnail on the right. `articles/list` carries **no
-  `description`**, unlike `articles/detail`, which is why the row's secondary line is keywords and
-  not a deck — don't fetch the detail per row to fill one.
+  hand-rolled pill — with a square thumbnail on the right. `articles/list` now carries the optional
+  article `description`; `ArticleListEntry.description` remains optional because the sibling
+  `articles/list-filter` contract does not advertise it. The row deliberately keeps its compact
+  keyword meta rather than adding a deck, while reposts from both the list and detail page go through
+  `components/articles/article-compose-draft.ts` so their feed attachment previews receive the same
+  title, description, cover, category, and author fields without fetching detail per row.
   Three tabs — Semua, Mengikuti, Saya — reuse `/quran`'s segmented-pill treatment (one
   `rounded-full border` track holding `bg-primary text-white` for the active pill), but as URL state
   (`?tab=following`/`?tab=me`, absent for
@@ -2488,6 +2492,11 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `status: "active"` and rejects branch managers requesting another branch, while the handler's
   unscoped path keeps using the global people search for its other callers. Contact-person options
   opt into `SearchableSelect`'s avatar rendering, which falls back to a `UserRound` icon.
+  `trainings/create` no longer takes `contact_person_id` or `is_registration_open` — the caller always
+  becomes the contact person and registration starts open — so the sheet's create path follows up
+  with one `updateTraining` call only when the picked contact person or a closed registration differs.
+  It also sends `organizer_name` (the bare Cabang name): the backend stores that column as sent and
+  never derives it from the organizer pair, so omitting it leaves the catalog with no organizer line.
   `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, Peserta, and Penilaian tabs:
   Ringkasan uses a left column containing the desktop poster and contact-person details without a
   WhatsApp action; colored-icon execution metadata, a horizontal Total Sesi Materi/Total Peserta
@@ -2561,7 +2570,18 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   The main-site training catalog is public, outside `(gated)`, like profile pages:
   `/trainings` lists every level with API-backed name/level/organizer filters and pagination,
   `/trainings/{training_id}` renders the public event detail, and
-  `/trainings/{training_id}/register` is the session-gated registration form. The `/trainings`
+  `/trainings/{training_id}/register` is the session-gated registration form.
+  `/trainings/create` (`components/pages/TrainingCreatePage.tsx`) is where **any verified member**
+  creates an event — `trainings/create` is open to every authenticated user on the backend, which
+  makes the caller the contact person and opens registration. It is reached from the catalog's
+  "Buat Event" link (shown to everyone, since the route owns its own login/`/activation`/
+  `/verification` bounces and renders `PageState` for a verification still under review) and from
+  `CreateOptionList`'s Event row. The organizer pair is **optional** on the backend now, so
+  `TrainingListEntry.organizer_type`/`organizer_id` are nullable: the Penyelenggara select offers
+  the caller's own manage grants (Korkom excluded — it never organizes training), sending the pair
+  plus the bare entity name as `organizer_name`, or "Lainnya" for a free-text `organizer_name` with
+  no pair, which every organizer display then shows unprefixed (`lib/organizer.ts`). Poster upload
+  lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`. The `/trainings`
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
   the register Server Component performs its own session check and redirects anonymous visitors
   to `/auth/login?redirectTo=/trainings/{training_id}/register`. `apis/trainings.ts#listTrainings` and

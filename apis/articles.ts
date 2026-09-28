@@ -12,6 +12,8 @@ import { callApi } from "./api";
 export type ArticleListEntry = {
   id: string;
   title: string;
+  // Present on articles/list; optional because list-filter has not published this field in its contract.
+  description?: string | null;
   image_url: string;
   status: ArticleStatusEnum;
   category_id: number;

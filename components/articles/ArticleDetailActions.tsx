@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArticleDetail } from "@/apis/articles";
 import Button from "@/components/buttons/Button";
-import type { ComposerArticleDraft } from "@/components/forms/CreateFeedForms";
 import ArticleShareModal from "./ArticleShareModal";
+import { articleComposeDraft } from "./article-compose-draft";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,
@@ -35,28 +35,14 @@ export default function ArticleDetailActions({
 
   // Same hand-off RepostToFeedButton uses for news, just carrying an article instead.
   function handleShareToFeed() {
-    if (!isSignedIn) {
-      router.push(`/auth/login?redirectTo=${articlePath}`);
-      return;
-    }
-
-    const draft: ComposerArticleDraft = {
-      id: article.id,
-      title: article.title,
-      slugUrl: article.slug_url,
-      imageUrl: article.image_url,
-      description: article.description ?? undefined,
-      categoryName: article.category_name,
-      authorName: article.author_name,
-      authorAvatar: article.author_avatar,
-    };
+    const draft = articleComposeDraft(article);
     window.sessionStorage.setItem(
       COMPOSE_INTENT_ARTICLE_KEY,
       JSON.stringify(draft)
     );
     window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
     window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
-    router.push("/");
+    router.push(isSignedIn ? "/" : "/auth/login?redirectTo=%2F");
   }
 
   return (

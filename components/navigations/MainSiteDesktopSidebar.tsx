@@ -13,6 +13,7 @@ import {
   IconLogout,
   IconMosque,
   IconPlus,
+  IconSchool,
   IconSettings,
   IconSmartHome,
   IconUserCircle,
@@ -86,6 +87,14 @@ const NAV_ITEMS = [
     // /articles/create has no nav entry of its own, so it lights this one up too.
     matches: (pathname: string) =>
       pathname === "/articles" || pathname.startsWith("/articles/"),
+  },
+  {
+    label: "LK Center",
+    href: "/trainings",
+    icon: IconSchool,
+    // Covers the event detail, registration, and /trainings/create routes too.
+    matches: (pathname: string) =>
+      pathname === "/trainings" || pathname.startsWith("/trainings/"),
   },
   {
     label: "Al-Quran",

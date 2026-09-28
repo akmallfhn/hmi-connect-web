@@ -1,16 +1,31 @@
-import { CalendarDays, ImageOff } from "lucide-react";
+"use client";
+
+import {
+  Bell,
+  BellRing,
+  CalendarDays,
+  Ellipsis,
+  ImageOff,
+  MapPin,
+  Share2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import type { TrainingListEntry } from "@/apis/trainings";
-import { formatDate } from "@/lib/time-manipulation";
+import { formatDate, formatShortDate } from "@/lib/time-manipulation";
 import type { TrainingOrganizerTypeEnum } from "@/lib/types";
+import Dropdown from "../common/Dropdown";
+import RepostTrainingToFeedButton from "./RepostTrainingToFeedButton";
 import {
   TrainingLevelLabel,
   TrainingRegistrationLabel,
+  TrainingStatusLabel,
 } from "./TrainingLabels";
 
 interface PublicTrainingCardProps {
   training: TrainingListEntry;
+  isSignedIn: boolean;
 }
 
 const ORGANIZER_TYPE_LABEL: Record<TrainingOrganizerTypeEnum, string> = {
@@ -22,61 +37,212 @@ const ORGANIZER_TYPE_LABEL: Record<TrainingOrganizerTypeEnum, string> = {
 
 function organizerLine(training: TrainingListEntry) {
   if (!training.organizer_name) return "Penyelenggara belum tersedia";
+  if (!training.organizer_type) return training.organizer_name;
   return `${ORGANIZER_TYPE_LABEL[training.organizer_type]} ${training.organizer_name}`;
 }
 
-function TrainingPoster({ training }: PublicTrainingCardProps) {
+function TrainingPoster({ training }: { training: TrainingListEntry }) {
   return training.image_url ? (
     <Image
       src={training.image_url}
       alt={`Poster ${training.name}`}
       fill
-      sizes="(max-width: 1023px) 25vw, 15vw"
-      className="object-cover"
+      sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, 390px"
+      className="object-cover transition duration-500 group-hover:scale-105"
     />
   ) : (
-    <div className="flex size-full items-center justify-center text-[#7b8190]">
-      <ImageOff className="size-5 lg:size-6" />
+    <div className="flex size-full items-center justify-center text-white/70">
+      <ImageOff className="size-8" />
     </div>
   );
 }
 
+async function copyText(value: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
 export default function PublicTrainingCard({
   training,
+  isSignedIn,
 }: PublicTrainingCardProps) {
+  const [actionMessage, setActionMessage] = useState("");
+  const reminderKey = `hmi-connect:training-reminder:${training.id}`;
+  const subscribeToReminder = useCallback((callback: () => void) => {
+    window.addEventListener("storage", callback);
+    window.addEventListener("hmi-training-reminder", callback);
+    return () => {
+      window.removeEventListener("storage", callback);
+      window.removeEventListener("hmi-training-reminder", callback);
+    };
+  }, []);
+  const getReminderSnapshot = useCallback(
+    () => window.localStorage.getItem(reminderKey) === "saved",
+    [reminderKey],
+  );
+  const reminded = useSyncExternalStore(
+    subscribeToReminder,
+    getReminderSnapshot,
+    () => false,
+  );
+
+  const eventUrl =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/trainings/${training.id}`;
+
+  function toggleReminder() {
+    const nextValue = !reminded;
+    if (nextValue) window.localStorage.setItem(reminderKey, "saved");
+    else window.localStorage.removeItem(reminderKey);
+    window.dispatchEvent(new Event("hmi-training-reminder"));
+  }
+
+  async function handleShare(repost = false) {
+    const message = repost
+      ? `Aku menemukan ${training.name}, agenda ${training.level} dari HMI. Yuk ikut!`
+      : `Lihat ${training.name}, agenda ${training.level} dari HMI.`;
+    try {
+      if (!repost && navigator.share) {
+        await navigator.share({ title: training.name, text: message, url: eventUrl });
+        setActionMessage("Dibagikan");
+        return;
+      }
+      await copyText(`${message}\n${eventUrl}`);
+      setActionMessage(repost ? "Teks repost disalin" : "Tautan disalin");
+    } catch {
+      setActionMessage("Bagikan kapan saja dari halaman detail");
+    }
+  }
+
   return (
-    <Link
-      href={`/trainings/${training.id}`}
-      className="group flex min-w-0 gap-3 bg-white px-4 py-3 transition hover:bg-[#f5f7fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:gap-4 lg:rounded-lg lg:border lg:border-[#e1e5ec] lg:p-4 lg:hover:-translate-y-0.5 lg:hover:border-primary/45 lg:hover:bg-white lg:hover:shadow-[0_12px_28px_rgba(23,32,51,0.09)]"
-    >
-      <div className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-lg bg-[#edf1f6] lg:w-28">
-        <TrainingPoster training={training} />
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
-        <div className="flex flex-wrap items-center gap-1.5 lg:gap-2">
-          <TrainingLevelLabel level={training.level} />
-          <TrainingRegistrationLabel
-            isOpen={training.is_registration_open}
-          />
-        </div>
-
-        <h2 className="mt-1.5 line-clamp-2 text-sm font-bold leading-5 text-[#172033] lg:mt-2 lg:text-base lg:leading-6">
-          {training.name}
-        </h2>
-
-        <p className="mt-1 truncate text-[13px] text-[#5f6573] lg:text-sm">
-          oleh {organizerLine(training)}
-        </p>
-
-        <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#5f6573] lg:text-sm">
-          <CalendarDays className="size-4 shrink-0 text-secondary" />
-          <span className="truncate">
+    <article className="group overflow-hidden rounded-2xl border border-[#e1e6eb] bg-white shadow-[0_4px_14px_rgba(23,32,51,0.04)] transition hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_16px_32px_rgba(23,32,51,0.11)]">
+      <Link
+        href={`/trainings/${training.id}`}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+      >
+        <div className="relative aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#0b6970,#159fa2)]">
+          <TrainingPoster training={training} />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#071d24]/65 to-transparent" />
+          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+            <TrainingLevelLabel level={training.level} />
+            <TrainingStatusLabel
+              startDate={training.start_date}
+              endDate={training.end_date}
+            />
+          </div>
+          <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-lg bg-white/94 px-2.5 py-1.5 text-xs font-bold text-[#172033] shadow-sm backdrop-blur-sm">
+            <CalendarDays className="size-3.5 text-secondary" />
             {formatDate(training.start_date)}
-            {training.location_name ? ` • ${training.location_name}` : ""}
-          </span>
+          </div>
         </div>
+
+        <div className="px-4 pb-3 pt-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-xs font-semibold text-primary">
+              {organizerLine(training)}
+            </p>
+            <TrainingRegistrationLabel
+              isOpen={training.is_registration_open}
+              className="shrink-0"
+            />
+          </div>
+          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 min-h-12 text-lg font-medium leading-6 text-[#172033]">
+            {training.name}
+          </h2>
+          <p className="mt-2 flex min-h-5 items-center gap-1.5 truncate text-sm text-[#667085]">
+            <MapPin className="size-4 shrink-0 text-[#87919e]" />
+            {training.location_name ?? "Lokasi akan diinformasikan"}
+          </p>
+        </div>
+      </Link>
+
+      <div className="flex items-center gap-1 border-t border-[#edf0f3] px-2 py-2">
+        <button
+          type="button"
+          onClick={toggleReminder}
+          aria-pressed={reminded}
+          className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+            reminded
+              ? "bg-primary-soft text-primary"
+              : "text-[#596474] hover:bg-[#f3f6f8] hover:text-primary"
+          }`}
+        >
+          {reminded ? <BellRing className="size-4" /> : <Bell className="size-4" />}
+          {reminded ? "Diingatkan" : "Ingatkan"}
+        </button>
+        <RepostTrainingToFeedButton
+          training={training}
+          isSignedIn={isSignedIn}
+          className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-[#596474] transition hover:bg-[#f3f6f8] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        />
+        <button
+          type="button"
+          onClick={() => void handleShare()}
+          className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#596474] transition hover:bg-[#f3f6f8] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label={`Bagikan ${training.name}`}
+        >
+          <Share2 className="size-4" />
+        </button>
+        <Dropdown
+          align="right"
+          panelClassName="w-80 rounded-2xl"
+          trigger={({ open, toggle }) => (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={`Info ${training.name}`}
+              aria-expanded={open}
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#596474] transition hover:bg-[#f3f6f8] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <Ellipsis className="size-5" />
+            </button>
+          )}
+        >
+          <div className="p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Info & pembaruan
+            </p>
+            <p className="mt-1 font-semibold text-[#172033]">{training.name}</p>
+            <div className="mt-3 space-y-2 text-sm text-[#5f6573]">
+              <p>
+                <span className="font-medium text-[#172033]">Jadwal:</span>{" "}
+                {formatDate(training.start_date)} – {formatDate(training.end_date)}
+              </p>
+              <p>
+                <span className="font-medium text-[#172033]">Penyelenggara:</span>{" "}
+                {organizerLine(training)}
+              </p>
+              <p>
+                <span className="font-medium text-[#172033]">Dipublikasikan:</span>{" "}
+                {formatShortDate(training.created_at)}
+              </p>
+            </div>
+            <Link
+              href={`/trainings/${training.id}`}
+              className="mt-4 inline-flex h-9 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-white transition hover:bg-[#128488]"
+            >
+              Lihat detail & pembaruan
+            </Link>
+          </div>
+        </Dropdown>
       </div>
-    </Link>
+      <div
+        aria-live="polite"
+        className="min-h-5 px-4 pb-2 text-xs font-medium text-primary"
+      >
+        {actionMessage}
+      </div>
+    </article>
   );
 }

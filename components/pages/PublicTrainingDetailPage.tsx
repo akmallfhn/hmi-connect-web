@@ -1,26 +1,15 @@
 "use client";
 
+import { IconAlarm, IconBrandWhatsapp, IconShare3 } from "@tabler/icons-react";
 import type { TrainingDetail } from "@/apis/trainings";
-import { socialIconUrl } from "@/lib/constants";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRange } from "@/lib/time-manipulation";
-import {
-  Calendar,
-  CalendarDays,
-  ExternalLink,
-  ImageOff,
-  MapPin,
-  UserPlus,
-} from "lucide-react";
+import { Calendar, CalendarDays, ExternalLink, ImageOff } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import LogoHmi from "../svg/LogoHmi";
-import {
-  TrainingLevelLabel,
-  TrainingRegistrationLabel,
-} from "../trainings/TrainingLabels";
 import TrainingPageShell, {
   type TrainingViewer,
 } from "../trainings/TrainingPageShell";
@@ -29,13 +18,6 @@ interface PublicTrainingDetailPageProps {
   viewer: TrainingViewer;
   training: TrainingDetail;
 }
-
-const ORGANIZER_LABEL = {
-  chapter: "Komisariat",
-  branch: "Cabang",
-  coordinating_body: "Badko",
-  organization: "Organisasi",
-};
 
 function buildWhatsAppUrl(phoneNumber: string) {
   const digits = phoneNumber.replace(/\D/g, "");
@@ -58,18 +40,26 @@ function getInitials(value: string) {
 function ContactPersonSection({
   training,
   className,
+  variant = "card",
 }: {
   training: TrainingDetail;
   className?: string;
+  variant?: "card" | "plain";
 }) {
   if (!training.contact_person_name) return null;
 
   return (
     <section className={className}>
-      <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
+      <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033] xl:text-[15px]">
         Contact Person
       </h2>
-      <div className="mt-3 flex items-center gap-3 rounded-lg border border-[#e4e8ef] bg-[#f8f9fb] p-3">
+      <div
+        className={
+          variant === "plain"
+            ? "mt-3 flex items-center gap-3"
+            : "mt-3 flex items-center gap-3 rounded-lg border border-[#e6e9ef] bg-white p-3"
+        }
+      >
         <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-white xl:text-[13px]">
           {training.contact_person_avatar ? (
             <Image
@@ -99,15 +89,9 @@ function ContactPersonSection({
             target="_blank"
             rel="noreferrer"
             aria-label={`Hubungi ${training.contact_person_name} via WhatsApp`}
-            className="shrink-0 transition hover:opacity-90"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition hover:bg-[#128488]"
           >
-            <Image
-              src={socialIconUrl("whatsapp")}
-              alt=""
-              width={36}
-              height={36}
-              className="size-9 rounded-full object-cover"
-            />
+            <IconBrandWhatsapp className="size-5" stroke={2} />
           </a>
         )}
       </div>
@@ -120,6 +104,49 @@ export default function PublicTrainingDetailPage({
   training,
 }: PublicTrainingDetailPageProps) {
   const organizerName = training.organizer_name ?? "Penyelenggara HMI";
+  const [shareFeedback, setShareFeedback] = useState("");
+  const reminderKey = `hmi-connect:training-reminder:${training.id}`;
+  const subscribeToReminder = useCallback((callback: () => void) => {
+    window.addEventListener("storage", callback);
+    window.addEventListener("hmi-training-reminder", callback);
+    return () => {
+      window.removeEventListener("storage", callback);
+      window.removeEventListener("hmi-training-reminder", callback);
+    };
+  }, []);
+  const getReminderSnapshot = useCallback(
+    () => window.localStorage.getItem(reminderKey) === "saved",
+    [reminderKey]
+  );
+  const reminded = useSyncExternalStore(
+    subscribeToReminder,
+    getReminderSnapshot,
+    () => false
+  );
+
+  function toggleReminder() {
+    if (reminded) window.localStorage.removeItem(reminderKey);
+    else window.localStorage.setItem(reminderKey, "saved");
+    window.dispatchEvent(new Event("hmi-training-reminder"));
+  }
+
+  async function shareTraining() {
+    const url = `${window.location.origin}/trainings/${training.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: training.name,
+          text: `Lihat ${training.name}, agenda ${training.level} dari HMI.`,
+          url,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareFeedback("Tautan disalin");
+    } catch {
+      setShareFeedback("Belum bisa membagikan training");
+    }
+  }
 
   return (
     <TrainingPageShell
@@ -168,115 +195,102 @@ export default function PublicTrainingDetailPage({
             </div>
           </div>
 
-          <div className="px-4 pb-24 pt-5 flex flex-col gap-2">
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold leading-tight text-[#172033]">
+          <div className="bg-white px-4 pb-5 pt-5">
+            <div className="flex flex-col items-center text-center">
+              <h1 className="font-stack-sans-headline text-2xl font-medium leading-tight text-[#172033]">
                 {training.name}
               </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <TrainingLevelLabel level={training.level} />
-                <TrainingRegistrationLabel
-                  isOpen={training.is_registration_open}
-                />
-              </div>
             </div>
 
-            <p className="mt-3 flex items-center gap-2 text-base text-[#172033]">
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Button
+                variant={reminded ? "soft" : "primary"}
+                size="default"
+                onClick={toggleReminder}
+                aria-pressed={reminded}
+              >
+                <IconAlarm className="size-5" stroke={2} />
+                {reminded ? "Diingatkan" : "Ingatkan saya"}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => void shareTraining()}
+                aria-label={`Bagikan ${training.name}`}
+              >
+                <IconShare3 className="size-5" stroke={2} />
+              </Button>
+            </div>
+            <p
+              aria-live="polite"
+              className="mt-2 text-center text-xs font-medium text-primary"
+            >
+              {shareFeedback}
+            </p>
+
+            <p className="mt-3 flex items-center justify-center gap-2 text-center text-base text-[#172033]">
               <Calendar className="size-5 shrink-0" />
               {formatDateRange(training.start_date, training.end_date)}
             </p>
+          </div>
 
-            <p className="mt-1 flex items-center gap-2 text-base text-[#172033]">
-              <MapPin className="size-5 shrink-0" />
-              {training.location_name ?? "Lokasi belum ditentukan"}
-            </p>
-
-            <ContactPersonSection training={training} className="mt-3" />
-
-            <section className="mt-6 border-t border-[#edf0f4] pt-5">
-              <h2 className="text-sm font-semibold text-[#7b8190]">
+          <div className="flex flex-col gap-1.5 bg-white pb-6">
+            <section className="border border-x-0 border-[#e6e9ef] bg-white p-5">
+              <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033]">
                 Deskripsi
               </h2>
-              <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#41474e]">
+              <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#5f6573]">
                 {training.description || "Deskripsi training belum tersedia."}
               </p>
             </section>
 
-            <section className="mt-6 border-t border-[#edf0f4] pt-5">
-              <h2 className="text-sm font-semibold text-[#7b8190]">
+            <section className="border border-x-0 border-[#e6e9ef] bg-white p-5">
+              <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033]">
                 Penyelenggara
               </h2>
-              <div className="mt-4 flex items-center gap-2.5">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft border border-primary/15">
+              <div className="mt-3 flex items-center gap-2.5">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-primary-soft">
                   <LogoHmi className="h-7 w-auto" />
                 </div>
-                <p className="min-w-0 truncate text-[#172033]">
+                <p className="min-w-0 truncate text-sm text-[#172033]">
                   {formatOrganizerName(training)}
                 </p>
               </div>
             </section>
 
-            <section className="mt-6 border-t border-[#edf0f4] pt-5">
-              <h2 className="text-sm font-semibold text-[#7b8190]">Lokasi</h2>
-              <div className="mt-4 flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#EFEDF9] text-[#42359B]">
-                  <MapPin className="size-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-[#172033]">
-                    {training.location_name ?? "Lokasi belum ditentukan"}
-                  </p>
-                  {training.location_url && (
-                    <a
-                      href={training.location_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-                    >
-                      Buka lokasi
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  )}
-                </div>
+            <ContactPersonSection
+              training={training}
+              className="border border-x-0 border-[#e6e9ef] bg-white p-5"
+              variant="plain"
+            />
+
+            <section className="border border-x-0 border-[#e6e9ef] bg-white p-5">
+              <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033]">
+                Lokasi
+              </h2>
+              <div className="mt-3 min-w-0">
+                <p className="text-sm text-[#5f6573]">
+                  {training.location_name ?? "Lokasi training belum tersedia."}
+                </p>
+                {training.location_url && (
+                  <a
+                    href={training.location_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                  >
+                    Buka lokasi
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                )}
               </div>
             </section>
-          </div>
-
-          {/* Floating register button, pinned to the viewport bottom (no BottomNav on this page). */}
-          <div
-            className="fixed inset-x-0 bottom-0 z-30 border-t border-[#e6e9ef] bg-white px-4 py-3"
-            style={{
-              paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-            }}
-          >
-            {training.is_registration_open ? (
-              <Link href={`/trainings/${training.id}/register`}>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full rounded-full"
-                >
-                  <UserPlus className="size-5" />
-                  Daftar Training
-                </Button>
-              </Link>
-            ) : (
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full rounded-full"
-                disabled
-              >
-                <UserPlus className="size-5" />
-                Daftar Training
-              </Button>
-            )}
           </div>
         </div>
 
         {/* Desktop-only: fixed blur band with a sticky poster column. */}
         <div className="hidden min-h-[calc(100vh-4rem)] bg-white lg:block">
-          <div className="relative h-[280px] overflow-hidden bg-[#dce7e8] xl:h-[320px]">
+          <div className="relative h-[220px] overflow-hidden bg-[#dce7e8] xl:h-[250px]">
             {training.image_url && (
               <Image
                 src={training.image_url}
@@ -290,10 +304,10 @@ export default function PublicTrainingDetailPage({
             )}
           </div>
 
-          <PageMargin className="relative -mt-52 pb-16 xl:-mt-60">
+          <PageMargin className="relative -mt-40 pb-16 xl:-mt-44">
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] xl:gap-8">
-              <aside className="sticky top-24 min-w-0 self-start">
-                <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-lg bg-[#edf1f6] shadow-[0_18px_50px_rgba(23,32,51,0.18)]">
+              <aside className="sticky top-6 min-w-0 self-start">
+                <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-xl border border-[#e6e9ef] bg-[#edf1f6] shadow-[0_18px_50px_rgba(23,32,51,0.18)]">
                   {training.image_url ? (
                     <Image
                       src={training.image_url}
@@ -301,7 +315,7 @@ export default function PublicTrainingDetailPage({
                       fill
                       priority
                       sizes="340px"
-                      className="object-contain"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="flex size-full flex-col items-center justify-center gap-3 text-[#7b8190]">
@@ -313,63 +327,64 @@ export default function PublicTrainingDetailPage({
                   )}
                 </div>
 
-                <div className="mx-auto mt-6 w-full max-w-[340px]">
-                  {training.is_registration_open ? (
-                    <Link href={`/trainings/${training.id}/register`}>
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="w-full rounded-full"
-                      >
-                        <UserPlus className="size-5" />
-                        Daftar Training
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full rounded-full"
-                      disabled
-                    >
-                      <UserPlus className="size-5" />
-                      Daftar Training
-                    </Button>
-                  )}
+                <div className="mx-auto mt-4 flex w-full max-w-[340px] items-center gap-2">
+                  <Button
+                    variant={reminded ? "soft" : "primary"}
+                    size="default"
+                    onClick={toggleReminder}
+                    aria-pressed={reminded}
+                    className="h-10 flex-1"
+                  >
+                    <IconAlarm className="size-5" stroke={2} />
+                    {reminded ? "Diingatkan" : "Ingatkan saya"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => void shareTraining()}
+                    aria-label={`Bagikan ${training.name}`}
+                  >
+                    <IconShare3 className="size-5" stroke={2} />
+                  </Button>
                 </div>
+                <p
+                  aria-live="polite"
+                  className="mx-auto mt-2 max-w-[340px] text-center text-xs font-medium text-primary"
+                >
+                  {shareFeedback}
+                </p>
               </aside>
 
-              <article className="min-w-0 self-start rounded-lg bg-white/95 p-6 backdrop-blur-sm xl:p-8">
-                <h1 className="text-4xl font-bold leading-tight text-[#172033]">
+              <article className="min-w-0 self-start rounded-xl border border-[#e6e9ef] bg-white p-6 xl:p-8">
+                <h1 className="font-stack-sans-headline text-3xl font-medium leading-tight text-[#172033] xl:text-[32px]">
                   {training.name}
                 </h1>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <TrainingLevelLabel
-                    level={training.level}
-                    className="xl:text-[13px]"
-                  />
-                  <TrainingRegistrationLabel
-                    isOpen={training.is_registration_open}
-                    className="xl:text-[13px]"
-                  />
-                </div>
 
                 <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#41474e] xl:text-[15px]">
                   <p className="flex items-center gap-2">
                     <CalendarDays className="size-4 shrink-0" />
                     {formatDateRange(training.start_date, training.end_date)}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="size-4 shrink-0" />
-                    {training.location_name ?? "Lokasi belum ditentukan"}
-                  </p>
                 </div>
 
-                <ContactPersonSection training={training} className="mt-6" />
+                <section className="mt-8 border-t border-[#e6e9ef] pt-6">
+                  <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033] xl:text-[15px]">
+                    Penyelenggara
+                  </h2>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e6e9ef] bg-primary-soft">
+                      <LogoHmi className="h-8 w-auto" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] text-[#172033]">
+                        {organizerName}
+                      </p>
+                    </div>
+                  </div>
+                </section>
 
-                <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
+                <section className="mt-8 border-t border-[#e6e9ef] pt-6">
+                  <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033] xl:text-[15px]">
                     Deskripsi
                   </h2>
                   <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#41474e]">
@@ -378,49 +393,30 @@ export default function PublicTrainingDetailPage({
                   </p>
                 </section>
 
-                <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
-                    Penyelenggara
-                  </h2>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white xl:text-[15px]">
-                      {getInitials(organizerName)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-bold text-[#172033]">
-                        {organizerName}
-                      </p>
-                      <p className="mt-0.5 text-sm text-[#7b8190] xl:text-[15px]">
-                        {ORGANIZER_LABEL[training.organizer_type]}
-                      </p>
-                    </div>
-                  </div>
-                </section>
+                <ContactPersonSection
+                  training={training}
+                  className="mt-8 border-t border-[#e6e9ef] pt-6"
+                />
 
-                <section className="mt-8 border-t border-[#edf0f4] pt-6">
-                  <h2 className="text-sm font-semibold text-[#7b8190] xl:text-[15px]">
+                <section className="mt-8 border-t border-[#e6e9ef] pt-6">
+                  <h2 className="font-stack-sans-headline text-sm font-medium text-[#172033] xl:text-[15px]">
                     Lokasi
                   </h2>
-                  <div className="mt-4 flex items-start gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#EFEDF9] text-[#42359B]">
-                      <MapPin className="size-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-[#172033]">
-                        {training.location_name ?? "Lokasi belum ditentukan"}
-                      </p>
-                      {training.location_url && (
-                        <a
-                          href={training.location_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline xl:text-[15px]"
-                        >
-                          Buka lokasi
-                          <ExternalLink className="size-3.5" />
-                        </a>
-                      )}
-                    </div>
+                  <div className="mt-4 min-w-0">
+                    <p className="text-[15px] leading-7 text-[#41474e]">
+                      {training.location_name ?? "Lokasi belum ditentukan"}
+                    </p>
+                    {training.location_url && (
+                      <a
+                        href={training.location_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline xl:text-[15px]"
+                      >
+                        Buka lokasi
+                        <ExternalLink className="size-3.5" />
+                      </a>
+                    )}
                   </div>
                 </section>
               </article>

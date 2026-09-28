@@ -5,6 +5,7 @@ import FeedItemCard from "./FeedItemCard";
 import CreateFeedForms, {
   type ComposerArticleDraft,
   type ComposerNewsDraft,
+  type ComposerTrainingDraft,
 } from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
@@ -12,6 +13,7 @@ import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,
   COMPOSE_INTENT_NEWS_KEY,
+  COMPOSE_INTENT_TRAINING_KEY,
 } from "@/lib/constants";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
@@ -59,6 +61,18 @@ function parseArticleIntent(
   }
 }
 
+function parseTrainingIntent(
+  raw: string | null,
+): ComposerTrainingDraft | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as ComposerTrainingDraft;
+    return parsed.id && parsed.name && parsed.level ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedTimeline({
   initialItems,
   initialHasMore,
@@ -82,6 +96,9 @@ export default function FeedTimeline({
   >(undefined);
   const [composerArticle, setComposerArticle] = useState<
     ComposerArticleDraft | undefined
+  >(undefined);
+  const [composerTraining, setComposerTraining] = useState<
+    ComposerTrainingDraft | undefined
   >(undefined);
 
   const loadNextPage = useCallback(async () => {
@@ -132,9 +149,16 @@ export default function FeedTimeline({
       if (rawArticle) {
         window.sessionStorage.removeItem(COMPOSE_INTENT_ARTICLE_KEY);
       }
+      const rawTraining = window.sessionStorage.getItem(
+        COMPOSE_INTENT_TRAINING_KEY,
+      );
+      if (rawTraining) {
+        window.sessionStorage.removeItem(COMPOSE_INTENT_TRAINING_KEY);
+      }
 
       setComposerNews(parseNewsIntent(raw));
       setComposerArticle(parseArticleIntent(rawArticle));
+      setComposerTraining(parseTrainingIntent(rawTraining));
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -180,6 +204,7 @@ export default function FeedTimeline({
         forceOpenSignal={composerSignal}
         forceOpenNews={composerNews}
         forceOpenArticle={composerArticle}
+        forceOpenTraining={composerTraining}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}
