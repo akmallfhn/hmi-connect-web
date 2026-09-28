@@ -5,6 +5,7 @@ import { Check, Copy, Share2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import Button from "../buttons/Button";
 import Modal from "./Modal";
 
 interface ShareModalProps {
@@ -96,16 +97,17 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
           </a>
         ))}
         {typeof navigator !== "undefined" && Boolean(navigator.share) && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleNativeShare}
-            className="flex flex-col items-center gap-1.5"
+            className="h-auto w-auto flex-col gap-1.5"
           >
             <span className="flex size-11 items-center justify-center rounded-full bg-[#f5f7fb] text-[#5f6573]">
               <Share2 className="size-5" />
             </span>
             <span className="text-xs text-[#5f6573]">Lainnya</span>
-          </button>
+          </Button>
         )}
       </div>
 
@@ -115,14 +117,15 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
           value={url}
           className="flex-1 truncate bg-transparent text-sm text-[#172033] outline-none"
         />
-        <button
-          type="button"
+        <Button
+          variant="light"
+          size="sm"
           onClick={handleCopyLink}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary-soft"
+          className="shrink-0 text-primary shadow-sm"
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
           {copied ? "Tersalin" : "Salin"}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

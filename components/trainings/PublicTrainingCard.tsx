@@ -16,6 +16,8 @@ import type { TrainingListEntry } from "@/apis/trainings";
 import { formatDate, formatShortDate } from "@/lib/time-manipulation";
 import type { TrainingOrganizerTypeEnum } from "@/lib/types";
 import Dropdown from "../common/Dropdown";
+import Button from "../buttons/Button";
+import ShareModal from "../modals/ShareModal";
 import RepostTrainingToFeedButton from "./RepostTrainingToFeedButton";
 import {
   TrainingLevelLabel,
@@ -57,26 +59,11 @@ function TrainingPoster({ training }: { training: TrainingListEntry }) {
   );
 }
 
-async function copyText(value: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-  const textarea = document.createElement("textarea");
-  textarea.value = value;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
-}
-
 export default function PublicTrainingCard({
   training,
   isSignedIn,
 }: PublicTrainingCardProps) {
-  const [actionMessage, setActionMessage] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
   const reminderKey = `hmi-connect:training-reminder:${training.id}`;
   const subscribeToReminder = useCallback((callback: () => void) => {
     window.addEventListener("storage", callback);
@@ -108,25 +95,9 @@ export default function PublicTrainingCard({
     window.dispatchEvent(new Event("hmi-training-reminder"));
   }
 
-  async function handleShare(repost = false) {
-    const message = repost
-      ? `Aku menemukan ${training.name}, agenda ${training.level} dari HMI. Yuk ikut!`
-      : `Lihat ${training.name}, agenda ${training.level} dari HMI.`;
-    try {
-      if (!repost && navigator.share) {
-        await navigator.share({ title: training.name, text: message, url: eventUrl });
-        setActionMessage("Dibagikan");
-        return;
-      }
-      await copyText(`${message}\n${eventUrl}`);
-      setActionMessage(repost ? "Teks repost disalin" : "Tautan disalin");
-    } catch {
-      setActionMessage("Bagikan kapan saja dari halaman detail");
-    }
-  }
-
   return (
-    <article className="group overflow-hidden rounded-2xl border border-[#e1e6eb] bg-white shadow-[0_4px_14px_rgba(23,32,51,0.04)] transition hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_16px_32px_rgba(23,32,51,0.11)]">
+    <>
+      <article className="group overflow-hidden rounded-2xl border border-[#e1e6eb] bg-white shadow-[0_4px_14px_rgba(23,32,51,0.04)] transition hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_16px_32px_rgba(23,32,51,0.11)]">
       <Link
         href={`/trainings/${training.id}`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
@@ -186,14 +157,15 @@ export default function PublicTrainingCard({
           isSignedIn={isSignedIn}
           className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-[#596474] transition hover:bg-[#f3f6f8] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         />
-        <button
-          type="button"
-          onClick={() => void handleShare()}
-          className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#596474] transition hover:bg-[#f3f6f8] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShareOpen(true)}
+          className="size-9 shrink-0 text-[#596474]"
           aria-label={`Bagikan ${training.name}`}
         >
           <Share2 className="size-4" />
-        </button>
+        </Button>
         <Dropdown
           align="right"
           panelClassName="w-80 rounded-2xl"
@@ -237,12 +209,13 @@ export default function PublicTrainingCard({
           </div>
         </Dropdown>
       </div>
-      <div
-        aria-live="polite"
-        className="min-h-5 px-4 pb-2 text-xs font-medium text-primary"
-      >
-        {actionMessage}
-      </div>
-    </article>
+      </article>
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={eventUrl}
+        text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
+      />
+    </>
   );
 }

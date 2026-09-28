@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useCallback, useState, useSyncExternalStore } from "react";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
+import ShareModal from "../modals/ShareModal";
 import LogoHmi from "../svg/LogoHmi";
 import TrainingPageShell, {
   type TrainingViewer,
@@ -104,7 +105,11 @@ export default function PublicTrainingDetailPage({
   training,
 }: PublicTrainingDetailPageProps) {
   const organizerName = training.organizer_name ?? "Penyelenggara HMI";
-  const [shareFeedback, setShareFeedback] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareUrl =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/trainings/${training.id}`;
   const reminderKey = `hmi-connect:training-reminder:${training.id}`;
   const subscribeToReminder = useCallback((callback: () => void) => {
     window.addEventListener("storage", callback);
@@ -128,24 +133,6 @@ export default function PublicTrainingDetailPage({
     if (reminded) window.localStorage.removeItem(reminderKey);
     else window.localStorage.setItem(reminderKey, "saved");
     window.dispatchEvent(new Event("hmi-training-reminder"));
-  }
-
-  async function shareTraining() {
-    const url = `${window.location.origin}/trainings/${training.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: training.name,
-          text: `Lihat ${training.name}, agenda ${training.level} dari HMI.`,
-          url,
-        });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setShareFeedback("Tautan disalin");
-    } catch {
-      setShareFeedback("Belum bisa membagikan training");
-    }
   }
 
   return (
@@ -215,18 +202,12 @@ export default function PublicTrainingDetailPage({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => void shareTraining()}
+                onClick={() => setShareOpen(true)}
                 aria-label={`Bagikan ${training.name}`}
               >
                 <IconShare3 className="size-5" stroke={2} />
               </Button>
             </div>
-            <p
-              aria-live="polite"
-              className="mt-2 text-center text-xs font-medium text-primary"
-            >
-              {shareFeedback}
-            </p>
 
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-base text-[#172033]">
               <Calendar className="size-5 shrink-0" />
@@ -341,18 +322,12 @@ export default function PublicTrainingDetailPage({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => void shareTraining()}
+                    onClick={() => setShareOpen(true)}
                     aria-label={`Bagikan ${training.name}`}
                   >
                     <IconShare3 className="size-5" stroke={2} />
                   </Button>
                 </div>
-                <p
-                  aria-live="polite"
-                  className="mx-auto mt-2 max-w-[340px] text-center text-xs font-medium text-primary"
-                >
-                  {shareFeedback}
-                </p>
               </aside>
 
               <article className="min-w-0 self-start rounded-xl border border-[#e6e9ef] bg-white p-6 xl:p-8">
@@ -424,6 +399,12 @@ export default function PublicTrainingDetailPage({
           </PageMargin>
         </div>
       </main>
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={shareUrl}
+        text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
+      />
     </TrainingPageShell>
   );
 }
