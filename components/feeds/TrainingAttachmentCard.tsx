@@ -4,17 +4,10 @@ import { IconBellCheck, IconBellPlus } from "@tabler/icons-react";
 import { CalendarDays, GraduationCap, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState, useSyncExternalStore } from "react";
-import { toast } from "sonner";
 import type { FeedTrainingAttachment } from "@/apis/feeds";
 import LogoHmi from "@/components/svg/LogoHmi";
-import {
-  activateTrainingReminder,
-  deactivateTrainingReminder,
-} from "@/lib/actions";
+import { useTrainingReminder } from "@/hooks/useTrainingReminder";
 import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
-import { isSuccessStatus } from "@/lib/types";
 
 function scheduleLabel(attachment: FeedTrainingAttachment) {
   const { reference_start_date: start, reference_end_date: end } = attachment;
@@ -26,10 +19,6 @@ function scheduleLabel(attachment: FeedTrainingAttachment) {
 function trainingLabel(level: FeedTrainingAttachment["reference_level"]) {
   const levelNumber = level?.match(/\d+/)?.[0];
   return levelNumber ? `Latihan Kader ${levelNumber}` : "Latihan Kader";
-}
-
-function reminderStorageKey(trainingId: string) {
-  return `hmi-connect:training-reminder:${trainingId}`;
 }
 
 interface TrainingAttachmentCardProps {
@@ -48,30 +37,15 @@ export default function TrainingAttachmentCard({
   onRemove,
   removeDisabled = false,
 }: TrainingAttachmentCardProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [savingReminder, setSavingReminder] = useState(false);
-  const subscribeToReminder = useCallback((callback: () => void) => {
-    window.addEventListener("storage", callback);
-    window.addEventListener("hmi-training-reminder", callback);
-    return () => {
-      window.removeEventListener("storage", callback);
-      window.removeEventListener("hmi-training-reminder", callback);
-    };
-  }, []);
-  const getReminderSnapshot = useCallback(() => {
-    const stored = window.localStorage.getItem(
-      reminderStorageKey(attachment.reference_id)
-    );
-    if (stored === "saved") return true;
-    if (stored === "cleared") return false;
-    return attachment.reference_is_reminder_active ?? false;
-  }, [attachment.reference_id, attachment.reference_is_reminder_active]);
-  const reminded = useSyncExternalStore(
-    subscribeToReminder,
-    getReminderSnapshot,
-    () => false
-  );
+  const {
+    active: reminded,
+    saving: savingReminder,
+    toggle: toggleReminder,
+  } = useTrainingReminder({
+    trainingId: attachment.reference_id,
+    initialActive: attachment.reference_is_reminder_active,
+    isSignedIn,
+  });
 
   if (attachment.reference_is_deleted) {
     return (
@@ -86,36 +60,6 @@ export default function TrainingAttachmentCard({
   const label = trainingLabel(attachment.reference_level);
   const organizerName =
     attachment.reference_organizer_entity_name?.trim() || "Penyelenggara HMI";
-
-  async function toggleReminder() {
-    if (!isSignedIn) {
-      router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(pathname || "/")}`
-      );
-      return;
-    }
-
-    const next = !reminded;
-    setSavingReminder(true);
-    try {
-      const result = next
-        ? await activateTrainingReminder(attachment.reference_id)
-        : await deactivateTrainingReminder(attachment.reference_id);
-      if (!isSuccessStatus(result.status)) throw new Error(result.message);
-
-      const storageKey = reminderStorageKey(attachment.reference_id);
-      if (next) window.localStorage.setItem(storageKey, "saved");
-      else window.localStorage.setItem(storageKey, "cleared");
-      window.dispatchEvent(new Event("hmi-training-reminder"));
-      toast.success(
-        next ? "Pengingat diaktifkan." : "Pengingat dinonaktifkan."
-      );
-    } catch {
-      toast.error("Gagal memperbarui pengingat. Coba lagi.");
-    } finally {
-      setSavingReminder(false);
-    }
-  }
 
   return (
     <div className="relative mt-3 max-w-md overflow-hidden rounded-2xl bg-[#060505] shadow-[0_14px_30px_rgba(23,32,51,0.16)]">

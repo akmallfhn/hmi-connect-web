@@ -83,8 +83,18 @@ async function getSessionToken() {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
-async function getTrainingReadToken() {
-  return process.env.CLIENT_SECRET ?? (await getSessionToken());
+// Session first so reads carry the viewer's own is_reminder_active; a stale cookie falls back to the client secret.
+async function callTrainingRead<T>(path: string, body: Record<string, unknown>) {
+  const tokens = [await getSessionToken(), process.env.CLIENT_SECRET].filter(
+    (token): token is string => Boolean(token)
+  );
+
+  let result: ApiEnvelope<T> | null = null;
+  for (const token of tokens) {
+    result = await callApi<T>(path, { method: "POST", token, body });
+    if (result.status !== "UNAUTHORIZED") return result;
+  }
+  return result;
 }
 
 function emptyPage<T>(page = 1): PagedTrainingResult<T> {
@@ -116,28 +126,22 @@ export type ListTrainingsOptions = {
 export async function listTrainings(
   options: ListTrainingsOptions = {}
 ): Promise<PagedTrainingResult<TrainingListEntry>> {
-  const authToken = await getTrainingReadToken();
   const page = options.page ?? 1;
-  if (!authToken) return emptyPage(page);
-
-  const result = await callApi<ListResponse<TrainingListEntry>>(
+  const result = await callTrainingRead<ListResponse<TrainingListEntry>>(
     "/api/v1/trainings/list",
     {
-      method: "POST",
-      token: authToken,
-      body: {
-        ...(options.search ? { search: options.search } : {}),
-        ...(options.level ? { level: options.level } : {}),
-        ...(options.organizerType
-          ? { organizer_type: options.organizerType }
-          : {}),
-        ...(options.organizerId ? { organizer_id: options.organizerId } : {}),
-        page,
-        page_size: options.pageSize ?? 20,
-      },
+      ...(options.search ? { search: options.search } : {}),
+      ...(options.level ? { level: options.level } : {}),
+      ...(options.organizerType
+        ? { organizer_type: options.organizerType }
+        : {}),
+      ...(options.organizerId ? { organizer_id: options.organizerId } : {}),
+      page,
+      page_size: options.pageSize ?? 20,
     }
   );
 
+  if (!result) return emptyPage(page);
   if (!isSuccessStatus(result.status)) {
     console.error("[listTrainings] request failed:", result);
     return emptyPage(page);
@@ -145,26 +149,15 @@ export async function listTrainings(
   return mapPage(result.data, page);
 }
 
-// Session first so the response carries the viewer's own is_reminder_active; a stale cookie falls back to the client secret.
 export async function getTrainingDetail(
   id: string
 ): Promise<TrainingDetail | null> {
-  const sessionToken = await getSessionToken();
-  const tokens = [sessionToken, process.env.CLIENT_SECRET].filter(
-    (token): token is string => Boolean(token)
+  const result = await callTrainingRead<TrainingDetail>(
+    "/api/v1/trainings/detail",
+    { id }
   );
-
-  for (const token of tokens) {
-    const result = await callApi<TrainingDetail>("/api/v1/trainings/detail", {
-      method: "POST",
-      token,
-      body: { id },
-    });
-    if (result.status === "UNAUTHORIZED") continue;
-    if (!isSuccessStatus(result.status) || !result.data) return null;
-    return result.data;
-  }
-  return null;
+  if (!result || !isSuccessStatus(result.status) || !result.data) return null;
+  return result.data;
 }
 
 export type TrainingReminder = {

@@ -2590,15 +2590,20 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
   the register Server Component performs its own session check and redirects anonymous visitors
   to `/auth/login?redirectTo=/trainings/{training_id}/register`. `apis/trainings.ts#listTrainings` and
-  `getTrainingDetail` prefer the server-only `CLIENT_SECRET` so anonymous requests can use the
-  backend's auth-or-client-secret read endpoints; training/material admin writes and participant
-  reads remain session-cookie-backed. `getTrainingDetail` is the exception to that preference: it tries
-  the session cookie **first** (falling back to `CLIENT_SECRET` on a 401), because only a user-JWT
-  read carries `is_reminder_active`. The detail page's "Remind me!" button seeds from that field
-  and toggles through `activateTrainingReminder`/`deactivateTrainingReminder`
-  (`trainings/reminder/activate|deactivate`, session-only — the backend emails H-7/H-3/H-1),
-  optimistically with rollback; a logged-out visitor is sent to `/auth/login?redirectTo=`. It used
-  to be a `localStorage` flag that reminded nobody. `registerTraining` is exposed through `lib/actions.ts` and
+  `getTrainingDetail` both read through one `callTrainingRead` helper that tries the session cookie
+  **first** and falls back to the server-only `CLIENT_SECRET` on a 401 — a user-JWT read is the only
+  one carrying `is_reminder_active`, while the fallback keeps anonymous visitors and the sitemap
+  working. Training/material admin writes and participant reads remain session-cookie-backed.
+  Every reminder toggle — the detail page's "Remind me!" button, `PublicTrainingCard` in the catalog,
+  and the bell on the feed's `TrainingAttachmentCard` — goes through `hooks/useTrainingReminder.ts`:
+  it seeds from the server's `is_reminder_active` (`reference_is_reminder_active` on a feed
+  attachment), flips optimistically with rollback, calls `activateTrainingReminder`/
+  `deactivateTrainingReminder` (`trainings/reminder/activate|deactivate`, session-only — the backend
+  emails H-7/H-3/H-1), and sends a logged-out visitor to `/auth/login?redirectTo=`. A successful
+  toggle broadcasts an in-memory window event so every card for the same training on the page
+  agrees. There is deliberately **no `localStorage`** anywhere in this flow: it used to be the
+  catalog's only state and an override on the feed card, which reminded nobody and leaked one
+  account's state into the next. `registerTraining` is exposed through `lib/actions.ts` and
   always requires the caller's session JWT. The register route reads the caller's full profile,
   education histories, and training histories before rendering. Its Google-Forms-style page
   updates editable `full_name`/`phone_number` through `updateMyProfile`; conditionally requires

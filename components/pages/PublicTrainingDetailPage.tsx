@@ -8,11 +8,8 @@ import {
   IconShare,
 } from "@tabler/icons-react";
 import type { TrainingDetail } from "@/apis/trainings";
-import {
-  activateTrainingReminder,
-  deactivateTrainingReminder,
-  deleteTraining,
-} from "@/lib/actions";
+import { useTrainingReminder } from "@/hooks/useTrainingReminder";
+import { deleteTraining } from "@/lib/actions";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
 import { ExternalLink, ImageOff, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -131,43 +128,19 @@ export default function PublicTrainingDetailPage({
       ? ""
       : `${window.location.origin}/trainings/${training.id}`;
   const router = useRouter();
-  const [reminded, setReminded] = useState(
-    training.is_reminder_active ?? false
-  );
-  const [savingReminder, setSavingReminder] = useState(false);
+  const {
+    active: reminded,
+    saving: savingReminder,
+    toggle: toggleReminder,
+  } = useTrainingReminder({
+    trainingId: training.id,
+    initialActive: training.is_reminder_active,
+    isSignedIn: Boolean(viewer.userId),
+  });
   const canEditTraining =
     Boolean(viewer.userId) && training.contact_person_id === viewer.userId;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  async function toggleReminder() {
-    if (!viewer.userId) {
-      router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(`/trainings/${training.id}`)}`
-      );
-      return;
-    }
-
-    const next = !reminded;
-    setReminded(next);
-    setSavingReminder(true);
-    try {
-      const result = next
-        ? await activateTrainingReminder(training.id)
-        : await deactivateTrainingReminder(training.id);
-      if (!isSuccessStatus(result.status)) throw new Error(result.message);
-      toast.success(
-        next
-          ? "Pengingat aktif. Kami akan mengirim email H-7, H-3, dan H-1."
-          : "Pengingat dinonaktifkan."
-      );
-    } catch {
-      setReminded(!next);
-      toast.error("Gagal memperbarui pengingat. Coba lagi.");
-    } finally {
-      setSavingReminder(false);
-    }
-  }
 
   async function handleDeleteTraining() {
     if (!canEditTraining) return;

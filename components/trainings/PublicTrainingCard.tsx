@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import type { TrainingListEntry } from "@/apis/trainings";
+import { useTrainingReminder } from "@/hooks/useTrainingReminder";
 import { formatDate, formatShortDate } from "@/lib/time-manipulation";
 import type { TrainingOrganizerTypeEnum } from "@/lib/types";
 import Dropdown from "../common/Dropdown";
@@ -64,36 +65,20 @@ export default function PublicTrainingCard({
   isSignedIn,
 }: PublicTrainingCardProps) {
   const [shareOpen, setShareOpen] = useState(false);
-  const reminderKey = `hmi-connect:training-reminder:${training.id}`;
-  const subscribeToReminder = useCallback((callback: () => void) => {
-    window.addEventListener("storage", callback);
-    window.addEventListener("hmi-training-reminder", callback);
-    return () => {
-      window.removeEventListener("storage", callback);
-      window.removeEventListener("hmi-training-reminder", callback);
-    };
-  }, []);
-  const getReminderSnapshot = useCallback(
-    () => window.localStorage.getItem(reminderKey) === "saved",
-    [reminderKey],
-  );
-  const reminded = useSyncExternalStore(
-    subscribeToReminder,
-    getReminderSnapshot,
-    () => false,
-  );
+  const {
+    active: reminded,
+    saving: savingReminder,
+    toggle: toggleReminder,
+  } = useTrainingReminder({
+    trainingId: training.id,
+    initialActive: training.is_reminder_active,
+    isSignedIn,
+  });
 
   const eventUrl =
     typeof window === "undefined"
       ? ""
       : `${window.location.origin}/trainings/${training.id}`;
-
-  function toggleReminder() {
-    const nextValue = !reminded;
-    if (nextValue) window.localStorage.setItem(reminderKey, "saved");
-    else window.localStorage.removeItem(reminderKey);
-    window.dispatchEvent(new Event("hmi-training-reminder"));
-  }
 
   return (
     <>
@@ -142,6 +127,7 @@ export default function PublicTrainingCard({
         <button
           type="button"
           onClick={toggleReminder}
+          disabled={savingReminder}
           aria-pressed={reminded}
           className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
             reminded
