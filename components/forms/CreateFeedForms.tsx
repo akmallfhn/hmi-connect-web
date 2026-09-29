@@ -119,6 +119,7 @@ export type ComposerTrainingDraft = {
   id: string;
   name: string;
   level: "LK1" | "LK2" | "LK3";
+  organizerName?: string;
   startDate: string;
   endDate: string;
   imageUrl?: string;
@@ -279,6 +280,11 @@ function trainingPreviewAttachment(
     reference_level: training.level,
     reference_start_date: training.startDate,
     reference_end_date: training.endDate,
+    reference_organizer_entity_type: null,
+    reference_organizer_entity_id: null,
+    reference_organizer_entity_name: training.organizerName ?? null,
+    reference_organizer_entity_image_url: null,
+    reference_is_reminder_active: null,
     reference_is_deleted: false,
   };
 }
@@ -898,22 +904,13 @@ function FeedComposerFields({
       )}
 
       {training && (
-        <div className="relative">
-          <TrainingAttachmentCard
-            attachment={trainingPreviewAttachment(training)}
-          />
-          <Button
-            type="button"
-            onClick={() => setTraining(null)}
-            disabled={submitting}
-            variant="dark"
-            size="iconSm"
-            className="absolute right-2 top-5"
-            aria-label="Hapus training"
-          >
-            <IconX className="size-4" stroke={2} />
-          </Button>
-        </div>
+        <TrainingAttachmentCard
+          attachment={trainingPreviewAttachment(training)}
+          isSignedIn={Boolean(userId)}
+          showReminder={false}
+          onRemove={() => setTraining(null)}
+          removeDisabled={submitting}
+        />
       )}
 
       {quoteFeed && <QuotedFeed feed={quoteFeed} />}

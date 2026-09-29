@@ -57,6 +57,21 @@ export function formatDateRange(startDate: string, endDate: string) {
   return `${start.format("D MMM YYYY")} - ${end.format("D MMM YYYY")}`;
 }
 
+// Event detail needs the weekday as well, unlike compact dates in cards and admin lists.
+export function formatDateRangeWithWeekday(startDate: string, endDate: string) {
+  const start = dayjs(startDate).locale("id");
+  const end = dayjs(endDate).locale("id");
+
+  if (start.isSame(end, "day")) return start.format("dddd, D MMM YYYY");
+  if (start.isSame(end, "month")) {
+    return `${start.format("dddd, D")} - ${end.format("dddd, D MMM YYYY")}`;
+  }
+  if (start.isSame(end, "year")) {
+    return `${start.format("dddd, D MMM")} - ${end.format("dddd, D MMM YYYY")}`;
+  }
+  return `${start.format("dddd, D MMM YYYY")} - ${end.format("dddd, D MMM YYYY")}`;
+}
+
 // Long-form relative phrase ("5 menit yang lalu") — feed/comment/notification timestamps.
 export function formatRelativeTime(dateString: string): string {
   return dayjs(dateString).locale("id").fromNow();

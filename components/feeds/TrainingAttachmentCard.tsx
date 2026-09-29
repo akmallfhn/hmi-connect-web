@@ -1,23 +1,78 @@
-import { CalendarDays, GraduationCap } from "lucide-react";
+"use client";
+
+import { IconBellCheck, IconBellPlus } from "@tabler/icons-react";
+import { CalendarDays, GraduationCap, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import Label from "@/components/common/Label";
-import { formatDate, formatDateRange } from "@/lib/time-manipulation";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useState, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import type { FeedTrainingAttachment } from "@/apis/feeds";
+import LogoHmi from "@/components/svg/LogoHmi";
+import {
+  activateTrainingReminder,
+  deactivateTrainingReminder,
+} from "@/lib/actions";
+import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
+import { isSuccessStatus } from "@/lib/types";
 
 function scheduleLabel(attachment: FeedTrainingAttachment) {
   const { reference_start_date: start, reference_end_date: end } = attachment;
-  if (start && end) return formatDateRange(start, end);
-  if (start) return formatDate(start);
+  if (start && end) return formatDateRangeWithWeekday(start, end);
+  if (start) return formatDateRangeWithWeekday(start, start);
   return null;
 }
 
-// Opens in-app on reference_id — a training attachment carries no url, unlike news.
+function trainingLabel(level: FeedTrainingAttachment["reference_level"]) {
+  const levelNumber = level?.match(/\d+/)?.[0];
+  return levelNumber ? `Latihan Kader ${levelNumber}` : "Latihan Kader";
+}
+
+function reminderStorageKey(trainingId: string) {
+  return `hmi-connect:training-reminder:${trainingId}`;
+}
+
+interface TrainingAttachmentCardProps {
+  attachment: FeedTrainingAttachment;
+  isSignedIn: boolean;
+  showReminder?: boolean;
+  onRemove?: () => void;
+  removeDisabled?: boolean;
+}
+
+// An image-led event card: the entire artwork opens the training, while its actions stay independent.
 export default function TrainingAttachmentCard({
   attachment,
-}: {
-  attachment: FeedTrainingAttachment;
-}) {
+  isSignedIn,
+  showReminder = true,
+  onRemove,
+  removeDisabled = false,
+}: TrainingAttachmentCardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [savingReminder, setSavingReminder] = useState(false);
+  const subscribeToReminder = useCallback((callback: () => void) => {
+    window.addEventListener("storage", callback);
+    window.addEventListener("hmi-training-reminder", callback);
+    return () => {
+      window.removeEventListener("storage", callback);
+      window.removeEventListener("hmi-training-reminder", callback);
+    };
+  }, []);
+  const getReminderSnapshot = useCallback(() => {
+    const stored = window.localStorage.getItem(
+      reminderStorageKey(attachment.reference_id)
+    );
+    if (stored === "saved") return true;
+    if (stored === "cleared") return false;
+    return attachment.reference_is_reminder_active ?? false;
+  }, [attachment.reference_id, attachment.reference_is_reminder_active]);
+  const reminded = useSyncExternalStore(
+    subscribeToReminder,
+    getReminderSnapshot,
+    () => false
+  );
+
   if (attachment.reference_is_deleted) {
     return (
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f5f7fb] px-3 py-4 text-sm text-[#5f6573]">
@@ -28,54 +83,151 @@ export default function TrainingAttachmentCard({
   }
 
   const schedule = scheduleLabel(attachment);
+  const label = trainingLabel(attachment.reference_level);
+  const organizerName =
+    attachment.reference_organizer_entity_name?.trim() || "Penyelenggara HMI";
+
+  async function toggleReminder() {
+    if (!isSignedIn) {
+      router.push(
+        `/auth/login?redirectTo=${encodeURIComponent(pathname || "/")}`
+      );
+      return;
+    }
+
+    const next = !reminded;
+    setSavingReminder(true);
+    try {
+      const result = next
+        ? await activateTrainingReminder(attachment.reference_id)
+        : await deactivateTrainingReminder(attachment.reference_id);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+
+      const storageKey = reminderStorageKey(attachment.reference_id);
+      if (next) window.localStorage.setItem(storageKey, "saved");
+      else window.localStorage.setItem(storageKey, "cleared");
+      window.dispatchEvent(new Event("hmi-training-reminder"));
+      toast.success(
+        next ? "Pengingat diaktifkan." : "Pengingat dinonaktifkan."
+      );
+    } catch {
+      toast.error("Gagal memperbarui pengingat. Coba lagi.");
+    } finally {
+      setSavingReminder(false);
+    }
+  }
 
   return (
-    <Link
-      href={`/trainings/${attachment.reference_id}`}
-      className="mt-3 flex overflow-hidden rounded-xl border border-[#e6e9ef] transition hover:bg-[#f5f7fb]"
-    >
-      {attachment.reference_image_url ? (
-        <div className="relative aspect-square w-16 shrink-0 bg-[#f5f7fb] sm:w-24">
+    <div className="relative mt-3 max-w-md overflow-hidden rounded-2xl bg-[#060505] shadow-[0_14px_30px_rgba(23,32,51,0.16)]">
+      <Link
+        href={`/trainings/${attachment.reference_id}`}
+        className="group relative block aspect-[4/5] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+      >
+        {attachment.reference_image_url ? (
           <Image
             src={attachment.reference_image_url}
             alt=""
             fill
-            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="object-cover transition duration-700 group-hover:scale-[1.035]"
             unoptimized
           />
-        </div>
-      ) : (
-        <div className="flex aspect-square w-16 shrink-0 items-center justify-center bg-[#f5f7fb] text-[#5f6573] sm:w-24">
-          <GraduationCap className="size-5" />
-        </div>
-      )}
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-3 py-2">
-        <div className="flex items-center gap-2">
-          {attachment.reference_level && (
-            <Label variant="blue" size="sm">
-              {attachment.reference_level}
-            </Label>
-          )}
-          <p className="truncate text-[11px] uppercase tracking-wide text-[#5f6573]">
-            Latihan Kader
-          </p>
-        </div>
-        <p className="line-clamp-2 text-sm font-semibold text-[#172033]">
-          {attachment.reference_title ?? "Latihan Kader"}
-        </p>
-        {schedule ? (
-          <p className="flex items-center gap-1 text-xs text-[#5f6573]">
-            <CalendarDays className="size-3.5 shrink-0" />
-            {schedule}
-          </p>
         ) : (
-          attachment.reference_description && (
-            <p className="line-clamp-2 text-xs text-[#5f6573]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,#158184,transparent_42%),radial-gradient(circle_at_85%_100%,#d85c38,transparent_40%),#080a0c]" />
+        )}
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/5" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#060505]/35 via-transparent to-transparent" />
+
+        {!attachment.reference_image_url && (
+          <GraduationCap className="absolute right-5 top-16 size-16 text-white/15" />
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="rounded-full border border-white/15 bg-gradient-to-r from-[#222529] to-[#111214] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.22)]">
+              {label}
+            </span>
+          </div>
+          <p className="font-stack-sans-headline line-clamp-2 max-w-[28rem] text-xl font-medium leading-[1.08] text-white sm:text-2xl">
+            {attachment.reference_title ?? "Latihan Kader"}
+          </p>
+          <div className="mt-2 flex min-w-0 items-center gap-2 text-xs font-medium text-white/75 sm:text-sm">
+            <span className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/90 ring-1 ring-white/30">
+              {attachment.reference_organizer_entity_image_url ? (
+                <Image
+                  src={attachment.reference_organizer_entity_image_url}
+                  alt=""
+                  fill
+                  sizes="20px"
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <LogoHmi className="h-3.5 w-auto" />
+              )}
+            </span>
+            <p className="truncate">{organizerName}</p>
+          </div>
+          {attachment.reference_description && (
+            <p className="mt-1.5 line-clamp-1 max-w-xl text-xs leading-4 text-white/60 sm:text-sm">
               {attachment.reference_description}
             </p>
-          )
-        )}
-      </div>
-    </Link>
+          )}
+          <div className="mt-3 text-xs text-white/75 sm:text-sm">
+            {schedule ? (
+              <span className="flex min-w-0 items-center gap-1.5 truncate">
+                <CalendarDays className="size-3.5 shrink-0 text-secondary" />
+                {schedule}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </Link>
+
+      {(showReminder || onRemove) && (
+        <div className="absolute right-3 top-3 flex items-start gap-1.5">
+          {showReminder && (
+            <button
+              type="button"
+              onClick={toggleReminder}
+              disabled={savingReminder}
+              aria-label={
+                reminded
+                  ? `Batalkan pengingat ${attachment.reference_title ?? "training"}`
+                  : `Ingatkan saya tentang ${attachment.reference_title ?? "training"}`
+              }
+              aria-pressed={reminded}
+              title={reminded ? "Batalkan pengingat" : "Ingatkan saya"}
+              className={`flex size-9 cursor-pointer items-center justify-center rounded-full border backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60 ${
+                reminded
+                  ? "border-primary bg-primary text-white"
+                  : "border-white/20 bg-black/35 text-white hover:bg-white/20"
+              }`}
+            >
+              {savingReminder ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : reminded ? (
+                <IconBellCheck className="size-4" stroke={2} />
+              ) : (
+                <IconBellPlus className="size-4" stroke={2} />
+              )}
+            </button>
+          )}
+          {onRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={removeDisabled}
+              aria-label="Hapus training"
+              title="Hapus training"
+              className="flex size-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition hover:border-destructive hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

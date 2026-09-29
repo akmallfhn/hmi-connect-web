@@ -522,7 +522,10 @@ export default function FeedItemCard({
         <ArticleAttachmentCard attachment={articleAttachment} />
       )}
       {trainingAttachment && (
-        <TrainingAttachmentCard attachment={trainingAttachment} />
+        <TrainingAttachmentCard
+          attachment={trainingAttachment}
+          isSignedIn={Boolean(currentUserId)}
+        />
       )}
       {feed.repost_of ? (
         <QuotedFeed feed={feed.repost_of} linkToDetail />

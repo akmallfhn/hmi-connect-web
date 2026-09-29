@@ -1,14 +1,20 @@
 "use client";
 
-import { IconAlarm, IconBrandWhatsapp, IconShare3 } from "@tabler/icons-react";
+import {
+  IconBellCheck,
+  IconBellPlus,
+  IconBrandWhatsapp,
+  IconCalendarStar,
+  IconShare,
+} from "@tabler/icons-react";
 import type { TrainingDetail } from "@/apis/trainings";
 import {
   activateTrainingReminder,
   deactivateTrainingReminder,
 } from "@/lib/actions";
 import { formatOrganizerName } from "@/lib/organizer";
-import { formatDateRange } from "@/lib/time-manipulation";
-import { Calendar, CalendarDays, ExternalLink, ImageOff } from "lucide-react";
+import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
+import { ExternalLink, ImageOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +27,7 @@ import LogoHmi from "../svg/LogoHmi";
 import TrainingPageShell, {
   type TrainingViewer,
 } from "../trainings/TrainingPageShell";
+import RepostTrainingToFeedButton from "../trainings/RepostTrainingToFeedButton";
 
 interface PublicTrainingDetailPageProps {
   viewer: TrainingViewer;
@@ -208,28 +215,42 @@ export default function PublicTrainingDetailPage({
 
             <div className="mt-4 flex items-center justify-center gap-2">
               <Button
-                variant={reminded ? "soft" : "primary"}
+                variant={reminded ? "outline" : "secondary"}
                 size="default"
                 onClick={toggleReminder}
                 disabled={savingReminder}
                 aria-pressed={reminded}
               >
-                <IconAlarm className="size-5" stroke={2} />
-                {reminded ? "Diingatkan" : "Ingatkan saya"}
+                {reminded ? (
+                  <IconBellCheck className="size-5" stroke={2} />
+                ) : (
+                  <IconBellPlus className="size-5" stroke={2} />
+                )}
+                {reminded ? "Reminded" : "Remind me!"}
               </Button>
+              <RepostTrainingToFeedButton
+                training={training}
+                isSignedIn={Boolean(viewer.userId)}
+                iconOnly
+                variant="outline"
+                size="icon"
+              />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setShareOpen(true)}
                 aria-label={`Bagikan ${training.name}`}
               >
-                <IconShare3 className="size-5" stroke={2} />
+                <IconShare className="size-5" stroke={2} />
               </Button>
             </div>
 
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-base text-[#172033]">
-              <Calendar className="size-5 shrink-0" />
-              {formatDateRange(training.start_date, training.end_date)}
+              <IconCalendarStar className="size-5 shrink-0" stroke={2} />
+              {formatDateRangeWithWeekday(
+                training.start_date,
+                training.end_date,
+              )}
             </p>
           </div>
 
@@ -328,23 +349,34 @@ export default function PublicTrainingDetailPage({
 
                 <div className="mx-auto mt-4 flex w-full max-w-[340px] items-center gap-2">
                   <Button
-                    variant={reminded ? "soft" : "primary"}
+                    variant={reminded ? "outline" : "secondary"}
                     size="default"
                     onClick={toggleReminder}
                     disabled={savingReminder}
                     aria-pressed={reminded}
                     className="h-10 flex-1"
                   >
-                    <IconAlarm className="size-5" stroke={2} />
-                    {reminded ? "Diingatkan" : "Ingatkan saya"}
+                    {reminded ? (
+                      <IconBellCheck className="size-5" stroke={2} />
+                    ) : (
+                      <IconBellPlus className="size-5" stroke={2} />
+                    )}
+                    {reminded ? "Reminded" : "Remind me!"}
                   </Button>
+                  <RepostTrainingToFeedButton
+                    training={training}
+                    isSignedIn={Boolean(viewer.userId)}
+                    iconOnly
+                    variant="outline"
+                    size="icon"
+                  />
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => setShareOpen(true)}
                     aria-label={`Bagikan ${training.name}`}
                   >
-                    <IconShare3 className="size-5" stroke={2} />
+                    <IconShare className="size-5" stroke={2} />
                   </Button>
                 </div>
               </aside>
@@ -356,8 +388,11 @@ export default function PublicTrainingDetailPage({
 
                 <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#41474e] xl:text-[15px]">
                   <p className="flex items-center gap-2">
-                    <CalendarDays className="size-4 shrink-0" />
-                    {formatDateRange(training.start_date, training.end_date)}
+                    <IconCalendarStar className="size-4 shrink-0" stroke={2} />
+                    {formatDateRangeWithWeekday(
+                      training.start_date,
+                      training.end_date,
+                    )}
                   </p>
                 </div>
 
