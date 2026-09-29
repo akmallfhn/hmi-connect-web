@@ -1,21 +1,32 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/apis/session";
+import { getTrainingDetail } from "@/apis/trainings";
 import TrainingCreatePage from "@/components/pages/TrainingCreatePage";
 import PageState from "@/components/states/PageState";
 
 export const metadata: Metadata = {
-  title: "Buat Event",
-  description: "Buat agenda Latihan Kader HMI.",
+  title: "Edit Event Training",
   robots: { index: false, follow: false },
 };
 
-export default async function TrainingCreateRoute() {
-  const { user } = await getSession();
+interface TrainingEditRouteProps {
+  params: Promise<{ training_id: string }>;
+}
 
-  // /trainings is allowlisted in next.config.mts, so this route owns its own login bounce with redirectTo.
+export default async function TrainingEditRoute({
+  params,
+}: TrainingEditRouteProps) {
+  const { training_id } = await params;
+  const [{ user }, training] = await Promise.all([
+    getSession(),
+    getTrainingDetail(training_id),
+  ]);
+
   if (!user?.id) {
-    redirect(`/auth/login?redirectTo=${encodeURIComponent("/trainings/create")}`);
+    redirect(
+      `/auth/login?redirectTo=${encodeURIComponent(`/trainings/${training_id}/edit`)}`,
+    );
   }
   if (user.status === "pending") redirect("/activation");
   if (user.verification_status === "unverified") redirect("/verification");
@@ -23,11 +34,12 @@ export default async function TrainingCreateRoute() {
     return (
       <PageState
         variant="forbidden"
-        backHref="/trainings"
-        message="Akunmu sedang ditinjau admin. Kamu bisa membuat event setelah verifikasi disetujui."
+        backHref={`/trainings/${training_id}`}
+        message="Akunmu sedang ditinjau admin. Kamu bisa mengubah event setelah verifikasi disetujui."
       />
     );
   }
+  if (!training) notFound();
 
   return (
     <TrainingCreatePage
@@ -39,6 +51,7 @@ export default async function TrainingCreateRoute() {
         branchName: user.branch_name,
         verificationStatus: user.verification_status,
       }}
+      training={training}
     />
   );
 }

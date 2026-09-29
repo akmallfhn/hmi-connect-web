@@ -11,17 +11,20 @@ import type { TrainingDetail } from "@/apis/trainings";
 import {
   activateTrainingReminder,
   deactivateTrainingReminder,
+  deleteTraining,
 } from "@/lib/actions";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
-import { ExternalLink, ImageOff } from "lucide-react";
+import { ExternalLink, ImageOff, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
+import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
+import AlertConfirmation from "../modals/AlertConfirmation";
 import ShareModal from "../modals/ShareModal";
 import LogoHmi from "../svg/LogoHmi";
 import TrainingPageShell, {
@@ -33,6 +36,9 @@ interface PublicTrainingDetailPageProps {
   viewer: TrainingViewer;
   training: TrainingDetail;
 }
+
+const EVENT_MENU_ITEM_CLASS =
+  "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]";
 
 function buildWhatsAppUrl(phoneNumber: string) {
   const digits = phoneNumber.replace(/\D/g, "");
@@ -129,6 +135,9 @@ export default function PublicTrainingDetailPage({
     training.is_reminder_active ?? false
   );
   const [savingReminder, setSavingReminder] = useState(false);
+  const canEditTraining = training.contact_person_id === viewer.userId;
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function toggleReminder() {
     if (!viewer.userId) {
@@ -156,6 +165,22 @@ export default function PublicTrainingDetailPage({
       toast.error("Gagal memperbarui pengingat. Coba lagi.");
     } finally {
       setSavingReminder(false);
+    }
+  }
+
+  async function handleDeleteTraining() {
+    if (!canEditTraining) return;
+
+    setDeleting(true);
+    try {
+      const result = await deleteTraining(training.id);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+
+      toast.success("Event berhasil dihapus.");
+      router.replace("/trainings");
+    } catch {
+      toast.error("Gagal menghapus event. Coba lagi.");
+      setDeleting(false);
     }
   }
 
@@ -243,8 +268,43 @@ export default function PublicTrainingDetailPage({
               >
                 <IconShare className="size-5" stroke={2} />
               </Button>
+              {canEditTraining && (
+                <Dropdown
+                  align="right"
+                  panelClassName="w-48 rounded-xl"
+                  trigger={({ open, toggle }) => (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={toggle}
+                      aria-label={`Opsi ${training.name}`}
+                      aria-expanded={open}
+                    >
+                      <MoreHorizontal className="size-5" />
+                    </Button>
+                  )}
+                >
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/trainings/${training.id}/edit`)}
+                      className={EVENT_MENU_ITEM_CLASS}
+                    >
+                      <Pencil className="size-4 text-[#5f6573]" />
+                      Edit event
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteOpen(true)}
+                      className={`${EVENT_MENU_ITEM_CLASS} text-destructive hover:bg-destructive-soft`}
+                    >
+                      <Trash2 className="size-4" />
+                      Hapus event
+                    </button>
+                  </div>
+                </Dropdown>
+              )}
             </div>
-
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-base text-[#172033]">
               <IconCalendarStar className="size-5 shrink-0" stroke={2} />
               {formatDateRangeWithWeekday(
@@ -378,6 +438,44 @@ export default function PublicTrainingDetailPage({
                   >
                     <IconShare className="size-5" stroke={2} />
                   </Button>
+                  {canEditTraining && (
+                    <Dropdown
+                      align="right"
+                      panelClassName="w-48 rounded-xl"
+                      trigger={({ open, toggle }) => (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={toggle}
+                          aria-label={`Opsi ${training.name}`}
+                          aria-expanded={open}
+                        >
+                          <MoreHorizontal className="size-5" />
+                        </Button>
+                      )}
+                    >
+                      <div className="py-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/trainings/${training.id}/edit`)
+                          }
+                          className={EVENT_MENU_ITEM_CLASS}
+                        >
+                          <Pencil className="size-4 text-[#5f6573]" />
+                          Edit event
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteOpen(true)}
+                          className={`${EVENT_MENU_ITEM_CLASS} text-destructive hover:bg-destructive-soft`}
+                        >
+                          <Trash2 className="size-4" />
+                          Hapus event
+                        </button>
+                      </div>
+                    </Dropdown>
+                  )}
                 </div>
               </aside>
 
@@ -458,6 +556,15 @@ export default function PublicTrainingDetailPage({
         onClose={() => setShareOpen(false)}
         url={shareUrl}
         text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
+      />
+      <AlertConfirmation
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDeleteTraining}
+        title="Hapus event?"
+        message={`Event “${training.name}” akan dihapus dan tidak dapat dipulihkan.`}
+        confirmLabel="Hapus event"
+        loading={deleting}
       />
     </TrainingPageShell>
   );

@@ -5,14 +5,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
-import { createTraining } from "@/lib/actions";
+import type { TrainingDetail } from "@/apis/trainings";
+import { createTraining, updateTraining } from "@/lib/actions";
 import {
   TRAINING_POSTER_ACCEPT,
   uploadTrainingPoster,
 } from "@/lib/training-poster";
 import {
   isSuccessStatus,
-  type TrainingOrganizerTypeEnum,
   type TrainingStatusEnum,
 } from "@/lib/types";
 import Button from "../buttons/Button";
@@ -24,29 +24,16 @@ import TrainingPageShell, {
   type TrainingViewer,
 } from "../trainings/TrainingPageShell";
 
-export type TrainingOrganizerChoice = {
-  type: TrainingOrganizerTypeEnum;
-  id: string;
-  name: string; // bare name, since every organizer display adds its own level prefix
-  label: string;
-};
-
 interface TrainingCreatePageProps {
   viewer: TrainingViewer;
-  organizers: TrainingOrganizerChoice[];
+  training?: TrainingDetail;
 }
-
-const CUSTOM_ORGANIZER = "custom";
 
 const LEVEL_OPTIONS: { label: string; value: TrainingStatusEnum }[] = [
   { label: "Latihan Kader 1 (LK1)", value: "LK1" },
   { label: "Latihan Kader 2 (LK2)", value: "LK2" },
   { label: "Latihan Kader 3 (LK3)", value: "LK3" },
 ];
-
-function organizerKey(organizer: TrainingOrganizerChoice) {
-  return `${organizer.type}:${organizer.id}`;
-}
 
 function isValidHttpUrl(value: string) {
   try {
@@ -59,36 +46,31 @@ function isValidHttpUrl(value: string) {
 
 export default function TrainingCreatePage({
   viewer,
-  organizers,
+  training,
 }: TrainingCreatePageProps) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState(training?.image_url ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [name, setName] = useState("");
-  const [level, setLevel] = useState<TrainingStatusEnum | null>(null);
-  const [organizerValue, setOrganizerValue] = useState(
-    organizers[0] ? organizerKey(organizers[0]) : CUSTOM_ORGANIZER
+  const [name, setName] = useState(training?.name ?? "");
+  const [level, setLevel] = useState<TrainingStatusEnum | null>(
+    training?.level ?? null,
   );
-  const [customOrganizerName, setCustomOrganizerName] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [locationName, setLocationName] = useState("");
-  const [locationUrl, setLocationUrl] = useState("");
+  const [organizerName, setOrganizerName] = useState(
+    training?.organizer_name ?? "",
+  );
+  const [description, setDescription] = useState(training?.description ?? "");
+  const [startDate, setStartDate] = useState(training?.start_date ?? "");
+  const [endDate, setEndDate] = useState(training?.end_date ?? "");
+  const [locationName, setLocationName] = useState(
+    training?.location_name ?? "",
+  );
+  const [locationUrl, setLocationUrl] = useState(
+    training?.location_url ?? "",
+  );
   const [isSaving, setIsSaving] = useState(false);
-
-  const selectedOrganizer = organizers.find(
-    (organizer) => organizerKey(organizer) === organizerValue
-  );
-  const organizerOptions = [
-    ...organizers.map((organizer) => ({
-      label: organizer.label,
-      value: organizerKey(organizer),
-    })),
-    { label: "Lainnya (tulis sendiri)", value: CUSTOM_ORGANIZER },
-  ];
+  const isEditing = Boolean(training);
   const busy = isSaving || isUploadingImage;
 
   async function handleImageFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -118,40 +100,49 @@ export default function TrainingCreatePage({
       return;
     }
 
-    const organizerName = selectedOrganizer
-      ? selectedOrganizer.name
-      : customOrganizerName.trim();
-
     setIsSaving(true);
     try {
-      const result = await createTraining({
-        name: name.trim(),
-        level,
-        start_date: startDate,
-        end_date: endDate,
-        ...(selectedOrganizer
-          ? {
-              organizer_type: selectedOrganizer.type,
-              organizer_id: selectedOrganizer.id,
-            }
-          : {}),
-        ...(organizerName ? { organizer_name: organizerName } : {}),
-        ...(description.trim() ? { description: description.trim() } : {}),
-        ...(locationName.trim() ? { location_name: locationName.trim() } : {}),
-        ...(locationUrl.trim() ? { location_url: locationUrl.trim() } : {}),
-        ...(imageUrl ? { image_url: imageUrl } : {}),
-      });
+      const result = training
+        ? await updateTraining({
+            id: training.id,
+            name: name.trim(),
+            level,
+            organizer_name: organizerName.trim(),
+            description: description.trim(),
+            start_date: startDate,
+            end_date: endDate,
+            location_name: locationName.trim(),
+            location_url: locationUrl.trim(),
+            image_url: imageUrl,
+          })
+        : await createTraining({
+            name: name.trim(),
+            level,
+            start_date: startDate,
+            end_date: endDate,
+            ...(organizerName.trim()
+              ? { organizer_name: organizerName.trim() }
+              : {}),
+            ...(description.trim() ? { description: description.trim() } : {}),
+            ...(locationName.trim()
+              ? { location_name: locationName.trim() }
+              : {}),
+            ...(locationUrl.trim()
+              ? { location_url: locationUrl.trim() }
+              : {}),
+            ...(imageUrl ? { image_url: imageUrl } : {}),
+          });
 
       if (!isSuccessStatus(result.status) || !result.data) {
-        toast.error(result.message ?? "Gagal membuat event.");
+        toast.error(result.message ?? "Gagal menyimpan event.");
         setIsSaving(false);
         return;
       }
-      toast.success("Event berhasil dibuat.");
+      toast.success(isEditing ? "Event berhasil diperbarui." : "Event berhasil dibuat.");
       router.push(`/trainings/${result.data.id}`);
     } catch (error) {
-      console.error("[TrainingCreatePage] create threw:", error);
-      toast.error("Gagal membuat event.");
+      console.error("[TrainingCreatePage] save threw:", error);
+      toast.error("Gagal menyimpan event.");
       setIsSaving(false);
     }
   }
@@ -159,7 +150,7 @@ export default function TrainingCreatePage({
   return (
     <TrainingPageShell
       viewer={viewer}
-      mobileBackTitle="Buat Event"
+      mobileBackTitle={isEditing ? "Edit Event Training" : "Buat Event Training"}
       hideBottomNav
     >
       <main>
@@ -167,11 +158,8 @@ export default function TrainingCreatePage({
           <div className="mx-auto w-full max-w-[720px]">
             <div className="hidden lg:block">
               <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
-                Buat Event
+                {isEditing ? "Edit Event Training" : "Buat Event Training"}
               </h1>
-              <p className="mt-1 text-sm text-[#5f6573]">
-                Umumkan agenda Latihan Kader agar kader lain bisa mendaftar.
-              </p>
             </div>
 
             <form
@@ -256,27 +244,13 @@ export default function TrainingCreatePage({
                 options={LEVEL_OPTIONS}
                 required
               />
-              <Select
-                selectId="event-organizer"
-                label="Penyelenggara"
-                placeholder="Pilih penyelenggara"
-                value={organizerValue}
-                onChange={(value) =>
-                  setOrganizerValue(String(value ?? CUSTOM_ORGANIZER))
-                }
-                options={organizerOptions}
+              <Input
+                inputId="event-organizer-name"
+                label="Nama Penyelenggara"
+                placeholder="Contoh: HMI Komisariat Fakultas Teknik"
+                value={organizerName}
+                onChange={(event) => setOrganizerName(event.target.value)}
               />
-              {!selectedOrganizer && (
-                <Input
-                  inputId="event-organizer-name"
-                  label="Nama Penyelenggara"
-                  placeholder="Contoh: HMI Komisariat Fakultas Teknik"
-                  value={customOrganizerName}
-                  onChange={(event) =>
-                    setCustomOrganizerName(event.target.value)
-                  }
-                />
-              )}
               <TextArea
                 textAreaId="event-description"
                 label="Deskripsi"
@@ -335,7 +309,11 @@ export default function TrainingCreatePage({
                   Batal
                 </Button>
                 <Button type="submit" variant="primary" disabled={busy}>
-                  {isSaving ? "Menyimpan..." : "Buat Event"}
+                  {isSaving
+                    ? "Menyimpan..."
+                    : isEditing
+                      ? "Simpan Perubahan"
+                      : "Buat Event"}
                 </Button>
               </div>
             </form>
