@@ -2,11 +2,18 @@
 
 import { IconAlarm, IconBrandWhatsapp, IconShare3 } from "@tabler/icons-react";
 import type { TrainingDetail } from "@/apis/trainings";
+import {
+  activateTrainingReminder,
+  deactivateTrainingReminder,
+} from "@/lib/actions";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { Calendar, CalendarDays, ExternalLink, ImageOff } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import ShareModal from "../modals/ShareModal";
@@ -110,29 +117,39 @@ export default function PublicTrainingDetailPage({
     typeof window === "undefined"
       ? ""
       : `${window.location.origin}/trainings/${training.id}`;
-  const reminderKey = `hmi-connect:training-reminder:${training.id}`;
-  const subscribeToReminder = useCallback((callback: () => void) => {
-    window.addEventListener("storage", callback);
-    window.addEventListener("hmi-training-reminder", callback);
-    return () => {
-      window.removeEventListener("storage", callback);
-      window.removeEventListener("hmi-training-reminder", callback);
-    };
-  }, []);
-  const getReminderSnapshot = useCallback(
-    () => window.localStorage.getItem(reminderKey) === "saved",
-    [reminderKey]
+  const router = useRouter();
+  const [reminded, setReminded] = useState(
+    training.is_reminder_active ?? false
   );
-  const reminded = useSyncExternalStore(
-    subscribeToReminder,
-    getReminderSnapshot,
-    () => false
-  );
+  const [savingReminder, setSavingReminder] = useState(false);
 
-  function toggleReminder() {
-    if (reminded) window.localStorage.removeItem(reminderKey);
-    else window.localStorage.setItem(reminderKey, "saved");
-    window.dispatchEvent(new Event("hmi-training-reminder"));
+  async function toggleReminder() {
+    if (!viewer.userId) {
+      router.push(
+        `/auth/login?redirectTo=${encodeURIComponent(`/trainings/${training.id}`)}`
+      );
+      return;
+    }
+
+    const next = !reminded;
+    setReminded(next);
+    setSavingReminder(true);
+    try {
+      const result = next
+        ? await activateTrainingReminder(training.id)
+        : await deactivateTrainingReminder(training.id);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      toast.success(
+        next
+          ? "Pengingat aktif. Kami akan mengirim email H-7, H-3, dan H-1."
+          : "Pengingat dinonaktifkan."
+      );
+    } catch {
+      setReminded(!next);
+      toast.error("Gagal memperbarui pengingat. Coba lagi.");
+    } finally {
+      setSavingReminder(false);
+    }
   }
 
   return (
@@ -194,6 +211,7 @@ export default function PublicTrainingDetailPage({
                 variant={reminded ? "soft" : "primary"}
                 size="default"
                 onClick={toggleReminder}
+                disabled={savingReminder}
                 aria-pressed={reminded}
               >
                 <IconAlarm className="size-5" stroke={2} />
@@ -313,6 +331,7 @@ export default function PublicTrainingDetailPage({
                     variant={reminded ? "soft" : "primary"}
                     size="default"
                     onClick={toggleReminder}
+                    disabled={savingReminder}
                     aria-pressed={reminded}
                     className="h-10 flex-1"
                   >

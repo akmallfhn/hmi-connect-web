@@ -2587,7 +2587,13 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   to `/auth/login?redirectTo=/trainings/{training_id}/register`. `apis/trainings.ts#listTrainings` and
   `getTrainingDetail` prefer the server-only `CLIENT_SECRET` so anonymous requests can use the
   backend's auth-or-client-secret read endpoints; training/material admin writes and participant
-  reads remain session-cookie-backed. `registerTraining` is exposed through `lib/actions.ts` and
+  reads remain session-cookie-backed. `getTrainingDetail` is the exception to that preference: it tries
+  the session cookie **first** (falling back to `CLIENT_SECRET` on a 401), because only a user-JWT
+  read carries `is_reminder_active`. The detail page's "Ingatkan saya" button seeds from that field
+  and toggles through `activateTrainingReminder`/`deactivateTrainingReminder`
+  (`trainings/reminder/activate|deactivate`, session-only — the backend emails H-7/H-3/H-1),
+  optimistically with rollback; a logged-out visitor is sent to `/auth/login?redirectTo=`. It used
+  to be a `localStorage` flag that reminded nobody. `registerTraining` is exposed through `lib/actions.ts` and
   always requires the caller's session JWT. The register route reads the caller's full profile,
   education histories, and training histories before rendering. Its Google-Forms-style page
   updates editable `full_name`/`phone_number` through `updateMyProfile`; conditionally requires

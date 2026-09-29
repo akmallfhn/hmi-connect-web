@@ -196,8 +196,10 @@ import {
   type SendMessagePayload,
 } from "@/apis/chats";
 import {
+  activateTrainingReminder as activateTrainingReminderApi,
   createTraining as createTrainingApi,
   createTrainingMaterial as createTrainingMaterialApi,
+  deactivateTrainingReminder as deactivateTrainingReminderApi,
   deleteTraining as deleteTrainingApi,
   deleteTrainingMaterial as deleteTrainingMaterialApi,
   lockTrainingEvaluations as lockTrainingEvaluationsApi,
@@ -425,6 +427,14 @@ export async function deleteTraining(id: string) {
 
 export async function registerTraining(payload: RegisterTrainingPayload) {
   return registerTrainingApi(payload);
+}
+
+export async function activateTrainingReminder(trainingId: string) {
+  return activateTrainingReminderApi(trainingId);
+}
+
+export async function deactivateTrainingReminder(trainingId: string) {
+  return deactivateTrainingReminderApi(trainingId);
 }
 
 export async function createTrainingMaterial(

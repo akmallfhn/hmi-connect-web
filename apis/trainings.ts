@@ -24,6 +24,8 @@ export type TrainingListEntry = {
   is_evaluation_locked: boolean;
   location_name?: string;
   image_url?: string;
+  // Only present on a user-JWT read; a client-secret read omits it.
+  is_reminder_active?: boolean;
   created_at: string;
 };
 
@@ -143,19 +145,61 @@ export async function listTrainings(
   return mapPage(result.data, page);
 }
 
+// Session first so the response carries the viewer's own is_reminder_active; a stale cookie falls back to the client secret.
 export async function getTrainingDetail(
   id: string
 ): Promise<TrainingDetail | null> {
-  const authToken = await getTrainingReadToken();
-  if (!authToken) return null;
+  const sessionToken = await getSessionToken();
+  const tokens = [sessionToken, process.env.CLIENT_SECRET].filter(
+    (token): token is string => Boolean(token)
+  );
 
-  const result = await callApi<TrainingDetail>("/api/v1/trainings/detail", {
+  for (const token of tokens) {
+    const result = await callApi<TrainingDetail>("/api/v1/trainings/detail", {
+      method: "POST",
+      token,
+      body: { id },
+    });
+    if (result.status === "UNAUTHORIZED") continue;
+    if (!isSuccessStatus(result.status) || !result.data) return null;
+    return result.data;
+  }
+  return null;
+}
+
+export type TrainingReminder = {
+  training_id: string;
+  user_id: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+async function setTrainingReminder(
+  trainingId: string,
+  action: "activate" | "deactivate"
+): Promise<ApiEnvelope<TrainingReminder>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return {
+      status: "UNAUTHORIZED",
+      message: "Silakan masuk untuk mengaktifkan pengingat.",
+    };
+  }
+
+  return callApi<TrainingReminder>(`/api/v1/trainings/reminder/${action}`, {
     method: "POST",
-    token: authToken,
-    body: { id },
+    token: sessionToken,
+    body: { training_id: trainingId },
   });
-  if (!isSuccessStatus(result.status) || !result.data) return null;
-  return result.data;
+}
+
+export async function activateTrainingReminder(trainingId: string) {
+  return setTrainingReminder(trainingId, "activate");
+}
+
+export async function deactivateTrainingReminder(trainingId: string) {
+  return setTrainingReminder(trainingId, "deactivate");
 }
 
 export type RegisterTrainingPayload = {
