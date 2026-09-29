@@ -74,7 +74,8 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 the `/www` segment (see `app/(www)/www/`), and hides `/www` from direct access. It also
 holds the cookie-based redirect rules (no session → `/auth/login`, has session → don't
 show login again). Paths listed in that first rule's negative lookahead opt out of it:
-`profile/*`, `trainings*`, and `feeds/*` because they're genuinely public, and
+`profile/*`, `trainings*`, and `feeds/*` because they're genuinely public;
+`api/attachment-palette` is public so those pages can color their attachments; and
 `invitations/*` because it isn't — that route needs to redirect to login with its own
 `redirectTo` so the emailed link survives signing in, which a config-level redirect can't do.
 `auth/forget-password` and `reset-password/*` are allowlisted for the plainest reason of all:
@@ -1272,15 +1273,19 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   articles are all
   soft-deleted, so a removed target still resolves and arrives with `reference_is_deleted`
   true — all three cards render a muted "sudah dihapus" strip rather than dropping the attachment,
-  the same reasoning `DeletedQuotedFeed` follows. `ArticleAttachmentCard` is deliberately the
-  large image-led card (16/9 cover above a dark `#202428` band carrying the author avatar +
-  byline, the `font-stack-sans-headline` title, and the description) rather than the compact
-  horizontal strip `NewsAttachmentCard` uses: an editorial article is first-party long-form
-  content, a news item is an external link-out, and the two shouldn't read as the same thing.
-  (`NewsAttachmentCard` itself was reworked into that dark strip — `bg-[#202428]`, title and
-  source on the left, the cover bled into the right ~38% behind a left-to-right gradient that
-  fades it into the card, so the photo reads as texture rather than as a competing thumbnail; it
-  no longer has a hover tint.) `ArticleAttachmentCard`'s
+  the same reasoning `DeletedQuotedFeed` follows. `ArticleAttachmentCard` and
+  `NewsAttachmentCard` share a borderless image-led layout: on mobile a 16/9 thumbnail fades into
+  the metadata band below it, and on desktop the thumbnail fills the 16/9 card with metadata
+  overlaid at the bottom. Description text is limited to three lines on mobile and two on
+  desktop. Article metadata uses its author name/avatar; news uses its source name/logo. Both
+  gradients use exactly one palette color, from full opacity to transparent. The thumbnail is
+  sampled by `/www/api/attachment-palette` (the public path is `/api/attachment-palette`),
+  matched to the fixed dark colors in `lib/attachment-palette.ts`, and cached through
+  `hooks/useAttachmentPalette.ts`; images that cannot be sampled use neutral gray. The route
+  checks public HTTP(S) destinations, follows at most two redirects, and caps download and decode
+  size. The global revalidation header excludes this image-only endpoint so its success/fallback
+  cache lifetimes apply. It is allowlisted in the no-session redirect because public feed detail can render
+  these cards. `ArticleAttachmentCard`'s
   byline falls back from `reference_author_name` to `reference_category_name`, since an article
   can be published without an author. The composer now produces this attachment too — the reader's
   own Repeat2 button hands one over, see `ArticleDetailActions` under

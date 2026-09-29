@@ -1,78 +1,97 @@
+"use client";
+
 import { Newspaper } from "lucide-react";
 import Image from "next/image";
+import Avatar from "@/components/common/Avatar";
 import type { FeedNewsAttachment } from "@/apis/feeds";
+import { useAttachmentPalette } from "@/hooks/useAttachmentPalette";
 
-// The resolved twin of LinkPreviewCard: same slot and shape, but the backend hands us the fields.
+// A resolved news item follows the article attachment layout, but uses its source as the byline.
 export default function NewsAttachmentCard({
   attachment,
 }: {
   attachment: FeedNewsAttachment;
 }) {
+  const color = useAttachmentPalette(
+    attachment.reference_is_deleted ? null : attachment.reference_image_url
+  );
+
   if (attachment.reference_is_deleted) {
     return (
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f5f7fb] px-3 py-4 text-sm text-[#5f6573]">
+      <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f7fb] px-3 py-4 text-sm text-[#5f6573]">
         <Newspaper className="size-4 shrink-0" />
         Berita yang dibagikan sudah dihapus
       </div>
     );
   }
 
-  const body = (
+  const title = attachment.reference_title ?? "Berita";
+  const sourceName = attachment.reference_source_name ?? "Berita";
+  const card = (
     <>
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <p className="line-clamp-2 text-sm font-semibold font-stack-sans-headline leading-5 text-white sm:text-base">
-            {attachment.reference_title ?? "Berita"}
-          </p>
-          {attachment.reference_description && (
-            <p className="mt-1.5 line-clamp-1 text-[13px] leading-4 text-white/65">
-              {attachment.reference_description}
-            </p>
-          )}
-        </div>
-        <div className="flex min-w-0 items-center gap-1.5 text-white/65">
-          {attachment.reference_source_logo_url ? (
-            <span className="relative size-4 shrink-0 overflow-hidden rounded-full bg-white">
-              <Image
-                src={attachment.reference_source_logo_url}
-                alt=""
-                fill
-                className="object-contain"
-                unoptimized
-              />
-            </span>
-          ) : (
-            <Newspaper className="size-3.5 shrink-0" />
-          )}
-          <p className="truncate text-xs tracking-wide">
-            {attachment.reference_source_name ?? "Berita"}
-          </p>
-        </div>
-      </div>
-      {attachment.reference_image_url ? (
-        <div className="relative w-[38%] shrink-0 self-stretch bg-black/20 sm:w-40">
+      <div className="relative aspect-[16/9] w-full overflow-hidden md:absolute md:inset-0 md:aspect-auto">
+        {attachment.reference_image_url ? (
           <Image
             src={attachment.reference_image_url}
             alt=""
             fill
-            className="object-cover brightness-[0.78] saturate-[0.7] contrast-[0.9]"
+            sizes="(max-width: 767px) 100vw, 640px"
+            className="object-cover transition duration-500 group-hover:scale-[1.025]"
             unoptimized
           />
-          <div className="pointer-events-none absolute inset-0 bg-[#202428]/30" />
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-[#202428] from-5% via-[#202428]/75 to-transparent" />
+        ) : (
+          <div className="flex size-full items-center justify-center text-white/40">
+            <Newspaper className="size-9" />
+          </div>
+        )}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 md:hidden"
+          style={{
+            backgroundImage: `linear-gradient(to top, ${color}, ${color}00)`,
+          }}
+        />
+      </div>
+
+      <div
+        className="pointer-events-none absolute inset-0 hidden md:block"
+        style={{
+          backgroundImage: `linear-gradient(to top, ${color} 0%, ${color} 25%, ${color}00 100%)`,
+        }}
+      />
+
+      <div className="relative flex flex-col gap-2 p-4 text-white md:aspect-[16/9] md:justify-end md:gap-2.5 md:p-5 md:pt-20">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar
+            src={attachment.reference_source_logo_url}
+            name={sourceName}
+            size={24}
+            className="bg-white ring-1 ring-white/25"
+          />
+          <p className="truncate text-xs font-medium text-white/75">
+            {sourceName}
+          </p>
         </div>
-      ) : (
-        <div className="flex w-[38%] shrink-0 items-center justify-center bg-black/20 text-white/45 sm:w-40">
-          <Newspaper className="size-7" />
-        </div>
-      )}
+
+        <p className="line-clamp-2 font-stack-sans-headline text-base font-medium leading-5 text-white md:text-xl md:leading-6">
+          {title}
+        </p>
+
+        {attachment.reference_description && (
+          <p className="line-clamp-3 text-[13px] leading-5 text-white/70 md:line-clamp-2 md:text-sm md:leading-5">
+            {attachment.reference_description}
+          </p>
+        )}
+      </div>
     </>
   );
 
+  const className =
+    "group relative isolate mt-3 block overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
   if (!attachment.reference_url) {
     return (
-      <div className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428]">
-        {body}
+      <div className={className} style={{ backgroundColor: color }}>
+        {card}
       </div>
     );
   }
@@ -82,9 +101,10 @@ export default function NewsAttachmentCard({
       href={attachment.reference_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-3 flex min-h-32 overflow-hidden rounded-xl border border-white/10 bg-[#202428] transition"
+      className={className}
+      style={{ backgroundColor: color }}
     >
-      {body}
+      {card}
     </a>
   );
 }

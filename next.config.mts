@@ -16,11 +16,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Force revalidation on every site host so a cookie-dependent response never gets served stale.
+  // Force revalidation on site pages; the public palette response has its own image-based cache lifetime.
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/:path((?!api/attachment-palette$).*)",
         has: [
           {
             type: "header",
@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
       // No session cookie on a protected path -> send to /auth/login
       {
         source:
-          "/:path((?!auth/login|auth/forget-password|reset-password/.*|api/auth/callback/google|profile/.*|trainings(?:/.*)?|invitations/.*|feeds/.*|articles(?:/.*)?|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
+          "/:path((?!auth/login|auth/forget-password|reset-password/.*|api/auth/callback/google|api/attachment-palette|profile/.*|trainings(?:/.*)?|invitations/.*|feeds/.*|articles(?:/.*)?|_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\..*).*)",
         has: [
           {
             type: "header",
