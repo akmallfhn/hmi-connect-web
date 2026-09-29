@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Ban,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   Heart,
   MessageCircle,
@@ -15,7 +17,15 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useState, useTransition } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
@@ -95,8 +105,6 @@ function PhotoGrid({
   const photos = [...unsorted].sort(
     (a, b) => a.reference_index - b.reference_index,
   );
-  const visible = photos.slice(0, 4);
-  const overflow = photos.length - visible.length;
 
   if (photos.length === 1) {
     return (
@@ -118,46 +126,96 @@ function PhotoGrid({
   }
 
   return (
-    <div className="mt-3 grid grid-cols-2 gap-1 overflow-hidden rounded-xl">
-      {visible.map((photo, idx) => {
-        const isLastVisible = idx === visible.length - 1;
-        const spanFull = photos.length === 3 && idx === 0;
-        return (
-          <button
-            type="button"
-            key={photo.id}
-            onClick={() => onPreview(photo)}
-            className={`relative aspect-square bg-[#f5f7fb] ${spanFull ? "col-span-2" : ""}`}
-            aria-label="Buka pratinjau gambar"
-          >
-            <Image
-              src={photo.reference_url}
-              alt=""
-              fill
-              className="object-cover"
-              unoptimized
-            />
-            {isLastVisible && overflow > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-lg font-semibold text-white">
-                +{overflow}
-              </div>
-            )}
-          </button>
-        );
-      })}
+    <div className="mt-3 flex h-72 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] sm:h-80 lg:h-96 [&::-webkit-scrollbar]:hidden">
+      {photos.map((photo, index) => (
+        <ScrollablePhoto
+          key={photo.id}
+          photo={photo}
+          index={index}
+          total={photos.length}
+          onPreview={onPreview}
+        />
+      ))}
     </div>
+  );
+}
+
+function ScrollablePhoto({
+  photo,
+  index,
+  total,
+  onPreview,
+}: {
+  photo: FeedUploadAttachment;
+  index: number;
+  total: number;
+  onPreview: (photo: FeedUploadAttachment) => void;
+}) {
+  // A temporary portrait ratio prevents a zero-width item while the image loads.
+  const [aspectRatio, setAspectRatio] = useState(4 / 5);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onPreview(photo)}
+      style={{ aspectRatio }}
+      className="relative h-full shrink-0 snap-start overflow-hidden rounded-xl bg-[#f5f7fb]"
+      aria-label={`Buka pratinjau gambar ${index + 1} dari ${total}`}
+    >
+      <Image
+        src={photo.reference_url}
+        alt=""
+        fill
+        className="object-cover"
+        onLoad={(event) => {
+          const { naturalHeight, naturalWidth } = event.currentTarget;
+          if (naturalWidth && naturalHeight) {
+            setAspectRatio(naturalWidth / naturalHeight);
+          }
+        }}
+        unoptimized
+      />
+    </button>
   );
 }
 
 function ImagePreviewModal({
   photo,
+  photos,
+  onPhotoChange,
   onClose,
 }: {
   photo: FeedUploadAttachment | null;
+  photos: FeedUploadAttachment[];
+  onPhotoChange: (photo: FeedUploadAttachment) => void;
   onClose: () => void;
 }) {
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const isOpen = photo !== null;
+  const orderedPhotos = useMemo(
+    () =>
+      [...photos].sort((a, b) => a.reference_index - b.reference_index),
+    [photos],
+  );
+  const currentIndex = photo
+    ? orderedPhotos.findIndex((item) => item.id === photo.id)
+    : -1;
+  const currentPhoto =
+    currentIndex >= 0 ? orderedPhotos[currentIndex] : photo;
+  const canNavigate = orderedPhotos.length > 1 && currentIndex >= 0;
+
+  const movePhoto = useCallback(
+    (direction: -1 | 1) => {
+      if (!canNavigate) return;
+      const nextIndex =
+        (currentIndex + direction + orderedPhotos.length) % orderedPhotos.length;
+      onPhotoChange(orderedPhotos[nextIndex]);
+    },
+    [canNavigate, currentIndex, onPhotoChange, orderedPhotos],
+  );
+
   useEffect(() => {
-    if (!photo) return;
+    if (!isOpen) return;
 
     const scrollY = window.scrollY;
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -171,12 +229,6 @@ function ImagePreviewModal({
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousOverflow;
@@ -184,14 +236,59 @@ function ImagePreviewModal({
       document.body.style.top = previousTop;
       document.body.style.width = previousWidth;
       window.scrollTo(0, scrollY);
-      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [photo, onClose]);
+  }, [isOpen]);
 
-  if (!photo) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        movePhoto(-1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        movePhoto(1);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, movePhoto]);
+
+  if (!currentPhoto) return null;
+
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    swipeStart.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = swipeStart.current;
+    const touch = event.changedTouches[0];
+    swipeStart.current = null;
+    if (!start || !touch) return;
+
+    const horizontalDistance = touch.clientX - start.x;
+    const verticalDistance = touch.clientY - start.y;
+    if (
+      Math.abs(horizontalDistance) < 48 ||
+      Math.abs(horizontalDistance) <= Math.abs(verticalDistance)
+    ) {
+      return;
+    }
+    movePhoto(horizontalDistance > 0 ? -1 : 1);
+  }
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black/90">
+    <div
+      className="fixed inset-0 z-[80] bg-black/90"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pratinjau gambar"
+    >
       <button
         type="button"
         className="absolute inset-0 cursor-zoom-out"
@@ -199,9 +296,13 @@ function ImagePreviewModal({
         aria-label="Tutup pratinjau gambar"
       />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-8">
-        <div className="relative max-h-full w-full max-w-6xl">
+        <div
+          className="pointer-events-auto relative max-h-full w-full max-w-6xl touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <Image
-            src={photo.reference_url}
+            src={currentPhoto.reference_url}
             alt=""
             width={1600}
             height={1200}
@@ -210,6 +311,29 @@ function ImagePreviewModal({
           />
         </div>
       </div>
+      {canNavigate && (
+        <>
+          <button
+            type="button"
+            onClick={() => movePhoto(-1)}
+            className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:left-6 sm:size-11"
+            aria-label="Gambar sebelumnya"
+          >
+            <ChevronLeft className="size-6" />
+          </button>
+          <button
+            type="button"
+            onClick={() => movePhoto(1)}
+            className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:right-6 sm:size-11"
+            aria-label="Gambar berikutnya"
+          >
+            <ChevronRight className="size-6" />
+          </button>
+          <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            {currentIndex + 1} / {orderedPhotos.length}
+          </p>
+        </>
+      )}
       <button
         type="button"
         onClick={onClose}
@@ -762,6 +886,8 @@ export default function FeedItemCard({
       />
       <ImagePreviewModal
         photo={previewPhoto}
+        photos={photoAttachments}
+        onPhotoChange={setPreviewPhoto}
         onClose={() => setPreviewPhoto(null)}
       />
     </article>
