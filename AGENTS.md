@@ -2577,10 +2577,15 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   "Buat Event" link (shown to everyone, since the route owns its own login/`/activation`/
   `/verification` bounces and renders `PageState` for a verification still under review) and from
   `CreateOptionList`'s Event row. The organizer pair is **optional** on the backend now, so
-  `TrainingListEntry.organizer_type`/`organizer_id` are nullable: the Penyelenggara select offers
-  the caller's own manage grants (Korkom excluded — it never organizes training), sending the pair
-  plus the bare entity name as `organizer_name`, or "Lainnya" for a free-text `organizer_name` with
-  no pair, which every organizer display then shows unprefixed (`lib/organizer.ts`). Poster upload
+  `TrainingListEntry.organizer_type`/`organizer_id` are nullable. The form no longer offers the
+  caller's grants as organizers: it is one free-text Nama Penyelenggara field sent as `organizer_name`
+  with no pair, which every organizer display then shows unprefixed (`lib/organizer.ts`). The same
+  page is the editor at `/trainings/{training_id}/edit` (a `training` prop seeds it and routes the
+  submit to `updateTraining`). That route renders `PageState` `forbidden` unless the caller is the
+  contact person or passes `canManageEntity` on the organizer pair, mirroring `trainings/update`;
+  an event that still carries a pair shows its organizer disabled and never sends `organizer_name`,
+  since a blank value would clear it under the pair. The detail page's Edit/Hapus menu is shown to
+  the contact person only (and never to a logged-out viewer, whose id is also `undefined`). Poster upload
   lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`. The `/trainings`
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
   the register Server Component performs its own session check and redirects anonymous visitors
@@ -2589,7 +2594,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   backend's auth-or-client-secret read endpoints; training/material admin writes and participant
   reads remain session-cookie-backed. `getTrainingDetail` is the exception to that preference: it tries
   the session cookie **first** (falling back to `CLIENT_SECRET` on a 401), because only a user-JWT
-  read carries `is_reminder_active`. The detail page's "Ingatkan saya" button seeds from that field
+  read carries `is_reminder_active`. The detail page's "Remind me!" button seeds from that field
   and toggles through `activateTrainingReminder`/`deactivateTrainingReminder`
   (`trainings/reminder/activate|deactivate`, session-only — the backend emails H-7/H-3/H-1),
   optimistically with rollback; a logged-out visitor is sent to `/auth/login?redirectTo=`. It used

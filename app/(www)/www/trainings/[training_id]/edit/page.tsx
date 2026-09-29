@@ -4,6 +4,7 @@ import { getSession } from "@/apis/session";
 import { getTrainingDetail } from "@/apis/trainings";
 import TrainingCreatePage from "@/components/pages/TrainingCreatePage";
 import PageState from "@/components/states/PageState";
+import { canManageEntity } from "@/lib/access";
 
 export const metadata: Metadata = {
   title: "Edit Event Training",
@@ -40,6 +41,22 @@ export default async function TrainingEditRoute({
     );
   }
   if (!training) notFound();
+
+  // Mirrors trainings/update: the contact person, Super Admin, or a grant at the organizer.
+  const canEdit =
+    training.contact_person_id === user.id ||
+    (training.organizer_type && training.organizer_id
+      ? canManageEntity(user, training.organizer_type, training.organizer_id)
+      : false);
+  if (!canEdit) {
+    return (
+      <PageState
+        variant="forbidden"
+        backHref={`/trainings/${training_id}`}
+        message="Hanya pembuat event yang bisa mengubah event ini."
+      />
+    );
+  }
 
   return (
     <TrainingCreatePage

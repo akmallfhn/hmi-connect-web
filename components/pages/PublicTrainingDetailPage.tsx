@@ -135,7 +135,8 @@ export default function PublicTrainingDetailPage({
     training.is_reminder_active ?? false
   );
   const [savingReminder, setSavingReminder] = useState(false);
-  const canEditTraining = training.contact_person_id === viewer.userId;
+  const canEditTraining =
+    Boolean(viewer.userId) && training.contact_person_id === viewer.userId;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 

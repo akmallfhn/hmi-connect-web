@@ -7,6 +7,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { TrainingDetail } from "@/apis/trainings";
 import { createTraining, updateTraining } from "@/lib/actions";
+import { formatOrganizerName } from "@/lib/organizer";
 import {
   TRAINING_POSTER_ACCEPT,
   uploadTrainingPoster,
@@ -71,6 +72,8 @@ export default function TrainingCreatePage({
   );
   const [isSaving, setIsSaving] = useState(false);
   const isEditing = Boolean(training);
+  // An entity-organized event keeps its name tied to the entity, so it isn't editable here.
+  const organizerLocked = Boolean(training?.organizer_type);
   const busy = isSaving || isUploadingImage;
 
   async function handleImageFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -107,7 +110,9 @@ export default function TrainingCreatePage({
             id: training.id,
             name: name.trim(),
             level,
-            organizer_name: organizerName.trim(),
+            ...(organizerLocked
+              ? {}
+              : { organizer_name: organizerName.trim() }),
             description: description.trim(),
             start_date: startDate,
             end_date: endDate,
@@ -248,8 +253,13 @@ export default function TrainingCreatePage({
                 inputId="event-organizer-name"
                 label="Nama Penyelenggara"
                 placeholder="Contoh: HMI Komisariat Fakultas Teknik"
-                value={organizerName}
+                value={
+                  organizerLocked && training
+                    ? formatOrganizerName(training)
+                    : organizerName
+                }
                 onChange={(event) => setOrganizerName(event.target.value)}
+                disabled={organizerLocked}
               />
               <TextArea
                 textAreaId="event-description"
