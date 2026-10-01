@@ -27,7 +27,7 @@ export default function MembershipCard({
     <div
       className={[
         "relative aspect-[85.6/54] w-full overflow-hidden bg-cover bg-center text-white shadow-xl shadow-primary/20",
-        "max-w-[420px] rounded-2xl p-6",
+        "max-w-[420px] rounded-2xl",
         className,
       ]
         .filter(Boolean)
@@ -38,7 +38,7 @@ export default function MembershipCard({
     >
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-black/50 via-black/20 to-black/50" />
 
-      <div className="relative flex h-full flex-col justify-between">
+      <div className="absolute inset-0 flex flex-col justify-between p-6">
         <div className="flex items-center justify-between">
           <LogoHmiConnectHorizontal
             colorPrimary="white"
