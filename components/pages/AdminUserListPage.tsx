@@ -5,6 +5,7 @@ import {
   Ban,
   EllipsisVertical,
   Eye,
+  Mail,
   Pencil,
   PlusCircle,
   Search,
@@ -15,7 +16,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { UserListEntry } from "@/apis/users";
-import { deactivateUser, deleteUser } from "@/lib/actions";
+import {
+  deactivateUser,
+  deleteUser,
+  sendVerificationReminder,
+} from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
@@ -74,6 +79,10 @@ export default function AdminUserListPage({
   const [deactivateTarget, setDeactivateTarget] =
     useState<UserListEntry | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
+  const [reminderTarget, setReminderTarget] = useState<UserListEntry | null>(
+    null
+  );
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
 
   function pushParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -111,6 +120,25 @@ export default function AdminUserListPage({
       toast.error("Gagal menghapus user.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleSendReminder() {
+    if (!reminderTarget) return;
+    setIsSendingReminder(true);
+    try {
+      const result = await sendVerificationReminder(reminderTarget.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal mengirim reminder.");
+        return;
+      }
+      toast.success("Reminder berhasil dikirim.");
+      setReminderTarget(null);
+    } catch (err) {
+      console.error("[AdminUserListPage] sendVerificationReminder threw:", err);
+      toast.error("Gagal mengirim reminder.");
+    } finally {
+      setIsSendingReminder(false);
     }
   }
 
@@ -282,6 +310,16 @@ export default function AdminUserListPage({
                             <Pencil className="size-4 text-[#5f6573]" />
                             Edit Cepat
                           </button>
+                          {user.verification_status === "unverified" && (
+                            <button
+                              type="button"
+                              onClick={() => setReminderTarget(user)}
+                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                            >
+                              <Mail className="size-4 text-[#5f6573]" />
+                              Kirim Reminder
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setDeactivateTarget(user)}
@@ -327,6 +365,17 @@ export default function AdminUserListPage({
           router.refresh();
         }}
         user={editTarget}
+      />
+
+      <AlertConfirmation
+        open={reminderTarget !== null}
+        onClose={() => setReminderTarget(null)}
+        onConfirm={handleSendReminder}
+        title="Kirim reminder?"
+        message={`Email pengingat aktivasi dan verifikasi akan dikirim ke ${reminderTarget?.email || reminderTarget?.full_name}. Reminder bisa dikirim berulang kali.`}
+        confirmLabel="Kirim Reminder"
+        confirmVariant="primary"
+        loading={isSendingReminder}
       />
 
       <AlertConfirmation

@@ -100,6 +100,7 @@ import {
   createUser as createUserApi,
   createWorkExperience as createWorkExperienceApi,
   deactivateUser as deactivateUserApi,
+  sendVerificationReminder as sendVerificationReminderApi,
   deleteEducationHistory as deleteEducationHistoryApi,
   deleteHonorAward as deleteHonorAwardApi,
   deleteOrganizationExperience as deleteOrganizationExperienceApi,
@@ -250,6 +251,10 @@ export async function createUser(payload: CreateUserPayload) {
 
 export async function deactivateUser(id: string) {
   return deactivateUserApi(id);
+}
+
+export async function sendVerificationReminder(id: string) {
+  return sendVerificationReminderApi(id);
 }
 
 export async function deleteUser(id: string, username: string) {

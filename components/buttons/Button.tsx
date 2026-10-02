@@ -41,7 +41,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref: ForwardedRef<HTMLButtonElement>
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center gap-2 font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
+      "inline-flex shrink-0 items-center truncate whitespace-nowrap justify-center gap-2 font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
     const variantClasses: Record<ButtonVariant, string> = {
       primary:
