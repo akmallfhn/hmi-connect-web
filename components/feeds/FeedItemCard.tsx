@@ -1,19 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import {
+  IconHeart,
+  IconMessageCircle,
+  IconRepeat,
+  IconShare,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import {
   Ban,
   ChevronLeft,
   ChevronRight,
   Eye,
-  Heart,
-  MessageCircle,
   MoreHorizontal,
   Pencil,
   Quote,
-  Repeat2,
-  Share2,
   Trash2,
   X,
 } from "lucide-react";
@@ -49,7 +51,7 @@ import {
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
 import ReactorsListModal from "../modals/ReactorsListModal";
-import ShareModal from "../modals/ShareModal";
+import FeedShareModal from "./FeedShareModal";
 import { useReaction } from "@/hooks/useReaction";
 import type {
   Feed,
@@ -540,7 +542,7 @@ export default function FeedItemCard({
     <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
       {repostedBy && (
         <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573] xl:text-[13px]">
-          <Repeat2 className="size-3.5" />
+          <IconRepeat className="size-3.5" />
           <Avatar
             src={repostedBy.avatar}
             name={repostedBy.fullName}
@@ -695,7 +697,7 @@ export default function FeedItemCard({
                 {reaction.activeReactionInfo.emoji}
               </span>
             ) : (
-              <Heart className="size-4" />
+              <IconHeart className="size-4" />
             )}
             {reaction.reactionCount > 0 && reaction.reactionCount}
           </Button>
@@ -713,7 +715,7 @@ export default function FeedItemCard({
           onClick={handleToggleComments}
           className="gap-1.5 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
         >
-          <MessageCircle className="size-4" />
+          <IconMessageCircle className="size-4" />
           {totalCommentCount > 0 && totalCommentCount}
         </Button>
         <Dropdown
@@ -727,7 +729,7 @@ export default function FeedItemCard({
                 reposted ? "text-secondary" : "text-[#5f6573]"
               }`}
             >
-              <Repeat2 className="size-4" />
+              <IconRepeat className="size-4" />
             </Button>
           )}
         >
@@ -743,7 +745,7 @@ export default function FeedItemCard({
               }
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1] xl:text-[15px]"
             >
-              <Repeat2 className="size-4 text-[#5f6573]" />
+              <IconRepeat className="size-4 text-[#5f6573]" />
               {reposted ? "Batalkan Repost" : "Repost"}
             </button>
             <button
@@ -761,7 +763,7 @@ export default function FeedItemCard({
           onClick={() => setShowShareModal(true)}
           className="rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
         >
-          <Share2 className="size-4" />
+          <IconShare className="size-4" />
         </Button>
       </div>
 
@@ -878,11 +880,12 @@ export default function FeedItemCard({
         targetType="feed"
         targetId={feed.id}
       />
-      <ShareModal
+      <FeedShareModal
         open={showShareModal}
         onClose={() => setShowShareModal(false)}
+        feed={feed}
+        content={content}
         url={shareUrl}
-        text={`Lihat postingan dari ${author.name} di HMI Connect`}
       />
       <ImagePreviewModal
         photo={previewPhoto}

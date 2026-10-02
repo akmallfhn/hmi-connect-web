@@ -8,7 +8,7 @@ import {
 
 const colorRequests = new Map<string, Promise<string>>();
 
-function requestColor(imageUrl: string) {
+export function requestAttachmentColor(imageUrl: string) {
   const cached = colorRequests.get(imageUrl);
   if (cached) return cached;
 
@@ -44,7 +44,7 @@ export function useAttachmentPalette(imageUrl: string | null) {
   useEffect(() => {
     if (!imageUrl) return;
     let active = true;
-    void requestColor(imageUrl).then((selected) => {
+    void requestAttachmentColor(imageUrl).then((selected) => {
       if (active) setResult({ imageUrl, color: selected });
     });
     return () => {

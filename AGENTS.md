@@ -2138,10 +2138,11 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   phone without a second copy of the portal/scroll-lock/Escape chrome;
   `AboutProfileModal.tsx` and `components/profile/SocialLinks.tsx` are its callers today. Below
   `sm:` a sheet caps at `100dvh - 1.5rem` rather than the dialog's `85vh`, so a tall sheet can rise
-  to just under the top edge while a short one keeps its own height. `UserShareModal` and
-  `ArticleShareModal` size their 9:16 preview as `min(natural, viewport - chrome)`, so the sheet
+  to just under the top edge while a short one keeps its own height. `UserShareModal`,
+  `ArticleShareModal`, and `FeedShareModal` size their 9:16 preview as
+  `min(natural, viewport - chrome)`, so the sheet
   hugs the preview and the preview only shrinks when the share row below would otherwise be cut
-  off. Both previews are the generated PNG itself (a blob URL), since a scaled-down HTML replica
+  off. These previews are the generated PNG itself (a blob URL), since a scaled-down HTML replica
   with fixed type sizes would clip.
   `ReactionPickerModal.tsx` is the odd one out — it's _not_ built on `Modal`, it's a small
   self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
@@ -2156,9 +2157,19 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `FollowListModal.tsx` is the same list-in-a-modal shape for `users/following/list`/
   `users/followers/list` (still `user_id`-keyed requests, unlike the username-keyed
   endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.
-  `ShareModal.tsx` is a YouTube-style share sheet (WhatsApp/
+  `ShareModal.tsx` is a YouTube-style link share sheet (WhatsApp/
   Facebook/X/Telegram/Email links + copy-link); unlike reactions/comments/repost, sharing
-  does not require `verificationStatus === "verified"`. Its five platform glyphs are the
+  does not require `verificationStatus === "verified"`. Feed cards use
+  `components/feeds/FeedShareModal.tsx`, which generates a downloadable 720 × 1280 PNG: a dark
+  card with a black drop shadow and a hairline white-sheen border, the author (no subtitle), at
+  most five lines of text, its attachment, and a "Lihat selengkapnya di Aplikasi HMI Connect"
+  footer in place of reaction/comment counts. Attachments mirror their feed components — photos
+  (two when available), a video frame/thumbnail with a play symbol, news/article as the 16:9
+  palette-faded cover with only byline and title (colors from the same
+  `requestAttachmentColor` the cards use), training as the horizontal poster card, and a URL as
+  text only, since third-party preview images would taint the canvas.
+  It follows the article share sheet's mobile actions and desktop link/image/social layout.
+  The five platform glyphs are the
   brand tiles in the public `hmi-connect` bucket's `assets/` folder, resolved through
   `lib/constants.ts#socialIconUrl` — the same set the backend's own `lookup_social_media`
   rows point `logo_url` at, which is why `SocialLinks` needs no icon table of its own. Each
