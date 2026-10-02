@@ -5,11 +5,11 @@ import TrainingCatalogPage from "@/components/pages/TrainingCatalogPage";
 import type { TrainingStatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Training HMI",
+  title: "Training Center",
   description: "Daftar agenda Latihan Kader HMI dari berbagai penyelenggara.",
   alternates: { canonical: "/trainings" },
   openGraph: {
-    title: "Training HMI | HMI Connect",
+    title: "Training Center | HMI Connect",
     description: "Daftar agenda Latihan Kader HMI dari berbagai penyelenggara.",
     url: "/trainings",
   },

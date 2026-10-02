@@ -18,13 +18,13 @@ fix the rule, not just the code.
   backend, see Transactional email below), `sanitize-html` (server-side only, and used by exactly
   one module — `lib/article-body.ts`, which scrubs user-authored article body HTML before it is
   rendered; see `/articles/[article_slug]/[article_id]` below).
-- **Two icon sets, split by surface.** `lucide-react` stays the default everywhere — admin,
-  forms, cards, labels, page chrome. `@tabler/icons-react` is used only by the main site's own
-  navigation and the few main-site widgets that sit beside it: `MainSiteDesktopSidebar`,
-  `BottomNav`, `MobileGreetingBar`'s bell, `ExploreSearchBar`, and `MembershipInfoCard`'s
-  status pill. Tabler's `stroke` prop is what carries the active state there (`2.4` active,
-  `2` idle), which is why those five don't use lucide. Don't reach for Tabler outside main-site
-  nav; don't reach for lucide inside it.
+- **Two icon sets, split by surface.** `lucide-react` stays the default for admin, forms,
+  cards, labels, and page chrome. `@tabler/icons-react` serves the main site's navigation
+  (`MainSiteDesktopSidebar`, `BottomNav`) and nearby widgets (`MobileGreetingBar`'s bell,
+  `ExploreSearchBar`, `MembershipInfoCard`'s status pill). The Training Center catalog and
+  `PublicTrainingCard` also use Tabler icons throughout; the shared `Pagination` accepts
+  caller-provided icons so that catalog can use Tabler without changing admin pages.
+  Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
   Stack Sans Headline is exposed as `font-stack-sans-headline`. On the **admin** side it is
   reserved for page titles plus all sidebar chrome (including scoped entity names in
@@ -2576,6 +2576,23 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `/trainings` lists every level with API-backed name/level/organizer filters and pagination,
   `/trainings/{training_id}` renders the public event detail, and
   `/trainings/{training_id}/register` is the session-gated registration form.
+  The catalog calls itself Training Center: its title and description are centered, and
+  its search uses the shared `Input`. The banner is a plain linear gradient with no
+  decorative shapes; it ends at the search input's vertical midpoint, so the input
+  straddles the gradient and the page background. LK1/LK2/LK3 sit in an icon-only
+  shared `Button` level dropdown at the left of the category shortcuts; its red active
+  dot stays inside the button so it is not clipped on mobile. The nearby/registration/
+  ongoing shortcuts remain separate client-side filters over the current page. There is
+  no agenda-total, divider, or create-event control in this catalog. A no-results catalog
+  state uses `EmptyStateIllustration`, not a calendar icon.
+  `PublicTrainingCard` uses a border without a shadow,
+  keeps a dark gradient over the poster, and places gray date/level labels together
+  inside the poster. It shows the organizer beside a round HMI logo fallback because
+  the training list response has no organizer image URL. The registration label sits
+  below the organizer. Its title has no fixed minimum height; the content group containing
+  title, organizer, and registration label owns the minimum height. Every button action in `PublicTrainingCard` must use the shared
+  `components/buttons/Button.tsx` primitive: its footer has a plain detail link plus
+  reminder, repost, and share actions.
   `/trainings/create` (`components/pages/TrainingCreatePage.tsx`) is where **any verified member**
   creates an event — `trainings/create` is open to every authenticated user on the backend, which
   makes the caller the contact person and opens registration. It is reached from the catalog's

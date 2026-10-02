@@ -63,9 +63,9 @@ export default function RepostTrainingToFeedButton({
       title="Repost ke feed"
     >
       {iconOnly ? (
-        <IconRepeat className="size-5" stroke={2} />
+        <IconRepeat className="size-5" />
       ) : (
-        <Repeat2 className="size-4" />
+        <Repeat2 className="size-5" />
       )}
       {iconOnly ? <span className="sr-only">Repost</span> : "Repost"}
     </Button>

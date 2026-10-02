@@ -2,12 +2,15 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
 import Button from "../buttons/Button";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
   queryKey?: string;
+  previousIcon?: ReactNode;
+  nextIcon?: ReactNode;
 }
 
 // Numbered pagination driving ?page=, same page-window/ellipsis logic as sevenpreneur's AppNumberPagination, ported to plain Tailwind.
@@ -15,6 +18,8 @@ export default function Pagination({
   currentPage,
   totalPages,
   queryKey = "page",
+  previousIcon = <ChevronLeft className="size-4" />,
+  nextIcon = <ChevronRight className="size-4" />,
 }: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,7 +57,7 @@ export default function Pagination({
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage <= 1}
       >
-        <ChevronLeft className="size-4" />
+        {previousIcon}
         <span className="hidden sm:inline">Sebelumnya</span>
       </Button>
 
@@ -83,7 +88,7 @@ export default function Pagination({
         disabled={currentPage >= totalPages}
       >
         <span className="hidden sm:inline">Selanjutnya</span>
-        <ChevronRight className="size-4" />
+        {nextIcon}
       </Button>
     </div>
   );
