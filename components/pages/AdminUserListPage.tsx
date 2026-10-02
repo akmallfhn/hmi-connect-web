@@ -129,7 +129,11 @@ export default function AdminUserListPage({
     try {
       const result = await sendVerificationReminder(reminderTarget.id);
       if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal mengirim reminder.");
+        toast.error(
+          result.status === "TOO_MANY_REQUESTS"
+            ? "Reminder sudah dikirim kurang dari 30 menit lalu. Coba lagi nanti."
+            : (result.message ?? "Gagal mengirim reminder.")
+        );
         return;
       }
       toast.success("Reminder berhasil dikirim.");
@@ -372,7 +376,7 @@ export default function AdminUserListPage({
         onClose={() => setReminderTarget(null)}
         onConfirm={handleSendReminder}
         title="Kirim reminder?"
-        message={`Email pengingat aktivasi dan verifikasi akan dikirim ke ${reminderTarget?.email || reminderTarget?.full_name}. Reminder bisa dikirim berulang kali.`}
+        message={`Email pengingat aktivasi dan verifikasi akan dikirim ke ${reminderTarget?.email || reminderTarget?.full_name}. Reminder berikutnya untuk user ini baru bisa dikirim setelah jeda 30 menit.`}
         confirmLabel="Kirim Reminder"
         confirmVariant="primary"
         loading={isSendingReminder}

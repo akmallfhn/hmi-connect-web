@@ -73,6 +73,7 @@ export type StatusName =
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "CONFLICT"
+  | "TOO_MANY_REQUESTS"
   | "INTERNAL_SERVER_ERROR";
 
 const SUCCESS_STATUSES: ReadonlySet<StatusName> = new Set([
