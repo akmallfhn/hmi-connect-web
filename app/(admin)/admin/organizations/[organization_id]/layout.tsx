@@ -48,7 +48,7 @@ export default async function OrganizationLayout({
         entityName={organizationName}
         fullName={user?.full_name}
         avatar={user?.avatar}
-        roleName={user?.role_name}
+        email={user?.email}
       />
       <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
         {children}

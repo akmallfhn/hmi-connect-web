@@ -27,7 +27,7 @@ export default async function MasterLayout({
       <MasterSidebar
         fullName={user?.full_name}
         avatar={user?.avatar}
-        roleName={user?.role_name}
+        email={user?.email}
         organizationId={user?.organization_id ?? process.env.ORGANIZATION_ID}
       />
       <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">

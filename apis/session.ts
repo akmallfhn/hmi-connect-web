@@ -35,6 +35,7 @@ export type SessionUser = {
   chapter_name?: string;
   grants?: SessionGrant[]; // replaced the can_manage_* booleans; `[]` for plain members and for Super Admin
   full_name?: string;
+  email?: string;
   username: string; // backend auto-generates a placeholder at sign-up, never null — see internal/user/README.md
   avatar?: string;
   role_id?: number;

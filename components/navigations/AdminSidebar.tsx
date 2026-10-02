@@ -81,7 +81,7 @@ interface AdminSidebarProps {
   renderHeader: (collapsed: boolean, tone: SidebarTone) => ReactNode;
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  email?: string;
 }
 
 function NavLink({
@@ -229,7 +229,7 @@ function NavList({
             onNavigate={onNavigate}
             tone={tone}
           />
-        ),
+        )
       )}
     </nav>
   );
@@ -238,23 +238,20 @@ function NavList({
 function ProfileBlock({
   fullName,
   avatar,
-  roleName,
+  email,
   collapsed,
   tone = "dark",
 }: {
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  email?: string;
   collapsed?: boolean;
   tone?: SidebarTone;
 }) {
   const displayName = fullName ?? "Admin";
   const [loggingOut, setLoggingOut] = useState(false);
   const isLight = tone === "light";
-  const shellClasses = isLight
-    ? "border-[#e6e9ef] bg-[#f5f7fb]"
-    : "border-white/10 bg-white/5 backdrop-blur-sm";
-  const avatarRing = isLight ? "ring-2 ring-white" : "ring-2 ring-white/15";
+  const dividerClasses = isLight ? "border-[#e6e9ef]" : "border-white/10";
   const logoutClasses = isLight
     ? "text-destructive hover:bg-destructive-soft"
     : "text-secondary hover:bg-secondary/15";
@@ -270,64 +267,51 @@ function ProfileBlock({
     }
   }
 
+  const logoutButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleLogout}
+      disabled={loggingOut}
+      aria-label="Keluar"
+      title="Keluar"
+      className={logoutClasses}
+    >
+      <LogOut className="size-4" />
+    </Button>
+  );
+
   if (collapsed) {
     return (
       <div
-        className={`flex flex-col items-center gap-2 rounded-xl border p-2 ${shellClasses}`}
+        className={`-mx-3 flex flex-col items-center gap-2 border-t px-3 py-3 ${dividerClasses}`}
       >
-        <Avatar
-          src={avatar}
-          name={displayName}
-          size={36}
-          className={avatarRing}
-        />
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={loggingOut}
-          aria-label="Keluar"
-          title="Keluar"
-          className={`flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${logoutClasses}`}
-        >
-          <LogOut className="size-4" />
-        </button>
+        <Avatar src={avatar} name={displayName} size={32} />
+        {logoutButton}
       </div>
     );
   }
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border p-3 ${shellClasses}`}
+      className={`-mx-4 flex items-center gap-2.5 border-t px-4 py-3 ${dividerClasses}`}
     >
-      <Avatar
-        src={avatar}
-        name={displayName}
-        size={40}
-        className={avatarRing}
-      />
+      <Avatar src={avatar} name={displayName} size={32} />
       <div className="min-w-0 flex-1">
         <p
           className={`truncate text-sm font-medium ${isLight ? "text-[#172033]" : "text-white"}`}
         >
           {displayName}
         </p>
-        {roleName && (
+        {email && (
           <p
             className={`truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
           >
-            {roleName}
+            {email}
           </p>
         )}
       </div>
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={loggingOut}
-        aria-label="Keluar"
-        className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${logoutClasses}`}
-      >
-        <LogOut className="size-5" />
-      </button>
+      {logoutButton}
     </div>
   );
 }
@@ -340,7 +324,7 @@ export default function AdminSidebar({
   renderHeader,
   fullName,
   avatar,
-  roleName,
+  email,
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -399,7 +383,7 @@ export default function AdminSidebar({
   return (
     <>
       <aside
-        className={`font-stack-sans-headline sticky top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-admin-sidebar py-6 transition-[width] duration-150 lg:flex ${
+        className={`font-stack-sans-headline sticky top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-admin-sidebar pt-6 transition-[width] duration-150 lg:flex ${
           isCollapsed ? "w-20 px-3" : "w-64 px-4"
         }`}
       >
@@ -435,7 +419,7 @@ export default function AdminSidebar({
           <ProfileBlock
             fullName={fullName}
             avatar={avatar}
-            roleName={roleName}
+            email={email}
             collapsed={isCollapsed}
           />
         </div>
@@ -474,7 +458,7 @@ export default function AdminSidebar({
           }`}
         />
         <div
-          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e9ef] bg-white px-4 py-6 shadow-2xl transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
+          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e9ef] bg-white px-4 pt-6 shadow-2xl transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -499,11 +483,11 @@ export default function AdminSidebar({
               tone="light"
             />
           </div>
-          <div className="mt-4 shrink-0">
+          <div className="shrink-0">
             <ProfileBlock
               fullName={fullName}
               avatar={avatar}
-              roleName={roleName}
+              email={email}
               tone="light"
             />
           </div>

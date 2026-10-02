@@ -38,7 +38,7 @@ interface EntitySidebarProps {
   imageUrl?: string | null;
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  email?: string;
 }
 
 const scopePaths: Record<EntitySidebarScope, string> = {
@@ -323,7 +323,7 @@ export default function EntitySidebar({
   imageUrl,
   fullName,
   avatar,
-  roleName,
+  email,
 }: EntitySidebarProps) {
   return (
     <AdminSidebar
@@ -344,7 +344,7 @@ export default function EntitySidebar({
       )}
       fullName={fullName}
       avatar={avatar}
-      roleName={roleName}
+      email={email}
     />
   );
 }

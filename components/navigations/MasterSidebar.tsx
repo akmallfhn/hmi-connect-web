@@ -17,7 +17,7 @@ import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 interface MasterSidebarProps {
   fullName?: string;
   avatar?: string;
-  roleName?: string;
+  email?: string;
   // This deployment manages one organization, so its item links straight to that id — there is no list.
   organizationId?: string;
 }
@@ -72,7 +72,7 @@ function getNavItems(organizationId?: string): AdminNavEntry[] {
 export default function MasterSidebar({
   fullName,
   avatar,
-  roleName,
+  email,
   organizationId,
 }: MasterSidebarProps) {
   return (
@@ -89,7 +89,7 @@ export default function MasterSidebar({
       }
       fullName={fullName}
       avatar={avatar}
-      roleName={roleName}
+      email={email}
     />
   );
 }
