@@ -385,7 +385,7 @@ Three layers, each with one job. Don't blend them.
    a JSON string, and the backend's own `validBodyContent` now **rejects** a block array outright,
    so don't reintroduce the block shape. See the security note under
    `/articles/[article_slug]/[article_id]` below before rendering it. `listArticleFeed` is the single entry point
-   behind `/articles`' three tabs and the one place that decides which endpoint serves which: `all`
+   behind `/articles`' three editorial tabs and the one place that decides which endpoint serves which: `all`
    delegates to `listArticles` (`articles/list`, published only, client secret), while `following`
    and `me` post to `articles/list-filter` with `is_following: true` / `is_mine: true` and the
    session cookie. Those two are **not** interchangeable — `list-filter` is `requireAuth` and always
@@ -738,6 +738,11 @@ them "Akses Ditolak" (see the accept route below).
 outline | soft | secondarySoft | ghost | destructive` (`soft` is primary-light, `secondarySoft` its
   secondary twin); sizes: `sm | default | lg | pill | pillSm | icon |
 iconSm`.
+  `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles`, `/quran`, and
+  `/trainings`: a light-gray track and inactive pills with tertiary active pills. Each item
+  supplies a value and label, optionally a short description and a URL; URL items render
+  links, while local-state items use `onChange`. Keep page-specific tab definitions and data
+  behavior in the page components, not in this visual primitive.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
   checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
@@ -754,14 +759,9 @@ iconSm`.
   `/quran`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
   "Posting" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
-  **News is deliberately absent from the rail** — `/news` and `/news/[category_slug]` stay real, it
-  is simply unlinked here, the same way the Cabang sidebar hides its SK/Konfercab routes. Articles
-  took its slot, and with News gone there is no longer a second claimant on `IconArticle`.
-  `MobileQuickMenu`'s first tile was repointed at `/articles` too, and `NewsCard`'s own
-  "Lihat Semua Berita" link is gone, so **nothing in the UI links to `/news` any more** — both
-  routes still render for anyone who types or bookmarks the URL, and the news data still reaches
-  readers through `NewsCard` and the timeline's `NewsCarousel`. Don't delete the routes assuming
-  they're dead, and if News is ever meant to be browsable again it needs a new entry point.
+  News is reached through the News tab on `/articles`, not a separate nav link.
+  `MobileQuickMenu`'s first tile also opens `/articles`. The former `/news` and
+  `/news/[category_slug]` routes were removed; the News tab is the single unfiltered list.
   Labels are English here, unlike the Indonesian copy everywhere else in the app — except the
   "Posting" button, which matches `BottomNav`'s own Indonesian label for the same action, since one
   action named two ways in two navs reads as two features. They are set in
@@ -825,11 +825,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   There is deliberately no mobile notification affordance in `Header` itself — the bell only
   shows up on mobile inside `MobileGreetingBar` (see below), so it doesn't need a second,
   sitewide top-right-corner bar competing for space on every page. `Header` also takes three optional props for pages reached by drilling in rather than
-  top-level nav (news, membership, notifications, `/feeds/[feed_id]`, ...): `mobileBackTitle` renders a
+  top-level nav (membership, notifications, `/feeds/[feed_id]`, ...): `mobileBackTitle` renders a
   `lg:hidden` back-arrow (`router.back()`) + title row; `mobileMenu`/`mobileMenuLabel` add an
   "⋮" overflow-menu trigger next to it (a `Dropdown`, only rendered when `mobileMenu` is
-  passed); `desktopFilterBar` renders a `lg:`-only bar for page-level filters (e.g. news
-  category pills) that should live in the sticky navbar. All three render as extra rows
+  passed); `desktopFilterBar` can render a `lg:`-only bar for page-level filters that belong
+  in the sticky navbar. All three render as extra rows
   inside `Header`'s own `sticky top-0` `<header>` element
   rather than as separately `sticky`-positioned siblings — a second independently-sticky
   element needs to know `Header`'s real rendered height to offset against, and that height
@@ -1145,8 +1145,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   between posts, handed to `FeedTimeline` as one `insertions: TimelineInsertion[]` prop
   (`{after, node, mobileOnly?}`, `after` being a 0-based index counting posts only). It is
   deliberately **not a modulo**: the pools behind these cards are finite, so a repeating cycle
-  would replay rows the reader already scrolled past — the same reason `/news` places its
-  `categoryPreviews` by `groupIndex < length` rather than by a cycle. Today's plan is follow
+  would replay rows the reader already scrolled past. Today's plan is follow
   suggestions after index 1, news after 6, news again after 13, then follow suggestions again
   after 20. Every slot renders at **all** breakpoints: the two news strips are unfiltered, while
   `RightSidebar`'s own card narrows to one category, so the sidebar and the timeline are never
@@ -1318,12 +1317,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   are on every page, so don't bring a per-page identity card back. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
   Component that calls `apis/news.ts#listNewsArticles({ pageSize: 4, categorySlug })` directly
-  and renders nothing if the list comes back empty. It has no "see all" footer link, which is
-  what leaves `/news` unlinked from the whole UI (see the rail's own note above).
+  and renders nothing if the list comes back empty. It has no "see all" footer link;
+  the News tab is reached from `/articles`.
   Its `CATEGORY_SLUG` (`"hmi"`) is deliberately **local to this file**, not a shared
   constant: narrowing to HMI's own news is this desktop card's job alone, and the timeline's news
-  strips stay unfiltered so the two surfaces don't show the same articles side by side. `/news`
-  itself is unaffected: it still lists every category behind its own pills. `UpcomingEventsCard`
+  strips stay unfiltered so the two surfaces don't show the same articles side by side.
+  The News tab shows the unfiltered list. `UpcomingEventsCard`
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
   `ExploreSearchBar` → `FollowingCard` → `NewsCard` → the footer note, and it is the
@@ -1789,110 +1788,55 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   panel has no room to stack. `Super Admin` holds no grants, so it gets a
   `Dashboard Super Admin` row in the account card instead, same placement logic as the
   dropdown's own.
-- `components/news/NewsArticleCard.tsx` — one article card, `variant` prop picks the shape:
-  `"grid"` (image-on-top, no card chrome — no white bg/border/padding, just floats on the
-  page background, used in the `lg:` 4-column grid), `"mobileBig"` and `"mobileList"`
-  (source row on top, then either a full-width image or a title+small-square-thumbnail row —
-  a Google News-style mix used only below `lg:`, `mobileList`'s timestamp sits under the
-  title, in the same column, not spanning the full row under the thumbnail), and
-  `"heroMain"`/`"heroSide"` (the `lg:`-only hero treatment: `heroMain` overlays publisher,
-  timestamp, title, and summary directly on the image — a `bg-gradient-to-t from-black/85
-via-black/40 to-transparent` scrim anchored to the image's bottom via `ArticleImage`'s
-  `overlay` prop, all text in white — rather than putting that text below the image, so
-  there's no separate white-on-page text block for `heroMain`; `heroSide` is a small
-  thumbnail-left row with timestamp above a 2-line title. Both used for the top-4 hero and
-  inside `NewsCategoryPreview`, see below. Text sizes across `grid`/`heroMain`/`heroSide`
-  step up again at `xl:` (title, publisher, timestamp, category badge) since `mobileBig`/
-  `mobileList` never render at `xl:` anyway (both `lg:hidden`), there's no risk of those
-  `xl:` classes leaking into the mobile rows. The `<a>` itself always links straight out to
-  `article.source_url` on the outlet's own site — there's no `news-articles/detail` endpoint
-  or in-app article page, by design (see the news API's own README). The source name is
-  paired with `SourceLogo`, which renders `article.source_logo_url` when present and falls
-  back to an empty placeholder square otherwise (some sources still don't have a
-  `news_sources.logo_url` set). Every variant also renders `RepostToFeedButton` (see the
-  compose-intent paragraph above for what it does), placement chosen per variant rather than
-  standardized on one spot: `mobileBig`/`mobileList` put it beside `Timestamp` (not
-  `SourceRow` — the source row up top is left alone), `grid` puts it in `ArticleMeta` beside
-  the source/timestamp line, `heroSide` puts it on its own line below the title, and
-  `heroMain` is the odd one out — instead of sitting inline in the meta row, it's passed as
-  `ArticleImage`'s `cornerAction` prop (a sibling of the gradient `overlay`, not part of its
-  text flow) so it can render as an enlarged (`size="lg"`), `variant="secondary"` (solid
-  orange, not the default `ghost`) badge fixed to the image's bottom-right corner; the
-  title/summary paragraphs in the overlay carry a matching `pr-16`/`xl:pr-20` so their text
-  never wraps under it.
-  `components/news/NewsCategoryPreview.tsx` renders one category's teaser block — accent
-  bar + category name + "Selengkapnya" link to `/news/{slug}`, then one `heroMain` article
-  plus up to 3 `heroSide` articles — used only on the desktop grid, see below.
-  Both are shared by `components/pages/NewsPage.tsx`, the client component behind both
-  `/news` (`app/(www)/www/(gated)/news/page.tsx`) and `/news/[category_slug]`
-  (`.../news/[category_slug]/page.tsx`) — same component, `activeCategorySlug` prop is what
-  differs, so switching categories is plain `<Link>` navigation between the two routes, not
-  client-side state. `NewsPage`'s "mobile" vs "desktop" split uses `lg:` (matching the rest
-  of the app's nav chrome, not the `sm:`-based split used elsewhere in this file for content
-  grids). Below `lg:`, every item (no separate featured/hero treatment) renders as a single
-  Google News-style column mixing `mobileBig`/`mobileList` (every 4th item is `mobileBig`).
-  At `lg:` and up, the first 4 items render as a hero (1 `heroMain` + 3 `heroSide` in a
-  narrower side column, `heroMain`'s image is a `21/9` letterbox crop rather than `16/9` so
-  it doesn't dwarf the 360px side column), then the rest render in a 4-column `"grid"`,
-  chunked into groups of 8 (`ITEMS_PER_PREVIEW` = 2 rows × 4 columns) — after chunk `i`, if
-  `categoryPreviews[i]` exists, it's inserted via `NewsCategoryPreview` (`groupIndex <
-categoryPreviews.length`, not a modulo cycle) — each preview category appears at most
-  once, and once every entry in `categoryPreviews` has been placed, later chunks render with
-  no preview at all, even as the infinite-scroll grid keeps growing. `categoryPreviews`
-  (`{ category, articles }[]`) is only fetched by the "all categories" `/news` route —
-  `app/(www)/www/(gated)/news/page.tsx` looks up a fixed, ordered allowlist
-  (`CATEGORY_PREVIEW_SLUGS` — currently `hmi`/`politik`/`nusantara`, matched against a
-  category's `slug` or lowercased `name`) rather than pulling in whatever categories the
-  backend happens to return, fetches `CATEGORY_PREVIEW_ARTICLES` (4) articles per matched
-  category in parallel via `apis/news.ts#listNewsArticles({ categorySlug })`, and drops any
-  category that came back empty; `/news/[category_slug]` doesn't pass this prop (no nested
-  category previews inside an already-filtered category view), so it defaults to `[]` and
-  the hero/grid render with no interspersed previews. Category filter pills
-  (`apis/news.ts#listNewsCategories`) render twice depending on breakpoint, not as one
-  shared sticky element: at `lg:` they're passed to `Header`'s `desktopFilterBar` prop, so
-  they live inside `Header`'s own sticky block (see `Header`'s notes above on why
-  page-level chrome that needs to sit flush under the navbar belongs inside `Header` rather
-  than in a separately-offset sticky element); below `lg:` they render as a plain
-  (non-sticky, no `bg-white` — left transparent over the page's `#f5f7fb`) bar in
-  `NewsPage`'s own JSX, right under `Header` — deliberately page-level, not navbar chrome,
-  per `mobileBackTitle`'s already-mobile-only back+title row also living in `Header`.
-  Further pages of `apis/news.ts#listNewsArticles` paginate via the
-  `loadMoreNewsArticles` Server Action, same infinite-scroll-via-`IntersectionObserver` shape
-  as `FeedTimeline`/`ProfileActivitiesPage`. Both route `page.tsx`s fetch `page: 1`
-  server-side and pass `key={category_slug}` (or `key="all"`) to `<NewsPage>` so switching
-  categories remounts it with fresh pagination state instead of leaking the previous
-  category's items in.
-- `/articles` (`app/(www)/www/(gated)/articles/page.tsx` →
-  `components/pages/ArticlesPage.tsx`) — the editorial article index, a Medium/Substack-style
-  single column of `divide-y` rows rather than the card grid `/news` uses: an
-  editorial article is read in a list, not browsed as a gallery. Its `<main>` is a plain
+- `components/news/NewsArticleCard.tsx` renders aggregated news in the `/articles?tab=news`
+  list and in the home-feed `NewsCarousel`. The News tab's `list` variant matches
+  `ArticleListRow` at every breakpoint: source logo/name in the author position, the same
+  title, date/category, action row, and right-hand thumbnail. A missing image keeps the
+  same thumbnail box with a CSS background and Tabler `IconPhotoOff` placeholder, as in
+  `ArticleListRow`; the carousel uses the same placeholder in its larger image slot. The whole row opens
+  `source_url` on the publisher's site. Repost, share, and the source-link menu take the
+  same action slots; `ShareModal` accepts a custom title for this news share. The carousel
+  keeps its compact image-led `carousel` variant.
+- `/articles?tab=news` is handled by `app/(www)/www/articles/page.tsx` and
+  `components/pages/ArticlesPage.tsx`; there is no `/news` route. The News tab and its
+  backend reads require a session, matching the old News route. The route fetches the
+  first 12 unfiltered news items server-side, with no category pills or category query.
+  The News feed uses the same full content width as editorial rows,
+  and `loadMoreNewsArticles` supplies subsequent pages through an intersection observer.
+- `/articles` (`app/(www)/www/articles/page.tsx` →
+  `components/pages/ArticlesPage.tsx`) — the editorial article tabs use a
+  Medium/Substack-style single column of `divide-y` rows; News follows the same row
+  layout described above. Its `<main>` is a plain
   `min-w-0` and takes its width from `PageMargin` alone, like `/notifications`, `/settings`, and
   `/search` — a page-local `max-w` here made this one column narrower than every sibling page. Each row is
   `components/articles/ArticleListRow.tsx` — a 20px author `Avatar` and name, the title in
   `font-stack-sans-headline` (`line-clamp-2`), then a date · category · keyword meta line — the
   category rides the shared `Label` primitive at `variant="gray" size="sm"` rather than a
-  hand-rolled pill — with a square thumbnail on the right. `articles/list` now carries the optional
+  hand-rolled pill — with a square thumbnail on the right, using Tabler `IconPhotoOff` on a
+  light CSS background when the image URL is empty. `articles/list` now carries the optional
   article `description`; `ArticleListEntry.description` remains optional because the sibling
   `articles/list-filter` contract does not advertise it. The row deliberately keeps its compact
   keyword meta rather than adding a deck, while reposts from both the list and detail page go through
   `components/articles/article-compose-draft.ts` so their feed attachment previews receive the same
   title, description, cover, category, and author fields without fetching detail per row.
-  Three tabs — Semua, Mengikuti, Saya — reuse `/quran`'s segmented-pill treatment (one
-  `rounded-full border` track holding `bg-primary text-white` for the active pill), but as URL state
-  (`?tab=following`/`?tab=me`, absent for
+  Four signed-in tabs — Semua, News, Mengikuti, Tulisan Saya — use the shared `Tabs` component (one
+  `rounded-full border` track holding `bg-tertiary text-white` for the active pill and a
+  very light gray background for both the track and inactive pills), but as URL state
+  (`?tab=following`/`?tab=me`/`?tab=news`, absent for
   Semua) rendered as plain `<Link>`s rather than `useState`, so switching one is a server refetch
   through
-  `listArticleFeed` the same way `?q=` drives `/search`; the route passes `key={activeTab}` so
+  `listArticleFeed` for editorial tabs or `listNewsArticles` for News, the same way
+  `?q=` drives `/search`; the route passes a tab/category key so
   `ArticlesPage` remounts with fresh pagination instead of leaking the previous tab's rows in.
   `scroll={false}` on those links keeps the viewport still while switching. Each tab carries its own
   empty copy, since "no published articles yet" and "you haven't written one" are different facts.
-  Further pages come from the `loadMoreArticles` Server Action through the usual
+  Further editorial pages come from the `loadMoreArticles` Server Action through the usual
   infinite-scroll-via-`IntersectionObserver` shape. A `draft`/`unpublished` row shows a `Label`
-  pill beside its author, since the Saya tab is the only place a caller's own unpublished work is
+  pill beside its author, since the Tulisan Saya tab is the only place a caller's own unpublished work is
   listed, and every row carries a `MoreHorizontal` `Dropdown` directly below its meta line — the same overflow menu
   `FeedItemCard` carries, so a row looks identical whoever is reading it. It holds "Lihat artikel"
   always and "Edit artikel" only when `article.author_id === viewerId`, which is gated on authorship
-  rather than on the Saya tab, so your own article is editable wherever it shows up. Both items
+  rather than on the Tulisan Saya tab, so your own article is editable wherever it shows up. Both items
   navigate with `router.push` (which is why the row is a Client Component) and the trigger
   `preventDefault`s, because the whole row is itself a `<Link>` and a nested `<a>` would break
   hydration. It sits inside the text column, `align="left"` so the panel opens flush under the
@@ -1902,8 +1846,8 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   the row's `<Link>`, not inside it, since React events bubble through the portal and a click in
   the modal would otherwise navigate to the article. It sits **outside `(gated)`**, like the reader below: reading articles is public,
   and `next.config.mts`'s allowlist entry is `articles(?:/.*)?` — the bare path included — so a
-  logged-out visitor lands on the list rather than on a login screen. The two personal tabs are what
-  needs a session, so the route hides the whole tablist (`showTabs`) and pins `activeTab` to `all`
+  logged-out visitor lands on the list rather than on a login screen. News and the two personal tabs
+  need a session, so the route hides the whole tablist (`showPrivateTabs`) and pins `activeTab` to `all`
   when `getSession()` has no `id`; without that pin a hand-typed `?tab=me` would call `list-filter`
   tokenless and render an empty list that just looks broken.
 - `/articles/create` and `/articles/[article_slug]/[article_id]/edit` both render
@@ -2025,8 +1969,8 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `onclick`/`iframe`/`svg onload` cases — those are the ones the current list is verified
   against. `articleReadingMinutes` derives the "N menit baca" line from the sanitized text at 200
   wpm, floored at 1.
-  The page is a Server Component: a centered `max-w-[720px]` column with the category `Label`,
-  the title in `font-stack-sans-headline`, the `description` as a deck, an author row
+  The page is a Server Component: a centered `max-w-[720px]` column with the title
+  in `font-stack-sans-headline` (24px on mobile), the `description` as a 17px mobile deck, an author row
   (avatar, name, `formatShortDate(published_at)` · reading time) between two rules, the cover
   image, then the sanitized body as a single `dangerouslySetInnerHTML` block — the per-block
   sub-heading/image/`figcaption` rendering is gone with the block contract, and an authored
@@ -2077,7 +2021,7 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `listAllQuranJuz` loop pages until exhausted and the page fetches everything upfront —
   search/tab-switching is plain client-side `.filter()` over that in-memory list, not a
   debounced endpoint like `CreateableSelect`/`SearchableSelect`'s `loadOptions`. The Surah/Juz
-  segmented control is a plain two-button toggle (no "Page" tab — the API has no
+  segmented control uses `components/common/Tabs.tsx` with local state (no "Page" tab — the API has no
   Mushaf-page grouping to back one). `components/quran/SurahRow.tsx` — a `Link` to
   `/quran/{slug}` — shows `name_latin`/`total_verses`/`revelation_place` (mapped to
   "Makkiyah"/"Madaniyah")/`estimated_reading_seconds` (rounded to whole minutes) plus a play
@@ -2295,7 +2239,7 @@ categoryPreviews.length`, not a modulo cycle) — each preview category appears 
   `/master/users` (`app/(admin)/admin/master/users/page.tsx`, a Server Component reading
   `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
   — search/status-filter/pagination are all URL state driven by `router.push`, the same
-  server-first pattern `NewsPage`/`SearchPage` use, not a client-fetched table; its empty results
+  server-first pattern `ArticlesPage`/`SearchPage` use, not a client-fetched table; its empty results
   use the shared `components/states/EmptyState.tsx`. There's no
   `users/detail`-by-id endpoint on the backend (only by `username`, and only `users/update`/
   `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
@@ -2590,10 +2534,12 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   The catalog calls itself Training Center: its title and description are centered, and
   its search uses the shared `Input`. The banner is a plain linear gradient with no
   decorative shapes; it ends at the search input's vertical midpoint, so the input
-  straddles the gradient and the page background. LK1/LK2/LK3 sit in an icon-only
+  straddles the gradient and the white page background inherited from `TrainingPageShell`.
+  LK1/LK2/LK3 sit in an icon-only
   shared `Button` level dropdown at the left of the category shortcuts; its red active
   dot stays inside the button so it is not clipped on mobile. The nearby/registration/
-  ongoing shortcuts remain separate client-side filters over the current page. There is
+  ongoing shortcuts use the shared `Tabs` component as client-side filters over the current page;
+  Terdekat keeps its 7-day behavior without showing "7 hari" in the tab label. There is
   no agenda-total, divider, or create-event control in this catalog. A no-results catalog
   state uses `EmptyStateIllustration`, not a calendar icon.
   `PublicTrainingCard` uses a border without a shadow,
@@ -3260,7 +3206,7 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   that Dropdown per view. Since all five entity detail pages embed this component in their
   Kepengurusan tab, the toggle is there too. A period Select switches
   between a chapter's `structural_periods` rows via `?period=` (server-refetched through
-  `structurals/detail`, same query-param-drives-a-server-refetch pattern `NewsPage`/`SearchPage` use
+  `structurals/detail`, same query-param-drives-a-server-refetch pattern `ArticlesPage`/`SearchPage` use
   for `?q=`). With no (or an invalid/stale) `?period=`, the route defaults to the period with a null
   `end_year` — that's the one still ongoing — rather than just `periods.list[0]`; `structurals/list`
   orders `start_year DESC, created_at DESC` with no "is current" concept on the backend, so a

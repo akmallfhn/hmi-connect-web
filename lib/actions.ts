@@ -635,10 +635,9 @@ export async function loadMoreFeeds(page: number) {
 }
 
 export async function loadMoreNewsArticles(
-  page: number,
-  categorySlug?: string
+  page: number
 ) {
-  return listNewsArticlesApi({ page, pageSize: 12, categorySlug });
+  return listNewsArticlesApi({ page, pageSize: 12 });
 }
 
 export async function createFeed(payload: CreateFeedPayload) {

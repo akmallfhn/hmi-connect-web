@@ -17,6 +17,7 @@ import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
 import Dropdown from "../common/Dropdown";
+import Tabs from "../common/Tabs";
 import Input from "../fields/Input";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 import PublicTrainingCard from "../trainings/PublicTrainingCard";
@@ -41,14 +42,13 @@ const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
 ];
 
 const DISCOVERY_CATEGORIES: {
-  id: DiscoveryCategory;
+  value: DiscoveryCategory;
   label: string;
-  description?: string;
 }[] = [
-  { id: "all", label: "Semua agenda" },
-  { id: "nearby", label: "Terdekat", description: "7 hari" },
-  { id: "open", label: "Pendaftaran dibuka" },
-  { id: "ongoing", label: "Sedang berlangsung" },
+  { value: "all", label: "Semua agenda" },
+  { value: "nearby", label: "Terdekat" },
+  { value: "open", label: "Pendaftaran dibuka" },
+  { value: "ongoing", label: "Sedang berlangsung" },
 ];
 
 function dateAtJakartaDay(value: string) {
@@ -113,10 +113,9 @@ export default function TrainingCatalogPage({
     <TrainingPageShell
       viewer={viewer}
       mobileBackTitle="Training"
-      bgClassName="bg-[#f6f8fa]"
     >
       <main>
-        <section className="relative overflow-hidden bg-[#f6f8fa] text-white">
+        <section className="relative overflow-hidden text-white">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%-4.25rem)] bg-[linear-gradient(118deg,#063f4a_0%,#0b6970_58%,#118b91_100%)] lg:h-[calc(100%-5.5rem)]" />
 
           <PageMargin className="relative py-8 lg:py-12">
@@ -167,7 +166,7 @@ export default function TrainingCatalogPage({
         </section>
 
         <PageMargin className="pb-6 lg:pb-8">
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
             <Dropdown
               align="left"
               panelClassName="w-56 rounded-xl"
@@ -212,31 +211,13 @@ export default function TrainingCatalogPage({
                 ))}
               </div>
             </Dropdown>
-            {DISCOVERY_CATEGORIES.map((item) => {
-              const active = category === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setCategory(item.id)}
-                  className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                    active
-                      ? "border-[#172033] bg-[#172033] text-white"
-                      : "border-[#dce2ea] bg-white text-[#4a5565] hover:border-primary/45 hover:text-primary"
-                  }`}
-                >
-                  {item.label}
-                  {item.description && (
-                    <span
-                      className={active ? "text-white/65" : "text-[#8992a0]"}
-                    >
-                      · {item.description}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            <Tabs
+              ariaLabel="Kategori agenda"
+              items={DISCOVERY_CATEGORIES}
+              activeValue={category}
+              onChange={setCategory}
+              className="w-max shrink-0"
+            />
           </div>
 
           {hasFilters && (

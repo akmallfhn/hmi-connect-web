@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, MoreHorizontal, Pencil, Repeat2, Share2 } from "lucide-react";
+import { IconPhotoOff } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -186,8 +187,8 @@ export default function ArticleListRow({
           </div>
         </div>
 
-        {article.image_url && (
-          <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-[#f5f7fb] sm:size-28">
+        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f7fb] text-[#aeb8c7] sm:size-28">
+          {article.image_url ? (
             <Image
               src={article.image_url}
               alt=""
@@ -195,8 +196,10 @@ export default function ArticleListRow({
               unoptimized
               className="object-cover"
             />
-          </div>
-        )}
+          ) : (
+            <IconPhotoOff className="size-7" stroke={1.8} aria-hidden="true" />
+          )}
+        </div>
       </Link>
 
       {/* Outside the Link, since React events bubble through the portal into the row's navigation. */}

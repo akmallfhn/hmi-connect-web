@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { listArticleFeed, type ArticleFeedTab } from "@/apis/articles";
+import { listNewsArticles } from "@/apis/news";
 import { getSession } from "@/apis/session";
 import ArticlesPage from "@/components/pages/ArticlesPage";
 
@@ -19,7 +20,28 @@ export default async function ArticlesRoute({
 }: ArticlesRouteProps) {
   const { tab } = await searchParams;
   const { user } = await getSession();
-  // Mengikuti/Saya need a session to mean anything, so a logged-out visitor only gets Semua.
+  const viewer = {
+    fullName: user?.full_name,
+    avatar: user?.avatar,
+    userId: user?.id,
+    username: user?.username,
+    verificationStatus: user?.verification_status,
+  };
+  // News and viewer-scoped article feeds require a session.
+  if (user?.id && tab === "news") {
+    const news = await listNewsArticles({ page: 1, pageSize: 12 });
+    return (
+      <ArticlesPage
+        key="news"
+        viewer={viewer}
+        showPrivateTabs
+        activeTab="news"
+        initialItems={news.list}
+        initialHasMore={news.hasMore}
+      />
+    );
+  }
+
   const activeTab = user?.id
     ? (FEED_TABS.find((entry) => entry === tab) ?? "all")
     : "all";
@@ -28,15 +50,9 @@ export default async function ArticlesRoute({
   return (
     <ArticlesPage
       key={activeTab}
-      viewer={{
-        fullName: user?.full_name,
-        avatar: user?.avatar,
-        userId: user?.id,
-        username: user?.username,
-        verificationStatus: user?.verification_status,
-      }}
+      viewer={viewer}
       activeTab={activeTab}
-      showTabs={Boolean(user?.id)}
+      showPrivateTabs={Boolean(user?.id)}
       initialItems={articles.list}
       initialHasMore={articles.hasMore}
     />

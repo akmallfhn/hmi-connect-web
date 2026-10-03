@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { QuranJuz, QuranSurah } from "@/apis/quran";
 import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
+import Tabs from "../common/Tabs";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import JuzRow from "../quran/JuzRow";
@@ -33,13 +34,10 @@ interface QuranPageProps {
 type QuranTab = "surah" | "juz";
 
 const SURAH_SEARCH_DEBOUNCE_MS = 400;
-
-function tabClassName(active: boolean): string {
-  return [
-    "flex-1 min-w-[96px] rounded-full py-1.5 px-3 text-sm font-semibold transition lg:flex-none",
-    active ? "bg-primary text-white" : "text-[#5f6573]",
-  ].join(" ");
-}
+const QURAN_TABS: { value: QuranTab; label: string }[] = [
+  { value: "surah", label: "Surah" },
+  { value: "juz", label: "Juz" },
+];
 
 function QuranSearchInput({
   query,
@@ -181,22 +179,13 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
                 <QuranSearchInput query={query} onChange={setQuery} />
               </div>
 
-              <div className="flex gap-1 rounded-full border border-[#e6e9ef] bg-white p-1">
-                <button
-                  type="button"
-                  onClick={() => setTab("surah")}
-                  className={tabClassName(tab === "surah")}
-                >
-                  Surah
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTab("juz")}
-                  className={tabClassName(tab === "juz")}
-                >
-                  Juz
-                </button>
-              </div>
+              <Tabs
+                ariaLabel="Daftar Al-Qur'an"
+                items={QURAN_TABS}
+                activeValue={tab}
+                onChange={setTab}
+                className="w-full lg:w-fit"
+              />
             </div>
 
             <div className="flex flex-col divide-y divide-[#e6e9ef] rounded-2xl border border-[#e6e9ef] bg-white px-4">

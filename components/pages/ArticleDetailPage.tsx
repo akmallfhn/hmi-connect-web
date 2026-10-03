@@ -5,7 +5,6 @@ import { formatShortDate } from "@/lib/time-manipulation";
 import type { VerificationStatusEnum } from "@/lib/types";
 import ArticleDetailActions from "../articles/ArticleDetailActions";
 import Avatar from "../common/Avatar";
-import Label from "../common/Label";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 
@@ -112,18 +111,12 @@ export default function ArticleDetailPage({
       />
 
       <article className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-6 lg:px-0 lg:pt-12">
-        {article.category_name && (
-          <Label variant="gray" className="mb-4">
-            {article.category_name}
-          </Label>
-        )}
-
-        <h1 className="font-stack-sans-headline text-[28px] font-medium leading-tight text-[#172033] sm:text-4xl sm:leading-[1.2]">
+        <h1 className="font-stack-sans-headline text-[24px] font-medium leading-tight text-[#172033] sm:text-4xl sm:leading-[1.2]">
           {article.title}
         </h1>
 
         {article.description && (
-          <p className="mt-4 text-lg leading-relaxed text-[#5f6573] sm:text-xl">
+          <p className="mt-4 text-[17px] leading-relaxed text-[#5f6573] sm:text-xl">
             {article.description}
           </p>
         )}

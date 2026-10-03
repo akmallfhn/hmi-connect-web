@@ -5,30 +5,19 @@ import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import type { NewsArticle } from "@/apis/news";
 import { COMPOSE_INTENT_KEY, COMPOSE_INTENT_NEWS_KEY } from "@/lib/constants";
-import Button, { type ButtonVariant } from "../buttons/Button";
+import Button from "../buttons/Button";
 import type { ComposerNewsDraft } from "../forms/CreateFeedForms";
 
 interface RepostToFeedButtonProps {
   article: NewsArticle;
   className?: string;
-  variant?: ButtonVariant;
-  /** "sm" (default) sits inline in a meta row; "lg" is for the heroMain corner badge. */
-  size?: "sm" | "lg";
 }
-
-const DIMENSIONS: Record<"sm" | "lg", { button: string; icon: string }> = {
-  sm: { button: "size-7", icon: "size-4" },
-  lg: { button: "size-11", icon: "size-5" },
-};
 
 export default function RepostToFeedButton({
   article,
   className,
-  variant = "ghost",
-  size = "sm",
 }: RepostToFeedButtonProps) {
   const router = useRouter();
-  const { button: buttonSize, icon: iconSize } = DIMENSIONS[size];
 
   function handleClick(event: MouseEvent) {
     // The whole card links out to the source — this button opens the composer instead.
@@ -53,13 +42,14 @@ export default function RepostToFeedButton({
   return (
     <Button
       type="button"
-      variant={variant}
+      variant="ghost"
       size="icon"
       onClick={handleClick}
-      aria-label="Bagikan ke feed"
-      className={`${buttonSize} shrink-0 rounded-full ${variant === "ghost" ? "hover:bg-black/5" : ""} ${className ?? ""}`}
+      aria-label={`Repost berita ${article.title} ke feed`}
+      title="Repost ke feed"
+      className={`size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb] ${className ?? ""}`}
     >
-      <Repeat2 className={iconSize} />
+      <Repeat2 className="size-4" />
     </Button>
   );
 }

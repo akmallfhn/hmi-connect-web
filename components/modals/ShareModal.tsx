@@ -13,6 +13,7 @@ interface ShareModalProps {
   onClose: () => void;
   url: string;
   text?: string;
+  title?: string;
 }
 
 export type SharePlatform = {
@@ -55,7 +56,7 @@ export const SHARE_PLATFORMS: SharePlatform[] = [
   },
 ];
 
-export default function ShareModal({ open, onClose, url, text = "Lihat postingan ini di HMI Connect" }: ShareModalProps) {
+export default function ShareModal({ open, onClose, url, text = "Lihat postingan ini di HMI Connect", title = "Bagikan Postingan" }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopyLink() {
@@ -75,7 +76,7 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Bagikan Postingan">
+    <Modal open={open} onClose={onClose} title={title}>
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
         {SHARE_PLATFORMS.map((platform) => (
           <a
