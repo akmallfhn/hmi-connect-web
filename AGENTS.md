@@ -738,8 +738,7 @@ them "Akses Ditolak" (see the accept route below).
 outline | soft | secondarySoft | ghost | destructive` (`soft` is primary-light, `secondarySoft` its
   secondary twin); sizes: `sm | default | lg | pill | pillSm | icon |
 iconSm`.
-  `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles`, `/quran`, and
-  `/trainings`: a light-gray track and inactive pills with tertiary active pills. Each item
+  `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles` and `/quran`: a light-gray track and inactive pills with tertiary active pills. Each item
   supplies a value and label, optionally a short description and a URL; URL items render
   links, while local-state items use `onChange`. Keep page-specific tab definitions and data
   behavior in the page components, not in this visual primitive.
@@ -2536,10 +2535,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   decorative shapes; it ends at the search input's vertical midpoint, so the input
   straddles the gradient and the white page background inherited from `TrainingPageShell`.
   LK1/LK2/LK3 sit in an icon-only
-  shared `Button` level dropdown at the left of the category shortcuts; its red active
-  dot stays inside the button so it is not clipped on mobile. The nearby/registration/
-  ongoing shortcuts use the shared `Tabs` component as client-side filters over the current page;
-  Terdekat keeps its 7-day behavior without showing "7 hari" in the tab label. There is
+  shared `Button` level dropdown beside the search input at every breakpoint; its red badge
+  shows the active-filter count (capped at `9+`) and pokes just past the button's top-right
+  corner, which is why that row has no `overflow` clipping. There are deliberately no
+  category tabs (the old Terdekat/Pendaftaran/Berlangsung shortcuts are gone). There is
   no agenda-total, divider, or create-event control in this catalog. A no-results catalog
   state uses `EmptyStateIllustration`, not a calendar icon.
   `PublicTrainingCard` uses a border without a shadow,

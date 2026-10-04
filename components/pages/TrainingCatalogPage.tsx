@@ -17,8 +17,8 @@ import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
 import Dropdown from "../common/Dropdown";
-import Tabs from "../common/Tabs";
 import Input from "../fields/Input";
+import EventIcon from "../icons/EventIcon";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 import PublicTrainingCard from "../trainings/PublicTrainingCard";
 import TrainingPageShell, {
@@ -32,44 +32,12 @@ interface TrainingCatalogPageProps {
   initialLevel?: TrainingStatusEnum;
 }
 
-type DiscoveryCategory = "all" | "nearby" | "open" | "ongoing";
-
 const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
   { label: "Semua level", value: undefined },
   { label: "LK1", value: "LK1" },
   { label: "LK2", value: "LK2" },
   { label: "LK3", value: "LK3" },
 ];
-
-const DISCOVERY_CATEGORIES: {
-  value: DiscoveryCategory;
-  label: string;
-}[] = [
-  { value: "all", label: "Semua agenda" },
-  { value: "nearby", label: "Terdekat" },
-  { value: "open", label: "Pendaftaran dibuka" },
-  { value: "ongoing", label: "Sedang berlangsung" },
-];
-
-function dateAtJakartaDay(value: string) {
-  return new Date(`${value}T00:00:00+07:00`);
-}
-
-function matchesCategory(
-  training: TrainingListEntry,
-  category: DiscoveryCategory
-) {
-  if (category === "all") return true;
-  if (category === "open") return training.is_registration_open;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startDate = dateAtJakartaDay(training.start_date);
-  const endDate = dateAtJakartaDay(training.end_date);
-  if (category === "ongoing") return startDate <= now && endDate >= now;
-
-  const daysUntilStart = (startDate.getTime() - today.getTime()) / 86_400_000;
-  return daysUntilStart >= 0 && daysUntilStart <= 7;
-}
 
 export default function TrainingCatalogPage({
   viewer,
@@ -81,7 +49,6 @@ export default function TrainingCatalogPage({
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(initialSearch);
   const [seenSearch, setSeenSearch] = useState(initialSearch);
-  const [category, setCategory] = useState<DiscoveryCategory>("all");
 
   if (seenSearch !== initialSearch) {
     setSeenSearch(initialSearch);
@@ -105,68 +72,59 @@ export default function TrainingCatalogPage({
   }
 
   const hasFilters = Boolean(initialSearch || initialLevel);
-  const visibleTrainings = result.list.filter((training) =>
-    matchesCategory(training, category)
-  );
+  const activeFilterCount = [initialLevel].filter(Boolean).length;
 
   return (
-    <TrainingPageShell
-      viewer={viewer}
-      mobileBackTitle="Training"
-    >
-      <main>
-        <section className="relative overflow-hidden text-white">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%-4.25rem)] bg-[linear-gradient(118deg,#063f4a_0%,#0b6970_58%,#118b91_100%)] lg:h-[calc(100%-5.5rem)]" />
-
-          <PageMargin className="relative py-8 lg:py-12">
-            <div className="mx-auto max-w-2xl text-center">
-              <h1 className="font-stack-sans-headline text-2xl font-medium leading-[1.08] tracking-tight sm:text-4xl lg:text-4xl">
-                Training Center
+    <TrainingPageShell viewer={viewer} mobileBackTitle="Training">
+      <PageMargin className="pt-3 lg:pt-6">
+        <main className="flex flex-col gap-3 lg:gap-6">
+          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(118deg,#063f4a_0%,#0b6970_58%,#118b91_100%)] p-5 text-white lg:flex lg:min-h-[120px] lg:items-center">
+            <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
+              <h1 className="text-xl font-medium leading-snug">
+                <span className="text-secondary">Training</span> Center
               </h1>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/80 sm:text-base">
+              <p className="mt-1 hidden text-base text-white/70 lg:flex">
                 Jelajahi Latihan Kader dari berbagai daerah, simpan dan
                 registrasi.
               </p>
             </div>
+            <EventIcon
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-6 right-2 h-32 w-auto rotate-[-8deg] lg:-bottom-8 lg:right-8 lg:h-40"
+            />
+          </div>
 
-            <div className="mt-6 rounded-2xl border border-[#cfd5df] bg-white p-2 lg:mt-8 lg:p-2.5">
-              <form onSubmit={handleSearch} className="min-w-0 flex-1">
-                <div>
-                  <Input
-                    inputId="training-search"
-                    type="search"
-                    aria-label="Cari training"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Cari nama training, kota, atau penyelenggara"
-                    icon={
-                      <IconSearch className="size-5 text-primary" stroke={2} />
-                    }
-                    className="h-12 rounded-xl bg-[#f3f7f8] pr-12 text-sm focus:bg-white"
-                    trailing={
-                      search ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSearch("");
-                            navigateWith({ search: undefined });
-                          }}
-                          aria-label="Hapus pencarian"
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-full text-[#6d7480] transition hover:bg-[#dbe3ef]"
-                        >
-                          <IconX className="size-4" stroke={2} />
-                        </button>
-                      ) : undefined
-                    }
-                  />
-                </div>
-              </form>
-            </div>
-          </PageMargin>
-        </section>
+          <div className="flex items-center gap-2 lg:gap-3">
+            <form onSubmit={handleSearch} className="min-w-0 flex-1">
+              <Input
+                inputId="training-search"
+                type="search"
+                aria-label="Cari training"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Cari nama training, kota, atau penyelenggara"
+                icon={
+                  <IconSearch className="size-4 text-[#7b8190]" stroke={2} />
+                }
+                className="h-11 rounded-full bg-white pr-12 text-sm"
+                trailing={
+                  search ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        navigateWith({ search: undefined });
+                      }}
+                      aria-label="Hapus pencarian"
+                      className="flex size-7 cursor-pointer items-center justify-center rounded-full text-[#6d7480] transition hover:bg-[#dbe3ef]"
+                    >
+                      <IconX className="size-4" stroke={2} />
+                    </button>
+                  ) : undefined
+                }
+              />
+            </form>
 
-        <PageMargin className="pb-6 lg:pb-8">
-          <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
             <Dropdown
               align="left"
               panelClassName="w-56 rounded-xl"
@@ -178,14 +136,16 @@ export default function TrainingCatalogPage({
                   title="Filter level"
                   variant="outline"
                   size="icon"
-                  className="relative shrink-0 rounded-full border-[#dce2ea] bg-white text-[#4a5565] hover:border-primary/45 hover:text-primary"
+                  className="relative shrink-0 overflow-visible!"
                 >
                   <IconFilter className="size-4" stroke={2} />
-                  {initialLevel && (
+                  {activeFilterCount > 0 && (
                     <span
-                      className="absolute right-1 top-1 size-2.5 rounded-full bg-destructive ring-2 ring-white"
-                      aria-label="Filter aktif"
-                    />
+                      className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
+                      aria-label={`${activeFilterCount} filter aktif`}
+                    >
+                      {activeFilterCount > 9 ? "9+" : activeFilterCount}
+                    </span>
                   )}
                 </Button>
               )}
@@ -211,65 +171,62 @@ export default function TrainingCatalogPage({
                 ))}
               </div>
             </Dropdown>
-            <Tabs
-              ariaLabel="Kategori agenda"
-              items={DISCOVERY_CATEGORIES}
-              activeValue={category}
-              onChange={setCategory}
-              className="w-max shrink-0"
-            />
           </div>
 
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={() => router.push("/trainings")}
-              className="mt-4 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#5f6573] transition hover:bg-white hover:text-[#172033]"
-            >
-              <IconRefresh className="size-3.5" stroke={2} />
-              Reset pencarian dan filter
-            </button>
-          )}
+          <div className="flex flex-col gap-4 pb-6 lg:pb-10">
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={() => router.push("/trainings")}
+                className="inline-flex h-9 self-start cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#5f6573] transition hover:bg-white hover:text-[#172033]"
+              >
+                <IconRefresh className="size-3.5" stroke={2} />
+                Reset pencarian dan filter
+              </button>
+            )}
 
-          {visibleTrainings.length === 0 ? (
-            <div className="mt-4 flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-[#cfd5df] bg-white px-5 text-center">
-              <EmptyStateIllustration
-                className="h-auto w-40"
-                aria-hidden="true"
-              />
-              <div className="mt-4">
-                <p className="font-semibold text-[#172033]">
-                  Belum ada agenda yang cocok
-                </p>
-                <p className="mt-1 text-sm text-[#5f6573]">
-                  Coba kategori lain atau ubah kata kunci pencarianmu.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
-              {visibleTrainings.map((training) => (
-                <PublicTrainingCard
-                  key={training.id}
-                  training={training}
-                  isSignedIn={Boolean(viewer.userId)}
+            {result.list.length === 0 ? (
+              <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-[#cfd5df] bg-white px-5 text-center">
+                <EmptyStateIllustration
+                  className="h-auto w-40"
+                  aria-hidden="true"
                 />
-              ))}
-            </div>
-          )}
+                <div className="mt-4">
+                  <p className="font-semibold text-[#172033]">
+                    Belum ada agenda yang cocok
+                  </p>
+                  <p className="mt-1 text-sm text-[#5f6573]">
+                    Coba level lain atau ubah kata kunci pencarianmu.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
+                {result.list.map((training) => (
+                  <PublicTrainingCard
+                    key={training.id}
+                    training={training}
+                    isSignedIn={Boolean(viewer.userId)}
+                  />
+                ))}
+              </div>
+            )}
 
-          {result.totalPage > 1 && (
-            <div className="mt-9 flex flex-col items-center gap-3">
-              <Pagination
-                currentPage={result.currentPage}
-                totalPages={result.totalPage}
-                previousIcon={<IconChevronLeft className="size-4" stroke={2} />}
-                nextIcon={<IconChevronRight className="size-4" stroke={2} />}
-              />
-            </div>
-          )}
-        </PageMargin>
-      </main>
+            {result.totalPage > 1 && (
+              <div className="mt-5 flex flex-col items-center gap-3">
+                <Pagination
+                  currentPage={result.currentPage}
+                  totalPages={result.totalPage}
+                  previousIcon={
+                    <IconChevronLeft className="size-4" stroke={2} />
+                  }
+                  nextIcon={<IconChevronRight className="size-4" stroke={2} />}
+                />
+              </div>
+            )}
+          </div>
+        </main>
+      </PageMargin>
     </TrainingPageShell>
   );
 }
