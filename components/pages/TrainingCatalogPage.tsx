@@ -9,21 +9,26 @@ import {
   IconSearch,
   IconX,
 } from "@tabler/icons-react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { PagedTrainingResult, TrainingListEntry } from "@/apis/trainings";
 import type { TrainingStatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
+import PageBanner from "../common/PageBanner";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
 import Dropdown from "../common/Dropdown";
 import Input from "../fields/Input";
-import EventIcon from "../icons/EventIcon";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 import PublicTrainingCard from "../trainings/PublicTrainingCard";
 import TrainingPageShell, {
   type TrainingViewer,
 } from "../trainings/TrainingPageShell";
+
+// Placeholder until the training banner photo is ready.
+const BANNER_IMAGE_URL =
+  "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/assets/lk-hmi.webp";
 
 interface TrainingCatalogPageProps {
   viewer: TrainingViewer;
@@ -78,21 +83,28 @@ export default function TrainingCatalogPage({
     <TrainingPageShell viewer={viewer} mobileBackTitle="Training">
       <PageMargin className="pt-3 lg:pt-6">
         <main className="flex flex-col gap-3 lg:gap-6">
-          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(118deg,#063f4a_0%,#0b6970_58%,#118b91_100%)] p-5 text-white lg:flex lg:min-h-[120px] lg:items-center">
+          <PageBanner className="bg-[#013334]">
             <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
-              <h1 className="text-xl font-medium leading-snug">
-                <span className="text-secondary">Training</span> Center
+              <h1 className="text-[15px] font-medium leading-snug sm:text-xl lg:text-2xl">
+                Training Center
               </h1>
-              <p className="mt-1 hidden text-base text-white/70 lg:flex">
+              <p className="mt-1 text-[10px] text-white/70 lg:flex lg:text-base">
                 Jelajahi Latihan Kader dari berbagai daerah, simpan dan
                 registrasi.
               </p>
             </div>
-            <EventIcon
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-6 right-2 h-32 w-auto rotate-[-8deg] lg:-bottom-8 lg:right-8 lg:h-40"
-            />
-          </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[45%]">
+              <Image
+                src={BANNER_IMAGE_URL}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 540px, 45vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-black/25" />
+              <div className="absolute inset-0 bg-linear-to-r from-[#013334] to-transparent" />
+            </div>
+          </PageBanner>
 
           <div className="flex items-center gap-2 lg:gap-3">
             <form onSubmit={handleSearch} className="min-w-0 flex-1">

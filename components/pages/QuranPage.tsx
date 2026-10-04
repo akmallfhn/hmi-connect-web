@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { QuranJuz, QuranSurah } from "@/apis/quran";
 import type { VerificationStatusEnum } from "@/lib/types";
+import PageBanner from "../common/PageBanner";
 import PageMargin from "../common/PageMargin";
 import Tabs from "../common/Tabs";
 import BottomNav from "../navigations/BottomNav";
@@ -14,8 +15,8 @@ import JuzRow from "../quran/JuzRow";
 import QuranMiniPlayer from "../quran/QuranMiniPlayer";
 import SurahRow from "../quran/SurahRow";
 
-const BANNER_ILLUSTRATION_URL =
-  "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/wallpaper-alquran.webp";
+const BANNER_IMAGE_URL =
+  "https://fkzvvwtrwpjsclpthqex.supabase.co/storage/v1/object/public/hmi-connect/assets/quran-image-banner.jpg";
 
 interface ViewerProps {
   fullName?: string;
@@ -149,29 +150,27 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
 
       <PageMargin className="pt-3 lg:pb-10 lg:pt-6">
         <div className="flex flex-col gap-3 lg:gap-6">
-          <div className="relative overflow-hidden rounded-2xl bg-[#013334] p-5 text-white lg:flex lg:min-h-[120px] lg:items-center">
+          <PageBanner className="bg-[#013334]">
             <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
-              <h1 className="text-xl font-medium leading-snug">
+              <h1 className="text-[15px] font-medium leading-snug sm:text-xl lg:text-2xl">
                 Yuk, luangkan waktu membaca{" "}
-                <span className="text-secondary">Al-Quran</span>
+                <span className="text-secondary">Al-Quran.</span>
               </h1>
-              <p className="hidden mt-1 lg:flex text-base text-white/70">
+              <p className="text-[10px] mt-1 lg:flex lg:text-base text-white/70">
                 Jadikan Al-Quran sebagai penuntun hidup.
               </p>
             </div>
-            <div className="pointer-events-none absolute bottom-0 right-0">
-              <div className="relative inline-flex">
-                <Image
-                  src={BANNER_ILLUSTRATION_URL}
-                  alt="Ilustrasi Al-Qur'an"
-                  width={1417}
-                  height={1110}
-                  className="block h-32 w-auto lg:w-[272px] lg:h-auto"
-                />
-                <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#013334]" />
-              </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[45%]">
+              <Image
+                src={BANNER_IMAGE_URL}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 540px, 45vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-linear-to-r from-[#013334] to-transparent" />
             </div>
-          </div>
+          </PageBanner>
 
           <div className={playingSurah ? "pb-24 lg:pb-0" : "pb-6 lg:pb-0"}>
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">

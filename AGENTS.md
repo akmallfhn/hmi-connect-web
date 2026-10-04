@@ -2009,8 +2009,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   an article is not a feed post, and none of those endpoints accept an article target.
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
   here instead of `href="#"`) — **no longer mobile-only**: `/quran` itself now has a real `lg:`
-  treatment (the `#013334` banner became a short full-width strip with the illustration pinned
-  right, and the search field + Surah/Juz toggle share one row above a single full-width list —
+  treatment (the `#013334` banner renders through `components/common/PageBanner.tsx` with
+  `quran-image-banner.jpg` filling its right 45% under a `#013334`-to-transparent fade, and the search field + Surah/Juz toggle share one row above a single full-width list —
   deliberately one column, not a grid, since a surah row is a short label that gains nothing from
   extra width). The two detail routes below are still mobile-first, and
   `QuranMiniPlayer` stays `lg:hidden`. Backed by
@@ -2530,10 +2530,12 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `/trainings` lists every level with API-backed name/level/organizer filters and pagination,
   `/trainings/{training_id}` renders the public event detail, and
   `/trainings/{training_id}/register` is the session-gated registration form.
-  The catalog calls itself Training Center: its title and description are centered, and
-  its search uses the shared `Input`. The banner is a plain linear gradient with no
-  decorative shapes; it ends at the search input's vertical midpoint, so the input
-  straddles the gradient and the white page background inherited from `TrainingPageShell`.
+  The catalog calls itself Training Center and its search uses the shared `Input`. Its banner copies
+  `/quran`'s exactly — `#013334` with a photo on its right 45% under the same `#013334`-to-transparent
+  fade (temporarily reusing the Quran banner image), rendered through
+  `components/common/PageBanner.tsx` — the shared banner wrapper `/trainings` and `/quran` both
+  use, which owns only the size (600×200 below `lg`, 1200×200 from `lg`), rounding, and padding;
+  each caller paints its own background and contents.
   LK1/LK2/LK3 sit in an icon-only
   shared `Button` level dropdown beside the search input at every breakpoint; its red badge
   shows the active-filter count (capped at `9+`) and pokes just past the button's top-right
