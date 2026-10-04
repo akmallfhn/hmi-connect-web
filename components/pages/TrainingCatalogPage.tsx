@@ -93,7 +93,7 @@ export default function TrainingCatalogPage({
                 registrasi.
               </p>
             </div>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[45%]">
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[45%] [mask-image:linear-gradient(to_right,transparent,black)]">
               <Image
                 src={BANNER_IMAGE_URL}
                 alt=""
@@ -102,7 +102,6 @@ export default function TrainingCatalogPage({
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-black/25" />
-              <div className="absolute inset-0 bg-linear-to-r from-[#013334] to-transparent" />
             </div>
           </PageBanner>
 

@@ -2010,7 +2010,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
   here instead of `href="#"`) — **no longer mobile-only**: `/quran` itself now has a real `lg:`
   treatment (the `#013334` banner renders through `components/common/PageBanner.tsx` with
-  `quran-image-banner.jpg` filling its right 45% under a `#013334`-to-transparent fade, and the search field + Surah/Juz toggle share one row above a single full-width list —
+  `quran-image-banner.jpg` filling its right 45%, faded in with a CSS `mask-image` rather than a `#013334` overlay (an overlay leaves a hairline at the fractional-pixel edge), and the search field + Surah/Juz toggle share one row above a single full-width list —
   deliberately one column, not a grid, since a surah row is a short label that gains nothing from
   extra width). The two detail routes below are still mobile-first, and
   `QuranMiniPlayer` stays `lg:hidden`. Backed by
@@ -2531,8 +2531,8 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `/trainings/{training_id}` renders the public event detail, and
   `/trainings/{training_id}/register` is the session-gated registration form.
   The catalog calls itself Training Center and its search uses the shared `Input`. Its banner copies
-  `/quran`'s exactly — `#013334` with a photo on its right 45% under the same `#013334`-to-transparent
-  fade (temporarily reusing the Quran banner image), rendered through
+  `/quran`'s exactly — `#013334` with a photo on its right 45% under the same mask fade plus a
+  `bg-black/25` dim (temporarily reusing the Quran banner image), rendered through
   `components/common/PageBanner.tsx` — the shared banner wrapper `/trainings` and `/quran` both
   use, which owns only the size (600×200 below `lg`, 1200×200 from `lg`), rounding, and padding;
   each caller paints its own background and contents.
