@@ -607,8 +607,18 @@ request was rejected and who is back to `unverified`. The endpoint creates a `pe
 row (a separate reviewable entity, `VerificationRequestStatusEnum`: `pending` | `approved` |
 `rejected`) and bumps `User.verification_status` to `"pending"` — it no longer sets
 `verification_status` to `"verified"` directly; that only happens once an admin approves the
-request (there's no admin review UI for that yet in this app, see the `apis/users.ts`/
-`VerificationResult` type for the reshaped response). Unlike activation this is **not**
+request. Master, Organization, and Branch review queues share
+`components/pages/BranchVerificationListPage.tsx`: below `xl` each request is a separate card
+with its identity, status, submitted date and time in WIB, organizational scope, and review
+actions visible without horizontal scrolling; the pagination shows only
+previous/current/next on mobile and is centered below the list on every screen size;
+from `xl` upward the same requests render as a table. The detail, approval, and rejection
+dialogs are shared by both layouts. The review-list search stays outside a single Filter
+dropdown. Status uses `components/fields/Select.tsx`, whose dropdown styling matches
+`SearchableSelect.tsx`; Master and Organization also show a Cabang `SearchableSelect`.
+Active filters show a count and removable chips;
+Reset clears them and closes the dropdown.
+Unlike activation this is **not**
 gated/mandatory — `app/(www)/www/verification/page.tsx` redirects away pending-activation
 users (to `/activation`) and anyone whose `verification_status` is already `"pending"` or
 `"verified"` (to `/`, since the backend 409s on resubmission for either state); anyone else
@@ -2340,8 +2350,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   That drawer stays **mounted at all times** (translated off-canvas with `-translate-x-full`,
   `pointer-events-none` + `aria-hidden` + `inert` while closed) rather than being conditionally
   rendered — an unmounted drawer can only pop in, so closing had no animation at all. It slides
-  on `transition-transform duration-300 ease-out` with `will-change-transform` while the backdrop
-  cross-fades on its own `transition-opacity`; both carry `motion-reduce:transition-none`.
+  on `transition-[transform,box-shadow] duration-300 ease-out` with `will-change-transform`;
+  its shadow exists only while open, so none peeks in from the left after it slides away. The
+  backdrop cross-fades on its own `transition-opacity`; both carry `motion-reduce:transition-none`.
   The drawer is sized with `h-dvh`, **not** `inset-0`: a `fixed` box resolves its edges against the
   *large* viewport, so with the URL bar showing, the panel ran taller than the visible area — the
   user/role footer sat under the fold and the nav never overflowed, so the page scrolled instead of
@@ -2674,11 +2685,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
   filter on all three pages is "Semua Status", so
   `apis/verification-requests.ts#listVerificationRequestsForReview` composes it in one place: when
-  `status` isn't
-  set, it fires all three
-  status queries in parallel (`page: 1`, `page_size: 100` each — `ALL_STATUS_FETCH_SIZE`, generous
-  since this is a review queue, not a full archive), merges, and sorts by `created_at` descending;
-  picking an explicit status still goes through normal single-status server-side pagination.
+  `status` isn't set, it gets each status's first 100 rows and total, fetches any further status
+  pages needed for the requested combined page, merges by `created_at` descending, and slices to
+  the requested page size. The combined total and page count come from the three backend totals;
+  picking an explicit status still uses normal single-status server-side pagination.
   `verification-requests/list` also takes a `search` param (substring match against the applicant's
   `full_name` only, not username/chapter) — `page.tsx` forwards `?search=` to it, and passes the
   same `search` into all three parallel calls when in "all statuses" mode.

@@ -61,6 +61,7 @@ interface SearchableSelectProps {
   disabled?: boolean;
   noOptionsMessage?: string;
   menuPlacement?: MenuPlacement;
+  portalMenu?: boolean;
   showOptionAvatar?: boolean;
 }
 
@@ -78,6 +79,7 @@ export default function SearchableSelect({
   disabled,
   noOptionsMessage = "Tidak ditemukan.",
   menuPlacement = "auto",
+  portalMenu = true,
   showOptionAvatar = false,
 }: SearchableSelectProps) {
   const [inputValue, setInputValue] = useState("");
@@ -201,7 +203,9 @@ export default function SearchableSelect({
             menuPlacement={menuPlacement}
             maxMenuHeight={160}
             menuPortalTarget={
-              typeof document !== "undefined" ? document.body : undefined
+              portalMenu && typeof document !== "undefined"
+                ? document.body
+                : undefined
             }
             styles={{
               // Above Modal's z-[100] so this menu doesn't paint behind it when used inside one.

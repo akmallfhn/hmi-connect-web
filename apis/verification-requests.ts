@@ -115,13 +115,21 @@ const ALL_VERIFICATION_REQUEST_STATUSES: VerificationRequestStatusEnum[] = [
 ];
 const ALL_STATUS_FETCH_SIZE = 100;
 
-// The backend accepts one status per request. Compose the UI's "Semua Status" option here.
+// Backend takes one status per request, so merge each status's rows into one created_at-ordered page.
 export async function listVerificationRequestsForReview(
   options: ListVerificationRequestsOptions = {}
 ): Promise<PagedListResult<VerificationRequestListEntry>> {
   if (options.status) return listVerificationRequests(options);
 
-  const results = await Promise.all(
+  const requestedPageSize = options.pageSize ?? 20;
+  const pageSize = Number.isFinite(requestedPageSize)
+    ? Math.min(Math.max(Math.floor(requestedPageSize), 1), ALL_STATUS_FETCH_SIZE)
+    : 20;
+  const page = options.page ?? 1;
+  const requestedPage = Number.isFinite(page)
+    ? Math.max(1, Math.floor(page))
+    : 1;
+  const firstPages = await Promise.all(
     ALL_VERIFICATION_REQUEST_STATUSES.map((status) =>
       listVerificationRequests({
         ...options,
@@ -131,15 +139,40 @@ export async function listVerificationRequestsForReview(
       })
     )
   );
-  const list = results
-    .flatMap((result) => result.list)
-    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  const totalData = firstPages.reduce((sum, result) => sum + result.totalData, 0);
+  const totalPage = Math.max(1, Math.ceil(totalData / pageSize));
+  const currentPage = Math.min(requestedPage, totalPage);
+  const rowsNeeded = currentPage * pageSize;
+
+  const statusRows = await Promise.all(
+    firstPages.map(async (firstPage, index) => {
+      const neededFromStatus = Math.min(firstPage.totalData, rowsNeeded);
+      const pageCount = Math.ceil(neededFromStatus / ALL_STATUS_FETCH_SIZE);
+      if (pageCount <= 1) return firstPage.list;
+
+      const laterPages = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, pageIndex) =>
+          listVerificationRequests({
+            ...options,
+            status: ALL_VERIFICATION_REQUEST_STATUSES[index],
+            page: pageIndex + 2,
+            pageSize: ALL_STATUS_FETCH_SIZE,
+          })
+        )
+      );
+      return [firstPage.list, ...laterPages.map((result) => result.list)].flat();
+    })
+  );
+  const list = statusRows
+    .flat()
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return {
     list,
-    totalData: list.length,
-    totalPage: 1,
-    currentPage: 1,
+    totalData,
+    totalPage,
+    currentPage,
   };
 }
 

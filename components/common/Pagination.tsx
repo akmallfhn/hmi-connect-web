@@ -54,6 +54,7 @@ export default function Pagination({
       <Button
         variant="outline"
         size="default"
+        aria-label="Halaman sebelumnya"
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage <= 1}
       >
@@ -61,29 +62,37 @@ export default function Pagination({
         <span className="hidden sm:inline">Sebelumnya</span>
       </Button>
 
-      {getPageNumbers().map((page, index) =>
-        page === "ellipsis" ? (
-          <span
-            key={`ellipsis-${index}`}
-            className="px-1 text-sm text-[#5f6573]"
-          >
-            …
-          </span>
-        ) : (
-          <Button
-            key={page}
-            variant={page === currentPage ? "primary" : "outline"}
-            size="icon"
-            onClick={() => goToPage(page)}
-          >
-            {page}
-          </Button>
-        )
-      )}
+      <span className="px-2 text-sm font-medium text-[#172033] sm:hidden">
+        {currentPage} / {totalPages}
+      </span>
+      <div className="hidden items-center gap-1.5 sm:flex">
+        {getPageNumbers().map((page, index) =>
+          page === "ellipsis" ? (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-1 text-sm text-[#5f6573]"
+            >
+              …
+            </span>
+          ) : (
+            <Button
+              key={page}
+              variant={page === currentPage ? "primary" : "outline"}
+              size="icon"
+              aria-label={`Halaman ${page}`}
+              aria-current={page === currentPage ? "page" : undefined}
+              onClick={() => goToPage(page)}
+            >
+              {page}
+            </Button>
+          )
+        )}
+      </div>
 
       <Button
         variant="outline"
         size="default"
+        aria-label="Halaman berikutnya"
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage >= totalPages}
       >

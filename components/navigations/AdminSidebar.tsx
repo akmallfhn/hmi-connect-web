@@ -458,8 +458,8 @@ export default function AdminSidebar({
           }`}
         />
         <div
-          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e9ef] bg-white px-4 pt-6 shadow-2xl transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none ${
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e9ef] bg-white px-4 pt-6 transition-[transform,box-shadow] duration-300 ease-out will-change-transform motion-reduce:transition-none ${
+            mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full shadow-none"
           }`}
         >
           {/* shrink-0 on both ends so only the nav scrolls — without it a long menu squeezes them instead. */}

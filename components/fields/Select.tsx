@@ -76,7 +76,7 @@ export default function Select({
           isOpen ? "border-primary ring-2 ring-primary/15" : "border-[#dbe3ef]",
           disabled
             ? "cursor-not-allowed border-[#e0e3e8] bg-[#f3f4f6] text-[#8a909d] opacity-100"
-            : "cursor-pointer bg-white",
+            : "cursor-pointer bg-white text-[#172033]",
           icon ? "pl-10" : "",
         ]
           .filter(Boolean)
@@ -105,7 +105,9 @@ export default function Select({
           )}
           <span
             className={`block truncate text-base ${
-              selectedOption ? "" : "text-[#5f6573]"
+              selectedOption && value !== "" && value !== null
+                ? ""
+                : "text-[#5f6573]/60"
             }`}
           >
             {selectedOption?.label || placeholder}
@@ -119,8 +121,8 @@ export default function Select({
         )}
 
         {isOpen && !disabled && (
-          <div className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md">
-            <ul className="flex max-h-60 flex-col overflow-auto text-base">
+          <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md">
+            <ul className="flex max-h-40 flex-col overflow-y-auto p-1 text-base">
               {options.map((opt, index) => (
                 <li
                   key={index}
@@ -129,7 +131,7 @@ export default function Select({
                     onChange?.(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-primary-soft ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 hover:bg-primary-soft hover:text-primary ${
                     value === opt.value ? "bg-primary-soft text-primary" : ""
                   }`}
                 >

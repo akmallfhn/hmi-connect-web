@@ -4,10 +4,12 @@ import AdminPageTitle from "../common/AdminPageTitle";
 import {
   Building2,
   Cake,
+  CalendarDays,
   Check,
   Eye,
   GraduationCap,
   IdCard,
+  ListFilter,
   MapPin,
   Mail,
   Phone,
@@ -17,7 +19,13 @@ import {
   X as XIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ReactNode, useEffect, useState, type ComponentType } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
 import { toast } from "sonner";
 import type {
   VerificationRequestDetail,
@@ -64,6 +72,21 @@ function formatDate(value?: string) {
     month: "long",
     year: "numeric",
   });
+}
+
+function formatSubmittedAt(value?: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return `${date.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Asia/Jakarta",
+  })} WIB`;
 }
 
 function Field({
@@ -201,6 +224,14 @@ export function VerificationRequestListPage({
 
   const [rejectTarget, setRejectTarget] =
     useState<VerificationRequestListEntry | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const activeFilterCount =
+    Number(Boolean(initialStatus)) +
+    Number(showBranchFilter && Boolean(selectedBranch));
+  const activeStatusOption = STATUS_FILTER_OPTIONS.find(
+    (option) => option.value === initialStatus
+  );
 
   function pushParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -210,6 +241,11 @@ export function VerificationRequestListPage({
     });
     params.set("page", "1");
     router.push(`?${params.toString()}`);
+  }
+
+  function clearFilters() {
+    pushParams({ branch_id: "", status: "" });
+    setFilterOpen(false);
   }
 
   async function loadBranchOptions(inputValue: string, page: number) {
@@ -232,6 +268,25 @@ export function VerificationRequestListPage({
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!filterRef.current?.contains(event.target as Node)) {
+        setFilterOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setFilterOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   async function handleOpenDetail(request: VerificationRequestListEntry) {
     setDetailTarget(request);
@@ -290,139 +345,327 @@ export function VerificationRequestListPage({
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-        {showBranchFilter && (
-          <div className="w-full sm:max-w-xs">
-            <SearchableSelect
-              selectId="master-verification-branch-filter"
-              placeholder="Filter Cabang"
-              value={branchOption}
-              onChange={(option) =>
-                pushParams({
-                  branch_id: option ? String(option.value) : "",
-                })
-              }
-              loadOptions={loadBranchOptions}
-              defaultOptions={branchOption ? [branchOption] : []}
-            />
-          </div>
-        )}
-        <div className="w-full sm:max-w-52">
-          <Select
-            selectId={`${showBranchFilter ? "master" : "branch"}-verification-status-filter`}
-            placeholder="Filter Status"
-            value={initialStatus || null}
-            onChange={(value) => pushParams({ status: String(value ?? "") })}
-            options={STATUS_FILTER_OPTIONS}
-          />
+        <div className="relative shrink-0" ref={filterRef}>
+          <Button
+            variant="light"
+            onClick={() => setFilterOpen((open) => !open)}
+            aria-expanded={filterOpen}
+            aria-controls="verification-filters"
+          >
+            <ListFilter className="size-4" /> Filter
+            {activeFilterCount > 0 && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+
+          {filterOpen && (
+            <div
+              id="verification-filters"
+              role="group"
+              aria-label="Filter permintaan verifikasi"
+              className="absolute left-0 top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-[#e6e9ef] bg-white p-4 shadow-lg"
+            >
+              <div className="flex flex-col gap-3">
+                {showBranchFilter && (
+                  <SearchableSelect
+                    selectId="verification-branch-filter"
+                    label="Cabang"
+                    placeholder="Semua Cabang"
+                    value={branchOption}
+                    onChange={(option) =>
+                      pushParams({
+                        branch_id: option ? String(option.value) : "",
+                      })
+                    }
+                    loadOptions={loadBranchOptions}
+                    defaultOptions={branchOption ? [branchOption] : []}
+                    portalMenu={false}
+                  />
+                )}
+                <Select
+                  selectId="verification-status-filter"
+                  label="Status"
+                  placeholder="Semua Status"
+                  value={initialStatus}
+                  onChange={(value) =>
+                    pushParams({ status: String(value ?? "") })
+                  }
+                  options={STATUS_FILTER_OPTIONS}
+                />
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#e6e9ef] pt-3">
+                <span className="text-xs text-[#5f6573]">
+                  {activeFilterCount} filter aktif
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={activeFilterCount === 0}
+                  onClick={clearFilters}
+                >
+                  Reset
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+      {activeFilterCount > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {selectedBranch && showBranchFilter && (
+            <Button
+              variant="soft"
+              size="sm"
+              className="max-w-full rounded-full"
+              onClick={() => pushParams({ branch_id: "" })}
+              aria-label="Hapus filter Cabang"
+            >
+              <span>Cabang:</span>
+              <span className="min-w-0 truncate">{selectedBranch.name}</span>
+              <XIcon className="size-3 shrink-0" />
+            </Button>
+          )}
+          {initialStatus && (
+            <Button
+              variant="soft"
+              size="sm"
+              className="max-w-full rounded-full"
+              onClick={() => pushParams({ status: "" })}
+              aria-label="Hapus filter Status"
+            >
+              <span>Status:</span>
+              <span className="min-w-0 truncate">
+                {activeStatusOption?.label ?? initialStatus}
+              </span>
+              <XIcon className="size-3 shrink-0" />
+            </Button>
+          )}
+          {activeFilterCount > 1 && (
+            <Button variant="destructive" size="sm" onClick={clearFilters}>
+              Hapus semua
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="mt-6">
         {requests.length === 0 ? (
-          <EmptyState
-            title={
-              initialSearch || initialStatus || selectedBranch
-                ? "Permintaan verifikasi tidak ditemukan"
-                : "Belum ada permintaan verifikasi"
-            }
-            description={
-              initialSearch || initialStatus || selectedBranch
-                ? "Coba ubah kata kunci pencarian atau filter status."
-                : "Permintaan verifikasi kader akan ditampilkan di sini."
-            }
-          />
+          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+            <EmptyState
+              title={
+                initialSearch || initialStatus || selectedBranch
+                  ? "Permintaan verifikasi tidak ditemukan"
+                  : "Belum ada permintaan verifikasi"
+              }
+              description={
+                initialSearch || initialStatus || selectedBranch
+                  ? "Coba ubah kata kunci pencarian atau filter status."
+                  : "Permintaan verifikasi kader akan ditampilkan di sini."
+              }
+            />
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-                <tr>
-                  <th className="px-4 py-3">Kader</th>
-                  <th className="px-4 py-3">
-                    {showBranchFilter ? "Cabang / Komisariat" : "Komisariat"}
-                  </th>
-                  <th className="px-4 py-3">Diajukan</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {requests.map((request) => (
-                  <tr key={request.id} className="align-middle">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          src={request.avatar}
-                          name={request.full_name}
-                          size={36}
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033]">
-                            {request.full_name}
-                          </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            @{request.username}
-                          </p>
-                        </div>
+          <>
+            <ul className="space-y-3 xl:hidden">
+              {requests.map((request) => (
+                <li
+                  key={request.id}
+                  className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white"
+                >
+                  <div className="p-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar
+                        src={request.avatar}
+                        name={request.full_name}
+                        size={44}
+                      />
+                      <div className="min-w-0">
+                        <p className="break-words text-[15px] font-semibold leading-5 text-[#172033]">
+                          {request.full_name}
+                        </p>
+                        <p className="mt-0.5 break-all text-[13px] text-[#5f6573]">
+                          @{request.username}
+                        </p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-[#172033]">
-                      {request.chapter_name ? (
-                        <div className="min-w-0">
-                          <p className="truncate">
-                            Komisariat {request.chapter_name}
-                          </p>
-                          {showBranchFilter && (
-                            <p className="truncate text-[13px] text-[#5f6573]">
-                              Cabang {request.branch_name ?? selectedBranch?.name ?? "—"}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[#5f6573]">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-[#172033]">
-                      {formatDate(request.created_at)}
-                    </td>
-                    <td className="px-4 py-3">
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                       <VerificationRequestStatusLabel status={request.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-[#5f6573]">
+                        <CalendarDays className="size-3.5" aria-hidden="true" />
+                        Diajukan {formatSubmittedAt(request.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-y border-[#e6e9ef] bg-[#f8fafb] px-4 py-3">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#7b8190]">
+                      Asal Organisasi
+                    </p>
+                    <div className="space-y-2 text-[13px] text-[#172033]">
+                      {showBranchFilter && (
+                        <div className="flex items-start gap-2">
+                          <Building2
+                            className="mt-0.5 size-4 shrink-0 text-primary"
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0 break-words">
+                            Cabang{" "}
+                            {request.branch_name ?? selectedBranch?.name ?? "—"}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-start gap-2">
+                        <GraduationCap
+                          className="mt-0.5 size-4 shrink-0 text-primary"
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0 break-words">
+                          {request.chapter_name
+                            ? `Komisariat ${request.chapter_name}`
+                            : "Komisariat —"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    {allowReviewActions && request.status === "pending" ? (
+                      <div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-2">
                         <Button
                           variant="outline"
-                          size="sm"
-                          aria-label="Lihat Detail"
+                          className="px-2.5"
                           onClick={() => handleOpenDetail(request)}
                         >
-                          <Eye className="size-4" /> Lihat Detail
+                          <Eye className="size-4" /> Detail
                         </Button>
-                        {allowReviewActions && request.status === "pending" && (
-                          <>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              aria-label="Reject"
-                              onClick={() => setRejectTarget(request)}
-                            >
-                              <XIcon className="size-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              aria-label="Approve"
-                              onClick={() => setApproveTarget(request)}
-                            >
-                              <Check className="size-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="destructive"
+                          className="w-full"
+                          onClick={() => setRejectTarget(request)}
+                        >
+                          Tolak
+                        </Button>
+                        <Button
+                          className="w-full"
+                          onClick={() => setApproveTarget(request)}
+                        >
+                          Setujui
+                        </Button>
                       </div>
-                    </td>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleOpenDetail(request)}
+                      >
+                        <Eye className="size-4" /> Lihat Detail
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                  <tr>
+                    <th className="px-4 py-3">Kader</th>
+                    <th className="px-4 py-3">
+                      {showBranchFilter ? "Cabang / Komisariat" : "Komisariat"}
+                    </th>
+                    <th className="px-4 py-3">Diajukan</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                  {requests.map((request) => (
+                    <tr key={request.id} className="align-middle">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            src={request.avatar}
+                            name={request.full_name}
+                            size={36}
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#172033]">
+                              {request.full_name}
+                            </p>
+                            <p className="truncate text-[13px] text-[#5f6573]">
+                              @{request.username}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[#172033]">
+                        {request.chapter_name ? (
+                          <div className="min-w-0">
+                            <p className="truncate">
+                              Komisariat {request.chapter_name}
+                            </p>
+                            {showBranchFilter && (
+                              <p className="truncate text-[13px] text-[#5f6573]">
+                                Cabang{" "}
+                                {request.branch_name ??
+                                  selectedBranch?.name ??
+                                  "—"}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[#5f6573]">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-[#172033]">
+                        {formatSubmittedAt(request.created_at)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <VerificationRequestStatusLabel
+                          status={request.status}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            aria-label="Lihat Detail"
+                            onClick={() => handleOpenDetail(request)}
+                          >
+                            <Eye className="size-4" /> Lihat Detail
+                          </Button>
+                          {allowReviewActions &&
+                            request.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  aria-label="Reject"
+                                  onClick={() => setRejectTarget(request)}
+                                >
+                                  <XIcon className="size-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  aria-label="Approve"
+                                  onClick={() => setApproveTarget(request)}
+                                >
+                                  <Check className="size-4" />
+                                </Button>
+                              </>
+                            )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
