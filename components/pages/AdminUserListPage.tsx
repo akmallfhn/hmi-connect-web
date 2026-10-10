@@ -8,26 +8,31 @@ import {
   Mail,
   Pencil,
   PlusCircle,
-  Search,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { UserListEntry } from "@/apis/users";
+import { formatShortDateTime } from "@/lib/time-manipulation";
 import {
   deactivateUser,
   deleteUser,
   sendVerificationReminder,
 } from "@/lib/actions";
+import {
+  hasMemberFilters,
+  type MemberFilterSelection,
+  type MemberSort,
+} from "@/lib/member-filters";
 import { isSuccessStatus } from "@/lib/types";
+import MemberFilterBar from "../admin/MemberFilterBar";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
 import Pagination from "../common/Pagination";
-import Input from "../fields/Input";
-import Select from "../fields/Select";
+import SortableHeader from "../common/SortableHeader";
 import AdminUserQuickEditForm from "../forms/AdminUserQuickEditForm";
 import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
@@ -36,20 +41,14 @@ import AlertConfirmation from "../modals/AlertConfirmation";
 import ConfirmDeleteUserModal from "../modals/ConfirmDeleteUserModal";
 import EmptyState from "../states/EmptyState";
 
-const STATUS_FILTER_OPTIONS = [
-  { label: "Semua Status", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Aktif", value: "active" },
-  { label: "Tidak Aktif", value: "inactive" },
-];
-
 interface AdminUserListPageProps {
   users: UserListEntry[];
   totalData: number;
   totalPage: number;
   currentPage: number;
   initialSearch: string;
-  initialStatus: string;
+  selection: MemberFilterSelection;
+  sort: MemberSort;
   pageSize: number;
 }
 
@@ -59,19 +58,12 @@ export default function AdminUserListPage({
   totalPage,
   currentPage,
   initialSearch,
-  initialStatus,
+  selection,
+  sort,
   pageSize,
 }: AdminUserListPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // "Adjust state during render" (not a useEffect) when the server hands back a new initialSearch, same pattern as SearchPage.
-  const [seenSearch, setSeenSearch] = useState(initialSearch);
-  const [searchInput, setSearchInput] = useState(initialSearch);
-  if (initialSearch !== seenSearch) {
-    setSeenSearch(initialSearch);
-    setSearchInput(initialSearch);
-  }
+  const isFiltered = Boolean(initialSearch) || hasMemberFilters(selection);
 
   const [editTarget, setEditTarget] = useState<UserListEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserListEntry | null>(null);
@@ -83,25 +75,6 @@ export default function AdminUserListPage({
     null
   );
   const [isSendingReminder, setIsSendingReminder] = useState(false);
-
-  function pushParams(next: Record<string, string>) {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(next).forEach(([key, value]) => {
-      if (value) params.set(key, value);
-      else params.delete(key);
-    });
-    params.set("page", "1");
-    router.push(`?${params.toString()}`);
-  }
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (searchInput === initialSearch) return;
-      pushParams({ search: searchInput });
-    }, 500);
-    return () => clearTimeout(handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -182,52 +155,43 @@ export default function AdminUserListPage({
         </Link>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="w-full sm:max-w-xs">
-          <Input
-            inputId="user-search"
-            placeholder="Cari nama, username, atau email..."
-            icon={<Search className="size-4" />}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-        </div>
-        <div className="w-full sm:max-w-52">
-          <Select
-            selectId="user-status-filter"
-            placeholder="Filter Status"
-            value={initialStatus || null}
-            onChange={(value) => pushParams({ status: String(value ?? "") })}
-            options={STATUS_FILTER_OPTIONS}
-          />
-        </div>
-      </div>
+      <MemberFilterBar
+        scope="master"
+        initialSearch={initialSearch}
+        selection={selection}
+      />
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {users.length === 0 ? (
           <EmptyState
-            title={
-              initialSearch || initialStatus
-                ? "User tidak ditemukan"
-                : "Belum ada user"
-            }
+            title={isFiltered ? "User tidak ditemukan" : "Belum ada user"}
             description={
-              initialSearch || initialStatus
-                ? "Coba ubah kata kunci pencarian atau filter status."
+              isFiltered
+                ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
                 : "User yang ditambahkan akan ditampilkan di sini."
             }
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[880px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
                 <tr>
-                  <th className="px-4 py-3">User</th>
+                  <SortableHeader
+                    label="User"
+                    sortKey="full_name"
+                    activeSort={sort}
+                  />
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Cabang / Komisariat</th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Terverifikasi</th>
+                  <SortableHeader
+                    label="Terdaftar Sejak"
+                    sortKey="created_at"
+                    defaultDirection="desc"
+                    activeSort={sort}
+                  />
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -282,6 +246,9 @@ export default function AdminUserListPage({
                     </td>
                     <td className="px-4 py-3">
                       <UserVerifiedLabel status={user.verification_status} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
+                      {user.created_at ? formatShortDateTime(user.created_at) : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">

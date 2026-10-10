@@ -1,29 +1,25 @@
 "use client";
 
-import { Eye, Search } from "lucide-react";
+import { Eye } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { UserListEntry } from "@/apis/users";
+import { formatShortDateTime } from "@/lib/time-manipulation";
+import {
+  hasMemberFilters,
+  type MemberFilterAnchors,
+  type MemberFilterSelection,
+  type MemberSort,
+} from "@/lib/member-filters";
+import MemberFilterBar from "../admin/MemberFilterBar";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
 import Pagination from "../common/Pagination";
-import Input from "../fields/Input";
-import SearchableSelect, {
-  type SearchableOption,
-} from "../fields/SearchableSelect";
-import Select from "../fields/Select";
+import SortableHeader from "../common/SortableHeader";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 import EmptyState from "../states/EmptyState";
-
-const STATUS_FILTER_OPTIONS = [
-  { label: "Semua Status", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Aktif", value: "active" },
-  { label: "Tidak Aktif", value: "inactive" },
-];
 
 export type MemberManagementScope =
   | "organization"
@@ -32,22 +28,16 @@ export type MemberManagementScope =
   | "coordinating_chapter"
   | "chapter";
 
-// Only for scopes whose own grant may narrow users/list by chapter — Cabang and Korkom.
-export interface MemberChapterFilter {
-  selected: { id: string; name: string } | null;
-  // Scopes the Komisariat picker to this roster's own Cabang/Korkom.
-  searchParams: Record<string, string>;
-}
-
 export interface AdminMemberListDataProps {
   users: UserListEntry[];
   totalData: number;
   totalPage: number;
   currentPage: number;
   initialSearch: string;
-  initialStatus: string;
+  selection: MemberFilterSelection;
+  sort: MemberSort;
+  filterAnchors?: MemberFilterAnchors;
   pageSize: number;
-  chapterFilter?: MemberChapterFilter;
 }
 
 interface AdminMemberListPageProps extends AdminMemberListDataProps {
@@ -66,69 +56,16 @@ export default function AdminMemberListPage({
   totalPage,
   currentPage,
   initialSearch,
-  initialStatus,
+  selection,
+  sort,
+  filterAnchors,
   pageSize,
-  chapterFilter,
 }: AdminMemberListPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const showBranchContext =
     managementScope === "organization" ||
     managementScope === "coordinating_body";
-
-  const chapterOption: SearchableOption | null = chapterFilter?.selected
-    ? {
-        label: `Komisariat ${chapterFilter.selected.name}`,
-        value: chapterFilter.selected.id,
-      }
-    : null;
-
-  const isFiltered = Boolean(initialSearch || initialStatus || chapterOption);
-
-  // Adjust state during render when the server hands back a new search value, same pattern as SearchPage.
-  const [seenSearch, setSeenSearch] = useState(initialSearch);
-  const [searchInput, setSearchInput] = useState(initialSearch);
-  if (initialSearch !== seenSearch) {
-    setSeenSearch(initialSearch);
-    setSearchInput(initialSearch);
-  }
-
-  function pushParams(next: Record<string, string>) {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(next).forEach(([key, value]) => {
-      if (value) params.set(key, value);
-      else params.delete(key);
-    });
-    params.set("page", "1");
-    router.push(`?${params.toString()}`);
-  }
-
-  async function loadChapterOptions(inputValue: string, page: number) {
-    const params = new URLSearchParams({
-      ...chapterFilter?.searchParams,
-      page: String(page),
-    });
-    if (inputValue) params.set("q", inputValue);
-    const response = await fetch(`/api/chapters/search?${params}`);
-    const json = await response.json();
-    const results: { id: string; name: string }[] = json.data ?? [];
-    return {
-      options: results.map((item) => ({
-        label: `Komisariat ${item.name}`,
-        value: item.id,
-      })),
-      hasMore: Boolean(json.hasMore),
-    };
-  }
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (searchInput === initialSearch) return;
-      pushParams({ search: searchInput });
-    }, 500);
-    return () => clearTimeout(handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
+  const isFiltered = Boolean(initialSearch) || hasMemberFilters(selection);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -136,40 +73,12 @@ export default function AdminMemberListPage({
         Daftar Kader
       </AdminPageTitle>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="w-full sm:max-w-xs">
-          <Input
-            inputId={`${managementScope}-member-search`}
-            placeholder="Cari nama, username, atau email..."
-            icon={<Search className="size-4" />}
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-          />
-        </div>
-        {chapterFilter && (
-          <div className="w-full sm:max-w-xs">
-            <SearchableSelect
-              selectId={`${managementScope}-member-chapter-filter`}
-              placeholder="Filter Komisariat"
-              value={chapterOption}
-              onChange={(option) =>
-                pushParams({ chapter_id: option ? String(option.value) : "" })
-              }
-              loadOptions={loadChapterOptions}
-              defaultOptions={chapterOption ? [chapterOption] : []}
-            />
-          </div>
-        )}
-        <div className="w-full sm:max-w-52">
-          <Select
-            selectId={`${managementScope}-member-status-filter`}
-            placeholder="Filter Status"
-            value={initialStatus || null}
-            onChange={(value) => pushParams({ status: String(value ?? "") })}
-            options={STATUS_FILTER_OPTIONS}
-          />
-        </div>
-      </div>
+      <MemberFilterBar
+        scope={managementScope}
+        anchors={filterAnchors}
+        initialSearch={initialSearch}
+        selection={selection}
+      />
 
       <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
         {users.length === 0 ? (
@@ -183,16 +92,26 @@ export default function AdminMemberListPage({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[880px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
                 <tr>
-                  <th className="px-4 py-3">User</th>
+                  <SortableHeader
+                    label="User"
+                    sortKey="full_name"
+                    activeSort={sort}
+                  />
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">
                     {showBranchContext ? "Cabang / Komisariat" : "Komisariat"}
                   </th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Terverifikasi</th>
+                  <SortableHeader
+                    label="Terdaftar Sejak"
+                    sortKey="created_at"
+                    defaultDirection="desc"
+                    activeSort={sort}
+                  />
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -245,6 +164,11 @@ export default function AdminMemberListPage({
                       </td>
                       <td className="px-4 py-3">
                         <UserVerifiedLabel status={user.verification_status} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
+                        {user.created_at
+                          ? formatShortDateTime(user.created_at)
+                          : "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end">

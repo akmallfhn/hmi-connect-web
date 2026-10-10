@@ -35,6 +35,24 @@ export function formatShortDate(value: string) {
   return parsed.locale("id").format("D MMM YYYY");
 }
 
+// Admin-table timestamp in WIB — "4 Sep 2026, 14.30 WIB"; Intl pins the zone so server and client agree.
+export function formatShortDateTime(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  const parts = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Asia/Jakarta",
+  }).formatToParts(parsed);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("day")} ${part("month")} ${part("year")}, ${part("hour")}.${part("minute")} WIB`;
+}
+
 // Month and year only — "Juli 2023", the joined/registered line on profiles and the about-me sheet.
 export function formatMonthYear(value: string) {
   const parsed = dayjs(value);

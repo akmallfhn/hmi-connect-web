@@ -9,8 +9,10 @@ import {
   type Degree,
   type GenderEnum,
   type ProfileCompletionStageEnum,
+  type SortTypeEnum,
   type TrainingResultEnum,
   type TrainingStatusEnum,
+  type UserSortByEnum,
   type UserStatusEnum,
   type VerificationRequestStatusEnum,
   type VerificationStatusEnum,
@@ -70,6 +72,8 @@ export type UserListEntry = {
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
   is_subscribe: boolean;
+  // Not in users/list's response yet; the Terdaftar Sejak column shows "—" until the backend sends it.
+  created_at?: string;
 };
 
 export type ListUsersOptions = {
@@ -87,6 +91,9 @@ export type ListUsersOptions = {
   coordinatingBodyId?: string;
   // Widest of the hierarchy filters — users in any chapter under this organization.
   organizationId?: string;
+  // Defaults to created_at descending on the backend.
+  sortBy?: UserSortByEnum;
+  sortType?: SortTypeEnum;
   page?: number;
   pageSize?: number;
 };
@@ -116,6 +123,8 @@ export async function listUsers(
     coordinatingChapterId,
     coordinatingBodyId,
     organizationId,
+    sortBy,
+    sortType,
     page,
     pageSize,
   } = options;
@@ -139,6 +148,8 @@ export async function listUsers(
           ? { coordinating_body_id: coordinatingBodyId }
           : {}),
         ...(organizationId ? { organization_id: organizationId } : {}),
+        ...(sortBy ? { sort_by: sortBy } : {}),
+        ...(sortType ? { sort_type: sortType } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },

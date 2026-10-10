@@ -5,10 +5,17 @@ import { searchBranches } from "@/apis/branches";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("q") ?? undefined;
+  const coordinatingBodyId =
+    searchParams.get("coordinating_body_id") || undefined;
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
-  const { list, hasMore } = await searchBranches({ search, page, pageSize });
+  const { list, hasMore } = await searchBranches({
+    search,
+    coordinatingBodyId,
+    page,
+    pageSize,
+  });
 
   return NextResponse.json({ data: list, hasMore });
 }

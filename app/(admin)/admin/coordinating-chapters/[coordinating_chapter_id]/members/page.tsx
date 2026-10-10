@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
-import { getChapterDetail } from "@/apis/chapters";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
-import type { UserStatusEnum } from "@/lib/types";
+import {
+  resolveMemberFilters,
+  type MemberFilterQuery,
+} from "@/lib/resolve-member-filters";
 
 export const metadata: Metadata = {
   title: "Daftar Kader Korkom",
@@ -14,12 +16,7 @@ const PAGE_SIZE = 20;
 
 interface CoordinatingChapterMembersPageProps {
   params: Promise<{ coordinating_chapter_id: string }>;
-  searchParams: Promise<{
-    search?: string;
-    status?: string;
-    chapter_id?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<MemberFilterQuery>;
 }
 
 export default async function CoordinatingChapterMembersPage({
@@ -28,25 +25,20 @@ export default async function CoordinatingChapterMembersPage({
 }: CoordinatingChapterMembersPageProps) {
   const { coordinating_chapter_id } = await params;
   const query = await searchParams;
-  const search = query.search?.trim() ?? "";
-  const status = query.status ?? "";
-  const chapterId = query.chapter_id?.trim() ?? "";
-  const page = Number(query.page ?? "1") || 1;
-  const [coordinatingChapter, result, chapter] = await Promise.all([
+  const [coordinatingChapter, filters] = await Promise.all([
     getCoordinatingChapterDetail(coordinating_chapter_id),
-    listUsers({
-      // users/list takes at most one hierarchy id, so the Komisariat filter replaces the Korkom scope.
-      ...(chapterId
-        ? { chapterId }
-        : { coordinatingChapterId: coordinating_chapter_id }),
-      search: search || undefined,
-      status: (status || undefined) as UserStatusEnum | undefined,
-      page,
-      pageSize: PAGE_SIZE,
-    }),
-    chapterId ? getChapterDetail(chapterId) : null,
+    resolveMemberFilters(
+      {
+        scope: "coordinating_chapter",
+        coordinatingChapterId: coordinating_chapter_id,
+      },
+      query
+    ),
   ]);
-
+  const result = await listUsers({
+    ...filters.listOptions,
+    pageSize: PAGE_SIZE,
+  });
 
   return (
     <AdminMemberListPage
@@ -57,13 +49,11 @@ export default async function CoordinatingChapterMembersPage({
       totalData={result.totalData}
       totalPage={result.totalPage}
       currentPage={result.currentPage}
-      initialSearch={search}
-      initialStatus={status}
+      initialSearch={filters.search}
+      selection={filters.selection}
+      sort={filters.sort}
+      filterAnchors={{ coordinatingChapterId: coordinating_chapter_id }}
       pageSize={PAGE_SIZE}
-      chapterFilter={{
-        selected: chapter ? { id: chapter.id, name: chapter.name } : null,
-        searchParams: { coordinating_chapter_id },
-      }}
     />
   );
 }

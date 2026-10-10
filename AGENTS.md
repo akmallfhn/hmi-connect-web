@@ -614,10 +614,10 @@ actions visible without horizontal scrolling; the pagination shows only
 previous/current/next on mobile and is centered below the list on every screen size;
 from `xl` upward the same requests render as a table. The detail, approval, and rejection
 dialogs are shared by both layouts. The review-list search stays outside a single Filter
-dropdown. Status uses `components/fields/Select.tsx`, whose dropdown styling matches
-`SearchableSelect.tsx`; Master and Organization also show a Cabang `SearchableSelect`.
-Active filters show a count and removable chips;
-Reset clears them and closes the dropdown.
+dropdown (the shared `components/common/FilterDropdown.tsx`). Status uses
+`components/fields/Select.tsx`, whose dropdown styling matches `SearchableSelect.tsx`; Master and
+Organization also show a Cabang `SearchableSelect`. Active filters show a count and removable chips
+(`components/common/ActiveFilterChips.tsx`); Reset clears them and closes the dropdown.
 Unlike activation this is **not**
 gated/mandatory — `app/(www)/www/verification/page.tsx` redirects away pending-activation
 users (to `/activation`) and anyone whose `verification_status` is already `"pending"` or
@@ -2632,12 +2632,29 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
   with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only
   thin compatibility wrappers that supply the Cabang base path/name to those shared components.
-  The Cabang and Korkom rosters additionally get a Komisariat `SearchableSelect` filter (backed by
-  `/admin/api/chapters/search`, scoped by `branch_id` and `coordinating_chapter_id` respectively) —
-  the two scopes whose own grant may narrow `users/list` by chapter. Since `users/list` rejects two
-  hierarchy ids in one request, a picked Komisariat **replaces** the route's own scope id rather
-  than joining it; the backend still confines rows to the caller's domain, so this can't widen the
-  roster. The other three scopes pass no `chapterFilter` and render as before.
+  Every roster — `/master/users` included — shares `components/admin/MemberFilterBar.tsx`: the
+  search input plus one `components/common/FilterDropdown.tsx` holding Status Akun, Status
+  Verifikasi, and a cascading `SearchableSelect` for each hierarchy level **below** the route's own
+  scope (`lib/member-filters.ts#MEMBER_FILTER_LEVELS`: Badko → Cabang → Korkom → Komisariat).
+  From `lg:` that panel splits into two columns (hierarchy left, statuses right) so it doesn't run
+  down the page; below `lg:` it stacks. Korkom needs a Cabang anchor and Komisariat needs a Cabang
+  or Korkom one (picked, or the route's own), since both pickers are scoped by it; changing a level
+  clears every pick beneath it. Pickers hit `/admin/api/{coordinating-bodies,branches,
+  coordinating-chapters,chapters}/search` — `branches/search` takes `coordinating_body_id`, and
+  `coordinating-chapters/search` exists only for this. `users/list` rejects two hierarchy ids in one
+  request, so `lib/resolve-member-filters.ts` (server-only, called by all six routes) sends only the
+  **most specific** pick in place of the route's own scope id, after checking each pick against its
+  anchors and dropping any that falls outside the route. It also parses `sort_by`/`sort_type`
+  (`full_name` or `created_at` — the backend renamed `name` to `full_name`, so don't send `name`).
+  `components/common/SortableHeader.tsx` renders each sortable header as a small ghost `Button`
+  with Tabler's plain `IconSortAscending`/`IconSortDescending` (the letters/numbers variants were
+  tried and dropped as too busy); the column shows `formatShortDateTime` ("4 Sep 2026, 14.30 WIB",
+  zone pinned to `Asia/Jakarta`). User cycles A–Z → Z–A
+  → default, while Terdaftar Sejak *is* the default (newest first), so it toggles to oldest first
+  and back. **`users/list` doesn't return `created_at` yet** — `UserListEntry.created_at` is
+  optional and the column shows "—" until the backend adds it to `userListItem`, though sorting by
+  it already works. The filter button's count badge is red and
+  hangs off the button's top-right corner (`overflow-visible!`, since `Button` truncates).
   Every Komisariat value in the table is prefixed with `Komisariat`. Organization and Badko span
   multiple Cabang, so their `Cabang / Komisariat` cells also show `Cabang {branch_name}` beneath
   the Komisariat, matching `/master/users`; the narrower Cabang/Korkom/Komisariat scopes keep only

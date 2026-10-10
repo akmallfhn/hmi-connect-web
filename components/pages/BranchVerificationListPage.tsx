@@ -9,7 +9,6 @@ import {
   Eye,
   GraduationCap,
   IdCard,
-  ListFilter,
   MapPin,
   Mail,
   Phone,
@@ -19,13 +18,7 @@ import {
   X as XIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ReactNode,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
+import { ReactNode, useEffect, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 import type {
   VerificationRequestDetail,
@@ -37,7 +30,9 @@ import {
   rejectVerificationRequest,
 } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
+import ActiveFilterChips from "../common/ActiveFilterChips";
 import Avatar from "../common/Avatar";
+import FilterDropdown from "../common/FilterDropdown";
 import Pagination from "../common/Pagination";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -224,8 +219,6 @@ export function VerificationRequestListPage({
 
   const [rejectTarget, setRejectTarget] =
     useState<VerificationRequestListEntry | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
   const activeFilterCount =
     Number(Boolean(initialStatus)) +
     Number(showBranchFilter && Boolean(selectedBranch));
@@ -245,7 +238,6 @@ export function VerificationRequestListPage({
 
   function clearFilters() {
     pushParams({ branch_id: "", status: "" });
-    setFilterOpen(false);
   }
 
   async function loadBranchOptions(inputValue: string, page: number) {
@@ -268,25 +260,6 @@ export function VerificationRequestListPage({
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (!filterRef.current?.contains(event.target as Node)) {
-        setFilterOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setFilterOpen(false);
-    }
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
 
   async function handleOpenDetail(request: VerificationRequestListEntry) {
     setDetailTarget(request);
@@ -345,111 +318,64 @@ export function VerificationRequestListPage({
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-        <div className="relative shrink-0" ref={filterRef}>
-          <Button
-            variant="light"
-            onClick={() => setFilterOpen((open) => !open)}
-            aria-expanded={filterOpen}
-            aria-controls="verification-filters"
-          >
-            <ListFilter className="size-4" /> Filter
-            {activeFilterCount > 0 && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-
-          {filterOpen && (
-            <div
-              id="verification-filters"
-              role="group"
-              aria-label="Filter permintaan verifikasi"
-              className="absolute left-0 top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-[#e6e9ef] bg-white p-4 shadow-lg"
-            >
-              <div className="flex flex-col gap-3">
-                {showBranchFilter && (
-                  <SearchableSelect
-                    selectId="verification-branch-filter"
-                    label="Cabang"
-                    placeholder="Semua Cabang"
-                    value={branchOption}
-                    onChange={(option) =>
-                      pushParams({
-                        branch_id: option ? String(option.value) : "",
-                      })
-                    }
-                    loadOptions={loadBranchOptions}
-                    defaultOptions={branchOption ? [branchOption] : []}
-                    portalMenu={false}
-                  />
-                )}
-                <Select
-                  selectId="verification-status-filter"
-                  label="Status"
-                  placeholder="Semua Status"
-                  value={initialStatus}
-                  onChange={(value) =>
-                    pushParams({ status: String(value ?? "") })
-                  }
-                  options={STATUS_FILTER_OPTIONS}
-                />
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#e6e9ef] pt-3">
-                <span className="text-xs text-[#5f6573]">
-                  {activeFilterCount} filter aktif
-                </span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={activeFilterCount === 0}
-                  onClick={clearFilters}
-                >
-                  Reset
-                </Button>
-              </div>
-            </div>
+        <FilterDropdown
+          panelId="verification-filters"
+          ariaLabel="Filter permintaan verifikasi"
+          activeCount={activeFilterCount}
+          onReset={clearFilters}
+        >
+          {showBranchFilter && (
+            <SearchableSelect
+              selectId="verification-branch-filter"
+              label="Cabang"
+              placeholder="Semua Cabang"
+              value={branchOption}
+              onChange={(option) =>
+                pushParams({
+                  branch_id: option ? String(option.value) : "",
+                })
+              }
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOption ? [branchOption] : []}
+              portalMenu={false}
+            />
           )}
-        </div>
+          <Select
+            selectId="verification-status-filter"
+            label="Status"
+            placeholder="Semua Status"
+            value={initialStatus}
+            onChange={(value) => pushParams({ status: String(value ?? "") })}
+            options={STATUS_FILTER_OPTIONS}
+          />
+        </FilterDropdown>
       </div>
 
-      {activeFilterCount > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {selectedBranch && showBranchFilter && (
-            <Button
-              variant="soft"
-              size="sm"
-              className="max-w-full rounded-full"
-              onClick={() => pushParams({ branch_id: "" })}
-              aria-label="Hapus filter Cabang"
-            >
-              <span>Cabang:</span>
-              <span className="min-w-0 truncate">{selectedBranch.name}</span>
-              <XIcon className="size-3 shrink-0" />
-            </Button>
-          )}
-          {initialStatus && (
-            <Button
-              variant="soft"
-              size="sm"
-              className="max-w-full rounded-full"
-              onClick={() => pushParams({ status: "" })}
-              aria-label="Hapus filter Status"
-            >
-              <span>Status:</span>
-              <span className="min-w-0 truncate">
-                {activeStatusOption?.label ?? initialStatus}
-              </span>
-              <XIcon className="size-3 shrink-0" />
-            </Button>
-          )}
-          {activeFilterCount > 1 && (
-            <Button variant="destructive" size="sm" onClick={clearFilters}>
-              Hapus semua
-            </Button>
-          )}
-        </div>
-      )}
+      <ActiveFilterChips
+        chips={[
+          ...(selectedBranch && showBranchFilter
+            ? [
+                {
+                  key: "branch",
+                  label: "Cabang",
+                  value: selectedBranch.name,
+                  onRemove: () => pushParams({ branch_id: "" }),
+                },
+              ]
+            : []),
+          ...(initialStatus
+            ? [
+                {
+                  key: "status",
+                  label: "Status",
+                  value: activeStatusOption?.label ?? initialStatus,
+                  onRemove: () => pushParams({ status: "" }),
+                },
+              ]
+            : []),
+        ]}
+        onClearAll={clearFilters}
+      />
 
       <div className="mt-6">
         {requests.length === 0 ? (

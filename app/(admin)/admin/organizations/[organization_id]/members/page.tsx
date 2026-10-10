@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { listUsers } from "@/apis/users";
 import AdminMemberListPage from "@/components/pages/AdminMemberListPage";
-import type { UserStatusEnum } from "@/lib/types";
+import {
+  resolveMemberFilters,
+  type MemberFilterQuery,
+} from "@/lib/resolve-member-filters";
 
 export const metadata: Metadata = {
   title: "Daftar Kader Organisasi",
@@ -12,7 +15,7 @@ const PAGE_SIZE = 20;
 
 interface OrganizationMembersPageProps {
   params: Promise<{ organization_id: string }>;
-  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+  searchParams: Promise<MemberFilterQuery>;
 }
 
 export default async function OrganizationMembersPage({
@@ -20,17 +23,11 @@ export default async function OrganizationMembersPage({
   searchParams,
 }: OrganizationMembersPageProps) {
   const { organization_id } = await params;
-  const query = await searchParams;
-  const search = query.search?.trim() ?? "";
-  const status = query.status ?? "";
-  const page = Number(query.page ?? "1") || 1;
-  const result = await listUsers({
-    search: search || undefined,
-    status: (status || undefined) as UserStatusEnum | undefined,
-    page,
-    pageSize: PAGE_SIZE,
-  });
-
+  const { search, selection, sort, listOptions } = await resolveMemberFilters(
+    { scope: "organization", organizationId: organization_id },
+    await searchParams
+  );
+  const result = await listUsers({ ...listOptions, pageSize: PAGE_SIZE });
 
   return (
     <AdminMemberListPage
@@ -42,7 +39,8 @@ export default async function OrganizationMembersPage({
       totalPage={result.totalPage}
       currentPage={result.currentPage}
       initialSearch={search}
-      initialStatus={status}
+      selection={selection}
+      sort={sort}
       pageSize={PAGE_SIZE}
     />
   );

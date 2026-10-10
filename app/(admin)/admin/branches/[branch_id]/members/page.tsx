@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { getChapterDetail } from "@/apis/chapters";
 import { listUsers } from "@/apis/users";
 import BranchMemberListPage from "@/components/pages/BranchMemberListPage";
-import type { UserStatusEnum } from "@/lib/types";
+import {
+  resolveMemberFilters,
+  type MemberFilterQuery,
+} from "@/lib/resolve-member-filters";
 
 export const metadata: Metadata = {
   title: "Daftar Kader",
@@ -16,12 +18,7 @@ const PAGE_SIZE = 20;
 
 interface BranchMembersPageProps {
   params: Promise<{ branch_id: string }>;
-  searchParams: Promise<{
-    search?: string;
-    status?: string;
-    chapter_id?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<MemberFilterQuery>;
 }
 
 export default async function BranchMembersPage({
@@ -29,23 +26,11 @@ export default async function BranchMembersPage({
   searchParams,
 }: BranchMembersPageProps) {
   const { branch_id } = await params;
-  const query = await searchParams;
-  const search = query.search?.trim() ?? "";
-  const status = query.status ?? "";
-  const chapterId = query.chapter_id?.trim() ?? "";
-  const page = Number(query.page ?? "1") || 1;
-
-  const [result, chapter] = await Promise.all([
-    listUsers({
-      // users/list takes at most one hierarchy id, so the Komisariat filter replaces the branch scope.
-      ...(chapterId ? { chapterId } : { branchId: branch_id }),
-      search: search || undefined,
-      status: (status || undefined) as UserStatusEnum | undefined,
-      page,
-      pageSize: PAGE_SIZE,
-    }),
-    chapterId ? getChapterDetail(chapterId) : null,
-  ]);
+  const { search, selection, sort, listOptions } = await resolveMemberFilters(
+    { scope: "branch", branchId: branch_id },
+    await searchParams
+  );
+  const result = await listUsers({ ...listOptions, pageSize: PAGE_SIZE });
 
   return (
     <BranchMemberListPage
@@ -55,12 +40,10 @@ export default async function BranchMembersPage({
       totalPage={result.totalPage}
       currentPage={result.currentPage}
       initialSearch={search}
-      initialStatus={status}
+      selection={selection}
+      sort={sort}
+      filterAnchors={{ branchId: branch_id }}
       pageSize={PAGE_SIZE}
-      chapterFilter={{
-        selected: chapter ? { id: chapter.id, name: chapter.name } : null,
-        searchParams: { branch_id },
-      }}
     />
   );
 }

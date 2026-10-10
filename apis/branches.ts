@@ -26,6 +26,7 @@ type BranchesListResponse = {
 
 export type GetBranchesOptions = {
   search?: string;
+  coordinatingBodyId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -38,7 +39,7 @@ export type GetBranchesResult = {
 async function fetchBranches(
   options: GetBranchesOptions = {},
 ): Promise<GetBranchesResult> {
-  const { search, page, pageSize } = options;
+  const { search, coordinatingBodyId, page, pageSize } = options;
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -48,6 +49,7 @@ async function fetchBranches(
     body: {
       organization_id: process.env.ORGANIZATION_ID,
       status: "active",
+      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
       ...(search ? { search } : {}),
       ...(page ? { page } : {}),
       ...(pageSize ? { page_size: pageSize } : {}),
