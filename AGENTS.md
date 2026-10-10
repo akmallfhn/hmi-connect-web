@@ -273,7 +273,7 @@ backend. `/auth/login`'s metadata was flipped to `index: true` so it can be list
 in a sitemap is a contradiction Search Console flags.
 **`/profile/*` and `/feeds/*` are not listed yet**, and not by oversight: both are public, but no
 endpoint enumerates users or feeds without a session (`users/list` needs a grant, `feeds/list` and
-`search/list` need a session — only the per-item `detail` reads take the client secret). Once the
+`search/user` and `search/feed` need a session — only the per-item `detail` reads take the client secret). Once the
 backend exposes a listing behind `requireClientSecret`, each becomes its own
 `app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
 `app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
@@ -1103,36 +1103,29 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `components/icons/ChatIcon.tsx` follows the same outline/bulk pattern as
   Home/Search/Notification/Profile, converted 1:1 from designer-provided
   `iconly-chat(-outline).svg` (now deleted, same conversion convention as `AlQuranIcon`).
-- `/search` (`components/pages/SearchPage.tsx`) — keyword search across people and postings,
-  backed by `apis/search.ts`'s single `search/list` endpoint (`type: "people" | "posting"`,
-  `SearchTypeEnum` in `lib/types.ts`; there's no unified result shape between the two per
-  the backend's own README, hence `searchPeople`/`searchPostings` as separate thin wrappers
-  over one shared internal `search()`). The page always fetches _both_ first pages
-  server-side for a given `q` and renders them as two stacked sections — "Orang" then
-  "Postingan" below it, not tabs. "Orang" is capped to manual "Muat lebih banyak" pagination
-  (a button, not an `IntersectionObserver`) since it sits above "Postingan" in the same
-  scroll container — an auto-loading sentinel there would fire while the user is just
-  scrolling past it to reach postings. "Postingan" gets the usual
-  infinite-scroll-via-`IntersectionObserver` treatment since it's the last thing on the
-  page. `q` is the only thing that's URL state (`?q=...`). `SearchPage` now renders **one**
-  keyword input at every breakpoint (debounced 400ms into a `router.replace` to `/search?q=...`),
-  since `Header`'s desktop navbar search box is gone with the rest of that row. The other way in
-  is `components/feeds/ExploreSearchBar.tsx`, which sits at the top of the home feed's right
-  sidebar: a real `<form>` on the shared `Input` primitive that only navigates
-  (`router.push("/search?q=")`) on explicit submit, no debounce. Since a debounced
-  `router.replace` would otherwise remount the
-  input and drop focus mid-keystroke, `SearchPage` isn't remounted via `key` — instead it
-  compares the incoming `initialQuery` prop against a locally-tracked `seenQuery` state
-  during render (the "adjust state during render" pattern, not a `useEffect`, since this
-  project's `eslint-plugin-react-hooks` flags `setState` inside an effect body) to reset
-  pagination state (and resync the input's own value) only when the server actually
-  returns results for a new query — covers both someone arriving from `ExploreSearchBar` and
-  back/forward navigation. `SearchPersonRow`/`SearchPostingRow` (`components/search/`) render the two
-  result types; `SearchPersonRow` has no follow button (unlike `FollowRecommendationRow`)
-  since `search/list`'s people result doesn't include `is_followed_by_me`. It is a single
-  centered column at every breakpoint now — the `ProfileSidebar` aside and the `profile` prop
-  feeding it are gone, along with the route's own `getUserByUsername`/`listEducationHistories`
-  fetches.
+- /search (components/pages/SearchPage.tsx) has four tabs in order: People (search/user),
+  Feed (search/feed), Official (search/entity), and Artikel (search/article). There is no
+  training search tab. The URL holds the keyword (q) and category (tab); omitting tab
+  selects People. The route fetches the active category's first page server-side. The
+  search field debounces input by 400ms, fetches new first pages through the shared Server
+  Action, and replaces the URL without remounting the input; Enter searches immediately.
+  The same action loads subsequent pages. Feed renders each hydrated result through
+  FeedItemCard, including repost attribution. Search uses a white page, one plain search
+  fields/Input control without a trailing button, underlined tabs, and a two-column desktop layout with SuggestedConnectionsCard
+  ("Mungkin Kamu Kenal") on the right. All tabs use manual pagination. The search form
+  keeps the URL in sync; the route keys SearchPage by category and keyword so navigation and
+  browser back/forward start with matching result state. apis/search.ts validates feed
+  items before passing them to FeedItemCard and hydrates legacy flat feed rows by id.
+  People rows show the name and username beside the avatar, then headline or HMI Cabang
+  name below; both third-line variants use 13px on mobile and 14px on desktop.
+  Verified and KAHMI badges use ProfileBadges and require
+  verification_status/is_alumni from search/user.
+  Official rows use the same rounded hover area and name typography as People; they
+  show no entity-type label above the name, and legal_name is 13px on mobile or 14px
+  on desktop. Their avatar uses FeedAuthorAvatar so a missing image falls back to LogoHmi.
+  The searchPeople wrapper also powers user pickers
+  on the main and admin subdomains through search/user. ExploreSearchBar in the home
+  sidebar is another entry point into this route.
 - `components/feeds/*` — the feed timeline and sidebar widgets for the gated home page.
   `FeedPage.tsx` is a **two-column** grid now (`lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]`):
   the timeline, then `RightSidebar` as the only aside. The old left column — `ProfileSidebar`
@@ -1206,9 +1199,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   typed **required-and-nullable**, not optional, since the backend always sends the keys).
   `lib/feed-author.ts#resolveFeedAuthor`
   is the single place that decides which of the two a feed renders under, so `FeedItemCard`,
-  `QuotedFeed`, `ActivityEntryCard`, `SearchPostingRow`, and `/feeds/[feed_id]`'s own metadata never
+  `QuotedFeed`, `ActivityEntryCard`, and `/feeds/[feed_id]`'s own metadata never
   branch on it themselves: it takes a `FeedAuthorSource` (the author-bearing subset of `Feed`, which
-  `search/list`'s posting row satisfies too) and returns the display name
+  `search/feed`'s hydrated feed satisfies too) and returns the display name
   (`HMI Cabang {name}`, `HMI Badko {name}`, ... — an organization is named outright, and an existing
   prefix in the stored name is stripped before one is added), the entity logo, an `isEntity` flag
   marking it as an entity, and the profile href from `entityProfileHref` (its
@@ -1307,7 +1300,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   The feed's `content` text is a plain `<p>`, not a link — navigating to the feed detail
   page (`/feeds/[feed_id]`) only happens through the "..." menu. That paragraph carries
   `break-words`, as does every other surface that renders user-authored body text (`QuotedFeed`,
-  `ActivityEntryCard`, `SearchPostingRow`, `CommentItem`): a pasted URL is one long unbreakable
+  `ActivityEntryCard`, `CommentItem`): a pasted URL is one long unbreakable
   word and spills past the card's own padding without it. That menu (`Dropdown`,
   see `components/common/*` below) has "Lihat post" (links to
   `/feeds/[feed.id]`) unless `showViewPostAction={false}` — only `/feeds/[feed_id]` passes that,

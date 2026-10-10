@@ -79,6 +79,7 @@ import {
 import { useActingHref } from "@/hooks/useActingEntity";
 
 interface FeedItemCardProps {
+  surface?: "card" | "flat";
   feed: Feed;
   currentUserId?: string;
   currentUserName?: string;
@@ -349,6 +350,7 @@ function ImagePreviewModal({
 }
 
 export default function FeedItemCard({
+  surface = "card",
   feed,
   currentUserId,
   currentUserName,
@@ -539,7 +541,9 @@ export default function FeedItemCard({
   }
 
   return (
-    <article className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
+    <article className={surface === "flat"
+      ? "border-b border-[#e6e9ef] bg-white py-5"
+      : "border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x"}>
       {repostedBy && (
         <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573] xl:text-[13px]">
           <IconRepeat className="size-3.5" />
@@ -558,14 +562,14 @@ export default function FeedItemCard({
         >
           {/* Two instances, not one CSS-scaled node: Avatar sizes itself with inline width/height. */}
           <span className="lg:hidden">
-            <FeedAuthorAvatar author={author} size={40} />
+            <FeedAuthorAvatar author={author} size={surface === "flat" ? 36 : 40} />
           </span>
           <span className="hidden lg:block">
-            <FeedAuthorAvatar author={author} size={44} />
+            <FeedAuthorAvatar author={author} size={surface === "flat" ? 36 : 44} />
           </span>
           <div className="min-w-0">
-            <p className="font-semibold text-[#172033]">{author.name}</p>
-            <p className="text-xs text-[#5f6573] xl:text-[13px]">
+            <p className={`font-semibold text-[#172033] ${surface === "flat" ? "text-sm" : ""}`}>{author.name}</p>
+            <p className={`text-xs text-[#5f6573] ${surface === "flat" ? "" : "xl:text-[13px]"}`}>
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
             </p>
@@ -621,7 +625,7 @@ export default function FeedItemCard({
         )}
       </div>
 
-      <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033] xl:text-[15px]">
+      <p className={`mt-3 whitespace-pre-line break-words text-[#172033] ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
         {content}
       </p>
 
@@ -688,7 +692,7 @@ export default function FeedItemCard({
             variant="ghost"
             onClick={handleReactionButtonClick}
             disabled={reaction.reacting}
-            className={`w-full gap-1.5 rounded-lg py-2 text-sm hover:bg-[#f5f7fb] xl:text-[15px] ${
+            className={`w-full gap-1.5 rounded-lg py-2 hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
               reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
             }`}
           >
@@ -713,7 +717,7 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={handleToggleComments}
-          className="gap-1.5 rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
+          className={`gap-1.5 rounded-lg py-2 text-[#5f6573] hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
         >
           <IconMessageCircle className="size-4" />
           {totalCommentCount > 0 && totalCommentCount}
@@ -725,7 +729,7 @@ export default function FeedItemCard({
               variant="ghost"
               onClick={toggle}
               disabled={reposting}
-              className={`w-full rounded-lg py-2 text-sm hover:bg-[#f5f7fb] xl:text-[15px] ${
+              className={`w-full rounded-lg py-2 hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
                 reposted ? "text-secondary" : "text-[#5f6573]"
               }`}
             >
@@ -761,7 +765,7 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={() => setShowShareModal(true)}
-          className="rounded-lg py-2 text-sm text-[#5f6573] hover:bg-[#f5f7fb] xl:text-[15px]"
+          className={`rounded-lg py-2 text-[#5f6573] hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
         >
           <IconShare className="size-4" />
         </Button>

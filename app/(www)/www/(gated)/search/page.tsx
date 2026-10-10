@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import SearchPage from "@/components/pages/SearchPage";
 import { getSession } from "@/apis/session";
-import { searchPeople, searchPostings } from "@/apis/search";
+import { SEARCH_CATEGORIES, searchResults, type SearchCategory } from "@/apis/search";
+import { Suspense } from "react";
+import SuggestedConnectionsCard from "@/components/feeds/SuggestedConnectionsCard";
 
 export const metadata: Metadata = {
   title: "Cari",
@@ -12,31 +14,38 @@ export const metadata: Metadata = {
 };
 
 interface SearchRouteProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; tab?: string }>;
 }
 
 export default async function Search({ searchParams }: SearchRouteProps) {
-  const { q } = await searchParams;
+  const { q, tab } = await searchParams;
   const keyword = q?.trim() ?? "";
+  const category: SearchCategory = SEARCH_CATEGORIES.includes(tab as SearchCategory)
+    ? (tab as SearchCategory)
+    : "user";
 
   const { user } = await getSession();
-  const [people, postings] = await Promise.all([
-    searchPeople(keyword, { page: 1, pageSize: 20 }),
-    searchPostings(keyword, { page: 1, pageSize: 20 }),
-  ]);
+  const results = await searchResults(category, keyword);
 
   return (
     <SearchPage
+      key={`${category}:${keyword}`}
       viewer={{
         fullName: user?.full_name,
         avatar: user?.avatar,
         userId: user?.id,
         username: user?.username,
+        userStatus: user?.status,
         verificationStatus: user?.verification_status,
       }}
       initialQuery={keyword}
-      initialPeople={people}
-      initialPostings={postings}
+      activeCategory={category}
+      initialResults={results}
+      aside={
+        <Suspense fallback={null}>
+          <SuggestedConnectionsCard />
+        </Suspense>
+      }
     />
   );
 }

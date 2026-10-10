@@ -181,10 +181,7 @@ import {
   listNotifications as listNotificationsApi,
   markNotificationsAsRead as markNotificationsAsReadApi,
 } from "@/apis/notifications";
-import {
-  searchPeople as searchPeopleApi,
-  searchPostings as searchPostingsApi,
-} from "@/apis/search";
+import { searchResults as searchResultsApi, type SearchCategory } from "@/apis/search";
 import {
   deleteChatMessage as deleteChatMessageApi,
   deleteConversation as deleteConversationApi,
@@ -724,12 +721,12 @@ export async function markNotificationsAsRead(ids?: string[]) {
   return markNotificationsAsReadApi(ids);
 }
 
-export async function loadMoreSearchPeople(keyword: string, page: number) {
-  return searchPeopleApi(keyword, { page, pageSize: 20 });
-}
-
-export async function loadMoreSearchPostings(keyword: string, page: number) {
-  return searchPostingsApi(keyword, { page, pageSize: 20 });
+export async function fetchSearchResults(
+  category: SearchCategory,
+  keyword: string,
+  page: number
+) {
+  return searchResultsApi(category, keyword, { page });
 }
 
 export async function listReactors(
