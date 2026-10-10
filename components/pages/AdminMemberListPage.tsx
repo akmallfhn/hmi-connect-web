@@ -12,6 +12,7 @@ import {
   type MemberSort,
 } from "@/lib/member-filters";
 import MemberFilterBar from "../admin/MemberFilterBar";
+import MemberMobileCard from "../admin/MemberMobileCard";
 import Button from "../buttons/Button";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
@@ -78,46 +79,60 @@ export default function AdminMemberListPage({
         anchors={filterAnchors}
         initialSearch={initialSearch}
         selection={selection}
+        sort={sort}
       />
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+      <div className="mt-6">
         {users.length === 0 ? (
-          <EmptyState
-            title={isFiltered ? "Kader tidak ditemukan" : "Belum ada kader"}
-            description={
-              isFiltered
-                ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
-                : "Kader yang terdaftar akan ditampilkan di sini."
-            }
-          />
+          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+            <EmptyState
+              title={isFiltered ? "Kader tidak ditemukan" : "Belum ada kader"}
+              description={
+                isFiltered
+                  ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
+                  : "Kader yang terdaftar akan ditampilkan di sini."
+              }
+            />
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
-                <tr>
-                  <SortableHeader
-                    label="User"
-                    sortKey="full_name"
-                    activeSort={sort}
-                  />
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">
-                    {showBranchContext ? "Cabang / Komisariat" : "Komisariat"}
-                  </th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Terverifikasi</th>
-                  <SortableHeader
-                    label="Terdaftar Sejak"
-                    sortKey="created_at"
-                    defaultDirection="desc"
-                    activeSort={sort}
-                  />
-                  <th className="px-4 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {users.map((user) => (
-                  <tr key={user.id} className="align-middle">
+          <>
+            <ul className="space-y-3 xl:hidden">
+              {users.map((user) => (
+                <MemberMobileCard
+                  key={user.id}
+                  user={user}
+                  detailHref={`${basePath}/members/${encodeURIComponent(user.username)}`}
+                  showBranchContext={showBranchContext}
+                />
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+              <table className="w-full min-w-[1000px] text-left text-sm">
+                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
+                  <tr>
+                    <SortableHeader
+                      label="User"
+                      sortKey="full_name"
+                      activeSort={sort}
+                    />
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">
+                      {showBranchContext ? "Cabang / Komisariat" : "Komisariat"}
+                    </th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Terverifikasi</th>
+                    <SortableHeader
+                      label="Terdaftar Sejak"
+                      sortKey="created_at"
+                      defaultDirection="desc"
+                      activeSort={sort}
+                    />
+                    <th className="px-4 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                  {users.map((user) => (
+                    <tr key={user.id} className="align-middle">
                       <td className="px-4 py-3">
                         <Link
                           href={`${basePath}/members/${encodeURIComponent(user.username)}`}
@@ -177,7 +192,7 @@ export default function AdminMemberListPage({
                             size="sm"
                             onClick={() =>
                               router.push(
-                                `${basePath}/members/${encodeURIComponent(user.username)}`
+                                `${basePath}/members/${encodeURIComponent(user.username)}`,
                               )
                             }
                             aria-label={`Lihat detail ${user.full_name}`}
@@ -188,10 +203,11 @@ export default function AdminMemberListPage({
                         </div>
                       </td>
                     </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

@@ -2249,8 +2249,16 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `?search=&status=&page=` and passing the result to `components/pages/AdminUserListPage.tsx`)
   — search/status-filter/pagination are all URL state driven by `router.push`, the same
   server-first pattern `ArticlesPage`/`SearchPage` use, not a client-fetched table; its empty results
-  use the shared `components/states/EmptyState.tsx`. There's no
-  `users/detail`-by-id endpoint on the backend (only by `username`, and only `users/update`/
+  use the shared `components/states/EmptyState.tsx`. On narrow screens, `/master/users` and
+  every scoped member roster render
+  `components/admin/MemberMobileCard.tsx` below `xl`, keeping status, verification, hierarchy,
+  registration date, detail navigation, and Master actions visible. Card metadata uses stacked
+  labels and values, with email full width and hierarchy/date in a wrapping grid. The desktop
+  tables remain at `xl`, while `MemberFilterBar` exposes the table's name/date sorting through
+  a mobile `Sort` button and dropdown beside `Filter`. Master alone shows an icon-only rounded
+  `+` create button fixed at the lower right below `lg`; its labeled create button stays hidden
+  until the desktop header. Scoped member rosters remain read-only.
+  The backend has no `users/detail`-by-id endpoint (only by `username`, and only `users/update`/
   `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
   same backend shape — the read page is keyed by **username**, not id:
   `app/(admin)/admin/master/users/[username]/page.tsx` calls `getUserByUsername` and renders
@@ -2626,8 +2634,9 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   under every scoped admin shell: `/organizations/{id}/members`,
   `/coordinating-bodies/{id}/members`, `/branches/{id}/members`,
   `/coordinating-chapters/{id}/members`, and `/chapters/{id}/members`. All five reuse
-  `components/pages/AdminMemberListPage.tsx` (URL-driven search/status/pagination, the same table
-  look as `/master/users`, but no create/edit/delete/dropdown controls; its `Aksi` column has one
+  `components/pages/AdminMemberListPage.tsx` (URL-driven search/status/pagination, the same desktop
+  table and mobile card pattern as `/master/users`, but no create/edit/delete/dropdown controls;
+  its desktop `Aksi` column has one
   outlined `Eye` + `Lihat Detail` button that navigates to the scoped member detail route) and
   `AdminMemberDetailPage.tsx` (the same account/KTP/organization/other section cards and stat pills,
   with no edit forms or delete button). `BranchMemberListPage`/`BranchMemberDetailPage` are now only

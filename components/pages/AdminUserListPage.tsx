@@ -7,6 +7,7 @@ import {
   Eye,
   Mail,
   Pencil,
+  Plus,
   PlusCircle,
   Trash2,
 } from "lucide-react";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/member-filters";
 import { isSuccessStatus } from "@/lib/types";
 import MemberFilterBar from "../admin/MemberFilterBar";
+import MemberMobileCard from "../admin/MemberMobileCard";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
@@ -72,7 +74,7 @@ export default function AdminUserListPage({
     useState<UserListEntry | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [reminderTarget, setReminderTarget] = useState<UserListEntry | null>(
-    null
+    null,
   );
   const [isSendingReminder, setIsSendingReminder] = useState(false);
 
@@ -105,7 +107,7 @@ export default function AdminUserListPage({
         toast.error(
           result.status === "TOO_MANY_REQUESTS"
             ? "Reminder sudah dikirim kurang dari 30 menit lalu. Coba lagi nanti."
-            : (result.message ?? "Gagal mengirim reminder.")
+            : (result.message ?? "Gagal mengirim reminder."),
         );
         return;
       }
@@ -139,182 +141,219 @@ export default function AdminUserListPage({
     }
   }
 
+  function renderUserActions(user: UserListEntry) {
+    return (
+      <Dropdown
+        panelClassName="w-48 rounded-xl"
+        trigger={({ toggle }) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label={`Aksi untuk ${user.full_name}`}
+          >
+            <EllipsisVertical className="size-4" />
+          </Button>
+        )}
+      >
+        <Link href={`/master/users/${encodeURIComponent(user.username)}`}>
+          <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
+            <Eye className="size-4 text-[#5f6573]" />
+            Lihat Detail
+          </div>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setEditTarget(user)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+        >
+          <Pencil className="size-4 text-[#5f6573]" />
+          Edit Cepat
+        </button>
+        {user.verification_status === "unverified" && (
+          <button
+            type="button"
+            onClick={() => setReminderTarget(user)}
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          >
+            <Mail className="size-4 text-[#5f6573]" />
+            Kirim Reminder
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setDeactivateTarget(user)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+        >
+          <Ban className="size-4" />
+          Nonaktifkan
+        </button>
+        <button
+          type="button"
+          onClick={() => setDeleteTarget(user)}
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+        >
+          <Trash2 className="size-4" />
+          Hapus Permanen
+        </button>
+      </Dropdown>
+    );
+  }
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <AdminPageTitle description="Kelola akun dan hak akses user HMI Connect.">
             User Management
           </AdminPageTitle>
         </div>
-        <Link href="/master/users/create" className="w-fit">
-          <Button variant="primary">
+        <div className="hidden lg:block">
+          <Button
+            variant="primary"
+            onClick={() => router.push("/master/users/create")}
+          >
             <PlusCircle className="size-4" />
             Tambah User
           </Button>
-        </Link>
+        </div>
       </div>
+
+      <Button
+        variant="primary"
+        size="icon"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-5 z-20 size-14! rounded-full shadow-lg lg:hidden"
+        aria-label="Tambah user"
+        title="Tambah user"
+        onClick={() => router.push("/master/users/create")}
+      >
+        <Plus className="size-6" />
+      </Button>
 
       <MemberFilterBar
         scope="master"
         initialSearch={initialSearch}
         selection={selection}
+        sort={sort}
       />
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+      <div className="mt-6">
         {users.length === 0 ? (
-          <EmptyState
-            title={isFiltered ? "User tidak ditemukan" : "Belum ada user"}
-            description={
-              isFiltered
-                ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
-                : "User yang ditambahkan akan ditampilkan di sini."
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
-                <tr>
-                  <SortableHeader
-                    label="User"
-                    sortKey="full_name"
-                    activeSort={sort}
-                  />
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Cabang / Komisariat</th>
-                  <th className="px-4 py-3">Role</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Terverifikasi</th>
-                  <SortableHeader
-                    label="Terdaftar Sejak"
-                    sortKey="created_at"
-                    defaultDirection="desc"
-                    activeSort={sort}
-                  />
-                  <th className="px-4 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
-                {users.map((user) => (
-                  <tr key={user.id} className="align-middle">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/master/users/${encodeURIComponent(user.username)}`}
-                        className="group flex items-center gap-3"
-                      >
-                        <Avatar
-                          src={user.avatar}
-                          name={user.full_name}
-                          size={36}
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
-                            {user.full_name}
-                          </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            @{user.username}
-                          </p>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-[#5f6573]">
-                      <span className="block max-w-56 truncate">
-                        {user.email || "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#172033]">
-                      {user.chapter_name ? (
-                        <div className="min-w-0">
-                          <p className="truncate">{user.chapter_name}</p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
-                            Cabang {user.branch_name}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-[#5f6573]">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <UserRoleLabel
-                        roleId={user.role_id}
-                        roleName={user.role_name}
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <UserStatusLabel status={user.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <UserVerifiedLabel status={user.verification_status} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
-                      {user.created_at ? formatShortDateTime(user.created_at) : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end">
-                        <Dropdown
-                          panelClassName="w-48 rounded-xl"
-                          trigger={({ toggle }) => (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={toggle}
-                              aria-label="Aksi"
-                            >
-                              <EllipsisVertical className="size-4" />
-                            </Button>
-                          )}
-                        >
-                          <Link
-                            href={`/master/users/${encodeURIComponent(user.username)}`}
-                          >
-                            <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
-                              <Eye className="size-4 text-[#5f6573]" />
-                              Lihat Detail
-                            </div>
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => setEditTarget(user)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                          >
-                            <Pencil className="size-4 text-[#5f6573]" />
-                            Edit Cepat
-                          </button>
-                          {user.verification_status === "unverified" && (
-                            <button
-                              type="button"
-                              onClick={() => setReminderTarget(user)}
-                              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
-                            >
-                              <Mail className="size-4 text-[#5f6573]" />
-                              Kirim Reminder
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setDeactivateTarget(user)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-                          >
-                            <Ban className="size-4" />
-                            Nonaktifkan
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(user)}
-                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
-                          >
-                            <Trash2 className="size-4" />
-                            Hapus Permanen
-                          </button>
-                        </Dropdown>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+            <EmptyState
+              title={isFiltered ? "User tidak ditemukan" : "Belum ada user"}
+              description={
+                isFiltered
+                  ? "Coba ubah kata kunci pencarian atau filter yang dipakai."
+                  : "User yang ditambahkan akan ditampilkan di sini."
+              }
+            />
           </div>
+        ) : (
+          <>
+            <ul className="space-y-3 xl:hidden">
+              {users.map((user) => (
+                <MemberMobileCard
+                  key={user.id}
+                  user={user}
+                  detailHref={`/master/users/${encodeURIComponent(user.username)}`}
+                  showBranchContext
+                  showRole
+                  actions={renderUserActions(user)}
+                />
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+              <table className="w-full min-w-[1000px] text-left text-sm">
+                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                  <tr>
+                    <SortableHeader
+                      label="User"
+                      sortKey="full_name"
+                      activeSort={sort}
+                    />
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Cabang / Komisariat</th>
+                    <th className="px-4 py-3">Role</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Terverifikasi</th>
+                    <SortableHeader
+                      label="Terdaftar Sejak"
+                      sortKey="created_at"
+                      defaultDirection="desc"
+                      activeSort={sort}
+                    />
+                    <th className="px-4 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                  {users.map((user) => (
+                    <tr key={user.id} className="align-middle">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/master/users/${encodeURIComponent(user.username)}`}
+                          className="group flex items-center gap-3"
+                        >
+                          <Avatar
+                            src={user.avatar}
+                            name={user.full_name}
+                            size={36}
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
+                              {user.full_name}
+                            </p>
+                            <p className="truncate text-[13px] text-[#5f6573]">
+                              @{user.username}
+                            </p>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-[#5f6573]">
+                        <span className="block max-w-56 truncate">
+                          {user.email || "—"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#172033]">
+                        {user.chapter_name ? (
+                          <div className="min-w-0">
+                            <p className="truncate">{user.chapter_name}</p>
+                            <p className="truncate text-[13px] text-[#5f6573]">
+                              Cabang {user.branch_name}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-[#5f6573]">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <UserRoleLabel
+                          roleId={user.role_id}
+                          roleName={user.role_name}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <UserStatusLabel status={user.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <UserVerifiedLabel status={user.verification_status} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
+                        {user.created_at
+                          ? formatShortDateTime(user.created_at)
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          {renderUserActions(user)}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { ArrowDownUp, Check, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -12,10 +12,13 @@ import {
   type MemberFilterLevel,
   type MemberFilterScope,
   type MemberFilterSelection,
+  type MemberSort,
 } from "@/lib/member-filters";
 import ActiveFilterChips, {
   type ActiveFilterChip,
 } from "../common/ActiveFilterChips";
+import Button from "../buttons/Button";
+import Dropdown from "../common/Dropdown";
 import FilterDropdown from "../common/FilterDropdown";
 import Input from "../fields/Input";
 import SearchableSelect, {
@@ -44,11 +47,19 @@ const LEVEL_ORDER: MemberFilterLevel[] = [
   "chapter",
 ];
 
+const SORT_OPTIONS = [
+  { label: "Terdaftar terbaru", value: "created_at:desc" },
+  { label: "Terdaftar terlama", value: "created_at:asc" },
+  { label: "Nama A–Z", value: "full_name:asc" },
+  { label: "Nama Z–A", value: "full_name:desc" },
+] as const;
+
 interface MemberFilterBarProps {
   scope: MemberFilterScope;
   anchors?: MemberFilterAnchors;
   initialSearch: string;
   selection: MemberFilterSelection;
+  sort: MemberSort;
 }
 
 function toOption(entity: MemberFilterEntity | null): SearchableOption | null {
@@ -71,6 +82,7 @@ export default function MemberFilterBar({
   anchors = {},
   initialSearch,
   selection,
+  sort,
 }: MemberFilterBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -190,6 +202,15 @@ export default function MemberFilterBar({
   const verificationLabel = MEMBER_VERIFICATION_OPTIONS.find(
     (option) => option.value === selection.verificationStatus,
   )?.label;
+  const sortValue = sort ? `${sort.by}:${sort.type}` : "created_at:desc";
+
+  function changeSort(next: string) {
+    const [by, type] = next.split(":");
+    pushParams({
+      sort_by: next === "created_at:desc" ? "" : by,
+      sort_type: next === "created_at:desc" ? "" : type,
+    });
+  }
 
   const chips: ActiveFilterChip[] = [
     ...levels.flatMap((level) => {
@@ -239,61 +260,99 @@ export default function MemberFilterBar({
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
-        <FilterDropdown
-          panelId={`${scope}-member-filters`}
-          ariaLabel="Filter daftar kader"
-          activeCount={chips.length}
-          onReset={clearFilters}
-          layout={levels.length > 0 ? "split" : "stack"}
-        >
-          {levels.length > 0 && (
+        <div className="flex items-center gap-2">
+          <FilterDropdown
+            panelId={`${scope}-member-filters`}
+            ariaLabel="Filter daftar kader"
+            activeCount={chips.length}
+            onReset={clearFilters}
+            layout={levels.length > 0 ? "split" : "stack"}
+          >
+            {levels.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {levels.map((level) => {
+                  const config = levelConfig[level];
+                  const option = toOption(selected[level]);
+                  return (
+                    <SearchableSelect
+                      // Remount when the parent pick changes so the option list reloads under the new scope.
+                      key={`${level}-${bodyAnchor}-${branchAnchor}-${korkomAnchor}`}
+                      selectId={`${scope}-member-${level}-filter`}
+                      label={LEVEL_LABEL[level]}
+                      placeholder={
+                        config.disabledHint ?? `Semua ${LEVEL_LABEL[level]}`
+                      }
+                      value={option}
+                      onChange={(next) =>
+                        setLevel(level, next ? String(next.value) : "")
+                      }
+                      loadOptions={config.load}
+                      defaultOptions={option ? [option] : []}
+                      disabled={Boolean(config.disabledHint)}
+                      portalMenu={false}
+                    />
+                  );
+                })}
+              </div>
+            )}
             <div className="flex flex-col gap-3">
-              {levels.map((level) => {
-                const config = levelConfig[level];
-                const option = toOption(selected[level]);
-                return (
-                  <SearchableSelect
-                    // Remount when the parent pick changes so the option list reloads under the new scope.
-                    key={`${level}-${bodyAnchor}-${branchAnchor}-${korkomAnchor}`}
-                    selectId={`${scope}-member-${level}-filter`}
-                    label={LEVEL_LABEL[level]}
-                    placeholder={
-                      config.disabledHint ?? `Semua ${LEVEL_LABEL[level]}`
-                    }
-                    value={option}
-                    onChange={(next) =>
-                      setLevel(level, next ? String(next.value) : "")
-                    }
-                    loadOptions={config.load}
-                    defaultOptions={option ? [option] : []}
-                    disabled={Boolean(config.disabledHint)}
-                    portalMenu={false}
-                  />
-                );
-              })}
+              <Select
+                selectId={`${scope}-member-status-filter`}
+                label="Status Akun"
+                placeholder="Semua Status"
+                value={selection.status}
+                onChange={(value) =>
+                  pushParams({ status: String(value ?? "") })
+                }
+                options={MEMBER_STATUS_OPTIONS}
+              />
+              <Select
+                selectId={`${scope}-member-verification-filter`}
+                label="Status Verifikasi"
+                placeholder="Semua Status Verifikasi"
+                value={selection.verificationStatus}
+                onChange={(value) =>
+                  pushParams({ verification_status: String(value ?? "") })
+                }
+                options={MEMBER_VERIFICATION_OPTIONS}
+              />
             </div>
-          )}
-          <div className="flex flex-col gap-3">
-            <Select
-              selectId={`${scope}-member-status-filter`}
-              label="Status Akun"
-              placeholder="Semua Status"
-              value={selection.status}
-              onChange={(value) => pushParams({ status: String(value ?? "") })}
-              options={MEMBER_STATUS_OPTIONS}
-            />
-            <Select
-              selectId={`${scope}-member-verification-filter`}
-              label="Status Verifikasi"
-              placeholder="Semua Status Verifikasi"
-              value={selection.verificationStatus}
-              onChange={(value) =>
-                pushParams({ verification_status: String(value ?? "") })
-              }
-              options={MEMBER_VERIFICATION_OPTIONS}
-            />
+          </FilterDropdown>
+          <div className="xl:hidden">
+            <Dropdown
+              panelClassName="w-56 rounded-xl p-1.5"
+              trigger={({ open, toggle }) => (
+                <Button
+                  variant="light"
+                  onClick={toggle}
+                  aria-expanded={open}
+                  aria-label="Sort daftar kader"
+                >
+                  <ArrowDownUp className="size-4" /> Sort
+                </Button>
+              )}
+            >
+              <div role="group" aria-label="Sort daftar kader">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={sortValue === option.value}
+                    onClick={() => changeSort(option.value)}
+                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-[#f5f7fb] ${
+                      sortValue === option.value
+                        ? "bg-primary-soft font-semibold text-primary"
+                        : "text-[#172033]"
+                    }`}
+                  >
+                    {option.label}
+                    {sortValue === option.value && <Check className="size-4" />}
+                  </button>
+                ))}
+              </div>
+            </Dropdown>
           </div>
-        </FilterDropdown>
+        </div>
       </div>
 
       <ActiveFilterChips chips={chips} onClearAll={clearFilters} />
