@@ -65,7 +65,7 @@ export default function MessageList({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
         <SendMessageIllustration className="w-52 max-w-full" />
-        <p className="text-[15px] text-[#7b8190]">
+        <p className="text-[15px] text-subtle-foreground">
           Mulai percakapan dengan mengirim pesan pertama.
         </p>
       </div>
@@ -81,7 +81,7 @@ export default function MessageList({
               type="button"
               onClick={onLoadMore}
               disabled={loadingMore}
-              className="cursor-pointer rounded-full border border-[#e6e9ef] bg-white px-4 py-1.5 text-xs font-medium text-[#5f6573] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer rounded-full border border-border bg-surface px-4 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loadingMore ? "Memuat..." : "Muat pesan lebih lama"}
             </button>
@@ -109,7 +109,7 @@ export default function MessageList({
           return (
             <div key={message.id}>
               {showDayDivider && (
-                <p className="my-4 text-center text-xs font-semibold uppercase tracking-wide text-[#9aa1ad]">
+                <p className="my-4 text-center text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
                   {dayLabel(message.created_at)}
                 </p>
               )}

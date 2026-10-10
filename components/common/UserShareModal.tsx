@@ -345,16 +345,16 @@ export function DesktopAction({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-3 rounded-xl border border-[#e6e9ef] p-3 text-left transition hover:border-[#bfe6e7] hover:bg-[#e3f6f6]/50 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition hover:border-primary-soft-border hover:bg-primary-soft-bg/50 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e3f6f6] text-[#0f6f72]">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft-bg text-primary-soft-fg">
         {icon}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-[#172033]">
+        <span className="block text-sm font-semibold text-heading">
           {title}
         </span>
-        <span className="block text-xs text-[#8a909d]">{description}</span>
+        <span className="block text-xs text-disabled-foreground">{description}</span>
       </span>
     </button>
   );
@@ -550,7 +550,7 @@ export default function UserShareModal({
       >
         <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
           {/* The exact PNG that downloads, so it scales down whole when the sheet is short. */}
-          <div className="relative aspect-[9/16] h-[min(587px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-[#e6e9ef] shadow-2xl sm:h-[min(587px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
+          <div className="relative aspect-[9/16] h-[min(587px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-border shadow-2xl sm:h-[min(587px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
             {previewUrl ? (
               <Image
                 src={previewUrl}
@@ -560,7 +560,7 @@ export default function UserShareModal({
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-[#7b8190]">
+              <div className="flex h-full items-center justify-center text-sm text-subtle-foreground">
                 {imagePreparing ? (
                   <span className="animate-pulse">Menyiapkan gambar...</span>
                 ) : (
@@ -577,7 +577,7 @@ export default function UserShareModal({
               title="Salin tautan"
               onClick={handleCopyLink}
               disabled={!username || busy !== null}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-heading transition hover:bg-media-backdrop/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconLink className="size-6" stroke={2} />
               {busy === "copy" ? "Menyalin..." : "Copy Link"}
@@ -588,7 +588,7 @@ export default function UserShareModal({
               title="Download"
               onClick={handleDownload}
               disabled={busy !== null || !imageBlob}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-heading transition hover:bg-media-backdrop/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconDownload className="size-6" stroke={2} />
               {busy === "download" || imagePreparing
@@ -601,7 +601,7 @@ export default function UserShareModal({
               title="Bagikan"
               onClick={handleNativeShare}
               disabled={busy !== null || !imageBlob}
-              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-[#172033] transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-heading transition hover:bg-media-backdrop/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IconShare3 className="size-6" stroke={2} />
               {busy === "share" || imagePreparing ? "Menyiapkan..." : "Share"}
@@ -609,25 +609,25 @@ export default function UserShareModal({
           </div>
 
           <div className="hidden min-w-0 flex-1 flex-col lg:flex">
-            <h3 className="font-stack-sans-headline text-xl font-semibold text-[#172033]">
+            <h3 className="font-stack-sans-headline text-xl font-semibold text-heading">
               Bagikan profil kamu
             </h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-[#5f6573]">
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               Unduh kartu ini untuk Story atau postingan, atau kirim tautan
               profil ke teman seperjuangan.
             </p>
 
             {username && (
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">
                   Tautan profil
                 </p>
-                <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#e6e9ef] bg-[#f8fafc] py-1.5 pl-3 pr-1.5">
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-surface-subtle py-1.5 pl-3 pr-1.5">
                   <IconLink
-                    className="size-4 shrink-0 text-[#8a909d]"
+                    className="size-4 shrink-0 text-disabled-foreground"
                     stroke={2}
                   />
-                  <span className="min-w-0 flex-1 truncate text-sm text-[#172033]">
+                  <span className="min-w-0 flex-1 truncate text-sm text-heading">
                     {profileShareUrl.replace(/^https?:\/\//, "")}
                   </span>
                   <Button
@@ -643,7 +643,7 @@ export default function UserShareModal({
             )}
 
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">
                 Gambar
               </p>
               <div className="mt-2 flex flex-col gap-2">

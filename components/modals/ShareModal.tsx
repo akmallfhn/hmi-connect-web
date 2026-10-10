@@ -94,7 +94,7 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
               // A hairline keeps the near-white Gmail tile from bleeding into the modal.
               className="size-11 rounded-full object-cover ring-1 ring-inset ring-black/5"
             />
-            <span className="text-xs text-[#5f6573]">{platform.name}</span>
+            <span className="text-xs text-muted-foreground">{platform.name}</span>
           </a>
         ))}
         {typeof navigator !== "undefined" && Boolean(navigator.share) && (
@@ -104,25 +104,25 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
             onClick={handleNativeShare}
             className="h-auto w-auto flex-col gap-1.5"
           >
-            <span className="flex size-11 items-center justify-center rounded-full bg-[#f5f7fb] text-[#5f6573]">
+            <span className="flex size-11 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
               <Share2 className="size-5" />
             </span>
-            <span className="text-xs text-[#5f6573]">Lainnya</span>
+            <span className="text-xs text-muted-foreground">Lainnya</span>
           </Button>
         )}
       </div>
 
-      <div className="mt-5 flex items-center gap-2 rounded-xl border border-[#e6e9ef] bg-[#f5f7fb] px-3 py-2">
+      <div className="mt-5 flex items-center gap-2 rounded-xl border border-border bg-surface-muted px-3 py-2">
         <input
           readOnly
           value={url}
-          className="flex-1 truncate bg-transparent text-sm text-[#172033] outline-none"
+          className="flex-1 truncate bg-transparent text-sm text-heading outline-none"
         />
         <Button
           variant="light"
           size="sm"
           onClick={handleCopyLink}
-          className="shrink-0 text-primary shadow-sm"
+          className="shrink-0 text-primary-foreground shadow-sm"
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
           {copied ? "Tersalin" : "Salin"}

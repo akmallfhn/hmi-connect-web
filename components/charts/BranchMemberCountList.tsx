@@ -60,13 +60,13 @@ export default function BranchMemberCountList({
   const lastItem = firstItem + entries.length - 1;
 
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <article className="flex h-full flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-[#172033]">
+          <h3 className="text-base font-bold text-heading">
             Total Kader tiap Cabang
           </h3>
-          <p className="text-sm leading-5 text-[#5f6573]">
+          <p className="text-sm leading-5 text-muted-foreground">
             Diurutkan dari jumlah kader aktif paling sedikit
           </p>
         </div>
@@ -89,40 +89,40 @@ export default function BranchMemberCountList({
 
       {entries.length === 0 ? (
         <div className="flex min-h-40 flex-1 items-center justify-center text-center">
-          <p className="text-sm text-[#5f6573]">
+          <p className="text-sm text-muted-foreground">
             {searchTerm
               ? "Cabang yang dicari tidak ditemukan."
               : "Belum ada data Cabang."}
           </p>
         </div>
       ) : (
-        <div className="mt-4 flex-1 divide-y divide-[#eef0f4]">
+        <div className="mt-4 flex-1 divide-y divide-divider">
           {entries.map((branch) => (
             <div
               key={branch.id}
               className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-foreground">
                 <Building2 className="size-3.5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p
                   title={formatBranchName(branch.name)}
-                  className="truncate text-sm font-semibold text-[#172033]"
+                  className="truncate text-sm font-semibold text-heading"
                 >
                   {formatBranchName(branch.name)}
                 </p>
-                <p className="mt-0.5 text-xs text-[#5f6573]">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {branch.chapter_count !== undefined
                     ? `${formatNumber(branch.chapter_count)} Komisariat`
                     : formatCoordinatingBodyName(branch.coordinating_body_name)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-sm font-bold text-[#172033]">
+                <p className="text-sm font-bold text-heading">
                   {formatNumber(branch.user_count ?? 0)}
                 </p>
-                <p className="text-xs text-[#5f6573]">Kader Aktif</p>
+                <p className="text-xs text-muted-foreground">Kader Aktif</p>
               </div>
             </div>
           ))}
@@ -130,8 +130,8 @@ export default function BranchMemberCountList({
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eef0f4] pt-4">
-          <p className="text-xs text-[#5f6573]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">
             {firstItem}–{lastItem} dari {formatNumber(totalData)} data
           </p>
           <div className="flex items-center gap-1.5">
@@ -144,7 +144,7 @@ export default function BranchMemberCountList({
             >
               <ChevronLeft className="size-3.5" /> Prev
             </Button>
-            <span className="min-w-14 text-center text-xs font-semibold text-[#172033]">
+            <span className="min-w-14 text-center text-xs font-semibold text-heading">
               {page} / {totalPages}
             </span>
             <Button

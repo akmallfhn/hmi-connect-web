@@ -8,7 +8,7 @@ interface ImageLightboxProps {
 export default function ImageLightbox({ url, onClose }: ImageLightboxProps) {
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-media-backdrop/80 p-4"
       onClick={onClose}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage */}

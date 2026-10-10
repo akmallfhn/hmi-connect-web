@@ -39,10 +39,10 @@ export default function ConversationListItem({
       className={[
         "flex items-center gap-3 px-4 py-3 transition",
         active
-          ? "bg-[#eef1f5]"
+          ? "bg-surface-muted"
           : unread
             ? "bg-primary-soft/40 hover:bg-primary-soft/60"
-            : "hover:bg-[#f5f7fb]",
+            : "hover:bg-surface-muted",
       ].join(" ")}
     >
       <Avatar
@@ -58,8 +58,8 @@ export default function ConversationListItem({
             className={[
               "min-w-0 truncate text-[15px]",
               unread
-                ? "font-semibold text-[#172033]"
-                : "font-medium text-[#172033]",
+                ? "font-semibold text-heading"
+                : "font-medium text-heading",
             ].join(" ")}
           >
             {conversation.other_full_name}
@@ -67,7 +67,7 @@ export default function ConversationListItem({
           <span
             className={[
               "shrink-0 text-xs",
-              unread ? "font-semibold text-primary" : "text-[#7b8190]",
+              unread ? "font-semibold text-primary-foreground" : "text-subtle-foreground",
             ].join(" ")}
           >
             {formatCompactTime(timestamp)}
@@ -76,7 +76,7 @@ export default function ConversationListItem({
         <p
           className={[
             "mt-0.5 line-clamp-1 break-all text-[13px]",
-            unread ? "font-semibold text-[#172033]" : "text-[#7b8190]",
+            unread ? "font-semibold text-heading" : "text-subtle-foreground",
           ].join(" ")}
         >
           {previewText(conversation, viewerId)}

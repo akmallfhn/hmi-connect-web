@@ -162,21 +162,21 @@ export default function TrainingCreatePage({
         <PageMargin className="py-5 lg:py-8">
           <div className="mx-auto w-full max-w-[720px]">
             <div className="hidden lg:block">
-              <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
+              <h1 className="font-stack-sans-headline text-2xl font-medium text-heading">
                 {isEditing ? "Edit Event Training" : "Buat Event Training"}
               </h1>
             </div>
 
             <form
               onSubmit={handleSubmit}
-              className="flex flex-col gap-4 lg:mt-6 lg:rounded-xl lg:border lg:border-[#e1e5ec] lg:p-6"
+              className="flex flex-col gap-4 lg:mt-6 lg:rounded-xl lg:border lg:border-border lg:p-6"
             >
               <div className="flex flex-col gap-1">
-                <span className="pl-1 text-[15px] font-medium text-[#172033]">
+                <span className="pl-1 text-[15px] font-medium text-heading">
                   Poster Event
                 </span>
                 <div className="flex items-center gap-4">
-                  <div className="aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
+                  <div className="aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
@@ -186,7 +186,7 @@ export default function TrainingCreatePage({
                         className="size-full object-cover"
                       />
                     ) : (
-                      <div className="flex size-full items-center justify-center text-[#5f6573]">
+                      <div className="flex size-full items-center justify-center text-muted-foreground">
                         <ImageOff className="size-5" />
                       </div>
                     )}
@@ -225,7 +225,7 @@ export default function TrainingCreatePage({
                         Hapus Poster
                       </Button>
                     )}
-                    <p className="text-xs text-[#5f6573]">
+                    <p className="text-xs text-muted-foreground">
                       Rasio potret 4:5, maksimal 5MB.
                     </p>
                   </div>
@@ -304,13 +304,13 @@ export default function TrainingCreatePage({
                 onChange={(event) => setLocationUrl(event.target.value)}
               />
 
-              <p className="flex items-start gap-2 rounded-lg bg-[#f5f7fb] p-3 text-sm text-[#5f6573]">
-                <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+              <p className="flex items-start gap-2 rounded-lg bg-surface-muted p-3 text-sm text-muted-foreground">
+                <Info className="mt-0.5 size-4 shrink-0 text-primary-foreground" />
                 Kamu otomatis menjadi contact person event ini, dan pendaftaran
                 langsung dibuka setelah event dibuat.
               </p>
 
-              <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+              <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
                 <Button
                   variant="outline"
                   onClick={() => router.back()}

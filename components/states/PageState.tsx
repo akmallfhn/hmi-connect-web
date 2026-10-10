@@ -41,13 +41,13 @@ export default function PageState({
   } = VARIANT_CONTENT[variant];
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-[#f5f7fb] px-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-surface-muted px-6 text-center">
       <div className="flex w-full max-w-64 overflow-hidden lg:max-w-80">
         <Illustration className="h-full w-full" />
       </div>
       <div className="flex max-w-md flex-col gap-2">
-        <p className="text-2xl font-bold text-[#172033]">{title}</p>
-        <p className="text-base text-[#5f6573] md:text-lg">
+        <p className="text-2xl font-bold text-heading">{title}</p>
+        <p className="text-base text-muted-foreground md:text-lg">
           {message ?? defaultMessage}
         </p>
       </div>

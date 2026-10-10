@@ -33,7 +33,7 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40">
       {desktopFilterBar && (
-        <div className="hidden border-t border-[#e6e9ef] bg-white lg:block">
+        <div className="hidden border-t border-border bg-surface lg:block">
           <PageMargin className="flex items-center gap-4 py-3">
             {desktopFilterBar}
           </PageMargin>
@@ -41,19 +41,19 @@ export default function Header({
       )}
 
       {(mobileBackTitle || mobileMenu) && (
-        <div className="border-y border-[#e6e9ef] bg-white lg:hidden">
+        <div className="border-y border-border bg-surface lg:hidden">
           <PageMargin className="flex h-12 items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
               aria-label="Kembali"
-              className="-ml-2 size-8 shrink-0 rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+              className="-ml-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
             >
               <ArrowLeft className="size-5" />
             </Button>
             {mobileBackTitle ? (
-              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-[#172033]">
+              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-heading">
                 {mobileBackTitle}
               </h1>
             ) : (
@@ -70,7 +70,7 @@ export default function Header({
                     onClick={toggle}
                     aria-label={mobileMenuLabel}
                     aria-expanded={open}
-                    className="-mr-2 size-8 shrink-0 rounded-full text-[#172033] hover:bg-[#f5f7fb]"
+                    className="-mr-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
                   >
                     <EllipsisVertical className="size-5" />
                   </Button>

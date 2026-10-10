@@ -68,13 +68,13 @@ export default function ResetPasswordPage({
 
   return (
     <AuthSplitLayout>
-      <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-[#172033] shadow-none lg:max-w-[420px] lg:px-8">
+      <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-heading shadow-none lg:max-w-[420px] lg:px-8">
         <div className="mx-auto flex w-full flex-col items-center gap-6">
           <LogoHmiConnect className="h-22 w-auto" />
 
           {!valid ? (
             <>
-              <span className="flex size-14 items-center justify-center rounded-full bg-destructive-soft text-destructive">
+              <span className="flex size-14 items-center justify-center rounded-full bg-destructive-soft text-destructive-foreground">
                 <CircleAlert className="size-7" />
               </span>
 
@@ -82,7 +82,7 @@ export default function ResetPasswordPage({
                 <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Tautan Tidak Berlaku
                 </h1>
-                <p className="text-sm leading-6 text-[#5f6573] lg:text-base">
+                <p className="text-sm leading-6 text-muted-foreground lg:text-base">
                   {invalidMessage ??
                     "Tautan reset ini tidak valid, sudah dipakai, atau sudah kedaluwarsa."}{" "}
                   Minta tautan baru untuk melanjutkan.
@@ -97,7 +97,7 @@ export default function ResetPasswordPage({
             </>
           ) : done ? (
             <>
-              <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
                 <ShieldCheck className="size-7" />
               </span>
 
@@ -105,7 +105,7 @@ export default function ResetPasswordPage({
                 <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Password Berhasil Diubah
                 </h1>
-                <p className="text-sm leading-6 text-[#5f6573] lg:text-base">
+                <p className="text-sm leading-6 text-muted-foreground lg:text-base">
                   Semua sesi kamu sudah diakhiri. Masuk kembali dengan password
                   baru.
                 </p>
@@ -123,7 +123,7 @@ export default function ResetPasswordPage({
                 <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Buat Password Baru
                 </h1>
-                <p className="text-sm leading-6 text-[#5f6573] lg:text-base">
+                <p className="text-sm leading-6 text-muted-foreground lg:text-base">
                   Password {PASSWORD_MIN_LENGTH}-{PASSWORD_MAX_LENGTH} karakter.
                   Masukkan dua kali untuk memastikan tidak salah ketik.
                 </p>
@@ -170,7 +170,7 @@ export default function ResetPasswordPage({
               </form>
 
               {errorMessage ? (
-                <p className="text-xs font-semibold text-destructive">
+                <p className="text-xs font-semibold text-destructive-foreground">
                   {errorMessage}
                 </p>
               ) : null}
@@ -180,7 +180,7 @@ export default function ResetPasswordPage({
           {done ? null : (
             <Link
               href="/auth/login"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5f6573] hover:text-primary"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary-foreground"
             >
               <ArrowLeft className="size-4" />
               Kembali ke Login

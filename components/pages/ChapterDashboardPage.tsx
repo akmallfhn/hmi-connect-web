@@ -33,7 +33,7 @@ export default function ChapterDashboardPage({
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
     {
       label: "Pertumbuhan Kader 1 Bulan",
@@ -42,7 +42,7 @@ export default function ChapterDashboardPage({
       ).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%`,
       icon: TrendingUp,
       iconBg: "bg-secondary-soft",
-      iconColor: "text-secondary",
+      iconColor: "text-secondary-foreground",
     },
     {
       label: "Kader Baru 1 Bulan",
@@ -51,7 +51,7 @@ export default function ChapterDashboardPage({
       ),
       icon: UserPlus,
       iconBg: "bg-tertiary/10",
-      iconColor: "text-tertiary",
+      iconColor: "text-heading",
     },
   ];
 
@@ -87,17 +87,17 @@ export default function ChapterDashboardPage({
             {
               name: "Terverifikasi",
               value: verificationCount?.verified_count ?? 0,
-              color: "#1baf7a",
+              color: "var(--chart-success)",
             },
             {
               name: "Dalam Proses Verifikasi",
               value: verificationCount?.pending_count ?? 0,
-              color: "#eda100",
+              color: "var(--chart-warning)",
             },
             {
               name: "Belum Terverifikasi",
               value: verificationCount?.unverified_count ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />

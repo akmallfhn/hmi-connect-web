@@ -18,7 +18,7 @@ export default function VerificationBanner({
   if (verificationStatus === "unverified") {
     return (
       <div className="border-b border-destructive/20 bg-destructive-soft">
-        <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-destructive">
+        <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-destructive-foreground">
           <TriangleAlert className="size-4 shrink-0" />
           <span>Akun kamu belum terverifikasi.</span>
           <Link
@@ -34,8 +34,8 @@ export default function VerificationBanner({
 
   if (verificationStatus === "pending") {
     return (
-      <div className="border-b border-[#ECCF80]/40 bg-[#FFF6E0]">
-        <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-[#8A6300]">
+      <div className="border-b border-warning-soft-border/40 bg-warning-soft-bg">
+        <PageMargin className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 py-2 text-center text-sm font-medium text-warning-soft-fg">
           <TriangleAlert className="size-4 shrink-0" />
           <span>Verifikasi akun kamu sedang ditinjau admin.</span>
         </PageMargin>

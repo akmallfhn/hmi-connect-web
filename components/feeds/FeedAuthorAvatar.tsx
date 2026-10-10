@@ -38,7 +38,7 @@ export default function FeedAuthorAvatar({
     >
       <span
         style={{ width: size, height: size }}
-        className="flex items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#f5f7fb] ring-2 ring-primary"
+        className="flex items-center justify-center overflow-hidden rounded-full border-2 border-on-dark bg-surface-muted ring-2 ring-primary"
       >
         {author.avatar ? (
           <Image
@@ -62,7 +62,7 @@ export default function FeedAuthorAvatar({
           height: badgeSize,
           borderWidth: badgeBorder,
         }}
-        className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full border-white bg-primary text-white"
+        className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full border-on-dark bg-badge-primary text-badge-foreground"
       >
         <Check
           style={{ width: badgeSize * 0.6, height: badgeSize * 0.6 }}

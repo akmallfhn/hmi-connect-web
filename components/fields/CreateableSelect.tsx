@@ -29,7 +29,7 @@ function MenuListWithLoader(props: MenuListProps<SearchableOption, false>) {
     <SelectComponents.MenuList {...props}>
       {props.children}
       {isLoadingMore && (
-        <div className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-[#5f6573]">
+        <div className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Memuat...
         </div>
@@ -145,17 +145,17 @@ export default function CreateableSelect({
       {label && (
         <label
           htmlFor={selectId}
-          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
+          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading"
         >
           {label}
-          {required && <span className="text-destructive">*</span>}
+          {required && <span className="text-destructive-foreground">*</span>}
         </label>
       )}
 
       <IsLoadingMoreContext.Provider value={isLoadingMore}>
         <div className="relative">
           {icon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-[#5f6573]">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-muted-foreground">
               {icon}
             </div>
           )}
@@ -198,7 +198,7 @@ export default function CreateableSelect({
             ) => {
               if (option.__isNew__) {
                 return (
-                  <span className="flex items-center gap-2 text-primary">
+                  <span className="flex items-center gap-2 text-primary-foreground">
                     <Plus className="size-4" />
                     {option.label}
                   </span>
@@ -207,7 +207,7 @@ export default function CreateableSelect({
 
               return (
                 <div className="flex items-center gap-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+                  <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted">
                     {option.image ? (
                       <Image
                         className="h-full w-full object-cover"
@@ -217,7 +217,7 @@ export default function CreateableSelect({
                         height={24}
                       />
                     ) : (
-                      <University className="size-3.5 text-[#5f6573]" />
+                      <University className="size-3.5 text-muted-foreground" />
                     )}
                   </span>
                   <span className="truncate">{option.label}</span>
@@ -228,31 +228,31 @@ export default function CreateableSelect({
             unstyled
             classNames={{
               control: ({ isFocused }) =>
-                `cursor-pointer rounded-lg border bg-white px-2 py-1 text-base transition ${
+                `cursor-pointer rounded-lg border bg-surface px-2 py-1 text-base transition ${
                   isFocused
                     ? "border-primary ring-2 ring-primary/15"
-                    : "border-[#dbe3ef]"
+                    : "border-border-strong"
                 } ${icon ? "pl-7" : ""}`,
               valueContainer: () => "cursor-pointer px-1 py-0.5",
               placeholder: () =>
-                "cursor-pointer px-1 text-base text-[#5f6573]/60",
-              input: () => "cursor-pointer px-1 text-base text-[#172033]",
+                "cursor-pointer px-1 text-base text-placeholder",
+              input: () => "cursor-pointer px-1 text-base text-heading",
               singleValue: () =>
-                "cursor-pointer px-1 text-base text-[#172033]",
-              indicatorsContainer: () => "cursor-pointer text-[#5f6573]",
+                "cursor-pointer px-1 text-base text-heading",
+              indicatorsContainer: () => "cursor-pointer text-muted-foreground",
               indicatorSeparator: () => "hidden",
               dropdownIndicator: () => "cursor-pointer px-1",
-              clearIndicator: () => "cursor-pointer px-1 hover:text-destructive",
+              clearIndicator: () => "cursor-pointer px-1 hover:text-destructive-foreground",
               menuPortal: () => "z-[110]",
               menu: () =>
-                "z-30 mt-1 overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md",
+                "z-30 mt-1 overflow-hidden rounded-lg border border-border-strong bg-surface shadow-md",
               menuList: () => "max-h-40 overflow-y-auto p-1",
               option: ({ isFocused }) =>
                 `cursor-pointer rounded-md px-3 py-2 text-base ${
-                  isFocused ? "bg-primary-soft text-primary" : "text-[#172033]"
+                  isFocused ? "bg-primary-soft text-primary-foreground" : "text-heading"
                 }`,
-              noOptionsMessage: () => "p-2 text-sm text-[#5f6573]",
-              loadingMessage: () => "p-2 text-sm text-[#5f6573]",
+              noOptionsMessage: () => "p-2 text-sm text-muted-foreground",
+              loadingMessage: () => "p-2 text-sm text-muted-foreground",
             }}
           />
         </div>

@@ -114,7 +114,7 @@ function PhotoGrid({
       <button
         type="button"
         onClick={() => onPreview(photos[0])}
-        className="relative mt-3 aspect-video w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f7fb]"
+        className="relative mt-3 aspect-video w-full cursor-zoom-in overflow-hidden rounded-xl bg-surface-muted"
         aria-label="Buka pratinjau gambar"
       >
         <Image
@@ -162,7 +162,7 @@ function ScrollablePhoto({
       type="button"
       onClick={() => onPreview(photo)}
       style={{ aspectRatio }}
-      className="relative h-full shrink-0 snap-start overflow-hidden rounded-xl bg-[#f5f7fb]"
+      className="relative h-full shrink-0 snap-start overflow-hidden rounded-xl bg-surface-muted"
       aria-label={`Buka pratinjau gambar ${index + 1} dari ${total}`}
     >
       <Image
@@ -287,7 +287,7 @@ function ImagePreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[80] bg-black/90"
+      className="fixed inset-0 z-[80] bg-media-backdrop/90"
       role="dialog"
       aria-modal="true"
       aria-label="Pratinjau gambar"
@@ -319,7 +319,7 @@ function ImagePreviewModal({
           <button
             type="button"
             onClick={() => movePhoto(-1)}
-            className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:left-6 sm:size-11"
+            className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-backdrop/45 text-on-dark backdrop-blur-sm transition hover:bg-on-dark/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:left-6 sm:size-11"
             aria-label="Gambar sebelumnya"
           >
             <ChevronLeft className="size-6" />
@@ -327,12 +327,12 @@ function ImagePreviewModal({
           <button
             type="button"
             onClick={() => movePhoto(1)}
-            className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:right-6 sm:size-11"
+            className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-backdrop/45 text-on-dark backdrop-blur-sm transition hover:bg-on-dark/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:right-6 sm:size-11"
             aria-label="Gambar berikutnya"
           >
             <ChevronRight className="size-6" />
           </button>
-          <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+          <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-media-backdrop/45 px-3 py-1 text-xs font-medium text-on-dark backdrop-blur-sm">
             {currentIndex + 1} / {orderedPhotos.length}
           </p>
         </>
@@ -340,7 +340,7 @@ function ImagePreviewModal({
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+        className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-on-dark/10 text-on-dark transition hover:bg-on-dark/20"
         aria-label="Tutup"
       >
         <X className="size-5" />
@@ -542,10 +542,10 @@ export default function FeedItemCard({
 
   return (
     <article className={surface === "flat"
-      ? "border-b border-[#e6e9ef] bg-white py-5"
-      : "border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x"}>
+      ? "border-b border-border bg-surface py-5"
+      : "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x"}>
       {repostedBy && (
-        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-[#5f6573] xl:text-[13px]">
+        <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground xl:text-[13px]">
           <IconRepeat className="size-3.5" />
           <Avatar
             src={repostedBy.avatar}
@@ -568,8 +568,8 @@ export default function FeedItemCard({
             <FeedAuthorAvatar author={author} size={surface === "flat" ? 36 : 44} />
           </span>
           <div className="min-w-0">
-            <p className={`font-semibold text-[#172033] ${surface === "flat" ? "text-sm" : ""}`}>{author.name}</p>
-            <p className={`text-xs text-[#5f6573] ${surface === "flat" ? "" : "xl:text-[13px]"}`}>
+            <p className={`font-semibold text-heading ${surface === "flat" ? "text-sm" : ""}`}>{author.name}</p>
+            <p className={`text-xs text-muted-foreground ${surface === "flat" ? "" : "xl:text-[13px]"}`}>
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
             </p>
@@ -583,7 +583,7 @@ export default function FeedItemCard({
                 variant="ghost"
                 size="icon"
                 onClick={toggle}
-                className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+                className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
                 aria-label="Opsi lainnya"
               >
                 <MoreHorizontal className="size-4" />
@@ -594,9 +594,9 @@ export default function FeedItemCard({
               {showViewPostAction && (
                 <Link
                   href={actingHref(`/feeds/${feed.id}`)}
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
                 >
-                  <Eye className="size-4 text-[#5f6573]" />
+                  <Eye className="size-4 text-muted-foreground" />
                   Lihat post
                 </Link>
               )}
@@ -605,15 +605,15 @@ export default function FeedItemCard({
                   <button
                     type="button"
                     onClick={() => setShowEditForm(true)}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
                   >
-                    <Pencil className="size-4 text-[#5f6573]" />
+                    <Pencil className="size-4 text-muted-foreground" />
                     Edit post
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft xl:text-[15px]"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft xl:text-[15px]"
                   >
                     <Trash2 className="size-4" />
                     Delete post
@@ -625,7 +625,7 @@ export default function FeedItemCard({
         )}
       </div>
 
-      <p className={`mt-3 whitespace-pre-line break-words text-[#172033] ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
+      <p className={`mt-3 whitespace-pre-line break-words text-content-foreground ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
         {content}
       </p>
 
@@ -643,7 +643,7 @@ export default function FeedItemCard({
           // Feeds posted before the YouTube-only composer still carry an uploaded file.
           <AutoplayVideo
             src={videoAttachment.reference_url}
-            className="mt-3 w-full rounded-xl bg-black"
+            className="mt-3 w-full rounded-xl bg-media-backdrop"
           />
         ))}
       {urlAttachment && <LinkPreviewCard url={urlAttachment.reference_url} />}
@@ -667,7 +667,7 @@ export default function FeedItemCard({
         <button
           type="button"
           onClick={() => setShowReactorsModal(true)}
-          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-[#5f6573] xl:text-[13px]"
+          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-muted-foreground xl:text-[13px]"
         >
           <span className="flex items-center -space-x-1">
             {(reaction.reactionEmojis.length > 0
@@ -676,7 +676,7 @@ export default function FeedItemCard({
             ).map((emoji, index) => (
               <span
                 key={`${emoji}-${index}`}
-                className="flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none ring-1 ring-white"
+                className="flex size-4 items-center justify-center rounded-full bg-surface text-[10px] leading-none ring-1 ring-on-dark"
               >
                 {emoji}
               </span>
@@ -686,14 +686,14 @@ export default function FeedItemCard({
         </button>
       )}
 
-      <div className="mt-3 grid grid-cols-4 gap-1 border-t border-[#e6e9ef] pt-2">
+      <div className="mt-3 grid grid-cols-4 gap-1 border-t border-border pt-2">
         <div className="relative">
           <Button
             variant="ghost"
             onClick={handleReactionButtonClick}
             disabled={reaction.reacting}
-            className={`w-full gap-1.5 rounded-lg py-2 hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
-              reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
+            className={`w-full gap-1.5 rounded-lg py-2 hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
+              reaction.activeReaction ? "text-secondary-foreground" : "text-muted-foreground"
             }`}
           >
             {reaction.activeReactionInfo ? (
@@ -717,7 +717,7 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={handleToggleComments}
-          className={`gap-1.5 rounded-lg py-2 text-[#5f6573] hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
+          className={`gap-1.5 rounded-lg py-2 text-muted-foreground hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
         >
           <IconMessageCircle className="size-4" />
           {totalCommentCount > 0 && totalCommentCount}
@@ -729,8 +729,8 @@ export default function FeedItemCard({
               variant="ghost"
               onClick={toggle}
               disabled={reposting}
-              className={`w-full rounded-lg py-2 hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
-                reposted ? "text-secondary" : "text-[#5f6573]"
+              className={`w-full rounded-lg py-2 hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
+                reposted ? "text-secondary-foreground" : "text-muted-foreground"
               }`}
             >
               <IconRepeat className="size-4" />
@@ -747,17 +747,17 @@ export default function FeedItemCard({
                   ? "Tidak bisa me-repost postingan sendiri"
                   : undefined
               }
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#c3c7d1] xl:text-[15px]"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-disabled-foreground xl:text-[15px]"
             >
-              <IconRepeat className="size-4 text-[#5f6573]" />
+              <IconRepeat className="size-4 text-muted-foreground" />
               {reposted ? "Batalkan Repost" : "Repost"}
             </button>
             <button
               type="button"
               onClick={handleQuoteRepost}
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb] xl:text-[15px]"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
             >
-              <Quote className="size-4 text-[#5f6573]" />
+              <Quote className="size-4 text-muted-foreground" />
               Quote Repost
             </button>
           </div>
@@ -765,14 +765,14 @@ export default function FeedItemCard({
         <Button
           variant="ghost"
           onClick={() => setShowShareModal(true)}
-          className={`rounded-lg py-2 text-[#5f6573] hover:bg-[#f5f7fb] ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
+          className={`rounded-lg py-2 text-muted-foreground hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
         >
           <IconShare className="size-4" />
         </Button>
       </div>
 
       {!showComments && feed.top_comment && !topCommentDeleted && (
-        <div className="mt-3 border-t border-[#e6e9ef] pt-3">
+        <div className="mt-3 border-t border-border pt-3">
           <CommentItem
             comment={feed.top_comment}
             userStatus={userStatus}
@@ -787,7 +787,7 @@ export default function FeedItemCard({
             <button
               type="button"
               onClick={handleToggleComments}
-              className="mt-2 pl-3 text-xs font-semibold text-[#5f6573] hover:underline xl:text-[13px]"
+              className="mt-2 pl-3 text-xs font-semibold text-muted-foreground hover:underline xl:text-[13px]"
             >
               Lihat {commentCount - 1} komentar lainnya
             </button>
@@ -796,14 +796,14 @@ export default function FeedItemCard({
       )}
 
       {showComments && (
-        <div className="mt-3 flex flex-col gap-3 border-t border-[#e6e9ef] pt-3">
+        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
           {loadingComments && (
-            <p className="text-xs text-[#5f6573] xl:text-[13px]">
+            <p className="text-xs text-muted-foreground xl:text-[13px]">
               Memuat komentar...
             </p>
           )}
           {!loadingComments && commentsLoaded && comments.length === 0 && (
-            <p className="py-4 text-center text-[13px] text-[#5f6573] xl:text-sm">
+            <p className="py-4 text-center text-[13px] text-muted-foreground xl:text-sm">
               Jadilah yang pertama berkomentar!
             </p>
           )}
@@ -832,10 +832,10 @@ export default function FeedItemCard({
               disabled={postingComment}
             />
           ) : (
-            <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-[#f8fafc] px-4 py-3 text-sm text-[#5f6573] xl:text-[15px]">
+            <div className="rounded-xl border border-dashed border-border-strong bg-surface-subtle px-4 py-3 text-sm text-muted-foreground xl:text-[15px]">
               <Link
                 href="/auth/login"
-                className="font-semibold text-primary hover:underline"
+                className="font-semibold text-primary-foreground hover:underline"
               >
                 Login
               </Link>{" "}
@@ -904,7 +904,7 @@ export default function FeedItemCard({
 // A quote repost keeps its own words after the quoted feed is deleted — say so rather than showing an empty card.
 function DeletedQuotedFeed() {
   return (
-    <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-3 py-4 text-sm text-[#5f6573]">
+    <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-border bg-surface-subtle px-3 py-4 text-sm text-muted-foreground">
       <Ban className="size-4 shrink-0" />
       Postingan yang dibagikan sudah dihapus.
     </div>

@@ -28,13 +28,13 @@ export default function ConversationList({ viewerId, activeConversationId }: Con
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-[#e6e9ef] px-4 py-3.5 lg:h-[72px] lg:py-0">
-        <h1 className="text-lg font-bold text-[#172033]">Pesan</h1>
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3.5 lg:h-[72px] lg:py-0">
+        <h1 className="text-lg font-bold text-heading">Pesan</h1>
         <button
           type="button"
           onClick={() => setComposeOpen(true)}
           aria-label="Pesan baru"
-          className="flex size-9 cursor-pointer items-center justify-center rounded-full text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex size-9 cursor-pointer items-center justify-center rounded-full text-heading transition hover:bg-surface-muted"
         >
           <SquarePen className="size-5" />
         </button>
@@ -43,13 +43,13 @@ export default function ConversationList({ viewerId, activeConversationId }: Con
       <div className="shrink-0 px-4 py-3">
         <label className="relative block">
           <span className="sr-only">Cari pesan</span>
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Cari"
-            className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+            className="h-10 w-full rounded-full border border-border-strong bg-surface-muted pl-10 pr-4 text-sm text-heading outline-none transition placeholder:text-subtle-foreground focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
           />
         </label>
       </div>
@@ -58,7 +58,7 @@ export default function ConversationList({ viewerId, activeConversationId }: Con
         {loading ? (
           <ConversationListSkeleton />
         ) : filtered.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-[#7b8190]">
+          <p className="px-4 py-10 text-center text-sm text-subtle-foreground">
             {query ? "Tidak ada percakapan yang cocok." : "Belum ada percakapan."}
           </p>
         ) : (
@@ -76,7 +76,7 @@ export default function ConversationList({ viewerId, activeConversationId }: Con
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="flex w-full cursor-pointer items-center justify-center py-4 text-sm font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:text-[#9aa1ad]"
+                className="flex w-full cursor-pointer items-center justify-center py-4 text-sm font-medium text-primary-foreground hover:underline disabled:cursor-not-allowed disabled:text-subtle-foreground"
               >
                 {loadingMore ? "Memuat..." : "Muat lebih banyak"}
               </button>

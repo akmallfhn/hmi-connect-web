@@ -81,7 +81,7 @@ export default function ChatNewThreadPage({
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
         <EmptyStateIllustration className="h-auto w-52" aria-hidden="true" />
-        <p className="text-[15px] text-[#7b8190]">
+        <p className="text-[15px] text-subtle-foreground">
           Pilih orang yang ingin dikirimi pesan dulu.
         </p>
         <Button
@@ -106,7 +106,7 @@ export default function ChatNewThreadPage({
       {messages.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
           <SendMessageIllustration className="w-52 max-w-full" />
-          <p className="text-[15px] text-[#7b8190]">
+          <p className="text-[15px] text-subtle-foreground">
             Mulai percakapan dengan mengirim pesan pertama.
           </p>
         </div>

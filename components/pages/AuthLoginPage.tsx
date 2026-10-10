@@ -101,7 +101,7 @@ function LoginAction() {
   }
 
   return (
-    <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-[#172033] shadow-none lg:max-w-[420px] lg:px-8">
+    <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-heading shadow-none lg:max-w-[420px] lg:px-8">
       <div className="login-component mx-auto flex w-full flex-col items-center gap-6">
         <LogoHmiConnect className="h-22 w-auto" />
 
@@ -109,13 +109,13 @@ function LoginAction() {
           <h1 className="login-title text-2xl font-bold tracking-tight lg:text-3xl">
             Welcome Back, Kanda!
           </h1>
-          <p className="login-tagline text-sm leading-6 text-[#5f6573] lg:text-lg">
+          <p className="login-tagline text-sm leading-6 text-muted-foreground lg:text-lg">
             Login untuk lanjut mengelola koneksi, agenda, dan aktivitas HMI.
           </p>
         </div>
 
         <div className="login-action flex w-full flex-col gap-3">
-          <p className="text-[13px] font-medium text-[#5f6573] lg:text-base">
+          <p className="text-[13px] font-medium text-muted-foreground lg:text-base">
             Continue securely with
           </p>
 
@@ -140,9 +140,9 @@ function LoginAction() {
         </div>
 
         <div className="flex w-full items-center gap-3">
-          <span className="h-px flex-1 bg-[#e6e9ef]" />
-          <span className="text-[13px] font-medium text-[#7b8190]">atau</span>
-          <span className="h-px flex-1 bg-[#e6e9ef]" />
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-[13px] font-medium text-subtle-foreground">atau</span>
+          <span className="h-px flex-1 bg-border" />
         </div>
 
         <form
@@ -174,7 +174,7 @@ function LoginAction() {
 
           <Link
             href="/auth/forget-password"
-            className="self-end text-sm font-semibold text-primary hover:underline"
+            className="self-end text-sm font-semibold text-primary-foreground hover:underline"
           >
             Lupa password?
           </Link>
@@ -192,12 +192,12 @@ function LoginAction() {
         </form>
 
         {errorMessage ? (
-          <p className="text-xs font-semibold text-destructive">
+          <p className="text-xs font-semibold text-destructive-foreground">
             {errorMessage}
           </p>
         ) : null}
 
-        <p className="text-[13px] leading-5 text-[#7b8190] lg:text-sm">
+        <p className="text-[13px] leading-5 text-subtle-foreground lg:text-sm">
           By logging in, you agree to HMI Connect privacy and usage terms.
         </p>
       </div>

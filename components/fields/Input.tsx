@@ -53,10 +53,10 @@ export default function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
+          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading"
         >
           {label}
-          {required && <span className="text-destructive">*</span>}
+          {required && <span className="text-destructive-foreground">*</span>}
         </label>
       )}
 
@@ -64,7 +64,7 @@ export default function Input({
         {icon && (
           <div
             className={`pointer-events-none absolute left-0 flex h-full items-center pl-3 ${
-              disabled ? "text-[#9aa0ab]" : "text-[#5f6573]"
+              disabled ? "text-disabled-foreground" : "text-muted-foreground"
             }`}
           >
             {icon}
@@ -79,13 +79,13 @@ export default function Input({
           {...rest}
           onChange={handleChange}
           className={[
-            "w-full rounded-lg border px-3 py-2 text-base text-[#172033] transition placeholder:text-[#5f6573]/60 focus:outline-none focus:ring-2",
+            "w-full rounded-lg border px-3 py-2 text-base text-heading transition placeholder:text-placeholder focus:outline-none focus:ring-2",
             computedError
               ? "border-destructive focus:ring-destructive/20"
-              : "border-[#dbe3ef] focus:border-primary focus:ring-primary/15",
+              : "border-border-strong focus:border-primary focus:ring-primary/15",
             disabled
-              ? "cursor-not-allowed disabled:border-[#e0e3e8] disabled:bg-[#f3f4f6] disabled:text-[#8a909d] disabled:opacity-100 disabled:[-webkit-text-fill-color:#8a909d]"
-              : "bg-white",
+              ? "cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-disabled-foreground disabled:opacity-100 disabled:[-webkit-text-fill-color:var(--disabled-foreground)]"
+              : "bg-surface",
             icon ? "pl-10" : "",
             trailing ? "pr-10" : "",
             className,
@@ -100,7 +100,7 @@ export default function Input({
         )}
       </div>
 
-      {computedError && <p className="text-xs text-destructive">{computedError}</p>}
+      {computedError && <p className="text-xs text-destructive-foreground">{computedError}</p>}
     </div>
   );
 }

@@ -62,7 +62,7 @@ export default function Pagination({
         <span className="hidden sm:inline">Sebelumnya</span>
       </Button>
 
-      <span className="px-2 text-sm font-medium text-[#172033] sm:hidden">
+      <span className="px-2 text-sm font-medium text-heading sm:hidden">
         {currentPage} / {totalPages}
       </span>
       <div className="hidden items-center gap-1.5 sm:flex">
@@ -70,7 +70,7 @@ export default function Pagination({
           page === "ellipsis" ? (
             <span
               key={`ellipsis-${index}`}
-              className="px-1 text-sm text-[#5f6573]"
+              className="px-1 text-sm text-muted-foreground"
             >
               …
             </span>

@@ -5,7 +5,7 @@ import { ActivityListSkeleton } from "@/components/states/Skeleton";
 
 export default function SearchLoading() {
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header loading />
 
       <PageMargin noMobilePadding className="animate-pulse pb-6 lg:pt-6">

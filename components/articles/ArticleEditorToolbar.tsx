@@ -44,7 +44,7 @@ function ToolbarButton({
       className={`flex size-10 shrink-0 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-30 sm:size-9 ${
         active
           ? "bg-primary-soft text-primary-foreground"
-          : "text-[#454b57] hover:bg-[#f3f5f7] hover:text-[#172033]"
+          : "text-foreground hover:bg-surface-muted hover:text-heading"
       }`}
     >
       {children}
@@ -56,7 +56,7 @@ function Divider() {
   return (
     <span
       aria-hidden="true"
-      className="mx-0.5 h-7 w-px shrink-0 bg-[#e6e9ef] sm:mx-1"
+      className="mx-0.5 h-7 w-px shrink-0 bg-border sm:mx-1"
     />
   );
 }
@@ -123,9 +123,9 @@ export default function ArticleEditorToolbar({
           : "paragraph";
 
   return (
-    <div className="sticky top-16 z-30 border-b border-[#e6e9ef] bg-white/95 backdrop-blur-md">
+    <div className="sticky top-16 z-30 border-b border-border bg-surface/95 backdrop-blur-md">
       {/* The right fade is the only cue that the row scrolls, since its scrollbar is hidden. */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-surface to-transparent sm:hidden" />
       <div className="mx-auto flex h-14 max-w-[900px] items-center overflow-x-auto px-3 [scrollbar-width:none] sm:px-8 [&::-webkit-scrollbar]:hidden">
         <ToolbarButton
           label="Urungkan"
@@ -151,7 +151,7 @@ export default function ArticleEditorToolbar({
             value={currentBlock}
             disabled={!editor}
             onChange={(event) => setBlockStyle(event.target.value)}
-            className="h-10 cursor-pointer appearance-none rounded-lg bg-transparent py-0 pl-2 pr-7 text-[13px] font-medium text-[#343a46] outline-none hover:bg-[#f3f5f7] focus:ring-2 focus:ring-primary/30 sm:h-9 sm:pl-3 sm:pr-8 sm:text-sm"
+            className="h-10 cursor-pointer appearance-none rounded-lg bg-transparent py-0 pl-2 pr-7 text-[13px] font-medium text-foreground outline-none hover:bg-surface-muted focus:ring-2 focus:ring-primary/30 sm:h-9 sm:pl-3 sm:pr-8 sm:text-sm"
           >
             <option value="paragraph">Paragraf</option>
             <option value="h1">Heading 1</option>
@@ -159,7 +159,7 @@ export default function ArticleEditorToolbar({
             <option value="h3">Heading 3</option>
             <option value="h4">Heading 4</option>
           </select>
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#7b8190] sm:right-3">
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-subtle-foreground sm:right-3">
             ▼
           </span>
         </label>

@@ -8,8 +8,8 @@ interface Datum {
   color: string;
 }
 
-const PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
-const OTHERS_COLOR = "#c3c2b7";
+const PALETTE = ["var(--chart-blue)", "var(--chart-orange)", "var(--chart-success)", "var(--chart-warning)", "var(--chart-pink)"];
+const OTHERS_COLOR = "var(--chart-neutral)";
 
 interface CabangDistributionDonutProps {
   entries: { name: string; value: number }[];
@@ -30,11 +30,11 @@ function DonutTooltip({ active, payload, total }: DonutTooltipProps) {
   const datum = payload[0].payload;
   const percent = total > 0 ? ((datum.value / total) * 100).toFixed(1) : "0";
   return (
-    <div className="rounded-lg border border-[#e6e9ef] bg-white px-3 py-2 shadow-lg">
-      <p className="text-sm font-semibold text-[#172033]">
+    <div className="rounded-lg border border-border bg-surface px-3 py-2 shadow-lg">
+      <p className="text-sm font-semibold text-heading">
         {datum.value.toLocaleString("id-ID")} kader
       </p>
-      <p className="text-xs text-[#5f6573]">
+      <p className="text-xs text-muted-foreground">
         {datum.name} · {percent}%
       </p>
     </div>
@@ -62,12 +62,12 @@ export default function CabangDistributionDonut({
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-base font-bold text-[#172033]">{title}</p>
-      <p className="text-sm text-[#5f6573]">{subtitle}</p>
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <p className="text-base font-bold text-heading">{title}</p>
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
 
       {data.length === 0 ? (
-        <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>
+        <p className="mt-6 text-sm text-muted-foreground">Belum ada data.</p>
       ) : (
         <div className="mt-4 flex flex-col items-center gap-6 sm:flex-row">
           <div className="relative h-52 w-52 shrink-0">
@@ -81,7 +81,7 @@ export default function CabangDistributionDonut({
                   outerRadius="100%"
                   paddingAngle={2}
                   strokeWidth={2}
-                  stroke="#ffffff"
+                  stroke="var(--surface)"
                   isAnimationActive={false}
                 >
                   {data.map((d) => (
@@ -92,10 +92,10 @@ export default function CabangDistributionDonut({
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-xl font-bold text-[#172033]">
+              <p className="text-xl font-bold text-heading">
                 {total.toLocaleString("id-ID")}
               </p>
-              <p className="text-xs text-[#5f6573]">Total Kader</p>
+              <p className="text-xs text-muted-foreground">Total Kader</p>
             </div>
           </div>
 
@@ -106,8 +106,8 @@ export default function CabangDistributionDonut({
                   className="size-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: d.color }}
                 />
-                <span className="min-w-0 flex-1 truncate text-[#172033]">{d.name}</span>
-                <span className="shrink-0 font-semibold text-[#172033]">
+                <span className="min-w-0 flex-1 truncate text-heading">{d.name}</span>
+                <span className="shrink-0 font-semibold text-heading">
                   {total > 0 ? ((d.value / total) * 100).toFixed(1) : "0"}%
                 </span>
               </div>

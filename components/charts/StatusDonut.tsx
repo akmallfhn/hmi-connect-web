@@ -26,11 +26,11 @@ function DonutTooltip({ active, payload, total }: DonutTooltipProps) {
   const datum = payload[0].payload;
   const percent = total > 0 ? ((datum.value / total) * 100).toFixed(1) : "0";
   return (
-    <div className="rounded-lg border border-[#e6e9ef] bg-white px-3 py-2 shadow-lg">
-      <p className="text-sm font-semibold text-[#172033]">
+    <div className="rounded-lg border border-border bg-surface px-3 py-2 shadow-lg">
+      <p className="text-sm font-semibold text-heading">
         {datum.value.toLocaleString("id-ID")}
       </p>
-      <p className="text-xs text-[#5f6573]">
+      <p className="text-xs text-muted-foreground">
         {datum.name} · {percent}%
       </p>
     </div>
@@ -47,12 +47,12 @@ export default function StatusDonut({
   const leadPercent = total > 0 ? ((segments[0]?.value ?? 0) / total) * 100 : 0;
 
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
-      <p className="text-base font-bold text-[#172033]">{title}</p>
-      <p className="text-sm text-[#5f6573]">{subtitle}</p>
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <p className="text-base font-bold text-heading">{title}</p>
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
 
       {total === 0 ? (
-        <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>
+        <p className="mt-6 text-sm text-muted-foreground">Belum ada data.</p>
       ) : (
         <div className="mt-4 flex items-center gap-6">
           <div className="relative h-36 w-36 shrink-0">
@@ -66,7 +66,7 @@ export default function StatusDonut({
                   outerRadius="100%"
                   paddingAngle={3}
                   strokeWidth={2}
-                  stroke="#ffffff"
+                  stroke="var(--surface)"
                   isAnimationActive={false}
                 >
                   {segments.map((s) => (
@@ -77,10 +77,10 @@ export default function StatusDonut({
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-lg font-bold text-[#172033]">
+              <p className="text-lg font-bold text-heading">
                 {leadPercent.toFixed(0)}%
               </p>
-              <p className="text-[10px] text-[#5f6573]">{centerLabel}</p>
+              <p className="text-[10px] text-muted-foreground">{centerLabel}</p>
             </div>
           </div>
 
@@ -91,8 +91,8 @@ export default function StatusDonut({
                   className="size-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: s.color }}
                 />
-                <span className="flex-1 text-[#172033]">{s.name}</span>
-                <span className="font-semibold text-[#172033]">
+                <span className="flex-1 text-heading">{s.name}</span>
+                <span className="font-semibold text-heading">
                   {s.value.toLocaleString("id-ID")}
                 </span>
               </div>

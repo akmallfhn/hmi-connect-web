@@ -6,11 +6,11 @@
 // prop there so it shows a neutral placeholder instead of assuming a logged-out user.
 
 export function Bar({ className }: { className: string }) {
-  return <div className={`rounded-full bg-[#e6e9ef] ${className}`} />;
+  return <div className={`rounded-full bg-border ${className}`} />;
 }
 
 export function Circle({ className }: { className: string }) {
-  return <div className={`shrink-0 rounded-full bg-[#e6e9ef] ${className}`} />;
+  return <div className={`shrink-0 rounded-full bg-border ${className}`} />;
 }
 
 export function CardSkeleton({
@@ -21,7 +21,7 @@ export function CardSkeleton({
   titleWidth?: string;
 }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface-muted p-4 lg:rounded-2xl lg:border-x">
       <Bar className={`h-3.5 ${titleWidth}`} />
       <div className="mt-3 flex flex-col gap-3">
         {Array.from({ length: rows }).map((_, index) => (
@@ -40,10 +40,10 @@ export function CardSkeleton({
 
 export function SidebarMenuSkeleton() {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-2">
+    <div className="flex flex-col gap-1 rounded-2xl border border-border bg-surface-muted p-2">
       {Array.from({ length: 4 }).map((_, index) => (
         <div key={index} className="flex items-center gap-2.5 px-2 py-1.5">
-          <div className="size-11 shrink-0 rounded-xl bg-[#e6e9ef]" />
+          <div className="size-11 shrink-0 rounded-xl bg-border" />
           <Bar className="h-3.5 w-16" />
         </div>
       ))}
@@ -53,7 +53,7 @@ export function SidebarMenuSkeleton() {
 
 export function ProfileMiniCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface-muted p-5 shadow-sm">
       <div className="flex flex-col items-center gap-3 text-center">
         <Circle className="size-[72px]" />
         <div className="flex flex-col items-center gap-2">
@@ -62,7 +62,7 @@ export function ProfileMiniCardSkeleton() {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 divide-x divide-[#e6e9ef] border-y border-[#e6e9ef] py-3">
+      <div className="mt-5 grid grid-cols-3 divide-x divide-divider border-y border-border py-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="flex flex-col items-center gap-1.5">
             <Bar className="h-4 w-6" />
@@ -96,7 +96,7 @@ export function SectionCardSkeleton({
   rows?: number;
 }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface-muted p-5 lg:rounded-2xl lg:border-x">
       <Bar className={`h-3.5 ${titleWidth}`} />
       <div className="mt-4 flex flex-col gap-4">
         {Array.from({ length: rows }).map((_, index) => (
@@ -115,7 +115,7 @@ export function SectionCardSkeleton({
 
 export function FeedItemSkeleton() {
   return (
-    <article className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
+    <article className="border border-x-0 border-border bg-surface-muted p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-start gap-3">
         <Circle className="size-11" />
         <div className="flex flex-1 flex-col gap-2 pt-0.5">
@@ -130,7 +130,7 @@ export function FeedItemSkeleton() {
         <Bar className="h-3 w-2/3" />
       </div>
 
-      <div className="mt-4 grid grid-cols-4 gap-1 border-t border-[#e6e9ef] pt-3">
+      <div className="mt-4 grid grid-cols-4 gap-1 border-t border-border pt-3">
         {Array.from({ length: 4 }).map((_, index) => (
           <div key={index} className="flex items-center justify-center py-1.5">
             <Bar className="h-4 w-4" />
@@ -143,12 +143,12 @@ export function FeedItemSkeleton() {
 
 export function ComposerSkeleton() {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-4 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface-muted p-4 lg:rounded-2xl lg:border-x">
       <div className="flex items-center gap-3">
         <Circle className="size-11" />
-        <div className="h-10 flex-1 rounded-full bg-[#e6e9ef]" />
+        <div className="h-10 flex-1 rounded-full bg-border" />
       </div>
-      <div className="mt-3 flex items-center justify-around border-t border-[#e6e9ef] pt-3">
+      <div className="mt-3 flex items-center justify-around border-t border-border pt-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <Bar key={index} className="h-4 w-16" />
         ))}
@@ -162,7 +162,7 @@ export function CategoryPillsSkeleton() {
   return (
     <>
       {widths.map((width, index) => (
-        <div key={index} className={`h-7 shrink-0 rounded-full bg-[#e6e9ef] ${width}`} />
+        <div key={index} className={`h-7 shrink-0 rounded-full bg-border ${width}`} />
       ))}
     </>
   );
@@ -171,7 +171,7 @@ export function CategoryPillsSkeleton() {
 export function ArticleCardSkeleton() {
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="aspect-video w-full rounded-xl bg-[#e6e9ef]" />
+      <div className="aspect-video w-full rounded-xl bg-border" />
       <Bar className="h-3.5 w-full" />
       <Bar className="h-3.5 w-2/3" />
       <Bar className="h-2.5 w-1/3" />
@@ -182,7 +182,7 @@ export function ArticleCardSkeleton() {
 export function ArticleRowSkeleton() {
   return (
     <div className="flex items-center gap-3 py-4">
-      <div className="size-16 shrink-0 rounded-lg bg-[#e6e9ef]" />
+      <div className="size-16 shrink-0 rounded-lg bg-border" />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Bar className="h-3.5 w-full" />
         <Bar className="h-3.5 w-3/4" />
@@ -194,8 +194,8 @@ export function ArticleRowSkeleton() {
 
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-[#eef1f5] lg:rounded-2xl lg:border-x">
-      <div className="h-28 bg-[#e6e9ef] sm:h-40" />
+    <div className="overflow-hidden border border-x-0 border-border bg-surface-muted lg:rounded-2xl lg:border-x">
+      <div className="h-28 bg-border sm:h-40" />
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
         <div className="flex items-start justify-between">
           <Circle className="-mt-14 size-28 lg:-mt-16" />
@@ -218,7 +218,7 @@ export function ProfileHeaderSkeleton() {
 
 export function ActivityRowSkeleton() {
   return (
-    <div className="flex flex-col gap-2 border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0">
+    <div className="flex flex-col gap-2 border-t border-border pt-4 first:border-t-0 first:pt-0">
       <Bar className="h-2.5 w-32" />
       <Bar className="h-3 w-full" />
       <Bar className="h-3 w-11/12" />
@@ -229,7 +229,7 @@ export function ActivityRowSkeleton() {
 
 export function ActivityListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-[#eef1f5] p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface-muted p-5 lg:rounded-2xl lg:border-x">
       <Bar className="h-3.5 w-24" />
       <div className="mt-3 flex flex-col gap-4">
         {Array.from({ length: rows }).map((_, index) => (
@@ -243,7 +243,7 @@ export function ActivityListSkeleton({ rows = 3 }: { rows?: number }) {
 export function HomeSidebarSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="h-10 rounded-xl border border-[#e6e9ef] bg-[#eef1f5]" />
+      <div className="h-10 rounded-xl border border-border bg-surface-muted" />
       <CardSkeleton rows={5} titleWidth="w-28" />
     </div>
   );
@@ -251,7 +251,7 @@ export function HomeSidebarSkeleton() {
 
 export function NotificationListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <div className="flex flex-col divide-y divide-[#e6e9ef]">
+    <div className="flex flex-col divide-y divide-divider">
       {Array.from({ length: rows }).map((_, index) => (
         <div key={index} className="flex gap-3 px-4 py-3">
           <Circle className="size-9" />
@@ -322,7 +322,7 @@ export function MessageThreadSkeleton() {
           className={`flex items-end gap-2 ${row.own ? "flex-row-reverse" : ""}`}
         >
           {!row.own && <Circle className="size-7" />}
-          <div className={`max-w-[75%] rounded-[20px] bg-[#e6e9ef] ${row.className}`} />
+          <div className={`max-w-[75%] rounded-[20px] bg-border ${row.className}`} />
         </div>
       ))}
     </div>
@@ -331,11 +331,11 @@ export function MessageThreadSkeleton() {
 
 export function MessageComposerSkeleton() {
   return (
-    <div className="shrink-0 animate-pulse border-t border-[#e6e9ef] bg-white px-3 py-3 lg:px-5">
+    <div className="shrink-0 animate-pulse border-t border-border bg-surface px-3 py-3 lg:px-5">
       <div className="flex items-end gap-1.5">
         <Circle className="size-9" />
         <Circle className="size-9" />
-        <div className="h-10 min-w-0 flex-1 rounded-full bg-[#e6e9ef]" />
+        <div className="h-10 min-w-0 flex-1 rounded-full bg-border" />
         <Circle className="size-9" />
       </div>
     </div>

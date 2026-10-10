@@ -241,7 +241,7 @@ function EntityHeader({
   const icon = (
     <span
       className={`flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-inset ${
-        isLight ? "bg-[#f5f7fb] ring-[#e6e9ef]" : "bg-white/10 ring-white/15"
+        isLight ? "bg-surface-muted ring-border" : "bg-on-dark/10 ring-on-dark/15"
       }`}
     >
       {imageUrl ? (
@@ -278,7 +278,7 @@ function EntityHeader({
         <p
           title={title}
           className={`font-stack-sans-headline truncate text-sm font-semibold ${
-            isLight ? "text-[#172033]" : "text-white"
+            isLight ? "text-heading" : "text-on-dark"
           }`}
         >
           {title}
@@ -294,7 +294,7 @@ function EntityHeader({
               />
             </span>
             <span
-              className={`truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
+              className={`truncate text-xs ${isLight ? "text-muted-foreground" : "text-on-dark/50"}`}
             >
               {statusText}
             </span>
@@ -303,7 +303,7 @@ function EntityHeader({
           subtitle && (
             <p
               title={subtitle}
-              className={`mt-0.5 truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
+              className={`mt-0.5 truncate text-xs ${isLight ? "text-muted-foreground" : "text-on-dark/50"}`}
             >
               {subtitle}
             </p>

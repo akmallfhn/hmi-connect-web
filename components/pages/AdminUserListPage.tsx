@@ -157,33 +157,33 @@ export default function AdminUserListPage({
         )}
       >
         <Link href={`/master/users/${encodeURIComponent(user.username)}`}>
-          <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]">
-            <Eye className="size-4 text-[#5f6573]" />
+          <div className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted">
+            <Eye className="size-4 text-muted-foreground" />
             Lihat Detail
           </div>
         </Link>
         <button
           type="button"
           onClick={() => setEditTarget(user)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
         >
-          <Pencil className="size-4 text-[#5f6573]" />
+          <Pencil className="size-4 text-muted-foreground" />
           Edit Cepat
         </button>
         {user.verification_status === "unverified" && (
           <button
             type="button"
             onClick={() => setReminderTarget(user)}
-            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
           >
-            <Mail className="size-4 text-[#5f6573]" />
+            <Mail className="size-4 text-muted-foreground" />
             Kirim Reminder
           </button>
         )}
         <button
           type="button"
           onClick={() => setDeactivateTarget(user)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft"
         >
           <Ban className="size-4" />
           Nonaktifkan
@@ -191,7 +191,7 @@ export default function AdminUserListPage({
         <button
           type="button"
           onClick={() => setDeleteTarget(user)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft"
         >
           <Trash2 className="size-4" />
           Hapus Permanen
@@ -239,7 +239,7 @@ export default function AdminUserListPage({
 
       <div className="mt-6">
         {users.length === 0 ? (
-          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <EmptyState
               title={isFiltered ? "User tidak ditemukan" : "Belum ada user"}
               description={
@@ -263,9 +263,9 @@ export default function AdminUserListPage({
                 />
               ))}
             </ul>
-            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+            <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface xl:block">
               <table className="w-full min-w-[1000px] text-left text-sm">
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <SortableHeader
                       label="User"
@@ -286,7 +286,7 @@ export default function AdminUserListPage({
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                <tbody className="divide-y divide-divider text-[13px]">
                   {users.map((user) => (
                     <tr key={user.id} className="align-middle">
                       <td className="px-4 py-3">
@@ -300,30 +300,30 @@ export default function AdminUserListPage({
                             size={36}
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
+                            <p className="truncate text-sm font-semibold text-heading group-hover:text-primary-foreground">
                               {user.full_name}
                             </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               @{user.username}
                             </p>
                           </div>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-[#5f6573]">
+                      <td className="px-4 py-3 text-muted-foreground">
                         <span className="block max-w-56 truncate">
                           {user.email || "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {user.chapter_name ? (
                           <div className="min-w-0">
                             <p className="truncate">{user.chapter_name}</p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               Cabang {user.branch_name}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-[#5f6573]">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -338,7 +338,7 @@ export default function AdminUserListPage({
                       <td className="px-4 py-3">
                         <UserVerifiedLabel status={user.verification_status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                         {user.created_at
                           ? formatShortDateTime(user.created_at)
                           : "—"}
@@ -360,7 +360,7 @@ export default function AdminUserListPage({
       {users.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
             {(currentPage - 1) * pageSize + users.length} dari {totalData} user
           </p>

@@ -47,13 +47,13 @@ export default function AuthForgetPasswordPage() {
 
   return (
     <AuthSplitLayout>
-      <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-[#172033] shadow-none lg:max-w-[420px] lg:px-8">
+      <div className="container z-30 flex w-full max-w-[340px] items-center rounded-[20px] bg-transparent px-5 py-12 text-center text-heading shadow-none lg:max-w-[420px] lg:px-8">
         <div className="mx-auto flex w-full flex-col items-center gap-6">
           <LogoHmiConnect className="h-22 w-auto" />
 
           {sentTo ? (
             <>
-              <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
                 <MailCheck className="size-7" />
               </span>
 
@@ -61,9 +61,9 @@ export default function AuthForgetPasswordPage() {
                 <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Cek Email Kamu
                 </h1>
-                <p className="text-sm leading-6 text-[#5f6573] lg:text-base">
+                <p className="text-sm leading-6 text-muted-foreground lg:text-base">
                   Tautan untuk membuat password baru sudah dikirim ke{" "}
-                  <strong className="text-[#172033]">{sentTo}</strong>.
+                  <strong className="text-heading">{sentTo}</strong>.
                   {expiresInMinutes
                     ? ` Tautan berlaku ${expiresInMinutes} menit dan hanya bisa dipakai sekali.`
                     : " Tautan hanya bisa dipakai sekali."}
@@ -88,7 +88,7 @@ export default function AuthForgetPasswordPage() {
                 <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Lupa Password?
                 </h1>
-                <p className="text-sm leading-6 text-[#5f6573] lg:text-base">
+                <p className="text-sm leading-6 text-muted-foreground lg:text-base">
                   Masukkan email akun kamu. Kami akan mengirim tautan untuk
                   membuat password baru.
                 </p>
@@ -124,7 +124,7 @@ export default function AuthForgetPasswordPage() {
               </form>
 
               {errorMessage ? (
-                <p className="text-xs font-semibold text-destructive">
+                <p className="text-xs font-semibold text-destructive-foreground">
                   {errorMessage}
                 </p>
               ) : null}
@@ -133,7 +133,7 @@ export default function AuthForgetPasswordPage() {
 
           <Link
             href="/auth/login"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5f6573] hover:text-primary"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary-foreground"
           >
             <ArrowLeft className="size-4" />
             Kembali ke Login

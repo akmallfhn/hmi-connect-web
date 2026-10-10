@@ -93,7 +93,7 @@ export default function NotificationsPage({
   }
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -106,7 +106,7 @@ export default function NotificationsPage({
             type="button"
             onClick={handleMarkAllRead}
             disabled={unreadCount === 0}
-            className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm font-medium text-[#172033] transition hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:text-[#9aa1ad] disabled:hover:bg-transparent"
+            className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm font-medium text-heading transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-subtle-foreground disabled:hover:bg-transparent"
           >
             Tandai semua dibaca
           </button>
@@ -117,21 +117,21 @@ export default function NotificationsPage({
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
         <main className="min-w-0">
           <div className="hidden items-center justify-between pb-5 lg:flex">
-            <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
+            <h1 className="font-stack-sans-headline text-2xl font-medium text-heading">
               Notifikasi
             </h1>
             <button
               type="button"
               onClick={handleMarkAllRead}
               disabled={unreadCount === 0}
-              className="cursor-pointer text-sm font-medium text-primary transition hover:text-primary-dark disabled:cursor-not-allowed disabled:text-[#9aa1ad]"
+              className="cursor-pointer text-sm font-medium text-primary-foreground transition hover:text-primary-dark disabled:cursor-not-allowed disabled:text-subtle-foreground"
             >
               Tandai semua dibaca
             </button>
           </div>
-          <div className="flex flex-col divide-y divide-[#e6e9ef] bg-white">
+          <div className="flex flex-col divide-y divide-divider bg-surface">
             {items.length === 0 && (
-              <p className="px-5 py-10 text-center text-sm text-[#5f6573]">
+              <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                 Belum ada notifikasi.
               </p>
             )}
@@ -147,7 +147,7 @@ export default function NotificationsPage({
             {(hasMore || loadingMore) && (
               <div
                 ref={sentinelRef}
-                className="flex h-12 items-center justify-center text-xs font-medium text-[#5f6573]"
+                className="flex h-12 items-center justify-center text-xs font-medium text-muted-foreground"
               >
                 {loadingMore ? "Memuat..." : null}
               </div>

@@ -57,7 +57,7 @@ export default function FilterDropdown({
         <ListFilter className="size-4" /> Filter
         {activeCount > 0 && (
           <span
-            className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white"
+            className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-badge-destructive px-1 text-[11px] font-bold leading-none text-badge-foreground ring-2 ring-on-dark"
             aria-label={`${activeCount} filter aktif`}
           >
             {activeCount > 9 ? "9+" : activeCount}
@@ -70,7 +70,7 @@ export default function FilterDropdown({
           id={panelId}
           role="group"
           aria-label={ariaLabel}
-          className={`absolute left-0 top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-[#e6e9ef] bg-white p-4 shadow-lg ${
+          className={`absolute left-0 top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-border bg-surface p-4 shadow-lg ${
             split ? "lg:w-[36rem] lg:max-w-none" : ""
           }`}
         >
@@ -81,8 +81,8 @@ export default function FilterDropdown({
           >
             {children}
           </div>
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#e6e9ef] pt-3">
-            <span className="text-xs text-[#5f6573]">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+            <span className="text-xs text-muted-foreground">
               {activeCount} filter aktif
             </span>
             <Button

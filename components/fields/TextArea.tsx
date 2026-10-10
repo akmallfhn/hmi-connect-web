@@ -39,10 +39,10 @@ export default function TextArea({
       {label && (
         <label
           htmlFor={textAreaId}
-          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
+          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading"
         >
           {label}
-          {required && <span className="text-destructive">*</span>}
+          {required && <span className="text-destructive-foreground">*</span>}
         </label>
       )}
 
@@ -55,11 +55,11 @@ export default function TextArea({
           {...rest}
           onChange={handleChange}
           className={[
-            "w-full resize-none rounded-lg border px-3 py-2 text-base text-[#172033] transition placeholder:text-[#5f6573]/60 focus:outline-none focus:ring-2",
+            "w-full resize-none rounded-lg border px-3 py-2 text-base text-heading transition placeholder:text-placeholder focus:outline-none focus:ring-2",
             computedError
               ? "border-destructive focus:ring-destructive/20"
-              : "border-[#dbe3ef] focus:border-primary focus:ring-primary/15",
-            disabled ? "cursor-not-allowed bg-[#f5f7fb] text-[#5f6573]" : "bg-white",
+              : "border-border-strong focus:border-primary focus:ring-primary/15",
+            disabled ? "cursor-not-allowed bg-surface-muted text-muted-foreground" : "bg-surface",
             className,
           ]
             .filter(Boolean)
@@ -67,7 +67,7 @@ export default function TextArea({
         />
       </div>
 
-      {computedError && <p className="text-xs text-destructive">{computedError}</p>}
+      {computedError && <p className="text-xs text-destructive-foreground">{computedError}</p>}
     </div>
   );
 }

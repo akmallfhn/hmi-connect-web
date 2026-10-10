@@ -24,7 +24,7 @@ export default function FeedPage({
   verificationStatus,
 }: FeedPageProps) {
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}

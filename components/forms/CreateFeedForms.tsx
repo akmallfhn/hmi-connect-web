@@ -75,7 +75,7 @@ function ComposerAvatar({
   }
 
   return (
-    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted">
       {authorEntity.imageUrl ? (
         <Image
           src={authorEntity.imageUrl}
@@ -156,25 +156,25 @@ const ACTIONS = [
     label: "Foto",
     mode: "photo" as const,
     icon: IconPhoto,
-    color: "text-primary",
+    color: "text-primary-foreground",
   },
   {
     label: "Video",
     mode: "video" as const,
     icon: IconBrandYoutube,
-    color: "text-secondary",
+    color: "text-secondary-foreground",
   },
   {
     label: "URL",
     mode: "url" as const,
     icon: IconLink,
-    color: "text-[#5f6573]",
+    color: "text-muted-foreground",
   },
 ];
 
 // Layered on Button's ghost/icon variant: a round, muted glyph that stays flat while disabled.
 const TOOL_BUTTON_CLASS =
-  "size-9 rounded-full text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033] disabled:hover:bg-transparent";
+  "size-9 rounded-full text-muted-foreground hover:bg-surface-muted hover:text-heading disabled:hover:bg-transparent";
 
 function getExtension(file: File) {
   return file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -346,7 +346,7 @@ export default function CreateFeedForms({
 
   return (
     <>
-      <div className="relative z-20 -mt-16 mx-4 rounded-2xl border border-[#e6e9ef] bg-white p-4 lg:mx-0 lg:mt-0">
+      <div className="relative z-20 -mt-16 mx-4 rounded-2xl border border-border bg-surface p-4 lg:mx-0 lg:mt-0">
         <div className="flex items-center gap-3">
           <div className="hidden lg:block">
             <ComposerAvatar
@@ -365,19 +365,19 @@ export default function CreateFeedForms({
                 openComposer();
               }
             }}
-            className="flex-1 cursor-pointer rounded-full bg-[#f5f7fb] px-4 py-2.5 text-sm font-medium text-[#5f6573] transition hover:bg-[#eef1f6] focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="flex-1 cursor-pointer rounded-full bg-surface-muted px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             {composerPrompt}
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-around border-t border-[#e6e9ef] pt-3">
+        <div className="mt-3 flex items-center justify-around border-t border-border pt-3">
           {ACTIONS.map(({ label, mode, icon: Icon, color }) => (
             <Button
               key={mode}
               type="button"
               variant="ghost"
               onClick={() => openComposer(mode)}
-              className="gap-2 rounded-lg px-3 py-1.5 text-sm text-[#5f6573] hover:bg-[#f5f7fb]"
+              className="gap-2 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-surface-muted"
             >
               <Icon className={`size-4 ${color}`} stroke={2} />
               {label}
@@ -778,10 +778,10 @@ function FeedComposerFields({
           avatar={avatar}
         />
         <div>
-          <p className="font-semibold text-[#172033]">
+          <p className="font-semibold text-heading">
             {authorEntity ? authorEntity.name : (fullName ?? "Kader")}
           </p>
-          <p className="text-[13px] text-[#5f6573]">
+          <p className="text-[13px] text-muted-foreground">
             {authorEntity
               ? "Posting sebagai akun resmi"
               : "Posting ke feed HMI Connect"}
@@ -798,7 +798,7 @@ function FeedComposerFields({
         }
         rows={5}
         disabled={submitting}
-        className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-white px-0 py-2 text-base leading-7 text-[#172033] placeholder:text-[#5f6573]/70 focus:outline-none disabled:cursor-not-allowed disabled:text-[#5f6573]"
+        className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-surface px-0 py-2 text-base leading-7 text-heading placeholder:text-muted-foreground/70 focus:outline-none disabled:cursor-not-allowed disabled:text-muted-foreground"
       />
 
       {photos.length > 0 && (
@@ -806,7 +806,7 @@ function FeedComposerFields({
           {photos.map((photo, index) => (
             <div
               key={photo.id}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-[#f5f7fb]"
+              className="group relative aspect-square overflow-hidden rounded-xl bg-surface-muted"
             >
               <Image
                 src={photo.previewUrl}
@@ -915,7 +915,7 @@ function FeedComposerFields({
 
       {quoteFeed && <QuotedFeed feed={quoteFeed} />}
 
-      <div className="flex items-center justify-between gap-3 border-t border-[#e6e9ef] pt-3">
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
         <div className="flex items-center gap-1">
           {!quoteFeed && (
             <>
@@ -1002,7 +1002,7 @@ function FeedComposerFields({
             variant="ghost"
             onClick={handleClose}
             disabled={submitting}
-            className="text-[#5f6573]"
+            className="text-muted-foreground"
           >
             Batal
           </Button>
@@ -1050,8 +1050,8 @@ function AttachmentInput({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 rounded-xl border border-[#dbe3ef] py-1 pl-3 pr-1 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
-        <span className="shrink-0 text-[#5f6573]">{icon}</span>
+      <div className="flex items-center gap-2 rounded-xl border border-border-strong py-1 pl-3 pr-1 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+        <span className="shrink-0 text-muted-foreground">{icon}</span>
         <input
           type="url"
           value={value}
@@ -1059,7 +1059,7 @@ function AttachmentInput({
           disabled={disabled}
           placeholder={placeholder}
           autoFocus
-          className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[#172033] outline-none placeholder:text-[#5f6573]/60 disabled:cursor-not-allowed"
+          className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-heading outline-none placeholder:text-placeholder disabled:cursor-not-allowed"
         />
         <Button
           type="button"
@@ -1068,13 +1068,13 @@ function AttachmentInput({
           aria-label={removeLabel}
           variant="ghost"
           size="iconSm"
-          className="size-8 shrink-0 text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033]"
+          className="size-8 shrink-0 text-muted-foreground hover:bg-surface-muted hover:text-heading"
         >
           <IconX className="size-4" stroke={2} />
         </Button>
       </div>
       {invalidMessage && (
-        <p className="mt-1 text-xs text-destructive">{invalidMessage}</p>
+        <p className="mt-1 text-xs text-destructive-foreground">{invalidMessage}</p>
       )}
     </div>
   );

@@ -101,53 +101,53 @@ export default function TrainingPriorityList({
   return (
     <article
       aria-busy={isLoading}
-      className="relative rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm"
+      className="relative rounded-2xl border border-border bg-surface p-5 shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-[#172033]">
+          <h3 className="text-base font-bold text-heading">
             Prioritas Pengkaderan
           </h3>
-          <p className="text-sm leading-5 text-[#5f6573]">
+          <p className="text-sm leading-5 text-muted-foreground">
             {entityLabel} persiapan dengan jumlah kader aktif paling sedikit
           </p>
         </div>
         {isLoading && (
           <LoaderCircle
             aria-label="Memuat prioritas pengkaderan"
-            className="mt-0.5 size-4 shrink-0 animate-spin text-primary"
+            className="mt-0.5 size-4 shrink-0 animate-spin text-primary-foreground"
           />
         )}
       </div>
 
       {entries.length === 0 ? (
         <div className="flex min-h-40 items-center justify-center text-center">
-          <p className="text-sm text-[#5f6573]">
+          <p className="text-sm text-muted-foreground">
             Belum ada {entityLabel} yang menjadi prioritas pengkaderan.
           </p>
         </div>
       ) : (
-        <div className="mt-4 divide-y divide-[#eef0f4]">
+        <div className="mt-4 divide-y divide-divider">
           {entries.map((entry) => (
             <div
               key={entry.id}
               className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-foreground">
                 <EntityIcon className="size-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[#172033]">
+                <p className="truncate text-sm font-semibold text-heading">
                   {entityLabel} {entry.name}
                 </p>
-                <p className="mt-0.5 text-xs text-[#5f6573]">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {isBranch && (
                     <>{formatNumber(entry.count_chapter ?? 0)} Komisariat · </>
                   )}
                   {formatNumber(entry.count_members)} kader aktif
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-secondary-soft px-2.5 py-1 text-[11px] font-semibold text-secondary">
+              <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-badge-foreground">
                 Persiapan
               </span>
             </div>
@@ -156,14 +156,14 @@ export default function TrainingPriorityList({
       )}
 
       {loadFailed && (
-        <p className="mt-3 text-center text-xs text-destructive" role="alert">
+        <p className="mt-3 text-center text-xs text-destructive-foreground" role="alert">
           Data gagal dimuat. Silakan coba lagi.
         </p>
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eef0f4] pt-4">
-          <p className="text-xs text-[#5f6573]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">
             {firstItem}–{lastItem} dari {formatNumber(totalData)} data
           </p>
           <div className="flex items-center gap-1.5">
@@ -176,7 +176,7 @@ export default function TrainingPriorityList({
             >
               <ChevronLeft className="size-3.5" /> Prev
             </Button>
-            <span className="min-w-14 text-center text-xs font-semibold text-[#172033]">
+            <span className="min-w-14 text-center text-xs font-semibold text-heading">
               {currentPage} / {totalPages}
             </span>
             <Button

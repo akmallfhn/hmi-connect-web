@@ -195,7 +195,7 @@ export default function SearchPage({
   )!;
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -231,7 +231,7 @@ export default function SearchPage({
 
           <nav
             aria-label="Kategori pencarian"
-            className="mt-5 grid grid-cols-4 border-b border-[#e6e9ef]"
+            className="mt-5 grid grid-cols-4 border-b border-border"
           >
             {CATEGORIES.map((category) => {
               const active = category.value === activeCategory;
@@ -249,8 +249,8 @@ export default function SearchPage({
                   }}
                   className={`-mb-px min-h-10 cursor-pointer border-b-2 px-1 text-center text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:text-sm ${
                     active
-                      ? "border-[#172033] font-semibold text-[#172033]"
-                      : "border-transparent font-medium text-[#7b8190] hover:text-[#172033]"
+                      ? "border-border-strong font-semibold text-heading"
+                      : "border-transparent font-medium text-subtle-foreground hover:text-heading"
                   }`}
                 >
                   {category.label}
@@ -264,19 +264,19 @@ export default function SearchPage({
             className="pt-5"
           >
             {keyword.trim() !== searchedQuery ? (
-              <p role="status" className="py-16 text-center text-sm text-[#7b8190]">
+              <p role="status" className="py-16 text-center text-sm text-subtle-foreground">
                 Mencari...
               </p>
             ) : searchError ? (
-              <p role="alert" className="py-16 text-center text-sm text-destructive">
+              <p role="alert" className="py-16 text-center text-sm text-destructive-foreground">
                 Gagal mencari. Coba ubah kata kunci atau tekan Enter.
               </p>
             ) : !searchedQuery ? (
-              <p className="py-16 text-center text-sm text-[#7b8190]">
+              <p className="py-16 text-center text-sm text-subtle-foreground">
                 Ketik kata kunci untuk mencari {currentCategory.noun}.
               </p>
             ) : results.list.length === 0 ? (
-              <p className="py-16 text-center text-sm text-[#7b8190]">
+              <p className="py-16 text-center text-sm text-subtle-foreground">
                 Tidak ada {currentCategory.noun} untuk &ldquo;{searchedQuery}
                 &rdquo;.
               </p>
@@ -294,7 +294,7 @@ export default function SearchPage({
                       {loadingMore ? "Memuat..." : "Muat lebih banyak"}
                     </button>
                     {loadError && (
-                      <p role="alert" className="mt-2 text-sm text-destructive">
+                      <p role="alert" className="mt-2 text-sm text-destructive-foreground">
                         Gagal memuat hasil. Coba lagi.
                       </p>
                     )}

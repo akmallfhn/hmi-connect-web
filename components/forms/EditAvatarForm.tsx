@@ -164,7 +164,7 @@ function AvatarFields({
 
   return (
     <div className="flex flex-col items-center gap-5">
-      <div className="flex size-40 items-center justify-center overflow-hidden rounded-full ring-1 ring-[#e6e9ef]">
+      <div className="flex size-40 items-center justify-center overflow-hidden rounded-full ring-1 ring-border">
         {avatarUrl ? (
           <Image
             src={avatarUrl}
@@ -176,7 +176,7 @@ function AvatarFields({
         ) : (
           <div
             style={{ fontSize: 160 * 0.4 }}
-            className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary"
+            className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary-foreground"
           >
             {getInitials(fullName ?? "?")}
           </div>

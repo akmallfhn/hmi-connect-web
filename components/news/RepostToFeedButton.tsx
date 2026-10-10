@@ -47,7 +47,7 @@ export default function RepostToFeedButton({
       onClick={handleClick}
       aria-label={`Repost berita ${article.title} ke feed`}
       title="Repost ke feed"
-      className={`size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb] ${className ?? ""}`}
+      className={`size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted ${className ?? ""}`}
     >
       <Repeat2 className="size-4" />
     </Button>

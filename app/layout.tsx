@@ -10,6 +10,7 @@ import {
 import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
+import AppThemeProvider from "@/components/theme/AppThemeProvider";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
 
@@ -60,16 +61,19 @@ export default function RootLayout({
   return (
     <html
       lang="id"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} ${crayonize.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col scroll-smooth">
-        <ScrollToTop />
-        <GoogleOAuthProvider clientId={googleOauthId!}>
-          <div className="font-google-sans flex min-h-full flex-1 flex-col">
-            {children}
-          </div>
-        </GoogleOAuthProvider>
-        <Toaster richColors position="top-center" />
+        <AppThemeProvider>
+          <ScrollToTop />
+          <GoogleOAuthProvider clientId={googleOauthId!}>
+            <div className="font-google-sans flex min-h-full flex-1 flex-col">
+              {children}
+            </div>
+          </GoogleOAuthProvider>
+          <Toaster richColors position="top-center" />
+        </AppThemeProvider>
       </body>
     </html>
   );

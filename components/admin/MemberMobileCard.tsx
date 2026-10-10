@@ -19,8 +19,8 @@ function DetailItem({
 }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <dt className="text-xs text-[#5f6573]">{label}</dt>
-      <dd className="mt-1 break-words text-sm font-medium leading-5 text-[#172033]">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-1 break-words text-sm font-medium leading-5 text-heading">
         {value}
       </dd>
     </div>
@@ -41,7 +41,7 @@ export default function MemberMobileCard({
   actions?: ReactNode;
 }) {
   return (
-    <li className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white">
+    <li className="overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="p-4">
         <Link
           href={detailHref}
@@ -49,10 +49,10 @@ export default function MemberMobileCard({
         >
           <Avatar src={user.avatar} name={user.full_name} size={44} />
           <div className="min-w-0">
-            <p className="break-words text-[15px] font-semibold leading-5 text-[#172033] group-hover:text-primary">
+            <p className="break-words text-[15px] font-semibold leading-5 text-heading group-hover:text-primary-foreground">
               {user.full_name}
             </p>
-            <p className="mt-0.5 break-all text-[13px] text-[#5f6573]">
+            <p className="mt-0.5 break-all text-[13px] text-muted-foreground">
               @{user.username}
             </p>
           </div>
@@ -66,7 +66,7 @@ export default function MemberMobileCard({
         </div>
       </div>
 
-      <dl className="mx-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-[#e6e9ef] py-4">
+      <dl className="mx-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border py-4">
         <DetailItem
           className="col-span-2"
           label="Email"
@@ -83,10 +83,10 @@ export default function MemberMobileCard({
         />
       </dl>
 
-      <div className="flex items-center justify-between gap-2 border-t border-[#e6e9ef] px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
         <Link
           href={detailHref}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <Eye className="size-4" /> Lihat Detail
         </Link>

@@ -100,9 +100,9 @@ function ArticleFeed({
 
   return (
     <>
-      <div className="mt-2 flex flex-col divide-y divide-[#e6e9ef]">
+      <div className="mt-2 flex flex-col divide-y divide-divider">
         {items.length === 0 && (
-          <p className="py-12 text-center text-sm text-[#5f6573] lg:text-[15px]">
+          <p className="py-12 text-center text-sm text-muted-foreground lg:text-[15px]">
             {TABS.find((item) => item.tab === activeTab)?.empty}
           </p>
         )}
@@ -111,7 +111,7 @@ function ArticleFeed({
         ))}
       </div>
       {hasMore && <div ref={sentinelRef} className="h-4" />}
-      {loadingMore && <p className="py-4 text-center text-sm text-[#8a909d]">Memuat...</p>}
+      {loadingMore && <p className="py-4 text-center text-sm text-disabled-foreground">Memuat...</p>}
     </>
   );
 }
@@ -161,9 +161,9 @@ function NewsFeed({
 
   return (
     <>
-      <div className="mt-2 flex flex-col divide-y divide-[#e6e9ef]">
+      <div className="mt-2 flex flex-col divide-y divide-divider">
         {items.length === 0 && (
-          <p className="py-12 text-center text-sm text-[#5f6573]">
+          <p className="py-12 text-center text-sm text-muted-foreground">
             Belum ada berita.
           </p>
         )}
@@ -172,7 +172,7 @@ function NewsFeed({
         ))}
       </div>
       {hasMore && <div ref={sentinelRef} className="h-4" />}
-      {loadingMore && <p className="py-4 text-center text-sm text-[#8a909d]">Memuat...</p>}
+      {loadingMore && <p className="py-4 text-center text-sm text-disabled-foreground">Memuat...</p>}
     </>
   );
 }
@@ -181,7 +181,7 @@ export default function ArticlesPage(props: ArticlesPageProps) {
   const { viewer, activeTab, showPrivateTabs } = props;
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -192,7 +192,7 @@ export default function ArticlesPage(props: ArticlesPageProps) {
       />
       <PageMargin className="pt-4 pb-6 lg:pt-6">
         <main className="min-w-0">
-          <h1 className="font-stack-sans-headline hidden pb-4 text-2xl font-medium text-[#172033] lg:block">
+          <h1 className="font-stack-sans-headline hidden pb-4 text-2xl font-medium text-heading lg:block">
             Artikel
           </h1>
           {showPrivateTabs && (

@@ -58,28 +58,28 @@ export default function CoordinatingBodyDashboardPage({
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
     {
       label: "Total Cabang",
       value: (summary?.branch_count ?? 0).toLocaleString("id-ID"),
       icon: Building2,
       iconBg: "bg-secondary-soft",
-      iconColor: "text-secondary",
+      iconColor: "text-secondary-foreground",
     },
     {
       label: "Total Korkom",
       value: (summary?.coordinating_chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Network,
       iconBg: "bg-tertiary/10",
-      iconColor: "text-tertiary",
+      iconColor: "text-heading",
     },
     {
       label: "Total Komisariat",
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
   ];
   const branchEntries = (branchDistribution?.list ?? []).map((entry) => ({
@@ -137,12 +137,12 @@ export default function CoordinatingBodyDashboardPage({
             {
               name: "Cabang Penuh",
               value: branchStatus?.total_full ?? 0,
-              color: "#159fa2",
+              color: "var(--primary)",
             },
             {
               name: "Cabang Persiapan",
               value: branchStatus?.total_provisional ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />
@@ -154,12 +154,12 @@ export default function CoordinatingBodyDashboardPage({
             {
               name: "Komisariat Penuh",
               value: chapterStatus?.total_full ?? 0,
-              color: "#eda100",
+              color: "var(--chart-warning)",
             },
             {
               name: "Komisariat Persiapan",
               value: chapterStatus?.total_provisional ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />

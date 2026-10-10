@@ -17,10 +17,10 @@ const VARIANT_CLASSNAMES: Record<AdminPageTitleVariant, string> = {
 
 const DESCRIPTION_CLASSNAMES: Record<AdminPageTitleVariant, string> = {
   default:
-    "font-stack-sans-headline font-light mt-1.5 text-sm text-[#5f6573] sm:text-base",
-  compact: "font-stack-sans-headline font-light mt-0.5 text-sm text-[#5f6573]",
+    "font-stack-sans-headline font-light mt-1.5 text-sm text-muted-foreground sm:text-base",
+  compact: "font-stack-sans-headline font-light mt-0.5 text-sm text-muted-foreground",
   placeholder:
-    "font-stack-sans-headline font-light max-w-sm text-sm text-[#5f6573]",
+    "font-stack-sans-headline font-light max-w-sm text-sm text-muted-foreground",
 };
 
 export default function AdminPageTitle({
@@ -33,7 +33,7 @@ export default function AdminPageTitle({
     <>
       <h1
         className={[
-          "font-stack-sans-headline font-semibold text-[#172033]",
+          "font-stack-sans-headline font-semibold text-heading",
           VARIANT_CLASSNAMES[variant],
           className,
         ]

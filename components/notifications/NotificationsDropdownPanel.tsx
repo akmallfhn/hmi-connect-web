@@ -21,13 +21,13 @@ export default function NotificationsDropdownPanel({
 }: NotificationsDropdownPanelProps) {
   return (
     <>
-      <div className="flex items-center justify-between border-b border-[#e6e9ef] px-4 py-3">
-        <p className="text-sm font-semibold text-[#172033]">Notifikasi</p>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <p className="text-sm font-semibold text-heading">Notifikasi</p>
         {unreadCount > 0 && (
           <button
             type="button"
             onClick={onMarkAllRead}
-            className="cursor-pointer text-xs font-medium text-primary hover:underline"
+            className="cursor-pointer text-xs font-medium text-primary-foreground hover:underline"
           >
             Tandai semua dibaca
           </button>
@@ -35,7 +35,7 @@ export default function NotificationsDropdownPanel({
       </div>
       <div className="flex max-h-80 flex-col overflow-y-auto">
         {notifications.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-[#5f6573]">
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
             Belum ada notifikasi.
           </p>
         )}
@@ -45,7 +45,7 @@ export default function NotificationsDropdownPanel({
       </div>
       <Link
         href="/notifications"
-        className="block border-t border-[#e6e9ef] px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-[#f5f7fb]"
+        className="block border-t border-border px-4 py-2.5 text-center text-xs font-medium text-primary-foreground hover:bg-surface-muted"
       >
         Lihat semua notifikasi
       </Link>

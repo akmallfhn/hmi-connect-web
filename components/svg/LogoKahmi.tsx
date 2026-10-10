@@ -9,7 +9,7 @@ interface LogoKahmiProps extends SVGProps<SVGSVGElement> {
 // Converted 1:1 from "logo kahmi.svg"; its clipPath equalled the viewBox, so it's dropped — no duplicate id.
 export default function LogoKahmi({
   colorGreen = "#0D9347",
-  colorDark = "#312C2C",
+  colorDark = "var(--logo-ink)",
   colorWhite = "white",
   ...props
 }: LogoKahmiProps) {

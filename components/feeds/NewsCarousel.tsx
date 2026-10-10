@@ -12,8 +12,8 @@ export default function NewsCarousel({
   if (articles.length === 0) return null;
 
   return (
-    <section className="border border-x-0 border-[#e6e9ef] bg-white py-4 lg:rounded-2xl lg:border-x">
-      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-[#172033] xl:text-[15px]">
+    <section className="border border-x-0 border-border bg-surface py-4 lg:rounded-2xl lg:border-x">
+      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-heading xl:text-[15px]">
         {title}
       </h2>
 

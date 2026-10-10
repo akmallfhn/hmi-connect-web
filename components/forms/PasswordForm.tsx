@@ -99,7 +99,7 @@ function PasswordFields({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <p className="text-sm leading-6 text-[#5f6573]">
+      <p className="text-sm leading-6 text-muted-foreground">
         {hasPassword
           ? `Masukkan password saat ini, lalu password baru ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} karakter.`
           : `Buat password ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} karakter agar kamu bisa masuk dengan email atau username, selain lewat Google.`}

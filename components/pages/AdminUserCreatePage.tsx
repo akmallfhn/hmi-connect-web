@@ -53,8 +53,8 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[#e6e9ef] bg-white p-5">
-      <h2 className="text-sm font-semibold text-[#172033]">{title}</h2>
+    <div className="rounded-xl border border-border bg-surface p-5">
+      <h2 className="text-sm font-semibold text-heading">{title}</h2>
       <div className="mt-4 flex flex-col gap-4">{children}</div>
     </div>
   );
@@ -306,7 +306,7 @@ export default function AdminUserCreatePage() {
       <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SectionCard title="Akun & Peran">
           <div className="flex items-center gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-[#e6e9ef]">
+            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-border">
               {avatar ? (
                 <Image
                   src={avatar}
@@ -318,7 +318,7 @@ export default function AdminUserCreatePage() {
               ) : (
                 <div
                   style={{ fontSize: 64 * 0.4 }}
-                  className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary"
+                  className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary-foreground"
                 >
                   {getInitials(fullName || "?")}
                 </div>
@@ -444,7 +444,7 @@ export default function AdminUserCreatePage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="pl-1 text-[15px] font-medium text-[#172033]">
+            <label className="pl-1 text-[15px] font-medium text-heading">
               Jenis Kelamin
             </label>
             <div className="grid grid-cols-2 gap-3">

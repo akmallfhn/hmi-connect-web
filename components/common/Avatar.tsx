@@ -46,7 +46,7 @@ export default function Avatar({
   return (
     <div
       style={{ width: size, height: size, fontSize: size * 0.4 }}
-      className={`${shared} flex items-center justify-center bg-primary-soft font-semibold text-primary`}
+      className={`${shared} flex items-center justify-center bg-primary-soft font-semibold text-primary-foreground`}
     >
       {getInitials(name)}
     </div>

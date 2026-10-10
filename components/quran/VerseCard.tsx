@@ -22,20 +22,20 @@ export default function VerseCard({
   onTogglePlay,
 }: VerseCardProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#e6e9ef] py-5 last:border-b-0">
+    <div className="flex flex-col gap-3 border-b border-border py-5 last:border-b-0">
       <p
         dir="rtl"
         lang="ar"
-        className="font-arabic-quran text-right text-3xl leading-[2.8] text-[#172033]"
+        className="font-arabic-quran text-right text-3xl leading-[2.8] text-heading"
       >
         {verse.text_arabic}
-        <span className="mx-1.5 inline-flex size-7 items-center justify-center rounded-full bg-secondary-soft/50 align-middle text-sm font-bold text-secondary">
+        <span className="mx-1.5 inline-flex size-7 items-center justify-center rounded-full bg-secondary align-middle text-sm font-bold text-badge-foreground">
           {toArabicNumerals(verse.number)}
         </span>
       </p>
 
-      <p className="text-sm italic text-[#5f6573]">{verse.text_latin}</p>
-      <p className="text-sm text-[#172033]">{verse.translation_id}</p>
+      <p className="text-sm italic text-muted-foreground">{verse.text_latin}</p>
+      <p className="text-sm text-heading">{verse.translation_id}</p>
 
       <div className="mt-1 flex items-center gap-2">
         <Button

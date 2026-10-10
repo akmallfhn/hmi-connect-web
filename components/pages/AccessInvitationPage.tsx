@@ -48,28 +48,28 @@ export default function AccessInvitationPage({
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-white px-5 py-12">
-      <section className="w-full max-w-md rounded-2xl border border-[#e6e9ef] bg-white p-6 text-center sm:p-8">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-surface px-5 py-12">
+      <section className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 text-center sm:p-8">
         <LogoHmiConnectHorizontal className="mx-auto h-8 w-auto" />
 
-        <h1 className="mt-6 text-xl font-bold text-[#172033]">
+        <h1 className="mt-6 text-xl font-bold text-heading">
           {alreadyAccepted
             ? `Sukses!`
             : `Kamu diundang sebagai Admin ${entityLabel}`}
         </h1>
 
-        <p className="mt-2 leading-relaxed text-[#5f6573]">
+        <p className="mt-2 leading-relaxed text-muted-foreground">
           {alreadyAccepted ? (
             <>
               kamu telah terdaftar sebagai Admin{" "}
-              <strong className="text-[#172033]">{scope}</strong> di HMI
+              <strong className="text-heading">{scope}</strong> di HMI
               Connect.
             </>
           ) : (
             <>
               {grant.granted_by_name ? (
                 <>
-                  <span className="font-semibold text-[#172033]">
+                  <span className="font-semibold text-heading">
                     {grant.granted_by_name}
                   </span>{" "}
                   mengundang kamu
@@ -78,7 +78,7 @@ export default function AccessInvitationPage({
                 "Kamu diundang"
               )}{" "}
               untuk mengelola dashboard{" "}
-              <strong className="text-[#172033]">{scope}</strong> di HMI
+              <strong className="text-heading">{scope}</strong> di HMI
               Connect.
             </>
           )}
@@ -105,7 +105,7 @@ export default function AccessInvitationPage({
 
         <Link
           href="/"
-          className="mt-4 inline-block text-sm font-semibold text-[#5f6573] hover:text-primary"
+          className="mt-4 inline-block text-sm font-semibold text-muted-foreground hover:text-primary-foreground"
         >
           Kembali ke Beranda
         </Link>

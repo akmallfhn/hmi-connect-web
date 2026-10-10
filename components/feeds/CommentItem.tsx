@@ -166,16 +166,16 @@ export default function CommentItem({
         <FeedAuthorAvatar author={author} size={isReply ? 28 : 32} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-xl bg-[#f5f7fb] px-3 py-2">
-          <p className="text-xs font-semibold text-[#172033] xl:text-[13px]">
+        <div className="rounded-xl bg-surface-muted px-3 py-2">
+          <p className="text-xs font-semibold text-heading xl:text-[13px]">
             {author.name}
           </p>
-          <p className="break-words text-sm text-[#172033] xl:text-[15px]">
+          <p className="break-words text-sm text-content-foreground xl:text-[15px]">
             {comment.message}
           </p>
         </div>
 
-        <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-[#5f6573] xl:text-[13px]">
+        <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-muted-foreground xl:text-[13px]">
           <span className="text-[11px] xl:text-xs">
             {formatRelativeTime(comment.created_at)}
           </span>
@@ -187,7 +187,7 @@ export default function CommentItem({
               disabled={reaction.reacting}
               aria-label={reaction.activeReactionInfo?.label ?? "Suka"}
               className={`cursor-pointer transition ${
-                reaction.activeReaction ? "text-secondary" : "text-[#5f6573]"
+                reaction.activeReaction ? "text-secondary-foreground" : "text-muted-foreground"
               }`}
             >
               {reaction.activeReactionInfo ? (
@@ -202,7 +202,7 @@ export default function CommentItem({
               <button
                 type="button"
                 onClick={() => setShowReactorsModal(true)}
-                className="cursor-pointer font-semibold text-[#5f6573]"
+                className="cursor-pointer font-semibold text-muted-foreground"
               >
                 {reaction.reactionCount}
               </button>
@@ -222,7 +222,7 @@ export default function CommentItem({
               type="button"
               onClick={handleToggleExpanded}
               aria-label="Balas"
-              className="cursor-pointer text-[#5f6573]"
+              className="cursor-pointer text-muted-foreground"
             >
               <Reply className="size-3.5" />
             </button>
@@ -231,7 +231,7 @@ export default function CommentItem({
             <button
               type="button"
               onClick={handleToggleExpanded}
-              className="cursor-pointer font-semibold text-secondary underline-offset-2 hover:underline"
+              className="cursor-pointer font-semibold text-secondary-foreground underline-offset-2 hover:underline"
             >
               {expanded
                 ? `Sembunyikan ${replyCount} balasan`
@@ -242,7 +242,7 @@ export default function CommentItem({
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
-              className="cursor-pointer font-semibold text-destructive underline-offset-2 hover:underline"
+              className="cursor-pointer font-semibold text-destructive-foreground underline-offset-2 hover:underline"
             >
               Delete
             </button>
@@ -252,7 +252,7 @@ export default function CommentItem({
         {!isReply && expanded && (
           <div className="mt-2 flex flex-col gap-2 pl-3">
             {loadingReplies && (
-              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+              <p className="text-xs text-muted-foreground xl:text-[13px]">
                 Memuat balasan...
               </p>
             )}
@@ -283,10 +283,10 @@ export default function CommentItem({
                 disabled={postingReply}
               />
             ) : (
-              <div className="rounded-xl border border-dashed border-[#dbe3ef] bg-white px-3 py-2 text-xs text-[#5f6573] xl:text-[13px]">
+              <div className="rounded-xl border border-dashed border-border-strong bg-surface px-3 py-2 text-xs text-muted-foreground xl:text-[13px]">
                 <Link
                   href="/auth/login"
-                  className="font-semibold text-primary hover:underline"
+                  className="font-semibold text-primary-foreground hover:underline"
                 >
                   Login
                 </Link>{" "}

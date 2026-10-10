@@ -79,7 +79,7 @@ export default async function FeedDetailPage({
   // With a valid ?as=, every like, comment, and repost here is the entity's, not the viewer's.
   return (
     <ActingEntityProvider entity={actingEntity}>
-      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+      <div className="min-h-screen bg-surface pb-16 lg:pb-0">
         <Header
           fullName={user?.full_name}
           avatar={user?.avatar}

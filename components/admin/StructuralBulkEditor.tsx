@@ -222,10 +222,10 @@ export default function StructuralBulkEditor({
     <div className="p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-base font-semibold text-[#172033]">
+          <p className="text-base font-semibold text-heading">
             Kelola Anggota Sekaligus
           </p>
-          <p className="mt-1 text-sm text-[#5f6573]">
+          <p className="mt-1 text-sm text-muted-foreground">
             Ubah jabatan dan status beberapa anggota, tambahkan anggota baru,
             atau tandai yang ingin dihapus, lalu simpan sekali.
           </p>
@@ -242,10 +242,10 @@ export default function StructuralBulkEditor({
         </Button>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef]">
+      <div className="mt-4 overflow-hidden rounded-xl border border-border">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[780px] text-left text-sm">
-            <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+            <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="w-12 px-4 py-3">No</th>
                 <th className="px-4 py-3">Nama</th>
@@ -254,13 +254,13 @@ export default function StructuralBulkEditor({
                 <th className="w-16 px-4 py-3 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e6e9ef]">
+            <tbody className="divide-y divide-divider">
               {rows.map((row, index) => (
                 <tr
                   key={row.key}
                   className={row.removed ? "bg-destructive-soft/40" : undefined}
                 >
-                  <td className="px-4 py-3 text-[#5f6573]">{index + 1}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
                   <td className="px-4 py-3">
                     {row.officer ? (
                       <div
@@ -274,7 +274,7 @@ export default function StructuralBulkEditor({
                           size={36}
                         />
                         <span
-                          className={`font-medium text-[#172033] ${
+                          className={`font-medium text-heading ${
                             row.removed ? "line-through" : ""
                           }`}
                         >
@@ -325,7 +325,7 @@ export default function StructuralBulkEditor({
                       />
                     ) : (
                       // officers/create takes no status — a new officer always starts active.
-                      <span className="text-[#5f6573]">Aktif</span>
+                      <span className="text-muted-foreground">Aktif</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -342,8 +342,8 @@ export default function StructuralBulkEditor({
                         }
                         className={
                           row.removed
-                            ? "text-[#5f6573] hover:bg-[#f5f7fb]"
-                            : "text-destructive hover:bg-destructive-soft"
+                            ? "text-muted-foreground hover:bg-surface-muted"
+                            : "text-destructive-foreground hover:bg-destructive-soft"
                         }
                       >
                         {row.removed ? (
@@ -361,7 +361,7 @@ export default function StructuralBulkEditor({
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-6 text-center text-[#5f6573]"
+                    className="px-4 py-6 text-center text-muted-foreground"
                   >
                     Belum ada anggota. Tambahkan baris untuk mulai mengisi.
                   </td>
@@ -372,8 +372,8 @@ export default function StructuralBulkEditor({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-[#e6e9ef] pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-[#5f6573]">
+      <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
           {changedCount > 0
             ? `${changedCount} perubahan belum disimpan.`
             : "Belum ada perubahan."}

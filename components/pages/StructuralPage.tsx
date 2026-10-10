@@ -240,7 +240,7 @@ export default function StructuralPage({
       )}
 
       <div
-        className={`overflow-hidden rounded-xl border border-[#e6e9ef] bg-white ${embedded ? "" : "mt-6"}`}
+        className={`overflow-hidden rounded-xl border border-border bg-surface ${embedded ? "" : "mt-6"}`}
       >
         {periods.length === 0 ? (
           <EmptyState
@@ -249,7 +249,7 @@ export default function StructuralPage({
           />
         ) : (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6e9ef] p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 sm:p-6">
               <div className="w-full max-w-xs">
                 <Select
                   selectId="structural-period"
@@ -265,7 +265,7 @@ export default function StructuralPage({
               </div>
               <div className="flex w-fit shrink-0 flex-wrap items-center gap-2">
                 {root && !isBulkEditing && (
-                  <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5">
+                  <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5">
                     <button
                       type="button"
                       onClick={() => handleViewModeChange("chart")}
@@ -273,8 +273,8 @@ export default function StructuralPage({
                       title="Tampilan Bagan"
                       className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
                         viewMode === "chart"
-                          ? "bg-primary-soft text-primary"
-                          : "text-[#5f6573] hover:text-[#172033]"
+                          ? "bg-primary-soft text-primary-foreground"
+                          : "text-muted-foreground hover:text-heading"
                       }`}
                     >
                       <Network className="size-3.5" />
@@ -287,8 +287,8 @@ export default function StructuralPage({
                       title="Tampilan Tabel"
                       className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
                         viewMode === "table"
-                          ? "bg-primary-soft text-primary"
-                          : "text-[#5f6573] hover:text-[#172033]"
+                          ? "bg-primary-soft text-primary-foreground"
+                          : "text-muted-foreground hover:text-heading"
                       }`}
                     >
                       <Table2 className="size-3.5" />
@@ -473,7 +473,7 @@ export default function StructuralPage({
 }
 
 // A touch more visible than the app's usual #dbe3ef border tone, without going full mid-gray.
-const TREE_LINE_CLASS = "bg-[#c7d0de]";
+const TREE_LINE_CLASS = "bg-border-strong";
 
 // One row below the root; each card owns its own half-connector so the bar meets the outermost stems at a clean right angle instead of overhanging past them.
 function TreeTier({
@@ -558,24 +558,24 @@ function OfficerNode({
 
   return (
     <div
-      className={`flex w-64 items-center gap-3 rounded-2xl border bg-white p-3 shadow-sm transition ${
+      className={`flex w-64 items-center gap-3 rounded-2xl border bg-surface p-3 shadow-sm transition ${
         isActive
           ? "border-primary/30 ring-1 ring-primary/10"
-          : "border-[#e6e9ef] opacity-70"
+          : "border-border opacity-70"
       }`}
     >
       <Avatar src={officer.user_avatar} name={officer.user_full_name} size={44} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#172033]">
+        <p className="truncate text-sm font-semibold text-heading">
           {officer.user_full_name}
         </p>
         <div className="group/position relative min-w-0 w-fit">
-          <p className="line-clamp-2 text-xs text-[#5f6573]">
+          <p className="line-clamp-2 text-xs text-muted-foreground">
             {officer.position_name}
           </p>
           <span
             role="tooltip"
-            className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 w-max max-w-56 -translate-x-1/2 translate-y-1 rounded-md bg-[#172033] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition group-hover/position:translate-y-0 group-hover/position:opacity-100"
+            className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 w-max max-w-56 -translate-x-1/2 translate-y-1 rounded-md bg-brand-ink px-2.5 py-1.5 text-xs font-medium text-on-dark opacity-0 shadow-lg transition group-hover/position:translate-y-0 group-hover/position:opacity-100"
           >
             {officer.position_name}
           </span>
@@ -618,7 +618,7 @@ function OfficerActionsMenu({
           type="button"
           onClick={toggle}
           aria-label={`Aksi untuk ${officer.user_full_name}`}
-          className="flex size-7 shrink-0 items-center justify-center rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-muted"
         >
           <MoreVertical className="size-4" />
         </button>
@@ -627,8 +627,8 @@ function OfficerActionsMenu({
       <button
         type="button"
         onClick={onToggleStatus}
-        className={`flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-[#f5f7fb] ${
-          isActive ? "text-destructive" : "text-primary"
+        className={`flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-surface-muted ${
+          isActive ? "text-destructive-foreground" : "text-primary-foreground"
         }`}
       >
         {isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
@@ -637,7 +637,7 @@ function OfficerActionsMenu({
       <button
         type="button"
         onClick={onUpdatePosition}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-[#172033] hover:bg-[#f5f7fb]"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-heading hover:bg-surface-muted"
       >
         <Pencil className="size-4" />
         Update Jabatan
@@ -645,7 +645,7 @@ function OfficerActionsMenu({
       <button
         type="button"
         onClick={onDelete}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-destructive hover:bg-[#f5f7fb]"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-destructive-foreground hover:bg-surface-muted"
       >
         <Trash2 className="size-4" />
         Hapus Anggota
@@ -671,10 +671,10 @@ function OfficerTable({
   return (
     // Inset in its own bordered box, same treatment EntityAccessTab gives its table.
     <div className="p-4 sm:p-6">
-      <div className="overflow-hidden rounded-xl border border-[#e6e9ef]">
+      <div className="overflow-hidden rounded-xl border border-border">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+            <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="w-12 px-4 py-3">No</th>
                 <th className="px-4 py-3">Nama</th>
@@ -685,13 +685,13 @@ function OfficerTable({
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e6e9ef]">
+            <tbody className="divide-y divide-divider">
               {officers.map((officer, index) => {
                 const isActive = officer.status === "active";
 
                 return (
-                  <tr key={officer.id} className="hover:bg-[#f9fafc]">
-                    <td className="px-4 py-3 text-[#5f6573]">{index + 1}</td>
+                  <tr key={officer.id} className="hover:bg-surface-subtle">
+                    <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar
@@ -699,12 +699,12 @@ function OfficerTable({
                           name={officer.user_full_name}
                           size={36}
                         />
-                        <span className="font-medium text-[#172033]">
+                        <span className="font-medium text-heading">
                           {officer.user_full_name}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#172033]">
+                    <td className="px-4 py-3 text-heading">
                       {officer.position_name}
                     </td>
                     <td className="px-4 py-3">
@@ -872,14 +872,14 @@ function CreatePeriodModal({
 
         <label
           htmlFor="structural-is-ongoing"
-          className="flex w-fit cursor-pointer items-center gap-2 text-sm text-[#172033]"
+          className="flex w-fit cursor-pointer items-center gap-2 text-sm text-heading"
         >
           <input
             id="structural-is-ongoing"
             type="checkbox"
             checked={isOngoing}
             onChange={(e) => setIsOngoing(e.target.checked)}
-            className="size-4 rounded border-[#dbe3ef] accent-primary"
+            className="size-4 rounded border-border-strong accent-primary"
           />
           Kepengurusan masih berjalan
         </label>
@@ -898,8 +898,8 @@ function CreatePeriodModal({
 
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <p className="text-[15px] font-medium text-[#172033]">
-              Anggota <span className="text-destructive">*</span>
+            <p className="text-[15px] font-medium text-heading">
+              Anggota <span className="text-destructive-foreground">*</span>
             </p>
             <Button
               variant="outline"
@@ -915,7 +915,7 @@ function CreatePeriodModal({
           {officers.map((officerDraft, index) => (
             <div
               key={officerDraft.key}
-              className="flex flex-col gap-2 rounded-lg border border-[#e6e9ef] p-3 sm:flex-row sm:items-end"
+              className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-end"
             >
               <div className="flex-1">
                 <SearchableSelect
@@ -949,7 +949,7 @@ function CreatePeriodModal({
                   size="icon"
                   onClick={() => removeOfficerRow(officerDraft.key)}
                   aria-label="Hapus baris"
-                  className="shrink-0 text-destructive hover:bg-destructive-soft"
+                  className="shrink-0 text-destructive-foreground hover:bg-destructive-soft"
                 >
                   <Trash2 className="size-4" />
                 </Button>
@@ -958,7 +958,7 @@ function CreatePeriodModal({
           ))}
         </div>
 
-        <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+        <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Batal
           </Button>
@@ -1073,14 +1073,14 @@ function UpdatePeriodFields({
 
       <label
         htmlFor="structural-update-is-ongoing"
-        className="flex w-fit cursor-pointer items-center gap-2 text-sm text-[#172033]"
+        className="flex w-fit cursor-pointer items-center gap-2 text-sm text-heading"
       >
         <input
           id="structural-update-is-ongoing"
           type="checkbox"
           checked={isOngoing}
           onChange={(e) => setIsOngoing(e.target.checked)}
-          className="size-4 rounded border-[#dbe3ef] accent-primary"
+          className="size-4 rounded border-border-strong accent-primary"
         />
         Kepengurusan masih berjalan
       </label>
@@ -1097,7 +1097,7 @@ function UpdatePeriodFields({
         />
       )}
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>
@@ -1199,7 +1199,7 @@ function UpdateOfficerPositionFields({
         ]}
       />
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>
@@ -1308,7 +1308,7 @@ function AddOfficerModal({
           required
         />
 
-        <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+        <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Batal
           </Button>

@@ -16,17 +16,17 @@ interface Lk2StatCardProps {
 export default function Lk2StatCard({ icon: Icon, color, label, value, hint }: Lk2StatCardProps) {
   const style = COLOR_STYLES[color];
   return (
-    <div className="rounded-xl border border-[#e6e9ef] bg-white p-4">
+    <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-center gap-3">
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${style.bg}`}>
           <Icon className={`size-5 ${style.text}`} />
         </span>
         <div className="min-w-0">
-          <p className="text-sm leading-5 text-[#5f6573]">{label}</p>
-          <p className="truncate text-xl font-bold text-[#172033]">{value}</p>
+          <p className="text-sm leading-5 text-muted-foreground">{label}</p>
+          <p className="truncate text-xl font-bold text-heading">{value}</p>
         </div>
       </div>
-      {hint && <p className="mt-2 text-xs text-[#5f6573]">{hint}</p>}
+      {hint && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

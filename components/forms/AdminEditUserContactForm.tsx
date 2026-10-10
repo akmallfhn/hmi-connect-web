@@ -173,7 +173,7 @@ function ContactFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="pl-1 text-[15px] font-medium text-[#172033]">
+        <label className="pl-1 text-[15px] font-medium text-heading">
           Jenis Kelamin
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -242,7 +242,7 @@ function ContactFields({
         />
       </div>
 
-      <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

@@ -83,12 +83,12 @@ export default function TrainingCatalogPage({
     <TrainingPageShell viewer={viewer} mobileBackTitle="Training">
       <PageMargin className="pt-3 lg:pt-6">
         <main className="flex flex-col gap-3 lg:gap-6">
-          <PageBanner className="bg-[#013334]">
+          <PageBanner className="bg-brand-deep">
             <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
               <h1 className="text-[15px] font-medium leading-snug sm:text-xl lg:text-2xl">
                 Training Center
               </h1>
-              <p className="mt-1 text-[10px] text-white/70 lg:flex lg:text-base">
+              <p className="mt-1 text-[10px] text-on-dark/70 lg:flex lg:text-base">
                 Jelajahi Latihan Kader dari berbagai daerah, simpan dan
                 registrasi.
               </p>
@@ -101,7 +101,7 @@ export default function TrainingCatalogPage({
                 sizes="(min-width: 1024px) 540px, 45vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-black/25" />
+              <div className="absolute inset-0 bg-media-backdrop/25" />
             </div>
           </PageBanner>
 
@@ -115,9 +115,9 @@ export default function TrainingCatalogPage({
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Cari nama training, kota, atau penyelenggara"
                 icon={
-                  <IconSearch className="size-4 text-[#7b8190]" stroke={2} />
+                  <IconSearch className="size-4 text-subtle-foreground" stroke={2} />
                 }
-                className="h-11 rounded-full bg-white pr-12 text-sm"
+                className="h-11 rounded-full bg-surface pr-12 text-sm"
                 trailing={
                   search ? (
                     <button
@@ -127,7 +127,7 @@ export default function TrainingCatalogPage({
                         navigateWith({ search: undefined });
                       }}
                       aria-label="Hapus pencarian"
-                      className="flex size-7 cursor-pointer items-center justify-center rounded-full text-[#6d7480] transition hover:bg-[#dbe3ef]"
+                      className="flex size-7 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-border-strong"
                     >
                       <IconX className="size-4" stroke={2} />
                     </button>
@@ -152,7 +152,7 @@ export default function TrainingCatalogPage({
                   <IconFilter className="size-4" stroke={2} />
                   {activeFilterCount > 0 && (
                     <span
-                      className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
+                      className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-badge-destructive px-1 text-[10px] font-semibold leading-none text-badge-foreground ring-2 ring-on-dark"
                       aria-label={`${activeFilterCount} filter aktif`}
                     >
                       {activeFilterCount > 9 ? "9+" : activeFilterCount}
@@ -172,11 +172,11 @@ export default function TrainingCatalogPage({
                     type="button"
                     aria-pressed={initialLevel === level.value}
                     onClick={() => navigateWith({ level: level.value })}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-[#41474e] transition hover:bg-primary-soft hover:text-primary"
+                    className="flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition hover:bg-primary-soft hover:text-primary-foreground"
                   >
                     {level.label}
                     {initialLevel === level.value && (
-                      <IconCheck className="size-4 text-primary" stroke={2} />
+                      <IconCheck className="size-4 text-primary-foreground" stroke={2} />
                     )}
                   </button>
                 ))}
@@ -189,7 +189,7 @@ export default function TrainingCatalogPage({
               <button
                 type="button"
                 onClick={() => router.push("/trainings")}
-                className="inline-flex h-9 self-start cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#5f6573] transition hover:bg-white hover:text-[#172033]"
+                className="inline-flex h-9 self-start cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-muted-foreground transition hover:bg-surface hover:text-heading"
               >
                 <IconRefresh className="size-3.5" stroke={2} />
                 Reset pencarian dan filter
@@ -197,16 +197,16 @@ export default function TrainingCatalogPage({
             )}
 
             {result.list.length === 0 ? (
-              <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-[#cfd5df] bg-white px-5 text-center">
+              <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong bg-surface px-5 text-center">
                 <EmptyStateIllustration
                   className="h-auto w-40"
                   aria-hidden="true"
                 />
                 <div className="mt-4">
-                  <p className="font-semibold text-[#172033]">
+                  <p className="font-semibold text-heading">
                     Belum ada agenda yang cocok
                   </p>
-                  <p className="mt-1 text-sm text-[#5f6573]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Coba level lain atau ubah kata kunci pencarianmu.
                   </p>
                 </div>

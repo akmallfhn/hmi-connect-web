@@ -200,7 +200,7 @@ function QuickEditFields({ user, onClose, onSaved }: QuickEditFieldsProps) {
         required
       />
 
-      <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

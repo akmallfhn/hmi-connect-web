@@ -21,7 +21,7 @@ import {
 } from "@/lib/constants";
 
 const MENU_ITEM_CLASS =
-  "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]";
+  "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted";
 
 const STATUS_LABEL: Partial<
   Record<ArticleStatusEnum, { variant: LabelVariant; text: string }>
@@ -97,17 +97,17 @@ export default function ArticleListRow({
               name={article.author_name}
               size={20}
             />
-            <span className="truncate text-[13px] text-[#5f6573] lg:text-sm">
+            <span className="truncate text-[13px] text-muted-foreground lg:text-sm">
               {article.author_name}
             </span>
             {status && <Label variant={status.variant}>{status.text}</Label>}
           </div>
 
-          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] lg:text-lg font-medium leading-snug text-[#172033] hover:text-secondary sm:text-xl">
+          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] lg:text-lg font-medium leading-snug text-heading hover:text-secondary-foreground sm:text-xl">
             {article.title}
           </h2>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[#8a909d] lg:text-sm">
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-disabled-foreground lg:text-sm">
             <span>{formatShortDate(article.published_at)}</span>
             <span aria-hidden="true">·</span>
             <Label variant="gray" size="sm">
@@ -127,7 +127,7 @@ export default function ArticleListRow({
               onClick={repostToFeed}
               aria-label={`Repost artikel ${article.title} ke feed`}
               title="Repost ke feed"
-              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+              className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             >
               <Repeat2 className="size-4" />
             </Button>
@@ -141,7 +141,7 @@ export default function ArticleListRow({
               }}
               aria-label={`Bagikan artikel ${article.title}`}
               title="Bagikan artikel"
-              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+              className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             >
               <Share2 className="size-4" />
             </Button>
@@ -157,7 +157,7 @@ export default function ArticleListRow({
                     toggle();
                   }}
                   aria-label={`Opsi artikel ${article.title}`}
-                  className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
@@ -169,7 +169,7 @@ export default function ArticleListRow({
                   onClick={go(articleHref(article))}
                   className={MENU_ITEM_CLASS}
                 >
-                  <Eye className="size-4 text-[#5f6573]" />
+                  <Eye className="size-4 text-muted-foreground" />
                   Lihat artikel
                 </button>
                 {canEdit && (
@@ -178,7 +178,7 @@ export default function ArticleListRow({
                     onClick={go(`${articleHref(article)}/edit`)}
                     className={MENU_ITEM_CLASS}
                   >
-                    <Pencil className="size-4 text-[#5f6573]" />
+                    <Pencil className="size-4 text-muted-foreground" />
                     Edit artikel
                   </button>
                 )}
@@ -187,7 +187,7 @@ export default function ArticleListRow({
           </div>
         </div>
 
-        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f7fb] text-[#aeb8c7] sm:size-28">
+        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted text-subtle-foreground sm:size-28">
           {article.image_url ? (
             <Image
               src={article.image_url}

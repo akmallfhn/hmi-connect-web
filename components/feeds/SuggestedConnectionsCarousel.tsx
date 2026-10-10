@@ -29,8 +29,8 @@ export default function SuggestedConnectionsCarousel({
   if (visible.length === 0) return null;
 
   return (
-    <section className="border border-x-0 border-[#e6e9ef] bg-white py-4 lg:rounded-2xl lg:border-x">
-      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-[#172033] xl:text-[15px]">
+    <section className="border border-x-0 border-border bg-surface py-4 lg:rounded-2xl lg:border-x">
+      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-heading xl:text-[15px]">
         {title}
       </h2>
 
@@ -86,12 +86,12 @@ function ConnectionCard({
   }
 
   return (
-    <div className="relative flex w-40 shrink-0 snap-start flex-col items-center rounded-xl border border-[#e6e9ef] p-4 sm:w-44">
+    <div className="relative flex w-40 shrink-0 snap-start flex-col items-center rounded-xl border border-border p-4 sm:w-44">
       <button
         type="button"
         onClick={() => onDismiss(connection.id)}
         aria-label={`Sembunyikan ${connection.full_name}`}
-        className="absolute right-1.5 top-1.5 cursor-pointer rounded-full p-1 text-[#7b8190] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+        className="absolute right-1.5 top-1.5 cursor-pointer rounded-full p-1 text-subtle-foreground transition hover:bg-surface-muted hover:text-heading"
       >
         <X className="size-4" />
       </button>
@@ -102,13 +102,13 @@ function ConnectionCard({
 
       <Link
         href={profileHref}
-        className="mt-3 line-clamp-1 w-full text-center text-sm font-semibold text-[#172033] hover:underline lg:text-[15px]"
+        className="mt-3 line-clamp-1 w-full text-center text-sm font-semibold text-heading hover:underline lg:text-[15px]"
       >
         {connection.full_name}
       </Link>
 
       {/* Reserved even when empty, so every card's Ikuti button lands on the same line. */}
-      <p className="mt-0.5 line-clamp-2 h-8 w-full text-center text-xs text-[#5f6573] lg:text-[13px]">
+      <p className="mt-0.5 line-clamp-2 h-8 w-full text-center text-xs text-muted-foreground lg:text-[13px]">
         {subtitle}
       </p>
 

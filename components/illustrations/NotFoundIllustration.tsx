@@ -5,6 +5,7 @@ const NotFoundIllustration = (props: SVGProps<SVGSVGElement>) => (
     viewBox="0 0 233 227"
     fill="none"
     {...props}
+    className={["theme-illustration", props.className].filter(Boolean).join(" ")}
   >
     <path
       fill="#D44D3B"

@@ -55,8 +55,8 @@ export default function TrainingParticipantsTab({
   }, [searchInput]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-      <div className="border-b border-[#e6e9ef] p-5">
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="border-b border-border p-5">
         <div className="w-full sm:max-w-sm">
           <Input
             inputId="training-participant-search"
@@ -82,7 +82,7 @@ export default function TrainingParticipantsTab({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase text-[#5f6573]">
+            <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Peserta</th>
                 <th className="px-4 py-3">Email</th>
@@ -90,7 +90,7 @@ export default function TrainingParticipantsTab({
                 <th className="px-4 py-3">Terdaftar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+            <tbody className="divide-y divide-divider text-[13px]">
               {participants.map((participant) => (
                 <tr key={participant.user_id}>
                   <td className="px-4 py-3">
@@ -101,22 +101,22 @@ export default function TrainingParticipantsTab({
                         size={34}
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[#172033]">
+                        <p className="truncate text-sm font-semibold text-heading">
                           {participant.user_full_name}
                         </p>
-                        <p className="truncate text-xs text-[#5f6573]">
+                        <p className="truncate text-xs text-muted-foreground">
                           @{participant.user_username}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[#172033]">
+                  <td className="px-4 py-3 text-heading">
                     {participant.user_email}
                   </td>
                   <td className="px-4 py-3">
                     <TrainingResultLabel result={participant.result} />
                   </td>
-                  <td className="px-4 py-3 text-[#5f6573]">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {new Date(participant.created_at).toLocaleDateString("id-ID", {
                       day: "numeric",
                       month: "short",
@@ -132,13 +132,13 @@ export default function TrainingParticipantsTab({
       )}
 
       {participants.length > 0 && (
-        <div className="flex flex-col items-center gap-3 border-t border-[#e6e9ef] p-5">
+        <div className="flex flex-col items-center gap-3 border-t border-border p-5">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPage}
             queryKey="participant_page"
           />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
             {(currentPage - 1) * pageSize + participants.length} dari {totalData} peserta
           </p>

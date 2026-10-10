@@ -195,19 +195,19 @@ export default function SuspendedEntityList({
   return (
     <article
       aria-busy={isLoading}
-      className="relative flex h-full flex-col rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm"
+      className="relative flex h-full flex-col rounded-2xl border border-border bg-surface p-5 shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-[#172033]">{title}</h3>
-          <p className="text-sm leading-5 text-[#5f6573]">
+          <h3 className="text-base font-bold text-heading">{title}</h3>
+          <p className="text-sm leading-5 text-muted-foreground">
             Entitas yang sedang berstatus tidak aktif
           </p>
         </div>
         {isLoading && (
           <LoaderCircle
             aria-label="Memuat entitas tidak aktif"
-            className="mt-0.5 size-4 shrink-0 animate-spin text-primary"
+            className="mt-0.5 size-4 shrink-0 animate-spin text-primary-foreground"
           />
         )}
       </div>
@@ -216,7 +216,7 @@ export default function SuspendedEntityList({
         <div
           role="tablist"
           aria-label="Jenis entitas tidak aktif"
-          className="mt-4 inline-flex w-fit self-start rounded-full bg-[#f5f7fb] p-1"
+          className="mt-4 inline-flex w-fit self-start rounded-full bg-surface-muted p-1"
         >
           {tabs.map((tab) => {
             const isActive = activeEntityType === tab.entityType;
@@ -232,12 +232,12 @@ export default function SuspendedEntityList({
                 onClick={() => selectTab(tab.entityType)}
                 className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                   isActive
-                    ? "bg-white text-primary shadow-sm"
-                    : "text-[#5f6573] hover:text-[#172033]"
+                    ? "bg-surface text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-heading"
                 }`}
               >
                 {tab.label}
-                <span className="flex size-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                <span className="flex size-5 items-center justify-center rounded-full bg-badge-destructive text-[10px] font-bold text-badge-foreground">
                   {formatNumber(tab.initialData?.metapaging.total_data ?? 0)}
                 </span>
               </button>
@@ -256,29 +256,29 @@ export default function SuspendedEntityList({
       >
         {entries.length === 0 ? (
           <div className="flex min-h-40 flex-1 items-center justify-center text-center">
-            <p className="text-sm text-[#5f6573]">
+            <p className="text-sm text-muted-foreground">
               Tidak ada {activeTab.label.toLowerCase()} yang suspended.
             </p>
           </div>
         ) : (
-          <div className="mt-4 divide-y divide-[#eef0f4]">
+          <div className="mt-4 divide-y divide-divider">
             {entries.map((entry) => (
               <div
                 key={entry.id}
                 className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-foreground">
                   <EntityIcon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[#172033]">
+                  <p className="truncate text-sm font-semibold text-heading">
                     {formatEntityName(activeTab.entityType, entry.name)}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-[#5f6573]">
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
                     {getParentName(activeTab.entityType, entry)}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-destructive-soft px-2.5 py-1 text-[11px] font-semibold text-destructive">
+                <span className="shrink-0 rounded-full bg-badge-destructive px-2.5 py-1 text-[11px] font-semibold text-badge-foreground">
                   Tidak Aktif
                 </span>
               </div>
@@ -288,14 +288,14 @@ export default function SuspendedEntityList({
       </div>
 
       {loadFailed && (
-        <p className="mt-3 text-center text-xs text-destructive" role="alert">
+        <p className="mt-3 text-center text-xs text-destructive-foreground" role="alert">
           Data gagal dimuat. Silakan coba lagi.
         </p>
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eef0f4] pt-4">
-          <p className="text-xs text-[#5f6573]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">
             {firstItem}–{lastItem} dari {formatNumber(totalData)} data
           </p>
           <div className="flex items-center gap-1.5">
@@ -308,7 +308,7 @@ export default function SuspendedEntityList({
             >
               <ChevronLeft className="size-3.5" /> Prev
             </Button>
-            <span className="min-w-14 text-center text-xs font-semibold text-[#172033]">
+            <span className="min-w-14 text-center text-xs font-semibold text-heading">
               {currentPage} / {totalPages}
             </span>
             <Button

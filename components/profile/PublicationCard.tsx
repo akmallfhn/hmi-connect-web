@@ -24,9 +24,9 @@ export default function PublicationCard({
   if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
+        <h2 className="text-sm font-stack-sans-headline font-medium text-heading xl:text-[15px]">
           Publikasi
         </h2>
         {isOwnProfile && (
@@ -39,13 +39,13 @@ export default function PublicationCard({
 
       <div className="mt-3 flex flex-col gap-4">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573] xl:text-[15px]">
+          <p className="rounded-xl border border-dashed border-border-strong px-4 py-5 text-sm text-muted-foreground xl:text-[15px]">
             Belum ada publikasi yang ditambahkan.
           </p>
         ) : (
           entries.map((entry) => (
             <div key={entry.id} className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
                 <BookOpen className="size-5" />
               </div>
               <div className="min-w-0">
@@ -54,23 +54,23 @@ export default function PublicationCard({
                     href={entry.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-semibold text-[#172033] hover:text-primary hover:underline xl:text-[15px]"
+                    className="text-sm font-semibold text-heading hover:text-primary-foreground hover:underline xl:text-[15px]"
                   >
                     {entry.title}
                   </a>
                 ) : (
-                  <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+                  <p className="text-sm font-semibold text-heading xl:text-[15px]">
                     {entry.title}
                   </p>
                 )}
-                <p className="text-sm text-[#5f6573] xl:text-[15px]">
+                <p className="text-sm text-muted-foreground xl:text-[15px]">
                   {entry.publisher}
                 </p>
-                <p className="text-xs text-[#5f6573] xl:text-[13px]">
+                <p className="text-xs text-muted-foreground xl:text-[13px]">
                   {entry.year}
                 </p>
                 {entry.description && (
-                  <p className="mt-1 text-sm leading-relaxed text-[#5f6573] xl:text-[15px]">
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground xl:text-[15px]">
                     {entry.description}
                   </p>
                 )}

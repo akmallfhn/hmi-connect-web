@@ -56,13 +56,13 @@ export default function Modal({
       ].join(" ")}
     >
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-media-backdrop/40"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         className={[
-          "relative flex w-full flex-col overflow-hidden bg-white shadow-xl",
+          "relative flex w-full flex-col overflow-hidden bg-surface shadow-xl",
           // A phone sheet may rise to just under the top edge; a dialog keeps its 85vh cap.
           isSheet
             ? "max-h-[calc(100dvh-1.5rem)] rounded-t-2xl sm:max-h-[85vh] sm:rounded-2xl"
@@ -76,18 +76,18 @@ export default function Modal({
         {isSheet && (
           <span
             aria-hidden="true"
-            className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-[#dbe3ef] sm:hidden"
+            className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-border-strong sm:hidden"
           />
         )}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#e6e9ef] px-5 pb-2 pt-4">
-          <h2 className="font-stack-sans-headline text-base font-medium text-[#172033] xl:text-lg">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 pb-2 pt-4">
+          <h2 className="font-stack-sans-headline text-base font-medium text-heading xl:text-lg">
             {title}
           </h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="size-8 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+            className="size-8 rounded-full text-muted-foreground hover:bg-surface-muted"
             aria-label="Tutup"
           >
             <X className="size-4" />

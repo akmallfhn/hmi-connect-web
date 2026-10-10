@@ -22,11 +22,11 @@ export default function MasterAttentionLists({
         <div>
           <h2
             id="master-attention-title"
-            className="text-base font-bold text-[#172033]"
+            className="text-base font-bold text-heading"
           >
             Data yang Perlu Perhatian
           </h2>
-          <p className="mt-0.5 text-xs text-[#5f6573]">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Ringkasan entitas yang membutuhkan pemantauan dan tindak lanjut
           </p>
         </div>

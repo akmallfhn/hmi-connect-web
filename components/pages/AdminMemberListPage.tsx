@@ -84,7 +84,7 @@ export default function AdminMemberListPage({
 
       <div className="mt-6">
         {users.length === 0 ? (
-          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <EmptyState
               title={isFiltered ? "Kader tidak ditemukan" : "Belum ada kader"}
               description={
@@ -106,9 +106,9 @@ export default function AdminMemberListPage({
                 />
               ))}
             </ul>
-            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+            <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface xl:block">
               <table className="w-full min-w-[1000px] text-left text-sm">
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold tracking-wide text-[#5f6573] uppercase">
+                <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">
                   <tr>
                     <SortableHeader
                       label="User"
@@ -130,7 +130,7 @@ export default function AdminMemberListPage({
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                <tbody className="divide-y divide-divider text-[13px]">
                   {users.map((user) => (
                     <tr key={user.id} className="align-middle">
                       <td className="px-4 py-3">
@@ -144,34 +144,34 @@ export default function AdminMemberListPage({
                             size={36}
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033] group-hover:text-primary">
+                            <p className="truncate text-sm font-semibold text-heading group-hover:text-primary-foreground">
                               {user.full_name}
                             </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               @{user.username}
                             </p>
                           </div>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-[#5f6573]">
+                      <td className="px-4 py-3 text-muted-foreground">
                         <span className="block max-w-56 truncate">
                           {user.email || "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {user.chapter_name ? (
                           <div className="min-w-0">
                             <p className="truncate">
                               Komisariat {user.chapter_name}
                             </p>
                             {showBranchContext && user.branch_name && (
-                              <p className="truncate text-[13px] text-[#5f6573]">
+                              <p className="truncate text-[13px] text-muted-foreground">
                                 Cabang {user.branch_name}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-[#5f6573]">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -180,7 +180,7 @@ export default function AdminMemberListPage({
                       <td className="px-4 py-3">
                         <UserVerifiedLabel status={user.verification_status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[#5f6573]">
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                         {user.created_at
                           ? formatShortDateTime(user.created_at)
                           : "—"}
@@ -214,7 +214,7 @@ export default function AdminMemberListPage({
       {users.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
             {(currentPage - 1) * pageSize + users.length} dari {totalData} kader
           </p>

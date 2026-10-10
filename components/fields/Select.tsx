@@ -62,10 +62,10 @@ export default function Select({
       {label && (
         <label
           htmlFor={selectId}
-          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]"
+          className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading"
         >
           {label}
-          {required && <span className="text-destructive">*</span>}
+          {required && <span className="text-destructive-foreground">*</span>}
         </label>
       )}
 
@@ -73,10 +73,10 @@ export default function Select({
         id={selectId}
         className={[
           "relative flex w-full items-center rounded-lg border p-2 text-base transition",
-          isOpen ? "border-primary ring-2 ring-primary/15" : "border-[#dbe3ef]",
+          isOpen ? "border-primary ring-2 ring-primary/15" : "border-border-strong",
           disabled
-            ? "cursor-not-allowed border-[#e0e3e8] bg-[#f3f4f6] text-[#8a909d] opacity-100"
-            : "cursor-pointer bg-white text-[#172033]",
+            ? "cursor-not-allowed border-border bg-surface-muted text-disabled-foreground opacity-100"
+            : "cursor-pointer bg-surface text-heading",
           icon ? "pl-10" : "",
         ]
           .filter(Boolean)
@@ -86,7 +86,7 @@ export default function Select({
         }}
       >
         {icon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#5f6573]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
             {icon}
           </div>
         )}
@@ -107,7 +107,7 @@ export default function Select({
             className={`block truncate text-base ${
               selectedOption && value !== "" && value !== null
                 ? ""
-                : "text-[#5f6573]/60"
+                : "text-placeholder"
             }`}
           >
             {selectedOption?.label || placeholder}
@@ -115,13 +115,13 @@ export default function Select({
         </div>
 
         {!disabled && (
-          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#5f6573]">
+          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
             <ChevronDown className="size-4" />
           </div>
         )}
 
         {isOpen && !disabled && (
-          <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-lg border border-[#dbe3ef] bg-white shadow-md">
+          <div className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-lg border border-border-strong bg-surface shadow-md">
             <ul className="flex max-h-40 flex-col overflow-y-auto p-1 text-base">
               {options.map((opt, index) => (
                 <li
@@ -131,8 +131,8 @@ export default function Select({
                     onChange?.(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 hover:bg-primary-soft hover:text-primary ${
-                    value === opt.value ? "bg-primary-soft text-primary" : ""
+                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 hover:bg-primary-soft hover:text-primary-foreground ${
+                    value === opt.value ? "bg-primary-soft text-primary-foreground" : ""
                   }`}
                 >
                   {opt.image && (

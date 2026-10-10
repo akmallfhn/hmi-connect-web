@@ -62,10 +62,10 @@ export default function ReactorsListModal({
     <Modal open={open} onClose={onClose} title="Reaksi">
       <div className="flex flex-col gap-1">
         {!loaded && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">Memuat...</p>
+          <p className="py-4 text-center text-sm text-muted-foreground">Memuat...</p>
         )}
         {loaded && reactors.length === 0 && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">
+          <p className="py-4 text-center text-sm text-muted-foreground">
             Belum ada reaksi.
           </p>
         )}
@@ -83,15 +83,15 @@ export default function ReactorsListModal({
               key={`${reactor.id}-${reactor.author_entity_type ?? "user"}-${reactor.author_entity_id ?? "self"}`}
               href={actingHref(author.href)}
               onClick={onClose}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
+              className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-muted"
             >
               <FeedAuthorAvatar author={author} size={40} />
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-[#172033]">
+                <p className="truncate text-sm font-medium text-heading">
                   {author.name}
                 </p>
                 {!entityAuthor && (
-                  <p className="truncate text-xs text-[#5f6573]">
+                  <p className="truncate text-xs text-muted-foreground">
                     @{reactor.username}
                   </p>
                 )}
@@ -104,7 +104,7 @@ export default function ReactorsListModal({
             type="button"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="mt-2 cursor-pointer py-1.5 text-center text-sm font-semibold text-primary hover:underline"
+            className="mt-2 cursor-pointer py-1.5 text-center text-sm font-semibold text-primary-foreground hover:underline"
           >
             {loadingMore ? "Memuat..." : "Muat lebih banyak"}
           </button>

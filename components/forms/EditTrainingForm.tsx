@@ -205,18 +205,18 @@ function TrainingFields({
             "flex flex-col gap-4 rounded-xl border p-4",
             draft.removed
               ? "border-destructive/30 bg-destructive-soft/30"
-              : "border-[#e6e9ef]",
+              : "border-border",
           ].join(" ")}
         >
           {(draft.isNew || draft.removed) && (
             <div className="flex flex-wrap gap-2">
               {draft.isNew && (
-                <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
+                <span className="inline-flex w-fit items-center rounded-full bg-badge-primary px-2 py-0.5 text-xs font-semibold text-badge-foreground">
                   Baru
                 </span>
               )}
               {draft.removed && (
-                <span className="inline-flex w-fit items-center rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-semibold text-destructive">
+                <span className="inline-flex w-fit items-center rounded-full bg-badge-destructive px-2 py-0.5 text-xs font-semibold text-badge-foreground">
                   Akan dihapus
                 </span>
               )}
@@ -266,7 +266,7 @@ function TrainingFields({
             />
           </div>
 
-          <div className="flex justify-end border-t border-[#e6e9ef] pt-4">
+          <div className="flex justify-end border-t border-border pt-4">
             <Button
               variant={draft.removed ? "outline" : "destructive"}
               size="sm"
@@ -291,7 +291,7 @@ function TrainingFields({
       <Button
         variant="ghost"
         onClick={addDraft}
-        className="w-full gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-primary hover:bg-primary-soft"
+        className="w-full gap-1.5 rounded-lg border border-dashed border-border-strong py-2.5 text-primary-foreground hover:bg-primary-soft"
       >
         <Plus className="size-4" />
         Tambah Riwayat Kaderisasi

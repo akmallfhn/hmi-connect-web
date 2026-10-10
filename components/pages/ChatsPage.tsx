@@ -31,7 +31,7 @@ export default function ChatsPage({ viewer, children }: ChatsPageProps) {
 
   return (
     <ChatConversationsProvider userId={viewer.userId}>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface">
         <div className={isThreadRoute ? "hidden lg:block lg:shrink-0" : "shrink-0"}>
           <Header
             fullName={viewer.fullName}
@@ -44,11 +44,11 @@ export default function ChatsPage({ viewer, children }: ChatsPageProps) {
         </div>
 
         <PageMargin noMobilePadding className="flex min-h-0 min-w-0 flex-1">
-          <div className="flex min-h-0 min-w-0 flex-1 lg:border-x lg:border-[#e6e9ef]">
+          <div className="flex min-h-0 min-w-0 flex-1 lg:border-x lg:border-border">
             <aside
               className={[
                 isThreadRoute ? "hidden lg:flex" : "flex",
-                "min-w-0 w-full flex-col lg:w-[360px] lg:shrink-0 lg:border-r lg:border-[#e6e9ef] xl:w-[400px]",
+                "min-w-0 w-full flex-col lg:w-[360px] lg:shrink-0 lg:border-r lg:border-border xl:w-[400px]",
               ].join(" ")}
             >
               <ConversationList viewerId={viewer.userId} activeConversationId={activeConversationId} />

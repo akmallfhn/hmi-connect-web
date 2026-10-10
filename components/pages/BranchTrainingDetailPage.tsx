@@ -113,7 +113,7 @@ export default function BranchTrainingDetailPage({
         <div
           role="tablist"
           aria-label="Detail training"
-          className="grid w-full grid-cols-4 gap-1 rounded-lg border border-[#e6e9ef] bg-white p-1 sm:max-w-2xl"
+          className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-surface p-1 sm:max-w-2xl"
         >
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -128,8 +128,8 @@ export default function BranchTrainingDetailPage({
                 onClick={() => selectTab(tab.id)}
                 className={`flex h-14 min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30 sm:h-10 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm ${
                   isActive
-                    ? "bg-secondary text-white shadow-sm"
-                    : "text-[#69707d] hover:bg-secondary-soft hover:text-secondary"
+                    ? "bg-secondary text-on-secondary shadow-sm"
+                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
                 }`}
               >
                 <Icon className="size-4 shrink-0" />

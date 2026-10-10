@@ -5,6 +5,7 @@ const ForbiddenIllustration = (props: SVGProps<SVGSVGElement>) => (
     viewBox="0 0 234 205"
     fill="none"
     {...props}
+    className={["theme-illustration", props.className].filter(Boolean).join(" ")}
   >
     <path
       fill="#1C2731"

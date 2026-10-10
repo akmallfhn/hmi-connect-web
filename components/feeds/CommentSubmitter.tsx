@@ -53,14 +53,14 @@ export default function CommentSubmitter({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        className="max-h-40 flex-1 resize-none rounded-2xl border border-[#e6e9ef] bg-[#f5f7fb] px-4 py-2 text-sm leading-5 outline-none focus:border-primary [&::-webkit-scrollbar]:hidden"
+        className="max-h-40 flex-1 resize-none rounded-2xl border border-border bg-surface-muted px-4 py-2 text-sm leading-5 outline-none focus:border-primary [&::-webkit-scrollbar]:hidden"
       />
       <Button
         type="submit"
         variant="ghost"
         size="icon"
         disabled={disabled || !value.trim()}
-        className="shrink-0 rounded-full text-primary hover:bg-primary-soft"
+        className="shrink-0 rounded-full text-primary-foreground hover:bg-primary-soft"
         aria-label="Kirim"
       >
         <Send className="size-4" />

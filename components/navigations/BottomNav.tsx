@@ -80,7 +80,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-[#e6e9ef] bg-white/95 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-border bg-surface/95 backdrop-blur lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <Link
@@ -88,7 +88,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
           onClick={triggerHome}
           className={[
             "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-            isHome ? "text-primary" : "text-[#5f6573]",
+            isHome ? "text-primary-foreground" : "text-muted-foreground",
           ].join(" ")}
         >
           <NavIconPulse pressed={homePressed}>
@@ -102,7 +102,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
           onClick={triggerSearch}
           className={[
             "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-            isSearch ? "text-primary" : "text-[#5f6573]",
+            isSearch ? "text-primary-foreground" : "text-muted-foreground",
           ].join(" ")}
         >
           <NavIconPulse pressed={searchPressed}>
@@ -117,9 +117,9 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
             onClick={() => setComposeOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={composeOpen}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-muted-foreground"
           >
-            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
+            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-on-primary-action shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
               <IconPlus className="size-5" stroke={2.4} />
             </span>
             Posting
@@ -127,9 +127,9 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
         ) : (
           <Link
             href="/auth/login"
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-[#5f6573]"
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-medium text-muted-foreground"
           >
-            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
+            <span className="-mt-5 flex size-11 items-center justify-center rounded-full bg-primary text-on-primary-action shadow-md shadow-primary/30 transition-transform duration-150 active:scale-90">
               <IconPlus className="size-5" stroke={2.4} />
             </span>
             Posting
@@ -141,7 +141,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
           onClick={triggerChats}
           className={[
             "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-            isChats ? "text-primary" : "text-[#5f6573]",
+            isChats ? "text-primary-foreground" : "text-muted-foreground",
           ].join(" ")}
         >
           <NavIconPulse pressed={chatsPressed}>
@@ -158,7 +158,7 @@ export default function BottomNav({ userId, username }: BottomNavProps) {
           onClick={triggerProfile}
           className={[
             "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium",
-            isProfile ? "text-primary" : "text-[#5f6573]",
+            isProfile ? "text-primary-foreground" : "text-muted-foreground",
           ].join(" ")}
         >
           <NavIconPulse pressed={profilePressed}>

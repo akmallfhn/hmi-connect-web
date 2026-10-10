@@ -462,8 +462,8 @@ export default function ArticleComposerPage({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#172033]">
-      <header className="sticky top-0 z-40 h-16 border-b border-[#e6e9ef] bg-white/95 backdrop-blur-md">
+    <main className="min-h-screen bg-surface text-heading">
+      <header className="sticky top-0 z-40 h-16 border-b border-border bg-surface/95 backdrop-blur-md">
         <div className="flex h-full items-center justify-between px-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             <button
@@ -471,16 +471,16 @@ export default function ArticleComposerPage({
               aria-label="Tutup editor"
               title="Tutup editor"
               onClick={goBack}
-              className="flex size-10 shrink-0 items-center justify-center rounded-full text-[#343a46] transition hover:bg-[#f3f5f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               <ChevronLeft className="size-6" strokeWidth={2.25} />
             </button>
 
-            <div className="flex items-center gap-2 rounded-lg border border-[#e1e5ea] bg-white px-3 py-1.5 text-sm text-[#454b57]">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground">
               {isSaved ? (
-                <Check className="size-3.5 text-[#1baf7a]" strokeWidth={3} />
+                <Check className="size-3.5 text-chart-success" strokeWidth={3} />
               ) : (
-                <span className="size-2 animate-pulse rounded-full bg-[#eda100]" />
+                <span className="size-2 animate-pulse rounded-full bg-chart-warning" />
               )}
               <span className="hidden sm:inline">
                 {isSaved ? "Tersimpan" : "Menyimpan..."}
@@ -537,14 +537,14 @@ export default function ArticleComposerPage({
           placeholder="Judul artikel"
           aria-label="Judul artikel"
           aria-describedby="article-title-limit"
-          className="font-stack-sans-headline block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[26px] font-medium leading-[1.15] text-[#172033] outline-none placeholder:text-[#afb4bd] sm:text-[38px] sm:leading-[1.1] lg:text-[40px]"
+          className="font-stack-sans-headline block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[26px] font-medium leading-[1.15] text-heading outline-none placeholder:text-subtle-foreground sm:text-[38px] sm:leading-[1.1] lg:text-[40px]"
         />
         <div
           id="article-title-limit"
           className={`mt-2 flex min-h-5 items-center justify-end gap-2 text-xs ${
             title.length >= MAX_TITLE_LENGTH
-              ? "text-destructive"
-              : "text-[#9aa0ab]"
+              ? "text-destructive-foreground"
+              : "text-disabled-foreground"
           }`}
         >
           {title.length >= MAX_TITLE_LENGTH && (
@@ -563,13 +563,13 @@ export default function ArticleComposerPage({
           onKeyDown={handleSingleLineKeyDown}
           placeholder="Tambahkan ringkasan singkat..."
           aria-label="Ringkasan artikel"
-          className="article-deck mt-3 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-[#5f6573] outline-none placeholder:text-[#b7bbc3] sm:mt-4"
+          className="article-deck mt-3 block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-muted-foreground outline-none placeholder:text-subtle-foreground sm:mt-4"
         />
         <div
           className={`mt-1 text-right text-xs ${
             subtitle.length >= MAX_DESCRIPTION_LENGTH
-              ? "text-destructive"
-              : "text-[#9aa0ab]"
+              ? "text-destructive-foreground"
+              : "text-disabled-foreground"
           }`}
         >
           {subtitle.length >= MAX_DESCRIPTION_LENGTH && (
@@ -582,7 +582,7 @@ export default function ArticleComposerPage({
 
         <section className="mt-7">
           {coverUrl ? (
-            <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[#f3f5f7]">
+            <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-surface-muted">
               <Image
                 src={coverUrl}
                 alt="Cover artikel"
@@ -590,7 +590,7 @@ export default function ArticleComposerPage({
                 unoptimized
                 className="object-cover transition duration-300 group-hover:scale-[1.01]"
               />
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15 opacity-100 transition sm:bg-black/0 sm:opacity-0 sm:group-hover:bg-black/25 sm:group-hover:opacity-100 sm:group-focus-within:bg-black/25 sm:group-focus-within:opacity-100">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-media-backdrop/15 opacity-100 transition sm:bg-media-backdrop/0 sm:opacity-0 sm:group-hover:bg-media-backdrop/25 sm:group-hover:opacity-100 sm:group-focus-within:bg-media-backdrop/25 sm:group-focus-within:opacity-100">
                 <div className="pointer-events-auto flex items-center gap-2">
                   <Button
                     variant="light"
@@ -625,22 +625,22 @@ export default function ArticleComposerPage({
               onClick={() => coverInputRef.current?.click()}
               onDragOver={(event) => event.preventDefault()}
               onDrop={handleCoverDrop}
-              className="flex aspect-[16/9] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#cbd2dc] bg-[#fbfcfd] px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              className="flex aspect-[16/9] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong bg-surface-subtle px-5 text-center transition hover:border-primary hover:bg-primary-soft/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
-              <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
                 <FileImage className="size-5" />
               </span>
-              <span className="mt-3 text-sm font-semibold text-[#343a46] lg:text-[15px]">
+              <span className="mt-3 text-sm font-semibold text-foreground lg:text-[15px]">
                 {isCoverUploading ? (
                   "Mengunggah cover..."
                 ) : (
                   <>
                     Unggah cover artikel{" "}
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive-foreground">*</span>
                   </>
                 )}
               </span>
-              <span className="mt-1 text-xs text-[#8a909d] lg:text-[13px]">
+              <span className="mt-1 text-xs text-disabled-foreground lg:text-[13px]">
                 Klik atau tarik gambar ke sini · rasio 16:9 disarankan
               </span>
             </button>
@@ -658,7 +658,7 @@ export default function ArticleComposerPage({
         title={isEditing ? "Perbarui artikel" : "Siapkan publikasi"}
         panelClassName="max-w-xl"
       >
-        <p className="text-sm leading-relaxed text-[#6b7280]">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           Pilih kategori dan tambahkan keyword agar artikel lebih mudah
           ditemukan.
         </p>
@@ -718,15 +718,15 @@ export default function ArticleComposerPage({
                 ))}
               </div>
             )}
-            <p className="mt-2 text-xs text-[#8a909d]">
+            <p className="mt-2 text-xs text-disabled-foreground">
               Gunakan keyword yang spesifik dan relevan dengan isi artikel.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-xl bg-[#202428]">
+        <div className="mt-6 overflow-hidden rounded-xl bg-code-bg">
           {coverUrl && (
-            <div className="relative aspect-[16/9] w-full bg-black/20">
+            <div className="relative aspect-[16/9] w-full bg-media-backdrop/20">
               <Image
                 src={coverUrl}
                 alt="Pratinjau cover artikel"
@@ -737,27 +737,27 @@ export default function ArticleComposerPage({
             </div>
           )}
           <div className="p-4">
-            <p className="font-stack-sans-headline text-xl font-medium text-white">
+            <p className="font-stack-sans-headline text-xl font-medium text-on-dark">
               {title}
             </p>
             {subtitle && (
-              <p className="mt-1.5 line-clamp-2 text-sm text-white/65">
+              <p className="mt-1.5 line-clamp-2 text-sm text-on-dark/65">
                 {subtitle}
               </p>
             )}
-            <div className="mt-3 flex items-center gap-2.5 border-t border-white/10 pt-3">
+            <div className="mt-3 flex items-center gap-2.5 border-t border-on-dark/10 pt-3">
               <Avatar src={author.avatar} name={author.fullName} size={32} />
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-on-dark">
                   {author.fullName}
                 </p>
-                <p className="text-xs text-white/70">Penulis</p>
+                <p className="text-xs text-on-dark/70">Penulis</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col-reverse gap-2 border-t border-[#e6e9ef] pt-4 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
           <Button
             variant="light"
             disabled={isPublishing}

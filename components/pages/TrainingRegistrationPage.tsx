@@ -277,9 +277,9 @@ async function uploadTrainingDocument(
 function TrainingEventCard({ training }: { training: TrainingDetail }) {
   return (
     <aside className="lg:sticky lg:top-24 lg:self-start">
-      <section className="rounded-lg border border-[#dfe3ea] bg-white p-3 sm:p-4">
+      <section className="rounded-lg border border-border bg-surface p-3 sm:p-4">
         <div className="flex items-stretch gap-4 lg:block">
-          <div className="relative aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-[#edf1f6] sm:w-36 lg:w-full">
+          <div className="relative aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-surface-muted sm:w-36 lg:w-full">
             {training.image_url ? (
               <Image
                 src={training.image_url}
@@ -290,7 +290,7 @@ function TrainingEventCard({ training }: { training: TrainingDetail }) {
                 className="object-cover"
               />
             ) : (
-              <div className="flex size-full items-center justify-center text-[#9298a5]">
+              <div className="flex size-full items-center justify-center text-subtle-foreground">
                 <ImageOff className="size-8" />
               </div>
             )}
@@ -303,10 +303,10 @@ function TrainingEventCard({ training }: { training: TrainingDetail }) {
                 isOpen={training.is_registration_open}
               />
             </div>
-            <h2 className="mt-2 line-clamp-2 text-base font-bold leading-6 text-[#172033] lg:text-lg">
+            <h2 className="mt-2 line-clamp-2 text-base font-bold leading-6 text-heading lg:text-lg">
               {training.name}
             </h2>
-            <div className="mt-3 flex flex-col gap-2 text-[13px] leading-5 text-[#5f6573] lg:text-sm">
+            <div className="mt-3 flex flex-col gap-2 text-[13px] leading-5 text-muted-foreground lg:text-sm">
               <p className="flex items-start gap-2">
                 <CalendarDays className="mt-0.5 size-4 shrink-0" />
                 <span>
@@ -748,7 +748,7 @@ export default function TrainingRegistrationPage({
     <TrainingPageShell
       viewer={viewer}
       mobileBackTitle="Pendaftaran Training"
-      bgClassName="bg-white"
+      bgClassName="bg-surface"
     >
       <main>
         <PageMargin className="py-4 lg:py-8">
@@ -757,12 +757,12 @@ export default function TrainingRegistrationPage({
 
             <div className="min-w-0">
               {registered ? (
-                <section className="flex min-h-[420px] flex-col items-center justify-center rounded-lg border border-[#dfe3ea] border-t-[6px] border-t-primary bg-white px-6 text-center">
-                  <CheckCircle2 className="size-14 text-primary" />
-                  <h1 className="mt-5 text-2xl font-bold text-[#172033]">
+                <section className="flex min-h-[420px] flex-col items-center justify-center rounded-lg border border-border border-t-[6px] border-t-primary bg-surface px-6 text-center">
+                  <CheckCircle2 className="size-14 text-primary-foreground" />
+                  <h1 className="mt-5 text-2xl font-bold text-heading">
                     Pendaftaran Berhasil
                   </h1>
-                  <p className="mt-2 max-w-md text-[15px] leading-6 text-[#5f6573]">
+                  <p className="mt-2 max-w-md text-[15px] leading-6 text-muted-foreground">
                     Data pendaftaranmu telah tercatat sebagai peserta{" "}
                     {training.name}.
                   </p>
@@ -777,20 +777,20 @@ export default function TrainingRegistrationPage({
                 </section>
               ) : (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  <header className="overflow-hidden rounded-lg border border-[#dfe3ea] border-t-[6px] border-t-primary bg-white p-5 sm:p-6">
-                    <h1 className="text-2xl font-bold leading-tight text-[#172033] sm:text-3xl">
+                  <header className="overflow-hidden rounded-lg border border-border border-t-[6px] border-t-primary bg-surface p-5 sm:p-6">
+                    <h1 className="text-2xl font-bold leading-tight text-heading sm:text-3xl">
                       Formulir Pendaftaran Training
                     </h1>
-                    <p className="mt-2 text-sm leading-6 text-[#5f6573] sm:text-[15px]">
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-[15px]">
                       {training.name}
                     </p>
-                    <p className="mt-5 border-t border-[#edf0f4] pt-4 text-xs font-medium text-destructive">
+                    <p className="mt-5 border-t border-border pt-4 text-xs font-medium text-destructive-foreground">
                       * Wajib diisi
                     </p>
                   </header>
 
-                  <section className="rounded-lg border border-[#dfe3ea] bg-white p-5 sm:p-6">
-                    <h2 className="text-lg font-bold text-[#172033]">
+                  <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                    <h2 className="text-lg font-bold text-heading">
                       Data Peserta
                     </h2>
                     <div className="mt-5 flex flex-col gap-5">
@@ -826,11 +826,11 @@ export default function TrainingRegistrationPage({
                   </section>
 
                   {hasMissingProfileData && (
-                    <section className="rounded-lg border border-[#dfe3ea] bg-white p-5 sm:p-6">
-                      <h2 className="text-lg font-bold text-[#172033]">
+                    <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                      <h2 className="text-lg font-bold text-heading">
                         Detail Identitas
                       </h2>
-                      <p className="mt-1 text-sm leading-6 text-[#5f6573]">
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
                         Lengkapi data berikut untuk melanjutkan pendaftaran.
                       </p>
 
@@ -852,9 +852,9 @@ export default function TrainingRegistrationPage({
 
                         {needsGender && (
                           <div className="flex flex-col gap-1">
-                            <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                            <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">
                               Jenis kelamin
-                              <span className="text-destructive">*</span>
+                              <span className="text-destructive-foreground">*</span>
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                               <RadioButton<GenderEnum>
@@ -878,8 +878,8 @@ export default function TrainingRegistrationPage({
                         )}
 
                         {needsAddress && (
-                          <div className="flex flex-col gap-4 border-t border-[#edf0f4] pt-5">
-                            <h3 className="font-bold text-[#41474e]">
+                          <div className="flex flex-col gap-4 border-t border-border pt-5">
+                            <h3 className="font-bold text-foreground">
                               Alamat domisili
                             </h3>
                             <SearchableSelect
@@ -944,11 +944,11 @@ export default function TrainingRegistrationPage({
                     </section>
                   )}
 
-                  <section className="rounded-lg border border-[#dfe3ea] bg-white p-5 sm:p-6">
-                    <h2 className="text-lg font-bold text-[#172033]">
+                  <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                    <h2 className="text-lg font-bold text-heading">
                       Riwayat Pendidikan
                     </h2>
-                    <p className="mt-1 text-sm leading-6 text-[#5f6573]">
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Perbarui data pendidikan yang akan digunakan pada
                       pendaftaran ini.
                     </p>
@@ -959,13 +959,13 @@ export default function TrainingRegistrationPage({
                           key={draft.clientId}
                           className={
                             index > 0
-                              ? "border-t border-[#edf0f4] pt-6"
+                              ? "border-t border-border pt-6"
                               : undefined
                           }
                         >
                           <div className="mb-4 flex items-center justify-between gap-3">
-                            <h3 className="flex items-center gap-2 font-bold text-[#41474e]">
-                              <GraduationCap className="size-4 text-primary" />
+                            <h3 className="flex items-center gap-2 font-bold text-foreground">
+                              <GraduationCap className="size-4 text-primary-foreground" />
                               Pendidikan {index + 1}
                             </h3>
                             <Button
@@ -977,7 +977,7 @@ export default function TrainingRegistrationPage({
                               disabled={
                                 submitting || educationDrafts.length === 1
                               }
-                              className="text-destructive hover:bg-destructive-soft"
+                              className="text-destructive-foreground hover:bg-destructive-soft"
                               aria-label={`Hapus pendidikan ${index + 1}`}
                               title={
                                 educationDrafts.length === 1
@@ -1095,13 +1095,13 @@ export default function TrainingRegistrationPage({
                   </section>
 
                   {training.level !== "LK1" && (
-                    <section className="rounded-lg border border-[#dfe3ea] bg-white p-5 sm:p-6">
-                      <h2 className="text-lg font-bold text-[#172033]">
+                    <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                      <h2 className="text-lg font-bold text-heading">
                         Riwayat Training
                       </h2>
                       <div className="mt-5 flex flex-col gap-7">
                         {historyDrafts.length === 0 && (
-                          <p className="text-sm leading-6 text-[#5f6573]">
+                          <p className="text-sm leading-6 text-muted-foreground">
                             Belum ada riwayat training yang ditambahkan.
                           </p>
                         )}
@@ -1110,12 +1110,12 @@ export default function TrainingRegistrationPage({
                             key={draft.clientId}
                             className={
                               index > 0
-                                ? "border-t border-[#edf0f4] pt-6"
+                                ? "border-t border-border pt-6"
                                 : undefined
                             }
                           >
                             <div className="mb-4 flex items-center justify-between gap-3">
-                              <h3 className="font-bold text-[#41474e]">
+                              <h3 className="font-bold text-foreground">
                                 Riwayat {index + 1}
                               </h3>
                               <Button
@@ -1125,7 +1125,7 @@ export default function TrainingRegistrationPage({
                                   removeHistoryDraft(draft.clientId)
                                 }
                                 disabled={submitting}
-                                className="text-destructive hover:bg-destructive-soft"
+                                className="text-destructive-foreground hover:bg-destructive-soft"
                                 aria-label={`Hapus riwayat ${index + 1}`}
                                 title="Hapus riwayat"
                               >
@@ -1216,11 +1216,11 @@ export default function TrainingRegistrationPage({
                     </section>
                   )}
 
-                  <section className="rounded-lg border border-[#dfe3ea] bg-white p-5 sm:p-6">
-                    <h2 className="text-lg font-bold text-[#172033]">
+                  <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                    <h2 className="text-lg font-bold text-heading">
                       Makalah
                     </h2>
-                    <p className="mt-1 text-sm leading-6 text-[#5f6573]">
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Opsional. Format PDF, DOC, atau DOCX dengan ukuran
                       maksimal 10MB.
                     </p>
@@ -1232,15 +1232,15 @@ export default function TrainingRegistrationPage({
                       onChange={handlePaperChange}
                     />
                     {paperFile ? (
-                      <div className="mt-5 flex items-center gap-3 rounded-lg border border-[#dbe3ef] bg-[#f8f9fb] p-3">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                      <div className="mt-5 flex items-center gap-3 rounded-lg border border-border-strong bg-surface-subtle p-3">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-foreground">
                           <FileText className="size-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-[#172033]">
+                          <p className="truncate text-sm font-semibold text-heading">
                             {paperFile.name}
                           </p>
-                          <p className="mt-0.5 text-xs text-[#7b8190]">
+                          <p className="mt-0.5 text-xs text-subtle-foreground">
                             {formatFileSize(paperFile.size)}
                           </p>
                         </div>
@@ -1260,7 +1260,7 @@ export default function TrainingRegistrationPage({
                         type="button"
                         onClick={() => paperInputRef.current?.click()}
                         disabled={submitting}
-                        className="mt-5 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#bfc7d4] bg-[#fafbfc] px-4 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-5 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong bg-surface-subtle px-4 text-sm font-semibold text-primary-foreground transition hover:border-primary hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Upload className="size-5" />
                         Unggah makalah
@@ -1271,7 +1271,7 @@ export default function TrainingRegistrationPage({
                   {errorMessage && (
                     <p
                       role="alert"
-                      className="rounded-lg border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive"
+                      className="rounded-lg border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive-foreground"
                     >
                       {errorMessage}
                     </p>

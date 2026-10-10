@@ -40,23 +40,23 @@ export default function Sheet({ open, onClose, title, description, children }: S
   return createPortal(
     <div className="font-google-sans fixed inset-0 z-[100] overscroll-contain">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-media-backdrop/40"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute inset-y-0 right-0 flex h-full w-full max-w-md flex-col border-l border-[#e6e9ef] bg-white shadow-xl">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#e6e9ef] px-5 py-4">
+      <div className="absolute inset-y-0 right-0 flex h-full w-full max-w-md flex-col border-l border-border bg-surface shadow-xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
-            <h2 className="font-stack-sans-headline text-base font-medium text-[#172033]">{title}</h2>
+            <h2 className="font-stack-sans-headline text-base font-medium text-heading">{title}</h2>
             {description && (
-              <p className="mt-0.5 text-sm text-[#5f6573]">{description}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
             )}
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+            className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             aria-label="Tutup"
           >
             <X className="size-4" />

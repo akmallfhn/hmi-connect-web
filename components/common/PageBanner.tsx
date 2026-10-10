@@ -10,7 +10,7 @@ export default function PageBanner({ children, className }: PageBannerProps) {
   return (
     <div
       className={[
-        "relative flex aspect-[3/1] items-center overflow-hidden rounded-xl px-4 text-white sm:px-6 lg:aspect-[6/1] lg:rounded-2xl lg:px-8",
+        "relative flex aspect-[3/1] items-center overflow-hidden rounded-xl px-4 text-on-dark sm:px-6 lg:aspect-[6/1] lg:rounded-2xl lg:px-8",
         className,
       ]
         .filter(Boolean)

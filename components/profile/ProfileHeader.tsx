@@ -197,13 +197,13 @@ export default function ProfileHeader({
   );
 
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x">
+    <div className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
       <div className="relative h-28 bg-gradient-to-r from-primary to-secondary sm:h-40">
         {isOwnProfile && (
           <Link
             href="/settings"
             aria-label="Pengaturan"
-            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white/30 lg:hidden"
+            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-on-dark/20 text-on-dark backdrop-blur transition hover:bg-on-dark/30 lg:hidden"
           >
             <Settings className="size-5" />
           </Link>
@@ -216,11 +216,11 @@ export default function ProfileHeader({
             <button
               type="button"
               onClick={() => setIsAvatarEditOpen(true)}
-              className="group relative -mt-14 shrink-0 overflow-hidden rounded-full border-4 border-white hover:cursor-pointer lg:-mt-16"
+              className="group relative -mt-14 shrink-0 overflow-hidden rounded-full border-4 border-on-dark hover:cursor-pointer lg:-mt-16"
               aria-label="Ubah foto profil"
             >
               <Avatar src={avatar} name={displayName} size={112} />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+              <span className="absolute inset-0 flex items-center justify-center bg-media-backdrop/0 text-on-dark opacity-0 transition group-hover:bg-media-backdrop/40 group-hover:opacity-100">
                 <Camera className="size-6" />
               </span>
             </button>
@@ -229,7 +229,7 @@ export default function ProfileHeader({
               src={avatar}
               name={displayName}
               size={112}
-              className="relative -mt-14 shrink-0 border-4 border-white lg:-mt-16"
+              className="relative -mt-14 shrink-0 border-4 border-on-dark lg:-mt-16"
             />
           )}
 
@@ -238,12 +238,12 @@ export default function ProfileHeader({
 
         <div className="mt-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <h1 className="truncate text-xl font-bold text-[#172033] sm:text-2xl">
+            <h1 className="truncate text-xl font-bold text-heading sm:text-2xl">
               {displayName}
             </h1>
             {verificationStatus !== "verified" && (
               <TriangleAlert
-                className="size-5 text-destructive"
+                className="size-5 text-destructive-foreground"
                 aria-label="Belum terverifikasi"
               />
             )}
@@ -255,17 +255,17 @@ export default function ProfileHeader({
           </div>
 
           {username && (
-            <p className="text-sm text-[#5f6573] xl:text-[15px]">@{username}</p>
+            <p className="text-sm text-muted-foreground xl:text-[15px]">@{username}</p>
           )}
 
           {headline && (
-            <p className="mt-3 text-sm text-[#172033] xl:text-[15px]">
+            <p className="mt-3 text-sm text-heading xl:text-[15px]">
               {headline}
             </p>
           )}
 
-          <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
-            <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground xl:text-[15px]">
+            <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary-foreground" />
             <span>
               {hasAffiliation ? affiliation : "Belum tergabung cabang"}
             </span>
@@ -284,18 +284,18 @@ export default function ProfileHeader({
               onClick={() => setFollowListType("following")}
               className="cursor-pointer hover:underline"
             >
-              <span className="font-bold text-[#172033]">
+              <span className="font-bold text-heading">
                 {followingCount ?? 0}
               </span>{" "}
-              <span className="text-[#5f6573]">Mengikuti</span>
+              <span className="text-muted-foreground">Mengikuti</span>
             </button>
             <button
               type="button"
               onClick={() => setFollowListType("followers")}
               className="cursor-pointer hover:underline"
             >
-              <span className="font-bold text-[#172033]">{followersTotal}</span>{" "}
-              <span className="text-[#5f6573]">Pengikut</span>
+              <span className="font-bold text-heading">{followersTotal}</span>{" "}
+              <span className="text-muted-foreground">Pengikut</span>
             </button>
           </div>
 

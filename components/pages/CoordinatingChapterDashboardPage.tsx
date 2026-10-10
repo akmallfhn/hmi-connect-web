@@ -54,14 +54,14 @@ export default function CoordinatingChapterDashboardPage({
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
     {
       label: "Total Komisariat",
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-secondary-soft",
-      iconColor: "text-secondary",
+      iconColor: "text-secondary-foreground",
     },
   ];
   const chapterEntries = (chapterDistribution?.list ?? []).map((entry) => ({
@@ -115,17 +115,17 @@ export default function CoordinatingChapterDashboardPage({
             {
               name: "Terverifikasi",
               value: verificationCount?.verified_count ?? 0,
-              color: "#1baf7a",
+              color: "var(--chart-success)",
             },
             {
               name: "Dalam Proses Verifikasi",
               value: verificationCount?.pending_count ?? 0,
-              color: "#eda100",
+              color: "var(--chart-warning)",
             },
             {
               name: "Belum Terverifikasi",
               value: verificationCount?.unverified_count ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />
@@ -137,12 +137,12 @@ export default function CoordinatingChapterDashboardPage({
             {
               name: "Komisariat Penuh",
               value: chapterStatus?.total_full ?? 0,
-              color: "#eda100",
+              color: "var(--chart-warning)",
             },
             {
               name: "Komisariat Persiapan",
               value: chapterStatus?.total_provisional ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />

@@ -37,7 +37,7 @@ function TrainingPoster({ training }: { training: TrainingListEntry }) {
       className="object-cover transition duration-500 group-hover:scale-105"
     />
   ) : (
-    <div className="flex size-full items-center justify-center text-white/70">
+    <div className="flex size-full items-center justify-center text-on-dark/70">
       <IconPhotoOff className="size-8" stroke={1.8} />
     </div>
   );
@@ -66,15 +66,15 @@ export default function PublicTrainingCard({
 
   return (
     <>
-      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#dbe3ef] bg-white transition-colors hover:border-primary/60 focus-within:border-primary">
+      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-surface transition-colors hover:border-primary/60 focus-within:border-primary">
         <Link
           href={`/trainings/${training.id}`}
           className="block flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
         >
-          <div className="relative aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#0b6970,#159fa2)]">
+          <div className="relative aspect-[16/9] overflow-hidden bg-linear-to-br from-brand-deep to-primary">
             <TrainingPoster training={training} />
-            <div className="pointer-events-none absolute inset-0 bg-black/15" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-media-backdrop/15" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-media-backdrop/80 to-transparent" />
             <div className="absolute inset-x-3 bottom-3 flex flex-wrap items-center gap-1.5">
               <Label
                 variant="gray"
@@ -92,15 +92,15 @@ export default function PublicTrainingCard({
           </div>
 
           <div className="min-h-[148px] flex flex-col gap-3 px-4 pb-4 pt-4">
-            <h2 className="font-stack-sans-headline line-clamp-2 text-lg font-medium leading-6 text-[#172033]">
+            <h2 className="font-stack-sans-headline line-clamp-2 text-lg font-medium leading-6 text-heading">
               {training.name}
             </h2>
 
             <div className="flex min-w-0 items-center gap-2">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-soft ring-1 ring-[#dbe3ef]">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-soft ring-1 ring-border-strong">
                 <LogoHmi className="h-5 w-auto" aria-hidden="true" />
               </span>
-              <span className="truncate text-sm font-medium text-[#5f6573] lg:text-[15px]">
+              <span className="truncate text-sm font-medium text-muted-foreground lg:text-[15px]">
                 {organizerName}
               </span>
             </div>
@@ -108,10 +108,10 @@ export default function PublicTrainingCard({
           </div>
         </Link>
 
-        <div className="flex items-center gap-2 border-t border-[#edf0f3] px-4 py-3">
+        <div className="flex items-center gap-2 border-t border-border px-4 py-3">
           <Link
             href={`/trainings/${training.id}`}
-            className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-white transition hover:bg-[#128488] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary-action transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             Lihat detail
           </Link>

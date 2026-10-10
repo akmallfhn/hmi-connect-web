@@ -36,13 +36,13 @@ export default function OfficialBottomNav({
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-[#e6e9ef] bg-white/95 backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between border-t border-border bg-surface/95 backdrop-blur lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <Link
         href={timelineHref}
         onClick={triggerHome}
-        className={`${TAB_CLASS} ${isTimeline ? "text-primary" : "text-[#5f6573]"}`}
+        className={`${TAB_CLASS} ${isTimeline ? "text-primary-foreground" : "text-muted-foreground"}`}
       >
         <NavIconPulse pressed={homePressed}>
           <IconSmartHome className="size-5" stroke={isTimeline ? 2.4 : 2} />
@@ -53,7 +53,7 @@ export default function OfficialBottomNav({
       <Link
         href={withActingEntity(profileHref, { entityType, entityId })}
         onClick={triggerProfile}
-        className={`${TAB_CLASS} ${isProfile ? "text-primary" : "text-[#5f6573]"}`}
+        className={`${TAB_CLASS} ${isProfile ? "text-primary-foreground" : "text-muted-foreground"}`}
       >
         <NavIconPulse pressed={profilePressed}>
           <IconUserCircle className="size-5" stroke={isProfile ? 2.4 : 2} />
@@ -64,7 +64,7 @@ export default function OfficialBottomNav({
       <Link
         href="/settings"
         onClick={triggerExit}
-        className={`${TAB_CLASS} text-destructive`}
+        className={`${TAB_CLASS} text-destructive-foreground`}
       >
         <NavIconPulse pressed={exitPressed}>
           <IconArrowBackUp className="size-5" stroke={2} />

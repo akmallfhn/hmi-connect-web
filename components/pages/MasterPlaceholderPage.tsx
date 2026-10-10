@@ -14,7 +14,7 @@ export default function MasterPlaceholderPage({
       <AdminPageTitle variant="placeholder" description={description}>
         {title}
       </AdminPageTitle>
-      <span className="mt-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+      <span className="mt-2 rounded-full bg-badge-primary px-3 py-1 text-xs font-semibold text-badge-foreground">
         Segera hadir
       </span>
     </div>

@@ -94,7 +94,7 @@ export default function QuranJuzDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -105,7 +105,7 @@ export default function QuranJuzDetailPage({
       />
 
       <PageMargin className="pt-4">
-        <div className="relative overflow-hidden rounded-2xl bg-white text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-surface text-on-dark">
           <div className="absolute inset-0 h-full w-full">
             <Image
               src={HEADER_BACKGROUND_URL}
@@ -141,12 +141,12 @@ export default function QuranJuzDetailPage({
           return (
             <div
               key={group.surahId}
-              className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4"
+              className="flex flex-col rounded-2xl border border-border bg-surface px-4"
             >
               {surah ? (
                 <SurahIntro surah={surah} />
               ) : (
-                <p className="border-b border-[#e6e9ef] py-3 text-sm font-semibold text-primary">
+                <p className="border-b border-border py-3 text-sm font-semibold text-primary-foreground">
                   {group.surahName}
                 </p>
               )}

@@ -47,8 +47,8 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[#e6e9ef] bg-white p-5">
-      <h2 className="text-base font-semibold text-[#172033]">{title}</h2>
+    <div className="rounded-xl border border-border bg-surface p-5">
+      <h2 className="text-base font-semibold text-heading">{title}</h2>
       <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {children}
       </div>
@@ -59,8 +59,8 @@ function SectionCard({
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-sm text-[#5f6573]">{label}</p>
-      <p className="text-[15px] font-medium text-[#172033]">{value ?? "—"}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-[15px] font-medium text-heading">{value ?? "—"}</p>
     </div>
   );
 }
@@ -75,13 +75,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] bg-white px-4 py-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-[#5f6573]">{label}</p>
-        <p className="truncate text-[15px] font-bold text-[#172033]">{value}</p>
+        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
+        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
       </div>
     </div>
   );
@@ -106,12 +106,12 @@ export default function AdminMemberDetailPage({
         </Button>
       </Link>
 
-      <div className="mt-4 flex flex-col gap-5 rounded-xl border border-[#e6e9ef] bg-white p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-4 flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
           <div className="relative shrink-0">
             <Avatar src={user.avatar} name={user.full_name} size={64} />
             <span
-              className={`absolute right-0 bottom-0 size-4 rounded-full border-2 border-white ${STATUS_DOT_CLASSNAME[user.status]}`}
+              className={`absolute right-0 bottom-0 size-4 rounded-full border-2 border-on-dark ${STATUS_DOT_CLASSNAME[user.status]}`}
               title={`Status: ${user.status}`}
             />
           </div>

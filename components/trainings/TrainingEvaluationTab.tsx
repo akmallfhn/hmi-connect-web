@@ -49,27 +49,27 @@ type AffectiveKey = (typeof AFFECTIVE_ASPECTS)[number]["key"];
 type PsychomotorKey = (typeof PSYCHOMOTOR_ASPECTS)[number]["key"];
 
 // Column-group tint (header + body), one color per category — explained in the legend below the table.
-const KOGNITIF_HEADER_BG = "bg-[#E8F5E9] text-[#2E7D32]";
-const KOGNITIF_BODY_BG = "bg-[#E8F5E9]/50";
-const AFEKTIF_HEADER_BG = "bg-[#EFEDF9] text-[#42359B]";
-const AFEKTIF_BODY_BG = "bg-[#EFEDF9]/50";
-const PSIKOMOTORIK_HEADER_BG = "bg-[#FDE7EE] text-[#BE2B5D]";
-const PSIKOMOTORIK_BODY_BG = "bg-[#FDE7EE]/50";
+const KOGNITIF_HEADER_BG = "bg-success-soft-bg text-success-soft-fg";
+const KOGNITIF_BODY_BG = "bg-success-soft-bg/50";
+const AFEKTIF_HEADER_BG = "bg-purple-soft-bg text-purple-soft-fg";
+const AFEKTIF_BODY_BG = "bg-purple-soft-bg/50";
+const PSIKOMOTORIK_HEADER_BG = "bg-pink-soft-bg text-pink-soft-fg";
+const PSIKOMOTORIK_BODY_BG = "bg-pink-soft-bg/50";
 
 const RESULT_LEGEND = [
   { label: "Lulus", range: "Nilai Akhir ≥ 65", dot: "bg-primary" },
   {
     label: "Lulus Bersyarat",
     range: "Nilai Akhir 50 – 64",
-    dot: "bg-[#FACC15]",
+    dot: "bg-chart-warning",
   },
   { label: "Tidak Lulus", range: "Nilai Akhir < 50", dot: "bg-destructive" },
 ] as const;
 
 const CATEGORY_LEGEND = [
-  { label: "Penilaian Materi (Kognitif)", dot: "bg-[#2E7D32]" },
-  { label: "Penilaian Afektif", dot: "bg-[#42359B]" },
-  { label: "Penilaian Psikomotorik", dot: "bg-[#BE2B5D]" },
+  { label: "Penilaian Materi (Kognitif)", dot: "bg-chart-success" },
+  { label: "Penilaian Afektif", dot: "bg-purple-soft-fg" },
+  { label: "Penilaian Psikomotorik", dot: "bg-pink-soft-fg" },
 ] as const;
 
 // Same ≥65/50-64/<50 thresholds as lib/trainings/guideline-content.ts#LK2_ASSESSMENT.criteria.
@@ -135,10 +135,10 @@ function ScoreCell({ value, disabled, onCommit }: ScoreCellProps) {
           setDraft(event.target.value.replace(/\D/g, "").slice(0, 3))
         }
         onBlur={commit}
-        className="w-full rounded-md border border-[#dbe3ef] bg-white px-2 py-1.5 text-center text-sm text-[#172033] outline-none transition placeholder:text-[#c1c6cf] focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[#f3f4f6] disabled:text-[#8a909d]"
+        className="w-full rounded-md border border-border-strong bg-surface px-2 py-1.5 text-center text-sm text-heading outline-none transition placeholder:text-subtle-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-disabled-foreground"
       />
       {isSaving && (
-        <Loader2 className="absolute right-1.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-primary" />
+        <Loader2 className="absolute right-1.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-primary-foreground" />
       )}
     </div>
   );
@@ -242,8 +242,8 @@ export default function TrainingEvaluationTab({
   const { materials, totalData, totalPage, currentPage } = matrix;
 
   return (
-    <div className="rounded-xl border border-[#e6e9ef] bg-white">
-      <div className="flex flex-col gap-3 border-b border-[#e6e9ef] p-5 sm:flex-row sm:items-center">
+    <div className="rounded-xl border border-border bg-surface">
+      <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-sm">
           <Input
             inputId="training-evaluation-search"
@@ -288,15 +288,15 @@ export default function TrainingEvaluationTab({
       ) : (
         <div className="overflow-x-auto rounded-b-xl">
           <table className="w-full min-w-[1320px] text-left text-sm">
-            <thead className="border-b border-[#e6e9ef] text-[13px] font-semibold text-[#5f6573]">
+            <thead className="border-b border-border text-[13px] font-semibold text-muted-foreground">
               <tr>
-                <th className="sticky left-0 z-20 w-[220px] min-w-[220px] border-r border-[#e6e9ef] bg-[#f5f7fb] px-4 py-2 align-bottom">
+                <th className="sticky left-0 z-20 w-[220px] min-w-[220px] border-r border-border bg-surface-muted px-4 py-2 align-bottom">
                   Peserta
                 </th>
                 {materials.map((material, i) => (
                   <th
                     key={material.training_material_id}
-                    className={`px-2 py-2 text-center font-medium ${KOGNITIF_HEADER_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                    className={`px-2 py-2 text-center font-medium ${KOGNITIF_HEADER_BG} ${i === 0 ? "border-l border-border" : ""}`}
                     title={material.title}
                   >
                     <span className="mx-auto line-clamp-2 max-w-[110px] text-center">
@@ -307,7 +307,7 @@ export default function TrainingEvaluationTab({
                 {AFFECTIVE_ASPECTS.map((aspect, i) => (
                   <th
                     key={aspect.key}
-                    className={`px-2 py-2 text-center font-medium ${AFEKTIF_HEADER_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                    className={`px-2 py-2 text-center font-medium ${AFEKTIF_HEADER_BG} ${i === 0 ? "border-l border-border" : ""}`}
                   >
                     <span className="mx-auto line-clamp-2 max-w-[110px] text-center">
                       {aspect.label}
@@ -317,20 +317,20 @@ export default function TrainingEvaluationTab({
                 {PSYCHOMOTOR_ASPECTS.map((aspect, i) => (
                   <th
                     key={aspect.key}
-                    className={`px-2 py-2 text-center font-medium ${PSIKOMOTORIK_HEADER_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                    className={`px-2 py-2 text-center font-medium ${PSIKOMOTORIK_HEADER_BG} ${i === 0 ? "border-l border-border" : ""}`}
                   >
                     <span className="mx-auto line-clamp-2 max-w-[110px] text-center">
                       {aspect.label}
                     </span>
                   </th>
                 ))}
-                <th className="border-l border-[#e6e9ef] bg-[#f5f7fb] px-4 py-2 align-bottom">
+                <th className="border-l border-border bg-surface-muted px-4 py-2 align-bottom">
                   Nilai Akhir
                 </th>
-                <th className="bg-[#f5f7fb] px-4 py-2 align-bottom">Hasil</th>
+                <th className="bg-surface-muted px-4 py-2 align-bottom">Hasil</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+            <tbody className="divide-y divide-divider text-[13px]">
               {list.map((entry) => {
                 const materialScoreByMaterialId = new Map(
                   entry.material_scores.map((score) => [
@@ -341,7 +341,7 @@ export default function TrainingEvaluationTab({
 
                 return (
                   <tr key={entry.user_id}>
-                    <td className="sticky left-0 z-10 w-[220px] min-w-[220px] border-r border-[#e6e9ef] bg-white px-4 py-3">
+                    <td className="sticky left-0 z-10 w-[220px] min-w-[220px] border-r border-border bg-surface px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar
                           src={entry.user_avatar}
@@ -349,10 +349,10 @@ export default function TrainingEvaluationTab({
                           size={32}
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033]">
+                          <p className="truncate text-sm font-semibold text-heading">
                             {entry.user_full_name}
                           </p>
-                          <p className="truncate text-xs text-[#5f6573]">
+                          <p className="truncate text-xs text-muted-foreground">
                             @{entry.user_username}
                           </p>
                         </div>
@@ -361,7 +361,7 @@ export default function TrainingEvaluationTab({
                     {materials.map((material, i) => (
                       <td
                         key={material.training_material_id}
-                        className={`px-2 py-2 ${KOGNITIF_BODY_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                        className={`px-2 py-2 ${KOGNITIF_BODY_BG} ${i === 0 ? "border-l border-border" : ""}`}
                       >
                         <ScoreCell
                           value={materialScoreByMaterialId.get(
@@ -384,7 +384,7 @@ export default function TrainingEvaluationTab({
                     {AFFECTIVE_ASPECTS.map((aspect, i) => (
                       <td
                         key={aspect.key}
-                        className={`px-2 py-2 ${AFEKTIF_BODY_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                        className={`px-2 py-2 ${AFEKTIF_BODY_BG} ${i === 0 ? "border-l border-border" : ""}`}
                       >
                         <ScoreCell
                           value={entry[aspect.key]}
@@ -402,7 +402,7 @@ export default function TrainingEvaluationTab({
                     {PSYCHOMOTOR_ASPECTS.map((aspect, i) => (
                       <td
                         key={aspect.key}
-                        className={`px-2 py-2 ${PSIKOMOTORIK_BODY_BG} ${i === 0 ? "border-l border-[#e6e9ef]" : ""}`}
+                        className={`px-2 py-2 ${PSIKOMOTORIK_BODY_BG} ${i === 0 ? "border-l border-border" : ""}`}
                       >
                         <ScoreCell
                           value={entry[aspect.key]}
@@ -417,7 +417,7 @@ export default function TrainingEvaluationTab({
                         />
                       </td>
                     ))}
-                    <td className="border-l border-[#e6e9ef] px-4 py-3 text-center text-base font-bold text-primary">
+                    <td className="border-l border-border px-4 py-3 text-center text-base font-bold text-primary-foreground">
                       {entry.final_score}
                     </td>
                     <td className="px-4 py-3">
@@ -437,35 +437,35 @@ export default function TrainingEvaluationTab({
       )}
 
       {list.length > 0 && (
-        <div className="grid gap-4 border-t border-[#e6e9ef] p-5 sm:grid-cols-2">
+        <div className="grid gap-4 border-t border-border p-5 sm:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold text-[#5f6573]">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">
               Keterangan Hasil
             </p>
             <div className="flex flex-col gap-2">
               {RESULT_LEGEND.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-1.5 text-xs text-[#41474E]"
+                  className="flex items-center gap-1.5 text-xs text-foreground"
                 >
                   <span
                     className={`size-2.5 shrink-0 rounded-full ${item.dot}`}
                   />
                   <span className="font-medium">{item.label}</span>
-                  <span className="text-[#8a909d]">({item.range})</span>
+                  <span className="text-disabled-foreground">({item.range})</span>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold text-[#5f6573]">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">
               Keterangan Kategori Penilaian
             </p>
             <div className="flex flex-col gap-2">
               {CATEGORY_LEGEND.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-1.5 text-xs text-[#41474E]"
+                  className="flex items-center gap-1.5 text-xs text-foreground"
                 >
                   <span
                     className={`size-2.5 shrink-0 rounded-full ${item.dot}`}
@@ -479,13 +479,13 @@ export default function TrainingEvaluationTab({
       )}
 
       {list.length > 0 && (
-        <div className="flex flex-col items-center gap-3 border-t border-[#e6e9ef] p-5">
+        <div className="flex flex-col items-center gap-3 border-t border-border p-5">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPage}
             queryKey="evaluation_page"
           />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
             {(currentPage - 1) * pageSize + list.length} dari {totalData}{" "}
             peserta

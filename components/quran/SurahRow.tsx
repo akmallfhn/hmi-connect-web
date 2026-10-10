@@ -32,21 +32,21 @@ export default function SurahRow({
       href={`/quran/${surah.slug}`}
       className="flex items-center gap-3 py-3"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-sm font-semibold text-secondary">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-badge-foreground">
         {toArabicNumerals(surah.number)}
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="font-stack-sans-headline truncate text-sm font-medium text-[#172033] lg:text-[15px]">
+        <p className="font-stack-sans-headline truncate text-sm font-medium text-heading lg:text-[15px]">
           {surah.name_latin}
         </p>
-        <p className="truncate text-xs text-[#5f6573] lg:text-[13px]">
+        <p className="truncate text-xs text-muted-foreground lg:text-[13px]">
           {surah.total_verses} ayat •{" "}
           {readingMinutesLabel(surah.estimated_reading_seconds)}
         </p>
       </div>
 
-      <p className="font-arabic-quran shrink-0 text-xl text-secondary">
+      <p className="font-arabic-quran shrink-0 text-xl text-secondary-foreground">
         {surah.name_arabic}
       </p>
 

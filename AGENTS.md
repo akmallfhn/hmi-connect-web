@@ -11,6 +11,32 @@ fix the rule, not just the code.
 - **Next.js 16** (App Router, Turbopack), **React 19**, **TypeScript** (strict).
 - **Tailwind CSS v4** (`app/globals.css`, `@theme inline` tokens — brand colors are
   `--primary` (tosca) and `--secondary` (orange)).
+- **Main-site dark mode** uses `next-themes` in the root layout (its script must
+  render there). Version 0.4.6 has a local `patch-package` patch to omit its
+  bootstrap script on client renders, avoiding a React 19/Next 16 warning;
+  keep that patch until upstream includes the fix. `AppThemeProvider` writes
+  the `.dark` class to `<html>` and persists the `hmi-connect-theme` choice per
+  origin; `hooks/use-theme.ts` exposes the light/dark toggle. The admin
+  subdomain has separate origin storage and no theme switch, so it stays light.
+  The switch lives directly below the password row on `/settings`.
+  `app/globals.css` owns paired semantic tokens for surfaces, text, borders,
+  accents and soft status colors, and registers them
+  through `@theme inline` with the Tailwind v4 class variant. Use those tokens
+  for new UI colors and keep text/background pairs at WCAG AA contrast; run
+  `python scripts/check-theme-contrast.py` after changing the palette. The
+  original inventory and impacted-file list are in `docs/dark-mode-audit.md`.
+  Feed and comment/reply body text use `--content-foreground`, which matches
+  heading text in light mode and is slightly dimmer in dark mode.
+  Solid secondary controls use white text in both themes. Keep
+  `--secondary` at the logo's exact `#FF5C53` in both modes; white text on it is an explicit
+  brand exception to the WCAG AA contrast check. Solid count and icon badges use
+  `--badge-foreground` (white) with accessible badge background tokens. The
+  shared `Label` pill uses colored text, a soft background, and a 1px border
+  using the text color at 30% opacity for every variant in both themes.
+  Primary buttons and icon actions use `--on-primary-action` (white) in both
+  modes; `--on-primary` remains dark in light mode for longer text on tosca.
+  Filled destructive buttons use white text in both themes; their light red and
+  hover tokens are dark enough to maintain WCAG AA contrast with white.
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@tiptap/react` + Tiptap extensions for the frontend article composer,
   `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
@@ -1254,7 +1280,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
-  reactions/comments/repost/share actions. `feeds/*` answers with `attachments`, an array
+  reactions/comments/repost/share actions. `TrainingAttachmentCard` uses a neutral
+  card surface: poster and event details in the main link, then a separate footer
+  for detail, reminder, and optional composer remove actions. Keep those actions
+  outside the main link. Its reminder uses the shared primary `Button` variant;
+  the card border and detail link have no hover treatment. `feeds/*` answers
+  with `attachments`, an array
   whose items differ by `type`: `photo`/`video`/`url` carry only `reference_url` (and
   `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training`/`article` carry a
   target id plus that record's display fields resolved server-side. Every field a type
@@ -1737,11 +1768,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   destructive "Keluar" row behind an `AlertConfirmation`; logging out calls the same
   `logoutUser` Server Action + `window.location.href = "/auth/login"` hard navigation
   `Header`'s own menu item uses, since the destination's access depends on the session
-  cookie it just deleted. The account card above it is conditional past its first two rows:
+  cookie it just deleted. The account card starts with `Tentang Saya` and is otherwise conditional:
   `Verifikasi Akun` only when `verification_status` is `"unverified"`, and `Super Admin`'s own
-  dashboard row only for that role. Two rows every account gets: its password row
+  dashboard row only for that role. Every account gets its password row
   (`Buat Password` when `has_password` is `false`, `Ubah Password` once it's `true`, opening
-  `PasswordForm`) and `Tentang Saya` at the top, opening
+  `PasswordForm`), followed immediately by `Mode Gelap`, whose toggle row has no
+  right chevron. `Tentang Saya` opens
   `components/modals/AboutProfileModal.tsx` — three read-only rows (name + `@username` with the
   avatar beside it, `{bulan tahun} · #{registration_number}` from `users/detail`, and the
   province). Neither navigates, which is why `SettingsMenuItem.href` is optional and `MenuRow`

@@ -19,12 +19,12 @@ export default function ChatThreadHeader({
   loading,
 }: ChatThreadHeaderProps) {
   return (
-    <div className="flex shrink-0 flex-col border-b border-[#e6e9ef] bg-white">
+    <div className="flex shrink-0 flex-col border-b border-border bg-surface">
       <div className="flex items-center gap-1 px-3 py-2.5 lg:h-[72px] lg:px-5 lg:py-0">
         <Link
           href="/chats"
           aria-label="Kembali ke pesan"
-          className="-ml-1 flex size-9 shrink-0 items-center justify-center rounded-full text-[#172033] transition hover:bg-[#f5f7fb] lg:hidden"
+          className="-ml-1 flex size-9 shrink-0 items-center justify-center rounded-full text-heading transition hover:bg-surface-muted lg:hidden"
         >
           <ArrowLeft className="size-5" />
         </Link>
@@ -39,17 +39,17 @@ export default function ChatThreadHeader({
             >
               <Avatar src={avatar} name={fullName} size={34} className="shrink-0" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#172033]">{fullName}</p>
-                {username && <p className="truncate text-[13px] text-[#7b8190]">@{username}</p>}
+                <p className="truncate text-sm font-semibold text-heading">{fullName}</p>
+                {username && <p className="truncate text-[13px] text-subtle-foreground">@{username}</p>}
               </div>
             </Link>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 border-t border-[#e6e9ef] bg-[#f8fafb] px-3 py-1.5">
-        <Lock className="size-3 shrink-0 text-[#9aa1ad]" />
-        <p className="text-center text-[13px] text-[#9aa1ad]">
+      <div className="flex items-center justify-center gap-1.5 border-t border-border bg-surface-subtle px-3 py-1.5">
+        <Lock className="size-3 shrink-0 text-subtle-foreground" />
+        <p className="text-center text-[13px] text-subtle-foreground">
           Pesan di percakapan ini terenkripsi end-to-end
         </p>
       </div>

@@ -11,18 +11,18 @@ interface JuzRowProps {
 export default function JuzRow({ juz }: JuzRowProps) {
   return (
     <Link href={`/quran/juz/${juz.id}`} className="flex items-center gap-3 py-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-sm font-semibold text-secondary">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-badge-foreground">
         {toArabicNumerals(juz.number)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-stack-sans-headline truncate text-sm font-medium text-[#172033] lg:text-[15px]">
+        <p className="font-stack-sans-headline truncate text-sm font-medium text-heading lg:text-[15px]">
           Juz {juz.number}
         </p>
-        <p className="truncate text-xs text-[#5f6573] lg:text-[13px]">
+        <p className="truncate text-xs text-muted-foreground lg:text-[13px]">
           {readingMinutesLabel(juz.estimated_reading_seconds)}
         </p>
       </div>
-      <ChevronRight className="size-4 shrink-0 text-[#7b8190]" />
+      <ChevronRight className="size-4 shrink-0 text-subtle-foreground" />
     </Link>
   );
 }

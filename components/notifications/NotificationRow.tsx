@@ -55,7 +55,7 @@ export default function NotificationRow({
   const unread = !notification.read_at;
 
   const className = [
-    "flex items-start gap-3 px-4 py-3 transition hover:bg-[#f5f7fb]",
+    "flex items-start gap-3 px-4 py-3 transition hover:bg-surface-muted",
     unread ? "bg-primary-soft/40" : "",
     href ? "cursor-pointer" : "",
   ].join(" ");
@@ -72,17 +72,17 @@ export default function NotificationRow({
           name={notification.actor_full_name}
           size={36}
         />
-        <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-white ring-2 ring-white">
+        <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-badge-primary text-badge-foreground ring-2 ring-on-dark">
           <Icon className="size-2.5" />
         </span>
       </div>
       <div className="min-w-0">
-        <p className="line-clamp-2 text-sm text-[#172033]">
+        <p className="line-clamp-2 text-sm text-heading">
           <span className="font-semibold">{notification.actor_full_name}</span>{" "}
           {notificationText(notification)}
           {notification.entity_content && `: ${notification.entity_content}`}
         </p>
-        <span className="mt-1 block text-xs text-[#5f6573]">
+        <span className="mt-1 block text-xs text-muted-foreground">
           {formatRelativeTime(notification.created_at)}
         </span>
       </div>

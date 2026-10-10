@@ -71,59 +71,59 @@ function BranchPoint({ point }: { point: BranchMapPoint }) {
       >
         <span
           className={`absolute size-5 animate-ping rounded-full motion-reduce:animate-none ${
-            isProvisional ? "bg-pink-500/45" : "bg-secondary/45"
+            isProvisional ? "bg-map-provisional/45" : "bg-secondary/45"
           }`}
         />
         <span
-          className={`relative flex size-4 items-center justify-center rounded-full border-2 border-white transition group-hover:scale-125 group-focus-within:scale-125 ${
+          className={`relative flex size-4 items-center justify-center rounded-full border-2 border-on-dark transition group-hover:scale-125 group-focus-within:scale-125 ${
             isProvisional
-              ? "bg-pink-500 shadow-[0_3px_10px_rgba(236,72,153,0.45)]"
-              : "bg-secondary shadow-[0_3px_10px_rgba(255,92,83,0.45)]"
+              ? "bg-map-provisional shadow-[0_3px_10px_var(--shadow-provisional)]"
+              : "bg-secondary shadow-[0_3px_10px_var(--shadow-secondary)]"
           }`}
         >
-          <span className="size-1.5 rounded-full bg-white" />
+          <span className="size-1.5 rounded-full bg-surface" />
         </span>
       </button>
 
       <div
         id={tooltipId}
         role="tooltip"
-        className={`pointer-events-none invisible absolute z-30 w-72 translate-y-1 rounded-xl border border-[#e6e9ef] bg-white p-3.5 opacity-0 shadow-[0_12px_32px_rgba(23,32,51,0.18)] transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${horizontalPosition} ${verticalPosition}`}
+        className={`pointer-events-none invisible absolute z-30 w-72 translate-y-1 rounded-xl border border-border bg-surface p-3.5 opacity-0 shadow-[0_12px_32px_var(--shadow-card)] transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${horizontalPosition} ${verticalPosition}`}
       >
         <div className="flex items-center gap-2">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary">
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
             <MapPin className="size-4" />
           </span>
-          <p className="text-sm leading-5 font-bold text-[#172033]">
+          <p className="text-sm leading-5 font-bold text-heading">
             {point.name}
           </p>
         </div>
-        <div className="mt-3 space-y-2 border-t border-[#eef0f4] pt-3">
-          <div className="flex items-start gap-2 text-[13px] text-[#5f6573]">
+        <div className="mt-3 space-y-2 border-t border-border pt-3">
+          <div className="flex items-start gap-2 text-[13px] text-muted-foreground">
             <Network className="mt-0.5 size-3.5 shrink-0" />
             <span className="flex-1">Badko</span>
-            <span className="max-w-36 text-right font-semibold text-[#172033]">
+            <span className="max-w-36 text-right font-semibold text-heading">
               {point.coordinatingBodyName}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-[#5f6573]">
+          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <CircleDot className="size-3.5" />
             <span className="flex-1">Status</span>
-            <span className="font-semibold text-[#172033]">
+            <span className="font-semibold text-heading">
               {formatBranchType(point.type)}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-[#5f6573]">
+          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <BadgeCheck className="size-3.5" />
             <span className="flex-1">Kader Terverifikasi</span>
-            <span className="font-semibold text-[#172033]">
+            <span className="font-semibold text-heading">
               {formatNumber(point.totalVerifiedKader)}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-[#5f6573]">
+          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <Factory className="size-3.5" />
             <span className="flex-1">Jumlah Komisariat</span>
-            <span className="font-semibold text-[#172033]">
+            <span className="font-semibold text-heading">
               {formatNumber(point.totalChapters)}
             </span>
           </div>
@@ -229,13 +229,13 @@ export default function IndonesiaBranchMap({
   );
 
   return (
-    <section className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-base font-bold text-[#172033]">
+          <p className="text-base font-bold text-heading">
             Sebaran Kader HMI di Indonesia
           </p>
-          <p className="text-sm text-[#5f6573]">
+          <p className="text-sm text-muted-foreground">
             Arahkan ke titik Cabang untuk melihat ringkasan
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function IndonesiaBranchMap({
             aria-label="Cari Cabang pada peta"
             icon={
               isSearchPending ? (
-                <LoaderCircle className="size-4 animate-spin text-primary" />
+                <LoaderCircle className="size-4 animate-spin text-primary-foreground" />
               ) : (
                 <Search className="size-4" />
               )
@@ -265,7 +265,7 @@ export default function IndonesiaBranchMap({
           <MapSquare
             aria-label="Peta Indonesia dengan titik persebaran Cabang HMI"
             role="img"
-            className="absolute inset-0 size-full text-primary"
+            className="absolute inset-0 size-full text-primary-foreground"
           />
 
           {points.map((point) => (
@@ -273,7 +273,7 @@ export default function IndonesiaBranchMap({
           ))}
 
           {!isSearchPending && normalizedSearch && points.length === 0 && (
-            <div className="absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full border border-[#e6e9ef] bg-white/95 px-4 py-2 text-xs font-medium text-[#5f6573] shadow-sm">
+            <div className="absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-medium text-muted-foreground shadow-sm">
               {searchFailed
                 ? "Pencarian gagal dimuat. Coba lagi."
                 : "Cabang tidak ditemukan atau belum memiliki koordinat."}

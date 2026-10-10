@@ -229,7 +229,7 @@ function AccountFields({
         required
       />
       <div className="flex items-center gap-4">
-        <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-[#e6e9ef]">
+        <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-border">
           {avatar ? (
             <Image
               src={avatar}
@@ -241,7 +241,7 @@ function AccountFields({
           ) : (
             <div
               style={{ fontSize: 64 * 0.4 }}
-              className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary"
+              className="flex size-full items-center justify-center bg-primary-soft font-semibold text-primary-foreground"
             >
               {getInitials(fullName || "?")}
             </div>
@@ -324,7 +324,7 @@ function AccountFields({
         />
       </div>
 
-      <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

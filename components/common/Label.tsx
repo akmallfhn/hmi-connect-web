@@ -5,16 +5,14 @@ export type LabelVariant =
   "green" | "orange" | "red" | "purple" | "blue" | "yellow" | "gray" | "pink";
 
 const VARIANT_CLASSNAME: Record<LabelVariant, string> = {
-  // This app's own brand tokens (see app/globals.css) already read as "green"/"orange"/"red".
-  green: "border-primary/30 bg-primary-soft text-primary",
-  orange: "border-secondary/30 bg-secondary-soft text-secondary",
-  red: "border-destructive/30 bg-destructive-soft text-destructive",
-  // No design tokens for these yet — hardcoded tints, same approach AppBasedLabel uses.
-  purple: "border-[#A19ACD] bg-[#EFEDF9] text-[#42359B]",
-  blue: "border-[#B6CBE9] bg-[#E2F0FF] text-[#164EA6]",
-  yellow: "border-[#ECCF80] bg-[#FFF6E0] text-[#8A6300]",
-  gray: "border-[#dbe3ef] bg-[#f5f7fb] text-[#41474E]",
-  pink: "border-[#F3A6BC] bg-[#FDE7EE] text-[#BE2B5D]",
+  green: "border-primary-soft-fg/30 bg-primary-soft-bg text-primary-soft-fg",
+  orange: "border-secondary-soft-fg/30 bg-secondary-soft-bg text-secondary-soft-fg",
+  red: "border-destructive-soft-fg/30 bg-destructive-soft-bg text-destructive-soft-fg",
+  purple: "border-purple-soft-fg/30 bg-purple-soft-bg text-purple-soft-fg",
+  blue: "border-info-soft-fg/30 bg-info-soft-bg text-info-soft-fg",
+  yellow: "border-warning-soft-fg/30 bg-warning-soft-bg text-warning-soft-fg",
+  gray: "border-muted-foreground/30 bg-surface-muted text-muted-foreground",
+  pink: "border-pink-soft-fg/30 bg-pink-soft-bg text-pink-soft-fg",
 };
 
 export type LabelSize = "default" | "sm";

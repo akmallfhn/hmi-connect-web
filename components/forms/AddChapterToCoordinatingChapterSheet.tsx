@@ -132,7 +132,7 @@ function AddChapterToCoordinatingChapterFields({
         required
       />
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

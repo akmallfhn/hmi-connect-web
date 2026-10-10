@@ -95,12 +95,12 @@ function Field({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm text-[#5f6573]">{label}</p>
-        <p className="break-words text-[15px] font-medium text-[#172033]">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="break-words text-[15px] font-medium text-heading">
           {value ?? "—"}
         </p>
       </div>
@@ -145,7 +145,7 @@ function RejectFields({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-[#5f6573]">
+      <p className="text-sm text-muted-foreground">
         Kader dapat mengajukan verifikasi ulang setelah permintaan ini ditolak.
       </p>
       <TextArea
@@ -156,7 +156,7 @@ function RejectFields({
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
-      <div className="flex justify-end gap-2 border-t border-[#e6e9ef] pt-4">
+      <div className="flex justify-end gap-2 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={loading}>
           Batal
         </Button>
@@ -379,7 +379,7 @@ export function VerificationRequestListPage({
 
       <div className="mt-6">
         {requests.length === 0 ? (
-          <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <EmptyState
               title={
                 initialSearch || initialStatus || selectedBranch
@@ -399,7 +399,7 @@ export function VerificationRequestListPage({
               {requests.map((request) => (
                 <li
                   key={request.id}
-                  className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white"
+                  className="overflow-hidden rounded-2xl border border-border bg-surface"
                 >
                   <div className="p-4">
                     <div className="flex min-w-0 items-center gap-3">
@@ -409,32 +409,32 @@ export function VerificationRequestListPage({
                         size={44}
                       />
                       <div className="min-w-0">
-                        <p className="break-words text-[15px] font-semibold leading-5 text-[#172033]">
+                        <p className="break-words text-[15px] font-semibold leading-5 text-heading">
                           {request.full_name}
                         </p>
-                        <p className="mt-0.5 break-all text-[13px] text-[#5f6573]">
+                        <p className="mt-0.5 break-all text-[13px] text-muted-foreground">
                           @{request.username}
                         </p>
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                       <VerificationRequestStatusLabel status={request.status} />
-                      <span className="inline-flex items-center gap-1.5 text-xs text-[#5f6573]">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                         <CalendarDays className="size-3.5" aria-hidden="true" />
                         Diajukan {formatSubmittedAt(request.created_at)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="border-y border-[#e6e9ef] bg-[#f8fafb] px-4 py-3">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#7b8190]">
+                  <div className="border-y border-border bg-surface-subtle px-4 py-3">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle-foreground">
                       Asal Organisasi
                     </p>
-                    <div className="space-y-2 text-[13px] text-[#172033]">
+                    <div className="space-y-2 text-[13px] text-heading">
                       {showBranchFilter && (
                         <div className="flex items-start gap-2">
                           <Building2
-                            className="mt-0.5 size-4 shrink-0 text-primary"
+                            className="mt-0.5 size-4 shrink-0 text-primary-foreground"
                             aria-hidden="true"
                           />
                           <span className="min-w-0 break-words">
@@ -445,7 +445,7 @@ export function VerificationRequestListPage({
                       )}
                       <div className="flex items-start gap-2">
                         <GraduationCap
-                          className="mt-0.5 size-4 shrink-0 text-primary"
+                          className="mt-0.5 size-4 shrink-0 text-primary-foreground"
                           aria-hidden="true"
                         />
                         <span className="min-w-0 break-words">
@@ -494,9 +494,9 @@ export function VerificationRequestListPage({
                 </li>
               ))}
             </ul>
-            <div className="hidden overflow-x-auto rounded-xl border border-[#e6e9ef] bg-white xl:block">
+            <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface xl:block">
               <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Kader</th>
                     <th className="px-4 py-3">
@@ -507,7 +507,7 @@ export function VerificationRequestListPage({
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                <tbody className="divide-y divide-divider text-[13px]">
                   {requests.map((request) => (
                     <tr key={request.id} className="align-middle">
                       <td className="px-4 py-3">
@@ -518,23 +518,23 @@ export function VerificationRequestListPage({
                             size={36}
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033]">
+                            <p className="truncate text-sm font-semibold text-heading">
                               {request.full_name}
                             </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               @{request.username}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {request.chapter_name ? (
                           <div className="min-w-0">
                             <p className="truncate">
                               Komisariat {request.chapter_name}
                             </p>
                             {showBranchFilter && (
-                              <p className="truncate text-[13px] text-[#5f6573]">
+                              <p className="truncate text-[13px] text-muted-foreground">
                                 Cabang{" "}
                                 {request.branch_name ??
                                   selectedBranch?.name ??
@@ -543,10 +543,10 @@ export function VerificationRequestListPage({
                             )}
                           </div>
                         ) : (
-                          <span className="text-[#5f6573]">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {formatSubmittedAt(request.created_at)}
                       </td>
                       <td className="px-4 py-3">
@@ -598,7 +598,7 @@ export function VerificationRequestListPage({
       {requests.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {requests.length} dari {totalData} permintaan
           </p>
         </div>
@@ -610,22 +610,22 @@ export function VerificationRequestListPage({
         title="Detail Permintaan Verifikasi"
       >
         {detailLoading ? (
-          <p className="py-6 text-center text-sm text-[#5f6573]">
+          <p className="py-6 text-center text-sm text-muted-foreground">
             Memuat detail...
           </p>
         ) : detailData ? (
           <div className="flex flex-col gap-5">
-            <div className="flex items-center gap-3 border-b border-[#e6e9ef] pb-4">
+            <div className="flex items-center gap-3 border-b border-border pb-4">
               <Avatar
                 src={detailData.avatar}
                 name={detailData.full_name}
                 size={48}
               />
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-[#172033]">
+                <p className="truncate text-base font-semibold text-heading">
                   {detailData.full_name}
                 </p>
-                <p className="truncate text-sm text-[#5f6573]">
+                <p className="truncate text-sm text-muted-foreground">
                   @{detailData.username}
                 </p>
               </div>
@@ -698,7 +698,7 @@ export function VerificationRequestListPage({
             </div>
           </div>
         ) : (
-          <p className="py-6 text-center text-sm text-[#5f6573]">
+          <p className="py-6 text-center text-sm text-muted-foreground">
             Detail tidak ditemukan.
           </p>
         )}

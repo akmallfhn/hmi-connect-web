@@ -76,7 +76,7 @@ function BranchLogo({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb] ${containerClassName}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted ${containerClassName}`}
     >
       {imageUrl ? (
         <Image
@@ -225,24 +225,24 @@ export default function AdminBranchListPage({
         <button
           type="button"
           onClick={() => router.push(`${detailBasePath}/${branch.id}`)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
         >
-          <Eye className="size-4 text-[#5f6573]" />
+          <Eye className="size-4 text-muted-foreground" />
           Lihat Detail
         </button>
         <button
           type="button"
           onClick={() => setEditTarget(branch)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
         >
-          <Pencil className="size-4 text-[#5f6573]" />
+          <Pencil className="size-4 text-muted-foreground" />
           Edit
         </button>
         {allowDelete && (
           <button
             type="button"
             onClick={() => setDeleteTarget(branch)}
-            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft"
           >
             <Trash2 className="size-4" />
             Hapus
@@ -264,7 +264,7 @@ export default function AdminBranchListPage({
             setDeleteTarget(branch);
           }}
           aria-label="Hapus Cabang"
-          className="text-destructive hover:bg-destructive-soft"
+          className="text-destructive-foreground hover:bg-destructive-soft"
         >
           <Trash2 className="size-4" />
         </Button>
@@ -332,7 +332,7 @@ export default function AdminBranchListPage({
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
-        <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5 sm:ml-auto">
+        <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 sm:ml-auto">
           <button
             type="button"
             onClick={() => handleViewModeChange("table")}
@@ -340,8 +340,8 @@ export default function AdminBranchListPage({
             title="Tampilan Tabel"
             className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
               viewMode === "table"
-                ? "bg-primary-soft text-primary"
-                : "text-[#5f6573] hover:text-[#172033]"
+                ? "bg-primary-soft text-primary-foreground"
+                : "text-muted-foreground hover:text-heading"
             }`}
           >
             <Table2 className="size-3.5" />
@@ -354,8 +354,8 @@ export default function AdminBranchListPage({
             title="Tampilan Card"
             className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
               viewMode === "card"
-                ? "bg-primary-soft text-primary"
-                : "text-[#5f6573] hover:text-[#172033]"
+                ? "bg-primary-soft text-primary-foreground"
+                : "text-muted-foreground hover:text-heading"
             }`}
           >
             <LayoutGrid className="size-3.5" />
@@ -365,7 +365,7 @@ export default function AdminBranchListPage({
       </div>
 
       {isEmpty ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <EmptyState
             title={hasFilter ? "Cabang tidak ditemukan" : "Belum ada Cabang"}
             description={
@@ -376,10 +376,10 @@ export default function AdminBranchListPage({
           />
         </div>
       ) : viewMode === "table" ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[840px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+              <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Nama Cabang</th>
                   <th className="px-4 py-3">Status Kepengurusan</th>
@@ -389,7 +389,7 @@ export default function AdminBranchListPage({
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+              <tbody className="divide-y divide-divider text-[13px]">
                 {branches.map((branch) => (
                   <tr key={branch.id} className="align-middle">
                     <td className="px-4 py-3">
@@ -404,10 +404,10 @@ export default function AdminBranchListPage({
                           logoClassName="h-7 w-auto"
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
+                          <p className="truncate text-sm font-semibold text-heading hover:text-primary-foreground">
                             {formatBranchName(branch.name)}
                           </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
+                          <p className="truncate text-[13px] text-muted-foreground">
                             {branch.coordinating_body_name
                               ? `Badko ${branch.coordinating_body_name}`
                               : "—"}
@@ -420,10 +420,10 @@ export default function AdminBranchListPage({
                         {branch.type === "full" ? "Penuh" : "Persiapan"}
                       </Label>
                     </td>
-                    <td className="px-4 py-3 text-[#172033]">
+                    <td className="px-4 py-3 text-heading">
                       {branch.chapter_count ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-[#172033]">
+                    <td className="px-4 py-3 text-heading">
                       {branch.user_count ?? "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -450,7 +450,7 @@ export default function AdminBranchListPage({
             <Link
               key={branch.id}
               href={`${detailBasePath}/${branch.id}`}
-              className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/40"
+              className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 transition hover:border-primary/40"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
@@ -461,10 +461,10 @@ export default function AdminBranchListPage({
                     logoClassName="h-8 w-auto"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#172033]">
+                    <p className="truncate text-sm font-semibold text-heading">
                       {formatBranchName(branch.name)}
                     </p>
-                    <p className="truncate text-[13px] text-[#5f6573]">
+                    <p className="truncate text-[13px] text-muted-foreground">
                       {branch.coordinating_body_name
                         ? `Badko ${branch.coordinating_body_name}`
                         : "—"}
@@ -491,16 +491,16 @@ export default function AdminBranchListPage({
                 </Label>
               </div>
 
-              <div className="flex items-center justify-between gap-2 border-t border-[#e6e9ef] pt-3 text-[13px]">
-                <span className="text-[#5f6573]">
+              <div className="flex items-center justify-between gap-2 border-t border-border pt-3 text-[13px]">
+                <span className="text-muted-foreground">
                   Jumlah Komisariat{" "}
-                  <span className="font-semibold text-[#172033]">
+                  <span className="font-semibold text-heading">
                     {branch.chapter_count ?? "—"}
                   </span>
                 </span>
-                <span className="text-[#5f6573]">
+                <span className="text-muted-foreground">
                   Jumlah Kader{" "}
-                  <span className="font-semibold text-[#172033]">
+                  <span className="font-semibold text-heading">
                     {branch.user_count ?? "—"}
                   </span>
                 </span>
@@ -513,7 +513,7 @@ export default function AdminBranchListPage({
       {branches.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
             {(currentPage - 1) * pageSize + branches.length} dari {totalData}{" "}
             Cabang

@@ -48,10 +48,10 @@ function InformationItem({
         <Icon className={`size-5 ${style.text}`} />
       </span>
       <div className="min-w-0 pt-0.5">
-        <dt className="text-xs font-semibold uppercase text-[#5f6573]">
+        <dt className="text-xs font-semibold uppercase text-muted-foreground">
           {label}
         </dt>
-        <dd className="mt-1 text-sm text-[#172033]">{children}</dd>
+        <dd className="mt-1 text-sm text-heading">{children}</dd>
       </div>
     </div>
   );
@@ -65,8 +65,8 @@ export default function TrainingSummaryTab({
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="flex min-w-0 flex-col gap-4">
-        <section className="hidden rounded-lg border border-[#e6e9ef] bg-white p-3 lg:block">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#f5f7fb]">
+        <section className="hidden rounded-lg border border-border bg-surface p-3 lg:block">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-surface-muted">
             {training.image_url ? (
               <Image
                 src={training.image_url}
@@ -76,7 +76,7 @@ export default function TrainingSummaryTab({
                 className="object-cover"
               />
             ) : (
-              <div className="flex size-full flex-col items-center justify-center gap-2 text-[#7b8190]">
+              <div className="flex size-full flex-col items-center justify-center gap-2 text-subtle-foreground">
                 <ImageOff className="size-9" />
                 <span className="text-sm font-medium">
                   Poster belum tersedia
@@ -86,10 +86,10 @@ export default function TrainingSummaryTab({
           </div>
         </section>
 
-        <section className="rounded-lg border border-[#e6e9ef] bg-white p-4">
-          <h2 className="text-sm font-bold text-[#172033]">Contact Person</h2>
+        <section className="rounded-lg border border-border bg-surface p-4">
+          <h2 className="text-sm font-bold text-heading">Contact Person</h2>
           <div className="mt-4 flex items-center gap-3">
-            <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-primary">
+            <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-primary-foreground">
               {training.contact_person_avatar ? (
                 <Image
                   src={training.contact_person_avatar}
@@ -103,10 +103,10 @@ export default function TrainingSummaryTab({
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-[#172033]">
+              <p className="truncate text-sm font-bold text-heading">
                 {training.contact_person_name ?? "Belum ditentukan"}
               </p>
-              <p className="mt-0.5 truncate text-xs text-[#5f6573]">
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 {training.contact_person_phone_number ??
                   "Nomor HP belum tersedia"}
               </p>
@@ -116,8 +116,8 @@ export default function TrainingSummaryTab({
       </aside>
 
       <div className="flex min-w-0 flex-col gap-4">
-        <section className="rounded-lg border border-[#e6e9ef] bg-white p-5">
-          <h2 className="text-sm font-bold text-[#172033]">
+        <section className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="text-sm font-bold text-heading">
             Informasi Pelaksanaan
           </h2>
           <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
@@ -139,7 +139,7 @@ export default function TrainingSummaryTab({
                     href={training.location_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="shrink-0 text-primary hover:underline"
+                    className="shrink-0 text-primary-foreground hover:underline"
                     aria-label="Buka lokasi"
                   >
                     <ExternalLink className="size-4" />
@@ -179,9 +179,9 @@ export default function TrainingSummaryTab({
           />
         </div>
 
-        <section className="rounded-lg border border-[#e6e9ef] bg-white p-5">
-          <h2 className="text-sm font-bold text-[#172033]">Deskripsi</h2>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#5f6573]">
+        <section className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="text-sm font-bold text-heading">Deskripsi</h2>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
             {training.description ||
               "Belum ada deskripsi untuk pelaksanaan ini."}
           </p>

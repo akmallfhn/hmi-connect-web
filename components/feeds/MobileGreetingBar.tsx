@@ -23,7 +23,7 @@ export default function MobileGreetingBar({
   const { unreadCount } = useNotificationsBell(userId);
 
   return (
-    <div className="relative z-0 overflow-hidden bg-white px-4 pb-20 pt-4 lg:hidden">
+    <div className="relative z-0 overflow-hidden bg-surface px-4 pb-20 pt-4 lg:hidden">
       <div className="pointer-events-none absolute -left-14 -top-16 size-56 rounded-full bg-primary/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-12 -top-20 size-52 rounded-full bg-secondary/25 blur-3xl" />
 
@@ -33,13 +33,13 @@ export default function MobileGreetingBar({
             src={avatar}
             name={displayName}
             size={36}
-            className="ring-2 ring-white/80"
+            className="ring-2 ring-on-dark/80"
           />
           <div className="min-w-0">
-            <p className="text-[15px] font-semibold leading-snug text-tertiary">
+            <p className="text-[15px] font-semibold leading-snug text-heading">
               Hi, {displayName}!
             </p>
-            <p className="truncate text-[13px] leading-snug text-[#5f6573]">
+            <p className="truncate text-[13px] leading-snug text-muted-foreground">
               Let’s connect & grow.
             </p>
           </div>
@@ -48,11 +48,11 @@ export default function MobileGreetingBar({
         <Link
           href="/notifications"
           aria-label="Notifikasi"
-          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/75 text-tertiary shadow-sm ring-1 ring-black/5 transition hover:bg-white"
+          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-surface/75 text-heading shadow-sm ring-1 ring-black/5 transition hover:bg-surface"
         >
           <IconBell className="size-5" stroke={2} />
           {unreadCount > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex size-3.5 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-white ring-2 ring-white">
+            <span className="absolute right-1.5 top-1.5 flex size-3.5 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-badge-foreground ring-2 ring-on-dark">
               {unreadCount}
             </span>
           )}

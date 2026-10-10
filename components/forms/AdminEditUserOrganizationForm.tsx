@@ -123,7 +123,7 @@ function OrganizationFields({
       />
 
       {user.coordinating_body_name && (
-        <p className="text-xs text-[#5f6573]">
+        <p className="text-xs text-muted-foreground">
           Badko saat ini: <span className="font-medium">{user.coordinating_body_name}</span>
         </p>
       )}
@@ -155,7 +155,7 @@ function OrganizationFields({
         required
       />
 
-      <div className="flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

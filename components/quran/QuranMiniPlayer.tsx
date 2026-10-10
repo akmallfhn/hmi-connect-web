@@ -51,8 +51,8 @@ export default function QuranMiniPlayer({
 
   return (
     <div className="fixed inset-x-0 bottom-16 z-40 px-3 lg:hidden">
-      <div className="mx-auto max-w-sm overflow-hidden rounded-2xl bg-[#172033] text-white shadow-lg">
-        <div className="h-1 bg-white/10">
+      <div className="mx-auto max-w-sm overflow-hidden rounded-2xl bg-brand-ink text-on-dark shadow-lg">
+        <div className="h-1 bg-on-dark/10">
           <div
             className="h-full bg-primary transition-[width]"
             style={{ width: `${progress}%` }}
@@ -61,7 +61,7 @@ export default function QuranMiniPlayer({
         <div className="flex items-center gap-3 px-3 py-2.5">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{track.title}</p>
-            <p className="truncate text-xs text-white/60">{track.subtitle}</p>
+            <p className="truncate text-xs text-on-dark/60">{track.subtitle}</p>
           </div>
           <Button
             type="button"
@@ -69,7 +69,7 @@ export default function QuranMiniPlayer({
             size="icon"
             onClick={onTogglePlay}
             aria-label={isPlaying ? "Jeda" : "Putar"}
-            className="size-9 shrink-0 !rounded-full text-white hover:bg-white/10"
+            className="size-9 shrink-0 !rounded-full text-on-dark hover:bg-on-dark/10"
           >
             {isPlaying ? (
               <Pause className="size-4" fill="currentColor" />
@@ -83,7 +83,7 @@ export default function QuranMiniPlayer({
             size="icon"
             onClick={onClose}
             aria-label="Tutup pemutar"
-            className="size-9 shrink-0 !rounded-full text-white/70 hover:bg-white/10"
+            className="size-9 shrink-0 !rounded-full text-on-dark/70 hover:bg-on-dark/10"
           >
             <X className="size-4" />
           </Button>

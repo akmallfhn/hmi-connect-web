@@ -77,7 +77,7 @@ function EditCoordinatingBodyLoader({
 
   if (loading) {
     return (
-      <p className="py-6 text-center text-sm text-[#5f6573]">
+      <p className="py-6 text-center text-sm text-muted-foreground">
         Memuat data Badko...
       </p>
     );
@@ -175,7 +175,7 @@ function EditCoordinatingBodyFields({
         rows={6}
       />
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

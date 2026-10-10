@@ -40,7 +40,7 @@ export default function OfficialAccountPage({
   // No personal Header or BottomNav here: on mobile the entity gets its own greeting and tab bar.
   return (
     <ActingEntityProvider entity={authorEntity}>
-      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+      <div className="min-h-screen bg-surface pb-16 lg:pb-0">
         <OfficialGreetingBar
           name={name}
           imageUrl={imageUrl}

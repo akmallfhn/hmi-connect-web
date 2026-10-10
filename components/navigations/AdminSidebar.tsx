@@ -52,22 +52,22 @@ const NAV_TONE: Record<
 > = {
   dark: {
     activeLink:
-      "bg-linear-to-r from-primary/40 via-primary/15 to-transparent font-medium text-white",
+      "bg-linear-to-r from-primary/40 via-primary/15 to-transparent font-medium text-on-dark",
     idleLink:
-      "text-white/65 hover:bg-linear-to-r hover:from-white/10 hover:to-transparent hover:text-white",
-    activeIcon: "text-primary",
-    idleIcon: "text-white/50 group-hover:text-white/85",
-    groupLabel: "text-white/35",
-    groupButton: "hover:bg-white/5",
+      "text-on-dark/65 hover:bg-linear-to-r hover:from-on-dark/10 hover:to-transparent hover:text-on-dark",
+    activeIcon: "text-primary-foreground",
+    idleIcon: "text-on-dark/50 group-hover:text-on-dark/85",
+    groupLabel: "text-on-dark/35",
+    groupButton: "hover:bg-surface/5",
   },
   light: {
     activeLink:
-      "bg-linear-to-r from-primary/15 via-primary/5 to-transparent font-medium text-primary",
-    idleLink: "text-[#5f6573] hover:bg-[#f5f7fb] hover:text-[#172033]",
-    activeIcon: "text-primary",
-    idleIcon: "text-[#7b8190] group-hover:text-[#172033]",
-    groupLabel: "text-[#7b8190]",
-    groupButton: "hover:bg-[#f5f7fb]",
+      "bg-linear-to-r from-primary/15 via-primary/5 to-transparent font-medium text-primary-foreground",
+    idleLink: "text-muted-foreground hover:bg-surface-muted hover:text-heading",
+    activeIcon: "text-primary-foreground",
+    idleIcon: "text-subtle-foreground group-hover:text-heading",
+    groupLabel: "text-subtle-foreground",
+    groupButton: "hover:bg-surface-muted",
   },
 };
 
@@ -251,10 +251,10 @@ function ProfileBlock({
   const displayName = fullName ?? "Admin";
   const [loggingOut, setLoggingOut] = useState(false);
   const isLight = tone === "light";
-  const dividerClasses = isLight ? "border-[#e6e9ef]" : "border-white/10";
+  const dividerClasses = isLight ? "border-border" : "border-on-dark/10";
   const logoutClasses = isLight
-    ? "text-destructive hover:bg-destructive-soft"
-    : "text-secondary hover:bg-secondary/15";
+    ? "text-destructive-foreground hover:bg-destructive-soft"
+    : "text-secondary-foreground hover:bg-secondary/15";
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -299,13 +299,13 @@ function ProfileBlock({
       <Avatar src={avatar} name={displayName} size={32} />
       <div className="min-w-0 flex-1">
         <p
-          className={`truncate text-sm font-medium ${isLight ? "text-[#172033]" : "text-white"}`}
+          className={`truncate text-sm font-medium ${isLight ? "text-heading" : "text-on-dark"}`}
         >
           {displayName}
         </p>
         {email && (
           <p
-            className={`truncate text-xs ${isLight ? "text-[#5f6573]" : "text-white/50"}`}
+            className={`truncate text-xs ${isLight ? "text-muted-foreground" : "text-on-dark/50"}`}
           >
             {email}
           </p>
@@ -383,7 +383,7 @@ export default function AdminSidebar({
   return (
     <>
       <aside
-        className={`font-stack-sans-headline sticky top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-admin-sidebar pt-6 transition-[width] duration-150 lg:flex ${
+        className={`font-stack-sans-headline sticky top-0 hidden h-screen shrink-0 flex-col border-r border-on-dark/10 bg-admin-sidebar pt-6 transition-[width] duration-150 lg:flex ${
           isCollapsed ? "w-20 px-3" : "w-64 px-4"
         }`}
       >
@@ -398,7 +398,7 @@ export default function AdminSidebar({
             onClick={() => setIsCollapsed((prev) => !prev)}
             aria-label={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
             title={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-            className="shrink-0 text-white/65 hover:bg-white/10 hover:text-white focus-visible:ring-secondary/50"
+            className="shrink-0 text-on-dark/65 hover:bg-on-dark/10 hover:text-on-dark focus-visible:ring-secondary/50"
           >
             {isCollapsed ? (
               <PanelLeftOpen className="size-4.5" />
@@ -407,7 +407,7 @@ export default function AdminSidebar({
             )}
           </Button>
         </div>
-        <div className="mt-4 -mx-4 shrink-0 border-t border-white/10" />
+        <div className="mt-4 -mx-4 shrink-0 border-t border-on-dark/10" />
         <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
           <NavList
             navItems={navItems}
@@ -426,7 +426,7 @@ export default function AdminSidebar({
       </aside>
 
       {/* Mobile chrome is light on purpose — the deep-slate rail is a desktop-only treatment. */}
-      <div className="font-stack-sans-headline sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-[#e6e9ef] bg-white px-4 lg:hidden">
+      <div className="font-stack-sans-headline sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-border bg-surface px-4 lg:hidden">
         <Link
           href={homeHref}
           className="flex items-center"
@@ -439,7 +439,7 @@ export default function AdminSidebar({
           onClick={() => setMobileOpen(true)}
           aria-label="Buka menu"
           aria-expanded={mobileOpen}
-          className="flex size-9 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+          className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted hover:text-heading"
         >
           <Menu className="size-5" />
         </button>
@@ -453,12 +453,12 @@ export default function AdminSidebar({
       >
         <div
           onClick={() => setMobileOpen(false)}
-          className={`absolute inset-0 bg-[#172033]/40 transition-opacity duration-300 ease-out motion-reduce:transition-none ${
+          className={`absolute inset-0 bg-brand-ink/40 transition-opacity duration-300 ease-out motion-reduce:transition-none ${
             mobileOpen ? "opacity-100" : "opacity-0"
           }`}
         />
         <div
-          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e9ef] bg-white px-4 pt-6 transition-[transform,box-shadow] duration-300 ease-out will-change-transform motion-reduce:transition-none ${
+          className={`font-stack-sans-headline absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-surface px-4 pt-6 transition-[transform,box-shadow] duration-300 ease-out will-change-transform motion-reduce:transition-none ${
             mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full shadow-none"
           }`}
         >
@@ -469,12 +469,12 @@ export default function AdminSidebar({
               type="button"
               onClick={() => setMobileOpen(false)}
               aria-label="Tutup menu"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted hover:text-heading"
             >
               <X className="size-5" />
             </button>
           </div>
-          <div className="mt-4 -mx-4 shrink-0 border-t border-[#e6e9ef]" />
+          <div className="mt-4 -mx-4 shrink-0 border-t border-border" />
           <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4">
             <NavList
               navItems={navItems}

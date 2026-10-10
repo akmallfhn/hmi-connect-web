@@ -45,12 +45,12 @@ export default function EntityProfileHeader({
   const registeredLabel = createdAt ? formatMonthYear(createdAt) : null;
 
   return (
-    <div className="overflow-hidden border border-x-0 border-[#e6e9ef] bg-white lg:rounded-2xl lg:border-x">
+    <div className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
       <div className="h-28 bg-gradient-to-r from-primary to-secondary sm:h-40" />
 
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
         <div className="relative -mt-14 w-fit lg:-mt-16">
-          <span className="flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#f5f7fb] ring-4 ring-primary">
+          <span className="flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-on-dark bg-surface-muted ring-4 ring-primary">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -67,14 +67,14 @@ export default function EntityProfileHeader({
           {/* The entity marker lives on the logo instead of a pill beside the name, so the name row stays one line. */}
           <span className="group/official absolute right-0.5 bottom-0.5">
             <span
-              className="flex size-7 items-center justify-center rounded-full border-2 border-white bg-primary text-white"
+              className="flex size-7 items-center justify-center rounded-full border-2 border-on-dark bg-badge-primary text-badge-foreground"
               aria-label="Official Account"
             >
               <Check className="size-3.5" strokeWidth={3} />
             </span>
             <span
               role="tooltip"
-              className="pointer-events-none absolute bottom-full right-0 z-20 mb-1.5 w-max rounded-md bg-[#172033] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition translate-y-1 group-hover/official:translate-y-0 group-hover/official:opacity-100"
+              className="pointer-events-none absolute bottom-full right-0 z-20 mb-1.5 w-max rounded-md bg-brand-ink px-2.5 py-1.5 text-xs font-medium text-on-dark opacity-0 shadow-lg transition translate-y-1 group-hover/official:translate-y-0 group-hover/official:opacity-100"
             >
               Official Account
             </span>
@@ -83,7 +83,7 @@ export default function EntityProfileHeader({
 
         <div className="mt-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <h1 className="text-xl font-bold text-[#172033] sm:text-2xl">
+            <h1 className="text-xl font-bold text-heading sm:text-2xl">
               {name}
             </h1>
             {type && (
@@ -94,8 +94,8 @@ export default function EntityProfileHeader({
           </div>
 
           {affiliations.length > 0 && (
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
-              <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary" />
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground xl:text-[15px]">
+              <Building2 className="mt-0.5 size-3.5 shrink-0 text-primary-foreground" />
               <span>
                 {affiliations.map((affiliation, index) => (
                   <span key={affiliation.label}>
@@ -103,7 +103,7 @@ export default function EntityProfileHeader({
                     {affiliation.href ? (
                       <Link
                         href={actingHref(affiliation.href)}
-                        className="hover:text-primary hover:underline"
+                        className="hover:text-primary-foreground hover:underline"
                       >
                         {affiliation.label}
                       </Link>
@@ -117,7 +117,7 @@ export default function EntityProfileHeader({
           )}
 
           {registeredLabel && (
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-[#5f6573] xl:text-[15px]">
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground xl:text-[15px]">
               <CalendarDays className="size-3.5" />
               Terdaftar {registeredLabel}
             </p>
@@ -127,8 +127,8 @@ export default function EntityProfileHeader({
             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
               {stats.map((stat) => (
                 <span key={stat.label}>
-                  <span className="font-bold text-[#172033]">{stat.value}</span>{" "}
-                  <span className="text-[#5f6573]">{stat.label}</span>
+                  <span className="font-bold text-heading">{stat.value}</span>{" "}
+                  <span className="text-muted-foreground">{stat.label}</span>
                 </span>
               ))}
             </div>

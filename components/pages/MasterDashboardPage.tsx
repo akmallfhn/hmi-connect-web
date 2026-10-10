@@ -64,28 +64,28 @@ export default function MasterDashboardPage({
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
     {
       label: "Total Cabang",
       value: (summary?.branch_count ?? 0).toLocaleString("id-ID"),
       icon: Building2,
       iconBg: "bg-secondary-soft",
-      iconColor: "text-secondary",
+      iconColor: "text-secondary-foreground",
     },
     {
       label: "Total Komisariat",
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-tertiary/10",
-      iconColor: "text-tertiary",
+      iconColor: "text-heading",
     },
     {
       label: "Total Badko",
       value: (summary?.coordinating_body_count ?? 0).toLocaleString("id-ID"),
       icon: Network,
       iconBg: "bg-primary-soft",
-      iconColor: "text-primary",
+      iconColor: "text-primary-foreground",
     },
   ];
 
@@ -161,12 +161,12 @@ export default function MasterDashboardPage({
             {
               name: "Cabang Penuh",
               value: branchStatus?.total_full ?? 0,
-              color: "#159fa2",
+              color: "var(--primary)",
             },
             {
               name: "Cabang Persiapan",
               value: branchStatus?.total_provisional ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />
@@ -178,12 +178,12 @@ export default function MasterDashboardPage({
             {
               name: "Komisariat Penuh",
               value: chapterStatus?.total_full ?? 0,
-              color: "#eda100",
+              color: "var(--chart-warning)",
             },
             {
               name: "Komisariat Persiapan",
               value: chapterStatus?.total_provisional ?? 0,
-              color: "#c3c2b7",
+              color: "var(--chart-neutral)",
             },
           ]}
         />

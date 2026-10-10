@@ -248,29 +248,29 @@ export default function VerificationPage({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
+    <main className="relative min-h-screen overflow-hidden bg-surface lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
       <div className="hidden lg:block">
         <DecorativeBackground />
       </div>
-      <div className="relative flex w-full flex-col lg:h-[620px] lg:max-w-4xl lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:bg-white lg:shadow-xl">
+      <div className="relative flex w-full flex-col lg:h-[620px] lg:max-w-4xl lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:bg-surface lg:shadow-xl">
         <div className="relative hidden w-[320px] shrink-0 flex-col justify-between overflow-hidden bg-primary-soft p-10 lg:flex">
           <div className="relative z-10 flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <LogoHmi className="h-24 w-auto" />
               <LogoHmiConnect className="h-16 w-auto" />
             </div>
-            <h2 className="text-2xl font-bold leading-snug text-[#172033]">
+            <h2 className="text-2xl font-bold leading-snug text-heading">
               Satu langkah lagi menuju akun terverifikasi
             </h2>
             <div className="h-1 w-10 rounded-full bg-secondary" />
-            <p className="text-[15px] leading-6 text-[#5f6573]">
+            <p className="text-[15px] leading-6 text-muted-foreground">
               Data KTP kamu hanya digunakan untuk verifikasi identitas
               keanggotaan.
             </p>
           </div>
 
           <svg
-            className="pointer-events-none absolute bottom-8 right-6 h-16 w-16 text-secondary/40"
+            className="pointer-events-none absolute bottom-8 right-6 h-16 w-16 text-secondary-foreground/40"
             viewBox="0 0 60 60"
             fill="none"
           >
@@ -290,7 +290,7 @@ export default function VerificationPage({
                 <div
                   key={label}
                   className={`h-1.5 flex-1 rounded-full ${
-                    index <= step ? "bg-primary" : "bg-[#e6e9ef]"
+                    index <= step ? "bg-primary" : "bg-border"
                   }`}
                 />
               ))}
@@ -300,7 +300,7 @@ export default function VerificationPage({
           <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
             {step === 0 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Data sesuai KTP kamu
                 </h2>
 
@@ -339,9 +339,9 @@ export default function VerificationPage({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">
                     Jenis Kelamin
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive-foreground">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <RadioButton<GenderEnum>
@@ -365,7 +365,7 @@ export default function VerificationPage({
 
             {step === 1 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Pilih Cabang dan Komisariat
                 </h2>
 
@@ -399,9 +399,9 @@ export default function VerificationPage({
                 />
 
                 <div className="flex flex-col gap-1">
-                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">
                     Apakah kamu sudah menjadi alumni HMI?
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive-foreground">*</span>
                   </label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <RadioButton<boolean>
@@ -424,7 +424,7 @@ export default function VerificationPage({
                 </div>
 
                 {status === "error" && (
-                  <p className="text-xs font-semibold text-destructive">
+                  <p className="text-xs font-semibold text-destructive-foreground">
                     {errorMessage}
                   </p>
                 )}
@@ -433,7 +433,7 @@ export default function VerificationPage({
 
             {step === 2 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Alamat sesuai KTP kamu
                 </h2>
 
@@ -484,7 +484,7 @@ export default function VerificationPage({
                 />
 
                 {status === "error" && (
-                  <p className="text-xs font-semibold text-destructive">
+                  <p className="text-xs font-semibold text-destructive-foreground">
                     {errorMessage}
                   </p>
                 )}
@@ -526,8 +526,8 @@ export default function VerificationPage({
               )}
             </div>
 
-            <p className="flex items-center justify-center gap-1.5 text-xs text-[#5f6573]">
-              <ShieldCheck className="size-3.5 text-primary" />
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="size-3.5 text-primary-foreground" />
               Data yang kamu isi aman dan hanya digunakan untuk keperluan
               internal HMI.
             </p>

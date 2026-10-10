@@ -29,7 +29,7 @@ export default function PasswordInput({
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Sembunyikan password" : "Tampilkan password"}
-          className="flex size-8 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted hover:text-heading"
         >
           {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>

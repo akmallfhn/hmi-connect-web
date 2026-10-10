@@ -93,12 +93,12 @@ export default function ProfileCompletionCard({
   }
 
   return (
-    <div className="border border-x-0 border-[#e2f0ff] bg-linear-to-br from-secondary/20 to-35% to-white p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-info-soft-border bg-linear-to-br from-secondary/20 to-35% to-surface p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-stack-sans-headline font-medium text-[#172033]">
+        <h2 className="text-base font-stack-sans-headline font-medium text-heading">
           Lengkapi Profil
         </h2>
-        <span className="shrink-0 text-sm font-medium text-[#5f6573]">
+        <span className="shrink-0 text-sm font-medium text-muted-foreground">
           {completed_stages}/{total_stages} Selesai
         </span>
       </div>
@@ -124,7 +124,7 @@ export default function ProfileCompletionCard({
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <span className="shrink-0 text-sm font-medium text-[#5f6573]">
+        <span className="shrink-0 text-sm font-medium text-muted-foreground">
           {percent}%
         </span>
       </div>
@@ -137,8 +137,8 @@ export default function ProfileCompletionCard({
                 className={[
                   "flex size-5 shrink-0 items-center justify-center rounded-full",
                   stage.is_completed
-                    ? "bg-primary text-white"
-                    : "border border-[#c7d0de] bg-white",
+                    ? "bg-badge-primary text-badge-foreground"
+                    : "border border-border-strong bg-surface",
                 ].join(" ")}
               >
                 {stage.is_completed && <Check className="size-3" />}
@@ -147,8 +147,8 @@ export default function ProfileCompletionCard({
               <span
                 className={
                   stage.is_completed
-                    ? "min-w-0 flex-1 text-sm text-primary line-through xl:text-[15px]"
-                    : "min-w-0 flex-1 text-sm text-[#5f6573] xl:text-[15px]"
+                    ? "min-w-0 flex-1 text-sm text-primary-foreground line-through xl:text-[15px]"
+                    : "min-w-0 flex-1 text-sm text-muted-foreground xl:text-[15px]"
                 }
               >
                 {STAGE_LABEL[stage.name] ?? stage.description}
@@ -158,7 +158,7 @@ export default function ProfileCompletionCard({
                 <button
                   type="button"
                   onClick={() => setOpenForm(STAGE_FORM[stage.name])}
-                  className="shrink-0 cursor-pointer text-sm font-semibold text-primary hover:underline hover:underline-offset-2"
+                  className="shrink-0 cursor-pointer text-sm font-semibold text-primary-foreground hover:underline hover:underline-offset-2"
                 >
                   Lengkapi
                 </button>
@@ -173,7 +173,7 @@ export default function ProfileCompletionCard({
           type="button"
           onClick={() => setExpanded((current) => !current)}
           aria-expanded={expanded}
-          className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1 text-sm font-semibold text-primary"
+          className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1 text-sm font-semibold text-primary-foreground"
         >
           {expanded ? "Sembunyikan" : "Lihat Selengkapnya"}
           <ChevronDown

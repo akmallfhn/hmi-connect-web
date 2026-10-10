@@ -3,7 +3,7 @@ import LogoHmiOutline from "../svg/LogoHmiOutline";
 
 export default function AdminDashboardBanner() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-[#222222] to-black">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-admin-banner-start to-media-backdrop">
       <div className="relative z-10 px-6 py-6 sm:px-10 sm:py-7 md:px-12 md:py-10">
         <div className="flex max-w-xl flex-col items-start gap-5 md:flex-row md:items-center xl:max-w-3xl">
           <div className="flex shrink-0 items-center gap-3">
@@ -14,12 +14,12 @@ export default function AdminDashboardBanner() {
               className="h-8 w-auto sm:h-12"
             />
           </div>
-          <div className="hidden h-12 w-px shrink-0 bg-white/50 md:block" />
+          <div className="hidden h-12 w-px shrink-0 bg-surface/50 md:block" />
           <div>
-            <h2 className="text-xl leading-tight font-extrabold text-white sm:text-2xl">
+            <h2 className="text-xl leading-tight font-extrabold text-on-dark sm:text-2xl">
               Data Center HMI, Perekat Tali Silaturahmi
             </h2>
-            <p className="mt-2 text-sm text-white/70 sm:text-base xl:text-lg">
+            <p className="mt-2 text-sm text-on-dark/70 sm:text-base xl:text-lg">
               Kelola HMI dalam satu dashboard.
             </p>
           </div>

@@ -80,7 +80,7 @@ export default function YouTubeEmbed({
   return (
     <div
       className={[
-        "relative aspect-video w-full overflow-hidden rounded-xl bg-black",
+        "relative aspect-video w-full overflow-hidden rounded-xl bg-media-backdrop",
         className,
       ]
         .filter(Boolean)

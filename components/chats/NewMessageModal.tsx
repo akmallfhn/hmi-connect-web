@@ -110,7 +110,7 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Cari nama atau username..."
-          className="h-10 w-full rounded-full border border-[#dbe3ef] bg-[#f5f7fb] px-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15"
+          className="h-10 w-full rounded-full border border-border-strong bg-surface-muted px-4 text-sm text-heading outline-none transition placeholder:text-subtle-foreground focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/15"
         />
       </label>
 
@@ -119,7 +119,7 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
           <>
             {loading && <PersonListSkeleton rows={4} />}
             {!loading && results.length === 0 && (
-              <p className="px-1 py-6 text-center text-sm text-[#7b8190]">Tidak ditemukan.</p>
+              <p className="px-1 py-6 text-center text-sm text-subtle-foreground">Tidak ditemukan.</p>
             )}
             {!loading &&
               results.map((person) => (
@@ -128,12 +128,12 @@ export default function NewMessageModal({ open, onClose, viewerId }: NewMessageM
           </>
         ) : (
           <>
-            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#9aa1ad]">
+            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
               Mengikuti
             </p>
             {followingLoading && <PersonListSkeleton />}
             {!followingLoading && following.length === 0 && (
-              <p className="px-1 py-6 text-center text-sm text-[#7b8190]">
+              <p className="px-1 py-6 text-center text-sm text-subtle-foreground">
                 Anda belum mengikuti siapa pun.
               </p>
             )}
@@ -159,12 +159,12 @@ function PersonRow({
     <button
       type="button"
       onClick={() => onSelect(person)}
-      className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 text-left transition hover:bg-[#f5f7fb]"
+      className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 text-left transition hover:bg-surface-muted"
     >
       <Avatar src={person.avatar} name={person.full_name} size={44} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#172033]">{person.full_name}</p>
-        <p className="truncate text-xs text-[#7b8190]">@{person.username}</p>
+        <p className="truncate text-sm font-semibold text-heading">{person.full_name}</p>
+        <p className="truncate text-xs text-subtle-foreground">@{person.username}</p>
       </div>
     </button>
   );

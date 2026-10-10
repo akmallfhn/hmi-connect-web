@@ -211,7 +211,7 @@ export default function FeedTimeline({
 
       <div className="flex flex-col gap-1.5 lg:gap-4">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-[#e6e9ef] bg-white p-8 text-center text-sm text-[#5f6573]">
+          <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-foreground">
             Belum ada postingan. Jadilah yang pertama membagikan sesuatu!
           </div>
         )}
@@ -254,7 +254,7 @@ export default function FeedTimeline({
         {(hasMore || loadingMore) && (
           <div
             ref={sentinelRef}
-            className="flex h-12 items-center justify-center text-xs font-medium text-[#5f6573]"
+            className="flex h-12 items-center justify-center text-xs font-medium text-muted-foreground"
           >
             {loadingMore ? "Memuat..." : null}
           </div>

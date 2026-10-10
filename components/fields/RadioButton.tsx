@@ -29,7 +29,7 @@ export default function RadioButton<T extends string | number | boolean>({
         "flex items-start gap-3 rounded-lg border p-3 transition",
         isSelected
           ? "border-primary bg-primary-soft"
-          : "border-[#dbe3ef] bg-white",
+          : "border-border-strong bg-surface",
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
         className,
       ]
@@ -45,9 +45,9 @@ export default function RadioButton<T extends string | number | boolean>({
         className="mt-0.5 size-4 accent-primary"
       />
       <div className="flex flex-col gap-0.5">
-        <span className="text-base font-medium text-[#172033]">{label}</span>
+        <span className="text-base font-medium text-heading">{label}</span>
         {description && (
-          <span className="text-sm text-[#5f6573]">{description}</span>
+          <span className="text-sm text-muted-foreground">{description}</span>
         )}
       </div>
     </label>

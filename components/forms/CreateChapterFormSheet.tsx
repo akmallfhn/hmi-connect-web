@@ -187,10 +187,10 @@ function CreateChapterFields({
 
       {lockBranch ? (
         <div className="flex flex-col gap-1">
-          <label className="pl-1 text-[15px] font-medium text-[#172033]">
+          <label className="pl-1 text-[15px] font-medium text-heading">
             Cabang
           </label>
-          <p className="rounded-lg border border-[#e6e9ef] bg-[#f9fafc] px-3 py-2.5 text-sm text-[#172033]">
+          <p className="rounded-lg border border-border bg-surface-subtle px-3 py-2.5 text-sm text-heading">
             {branch?.label ?? "—"}
           </p>
         </div>
@@ -227,7 +227,7 @@ function CreateChapterFields({
         required
       />
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

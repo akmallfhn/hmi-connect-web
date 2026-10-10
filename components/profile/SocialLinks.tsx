@@ -41,7 +41,7 @@ export default function SocialLinks({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-[#dbe3ef] bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-[#f5f7fb]"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-border-strong bg-surface px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-surface-muted"
         >
           <Plus className="size-3.5" />
           Tambah sosial media
@@ -63,7 +63,7 @@ export default function SocialLinks({
             target="_blank"
             rel="noreferrer"
             className={[
-              "max-w-full items-center gap-1.5 rounded-full border border-[#e6e9ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#172033] transition hover:bg-[#f5f7fb]",
+              "max-w-full items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-heading transition hover:bg-surface-muted",
               // The third chip is desktop-only, so mobile stops at two before the counter.
               index < MOBILE_VISIBLE ? "inline-flex" : "hidden sm:inline-flex",
             ].join(" ")}
@@ -100,25 +100,25 @@ export default function SocialLinks({
         variant="bottomSheet"
         panelClassName="max-w-md"
       >
-        <div className="divide-y divide-[#e6e9ef] rounded-xl border border-[#e6e9ef]">
+        <div className="divide-y divide-divider rounded-xl border border-border">
           {accounts.map((account) => (
             <a
               key={account.id}
               href={normalizeSocialUrl(account.url)}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 px-4 py-3 transition first:rounded-t-xl last:rounded-b-xl hover:bg-[#f5f7fb]"
+              className="flex items-center gap-3 px-4 py-3 transition first:rounded-t-xl last:rounded-b-xl hover:bg-surface-muted"
             >
               <PlatformIcon account={account} size={32} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold text-[#172033]">
+                <span className="block truncate text-[15px] font-semibold text-heading">
                   {account.platform_name}
                 </span>
-                <span className="block truncate text-[13px] text-[#5f6573]">
+                <span className="block truncate text-[13px] text-muted-foreground">
                   {account.url}
                 </span>
               </span>
-              <ExternalLink className="size-4 shrink-0 text-[#7b8190]" />
+              <ExternalLink className="size-4 shrink-0 text-subtle-foreground" />
             </a>
           ))}
         </div>
@@ -140,7 +140,7 @@ function OverflowButton({
     <button
       type="button"
       onClick={onClick}
-      className={`cursor-pointer items-center rounded-full border border-[#e6e9ef] bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-[#f5f7fb] ${className}`}
+      className={`cursor-pointer items-center rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-surface-muted ${className}`}
     >
       +{count} lainnya
     </button>
@@ -170,7 +170,7 @@ function PlatformIcon({
   return (
     <span
       style={{ width: size, height: size, fontSize: size * 0.55 }}
-      className="flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary"
+      className="flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary-foreground"
     >
       {account.platform_name.slice(0, 1)}
     </span>

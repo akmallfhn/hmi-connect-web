@@ -91,7 +91,7 @@ export default function EntityAccessTab({
   return (
     <section>
       {grants.length === 0 ? (
-        <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="overflow-hidden rounded-xl border border-border bg-surface">
           <EmptyState
             title="Belum ada admin"
             description={`Admin yang diberi akses untuk ${entityLabel} ini akan ditampilkan di sini.`}
@@ -110,13 +110,13 @@ export default function EntityAccessTab({
           />
         </div>
       ) : (
-        <div className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-border bg-surface p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-[#172033]">
+              <h2 className="text-base font-semibold text-heading">
                 Admin {entityLabel}
               </h2>
-              <p className="mt-1 text-sm text-[#5f6573]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Pengguna yang memiliki akses untuk mengelola dashboard{" "}
                 {entityLabel} ini.
               </p>
@@ -135,10 +135,10 @@ export default function EntityAccessTab({
             )}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef]">
+          <div className="mt-4 overflow-hidden rounded-xl border border-border">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+                <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Admin</th>
                     <th className="px-4 py-3">Email</th>
@@ -149,7 +149,7 @@ export default function EntityAccessTab({
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+                <tbody className="divide-y divide-divider text-[13px]">
                   {grants.map((grant) => (
                     <tr key={grant.id} className="align-middle">
                       <td className="px-4 py-3">
@@ -160,16 +160,16 @@ export default function EntityAccessTab({
                             size={36}
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#172033]">
+                            <p className="truncate text-sm font-semibold text-heading">
                               {grant.user_full_name}
                             </p>
-                            <p className="truncate text-[13px] text-[#5f6573]">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               @{grant.user_username}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[#5f6573]">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {grant.user_email ?? "—"}
                       </td>
                       <td className="px-4 py-3">
@@ -179,7 +179,7 @@ export default function EntityAccessTab({
                           <Label variant="orange">Menunggu Konfirmasi</Label>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[#5f6573]">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {grant.granted_by_name ?? "—"}
                       </td>
                       {canRevoke && (
@@ -330,13 +330,13 @@ function AddAccessModal({
           noOptionsMessage={`Tidak ada kader terverifikasi di ${entityLabel} ini.`}
           showOptionAvatar
         />
-        <p className="text-xs text-[#5f6573]">
+        <p className="text-xs text-muted-foreground">
           Hanya kader aktif dan terverifikasi yang terdaftar di {entityLabel}{" "}
           ini yang bisa dipilih. Undangan dikirim sebagai permintaan — pengguna baru bisa
           mengelola {entityLabel} ini setelah menerimanya.
         </p>
 
-        <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+        <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
           <Button variant="outline" onClick={onClose} disabled={isInviting}>
             Batal
           </Button>

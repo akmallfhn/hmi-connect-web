@@ -20,13 +20,13 @@ export default function EntitySummarySidebar({
 }: EntitySummarySidebarProps) {
   const actingHref = useActingHref();
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <Link
         href={actingHref(href)}
         className="flex flex-col items-center gap-2 text-center"
       >
         <span className="relative block size-[72px]">
-          <span className="flex size-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#f5f7fb] ring-2 ring-primary">
+          <span className="flex size-[72px] items-center justify-center overflow-hidden rounded-full border-2 border-on-dark bg-surface-muted ring-2 ring-primary">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -42,12 +42,12 @@ export default function EntitySummarySidebar({
           <span
             aria-label="Official Account"
             title="Official Account"
-            className="absolute -bottom-0.5 -right-0.5 flex size-6 items-center justify-center rounded-full border-2 border-white bg-primary text-white"
+            className="absolute -bottom-0.5 -right-0.5 flex size-6 items-center justify-center rounded-full border-2 border-on-dark bg-badge-primary text-badge-foreground"
           >
             <Check className="size-3" strokeWidth={4} />
           </span>
         </span>
-        <p className="font-bold text-[#172033]">{name}</p>
+        <p className="font-bold text-heading">{name}</p>
       </Link>
     </div>
   );

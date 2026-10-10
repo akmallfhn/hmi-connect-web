@@ -6,12 +6,12 @@ const PATTERN_DATA_URI =
 export default function AlQuranIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect x="16" y="16" width="208" height="208" rx="56" fill="#DCF0F0" />
-      <rect x="150" y="50" width="16" height="46" fill="#FF7A45" />
-      <polygon points="150,96 158,88 166,96" fill="#E5662F" />
-      <rect x="70" y="58" width="98" height="126" rx="16" fill="#159FA2" />
-      <rect x="70" y="172" width="98" height="12" rx="6" fill="#FFF6E9" />
-      <rect x="76" y="64" width="13" height="114" rx="6" fill="#0E7C7E" />
+      <rect x="16" y="16" width="208" height="208" rx="56" fill="var(--icon-canvas)" />
+      <rect x="150" y="50" width="16" height="46" fill="var(--icon-orange)" />
+      <polygon points="150,96 158,88 166,96" fill="var(--icon-orange-deep)" />
+      <rect x="70" y="58" width="98" height="126" rx="16" fill="var(--icon-primary)" />
+      <rect x="70" y="172" width="98" height="12" rx="6" fill="var(--icon-page-warm)" />
+      <rect x="76" y="64" width="13" height="114" rx="6" fill="var(--icon-primary-deep)" />
       <image
         href={PATTERN_DATA_URI}
         x="82"

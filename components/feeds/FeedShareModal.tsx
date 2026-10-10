@@ -556,8 +556,8 @@ function MobileAction({ icon, label, onClick, disabled }: {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
       className="flex w-[68px] shrink-0 snap-start flex-col items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50">
-      <span className="flex size-12 items-center justify-center rounded-full bg-[#f5f7fb] text-[#172033]">{icon}</span>
-      <span className="w-full truncate text-center text-xs text-[#5f6573]">{label}</span>
+      <span className="flex size-12 items-center justify-center rounded-full bg-surface-muted text-heading">{icon}</span>
+      <span className="w-full truncate text-center text-xs text-muted-foreground">{label}</span>
     </button>
   );
 }
@@ -648,11 +648,11 @@ export default function FeedShareModal({ open, onClose, feed, content, url }: Fe
     <Modal open={open} onClose={() => { setFailedKey(null); onClose(); }} title="Bagikan Postingan"
       variant="bottomSheet" panelClassName="rounded-t-xl sm:max-w-lg sm:rounded-xl lg:max-w-[760px]">
       <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
-        <div className="relative aspect-[9/16] h-[min(533px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-[#1b1b1d] shadow-2xl sm:h-[min(533px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
+        <div className="relative aspect-[9/16] h-[min(533px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-media-backdrop shadow-2xl sm:h-[min(533px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
           {ready ? (
             <Image src={ready.previewUrl} alt={`Gambar bagikan postingan ${author.name}`} fill unoptimized className="object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-[#a7a7ad]">
+            <div className="flex h-full items-center justify-center text-sm text-subtle-foreground">
               {preparing ? <span className="animate-pulse">Menyiapkan gambar...</span> : "Gambar tidak tersedia"}
             </div>
           )}
@@ -665,7 +665,7 @@ export default function FeedShareModal({ open, onClose, feed, content, url }: Fe
             {SHARE_PLATFORMS.map((platform) => (
               <a key={platform.name} href={platform.buildHref(url, shareText)} target="_blank" rel="noopener noreferrer" className="flex w-[68px] shrink-0 snap-start flex-col items-center gap-1.5">
                 <Image src={socialIconUrl(platform.icon)} alt="" width={48} height={48} className="size-12 rounded-full object-cover ring-1 ring-inset ring-black/5" />
-                <span className="w-full truncate text-center text-xs text-[#5f6573]">{platform.name}</span>
+                <span className="w-full truncate text-center text-xs text-muted-foreground">{platform.name}</span>
               </a>
             ))}
             <MobileAction icon={<IconShare3 className="size-5" stroke={2} />} label="Lainnya" onClick={handleNativeShare} disabled={busy !== null} />
@@ -673,29 +673,29 @@ export default function FeedShareModal({ open, onClose, feed, content, url }: Fe
         </div>
 
         <div className="hidden min-w-0 flex-1 flex-col lg:flex">
-          <h3 className="font-stack-sans-headline text-xl font-semibold text-[#172033]">Bagikan postingan ini</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#5f6573]">Unduh gambar untuk Story atau postingan, atau kirim tautannya ke teman.</p>
+          <h3 className="font-stack-sans-headline text-xl font-semibold text-heading">Bagikan postingan ini</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">Unduh gambar untuk Story atau postingan, atau kirim tautannya ke teman.</p>
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">Tautan postingan</p>
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#e6e9ef] bg-[#f8fafc] py-1.5 pl-3 pr-1.5">
-              <IconLink className="size-4 shrink-0 text-[#8a909d]" stroke={2} />
-              <span className="min-w-0 flex-1 truncate text-sm text-[#172033]">{url.replace(/^https?:\/\//, "")}</span>
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">Tautan postingan</p>
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-surface-subtle py-1.5 pl-3 pr-1.5">
+              <IconLink className="size-4 shrink-0 text-disabled-foreground" stroke={2} />
+              <span className="min-w-0 flex-1 truncate text-sm text-heading">{url.replace(/^https?:\/\//, "")}</span>
               <Button variant="primary" onClick={handleCopyLink} disabled={busy !== null} className="h-9 shrink-0 rounded-lg px-4 text-sm">{busy === "copy" ? "Menyalin..." : "Salin"}</Button>
             </div>
           </div>
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">Gambar</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">Gambar</p>
             <div className="mt-2">
               <DesktopAction icon={<IconDownload className="size-5" stroke={2} />} title={preparing || busy === "download" ? "Menyiapkan..." : "Download gambar"} description="PNG 720 × 1280, pas untuk Story" onClick={handleDownload} disabled={busy !== null || !ready} />
             </div>
           </div>
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">Media sosial</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">Media sosial</p>
             <div className="mt-2 flex flex-wrap gap-3">
               {SHARE_PLATFORMS.map((platform) => (
                 <a key={platform.name} href={platform.buildHref(url, shareText)} target="_blank" rel="noopener noreferrer" title={platform.name} className="flex flex-col items-center gap-1.5">
                   <Image src={socialIconUrl(platform.icon)} alt={platform.name} width={40} height={40} className="size-10 rounded-full object-cover ring-1 ring-inset ring-black/5" />
-                  <span className="text-[11px] text-[#5f6573]">{platform.name}</span>
+                  <span className="text-[11px] text-muted-foreground">{platform.name}</span>
                 </a>
               ))}
             </div>

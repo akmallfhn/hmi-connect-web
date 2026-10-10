@@ -14,8 +14,8 @@ export default async function FollowingCard({ userId }: { userId?: string }) {
   if (list.length === 0) return null;
 
   return (
-    <section className="border border-x-0 border-[#e6e9ef] bg-white py-4 lg:rounded-2xl lg:border-x">
-      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-[#172033] xl:text-[15px]">
+    <section className="border border-x-0 border-border bg-surface py-4 lg:rounded-2xl lg:border-x">
+      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-heading xl:text-[15px]">
         Mengikuti
       </h2>
 
@@ -44,13 +44,13 @@ export default async function FollowingCard({ userId }: { userId?: string }) {
               ) : (
                 <span
                   style={{ fontSize: TILE_SIZE * 0.4 }}
-                  className="font-semibold text-primary"
+                  className="font-semibold text-primary-foreground"
                 >
                   {getInitials(person.full_name)}
                 </span>
               )}
             </span>
-            <span className="line-clamp-2 text-center text-xs leading-4 text-[#5f6573]">
+            <span className="line-clamp-2 text-center text-xs leading-4 text-muted-foreground">
               {person.full_name}
             </span>
           </Link>

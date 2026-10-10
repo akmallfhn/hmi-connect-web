@@ -55,11 +55,11 @@ export default function FollowRecommendationRow({
       <div className="min-w-0 flex-1">
         <Link
           href={profileHref}
-          className="block truncate text-sm font-medium text-[#172033] hover:underline xl:text-[15px]"
+          className="block truncate text-sm font-medium text-heading hover:underline xl:text-[15px]"
         >
           {connection.full_name}
         </Link>
-        <p className="truncate text-xs text-[#5f6573] xl:text-[13px]">
+        <p className="truncate text-xs text-muted-foreground xl:text-[13px]">
           {subtitle}
         </p>
       </div>

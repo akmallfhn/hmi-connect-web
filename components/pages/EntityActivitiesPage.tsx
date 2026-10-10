@@ -45,7 +45,7 @@ export default function EntityActivitiesPage({
 
   return (
     <ActingEntityProvider entity={actingEntity ?? null}>
-      <div className="min-h-screen bg-white pb-16 lg:pb-0">
+      <div className="min-h-screen bg-surface pb-16 lg:pb-0">
         <Header
           fullName={viewer?.full_name}
           avatar={viewer?.avatar}
@@ -66,7 +66,7 @@ export default function EntityActivitiesPage({
             </aside>
 
             <main className="min-w-0">
-              <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
+              <div className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
                 <ActivityInfiniteList
                   initialItems={initialItems}
                   initialHasMore={initialHasMore}

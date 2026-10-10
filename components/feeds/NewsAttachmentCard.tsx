@@ -18,7 +18,7 @@ export default function NewsAttachmentCard({
 
   if (attachment.reference_is_deleted) {
     return (
-      <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f7fb] px-3 py-4 text-sm text-[#5f6573]">
+      <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-muted px-3 py-4 text-sm text-muted-foreground">
         <Newspaper className="size-4 shrink-0" />
         Berita yang dibagikan sudah dihapus
       </div>
@@ -40,7 +40,7 @@ export default function NewsAttachmentCard({
             unoptimized
           />
         ) : (
-          <div className="flex size-full items-center justify-center text-white/40">
+          <div className="flex size-full items-center justify-center text-on-dark/40">
             <Newspaper className="size-9" />
           </div>
         )}
@@ -59,25 +59,25 @@ export default function NewsAttachmentCard({
         }}
       />
 
-      <div className="relative flex flex-col gap-2 p-4 text-white md:aspect-[16/9] md:justify-end md:gap-2.5 md:p-5 md:pt-20">
+      <div className="relative flex flex-col gap-2 p-4 text-on-dark md:aspect-[16/9] md:justify-end md:gap-2.5 md:p-5 md:pt-20">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar
             src={attachment.reference_source_logo_url}
             name={sourceName}
             size={24}
-            className="bg-white ring-1 ring-white/25"
+            className="bg-surface ring-1 ring-on-dark/25"
           />
-          <p className="truncate text-xs font-medium text-white/75">
+          <p className="truncate text-xs font-medium text-on-dark/75">
             {sourceName}
           </p>
         </div>
 
-        <p className="line-clamp-2 font-stack-sans-headline text-base font-medium leading-5 text-white md:text-xl md:leading-6">
+        <p className="line-clamp-2 font-stack-sans-headline text-base font-medium leading-5 text-on-dark md:text-xl md:leading-6">
           {title}
         </p>
 
         {attachment.reference_description && (
-          <p className="line-clamp-3 text-[13px] leading-5 text-white/70 md:line-clamp-2 md:text-sm md:leading-5">
+          <p className="line-clamp-3 text-[13px] leading-5 text-on-dark/70 md:line-clamp-2 md:text-sm md:leading-5">
             {attachment.reference_description}
           </p>
         )}

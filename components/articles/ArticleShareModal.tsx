@@ -285,10 +285,10 @@ function MobileAction({
       disabled={disabled}
       className="flex w-[68px] shrink-0 snap-start flex-col items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span className="flex size-12 items-center justify-center rounded-full bg-[#f5f7fb] text-[#172033]">
+      <span className="flex size-12 items-center justify-center rounded-full bg-surface-muted text-heading">
         {icon}
       </span>
-      <span className="w-full truncate text-center text-xs text-[#5f6573]">
+      <span className="w-full truncate text-center text-xs text-muted-foreground">
         {label}
       </span>
     </button>
@@ -417,7 +417,7 @@ export default function ArticleShareModal({
     >
       <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-stretch lg:gap-8 lg:p-2">
         {/* Natural size when it fits; on a short phone it shrinks so the share row below stays visible. */}
-        <div className="relative aspect-[9/16] h-[min(533px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-[#e6e9ef] shadow-2xl sm:h-[min(533px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
+        <div className="relative aspect-[9/16] h-[min(533px,calc(100dvh-14rem))] max-w-full shrink-0 overflow-hidden rounded-lg bg-border shadow-2xl sm:h-[min(533px,calc(85dvh-12rem))] lg:h-auto lg:w-[288px]">
           {ready ? (
             // A blob URL needs no optimizer, and the preview must be the exact PNG that downloads.
             <Image
@@ -428,7 +428,7 @@ export default function ArticleShareModal({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-[#7b8190]">
+            <div className="flex h-full items-center justify-center text-sm text-subtle-foreground">
               {preparing ? (
                 <span className="animate-pulse">Menyiapkan gambar...</span>
               ) : (
@@ -469,7 +469,7 @@ export default function ArticleShareModal({
                   height={48}
                   className="size-12 rounded-full object-cover ring-1 ring-inset ring-black/5"
                 />
-                <span className="w-full truncate text-center text-xs text-[#5f6573]">
+                <span className="w-full truncate text-center text-xs text-muted-foreground">
                   {platform.name}
                 </span>
               </a>
@@ -484,21 +484,21 @@ export default function ArticleShareModal({
         </div>
 
         <div className="hidden min-w-0 flex-1 flex-col lg:flex">
-          <h3 className="font-stack-sans-headline text-xl font-semibold text-[#172033]">
+          <h3 className="font-stack-sans-headline text-xl font-semibold text-heading">
             Bagikan artikel ini
           </h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#5f6573]">
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             Unduh gambar ini untuk Story atau postingan, atau kirim tautan
             artikelnya langsung ke teman.
           </p>
 
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">
               Tautan artikel
             </p>
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#e6e9ef] bg-[#f8fafc] py-1.5 pl-3 pr-1.5">
-              <IconLink className="size-4 shrink-0 text-[#8a909d]" stroke={2} />
-              <span className="min-w-0 flex-1 truncate text-sm text-[#172033]">
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-surface-subtle py-1.5 pl-3 pr-1.5">
+              <IconLink className="size-4 shrink-0 text-disabled-foreground" stroke={2} />
+              <span className="min-w-0 flex-1 truncate text-sm text-heading">
                 {url.replace(/^https?:\/\//, "")}
               </span>
               <Button
@@ -513,7 +513,7 @@ export default function ArticleShareModal({
           </div>
 
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">
               Gambar
             </p>
             <div className="mt-2 flex flex-col gap-2">
@@ -532,7 +532,7 @@ export default function ArticleShareModal({
           </div>
 
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#8a909d]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">
               Media sosial
             </p>
             <div className="mt-2 flex flex-wrap gap-3">
@@ -552,7 +552,7 @@ export default function ArticleShareModal({
                     height={40}
                     className="size-10 rounded-full object-cover ring-1 ring-inset ring-black/5"
                   />
-                  <span className="text-[11px] text-[#5f6573]">
+                  <span className="text-[11px] text-muted-foreground">
                     {platform.name}
                   </span>
                 </a>

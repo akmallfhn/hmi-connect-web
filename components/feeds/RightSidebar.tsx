@@ -8,7 +8,7 @@ export default function RightSidebar({ userId }: { userId?: string }) {
       <ExploreSearchBar />
       <FollowingCard userId={userId} />
       <NewsCard />
-      <p className="px-2 text-xs text-[#7b8190]">
+      <p className="px-2 text-xs text-subtle-foreground">
         HMI Connect · SilaturaHMI Membangun Negeri
       </p>
     </div>

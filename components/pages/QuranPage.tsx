@@ -49,13 +49,13 @@ function QuranSearchInput({
 }) {
   return (
     <label className="relative block">
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#7b8190]" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
       <input
         type="search"
         value={query}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Cari surah atau juz..."
-        className="h-11 w-full rounded-full border border-[#dbe3ef] bg-white pl-10 pr-4 text-sm text-[#172033] outline-none transition placeholder:text-[#7b8190] focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="h-11 w-full rounded-full border border-border-strong bg-surface pl-10 pr-4 text-sm text-heading outline-none transition placeholder:text-subtle-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
     </label>
   );
@@ -138,7 +138,7 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -150,13 +150,13 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
 
       <PageMargin className="pt-3 lg:pb-10 lg:pt-6">
         <div className="flex flex-col gap-3 lg:gap-6">
-          <PageBanner className="bg-[#013334]">
+          <PageBanner className="bg-brand-deep">
             <div className="relative z-10 max-w-[60%] font-stack-sans-headline">
               <h1 className="text-[15px] font-medium leading-snug sm:text-xl lg:text-2xl">
                 Yuk, luangkan waktu membaca{" "}
-                <span className="text-secondary">Al-Quran.</span>
+                <span className="text-secondary-foreground">Al-Quran.</span>
               </h1>
-              <p className="text-[10px] mt-1 lg:flex lg:text-base text-white/70">
+              <p className="text-[10px] mt-1 lg:flex lg:text-base text-on-dark/70">
                 Jadikan Al-Quran sebagai penuntun hidup.
               </p>
             </div>
@@ -186,14 +186,14 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
               />
             </div>
 
-            <div className="flex flex-col divide-y divide-[#e6e9ef] rounded-2xl border border-[#e6e9ef] bg-white px-4">
+            <div className="flex flex-col divide-y divide-divider rounded-2xl border border-border bg-surface px-4">
               {tab === "surah" ? (
                 isSearchingSurahs ? (
-                  <p className="py-10 text-center text-sm text-[#5f6573]">
+                  <p className="py-10 text-center text-sm text-muted-foreground">
                     Mencari...
                   </p>
                 ) : filteredSurahs.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-[#5f6573]">
+                  <p className="py-10 text-center text-sm text-muted-foreground">
                     Surah tidak ditemukan.
                   </p>
                 ) : (
@@ -207,7 +207,7 @@ export default function QuranPage({ viewer, surahs, juz }: QuranPageProps) {
                   ))
                 )
               ) : filteredJuz.length === 0 ? (
-                <p className="py-10 text-center text-sm text-[#5f6573]">
+                <p className="py-10 text-center text-sm text-muted-foreground">
                   Juz tidak ditemukan.
                 </p>
               ) : (

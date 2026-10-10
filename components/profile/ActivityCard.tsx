@@ -21,21 +21,21 @@ export default function ActivityCard({
 }: ActivityCardProps) {
   const actingHref = useActingHref();
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
-      <h2 className="text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
+    <div className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
+      <h2 className="text-sm font-stack-sans-headline font-medium text-heading xl:text-[15px]">
         {title}
       </h2>
 
       <div className="mt-3 flex flex-col gap-4">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-sm text-[#5f6573] xl:text-[15px]">
+          <p className="rounded-xl border border-dashed border-border-strong px-4 py-5 text-sm text-muted-foreground xl:text-[15px]">
             {emptyMessage}
           </p>
         ) : (
           entries.map((entry, index) => (
             <div
               key={`${entry.type}-${entry.feed.id}-${entry.comment?.id ?? index}`}
-              className="border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0"
+              className="border-t border-border pt-4 first:border-t-0 first:pt-0"
             >
               <ActivityEntryCard entry={entry} />
             </div>
@@ -46,7 +46,7 @@ export default function ActivityCard({
       {seeAllHref && entries.length > 0 && (
         <Link
           href={actingHref(seeAllHref)}
-          className="mt-4 block border-t border-[#e6e9ef] pt-3 text-center text-xs font-semibold text-primary hover:underline xl:text-sm"
+          className="mt-4 block border-t border-border pt-3 text-center text-xs font-semibold text-primary-foreground hover:underline xl:text-sm"
         >
           Lihat semua
         </Link>

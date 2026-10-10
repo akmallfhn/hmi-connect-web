@@ -339,10 +339,10 @@ export default function MemberFilterBar({
                     type="button"
                     aria-pressed={sortValue === option.value}
                     onClick={() => changeSort(option.value)}
-                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-[#f5f7fb] ${
+                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-surface-muted ${
                       sortValue === option.value
-                        ? "bg-primary-soft font-semibold text-primary"
-                        : "text-[#172033]"
+                        ? "bg-primary-soft font-semibold text-primary-foreground"
+                        : "text-heading"
                     }`}
                   >
                     {option.label}

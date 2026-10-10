@@ -23,7 +23,7 @@ export default function OfficialGreetingBar({
         href={profileHref}
         className="relative z-10 flex min-w-0 items-center gap-3"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white/30">
+        <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface ring-2 ring-on-dark/30">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -37,10 +37,10 @@ export default function OfficialGreetingBar({
           )}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold leading-snug text-white">
+          <p className="truncate text-[15px] font-semibold leading-snug text-on-dark">
             Hi, {name}!
           </p>
-          <p className="truncate text-[13px] leading-snug text-white/70">
+          <p className="truncate text-[13px] leading-snug text-on-dark/70">
             Kamu sedang memakai akun resmi.
           </p>
         </div>

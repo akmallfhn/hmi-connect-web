@@ -10,9 +10,9 @@ interface SurahIntroProps {
 
 export default function SurahIntro({ surah }: SurahIntroProps) {
   return (
-    <div className="-mx-4 flex flex-col items-center gap-3 rounded-t-2xl border-b border-[#e6e9ef] bg-secondary-soft/25 py-6 text-center">
+    <div className="-mx-4 flex flex-col items-center gap-3 rounded-t-2xl border-b border-border bg-secondary-soft/25 py-6 text-center">
       {!SURAH_NUMBERS_WITHOUT_BISMILLAH.includes(surah.number) && (
-        <p className="font-arabic-quran text-2xl leading-relaxed text-primary sm:text-3xl">
+        <p className="font-arabic-quran text-2xl leading-relaxed text-primary-foreground sm:text-3xl">
           {BISMILLAH_ARABIC}
         </p>
       )}
@@ -24,8 +24,8 @@ export default function SurahIntro({ surah }: SurahIntroProps) {
       </div>
 
       <div className="flex gap-3 items-center">
-        <p className="text-base font-bold text-[#172033]">{surah.name_latin}</p>
-        <p className="font-arabic-quran mt-0.5 text-xl text-[#172033]">
+        <p className="text-base font-bold text-heading">{surah.name_latin}</p>
+        <p className="font-arabic-quran mt-0.5 text-xl text-heading">
           {surah.name_arabic}
         </p>
       </div>

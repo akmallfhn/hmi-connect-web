@@ -29,19 +29,19 @@ export default function QuotedFeed({
       <div className="flex items-center gap-2">
         <FeedAuthorAvatar author={author} size={36} />
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold text-[#172033]">
+          <p className="truncate text-[15px] font-semibold text-heading">
             {author.name}
           </p>
-          <p className="text-[13px] text-[#5f6573]">
+          <p className="text-[13px] text-muted-foreground">
             {formatRelativeTime(feed.created_at)}
           </p>
         </div>
       </div>
-      <p className="mt-2 line-clamp-4 whitespace-pre-line break-words text-sm text-[#172033]">
+      <p className="mt-2 line-clamp-4 whitespace-pre-line break-words text-sm text-heading">
         {feed.content}
       </p>
       {photo && (
-        <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-[#f5f7fb]">
+        <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-surface-muted">
           <Image
             src={photo.reference_url}
             alt=""
@@ -58,7 +58,7 @@ export default function QuotedFeed({
     return (
       <Link
         href={actingHref(`/feeds/${feed.id}`)}
-        className="mt-3 block rounded-xl border border-[#e6e9ef] p-3 transition hover:bg-[#f5f7fb]"
+        className="mt-3 block rounded-xl border border-border p-3 transition hover:bg-surface-muted"
       >
         {body}
       </Link>
@@ -66,6 +66,6 @@ export default function QuotedFeed({
   }
 
   return (
-    <div className="mt-3 rounded-xl border border-[#e6e9ef] p-3">{body}</div>
+    <div className="mt-3 rounded-xl border border-border p-3">{body}</div>
   );
 }

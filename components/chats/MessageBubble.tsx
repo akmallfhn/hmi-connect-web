@@ -41,7 +41,7 @@ export default function MessageBubble({
           <div
             className={[
               "w-full rounded-lg p-2",
-              isOwn ? "bg-primary" : "bg-[#f0f2f6]",
+              isOwn ? "bg-primary" : "bg-surface-muted",
             ].join(" ")}
           >
             <button
@@ -59,7 +59,7 @@ export default function MessageBubble({
             <div
               className={[
                 "select-none whitespace-pre-wrap px-1 pb-1 pt-2 text-sm leading-relaxed break-words",
-                isOwn ? "text-white" : "text-[#172033]",
+                isOwn ? "text-on-dark" : "text-heading",
               ].join(" ")}
             >
               {message.content}
@@ -86,8 +86,8 @@ export default function MessageBubble({
                 : [
                     "select-none whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words",
                     isOwn
-                      ? "bg-primary text-white"
-                      : "bg-[#f0f2f6] text-[#172033]",
+                      ? "bg-primary text-on-primary"
+                      : "bg-surface-muted text-heading",
                   ].join(" ")
             }
           >
@@ -110,12 +110,12 @@ export function MessageMeta({ message, isOwn }: MessageMetaProps) {
     <div
       className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}
     >
-      <span className="text-[11px] text-[#9aa1ad]">
+      <span className="text-[11px] text-subtle-foreground">
         {formatClockTime(message.created_at)}
       </span>
       {isOwn && (
         <CheckCheck
-          className={`size-3.5 ${message.status === "read" ? "text-primary" : "text-[#9aa1ad]"}`}
+          className={`size-3.5 ${message.status === "read" ? "text-primary-foreground" : "text-subtle-foreground"}`}
         />
       )}
     </div>

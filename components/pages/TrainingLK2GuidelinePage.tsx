@@ -148,8 +148,8 @@ function IconBadge({
 
 function ChecklistItem({ children }: { children: string }) {
   return (
-    <li className="flex gap-2 text-base text-[#172033]">
-      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+    <li className="flex gap-2 text-base text-heading">
+      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary-foreground" />
       {children}
     </li>
   );
@@ -157,7 +157,7 @@ function ChecklistItem({ children }: { children: string }) {
 
 function TableShell({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#e6e9ef]">
+    <div className="overflow-hidden rounded-xl border border-border">
       <table className="w-full text-left text-base">{children}</table>
     </div>
   );
@@ -176,13 +176,13 @@ function DocSection({
   return (
     <section
       id={id}
-      className="scroll-mt-6 rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6"
+      className="scroll-mt-6 rounded-xl border border-border bg-surface p-5 sm:p-6"
     >
       <div className="flex items-start gap-3">
         <IconBadge icon={meta.icon} color={meta.color} size="size-10" />
         <div className="min-w-0">
-          <h2 className="text-base font-bold text-[#172033]">{title}</h2>
-          <p className="text-sm text-[#5f6573]">{meta.description}</p>
+          <h2 className="text-base font-bold text-heading">{title}</h2>
+          <p className="text-sm text-muted-foreground">{meta.description}</p>
         </div>
       </div>
       <div className="mt-4">{children}</div>
@@ -219,17 +219,17 @@ export default function TrainingLK2GuidelinePage({
               <div key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-base font-medium text-[#41474E] transition hover:bg-[#f5f7fb] hover:text-primary"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-base font-medium text-foreground transition hover:bg-surface-muted hover:text-primary-foreground"
                 >
                   {section.title}
                 </a>
                 {section.id === "kurikulum" && (
-                  <div className="ml-3 flex flex-col gap-0.5 border-l border-[#e6e9ef] pl-3">
+                  <div className="ml-3 flex flex-col gap-0.5 border-l border-border pl-3">
                     {LK2_MATERIALS.map((material) => (
                       <a
                         key={material.id}
                         href={`#materi-${material.id}`}
-                        className="block truncate rounded-lg px-2 py-1.5 text-[15px] text-[#5f6573] transition hover:bg-[#f5f7fb] hover:text-primary"
+                        className="block truncate rounded-lg px-2 py-1.5 text-[15px] text-muted-foreground transition hover:bg-surface-muted hover:text-primary-foreground"
                       >
                         {material.title}
                       </a>
@@ -243,11 +243,11 @@ export default function TrainingLK2GuidelinePage({
 
         <div className="flex min-w-0 flex-1 flex-col gap-6">
           <DocSection id="pendahuluan" title="Pendahuluan">
-            <p className="text-base leading-relaxed text-[#172033]">
+            <p className="text-base leading-relaxed text-heading">
               {LK2_OVERVIEW.description}
             </p>
 
-            <div className="mt-4 overflow-hidden rounded-xl border border-[#e6e9ef] bg-black">
+            <div className="mt-4 overflow-hidden rounded-xl border border-border bg-media-backdrop">
               <div className="relative aspect-video w-full">
                 <iframe
                   src="https://www.youtube.com/embed/q08RJ70QeFw"
@@ -258,13 +258,13 @@ export default function TrainingLK2GuidelinePage({
                 />
               </div>
             </div>
-            <p className="mt-2 text-[15px] text-[#5f6573]">
+            <p className="mt-2 text-[15px] text-muted-foreground">
               Dokumentasi suasana pelatihan kaderisasi HMI, sebagai gambaran
               umum jalannya Latihan Kader.
             </p>
 
             <div className="mt-5">
-              <p className="text-base font-semibold text-[#172033]">
+              <p className="text-base font-semibold text-heading">
                 Tujuan Instruksional
               </p>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -274,10 +274,10 @@ export default function TrainingLK2GuidelinePage({
                   return (
                     <div
                       key={goal}
-                      className="flex items-center gap-3 rounded-xl bg-[#f5f7fb] p-4"
+                      className="flex items-center gap-3 rounded-xl bg-surface-muted p-4"
                     >
                       <Illustration className="size-12 shrink-0" />
-                      <p className="text-base text-[#172033]">{goal}</p>
+                      <p className="text-base text-heading">{goal}</p>
                     </div>
                   );
                 })}
@@ -298,16 +298,16 @@ export default function TrainingLK2GuidelinePage({
               {LK2_REGISTRATION_FLOW.map((step, index) => (
                 <li
                   key={step.title}
-                  className="flex gap-3 rounded-xl bg-[#f5f7fb] p-4"
+                  className="flex gap-3 rounded-xl bg-surface-muted p-4"
                 >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-base font-semibold text-secondary">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-base font-semibold text-badge-foreground">
                     {index + 1}
                   </span>
                   <div>
-                    <p className="text-base font-semibold text-[#172033]">
+                    <p className="text-base font-semibold text-heading">
                       {step.title}
                     </p>
-                    <p className="mt-0.5 text-base text-[#172033]">
+                    <p className="mt-0.5 text-base text-heading">
                       {step.description}
                     </p>
                   </div>
@@ -318,14 +318,14 @@ export default function TrainingLK2GuidelinePage({
 
           <DocSection id="peraturan-kelas" title="Peraturan Kelas">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-xl bg-[#f5f7fb] p-4">
+              <div className="rounded-xl bg-surface-muted p-4">
                 <div className="flex items-center gap-2.5">
                   <IconBadge icon={Clock} color="blue" size="size-8" />
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     Kehadiran
                   </p>
                 </div>
-                <ul className="mt-3 flex flex-col gap-1.5 text-base text-[#172033]">
+                <ul className="mt-3 flex flex-col gap-1.5 text-base text-heading">
                   {LK2_CLASS_RULES.attendance.map((rule) => (
                     <li key={rule} className="flex gap-2">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
@@ -334,14 +334,14 @@ export default function TrainingLK2GuidelinePage({
                   ))}
                 </ul>
               </div>
-              <div className="rounded-xl bg-[#f5f7fb] p-4">
+              <div className="rounded-xl bg-surface-muted p-4">
                 <div className="flex items-center gap-2.5">
                   <IconBadge icon={ShieldCheck} color="purple" size="size-8" />
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     Kedisiplinan & Etika
                   </p>
                 </div>
-                <ul className="mt-3 flex flex-col gap-1.5 text-base text-[#172033]">
+                <ul className="mt-3 flex flex-col gap-1.5 text-base text-heading">
                   {LK2_CLASS_RULES.conduct.map((rule) => (
                     <li key={rule} className="flex gap-2">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
@@ -350,14 +350,14 @@ export default function TrainingLK2GuidelinePage({
                   ))}
                 </ul>
               </div>
-              <div className="rounded-xl bg-[#f5f7fb] p-4">
+              <div className="rounded-xl bg-surface-muted p-4">
                 <div className="flex items-center gap-2.5">
                   <IconBadge icon={ShieldAlert} color="red" size="size-8" />
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     Sanksi Pelanggaran
                   </p>
                 </div>
-                <ul className="mt-3 flex flex-col gap-1.5 text-base text-[#172033]">
+                <ul className="mt-3 flex flex-col gap-1.5 text-base text-heading">
                   {LK2_CLASS_RULES.sanctions.map((rule) => (
                     <li key={rule} className="flex gap-2">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-destructive" />
@@ -371,14 +371,14 @@ export default function TrainingLK2GuidelinePage({
 
           <DocSection id="mot" title="Spesifikasi Master of Training (MOT)">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-[#f5f7fb] p-4">
+              <div className="rounded-xl bg-surface-muted p-4">
                 <div className="flex items-center gap-2.5">
                   <IconBadge
                     icon={ClipboardCheck}
                     color="green"
                     size="size-8"
                   />
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     Syarat
                   </p>
                 </div>
@@ -390,10 +390,10 @@ export default function TrainingLK2GuidelinePage({
                   ))}
                 </ul>
               </div>
-              <div className="rounded-xl bg-[#f5f7fb] p-4">
+              <div className="rounded-xl bg-surface-muted p-4">
                 <div className="flex items-center gap-2.5">
                   <IconBadge icon={Briefcase} color="orange" size="size-8" />
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     Tanggung Jawab
                   </p>
                 </div>
@@ -412,21 +412,21 @@ export default function TrainingLK2GuidelinePage({
 
           <DocSection id="instruktur" title="Tim Instruktur & Pemateri">
             <TableShell>
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[15px] font-semibold tracking-wide text-[#41474E] uppercase">
+              <thead className="border-b border-border bg-surface-muted text-[15px] font-semibold tracking-wide text-foreground uppercase">
                 <tr>
                   <th className="px-4 py-3">Peran</th>
                   <th className="px-4 py-3">Deskripsi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e6e9ef]">
+              <tbody className="divide-y divide-divider">
                 {LK2_INSTRUCTOR_ROLES.map((instructor, index) => {
                   const meta = INSTRUCTOR_META[index % INSTRUCTOR_META.length];
                   return (
                     <tr
                       key={instructor.role}
-                      className="transition hover:bg-[#f5f7fb]"
+                      className="transition hover:bg-surface-muted"
                     >
-                      <td className="px-4 py-3 font-medium text-[#172033]">
+                      <td className="px-4 py-3 font-medium text-heading">
                         <div className="flex items-center gap-2.5">
                           <IconBadge
                             icon={meta.icon}
@@ -436,7 +436,7 @@ export default function TrainingLK2GuidelinePage({
                           {instructor.role}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {instructor.description}
                       </td>
                     </tr>
@@ -447,7 +447,7 @@ export default function TrainingLK2GuidelinePage({
           </DocSection>
 
           <DocSection id="kurikulum" title="Kurikulum & Materi">
-            <p className="text-base text-[#172033]">
+            <p className="text-base text-heading">
               Total{" "}
               {LK2_MATERIALS.reduce((sum, material) => sum + material.hours, 0)}{" "}
               jam pelatihan yang terbagi ke dalam {LK2_MATERIALS.length} materi
@@ -461,7 +461,7 @@ export default function TrainingLK2GuidelinePage({
                   <div
                     key={material.id}
                     id={`materi-${material.id}`}
-                    className="scroll-mt-6 rounded-xl bg-[#f5f7fb] p-5"
+                    className="scroll-mt-6 rounded-xl bg-surface-muted p-5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
@@ -470,28 +470,28 @@ export default function TrainingLK2GuidelinePage({
                           color={meta.color}
                           size="size-9"
                         />
-                        <p className="text-lg font-semibold text-[#172033]">
+                        <p className="text-lg font-semibold text-heading">
                           {material.title}
                         </p>
                       </div>
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[14px] font-semibold text-[#172033]">
+                      <span className="rounded-full bg-surface px-2.5 py-1 text-[14px] font-semibold text-heading">
                         {material.hours} jam
                       </span>
                     </div>
-                    <p className="mt-3 text-base text-[#172033]">
+                    <p className="mt-3 text-base text-heading">
                       {material.objective}
                     </p>
 
                     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-[15px] font-semibold tracking-wide text-[#5f6573] uppercase">
+                        <p className="text-[15px] font-semibold tracking-wide text-muted-foreground uppercase">
                           Pokok Bahasan
                         </p>
                         <ul className="mt-1.5 flex flex-col gap-1.5">
                           {material.topics.map((topic) => (
                             <li
                               key={topic}
-                              className="flex gap-2 text-base text-[#172033]"
+                              className="flex gap-2 text-base text-heading"
                             >
                               <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
                               {topic}
@@ -501,18 +501,18 @@ export default function TrainingLK2GuidelinePage({
                       </div>
                       <div className="flex flex-col gap-3">
                         <div>
-                          <p className="text-[15px] font-semibold tracking-wide text-[#5f6573] uppercase">
+                          <p className="text-[15px] font-semibold tracking-wide text-muted-foreground uppercase">
                             Metode
                           </p>
-                          <p className="mt-1 text-base text-[#172033]">
+                          <p className="mt-1 text-base text-heading">
                             {material.method}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[15px] font-semibold tracking-wide text-[#5f6573] uppercase">
+                          <p className="text-[15px] font-semibold tracking-wide text-muted-foreground uppercase">
                             Evaluasi
                           </p>
-                          <p className="mt-1 text-base text-[#172033]">
+                          <p className="mt-1 text-base text-heading">
                             {material.evaluation}
                           </p>
                         </div>
@@ -527,22 +527,22 @@ export default function TrainingLK2GuidelinePage({
           <DocSection id="penilaian" title="Sistem Penilaian">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TableShell>
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[15px] font-semibold tracking-wide text-[#41474E] uppercase">
+                <thead className="border-b border-border bg-surface-muted text-[15px] font-semibold tracking-wide text-foreground uppercase">
                   <tr>
                     <th className="px-4 py-3">Komponen</th>
                     <th className="px-4 py-3 text-right">Bobot</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef]">
+                <tbody className="divide-y divide-divider">
                   {LK2_ASSESSMENT.components.map((component) => (
                     <tr
                       key={component.label}
-                      className="transition hover:bg-[#f5f7fb]"
+                      className="transition hover:bg-surface-muted"
                     >
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {component.label}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-[#172033]">
+                      <td className="px-4 py-3 text-right font-semibold text-heading">
                         {component.weight}%
                       </td>
                     </tr>
@@ -550,22 +550,22 @@ export default function TrainingLK2GuidelinePage({
                 </tbody>
               </TableShell>
               <TableShell>
-                <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[15px] font-semibold tracking-wide text-[#41474E] uppercase">
+                <thead className="border-b border-border bg-surface-muted text-[15px] font-semibold tracking-wide text-foreground uppercase">
                   <tr>
                     <th className="px-4 py-3">Nilai Akhir</th>
                     <th className="px-4 py-3">Status Kelulusan</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e6e9ef]">
+                <tbody className="divide-y divide-divider">
                   {LK2_ASSESSMENT.criteria.map((criterion) => (
                     <tr
                       key={criterion.range}
-                      className="transition hover:bg-[#f5f7fb]"
+                      className="transition hover:bg-surface-muted"
                     >
-                      <td className="px-4 py-3 font-semibold text-[#172033]">
+                      <td className="px-4 py-3 font-semibold text-heading">
                         {criterion.range}
                       </td>
-                      <td className="px-4 py-3 text-[#172033]">
+                      <td className="px-4 py-3 text-heading">
                         {criterion.status}
                       </td>
                     </tr>

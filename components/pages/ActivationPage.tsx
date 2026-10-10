@@ -451,18 +451,18 @@ export default function ActivationPage({
 
   if (!started) {
     return (
-      <main className="relative flex min-h-screen flex-col overflow-hidden bg-white lg:items-center lg:justify-center lg:px-5 lg:py-12">
+      <main className="relative flex min-h-screen flex-col overflow-hidden bg-surface lg:items-center lg:justify-center lg:px-5 lg:py-12">
         <div className="hidden lg:block">
           <DecorativeBackground />
         </div>
-        <div className="relative flex flex-1 flex-col items-center gap-6 p-6 pb-12 text-center lg:flex-none lg:w-full lg:max-w-md lg:rounded-3xl lg:bg-white lg:p-10 lg:shadow-xl">
+        <div className="relative flex flex-1 flex-col items-center gap-6 p-6 pb-12 text-center lg:flex-none lg:w-full lg:max-w-md lg:rounded-3xl lg:bg-surface lg:p-10 lg:shadow-xl">
           <div className="flex flex-1 flex-col items-center justify-center gap-6 lg:flex-none">
             <LogoHmiConnect className="h-16 w-auto" />
             <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-[#172033]">
+              <h1 className="text-2xl font-bold tracking-tight text-heading">
                 Halo, {fullName ?? "Kader"}!
               </h1>
-              <p className="text-[15px] leading-6 text-[#5f6573]">
+              <p className="text-[15px] leading-6 text-muted-foreground">
                 Sebelum lanjut, lengkapi dulu data keanggotaan kamu supaya kami
                 bisa mengaktifkan akun HMI Connect kamu.
               </p>
@@ -480,7 +480,7 @@ export default function ActivationPage({
             </Button>
             <span
               onClick={loggingOut ? undefined : handleLogout}
-              className={`text-sm font-medium text-destructive underline underline-offset-2 ${
+              className={`text-sm font-medium text-destructive-foreground underline underline-offset-2 ${
                 loggingOut
                   ? "cursor-not-allowed opacity-60"
                   : "cursor-pointer hover:text-destructive-foreground"
@@ -495,28 +495,28 @@ export default function ActivationPage({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
+    <main className="relative min-h-screen overflow-hidden bg-surface lg:flex lg:items-center lg:justify-center lg:px-5 lg:py-12">
       <div className="hidden lg:block">
         <DecorativeBackground />
       </div>
-      <div className="relative flex w-full flex-col lg:h-[620px] lg:max-w-4xl lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:bg-white lg:shadow-xl">
+      <div className="relative flex w-full flex-col lg:h-[620px] lg:max-w-4xl lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:bg-surface lg:shadow-xl">
         <div className="relative hidden w-[320px] shrink-0 flex-col justify-between overflow-hidden bg-primary-soft p-10 lg:flex">
           <div className="relative z-10 flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <LogoHmi className="h-24 w-auto" />
               <LogoHmiConnect className="h-16 w-auto" />
             </div>
-            <h2 className="text-2xl font-bold leading-snug text-[#172033]">
+            <h2 className="text-2xl font-bold leading-snug text-heading">
               Langkah awal perjalanan di HMI
             </h2>
             <div className="h-1 w-10 rounded-full bg-secondary" />
-            <p className="text-[15px] leading-6 text-[#5f6573]">
+            <p className="text-[15px] leading-6 text-muted-foreground">
               Terhubung, bertumbuh, dan berdampak bersama HMI.
             </p>
           </div>
 
           <svg
-            className="pointer-events-none absolute bottom-8 right-6 h-16 w-16 text-secondary/40"
+            className="pointer-events-none absolute bottom-8 right-6 h-16 w-16 text-secondary-foreground/40"
             viewBox="0 0 60 60"
             fill="none"
           >
@@ -536,7 +536,7 @@ export default function ActivationPage({
                 <div
                   key={label}
                   className={`h-1.5 flex-1 rounded-full ${
-                    index <= step ? "bg-primary" : "bg-[#e6e9ef]"
+                    index <= step ? "bg-primary" : "bg-border"
                   }`}
                 />
               ))}
@@ -546,11 +546,11 @@ export default function ActivationPage({
           <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:p-1">
             {step === 0 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Lengkapi profil kamu
                 </h2>
 
-                <div className="flex flex-col items-center gap-3 rounded-2xl bg-[#f7fbfa] p-5">
+                <div className="flex flex-col items-center gap-3 rounded-2xl bg-surface-subtle p-5">
                   <Avatar
                     src={formData.avatar}
                     name={formData.fullName || "Kader"}
@@ -581,7 +581,7 @@ export default function ActivationPage({
                         ? "Ganti Foto"
                         : "Unggah Foto"}
                   </Button>
-                  <p className="text-center text-xs text-[#5f6573]">
+                  <p className="text-center text-xs text-muted-foreground">
                     JPG, PNG, WEBP, atau AVIF. Maksimal 2MB.
                   </p>
                 </div>
@@ -619,23 +619,23 @@ export default function ActivationPage({
                   required
                 />
                 {usernameAvailability === "checking" && (
-                  <p className="-mt-2 pl-1 text-xs text-[#5f6573]">
+                  <p className="-mt-2 pl-1 text-xs text-muted-foreground">
                     Memeriksa ketersediaan username...
                   </p>
                 )}
                 {usernameAvailability === "available" && (
-                  <p className="-mt-2 pl-1 text-xs font-medium text-primary">
+                  <p className="-mt-2 pl-1 text-xs font-medium text-primary-foreground">
                     Username tersedia.
                   </p>
                 )}
                 {usernameAvailability === "unavailable" &&
                   !usernameApiError && (
-                    <p className="-mt-2 pl-1 text-xs text-destructive">
+                    <p className="-mt-2 pl-1 text-xs text-destructive-foreground">
                       Username sudah digunakan. Silakan pilih username lain.
                     </p>
                   )}
                 {usernameAvailability === "error" && (
-                  <p className="-mt-2 pl-1 text-xs text-destructive">
+                  <p className="-mt-2 pl-1 text-xs text-destructive-foreground">
                     Ketersediaan username gagal diperiksa. Coba lagi.
                   </p>
                 )}
@@ -651,9 +651,9 @@ export default function ActivationPage({
                   required
                 />
                 <div className="flex flex-col gap-1">
-                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">
                     Jenis Kelamin
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive-foreground">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <RadioButton<GenderEnum>
@@ -677,7 +677,7 @@ export default function ActivationPage({
 
             {step === 1 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Pilih Cabang dan Komisariat
                 </h2>
 
@@ -711,9 +711,9 @@ export default function ActivationPage({
                 />
 
                 <div className="flex flex-col gap-1">
-                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-[#172033]">
+                  <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">
                     Apakah kamu sudah menjadi alumni HMI?
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive-foreground">*</span>
                   </label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <RadioButton<boolean>
@@ -739,7 +739,7 @@ export default function ActivationPage({
 
             {step === 2 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Kamu berkuliah dimana?
                 </h2>
 
@@ -806,7 +806,7 @@ export default function ActivationPage({
 
             {step === 3 && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-[#172033]">
+                <h2 className="text-xl font-bold text-heading">
                   Riwayat Latihan Kader 1
                 </h2>
 
@@ -846,7 +846,7 @@ export default function ActivationPage({
                 />
 
                 {status === "error" && (
-                  <p className="text-xs font-semibold text-destructive">
+                  <p className="text-xs font-semibold text-destructive-foreground">
                     {errorMessage}
                   </p>
                 )}
@@ -889,8 +889,8 @@ export default function ActivationPage({
               )}
             </div>
 
-            <p className="flex items-center justify-center gap-1.5 text-xs text-[#5f6573]">
-              <ShieldCheck className="size-3.5 text-primary" />
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="size-3.5 text-primary-foreground" />
               Data yang kamu isi aman dan hanya digunakan untuk keperluan
               internal HMI.
             </p>

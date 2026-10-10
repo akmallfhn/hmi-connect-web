@@ -29,9 +29,9 @@ export default function EducationCard({
   if (entries.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
+        <h2 className="text-sm font-stack-sans-headline font-medium text-heading xl:text-[15px]">
           Pendidikan
         </h2>
         {isOwnProfile && (
@@ -45,7 +45,7 @@ export default function EducationCard({
       <div className="mt-3 flex flex-col gap-4">
         {entries.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e6e9ef] bg-white text-primary">
+            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-primary-foreground">
               {entry.image_url ? (
                 <Image
                   src={entry.image_url}
@@ -59,13 +59,13 @@ export default function EducationCard({
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#172033] xl:text-[15px]">
+              <p className="text-sm font-semibold text-heading xl:text-[15px]">
                 {entry.institution_name}
               </p>
-              <p className="text-sm text-[#5f6573] xl:text-[15px]">
+              <p className="text-sm text-muted-foreground xl:text-[15px]">
                 {DEGREE_LABELS[entry.degree]} • {entry.major}
               </p>
-              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+              <p className="text-xs text-muted-foreground xl:text-[13px]">
                 {entry.start_year} – {entry.end_year ?? "Sekarang"}
               </p>
             </div>

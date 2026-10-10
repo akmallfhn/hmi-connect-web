@@ -35,16 +35,16 @@ export default function Switch({
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />
-        <span className="pointer-events-none absolute inset-0 rounded-full bg-[#dbe3ef] transition peer-checked:bg-primary" />
-        <span className="pointer-events-none absolute left-1 size-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+        <span className="pointer-events-none absolute inset-0 rounded-full bg-border-strong transition peer-checked:bg-primary" />
+        <span className="pointer-events-none absolute left-1 size-4 rounded-full bg-surface shadow transition peer-checked:translate-x-5" />
       </span>
       {(label || description) && (
         <span className="flex flex-col gap-0.5">
           {label && (
-            <span className="text-[15px] font-medium text-[#172033]">{label}</span>
+            <span className="text-[15px] font-medium text-heading">{label}</span>
           )}
           {description && (
-            <span className="text-xs text-[#5f6573]">{description}</span>
+            <span className="text-xs text-muted-foreground">{description}</span>
           )}
         </span>
       )}

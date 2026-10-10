@@ -96,7 +96,7 @@ export default function ReactionPickerModal({
       ref={panelRef}
       style={mobileBottom !== null ? { bottom: mobileBottom } : undefined}
       className={[
-        "z-50 flex gap-1 rounded-2xl border border-[#e6e9ef] bg-white p-1.5 shadow-lg",
+        "z-50 flex gap-1 rounded-2xl border border-border bg-surface p-1.5 shadow-lg",
         mobileBottom !== null
           ? "fixed left-1/2 -translate-x-1/2"
           : "absolute bottom-full left-0 mb-2",
@@ -111,12 +111,12 @@ export default function ReactionPickerModal({
             onSelect(reaction.type);
             onClose();
           }}
-          className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:-translate-y-0.5 hover:bg-[#f5f7fb] ${
+          className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:-translate-y-0.5 hover:bg-surface-muted ${
             activeReaction === reaction.type ? "bg-primary-soft" : ""
           }`}
         >
           <span className="text-xl leading-none">{reaction.emoji}</span>
-          <span className="whitespace-nowrap text-[10px] font-medium text-[#5f6573]">
+          <span className="whitespace-nowrap text-[10px] font-medium text-muted-foreground">
             {reaction.label}
           </span>
         </button>

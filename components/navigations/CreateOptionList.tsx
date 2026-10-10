@@ -73,12 +73,12 @@ export default function CreateOptionList({
           key={kind}
           type="button"
           onClick={() => handleSelect(kind)}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#f5f7fb]"
+          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-surface-muted"
         >
-          <Icon className="size-4 shrink-0 text-[#5f6573]" stroke={2} />
+          <Icon className="size-4 shrink-0 text-muted-foreground" stroke={2} />
           <span className="min-w-0">
-            <span className="block text-sm text-[#172033]">{label}</span>
-            <span className="block truncate text-xs text-[#8a909d]">
+            <span className="block text-sm text-heading">{label}</span>
+            <span className="block truncate text-xs text-disabled-foreground">
               {description}
             </span>
           </span>

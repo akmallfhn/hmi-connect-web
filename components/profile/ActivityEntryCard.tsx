@@ -38,7 +38,7 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
 
   return (
     <Link href={actingHref(`/feeds/${feed.id}`)} className="block rounded-xl">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-[#5f6573] xl:text-[13px]">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground xl:text-[13px]">
         <Icon className="size-3.5" />
         {TYPE_LABEL[type]}
         <span>• {formatRelativeTime(entry.created_at)}</span>
@@ -46,17 +46,17 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
 
       {type === "comment" && comment ? (
         <>
-          <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm leading-6 text-[#172033] xl:text-[15px]">
+          <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm leading-6 text-heading xl:text-[15px]">
             {comment.message}
           </p>
-          <div className="mt-2 rounded-xl border border-[#e6e9ef] p-3">
+          <div className="mt-2 rounded-xl border border-border p-3">
             <div className="flex items-center gap-2">
               <FeedAuthorAvatar author={author} size={24} />
-              <p className="truncate text-xs font-semibold text-[#172033] xl:text-sm">
+              <p className="truncate text-xs font-semibold text-heading xl:text-sm">
                 {author.name}
               </p>
             </div>
-            <p className="mt-1 line-clamp-2 break-words text-xs text-[#5f6573] xl:text-sm">
+            <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground xl:text-sm">
               {feed.content}
             </p>
           </div>
@@ -65,14 +65,14 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
         <QuotedFeed feed={feed} />
       ) : (
         <>
-          <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-[#172033] xl:text-[15px]">
+          <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-heading xl:text-[15px]">
             {feed.content}
           </p>
           {feed.repost_of ? (
             <QuotedFeed feed={feed.repost_of} />
           ) : (
             feed.repost_of_id && (
-              <p className="mt-3 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-3 py-4 text-sm text-[#5f6573]">
+              <p className="mt-3 rounded-xl border border-dashed border-border bg-surface-subtle px-3 py-4 text-sm text-muted-foreground">
                 Postingan yang dibagikan sudah dihapus.
               </p>
             )
@@ -80,7 +80,7 @@ export default function ActivityEntryCard({ entry }: { entry: ActivityEntry }) {
         </>
       )}
 
-      <div className="mt-3 flex items-center gap-4 text-xs text-[#5f6573] xl:text-[13px]">
+      <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground xl:text-[13px]">
         <span className="flex items-center gap-1.5">
           <Heart className="size-3.5" />
           {type === "comment" && comment

@@ -5,11 +5,11 @@ import { Bar } from "@/components/states/Skeleton";
 
 export default function QuranSurahLoading() {
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header loading />
 
       <PageMargin className="pt-4">
-        <div className="rounded-2xl border border-[#e6e9ef] bg-[#eef1f5] p-5">
+        <div className="rounded-2xl border border-border bg-surface-muted p-5">
           <div className="animate-pulse">
             <Bar className="h-9 w-32" />
             <Bar className="mt-3 h-6 w-40" />
@@ -27,11 +27,11 @@ export default function QuranSurahLoading() {
       </PageMargin>
 
       <PageMargin className="animate-pulse pb-6 pt-4">
-        <div className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4">
+        <div className="flex flex-col rounded-2xl border border-border bg-surface px-4">
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="flex flex-col gap-3 border-b border-[#e6e9ef] py-5 last:border-b-0"
+              className="flex flex-col gap-3 border-b border-border py-5 last:border-b-0"
             >
               <Bar className="ml-auto h-6 w-3/4" />
               <Bar className="ml-auto h-6 w-1/2" />

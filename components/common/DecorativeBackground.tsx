@@ -7,7 +7,7 @@ export default function DecorativeBackground() {
       <div className="absolute -bottom-10 left-12 h-32 w-32 rounded-full bg-secondary/15 blur-2xl" />
 
       <svg
-        className="absolute left-6 top-6 h-16 w-16 text-primary/30 sm:left-10 sm:top-10"
+        className="absolute left-6 top-6 h-16 w-16 text-primary-foreground/30 sm:left-10 sm:top-10"
         viewBox="0 0 60 60"
         fill="none"
       >
@@ -25,7 +25,7 @@ export default function DecorativeBackground() {
       </svg>
 
       <svg
-        className="absolute bottom-10 right-10 h-16 w-28 text-secondary/40 sm:bottom-16 sm:right-16"
+        className="absolute bottom-10 right-10 h-16 w-28 text-secondary-foreground/40 sm:bottom-16 sm:right-16"
         viewBox="0 0 120 60"
         fill="none"
       >

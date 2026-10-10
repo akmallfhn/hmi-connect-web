@@ -65,7 +65,7 @@ export default function ActivityInfiniteList({
   return (
     <div className="flex flex-col gap-4">
       {items.length === 0 && (
-        <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-center text-sm text-[#5f6573]">
+        <p className="rounded-xl border border-dashed border-border-strong px-4 py-5 text-center text-sm text-muted-foreground">
           {emptyMessage}
         </p>
       )}
@@ -73,7 +73,7 @@ export default function ActivityInfiniteList({
       {items.map((entry, index) => (
         <div
           key={`${entry.type}-${entry.feed.id}-${entry.comment?.id ?? index}`}
-          className="border-t border-[#e6e9ef] pt-4 first:border-t-0 first:pt-0"
+          className="border-t border-border pt-4 first:border-t-0 first:pt-0"
         >
           <ActivityEntryCard entry={entry} />
         </div>
@@ -82,7 +82,7 @@ export default function ActivityInfiniteList({
       {(hasMore || loadingMore) && (
         <div
           ref={sentinelRef}
-          className="flex h-12 items-center justify-center text-xs font-medium text-[#5f6573]"
+          className="flex h-12 items-center justify-center text-xs font-medium text-muted-foreground"
         >
           {loadingMore ? "Memuat..." : null}
         </div>

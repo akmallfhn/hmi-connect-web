@@ -396,22 +396,22 @@ function ProfileFields({
           required
         />
         {usernameAvailability === "checking" && (
-          <p className="-mt-2 pl-1 text-xs text-[#5f6573]">
+          <p className="-mt-2 pl-1 text-xs text-muted-foreground">
             Memeriksa ketersediaan username...
           </p>
         )}
         {usernameAvailability === "available" && (
-          <p className="-mt-2 pl-1 text-xs font-medium text-primary">
+          <p className="-mt-2 pl-1 text-xs font-medium text-primary-foreground">
             Username tersedia.
           </p>
         )}
         {usernameAvailability === "unavailable" && !usernameApiError && (
-          <p className="-mt-2 pl-1 text-xs text-destructive">
+          <p className="-mt-2 pl-1 text-xs text-destructive-foreground">
             Username sudah digunakan. Silakan pilih username lain.
           </p>
         )}
         {usernameAvailability === "error" && (
-          <p className="-mt-2 pl-1 text-xs text-destructive">
+          <p className="-mt-2 pl-1 text-xs text-destructive-foreground">
             Ketersediaan username gagal diperiksa. Coba lagi.
           </p>
         )}
@@ -448,19 +448,19 @@ function ProfileFields({
         />
       </section>
 
-      <section className="border-t border-[#e6e9ef] pt-5">
+      <section className="border-t border-border pt-5">
         <div>
-          <h3 className="text-[15px] font-semibold text-[#172033]">
+          <h3 className="text-[15px] font-semibold text-heading">
             Sosial Media
           </h3>
-          <p className="mt-1 text-[13px] text-[#5f6573]">
+          <p className="mt-1 text-[13px] text-muted-foreground">
             Tambahkan link akun yang ingin ditampilkan di profil.
           </p>
         </div>
 
         <div className="mt-4 flex flex-col gap-4">
           {socialDrafts.length === 0 && (
-            <p className="rounded-xl border border-dashed border-[#dbe3ef] px-4 py-5 text-center text-sm text-[#5f6573]">
+            <p className="rounded-xl border border-dashed border-border-strong px-4 py-5 text-center text-sm text-muted-foreground">
               Belum ada sosial media yang ditambahkan.
             </p>
           )}
@@ -472,18 +472,18 @@ function ProfileFields({
                 "flex flex-col gap-4 rounded-xl border p-4",
                 draft.removed
                   ? "border-destructive/30 bg-destructive-soft/30"
-                  : "border-[#e6e9ef]",
+                  : "border-border",
               ].join(" ")}
             >
               {(draft.isNew || draft.removed) && (
                 <div className="flex flex-wrap gap-2">
                   {draft.isNew && (
-                    <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
+                    <span className="inline-flex w-fit items-center rounded-full bg-badge-primary px-2 py-0.5 text-xs font-semibold text-badge-foreground">
                       Baru
                     </span>
                   )}
                   {draft.removed && (
-                    <span className="inline-flex w-fit items-center rounded-full bg-destructive-soft px-2 py-0.5 text-xs font-semibold text-destructive">
+                    <span className="inline-flex w-fit items-center rounded-full bg-badge-destructive px-2 py-0.5 text-xs font-semibold text-badge-foreground">
                       Akan dihapus
                     </span>
                   )}
@@ -514,7 +514,7 @@ function ProfileFields({
                 required
               />
 
-              <div className="flex justify-end border-t border-[#e6e9ef] pt-4">
+              <div className="flex justify-end border-t border-border pt-4">
                 <Button
                   variant={draft.removed ? "outline" : "destructive"}
                   size="sm"
@@ -541,7 +541,7 @@ function ProfileFields({
           variant="ghost"
           onClick={addSocialDraft}
           disabled={isSaving}
-          className="mt-4 w-full gap-1.5 rounded-lg border border-dashed border-[#dbe3ef] py-2.5 text-primary hover:bg-primary-soft"
+          className="mt-4 w-full gap-1.5 rounded-lg border border-dashed border-border-strong py-2.5 text-primary-foreground hover:bg-primary-soft"
         >
           <Plus className="size-4" />
           Tambah Sosial Media

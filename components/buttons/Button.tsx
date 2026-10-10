@@ -45,21 +45,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantClasses: Record<ButtonVariant, string> = {
       primary:
-        "bg-primary text-white hover:bg-[#128488] active:bg-primary-foreground",
+        "bg-primary text-on-primary-action hover:bg-primary-hover active:bg-primary-hover",
       secondary:
-        "bg-secondary text-white hover:bg-[#e6534b] active:bg-secondary-foreground",
-      tertiary: "bg-tertiary text-white hover:bg-[#023c4d] active:bg-[#023c4d]",
+        "bg-secondary text-on-secondary hover:bg-secondary-hover active:bg-secondary-hover",
+      tertiary: "bg-tertiary text-on-dark hover:bg-tertiary-hover active:bg-tertiary-hover",
       light:
-        "border border-[#e6e9ef] bg-white text-[#172033] hover:-translate-y-0.5 hover:bg-[#f5f7fb]",
-      dark: "bg-[#202125] text-white hover:bg-[#2b2c31] active:bg-[#17181b]",
+        "border border-border bg-surface text-heading hover:-translate-y-0.5 hover:bg-surface-muted",
+      dark: "bg-dark-control text-on-dark hover:bg-dark-control-hover active:bg-dark-control-active",
       outline:
-        "border border-[#dbe3ef] bg-transparent text-[#172033] hover:bg-primary-soft",
-      soft: "bg-primary-soft text-primary hover:bg-primary-soft/80",
+        "border border-border-strong bg-transparent text-heading hover:bg-primary-soft",
+      soft: "bg-primary-soft text-primary-foreground hover:bg-primary-soft/80",
       secondarySoft:
-        "bg-secondary-soft text-secondary hover:bg-secondary-soft/80",
-      ghost: "bg-transparent text-[#172033] hover:bg-black/5",
+        "bg-secondary-soft text-secondary-foreground hover:bg-secondary-soft/80",
+      ghost: "bg-transparent text-heading hover:bg-media-backdrop/5",
       destructive:
-        "bg-destructive text-white hover:bg-[#c92e25] active:bg-destructive-foreground",
+        "bg-destructive text-on-destructive hover:bg-destructive-hover active:bg-destructive-hover",
     };
 
     const sizeClasses: Record<ButtonSize, string> = {

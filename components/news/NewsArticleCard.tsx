@@ -20,7 +20,7 @@ interface NewsArticleCardProps {
 
 function CarouselImage({ article }: { article: NewsArticle }) {
   return (
-    <div className="relative flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden bg-[#f5f7fb] text-[#aeb8c7]">
+    <div className="relative flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden bg-surface-muted text-subtle-foreground">
       {article.image_url ? (
         <Image
           src={article.image_url}
@@ -44,19 +44,19 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
         href={article.source_url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-[#e6e9ef] bg-white"
+        className="group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border bg-surface"
       >
         <CarouselImage article={article} />
         <div className="flex flex-1 flex-col gap-2 p-3">
           <div className="flex min-w-0 items-center gap-1.5">
             <Avatar src={article.source_logo_url} name={article.source_name} size={16} />
-            <span className="truncate text-xs text-[#5f6573]">{article.source_name}</span>
+            <span className="truncate text-xs text-muted-foreground">{article.source_name}</span>
           </div>
           <div className="flex items-start gap-1">
-            <p className="font-stack-sans-headline line-clamp-2 min-w-0 flex-1 text-sm font-medium leading-snug text-[#172033] transition lg:text-[15px]">
+            <p className="font-stack-sans-headline line-clamp-2 min-w-0 flex-1 text-sm font-medium leading-snug text-heading transition lg:text-[15px]">
               {article.title}
             </p>
-            <RepostToFeedButton article={article} className="shrink-0 text-[#5f6573]" />
+            <RepostToFeedButton article={article} className="shrink-0 text-muted-foreground" />
           </div>
         </div>
       </a>
@@ -74,17 +74,17 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Avatar src={article.source_logo_url} name={article.source_name} size={20} />
-            <span className="truncate text-[13px] text-[#5f6573] lg:text-sm">
+            <span className="truncate text-[13px] text-muted-foreground lg:text-sm">
               {article.source_name}
             </span>
           </div>
 
-          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] font-medium leading-snug text-[#172033] hover:text-secondary sm:text-xl lg:text-lg">
+          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] font-medium leading-snug text-heading hover:text-secondary-foreground sm:text-xl lg:text-lg">
             {article.title}
           </h2>
 
           {(article.published_at || article.category_name) && (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[#8a909d] lg:text-sm">
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-disabled-foreground lg:text-sm">
               {article.published_at && <span>{formatShortDate(article.published_at)}</span>}
               {article.published_at && article.category_name && <span aria-hidden="true">·</span>}
               {article.category_name && (
@@ -96,7 +96,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
           <div className="-ml-2 mt-3 flex items-center gap-1">
             <RepostToFeedButton
               article={article}
-              className="size-8 text-[#5f6573] hover:bg-[#f5f7fb]"
+              className="size-8 text-muted-foreground hover:bg-surface-muted"
             />
             <Button
               variant="ghost"
@@ -108,7 +108,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
               }}
               aria-label={`Bagikan berita ${article.title}`}
               title="Bagikan berita"
-              className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+              className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             >
               <Share2 className="size-4" />
             </Button>
@@ -124,7 +124,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
                     toggle();
                   }}
                   aria-label={`Opsi berita ${article.title}`}
-                  className="size-8 shrink-0 rounded-full text-[#5f6573] hover:bg-[#f5f7fb]"
+                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
@@ -135,9 +135,9 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
                   href={article.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
                 >
-                  <ExternalLink className="size-4 text-[#5f6573]" />
+                  <ExternalLink className="size-4 text-muted-foreground" />
                   Baca di sumber
                 </a>
               </div>
@@ -145,7 +145,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
           </div>
         </div>
 
-        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f7fb] text-[#aeb8c7] sm:size-28">
+        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted text-subtle-foreground sm:size-28">
           {article.image_url ? (
             <Image
               src={article.image_url}

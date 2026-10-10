@@ -80,11 +80,11 @@ function LineTooltip({ active, payload, granularity }: LineTooltipProps) {
   if (!active || !payload?.length) return null;
   const datum = payload[0].payload;
   return (
-    <div className="rounded-lg border border-[#e6e9ef] bg-white px-3 py-2 shadow-lg">
-      <p className="text-sm font-semibold text-[#172033]">
+    <div className="rounded-lg border border-border bg-surface px-3 py-2 shadow-lg">
+      <p className="text-sm font-semibold text-heading">
         {datum.addition.toLocaleString("id-ID")} kader baru
       </p>
-      <p className="text-xs text-[#5f6573]">
+      <p className="text-xs text-muted-foreground">
         {datum.label} · {PERIOD_LABEL[granularity]}
       </p>
     </div>
@@ -105,7 +105,7 @@ function renderEndpointLabel(lastIndex: number, lastValue: number) {
         x={Number(x)}
         y={Number(y) - 12}
         textAnchor="middle"
-        fill="#172033"
+        fill="var(--heading)"
         fontSize={12}
         fontWeight={600}
       >
@@ -131,27 +131,27 @@ export default function KaderGrowthLineChart({
   const windowTotal = data.reduce((sum, d) => sum + d.addition, 0);
 
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-base font-bold text-[#172033]">Pertumbuhan Kader Baru</p>
-          <p className="text-sm text-[#5f6573]">
+          <p className="text-base font-bold text-heading">Pertumbuhan Kader Baru</p>
+          <p className="text-sm text-muted-foreground">
             Penambahan kader dalam {WINDOW_LABEL[granularity]}
           </p>
         </div>
         {last && (
           <div className="shrink-0 text-right">
-            <p className="text-xl font-bold text-[#172033]">
+            <p className="text-xl font-bold text-heading">
               {windowTotal.toLocaleString("id-ID")}
             </p>
-            <p className="text-xs font-semibold text-[#0ca30c]">
+            <p className="text-xs font-semibold text-success-soft-fg">
               +{last.addition.toLocaleString("id-ID")} {PERIOD_LABEL[granularity]}
             </p>
           </div>
         )}
       </div>
 
-      <div className="mt-4 inline-flex rounded-full bg-[#f5f7fb] p-1">
+      <div className="mt-4 inline-flex rounded-full bg-surface-muted p-1">
         {GRANULARITY_OPTIONS.map((option) => (
           <button
             key={option.value}
@@ -159,8 +159,8 @@ export default function KaderGrowthLineChart({
             onClick={() => setGranularity(option.value)}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               granularity === option.value
-                ? "bg-white text-primary shadow-sm"
-                : "text-[#5f6573] hover:text-[#172033]"
+                ? "bg-surface text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-heading"
             }`}
           >
             {option.label}
@@ -169,43 +169,43 @@ export default function KaderGrowthLineChart({
       </div>
 
       {data.length === 0 ? (
-        <p className="mt-6 text-sm text-[#5f6573]">Belum ada data.</p>
+        <p className="mt-6 text-sm text-muted-foreground">Belum ada data.</p>
       ) : (
         <div className="mt-4 h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, left: -20, right: 24 }}>
               <defs>
                 <linearGradient id="kaderGrowthFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ff5c53" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#ff5c53" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--secondary)" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="var(--secondary)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} stroke="#e6e9ef" />
+              <CartesianGrid vertical={false} stroke="var(--divider)" />
               <XAxis
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "#5f6573", fontSize: 12 }}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "#5f6573", fontSize: 12 }}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 width={44}
                 tickFormatter={(value: number) => value.toLocaleString("id-ID")}
               />
               <Tooltip
                 content={<LineTooltip granularity={granularity} />}
-                cursor={{ stroke: "#e6e9ef" }}
+                cursor={{ stroke: "var(--divider)" }}
               />
               <Area
                 type="monotone"
                 dataKey="addition"
-                stroke="#ff5c53"
+                stroke="var(--secondary)"
                 strokeWidth={2}
                 fill="url(#kaderGrowthFill)"
-                dot={{ r: 3, fill: "#ff5c53", strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: "#ff5c53", stroke: "#ffffff", strokeWidth: 2 }}
+                dot={{ r: 3, fill: "var(--secondary)", strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: "var(--secondary)", stroke: "var(--surface)", strokeWidth: 2 }}
                 isAnimationActive={false}
               >
                 <LabelList

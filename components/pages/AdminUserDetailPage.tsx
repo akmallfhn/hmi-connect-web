@@ -96,9 +96,9 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[#e6e9ef] bg-white p-5">
+    <div className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-[#172033]">{title}</h2>
+        <h2 className="text-base font-semibold text-heading">{title}</h2>
         <Button variant="ghost" size="sm" onClick={onEdit}>
           <Pencil className="size-3.5" />
           Edit
@@ -114,8 +114,8 @@ function SectionCard({
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-sm text-[#5f6573]">{label}</p>
-      <p className="text-[15px] font-medium text-[#172033]">{value ?? "—"}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-[15px] font-medium text-heading">{value ?? "—"}</p>
     </div>
   );
 }
@@ -130,13 +130,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] bg-white px-4 py-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-[#5f6573]">{label}</p>
-        <p className="truncate text-[15px] font-bold text-[#172033]">{value}</p>
+        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
+        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
       </div>
     </div>
   );
@@ -208,12 +208,12 @@ export default function AdminUserDetailPage({
         </Button>
       </Link>
 
-      <div className="mt-4 flex flex-col gap-5 rounded-xl border border-[#e6e9ef] bg-white p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-4 flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
           <div className="relative shrink-0">
             <Avatar src={user.avatar} name={user.full_name} size={64} />
             <span
-              className={`absolute bottom-0 right-0 size-4 rounded-full border-2 border-white ${STATUS_DOT_CLASSNAME[user.status]}`}
+              className={`absolute bottom-0 right-0 size-4 rounded-full border-2 border-on-dark ${STATUS_DOT_CLASSNAME[user.status]}`}
               title={`Status: ${user.status}`}
             />
           </div>
@@ -320,13 +320,13 @@ export default function AdminUserDetailPage({
         </SectionCard>
       </div>
 
-      <section className="mt-4 rounded-xl border border-[#e6e9ef] bg-white p-5">
-        <h2 className="text-base font-semibold text-[#172033]">
+      <section className="mt-4 rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-base font-semibold text-heading">
           Hak Akses Admin
         </h2>
 
         {acceptedGrants.length === 0 ? (
-          <p className="mt-4 rounded-xl border border-dashed border-[#e6e9ef] bg-[#f9fafc] px-4 py-6 text-center text-sm text-[#5f6573]">
+          <p className="mt-4 rounded-xl border border-dashed border-border bg-surface-subtle px-4 py-6 text-center text-sm text-muted-foreground">
             Belum memegang akses admin di entitas mana pun.
           </p>
         ) : (
@@ -337,9 +337,9 @@ export default function AdminUserDetailPage({
               return (
                 <div
                   key={grant.id}
-                  className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] bg-[#f9fafc] px-4 py-3"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3"
                 >
-                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-soft text-primary">
+                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-soft text-primary-foreground">
                     {grant.entity_image_url ? (
                       <Image
                         src={grant.entity_image_url}
@@ -353,10 +353,10 @@ export default function AdminUserDetailPage({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold text-[#172033]">
+                    <p className="truncate text-[15px] font-semibold text-heading">
                       {formatGrantScope(grant)}
                     </p>
-                    <p className="truncate text-[13px] text-[#5f6573]">
+                    <p className="truncate text-[13px] text-muted-foreground">
                       Diberikan oleh {grant.granted_by_name ?? "—"}
                       {grant.granted_at
                         ? ` • ${formatShortDate(grant.granted_at)}`
@@ -374,7 +374,7 @@ export default function AdminUserDetailPage({
         <Button
           variant="outline"
           onClick={() => setShowDeactivateConfirm(true)}
-          className="w-fit text-destructive"
+          className="w-fit text-destructive-foreground"
         >
           <Ban className="size-3.5" />
           Nonaktifkan Akun

@@ -1,45 +1,289 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --surface: #ffffff;
+  --surface-muted: #f5f7fb;
+  --surface-subtle: #f9fafc;
+  --border: #e6e9ef;
+  --border-strong: #dbe3ef;
+  --divider: #e6e9ef;
+  --muted-foreground: #5f6573;
+  --placeholder: #5f6573;
+  --subtle-foreground: #7b8190;
+  --disabled-foreground: #8a909d;
+  --heading: #172033;
+  --content-foreground: #172033;
+  --overlay: rgb(0 0 0 / 45%);
+  --on-dark: #ffffff;
+  --on-primary: #0e141b;
+  /* Filled primary actions keep white text on the logo tosca. */
+  --on-primary-action: #ffffff;
+  --on-secondary: #ffffff;
+  --badge-foreground: #ffffff;
+  --badge-primary: #0f777b;
+  --badge-destructive: #c62f27;
+  /* Filled destructive actions keep white text in both themes. */
+  --on-destructive: #ffffff;
+  --media-backdrop: #05090f;
+  --brand-ink: #172033;
+  --brand-deep: #013334;
+  --code-bg: #202428;
+  --dark-control: #202125;
+  --dark-control-hover: #2b2c31;
+  --dark-control-active: #17181b;
+  --admin-banner-start: #222222;
+  --logo-ink: #141517;
+  --logo-paper: #ffffff;
+  --icon-canvas: #dcf0f0;
+  --icon-page: #ffffff;
+  --icon-page-warm: #fff6e9;
+  --icon-primary: #159fa2;
+  --icon-primary-light: #7fcfd1;
+  --icon-primary-deep: #0e7c7e;
+  --icon-orange: #ff7a45;
+  --icon-orange-deep: #e5662f;
+  --icon-orange-light: #ffebdd;
+  --primary-hover: #28adaf;
+  --secondary-hover: #ff766b;
+  --destructive-hover: #d9362e;
+  --tertiary-hover: #023c4d;
+  --chart-success: #1baf7a;
+  --chart-warning: #eda100;
+  --chart-neutral: #c3c2b7;
+  --chart-blue: #2a78d6;
+  --chart-orange: #eb6834;
+  --chart-pink: #e87ba4;
+  --map-provisional: #ec4899;
+  --shadow-card: rgb(23 32 51 / 18%);
+  --shadow-provisional: rgb(236 72 153 / 45%);
+  --shadow-secondary: rgb(255 92 83 / 45%);
+  --card-chip-start: #fef08a;
+  --card-chip-end: #facc15;
 
   /* HMI Connect brand colors — tosca primary and orange secondary, matching the logo */
   --primary: #159fa2;
   --primary-soft: #e3f6f6;
   --primary-light: #bfe6e7;
   --primary-foreground: #0f6f72;
+  --primary-soft-bg: #e3f6f6;
+  --primary-soft-fg: #0f6f72;
+  --primary-soft-border: #bfe6e7;
 
   --secondary: #ff5c53;
   --secondary-soft: #ffe7e5;
   --secondary-foreground: #bf453e;
+  --secondary-soft-bg: #ffe7e5;
+  --secondary-soft-fg: #9e3831;
+  --secondary-soft-border: #ffc8c3;
 
   --tertiary: #172033;
   --tertiary-foreground: #012c39;
 
   --admin-sidebar: #172033;
 
-  --destructive: #e6392f;
+  --destructive: #d3352d;
   --destructive-soft: #fdeceb;
   --destructive-foreground: #b42318;
+  --destructive-soft-bg: #fdeceb;
+  --destructive-soft-fg: #b42318;
+  --destructive-soft-border: #f8c6c2;
+  --success-soft-bg: #e8f5e9;
+  --success-soft-fg: #236b30;
+  --success-soft-border: #a8dab0;
+  --warning-soft-bg: #fff6e0;
+  --warning-soft-fg: #785400;
+  --warning-soft-border: #eccf80;
+  --info-soft-bg: #e2f0ff;
+  --info-soft-fg: #164ea6;
+  --info-soft-border: #b6cbe9;
+  --purple-soft-bg: #efedf9;
+  --purple-soft-fg: #42359b;
+  --purple-soft-border: #a19acd;
+  --pink-soft-bg: #fde7ee;
+  --pink-soft-fg: #9a204e;
+  --pink-soft-border: #f3a6bc;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0e141b;
+  --foreground: #e9eef4;
+  --surface: #18212b;
+  --surface-muted: #212d38;
+  --surface-subtle: #1b2732;
+  --border: #344453;
+  --border-strong: #526575;
+  --divider: #344453;
+  --muted-foreground: #b5c0cc;
+  --placeholder: #aab8c6;
+  --subtle-foreground: #9eacbc;
+  --disabled-foreground: #8998a8;
+  --heading: #f2f5f8;
+  --content-foreground: #d3dde7;
+  --overlay: rgb(0 0 0 / 70%);
+  --on-dark: #ffffff;
+  --on-primary: #ffffff;
+  --on-primary-action: #ffffff;
+  --on-secondary: #ffffff;
+  --badge-foreground: #ffffff;
+  --badge-primary: #087478;
+  --badge-destructive: #a92f2b;
+  --on-destructive: #ffffff;
+  --media-backdrop: #05090f;
+  --brand-ink: #172033;
+  --brand-deep: #013334;
+  --code-bg: #202428;
+  --dark-control: #202125;
+  --dark-control-hover: #2b2c31;
+  --dark-control-active: #17181b;
+  --admin-banner-start: #222222;
+  --logo-ink: #f2f5f8;
+  --logo-paper: #0e141b;
+  --icon-canvas: #183e41;
+  --icon-page: #21313a;
+  --icon-page-warm: #26353a;
+  --icon-primary: #49bdbe;
+  --icon-primary-light: #397a82;
+  --icon-primary-deep: #74d8d5;
+  --icon-orange: #cc7657;
+  --icon-orange-deep: #e9926c;
+  --icon-orange-light: #4c312c;
+  --primary-hover: #096469;
+  --secondary-hover: #ff766b;
+  --destructive-hover: #922723;
+  --tertiary-hover: #223a4b;
+  --chart-success: #72d9a7;
+  --chart-warning: #eec16a;
+  --chart-neutral: #82909f;
+  --chart-blue: #7db4ff;
+  --chart-orange: #ff9b72;
+  --chart-pink: #f4a8ca;
+  --map-provisional: #ef89bd;
+  --shadow-card: rgb(0 0 0 / 45%);
+  --shadow-provisional: rgb(239 137 189 / 40%);
+  --shadow-secondary: rgb(169 61 54 / 50%);
+  --card-chip-start: #ba9137;
+  --card-chip-end: #87641e;
+  --primary: #087478;
+  --primary-soft: #12393d;
+  --primary-light: #315b60;
+  --primary-foreground: #7ce3df;
+  --primary-soft-bg: #12393d;
+  --primary-soft-fg: #9ce9e5;
+  --primary-soft-border: #315b60;
+  --secondary: #ff5c53;
+  --secondary-soft: #412725;
+  --secondary-foreground: #ffada4;
+  --secondary-soft-bg: #412725;
+  --secondary-soft-fg: #ffb6ae;
+  --secondary-soft-border: #75413d;
+  --tertiary: #172033;
+  --tertiary-foreground: #c9e6eb;
+  --destructive: #a92f2b;
+  --destructive-soft: #422624;
+  --destructive-foreground: #ffa49b;
+  --destructive-soft-bg: #422624;
+  --destructive-soft-fg: #ffb0a8;
+  --destructive-soft-border: #79413c;
+  --success-soft-bg: #173a2c;
+  --success-soft-fg: #91e7ad;
+  --success-soft-border: #315e47;
+  --warning-soft-bg: #3b301a;
+  --warning-soft-fg: #f7d889;
+  --warning-soft-border: #75602c;
+  --info-soft-bg: #1b304c;
+  --info-soft-fg: #a9cbff;
+  --info-soft-border: #375b8b;
+  --purple-soft-bg: #302944;
+  --purple-soft-fg: #d6c5ff;
+  --purple-soft-border: #63537f;
+  --pink-soft-bg: #422637;
+  --pink-soft-fg: #ffb4d0;
+  --pink-soft-border: #79435d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-divider: var(--divider);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder: var(--placeholder);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-disabled-foreground: var(--disabled-foreground);
+  --color-heading: var(--heading);
+  --color-content-foreground: var(--content-foreground);
+  --color-on-dark: var(--on-dark);
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-action: var(--on-primary-action);
+  --color-on-secondary: var(--on-secondary);
+  --color-badge-foreground: var(--badge-foreground);
+  --color-badge-primary: var(--badge-primary);
+  --color-badge-destructive: var(--badge-destructive);
+  --color-on-destructive: var(--on-destructive);
+  --color-media-backdrop: var(--media-backdrop);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-deep: var(--brand-deep);
+  --color-code-bg: var(--code-bg);
+  --color-dark-control: var(--dark-control);
+  --color-dark-control-hover: var(--dark-control-hover);
+  --color-dark-control-active: var(--dark-control-active);
+  --color-admin-banner-start: var(--admin-banner-start);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-tertiary-hover: var(--tertiary-hover);
+  --color-chart-success: var(--chart-success);
+  --color-chart-warning: var(--chart-warning);
+  --color-chart-neutral: var(--chart-neutral);
+  --color-map-provisional: var(--map-provisional);
+  --color-card-chip-start: var(--card-chip-start);
+  --color-card-chip-end: var(--card-chip-end);
   --color-primary: var(--primary);
   --color-primary-soft: var(--primary-soft);
   --color-primary-light: var(--primary-light);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft-bg: var(--primary-soft-bg);
+  --color-primary-soft-fg: var(--primary-soft-fg);
+  --color-primary-soft-border: var(--primary-soft-border);
   --color-secondary: var(--secondary);
   --color-secondary-soft: var(--secondary-soft);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-soft-bg: var(--secondary-soft-bg);
+  --color-secondary-soft-fg: var(--secondary-soft-fg);
+  --color-secondary-soft-border: var(--secondary-soft-border);
   --color-tertiary: var(--tertiary);
   --color-tertiary-foreground: var(--tertiary-foreground);
   --color-admin-sidebar: var(--admin-sidebar);
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft-bg: var(--destructive-soft-bg);
+  --color-destructive-soft-fg: var(--destructive-soft-fg);
+  --color-destructive-soft-border: var(--destructive-soft-border);
+  --color-success-soft-bg: var(--success-soft-bg);
+  --color-success-soft-fg: var(--success-soft-fg);
+  --color-success-soft-border: var(--success-soft-border);
+  --color-warning-soft-bg: var(--warning-soft-bg);
+  --color-warning-soft-fg: var(--warning-soft-fg);
+  --color-warning-soft-border: var(--warning-soft-border);
+  --color-info-soft-bg: var(--info-soft-bg);
+  --color-info-soft-fg: var(--info-soft-fg);
+  --color-info-soft-border: var(--info-soft-border);
+  --color-purple-soft-bg: var(--purple-soft-bg);
+  --color-purple-soft-fg: var(--purple-soft-fg);
+  --color-purple-soft-border: var(--purple-soft-border);
+  --color-pink-soft-bg: var(--pink-soft-bg);
+  --color-pink-soft-fg: var(--pink-soft-fg);
+  --color-pink-soft-border: var(--pink-soft-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-google-sans: var(--font-google-sans);
@@ -49,17 +293,44 @@
   --breakpoint-3xl: 120rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  hr {
+    border-color: var(--divider);
+  }
+}
+
+.dark [data-sonner-toaster][data-sonner-theme="light"] {
+  --normal-bg: var(--surface);
+  --normal-border: var(--border);
+  --normal-text: var(--foreground);
+  --success-bg: var(--success-soft-bg);
+  --success-border: var(--success-soft-border);
+  --success-text: var(--success-soft-fg);
+  --info-bg: var(--info-soft-bg);
+  --info-border: var(--info-soft-border);
+  --info-text: var(--info-soft-fg);
+  --warning-bg: var(--warning-soft-bg);
+  --warning-border: var(--warning-soft-border);
+  --warning-text: var(--warning-soft-fg);
+  --error-bg: var(--destructive-soft-bg);
+  --error-border: var(--destructive-soft-border);
+  --error-text: var(--destructive-soft-fg);
+}
+
+.dark .theme-illustration {
+  filter: brightness(0.72) saturate(0.88);
 }
 
 /* Admin content: a diamond-lattice layer over the root layout's white-to-primary-soft gradient. */
@@ -83,7 +354,7 @@ body {
 
 /* Tiptap article composer. */
 .article-editor {
-  color: #242832;
+  color: var(--foreground);
 }
 
 /* The composer's deck reads at the body's own size, so the two can't drift apart. */
@@ -105,7 +376,7 @@ body {
 .article-editor h2,
 .article-editor h3,
 .article-editor h4 {
-  color: #172033;
+  color: var(--heading);
   font-family: var(--font-stack-sans-headline), Arial, sans-serif;
   font-weight: 500;
   line-height: 1.2;
@@ -154,13 +425,13 @@ body {
   margin-top: 1.75rem;
   border-left: 3px solid var(--primary);
   padding: 0.35rem 0 0.35rem 1.25rem;
-  color: #5f6573;
+  color: var(--muted-foreground);
   font-style: italic;
 }
 
 .article-editor code:not(pre code) {
   border-radius: 0.35rem;
-  background: #f1f3f5;
+  background: var(--surface-muted);
   padding: 0.15rem 0.4rem;
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.88em;
@@ -181,7 +452,7 @@ body {
 .article-editor hr {
   margin: 2.5rem 0;
   border: 0;
-  border-top: 1px solid #dfe3e8;
+  border-top: 1px solid var(--divider);
 }
 
 .article-editor img {
@@ -203,7 +474,7 @@ body {
 .article-editor p.is-editor-empty:first-child::before {
   float: left;
   height: 0;
-  color: #b7bbc3;
+  color: var(--subtle-foreground);
   content: attr(data-placeholder);
   pointer-events: none;
 }

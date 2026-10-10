@@ -25,13 +25,13 @@ function InfoRow({
 }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-[#5f6573]">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       {/* A locked row shows placeholder dots, never a real value behind a blur. */}
       <p
         className={[
-          "mt-0.5 text-sm font-semibold text-[#172033]",
+          "mt-0.5 text-sm font-semibold text-heading",
           locked ? "select-none blur-[5px]" : "",
         ]
           .filter(Boolean)
@@ -54,13 +54,13 @@ export default function MembershipInfoCard({
   return (
     <div
       className={[
-        "w-full rounded-2xl border border-[#e6e9ef] bg-white p-5",
+        "w-full rounded-2xl border border-border bg-surface p-5",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <p className="font-stack-sans-headline text-base font-medium text-[#172033]">
+      <p className="font-stack-sans-headline text-base font-medium text-heading">
         Status Keanggotaan
       </p>
 
@@ -70,8 +70,8 @@ export default function MembershipInfoCard({
         <InfoRow label="Komisariat" value={chapterName} locked={locked} />
       </div>
 
-      <div className="mt-5 border-t border-[#e6e9ef] pt-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[#5f6573]">
+      <div className="mt-5 border-t border-border pt-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Status Membership
         </p>
         {locked ? (

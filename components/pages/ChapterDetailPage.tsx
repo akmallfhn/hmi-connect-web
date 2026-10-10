@@ -121,13 +121,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#e6e9ef] bg-[#f9fafc] px-4 py-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-[#5f6573]">{label}</p>
-        <p className="truncate text-[15px] font-bold text-[#172033]">{value}</p>
+        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
+        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
       </div>
     </div>
   );
@@ -136,8 +136,8 @@ function StatPill({
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-sm text-[#5f6573]">{label}</p>
-      <p className="text-[15px] font-medium text-[#172033]">{value ?? "—"}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-[15px] font-medium text-heading">{value ?? "—"}</p>
     </div>
   );
 }
@@ -260,10 +260,10 @@ export default function ChapterDetailPage({
         </Button>
       </Link>
 
-      <section className="mt-4 rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
+      <section className="mt-4 rounded-xl border border-border bg-surface p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e6e9ef] bg-primary-soft text-primary">
+            <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-primary-soft text-primary-foreground">
               {chapter.image_url ? (
                 <Image
                   src={chapter.image_url}
@@ -278,7 +278,7 @@ export default function ChapterDetailPage({
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-bold text-[#172033]">
+                <h2 className="text-lg font-bold text-heading">
                   {formatChapterName(chapter.name)}
                 </h2>
                 <Label variant={chapter.status === "active" ? "green" : "red"}>
@@ -290,7 +290,7 @@ export default function ChapterDetailPage({
                     : "Status Kepengurusan: Persiapan"}
                 </Label>
               </div>
-              <p className="mt-1 text-sm text-[#69707d]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Cabang {chapter.branch_name ?? "—"}
                 {chapter.coordinating_chapter_name
                   ? ` • Korkom ${chapter.coordinating_chapter_name}`
@@ -366,7 +366,7 @@ export default function ChapterDetailPage({
         <div
           role="tablist"
           aria-label="Detail Komisariat"
-          className="inline-flex min-w-max rounded-full border border-[#e6e9ef] bg-white p-1"
+          className="inline-flex min-w-max rounded-full border border-border bg-surface p-1"
         >
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -383,8 +383,8 @@ export default function ChapterDetailPage({
                 onClick={() => selectTab(tab.id)}
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                   isActive
-                    ? "bg-secondary text-white shadow-sm"
-                    : "text-[#5f6573] hover:bg-secondary-soft hover:text-secondary"
+                    ? "bg-secondary text-on-secondary shadow-sm"
+                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
                 }`}
               >
                 <Icon className="size-4 shrink-0" />
@@ -403,8 +403,8 @@ export default function ChapterDetailPage({
       >
         {activeTab === "profile" && (
           <div className="flex flex-col gap-4">
-            <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
-              <h3 className="text-base font-semibold text-[#172033]">
+            <section className="rounded-xl border border-border bg-surface p-5 sm:p-6">
+              <h3 className="text-base font-semibold text-heading">
                 Informasi Komisariat
               </h3>
               <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
@@ -418,7 +418,7 @@ export default function ChapterDetailPage({
                   value={
                     chapter.institution_name ? (
                       <span className="flex items-center gap-2">
-                        <University className="size-4 shrink-0 text-[#5f6573]" />
+                        <University className="size-4 shrink-0 text-muted-foreground" />
                         {chapter.institution_name}
                       </span>
                     ) : undefined
@@ -427,11 +427,11 @@ export default function ChapterDetailPage({
               </div>
             </section>
 
-            <section className="rounded-xl border border-[#e6e9ef] bg-white p-5 sm:p-6">
-              <h3 className="text-base font-semibold text-[#172033]">
+            <section className="rounded-xl border border-border bg-surface p-5 sm:p-6">
+              <h3 className="text-base font-semibold text-heading">
                 Deskripsi
               </h3>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40454f]">
+              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">
                 {chapter.description || "Belum ada deskripsi."}
               </p>
             </section>
@@ -453,7 +453,7 @@ export default function ChapterDetailPage({
         {showTrainings && activeTab === "trainings" && (
           <section>
             {trainings.length === 0 ? (
-              <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+              <div className="overflow-hidden rounded-xl border border-border bg-surface">
                 <EmptyState
                   title="Belum ada Latihan Kader"
                   description="Latihan Kader yang diselenggarakan Komisariat ini akan ditampilkan di sini."
@@ -464,14 +464,14 @@ export default function ChapterDetailPage({
                 {trainings.map((training) => (
                   <article
                     key={training.id}
-                    className="rounded-xl border border-[#e6e9ef] bg-white p-5"
+                    className="rounded-xl border border-border bg-surface p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h2 className="truncate text-base font-semibold text-[#172033]">
+                        <h2 className="truncate text-base font-semibold text-heading">
                           {training.name}
                         </h2>
-                        <p className="mt-1 text-sm text-[#69707d]">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           HMI {formatChapterName(chapter.name)}
                         </p>
                       </div>
@@ -488,7 +488,7 @@ export default function ChapterDetailPage({
                       />
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-2 text-sm text-[#69707d]">
+                    <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <CalendarDays className="size-4 shrink-0" />
                         {formatDateRange(

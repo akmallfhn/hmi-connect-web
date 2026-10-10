@@ -67,10 +67,10 @@ export default function FollowListModal({
     <Modal open={open} onClose={onClose} title={TITLES[type]}>
       <div className="flex flex-col gap-1">
         {!loaded && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">Memuat...</p>
+          <p className="py-4 text-center text-sm text-muted-foreground">Memuat...</p>
         )}
         {loaded && users.length === 0 && (
-          <p className="py-4 text-center text-sm text-[#5f6573]">
+          <p className="py-4 text-center text-sm text-muted-foreground">
             {type === "following"
               ? "Belum mengikuti siapa pun."
               : "Belum ada pengikut."}
@@ -81,14 +81,14 @@ export default function FollowListModal({
             key={user.id}
             href={actingHref(`/profile/${user.username}`)}
             onClick={onClose}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f5f7fb]"
+            className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-muted"
           >
             <Avatar src={user.avatar} name={user.full_name} size={40} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#172033]">
+              <p className="truncate text-sm font-medium text-heading">
                 {user.full_name}
               </p>
-              <p className="truncate text-xs text-[#5f6573]">
+              <p className="truncate text-xs text-muted-foreground">
                 @{user.username}
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function FollowListModal({
             type="button"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="mt-2 cursor-pointer py-1.5 text-center text-sm font-semibold text-primary hover:underline"
+            className="mt-2 cursor-pointer py-1.5 text-center text-sm font-semibold text-primary-foreground hover:underline"
           >
             {loadingMore ? "Memuat..." : "Muat lebih banyak"}
           </button>

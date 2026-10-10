@@ -121,7 +121,7 @@ export default function OrganizationLogoField({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="pl-1 text-[15px] font-medium text-[#172033]">
+      <label className="pl-1 text-[15px] font-medium text-heading">
         Logo Organisasi
       </label>
       <div
@@ -132,7 +132,7 @@ export default function OrganizationLogoField({
         }
       >
         <div
-          className="flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]"
+          className="flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted"
           style={{ width: size, height: size }}
         >
           {imageUrl ? (
@@ -145,7 +145,7 @@ export default function OrganizationLogoField({
             />
           ) : (
             <ImageIcon
-              className={size >= 120 ? "size-10 text-[#5f6573]" : "size-6 text-[#5f6573]"}
+              className={size >= 120 ? "size-10 text-muted-foreground" : "size-6 text-muted-foreground"}
             />
           )}
         </div>
@@ -183,7 +183,7 @@ export default function OrganizationLogoField({
               Hapus Logo
             </Button>
           )}
-          <p className="text-xs text-[#5f6573]">Rasio persegi, maksimal 5MB.</p>
+          <p className="text-xs text-muted-foreground">Rasio persegi, maksimal 5MB.</p>
         </div>
       </div>
     </div>

@@ -14,8 +14,8 @@ export default async function NewsCard() {
   if (list.length === 0) return null;
 
   return (
-    <div className="border border-x-0 border-[#e6e9ef] bg-white p-4 lg:rounded-2xl lg:border-x">
-      <div className="flex items-center gap-2 text-sm font-stack-sans-headline font-medium text-[#172033] xl:text-[15px]">
+    <div className="border border-x-0 border-border bg-surface p-4 lg:rounded-2xl lg:border-x">
+      <div className="flex items-center gap-2 text-sm font-stack-sans-headline font-medium text-heading xl:text-[15px]">
         Kabar HMI
       </div>
 
@@ -26,9 +26,9 @@ export default async function NewsCard() {
             href={article.source_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-lg transition hover:bg-[#f5f7fb]"
+            className="flex items-center gap-3 rounded-lg transition hover:bg-surface-muted"
           >
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-[#f5f7fb]">
+            <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
               {article.image_url ? (
                 <Image
                   src={article.image_url}
@@ -38,15 +38,15 @@ export default async function NewsCard() {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Newspaper className="size-5 text-[#c3c7d1]" />
+                  <Newspaper className="size-5 text-disabled-foreground" />
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="line-clamp-2 text-sm font-medium text-[#172033] xl:text-[15px]">
+              <p className="line-clamp-2 text-sm font-medium text-heading xl:text-[15px]">
                 {article.title}
               </p>
-              <p className="text-xs text-[#5f6573] xl:text-[13px]">
+              <p className="text-xs text-muted-foreground xl:text-[13px]">
                 {article.source_name}
               </p>
             </div>

@@ -75,7 +75,7 @@ export default function SortableHeader({
         size="sm"
         onClick={handleClick}
         className={`-ml-3 text-[13px] font-semibold uppercase tracking-wide ${
-          direction ? "text-primary" : "text-[#5f6573]"
+          direction ? "text-primary-foreground" : "text-muted-foreground"
         }`}
       >
         {label}

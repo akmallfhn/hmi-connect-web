@@ -70,7 +70,7 @@ export default function QuranSurahDetailPage({
   const isSurahPlaying = isPlaying && playingTrack?.id === "surah";
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={viewer.fullName}
         avatar={viewer.avatar}
@@ -81,7 +81,7 @@ export default function QuranSurahDetailPage({
       />
 
       <PageMargin className="pt-4">
-        <div className="relative overflow-hidden rounded-2xl bg-white text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-surface text-on-dark">
           <div className="absolute inset-0 h-full w-full">
             <Image
               src={HEADER_BACKGROUND_URL}
@@ -94,7 +94,7 @@ export default function QuranSurahDetailPage({
           <div className="relative z-10 p-5">
             <p className="font-arabic-quran text-4xl">{surah.name_arabic}</p>
             <h1 className="mt-2 text-2xl font-bold">{surah.name_latin}</h1>
-            <p className="mt-1 text-sm text-white/80">
+            <p className="mt-1 text-sm text-on-dark/80">
               {surah.name_translation}
             </p>
 
@@ -147,7 +147,7 @@ export default function QuranSurahDetailPage({
       </PageMargin>
 
       <PageMargin className={playingTrack ? "pb-24 pt-4" : "pb-6 pt-4"}>
-        <div className="flex flex-col rounded-2xl border border-[#e6e9ef] bg-white px-4">
+        <div className="flex flex-col rounded-2xl border border-border bg-surface px-4">
           {surah.verses.map((verse) => (
             <VerseCard
               key={verse.id}

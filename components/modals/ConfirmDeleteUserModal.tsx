@@ -27,10 +27,10 @@ function DeleteFields({
 
   return (
     <>
-      <p className="text-sm text-[#5f6573] xl:text-[15px]">
+      <p className="text-sm text-muted-foreground xl:text-[15px]">
         Tindakan ini menghapus permanen seluruh data {fullName}. Postingan,
         komentar, riwayat, dan lainnya tidak dapat dibatalkan. Ketik{" "}
-        <span className="font-semibold text-[#172033]">{username}</span> untuk
+        <span className="font-semibold text-heading">{username}</span> untuk
         konfirmasi.
       </p>
       <div className="mt-4">

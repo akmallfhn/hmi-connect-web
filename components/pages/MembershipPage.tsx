@@ -53,7 +53,7 @@ export default function MembershipPage({
   ) : null;
 
   return (
-    <div className="min-h-screen bg-white pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className="min-h-screen bg-surface pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}
@@ -66,7 +66,7 @@ export default function MembershipPage({
 
       <PageMargin className="py-6">
         <div className="hidden lg:block">
-          <h1 className="font-stack-sans-headline text-2xl font-medium text-[#172033]">
+          <h1 className="font-stack-sans-headline text-2xl font-medium text-heading">
             E-Kartu Tanda Anggota
           </h1>
         </div>
@@ -103,13 +103,13 @@ export default function MembershipPage({
             <div className="w-full lg:hidden">{mobileShareButton}</div>
           </div>
         ) : (
-          <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#dbe3ef] bg-white px-6 py-12 text-center">
-            <ShieldAlert className="size-10 text-destructive" />
+          <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border-strong bg-surface px-6 py-12 text-center">
+            <ShieldAlert className="size-10 text-destructive-foreground" />
             <div>
-              <p className="font-semibold text-[#172033]">
+              <p className="font-semibold text-heading">
                 Belum Terverifikasi
               </p>
-              <p className="mt-1 max-w-sm text-sm text-[#5f6573]">
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 Verifikasi identitas kamu terlebih dahulu untuk mendapatkan
                 Kartu Tanda Anggota digital.
               </p>

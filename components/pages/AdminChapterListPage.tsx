@@ -78,7 +78,7 @@ function InstitutionAvatar({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e6e9ef] bg-[#f5f7fb] ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted ${className}`}
     >
       {imageUrl ? (
         <Image
@@ -89,7 +89,7 @@ function InstitutionAvatar({
           className="h-full w-full object-cover"
         />
       ) : (
-        <University className="size-1/2 text-[#5f6573]" />
+        <University className="size-1/2 text-muted-foreground" />
       )}
     </span>
   );
@@ -109,7 +109,7 @@ function ChapterLogo({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb] ${containerClassName}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted ${containerClassName}`}
     >
       {imageUrl ? (
         <Image
@@ -259,24 +259,24 @@ export default function AdminChapterListPage({
         <button
           type="button"
           onClick={() => router.push(`${detailBasePath}/${chapter.id}`)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
         >
-          <Eye className="size-4 text-[#5f6573]" />
+          <Eye className="size-4 text-muted-foreground" />
           Lihat Detail
         </button>
         <button
           type="button"
           onClick={() => setEditTarget(chapter)}
-          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
         >
-          <Pencil className="size-4 text-[#5f6573]" />
+          <Pencil className="size-4 text-muted-foreground" />
           Edit
         </button>
         {allowDelete && (
           <button
             type="button"
             onClick={() => setDeleteTarget(chapter)}
-            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive transition hover:bg-destructive-soft"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft"
           >
             <Trash2 className="size-4" />
             Hapus
@@ -298,7 +298,7 @@ export default function AdminChapterListPage({
             setDeleteTarget(chapter);
           }}
           aria-label="Hapus Komisariat"
-          className="text-destructive hover:bg-destructive-soft"
+          className="text-destructive-foreground hover:bg-destructive-soft"
         >
           <Trash2 className="size-4" />
         </Button>
@@ -366,7 +366,7 @@ export default function AdminChapterListPage({
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
-        <div className="flex shrink-0 rounded-lg border border-[#dbe3ef] bg-white p-0.5 sm:ml-auto">
+        <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 sm:ml-auto">
           <button
             type="button"
             onClick={() => handleViewModeChange("table")}
@@ -374,8 +374,8 @@ export default function AdminChapterListPage({
             title="Tampilan Tabel"
             className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
               viewMode === "table"
-                ? "bg-primary-soft text-primary"
-                : "text-[#5f6573] hover:text-[#172033]"
+                ? "bg-primary-soft text-primary-foreground"
+                : "text-muted-foreground hover:text-heading"
             }`}
           >
             <Table2 className="size-3.5" />
@@ -388,8 +388,8 @@ export default function AdminChapterListPage({
             title="Tampilan Card"
             className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
               viewMode === "card"
-                ? "bg-primary-soft text-primary"
-                : "text-[#5f6573] hover:text-[#172033]"
+                ? "bg-primary-soft text-primary-foreground"
+                : "text-muted-foreground hover:text-heading"
             }`}
           >
             <LayoutGrid className="size-3.5" />
@@ -399,7 +399,7 @@ export default function AdminChapterListPage({
       </div>
 
       {isEmpty ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <EmptyState
             title={
               hasFilter ? "Komisariat tidak ditemukan" : "Belum ada Komisariat"
@@ -412,10 +412,10 @@ export default function AdminChapterListPage({
           />
         </div>
       ) : viewMode === "table" ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-sm">
-              <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase tracking-wide text-[#5f6573]">
+              <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Nama Komisariat</th>
                   <th className="px-4 py-3">Asal Universitas</th>
@@ -425,7 +425,7 @@ export default function AdminChapterListPage({
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+              <tbody className="divide-y divide-divider text-[13px]">
                 {chapters.map((chapter) => (
                   <tr key={chapter.id} className="align-middle">
                     <td className="px-4 py-3">
@@ -440,10 +440,10 @@ export default function AdminChapterListPage({
                           logoClassName="h-7 w-auto"
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#172033] hover:text-primary">
+                          <p className="truncate text-sm font-semibold text-heading hover:text-primary-foreground">
                             {formatChapterName(chapter.name)}
                           </p>
-                          <p className="truncate text-[13px] text-[#5f6573]">
+                          <p className="truncate text-[13px] text-muted-foreground">
                             Cabang {chapter.branch_name}
                           </p>
                         </div>
@@ -457,12 +457,12 @@ export default function AdminChapterListPage({
                             name={chapter.institution_name}
                             className="size-7"
                           />
-                          <span className="truncate text-[#172033]">
+                          <span className="truncate text-heading">
                             {chapter.institution_name}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[#5f6573]">—</span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -472,7 +472,7 @@ export default function AdminChapterListPage({
                         {chapter.type === "full" ? "Penuh" : "Persiapan"}
                       </Label>
                     </td>
-                    <td className="px-4 py-3 text-[#172033]">
+                    <td className="px-4 py-3 text-heading">
                       {chapter.user_count ?? "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -499,7 +499,7 @@ export default function AdminChapterListPage({
             <Link
               key={chapter.id}
               href={`${detailBasePath}/${chapter.id}`}
-              className="flex flex-col gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/40"
+              className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 transition hover:border-primary/40"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
@@ -510,10 +510,10 @@ export default function AdminChapterListPage({
                     logoClassName="h-8 w-auto"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#172033]">
+                    <p className="truncate text-sm font-semibold text-heading">
                       {formatChapterName(chapter.name)}
                     </p>
-                    <p className="truncate text-[13px] text-[#5f6573]">
+                    <p className="truncate text-[13px] text-muted-foreground">
                       Cabang {chapter.branch_name}
                     </p>
                   </div>
@@ -540,23 +540,23 @@ export default function AdminChapterListPage({
                 </Label>
               </div>
 
-              <div className="flex items-start justify-between gap-3 border-t border-[#e6e9ef] pt-3 text-[13px]">
+              <div className="flex items-start justify-between gap-3 border-t border-border pt-3 text-[13px]">
                 <div className="min-w-0">
-                  <p className="text-[#5f6573]">Asal Universitas</p>
+                  <p className="text-muted-foreground">Asal Universitas</p>
                   <div className="mt-1 flex min-w-0 items-center gap-1.5">
                     <InstitutionAvatar
                       imageUrl={chapter.institution_avatar}
                       name={chapter.institution_name}
                       className="size-5"
                     />
-                    <span className="line-clamp-1 font-semibold text-[#172033]">
+                    <span className="line-clamp-1 font-semibold text-heading">
                       {chapter.institution_name ?? "—"}
                     </span>
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-[#5f6573]">Jumlah Kader</p>
-                  <p className="mt-1 font-semibold text-[#172033]">
+                  <p className="text-muted-foreground">Jumlah Kader</p>
+                  <p className="mt-1 font-semibold text-heading">
                     {chapter.user_count ?? "—"}
                   </p>
                 </div>
@@ -569,7 +569,7 @@ export default function AdminChapterListPage({
       {chapters.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}–
             {(currentPage - 1) * pageSize + chapters.length} dari {totalData}{" "}
             Komisariat

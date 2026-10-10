@@ -91,8 +91,8 @@ export default function TrainingMaterialsTab({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
-      <div className="flex flex-col gap-3 border-b border-[#e6e9ef] p-5 sm:flex-row sm:items-center">
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-xs">
           <Input
             inputId="training-material-search"
@@ -126,17 +126,17 @@ export default function TrainingMaterialsTab({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-left text-sm">
-            <thead className="border-b border-[#e6e9ef] bg-[#f5f7fb] text-[13px] font-semibold uppercase text-[#5f6573]">
+            <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Judul Materi</th>
                 <th className="px-4 py-3">Tautan</th>
                 {canManage && <th className="px-4 py-3 text-right">Aksi</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e6e9ef] text-[13px]">
+            <tbody className="divide-y divide-divider text-[13px]">
               {materials.map((material) => (
                 <tr key={material.id}>
-                  <td className="px-4 py-3 font-semibold text-[#172033]">
+                  <td className="px-4 py-3 font-semibold text-heading">
                     {material.title}
                   </td>
                   <td className="px-4 py-3">
@@ -145,13 +145,13 @@ export default function TrainingMaterialsTab({
                         href={material.material_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                        className="inline-flex items-center gap-1.5 text-primary-foreground hover:underline"
                       >
                         Buka materi
                         <ExternalLink className="size-3.5" />
                       </a>
                     ) : (
-                      <span className="text-[#5f6573]">Belum tersedia</span>
+                      <span className="text-muted-foreground">Belum tersedia</span>
                     )}
                   </td>
                   {canManage && (
@@ -184,13 +184,13 @@ export default function TrainingMaterialsTab({
       )}
 
       {materials.length > 0 && (
-        <div className="flex flex-col items-center gap-3 border-t border-[#e6e9ef] p-5">
+        <div className="flex flex-col items-center gap-3 border-t border-border p-5">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPage}
             queryKey="material_page"
           />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
             {(currentPage - 1) * pageSize + materials.length} dari {totalData}{" "}
             materi

@@ -230,14 +230,14 @@ export default function MainSiteDesktopSidebar({
   }
 
   return (
-    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-[#e6e9ef] bg-white px-3 py-5 lg:flex">
+    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-border bg-surface px-3 py-5 lg:flex">
       <Link href="/" className="mb-7 flex items-center px-2">
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>
 
       {official && (
-        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#e6e9ef] p-3">
-          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f5f7fb]">
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-border p-3">
+          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted">
             {officialGrant?.entity_image_url ? (
               <Image
                 src={officialGrant.entity_image_url}
@@ -251,7 +251,7 @@ export default function MainSiteDesktopSidebar({
             )}
           </span>
           <div className="min-w-0">
-            <p className="line-clamp-2 font-stack-sans-headline text-sm font-medium leading-snug text-[#172033]">
+            <p className="line-clamp-2 font-stack-sans-headline text-sm font-medium leading-snug text-heading">
               {officialGrant?.entity_name
                 ? formatEntityAuthorName(
                     official.entityType,
@@ -259,7 +259,7 @@ export default function MainSiteDesktopSidebar({
                   )
                 : "Official Account"}
             </p>
-            <p className="text-xs text-[#7b8190]">Official Account</p>
+            <p className="text-xs text-subtle-foreground">Official Account</p>
           </div>
         </div>
       )}
@@ -274,19 +274,19 @@ export default function MainSiteDesktopSidebar({
               className={[
                 "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
                 active
-                  ? "bg-primary-soft text-primary"
-                  : "text-[#424957] hover:bg-[#f5f7fb] hover:text-[#172033]",
+                  ? "bg-primary-soft text-primary-foreground"
+                  : "text-foreground hover:bg-surface-muted hover:text-heading",
               ].join(" ")}
             >
               <span className="relative flex size-5 shrink-0 items-center justify-center">
                 <Icon className="size-5" stroke={active ? 2.4 : 2} />
                 {label === "Chat" && unreadChatCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-white">
+                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
                     {unreadChatCount > 9 ? "9+" : unreadChatCount}
                   </span>
                 )}
                 {label === "Notifications" && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-white">
+                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -305,8 +305,8 @@ export default function MainSiteDesktopSidebar({
             className={[
               "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
               profileIsActive
-                ? "bg-primary-soft text-primary"
-                : "text-[#424957] hover:bg-[#f5f7fb] hover:text-[#172033]",
+                ? "bg-primary-soft text-primary-foreground"
+                : "text-foreground hover:bg-surface-muted hover:text-heading",
             ].join(" ")}
           >
             {userId && avatar ? (
@@ -374,7 +374,7 @@ export default function MainSiteDesktopSidebar({
           // Leaving the entity's voice goes through Settings, where the personal account lives.
           <Link
             href="/settings"
-            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive transition hover:bg-destructive-soft"
+            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive-foreground transition hover:bg-destructive-soft"
           >
             <IconArrowBackUp className="size-5" />
             Mode User
@@ -388,7 +388,7 @@ export default function MainSiteDesktopSidebar({
                 type="button"
                 onClick={toggle}
                 aria-expanded={open}
-                className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-[#424957] transition hover:bg-[#f5f7fb] hover:text-[#172033]"
+                className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-foreground transition hover:bg-surface-muted hover:text-heading"
               >
                 <IconDots className="size-5" />
                 More
@@ -398,9 +398,9 @@ export default function MainSiteDesktopSidebar({
             <div className="py-1 font-stack-sans-headline font-normal">
               <Link
                 href="/settings"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
               >
-                <IconSettings className="size-4 text-[#5f6573]" />
+                <IconSettings className="size-4 text-muted-foreground" />
                 Settings
               </Link>
               {userId ? (
@@ -408,7 +408,7 @@ export default function MainSiteDesktopSidebar({
                   type="button"
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive-foreground transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <IconLogout className="size-4" />
                   {loggingOut ? "Keluar..." : "Keluar"}
@@ -416,9 +416,9 @@ export default function MainSiteDesktopSidebar({
               ) : (
                 <Link
                   href="/auth/login"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#172033] transition hover:bg-[#f5f7fb]"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
                 >
-                  <IconLogin className="size-4 text-[#5f6573]" />
+                  <IconLogin className="size-4 text-muted-foreground" />
                   Masuk
                 </Link>
               )}

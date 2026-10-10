@@ -239,11 +239,11 @@ function TrainingFields({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label className="pl-1 text-[15px] font-medium text-[#172033]">
+        <label className="pl-1 text-[15px] font-medium text-heading">
           Gambar Batch
         </label>
         <div className="flex items-center gap-4">
-          <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
+          <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -253,7 +253,7 @@ function TrainingFields({
                 className="size-full object-cover"
               />
             ) : (
-              <div className="flex size-full items-center justify-center text-[#5f6573]">
+              <div className="flex size-full items-center justify-center text-muted-foreground">
                 <ImageOff className="size-5" />
               </div>
             )}
@@ -292,7 +292,7 @@ function TrainingFields({
                 Hapus Gambar
               </Button>
             )}
-            <p className="text-xs text-[#5f6573]">
+            <p className="text-xs text-muted-foreground">
               Rasio potret 4:5, maksimal 5MB.
             </p>
           </div>
@@ -345,7 +345,7 @@ function TrainingFields({
           required
         />
       </div>
-      <div className="rounded-lg border border-[#e6e9ef] bg-[#f8f9fb] p-3">
+      <div className="rounded-lg border border-border bg-surface-subtle p-3">
         <Switch
           switchId="training-registration-open"
           label="Pendaftaran dibuka"
@@ -370,7 +370,7 @@ function TrainingFields({
         onChange={(event) => setLocationUrl(event.target.value)}
       />
 
-      <div className="mt-2 flex justify-end gap-3 border-t border-[#e6e9ef] pt-4">
+      <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
         <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Batal
         </Button>

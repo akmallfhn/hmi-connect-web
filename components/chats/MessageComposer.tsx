@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
 import { supabase } from "@/lib/supabase";
+import { useTheme } from "@/hooks/use-theme";
 
 const MAX_TEXTAREA_HEIGHT = 120;
 const CHAT_IMAGE_TARGET_BYTES = 500 * 1024;
@@ -70,6 +71,7 @@ export default function MessageComposer({
   userId,
   onSend,
 }: MessageComposerProps) {
+  const { theme } = useTheme();
   const [text, setText] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -180,7 +182,7 @@ export default function MessageComposer({
 
   return (
     <div
-      className="shrink-0 border-t border-[#e6e9ef] bg-white px-3 py-3 lg:px-5"
+      className="shrink-0 border-t border-border bg-surface px-3 py-3 lg:px-5"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       {imagePreviewUrl && (
@@ -195,7 +197,7 @@ export default function MessageComposer({
             type="button"
             onClick={removeImage}
             aria-label="Hapus gambar"
-            className="absolute -right-2 -top-2 flex size-6 cursor-pointer items-center justify-center rounded-full bg-[#172033] text-white shadow"
+            className="absolute -right-2 -top-2 flex size-6 cursor-pointer items-center justify-center rounded-full bg-brand-ink text-on-dark shadow"
           >
             <X className="size-3.5" />
           </button>
@@ -208,19 +210,19 @@ export default function MessageComposer({
             type="button"
             onClick={() => setShowEmoji((prev) => !prev)}
             aria-label="Emoji"
-            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted"
           >
             <SmilePlus className="size-5" />
           </button>
           {showEmoji && (
-            <div className="absolute bottom-full left-0 z-20 mb-2 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white shadow-xl">
+            <div className="absolute bottom-full left-0 z-20 mb-2 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
               <EmojiPicker
                 open={showEmoji}
                 onEmojiClick={handleEmojiClick}
                 height={320}
                 width={300}
                 emojiStyle={EmojiStyle.NATIVE}
-                theme={Theme.LIGHT}
+                theme={theme === "dark" ? Theme.DARK : Theme.LIGHT}
                 searchDisabled
                 previewConfig={{ showPreview: false }}
               />
@@ -232,7 +234,7 @@ export default function MessageComposer({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           aria-label="Kirim gambar"
-          className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6573] transition hover:bg-[#f5f7fb]"
+          className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted"
         >
           <ImageIcon className="size-5" />
         </button>
@@ -244,7 +246,7 @@ export default function MessageComposer({
           className="hidden"
         />
 
-        <div className="flex flex-1 items-center rounded-3xl border border-[#dbe3ef] bg-[#f5f7fb] px-4 py-2">
+        <div className="flex flex-1 items-center rounded-3xl border border-border-strong bg-surface-muted px-4 py-2">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -252,7 +254,7 @@ export default function MessageComposer({
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder="Tulis pesan..."
-            className="block max-h-[120px] w-full resize-none bg-transparent text-sm leading-6 text-[#172033] outline-none placeholder:text-[#7b8190]"
+            className="block max-h-[120px] w-full resize-none bg-transparent text-sm leading-6 text-heading outline-none placeholder:text-subtle-foreground"
           />
         </div>
 
@@ -261,7 +263,7 @@ export default function MessageComposer({
           onClick={handleSend}
           disabled={!canSend}
           aria-label="Kirim"
-          className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white transition hover:bg-[#128488] active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary-action transition hover:bg-primary-hover active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Send className="size-4" />
         </button>

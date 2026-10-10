@@ -47,7 +47,7 @@ export default function AboutProfileModal({
       variant="bottomSheet"
       panelClassName="max-w-md"
     >
-      <div className="divide-y divide-[#e6e9ef] rounded-xl border border-[#e6e9ef]">
+      <div className="divide-y divide-divider rounded-xl border border-border">
         <Row
           label="Nama"
           value={nameValue}
@@ -72,8 +72,8 @@ function Row({
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-[#172033]">{label}</p>
-        <p className="mt-0.5 break-words text-sm text-[#5f6573]">{value}</p>
+        <p className="text-sm font-semibold text-heading">{label}</p>
+        <p className="mt-0.5 break-words text-sm text-muted-foreground">{value}</p>
       </div>
       {trailing}
     </div>

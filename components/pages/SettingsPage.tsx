@@ -15,11 +15,14 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
+  Moon,
   ShieldCheck,
+  Sun,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type ComponentType, type ReactNode } from "react";
+import { useTheme } from "@/hooks/use-theme";
 import PageMargin from "../common/PageMargin";
 import PasswordForm from "../forms/PasswordForm";
 import AboutProfileModal from "../modals/AboutProfileModal";
@@ -59,6 +62,7 @@ interface SettingsMenuItem {
   onClick?: () => void;
   icon: ComponentType<{ className?: string }>;
   external?: boolean;
+  showChevron?: boolean;
 }
 
 export default function SettingsPage({
@@ -78,6 +82,7 @@ export default function SettingsPage({
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const adminAccess = useHeaderAdminAccess();
+  const { theme, toggleTheme } = useTheme();
 
   const adminEntities = adminAccess
     ? adminAccess.grants
@@ -134,6 +139,13 @@ export default function SettingsPage({
       onClick: () => setIsPasswordOpen(true),
       icon: KeyRound,
     },
+    {
+      label: "Mode Gelap",
+      description: theme === "dark" ? "Aktif. Ketuk untuk mode terang." : "Nonaktif. Ketuk untuk mode gelap.",
+      onClick: toggleTheme,
+      icon: theme === "dark" ? Sun : Moon,
+      showChevron: false,
+    },
     // Super Admin manages no single entity, so its dashboard is a plain row, not a per-entity card.
     ...(adminAccess?.roleName === "Super Admin"
       ? [
@@ -160,7 +172,7 @@ export default function SettingsPage({
   }
 
   return (
-    <div className="min-h-screen bg-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
         fullName={fullName}
         avatar={avatar}
@@ -174,7 +186,7 @@ export default function SettingsPage({
       <PageMargin className="py-6">
         <div>
           <div className="hidden lg:mb-4 lg:block">
-            <h1 className="text-2xl font-medium font-stack-sans-headline text-[#172033]">
+            <h1 className="text-2xl font-medium font-stack-sans-headline text-heading">
               Pengaturan &amp; Admin
             </h1>
           </div>
@@ -193,7 +205,7 @@ export default function SettingsPage({
                         name={entity.name}
                         imageUrl={entity.imageUrl}
                       />
-                      <p className="min-w-0 truncate text-sm font-semibold text-[#172033]">
+                      <p className="min-w-0 truncate text-sm font-semibold text-heading">
                         {entity.name}
                       </p>
                     </>
@@ -201,20 +213,20 @@ export default function SettingsPage({
                 />
               ))}
 
-              <div className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white">
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface">
                 <button
                   type="button"
                   onClick={() => setIsLogoutOpen(true)}
                   className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition hover:bg-destructive-soft"
                 >
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive-soft text-destructive">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive-soft text-destructive-foreground">
                     <LogOut className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold text-destructive">
+                    <span className="block truncate text-[15px] font-semibold text-destructive-foreground">
                       Keluar
                     </span>
-                    <span className="block truncate text-[13px] text-[#5f6573]">
+                    <span className="block truncate text-[13px] text-muted-foreground">
                       Keluar dari akun ini di perangkat ini.
                     </span>
                   </span>
@@ -267,7 +279,7 @@ function MenuCard({
   if (items.length === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e6e9ef] bg-white">
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
       {header && (
         <div className="flex items-center gap-2.5 px-4 py-3">{header}</div>
       )}
@@ -275,7 +287,7 @@ function MenuCard({
         <MenuRow
           key={item.label}
           item={item}
-          className={index > 0 || header ? "border-t border-[#e6e9ef]" : ""}
+          className={index > 0 || header ? "border-t border-border" : ""}
         />
       ))}
     </div>
@@ -290,7 +302,7 @@ function MenuRow({
   className?: string;
 }) {
   const rowClasses = [
-    "flex items-center gap-3 px-4 py-3.5 transition hover:bg-[#f5f7fb]",
+    "flex items-center gap-3 px-4 py-3.5 transition hover:bg-surface-muted",
     className,
   ]
     .filter(Boolean)
@@ -298,18 +310,20 @@ function MenuRow({
 
   const body = (
     <>
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <item.icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold text-[#172033]">
+        <span className="block truncate text-[15px] font-semibold text-heading">
           {item.label}
         </span>
-        <span className="block truncate text-[13px] text-[#5f6573]">
+        <span className="block truncate text-[13px] text-muted-foreground">
           {item.description}
         </span>
       </span>
-      <ChevronRight className="size-4 shrink-0 text-[#7b8190]" />
+      {item.showChevron !== false && (
+        <ChevronRight className="size-4 shrink-0 text-subtle-foreground" />
+      )}
     </>
   );
 
@@ -355,7 +369,7 @@ function EntityBadge({
   imageUrl?: string | null;
 }) {
   return (
-    <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e6e9ef] bg-[#f5f7fb]">
+    <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted">
       {imageUrl ? (
         <Image
           src={imageUrl}

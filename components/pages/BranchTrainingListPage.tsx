@@ -112,7 +112,7 @@ export default function BranchTrainingListPage({
       </div>
 
       {trainings.length === 0 ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-[#e6e9ef] bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <EmptyState
             title={
               initialSearch
@@ -132,9 +132,9 @@ export default function BranchTrainingListPage({
             <Link
               key={training.id}
               href={`/branches/${branchId}/trainings/${training.id}`}
-              className="flex gap-4 rounded-xl border border-[#e6e9ef] bg-white p-5 transition hover:border-primary/50 hover:shadow-sm"
+              className="flex gap-4 rounded-xl border border-border bg-surface p-5 transition hover:border-primary/50 hover:shadow-sm"
             >
-              <div className="aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-[#f5f7fb]">
+              <div className="aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
                 {training.image_url ? (
                   <Image
                     src={training.image_url}
@@ -144,17 +144,17 @@ export default function BranchTrainingListPage({
                     className="size-full object-cover"
                   />
                 ) : (
-                  <div className="flex size-full items-center justify-center text-[#5f6573]">
+                  <div className="flex size-full items-center justify-center text-muted-foreground">
                     <ImageOff className="size-5" />
                   </div>
                 )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="min-w-0 flex flex-col gap-2">
-                  <p className="text-base font-semibold text-[#172033]">
+                  <p className="text-base font-semibold text-heading">
                     {training.name}
                   </p>
-                  <p className="text-sm text-[#5f6573]">
+                  <p className="text-sm text-muted-foreground">
                     HMI Cabang {training.organizer_name ?? "Cabang"}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -167,7 +167,7 @@ export default function BranchTrainingListPage({
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 text-sm text-[#5f6573]">
+                <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <CalendarDays className="size-4 shrink-0" />
                     {formatDateRange(training.start_date, training.end_date)}
@@ -186,7 +186,7 @@ export default function BranchTrainingListPage({
       {trainings.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
-          <p className="text-center text-sm text-[#5f6573]">
+          <p className="text-center text-sm text-muted-foreground">
             Menampilkan {(currentPage - 1) * pageSize + 1}-
             {(currentPage - 1) * pageSize + trainings.length} dari {totalData}{" "}
             batch

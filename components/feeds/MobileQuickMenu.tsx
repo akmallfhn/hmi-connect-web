@@ -13,7 +13,7 @@ const MENU_ITEMS = [
 
 export default function MobileQuickMenu() {
   return (
-    <div className="grid grid-cols-4 gap-2 border border-x-0 border-[#e6e9ef] bg-white px-4 py-4">
+    <div className="grid grid-cols-4 gap-2 border border-x-0 border-border bg-surface px-4 py-4">
       {MENU_ITEMS.map(({ label, href, icon: Icon }) => (
         <Link
           key={label}
@@ -21,7 +21,7 @@ export default function MobileQuickMenu() {
           className="flex flex-col items-center gap-1.5"
         >
           <Icon className="size-14" />
-          <span className="text-center text-sm font-medium text-[#5f6573]">
+          <span className="text-center text-sm font-medium text-muted-foreground">
             {label}
           </span>
         </Link>

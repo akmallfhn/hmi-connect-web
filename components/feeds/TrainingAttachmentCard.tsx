@@ -1,10 +1,11 @@
 "use client";
 
 import { IconBellCheck, IconBellPlus } from "@tabler/icons-react";
-import { CalendarDays, GraduationCap, Loader2, X } from "lucide-react";
+import { ArrowRight, CalendarDays, GraduationCap, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { FeedTrainingAttachment } from "@/apis/feeds";
+import Button from "@/components/buttons/Button";
 import Label from "@/components/common/Label";
 import LogoHmi from "@/components/svg/LogoHmi";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
@@ -37,7 +38,7 @@ interface TrainingAttachmentCardProps {
   removeDisabled?: boolean;
 }
 
-// A compact horizontal event card: its action stays beside, rather than over, the training details.
+// An image-led event preview with its actions in a separate footer.
 export default function TrainingAttachmentCard({
   attachment,
   isSignedIn,
@@ -57,7 +58,7 @@ export default function TrainingAttachmentCard({
 
   if (attachment.reference_is_deleted) {
     return (
-      <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f7fb] px-3 py-4 text-sm text-[#5f6573]">
+      <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-muted px-3 py-4 text-sm text-muted-foreground">
         <GraduationCap className="size-4 shrink-0" />
         Latihan kader yang dibagikan sudah dihapus
       </div>
@@ -71,116 +72,118 @@ export default function TrainingAttachmentCard({
     attachment.reference_organizer_entity_name?.trim() || "Penyelenggara HMI";
 
   return (
-    <div className="mt-3 flex overflow-hidden rounded-xl border border-[#dbe3ef] bg-primary-soft text-[#172033]">
+    <div className="mt-3 overflow-hidden rounded-2xl border border-border-strong bg-surface transition-colors focus-within:border-primary">
       <Link
         href={`/trainings/${attachment.reference_id}`}
-        className="group flex min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+        className="group flex min-w-0 items-stretch gap-3 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:gap-4 sm:p-4"
       >
-        <div className="flex shrink-0 items-center py-3 pl-3 sm:py-4 sm:pl-4">
-          <div className="relative aspect-[4/5] w-24 overflow-hidden rounded-lg bg-[#dfe4e8] sm:w-28">
-            {attachment.reference_image_url ? (
-              <Image
-                src={attachment.reference_image_url}
-                alt=""
-                fill
-                sizes="112px"
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="flex size-full items-center justify-center bg-[linear-gradient(145deg,#d7e4e4,#d9d4cf)] text-[#6f7986]">
-                <GraduationCap className="size-7" />
-              </div>
-            )}
-          </div>
+        <div className="relative aspect-[4/5] w-[88px] shrink-0 overflow-hidden rounded-xl bg-primary-soft sm:w-28">
+          {attachment.reference_image_url ? (
+            <Image
+              src={attachment.reference_image_url}
+              alt=""
+              fill
+              sizes="(max-width: 639px) 88px, 112px"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+              unoptimized
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center bg-linear-to-br from-primary-soft to-surface-muted text-primary-foreground">
+              <GraduationCap className="size-8" />
+            </div>
+          )}
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-3 py-3 sm:px-4">
-          <div className="hidden lg:block">
-            <Label variant="orange" size="sm">
-              {label}
-            </Label>
-          </div>
-          <p className="line-clamp-2 font-stack-sans-headline text-sm font-medium leading-5 text-[#172033] sm:text-base">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-2 py-0.5">
+          <Label variant="orange" size="sm">
+            {label}
+          </Label>
+          <p className="line-clamp-2 font-stack-sans-headline text-[15px] font-medium leading-5 text-heading sm:text-base sm:leading-6">
             {attachment.reference_title ?? "Latihan Kader"}
           </p>
 
-          <div className="flex min-w-0 items-center gap-1.5 text-xs text-[#5f6573] lg:text-[13px]">
-            <span className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[#d9dde3]">
-              {attachment.reference_organizer_entity_image_url ? (
-                <Image
-                  src={attachment.reference_organizer_entity_image_url}
-                  alt=""
-                  fill
-                  sizes="20px"
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <LogoHmi className="h-3.5 w-auto" />
-              )}
-            </span>
-            <p className="truncate line-clamp-1">{organizerName}</p>
+          <div className="mt-auto flex w-full min-w-0 flex-col gap-1.5">
+            {mobileSchedule && (
+              <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-secondary-foreground sm:text-[13px] lg:hidden">
+                <CalendarDays className="size-3.5 shrink-0" />
+                <span className="line-clamp-2">{mobileSchedule}</span>
+              </span>
+            )}
+            {desktopSchedule && (
+              <span className="hidden min-w-0 items-center gap-1.5 text-[13px] font-medium text-secondary-foreground lg:flex">
+                <CalendarDays className="size-3.5 shrink-0" />
+                <span className="line-clamp-2">{desktopSchedule}</span>
+              </span>
+            )}
+            <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground sm:text-[13px]">
+              <span className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft ring-1 ring-border">
+                {attachment.reference_organizer_entity_image_url ? (
+                  <Image
+                    src={attachment.reference_organizer_entity_image_url}
+                    alt=""
+                    fill
+                    sizes="20px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <LogoHmi className="h-3.5 w-auto" />
+                )}
+              </span>
+              <span className="truncate">{organizerName}</span>
+            </div>
           </div>
-
-          {mobileSchedule && (
-            <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-[#5f6573] lg:hidden">
-              <CalendarDays className="size-3.5 shrink-0 text-secondary" />
-              {mobileSchedule}
-            </span>
-          )}
-          {desktopSchedule && (
-            <span className="hidden min-w-0 items-center gap-1.5 truncate text-[13px] text-[#5f6573] lg:flex">
-              <CalendarDays className="size-3.5 shrink-0 text-secondary" />
-              {desktopSchedule}
-            </span>
-          )}
         </div>
       </Link>
 
-      {(showReminder || onRemove) && (
-        <div className="flex shrink-0 items-center gap-1 px-3 sm:px-4">
-          {showReminder && (
-            <button
-              type="button"
-              onClick={toggleReminder}
-              disabled={savingReminder}
-              aria-label={
-                reminded
-                  ? `Batalkan pengingat ${attachment.reference_title ?? "training"}`
-                  : `Ingatkan saya tentang ${attachment.reference_title ?? "training"}`
-              }
-              aria-pressed={reminded}
-              title={reminded ? "Batalkan pengingat" : "Ingatkan saya"}
-              className={`flex size-9 cursor-pointer items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60 ${
-                reminded
-                  ? "border border-secondary/20 bg-secondary-soft text-secondary"
-                  : "bg-secondary text-white hover:bg-primary-soft hover:text-primary"
-              }`}
-            >
-              {savingReminder ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : reminded ? (
-                <IconBellCheck className="size-4" stroke={2} />
-              ) : (
-                <IconBellPlus className="size-4" stroke={2} />
-              )}
-            </button>
-          )}
-          {onRemove && (
-            <button
-              type="button"
-              onClick={onRemove}
-              disabled={removeDisabled}
-              aria-label="Hapus training"
-              title="Hapus training"
-              className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-white text-[#5f6573] transition hover:bg-destructive-soft hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
-      )}
+      <div className="flex items-center justify-between gap-2 border-t border-divider bg-surface-subtle px-3 py-2.5 sm:px-4">
+        <Link
+          href={`/trainings/${attachment.reference_id}`}
+          className="inline-flex min-h-9 items-center gap-1.5 text-xs font-semibold text-primary-foreground focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
+        >
+          Lihat detail
+          <ArrowRight className="size-3.5" />
+        </Link>
+        {(showReminder || onRemove) && (
+          <div className="flex shrink-0 items-center gap-2">
+            {showReminder && (
+              <Button
+                variant="primary"
+                onClick={toggleReminder}
+                disabled={savingReminder}
+                aria-label={
+                  reminded
+                    ? `Batalkan pengingat ${attachment.reference_title ?? "training"}`
+                    : `Ingatkan saya tentang ${attachment.reference_title ?? "training"}`
+                }
+                aria-pressed={reminded}
+                title={reminded ? "Batalkan pengingat" : "Ingatkan saya"}
+              >
+                {savingReminder ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : reminded ? (
+                  <IconBellCheck className="size-4" stroke={2} />
+                ) : (
+                  <IconBellPlus className="size-4" stroke={2} />
+                )}
+                <span>{reminded ? "Pengingat aktif" : "Ingatkan saya"}</span>
+              </Button>
+            )}
+            {onRemove && (
+              <button
+                type="button"
+                onClick={onRemove}
+                disabled={removeDisabled}
+                aria-label="Hapus training"
+                title="Hapus training"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-border-strong bg-surface text-muted-foreground transition hover:bg-destructive-soft hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
