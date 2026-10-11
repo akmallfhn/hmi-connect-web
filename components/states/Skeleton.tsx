@@ -1,6 +1,4 @@
-// Shared skeleton palette: everything reads as "loading" gray, never white — the surface tone
-// (#eef1f5) sits one shade darker than the page background (#f5f7fb) so cards stay visible
-// without needing a white fill, and the block tone (#e6e9ef) is used for every pulsing shape.
+// Semantic surface/border tones keep the pulsing shapes visible on both the light and dark canvas.
 // Header/BottomNav render the real components in every loading.tsx, since neither fetches data
 // itself (props come from the page, which is what's actually loading) — pass Header the `loading`
 // prop there so it shows a neutral placeholder instead of assuming a logged-out user.

@@ -181,7 +181,7 @@ import {
   listNotifications as listNotificationsApi,
   markNotificationsAsRead as markNotificationsAsReadApi,
 } from "@/apis/notifications";
-import { searchResults as searchResultsApi, type SearchCategory } from "@/apis/search";
+import { searchOverview as searchOverviewApi, searchResults as searchResultsApi, type SearchCategory } from "@/apis/search";
 import {
   deleteChatMessage as deleteChatMessageApi,
   deleteConversation as deleteConversationApi,
@@ -727,6 +727,10 @@ export async function fetchSearchResults(
   page: number
 ) {
   return searchResultsApi(category, keyword, { page });
+}
+
+export async function fetchSearchOverview(category: SearchCategory, keyword: string) {
+  return searchOverviewApi(category, keyword);
 }
 
 export async function listReactors(

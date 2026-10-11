@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import SearchPage from "@/components/pages/SearchPage";
 import { getSession } from "@/apis/session";
-import { SEARCH_CATEGORIES, searchResults, type SearchCategory } from "@/apis/search";
+import { SEARCH_CATEGORIES, searchOverview, type SearchCategory } from "@/apis/search";
 import { Suspense } from "react";
 import SuggestedConnectionsCard from "@/components/feeds/SuggestedConnectionsCard";
 
@@ -25,7 +25,7 @@ export default async function Search({ searchParams }: SearchRouteProps) {
     : "user";
 
   const { user } = await getSession();
-  const results = await searchResults(category, keyword);
+  const { results, counts } = await searchOverview(category, keyword);
 
   return (
     <SearchPage
@@ -41,6 +41,7 @@ export default async function Search({ searchParams }: SearchRouteProps) {
       initialQuery={keyword}
       activeCategory={category}
       initialResults={results}
+      initialCounts={counts}
       aside={
         <Suspense fallback={null}>
           <SuggestedConnectionsCard />

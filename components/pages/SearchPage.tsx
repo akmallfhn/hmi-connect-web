@@ -2,17 +2,26 @@
 
 import { IconSearch } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import type { ArticleListEntry } from "@/apis/articles";
 import type {
   PagedSearchResult,
   SearchCategory,
+  SearchCounts,
   SearchEntityResult,
   SearchFeedResult,
   SearchPersonResult,
   SearchResultItem,
 } from "@/apis/search";
-import { fetchSearchResults } from "@/lib/actions";
+import { fetchSearchOverview, fetchSearchResults } from "@/lib/actions";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import FeedItemCard from "../feeds/FeedItemCard";
@@ -22,6 +31,7 @@ import Header from "../navigations/Header";
 import SearchArticleRow from "../search/SearchArticleRow";
 import SearchEntityRow from "../search/SearchEntityRow";
 import SearchPersonRow from "../search/SearchPersonRow";
+import SearchResultsSkeleton from "../search/SearchResultsSkeleton";
 
 interface ViewerProps {
   fullName?: string;
@@ -37,6 +47,7 @@ interface SearchPageProps {
   initialQuery: string;
   activeCategory: SearchCategory;
   initialResults: PagedSearchResult<SearchResultItem>;
+  initialCounts: SearchCounts;
   aside: ReactNode;
 }
 
@@ -60,6 +71,7 @@ export default function SearchPage({
   initialQuery,
   activeCategory,
   initialResults,
+  initialCounts,
   aside,
 }: SearchPageProps) {
   const router = useRouter();
@@ -67,30 +79,36 @@ export default function SearchPage({
   const [keyword, setKeyword] = useState(initialQuery);
   const [searchedQuery, setSearchedQuery] = useState(initialQuery);
   const [results, setResults] = useState(initialResults);
+  const [counts, setCounts] = useState(initialCounts);
   const [searchError, setSearchError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRequestIdRef = useRef(0);
 
-  const runSearch = useCallback(async (query: string, requestId: number) => {
-    window.history.replaceState(null, "", searchHref(query, activeCategory));
-    try {
-      const next = await fetchSearchResults(activeCategory, query, 1);
-      if (requestId !== searchRequestIdRef.current) return;
-      setResults(next);
-      setSearchedQuery(query);
-      setSearchError(false);
-      setLoadError(false);
-      setLoadingMore(false);
-    } catch {
-      if (requestId !== searchRequestIdRef.current) return;
-      setResults({ list: [], totalData: 0, currentPage: 1, hasMore: false });
-      setSearchedQuery(query);
-      setSearchError(true);
-      setLoadingMore(false);
-    }
-  }, [activeCategory]);
+  const runSearch = useCallback(
+    async (query: string, requestId: number) => {
+      window.history.replaceState(null, "", searchHref(query, activeCategory));
+      try {
+        const next = await fetchSearchOverview(activeCategory, query);
+        if (requestId !== searchRequestIdRef.current) return;
+        setResults(next.results);
+        setCounts(next.counts);
+        setSearchedQuery(query);
+        setSearchError(false);
+        setLoadError(false);
+        setLoadingMore(false);
+      } catch {
+        if (requestId !== searchRequestIdRef.current) return;
+        setResults({ list: [], totalData: 0, currentPage: 1, hasMore: false });
+        setCounts({ user: 0, feed: 0, entity: 0, article: 0 });
+        setSearchedQuery(query);
+        setSearchError(true);
+        setLoadingMore(false);
+      }
+    },
+    [activeCategory]
+  );
 
   useEffect(() => {
     const query = keyword.trim();
@@ -143,6 +161,10 @@ export default function SearchPage({
         (item) => (item as SearchFeedResult).feed?.id !== feedId
       ),
       totalData: Math.max(0, previous.totalData - 1),
+    }));
+    setCounts((previous) => ({
+      ...previous,
+      feed: Math.max(0, previous.feed - 1),
     }));
   }
 
@@ -253,7 +275,12 @@ export default function SearchPage({
                       : "border-transparent font-medium text-subtle-foreground hover:text-heading"
                   }`}
                 >
-                  {category.label}
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <span>{category.label}</span>
+                    <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-badge-primary text-[10px] font-semibold leading-none text-badge-foreground">
+                      {Math.min(counts[category.value], 99)}
+                    </span>
+                  </span>
                 </button>
               );
             })}
@@ -264,11 +291,15 @@ export default function SearchPage({
             className="pt-5"
           >
             {keyword.trim() !== searchedQuery ? (
-              <p role="status" className="py-16 text-center text-sm text-subtle-foreground">
-                Mencari...
-              </p>
+              <div role="status">
+                <span className="sr-only">Mencari...</span>
+                <SearchResultsSkeleton category={activeCategory} />
+              </div>
             ) : searchError ? (
-              <p role="alert" className="py-16 text-center text-sm text-destructive-foreground">
+              <p
+                role="alert"
+                className="py-16 text-center text-sm text-destructive-foreground"
+              >
                 Gagal mencari. Coba ubah kata kunci atau tekan Enter.
               </p>
             ) : !searchedQuery ? (
@@ -294,7 +325,10 @@ export default function SearchPage({
                       {loadingMore ? "Memuat..." : "Muat lebih banyak"}
                     </button>
                     {loadError && (
-                      <p role="alert" className="mt-2 text-sm text-destructive-foreground">
+                      <p
+                        role="alert"
+                        className="mt-2 text-sm text-destructive-foreground"
+                      >
                         Gagal memuat hasil. Coba lagi.
                       </p>
                     )}

@@ -22,7 +22,10 @@ fix the rule, not just the code.
   `app/globals.css` owns paired semantic tokens for surfaces, text, borders,
   accents and soft status colors, and registers them
   through `@theme inline` with the Tailwind v4 class variant. Use those tokens
-  for new UI colors and keep text/background pairs at WCAG AA contrast; run
+  for new UI colors. The dark canvas, surfaces, hover fills, and borders use
+  neutral near-black and gray; tosca stays an accent rather than tinting the
+  main dark surfaces. Dark `--primary-soft` is neutral for the same reason.
+  Keep text/background pairs at WCAG AA contrast; run
   `python scripts/check-theme-contrast.py` after changing the palette. The
   original inventory and impacted-file list are in `docs/dark-mode-audit.md`.
   Feed and comment/reply body text use `--content-foreground`, which matches
@@ -888,7 +891,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   set and its two-tone `outline`/`bulk` variants; **those six files still exist but have no callers
   left** — delete them or bring them back deliberately, don't assume they're live. (The four
   colorful `MobileQuickMenu` illustrations in the same folder — `NewsIcon`/`EKTAIcon`/`EventIcon`/
-  `AlQuranIcon` — are unaffected and still in use.) Pesan matches both `/chats` and any
+  `AlQuranIcon` — remain in use.) Pesan matches both `/chats` and any
   `/chats/[conversation_id]`. Profil always renders the generic glyph, never the caller's actual
   avatar photo — `BottomNav` doesn't even accept `avatar`/`fullName` props (only `username`,
   for the active-route check and the `/profile/[username]` href, and `userId`, which now
@@ -1135,8 +1138,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   selects People. The route fetches the active category's first page server-side. The
   search field debounces input by 400ms, fetches new first pages through the shared Server
   Action, and replaces the URL without remounting the input; Enter searches immediately.
+  Each tab shows a 20px primary badge with white text, capped at 99, beside its label. The active tab uses
+  the list response's metapaging.count (falling back to total_data); the other three
+  endpoints are queried with page_size 1 in parallel for their counts. Blank queries
+  show zero counts. The debounced action refreshes both results and counts together.
   The same action loads subsequent pages. Feed renders each hydrated result through
-  FeedItemCard, including repost attribution. Search uses a white page, one plain search
+  FeedItemCard, including repost attribution. Search uses the surface background, one plain search
   fields/Input control without a trailing button, underlined tabs, and a two-column desktop layout with SuggestedConnectionsCard
   ("Mungkin Kamu Kenal") on the right. All tabs use manual pagination. The search form
   keeps the URL in sync; the route keys SearchPage by category and keyword so navigation and
@@ -1149,6 +1156,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   Official rows use the same rounded hover area and name typography as People; they
   show no entity-type label above the name, and legal_name is 13px on mobile or 14px
   on desktop. Their avatar uses FeedAuthorAvatar so a missing image falls back to LogoHmi.
+  Article rows omit the category label, use 13px author/date text on mobile and 14px
+  on desktop, and show descriptions at 14px on desktop. Their padded rounded hover
+  area matches People and Official.
+  `search/loading.tsx` mirrors the search field, tabs, People rows, desktop grid, and
+  SuggestedConnectionsCard aside. Debounced searches render category-specific row
+  skeletons from `SearchResultsSkeleton` while the next result set loads.
   The searchPeople wrapper also powers user pickers
   on the main and admin subdomains through search/user. ExploreSearchBar in the home
   sidebar is another entry point into this route.
@@ -1425,16 +1438,12 @@ lg:block` — the overlapping card reads better without one competing with the g
   `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (an unscoped
   `ReactNode`, wrapped in `lg:hidden` by `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
   above the timeline. Its four entries use `components/icons/{NewsIcon,EKTAIcon,EventIcon,
-AlQuranIcon}.tsx` — colorful pre-rendered illustrations (unlike `HomeIcon`/`SearchIcon`/
-  `NotificationIcon`/`ProfileIcon`, these have no `outline`/`bulk` variant since they're not
-  nav-bar active-state icons, just static menu glyphs) converted 1:1 from designer-provided
-  SVGs; `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset as a module-level
-  `PATTERN_DATA_URI` constant rather than a `public/` file, since nothing else needed it
-  optimized or reused. Artikel (`/articles`), E-KTA (`/membership`), Latihan Kader
-  (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage` below) all route through `Link`. The
-  first tile keeps its original `NewsIcon` artwork even though it now opens `/articles` rather than
-  `/news` — that glyph reads as "something to read" either way, and the hand-converted set has no
-  article illustration of its own.
+AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dark mode adjusts
+  only the `--icon-*` palette in `app/globals.css`; its matte charcoal icon canvas keeps the artwork legible against
+  near-black surfaces. `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset
+  as a module-level `PATTERN_DATA_URI` constant. Artikel (`/articles`), E-KTA
+  (`/membership`), Latihan Kader (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage`
+  below) all route through `Link`.
 - `hooks/useInteractionGuard.ts` — the one gate every feed interaction runs through, shared by
   `FeedItemCard` and `CommentItem` (it replaced a `requireVerified` copy in each, so the rule lives
   in one place). `verification_status === "verified"` passes; no session pushes `/auth/login`; an
