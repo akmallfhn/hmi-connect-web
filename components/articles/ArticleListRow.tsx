@@ -77,7 +77,7 @@ export default function ArticleListRow({
     const draft = articleComposeDraft(article);
     window.sessionStorage.setItem(
       COMPOSE_INTENT_ARTICLE_KEY,
-      JSON.stringify(draft),
+      JSON.stringify(draft)
     );
     window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
     window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
@@ -103,9 +103,15 @@ export default function ArticleListRow({
             {status && <Label variant={status.variant}>{status.text}</Label>}
           </div>
 
-          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] lg:text-lg font-medium leading-snug text-heading hover:text-secondary-foreground sm:text-xl">
+          <h2 className="font-stack-sans-headline mt-2 line-clamp-2 text-[15px] sm:text-[17px] font-medium leading-snug text-heading hover:text-secondary-foreground">
             {article.title}
           </h2>
+
+          {article.description?.trim() && (
+            <p className="mt-1 line-clamp-1 text-[13px] leading-5 text-muted-foreground lg:text-sm">
+              {article.description}
+            </p>
+          )}
 
           <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-disabled-foreground lg:text-sm">
             <span>{formatShortDate(article.published_at)}</span>

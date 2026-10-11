@@ -1853,13 +1853,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `min-w-0` and takes its width from `PageMargin` alone, like `/notifications`, `/settings`, and
   `/search` — a page-local `max-w` here made this one column narrower than every sibling page. Each row is
   `components/articles/ArticleListRow.tsx` — a 20px author `Avatar` and name, the title in
-  `font-stack-sans-headline` (`line-clamp-2`), then a date · category · keyword meta line — the
+  `font-stack-sans-headline` (`line-clamp-2`), then its optional one-line description (13px
+  mobile, 14px desktop), then a date · category · keyword meta line — the
   category rides the shared `Label` primitive at `variant="gray" size="sm"` rather than a
   hand-rolled pill — with a square thumbnail on the right, using Tabler `IconPhotoOff` on a
   light CSS background when the image URL is empty. `articles/list` now carries the optional
   article `description`; `ArticleListEntry.description` remains optional because the sibling
-  `articles/list-filter` contract does not advertise it. The row deliberately keeps its compact
-  keyword meta rather than adding a deck, while reposts from both the list and detail page go through
+  `articles/list-filter` contract does not advertise it, so the row hides the description line when
+  it is absent or blank. Reposts from both the list and detail page go through
   `components/articles/article-compose-draft.ts` so their feed attachment previews receive the same
   title, description, cover, category, and author fields without fetching detail per row.
   Four signed-in tabs — Semua, News, Mengikuti, Tulisan Saya — use the shared `Tabs` component (one
