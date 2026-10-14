@@ -5,7 +5,6 @@ import {
   ActivityListSkeleton,
   CardSkeleton,
   ProfileHeaderSkeleton,
-  SectionCardSkeleton,
 } from "@/components/states/Skeleton";
 
 export default function ProfileLoading() {
@@ -17,11 +16,15 @@ export default function ProfileLoading() {
         <div className="grid grid-cols-1 gap-1.5 lg:items-start lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
           <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
             <ProfileHeaderSkeleton />
-            <SectionCardSkeleton titleWidth="w-16" rows={1} />
-            <SectionCardSkeleton titleWidth="w-40" rows={2} />
-            <SectionCardSkeleton titleWidth="w-24" rows={2} />
-            <SectionCardSkeleton titleWidth="w-28" rows={2} />
-            <ActivityListSkeleton />
+            <div className="px-4 lg:px-0">
+              <div className="grid h-10 w-full grid-cols-2 gap-1 rounded-lg border border-border bg-surface-subtle p-1 sm:w-52">
+                <div className="rounded-lg bg-border" />
+                <div className="rounded-lg bg-surface-muted" />
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <ActivityListSkeleton />
+            </div>
           </div>
 
           <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">

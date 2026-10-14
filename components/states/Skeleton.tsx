@@ -192,18 +192,20 @@ export function ArticleRowSkeleton() {
 
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="overflow-hidden border border-x-0 border-border bg-surface-muted lg:rounded-2xl lg:border-x">
-      <div className="h-28 bg-border sm:h-40" />
+    <div className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
+      <div className="relative h-28 overflow-hidden bg-primary-soft sm:h-36">
+        <div className="absolute -right-10 -top-24 size-72 rounded-full border-[32px] border-primary-light opacity-30 sm:right-8" />
+      </div>
       <div className="px-5 pb-5 lg:px-6 lg:pb-6">
         <div className="flex items-start justify-between">
-          <Circle className="-mt-14 size-28 lg:-mt-16" />
+          <Circle className="-mt-14 size-28 border-4 border-surface lg:-mt-16" />
           <Bar className="mt-3 h-9 w-28 rounded-lg" />
         </div>
         <div className="mt-3 flex flex-col gap-2">
-          <Bar className="h-5 w-40" />
+          <Bar className="h-6 w-44" />
           <Bar className="h-3 w-24" />
-          <Bar className="mt-1 h-3.5 w-56" />
-          <Bar className="h-3 w-48" />
+          <Bar className="mt-1 h-3.5 w-64 max-w-full" />
+          <Bar className="h-3.5 w-52 max-w-full" />
         </div>
         <div className="mt-3 flex items-center gap-4">
           <Bar className="h-3.5 w-20" />
@@ -216,24 +218,35 @@ export function ProfileHeaderSkeleton() {
 
 export function ActivityRowSkeleton() {
   return (
-    <div className="flex flex-col gap-2 border-t border-border pt-4 first:border-t-0 first:pt-0">
-      <Bar className="h-2.5 w-32" />
-      <Bar className="h-3 w-full" />
-      <Bar className="h-3 w-11/12" />
-      <Bar className="h-3 w-2/3" />
-    </div>
+    <article className="border border-x-0 border-border bg-surface p-5 sm:p-6 lg:rounded-2xl lg:border-x">
+      <div className="flex items-center gap-3">
+        <Circle className="size-[42px]" />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <Bar className="h-3.5 w-52 max-w-full" />
+          <Bar className="h-2.5 w-16" />
+        </div>
+        <Circle className="size-9" />
+      </div>
+      <div className="mt-5 flex flex-col gap-2">
+        <Bar className="h-3 w-full" />
+        <Bar className="h-3 w-11/12" />
+        <Bar className="h-3 w-2/3" />
+      </div>
+      <div className="mt-5 flex items-center gap-5 border-t border-border pt-4">
+        <Bar className="h-3.5 w-10" />
+        <Bar className="h-3.5 w-10" />
+        <Bar className="ml-auto h-3.5 w-24" />
+      </div>
+    </article>
   );
 }
 
 export function ActivityListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="border border-x-0 border-border bg-surface-muted p-5 lg:rounded-2xl lg:border-x">
-      <Bar className="h-3.5 w-24" />
-      <div className="mt-3 flex flex-col gap-4">
-        {Array.from({ length: rows }).map((_, index) => (
-          <ActivityRowSkeleton key={index} />
-        ))}
-      </div>
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: rows }).map((_, index) => (
+        <ActivityRowSkeleton key={index} />
+      ))}
     </div>
   );
 }

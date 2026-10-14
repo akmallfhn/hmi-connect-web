@@ -20,7 +20,7 @@ import { resolveActingEntity } from "@/lib/acting-entity";
 
 interface ProfileRouteProps {
   params: Promise<{ username: string }>;
-  searchParams?: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<{ as?: string | string[]; tab?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -70,7 +70,8 @@ export default async function Profile({
   searchParams,
 }: ProfileRouteProps) {
   const { username } = await params;
-  const { as } = (await searchParams) ?? {};
+  const { as, tab } = (await searchParams) ?? {};
+  const activeTab = tab === "profile" ? "profile" : "activities";
   const { sessionToken, user: viewer } = await getSession();
   const [profile, actingEntity] = await Promise.all([
     getUserByUsername(username, sessionToken),
@@ -92,7 +93,7 @@ export default async function Profile({
     { list: honorAwards },
     { list: publications },
     { list: socialMediaAccounts },
-    { list: activities },
+    { list: activities, hasMore: activitiesHasMore },
     institutions,
     socialMediaPlatforms,
     viewerProfile,
@@ -105,7 +106,9 @@ export default async function Profile({
     listHonorAwards(username),
     listPublications(username),
     listSocialMediaAccounts(profile.id),
-    listUserActivity(username, { pageSize: 3 }),
+    activeTab === "activities"
+      ? listUserActivity(username, { page: 1, pageSize: 20 })
+      : Promise.resolve({ list: [], hasMore: false }),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
     isOwnProfile
       ? getSocialMediaPlatforms({ page: 1, pageSize: 20 })
@@ -147,6 +150,7 @@ export default async function Profile({
         publications,
         honorAwards,
         activities,
+        activitiesHasMore,
         userId: profile.id,
         username,
       }}
@@ -165,6 +169,7 @@ export default async function Profile({
       profileCompletion={
         profileCompletion?.is_completed ? null : profileCompletion
       }
+      activeTab={activeTab}
     />
   );
 }

@@ -13,6 +13,9 @@ interface ActivityInfiniteListProps {
     hasMore: boolean;
   }>;
   emptyMessage: string;
+  itemVariant?: "flat" | "card";
+  owner?: { name: string; avatar?: string };
+  isSignedIn?: boolean;
 }
 
 export default function ActivityInfiniteList({
@@ -20,6 +23,9 @@ export default function ActivityInfiniteList({
   initialHasMore,
   loadMore,
   emptyMessage,
+  itemVariant = "flat",
+  owner,
+  isSignedIn = false,
 }: ActivityInfiniteListProps) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -63,7 +69,7 @@ export default function ActivityInfiniteList({
   }, [hasMore, loadNextPage]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={itemVariant === "card" ? "flex flex-col gap-3" : "flex flex-col gap-4"}>
       {items.length === 0 && (
         <p className="rounded-xl border border-dashed border-border-strong px-4 py-5 text-center text-sm text-muted-foreground">
           {emptyMessage}
@@ -73,9 +79,18 @@ export default function ActivityInfiniteList({
       {items.map((entry, index) => (
         <div
           key={`${entry.type}-${entry.feed.id}-${entry.comment?.id ?? index}`}
-          className="border-t border-border pt-4 first:border-t-0 first:pt-0"
+          className={
+            itemVariant === "card"
+              ? ""
+              : "border-t border-border pt-4 first:border-t-0 first:pt-0"
+          }
         >
-          <ActivityEntryCard entry={entry} />
+          <ActivityEntryCard
+            entry={entry}
+            variant={itemVariant}
+            owner={owner}
+            isSignedIn={isSignedIn}
+          />
         </div>
       ))}
 

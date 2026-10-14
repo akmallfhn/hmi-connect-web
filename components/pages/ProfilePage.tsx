@@ -19,12 +19,13 @@ import ActingAwareBottomNav from "../official/ActingAwareBottomNav";
 import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
-import ActivityCard from "../profile/ActivityCard";
 import EducationCard from "../profile/EducationCard";
 import HonorAwardCard from "../profile/HonorAwardCard";
 import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
+import ProfileActivityTimeline from "../profile/ProfileActivityTimeline";
 import ProfileCompletionCard from "../profile/ProfileCompletionCard";
 import ProfileHeader from "../profile/ProfileHeader";
+import ProfileTabs from "../profile/ProfileTabs";
 import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
 import WorkExperienceCard from "../profile/WorkExperienceCard";
@@ -41,6 +42,7 @@ interface ViewerProps {
 }
 
 interface ProfileProps extends ViewerProps {
+  username: string;
   headline?: string;
   phoneNumber?: string;
   bio?: string;
@@ -62,6 +64,7 @@ interface ProfileProps extends ViewerProps {
   publications: PublicationEntry[];
   honorAwards: HonorAwardEntry[];
   activities: ActivityEntry[];
+  activitiesHasMore: boolean;
 }
 
 interface ProfilePageProps {
@@ -74,6 +77,7 @@ interface ProfilePageProps {
   socialMediaPlatforms: SocialMediaPlatform[];
   // Null unless this is the viewer's own, verified, still-incomplete profile.
   profileCompletion: ProfileCompletion | null;
+  activeTab: "activities" | "profile";
 }
 
 export default function ProfilePage({
@@ -84,6 +88,7 @@ export default function ProfilePage({
   institutions,
   socialMediaPlatforms,
   profileCompletion,
+  activeTab,
 }: ProfilePageProps) {
   const completionForms = {
     userId: profile.userId,
@@ -100,6 +105,15 @@ export default function ProfilePage({
     organizationExperiences: profile.organizationExperiences,
     workExperiences: profile.workExperiences,
   };
+  const hasProfileDetails = Boolean(
+    profile.bio ||
+      profile.workExperiences.length ||
+      profile.organizationExperiences.length ||
+      profile.educationHistories.length ||
+      profile.trainingHistories.length ||
+      profile.publications.length ||
+      profile.honorAwards.length,
+  );
 
   return (
     <ActingEntityProvider entity={actingEntity ?? null}>
@@ -149,46 +163,70 @@ export default function ProfilePage({
                   />
                 </div>
               )}
-              <AboutCard bio={profile.bio} />
-              <WorkExperienceCard
-                userId={profile.userId}
-                entries={profile.workExperiences}
-                isOwnProfile={isOwnProfile}
-              />
-              <OrganizationExperienceCard
-                userId={profile.userId}
-                entries={profile.organizationExperiences}
-                isOwnProfile={isOwnProfile}
-              />
-              <EducationCard
-                userId={profile.userId}
-                entries={profile.educationHistories}
-                institutions={institutions}
-                isOwnProfile={isOwnProfile}
-              />
-              <TrainingCard
-                userId={profile.userId}
-                entries={profile.trainingHistories}
-                isOwnProfile={isOwnProfile}
-              />
-              <PublicationCard
-                userId={profile.userId}
-                entries={profile.publications}
-                isOwnProfile={isOwnProfile}
-              />
-              <HonorAwardCard
-                userId={profile.userId}
-                entries={profile.honorAwards}
-                isOwnProfile={isOwnProfile}
-              />
-              <ActivityCard
-                entries={profile.activities}
-                seeAllHref={
-                  profile.username
-                    ? `/profile/${profile.username}/activities`
-                    : undefined
-                }
-              />
+              <div>
+                <ProfileTabs
+                  username={profile.username}
+                  activeTab={activeTab}
+                />
+                {activeTab === "activities" && (
+                  <section
+                    aria-label="Activities"
+                    className="mt-4"
+                  >
+                    <ProfileActivityTimeline
+                      username={profile.username}
+                      owner={{
+                        name: profile.fullName ?? "Kader",
+                        avatar: profile.avatar,
+                      }}
+                      initialItems={profile.activities}
+                      initialHasMore={profile.activitiesHasMore}
+                      isSignedIn={Boolean(viewer.userId)}
+                    />
+                  </section>
+                )}
+              </div>
+              {activeTab === "profile" && (
+                <>
+                  {!isOwnProfile && !hasProfileDetails && (
+                    <p className="border border-x-0 border-border bg-surface p-6 text-center text-sm text-muted-foreground lg:rounded-2xl lg:border-x">
+                      Belum ada detail profil.
+                    </p>
+                  )}
+                  <AboutCard bio={profile.bio} />
+                  <WorkExperienceCard
+                    userId={profile.userId}
+                    entries={profile.workExperiences}
+                    isOwnProfile={isOwnProfile}
+                  />
+                  <OrganizationExperienceCard
+                    userId={profile.userId}
+                    entries={profile.organizationExperiences}
+                    isOwnProfile={isOwnProfile}
+                  />
+                  <EducationCard
+                    userId={profile.userId}
+                    entries={profile.educationHistories}
+                    institutions={institutions}
+                    isOwnProfile={isOwnProfile}
+                  />
+                  <TrainingCard
+                    userId={profile.userId}
+                    entries={profile.trainingHistories}
+                    isOwnProfile={isOwnProfile}
+                  />
+                  <PublicationCard
+                    userId={profile.userId}
+                    entries={profile.publications}
+                    isOwnProfile={isOwnProfile}
+                  />
+                  <HonorAwardCard
+                    userId={profile.userId}
+                    entries={profile.honorAwards}
+                    isOwnProfile={isOwnProfile}
+                  />
+                </>
+              )}
             </div>
 
             <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">

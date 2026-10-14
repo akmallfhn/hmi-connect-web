@@ -28,7 +28,7 @@ export default function Tabs<Value extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex gap-1 overflow-x-auto rounded-full border border-border bg-surface-subtle p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`flex gap-1 overflow-x-auto rounded-lg border border-border bg-surface-subtle p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
     >
       {items.map((item) => {
         const active = item.value === activeValue;
@@ -36,16 +36,22 @@ export default function Tabs<Value extends string>({
           <>
             {item.label}
             {item.description && (
-              <span className={active ? "text-on-dark/65" : "text-subtle-foreground"}>
+              <span
+                className={
+                  active
+                    ? "text-on-primary-action/70"
+                    : "text-subtle-foreground"
+                }
+              >
                 {" · "}
                 {item.description}
               </span>
             )}
           </>
         );
-        const tabClassName = `min-w-max flex-1 cursor-pointer whitespace-nowrap rounded-full px-2.5 py-1.5 text-center text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tertiary/30 sm:px-3 sm:text-sm lg:min-w-[96px] lg:flex-none ${
+        const tabClassName = `min-w-max flex-1 cursor-pointer whitespace-nowrap rounded-lg px-2.5 py-1.5 text-center text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:px-3 sm:text-sm lg:min-w-[96px] lg:flex-none ${
           active
-            ? "bg-tertiary text-on-dark"
+            ? "bg-primary text-on-primary-action"
             : "bg-surface-subtle text-muted-foreground hover:bg-surface-muted hover:text-heading"
         }`;
 

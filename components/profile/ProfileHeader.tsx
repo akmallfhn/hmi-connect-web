@@ -198,12 +198,19 @@ export default function ProfileHeader({
 
   return (
     <div className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
-      <div className="relative h-28 bg-gradient-to-r from-primary to-secondary sm:h-40">
+      <div className="relative h-28 overflow-hidden bg-primary-soft sm:h-36">
+        <div
+          aria-hidden="true"
+          className="absolute -right-10 -top-24 size-72 sm:right-8"
+        >
+          <div className="absolute inset-0 rounded-full border-[32px] border-primary-light opacity-50" />
+          <div className="absolute left-[-5.5rem] top-32 size-44 rounded-full border-[24px] border-primary-light opacity-40 sm:top-36" />
+        </div>
         {isOwnProfile && (
           <Link
             href="/settings"
             aria-label="Pengaturan"
-            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-on-dark/20 text-on-dark backdrop-blur transition hover:bg-on-dark/30 lg:hidden"
+            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-surface/80 text-heading backdrop-blur transition hover:bg-surface lg:hidden"
           >
             <Settings className="size-5" />
           </Link>
@@ -216,7 +223,7 @@ export default function ProfileHeader({
             <button
               type="button"
               onClick={() => setIsAvatarEditOpen(true)}
-              className="group relative -mt-14 shrink-0 overflow-hidden rounded-full border-4 border-on-dark hover:cursor-pointer lg:-mt-16"
+              className="group relative -mt-14 shrink-0 overflow-hidden rounded-full border-4 border-surface hover:cursor-pointer lg:-mt-16"
               aria-label="Ubah foto profil"
             >
               <Avatar src={avatar} name={displayName} size={112} />
@@ -229,7 +236,7 @@ export default function ProfileHeader({
               src={avatar}
               name={displayName}
               size={112}
-              className="relative -mt-14 shrink-0 border-4 border-on-dark lg:-mt-16"
+              className="relative -mt-14 shrink-0 border-4 border-surface lg:-mt-16"
             />
           )}
 
@@ -238,7 +245,7 @@ export default function ProfileHeader({
 
         <div className="mt-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <h1 className="truncate text-xl font-bold text-heading sm:text-2xl">
+            <h1 className="truncate font-stack-sans-headline text-xl font-medium text-heading sm:text-2xl">
               {displayName}
             </h1>
             {verificationStatus !== "verified" && (
@@ -255,7 +262,9 @@ export default function ProfileHeader({
           </div>
 
           {username && (
-            <p className="text-sm text-muted-foreground xl:text-[15px]">@{username}</p>
+            <p className="text-sm text-muted-foreground xl:text-[15px]">
+              @{username}
+            </p>
           )}
 
           {headline && (

@@ -777,7 +777,9 @@ them "Akses Ditolak" (see the accept route below).
 outline | soft | secondarySoft | ghost | destructive` (`soft` is primary-light, `secondarySoft` its
   secondary twin); sizes: `sm | default | lg | pill | pillSm | icon |
 iconSm`.
-  `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles` and `/quran`: a light-gray track and inactive pills with tertiary active pills. Each item
+  `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles`, `/quran`,
+  and the user profile: a light-gray track and inactive controls with primary active controls.
+  The track and every tab consistently use `rounded-lg`, never full pills. Each item
   supplies a value and label, optionally a short description and a URL; URL items render
   links, while local-state items use `onChange`. Keep page-specific tab definitions and data
   behavior in the page components, not in this visual primitive.
@@ -790,7 +792,9 @@ iconSm`.
 - `components/navigations/*` — site chrome shown on every page. **The main site's desktop
   navigation is a fixed left rail, not a top navbar.** `MainSiteDesktopSidebar.tsx` is that rail
   (`sticky top-0 h-dvh w-64 self-start`, `hidden lg:flex` — an in-flow flex column of the shell,
-  not a `fixed` overlay, so the verification banner above it can push it down): the horizontal
+  not a `fixed` overlay, so the verification banner above it can push it down). Its background
+  is `bg-surface dark:bg-[#141414]`: white in light mode and `#141414` in dark mode,
+  slightly brighter than the dark page surface. It contains the horizontal
   wordmark linking home, then
   eight nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
   Articles `/articles`, LK Center `/trainings` (matching every `/trainings/*` route), Al-Quran
@@ -963,7 +967,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   directly. `NotificationRow.tsx` (`components/notifications/`) renders each row on the full
   `/notifications` page
   (`components/pages/NotificationsPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
-  shape as `FeedTimeline`/`ProfileActivitiesPage`, backed by the `loadMoreNotifications`
+  shape as `FeedTimeline`/`ProfileActivityTimeline`, backed by the `loadMoreNotifications`
   Server Action; it takes only `viewer` plus the initial page now — its `ProfileSidebar` aside and
   the `profile` prop feeding it are gone, and the page is a single plain-white column under a
   `font-stack-sans-headline` "Notifikasi" title, with "Tandai semua dibaca" rendered always and
@@ -1357,7 +1361,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
   is expanded. The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
   **deleted** — the desktop-rail redesign dropped it from the home feed, `/search`,
-  `/notifications`, `/settings`, `/profile/[username]/activities`, and finally `/feeds/[feed_id]`
+  `/notifications`, `/settings`, `/profile/[username]`, and finally `/feeds/[feed_id]`
   (now a single centered `max-w-[600px]` column), each of which lost the
   `getUserByUsername`/`listEducationHistories` fetches that fed it. The rail already shows who you
   are on every page, so don't bring a per-page identity card back. `NewsCard.tsx`
@@ -1474,7 +1478,8 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   `postgres_changes` subscription — see the note under `Header`'s bell above for why.
 - `components/profile/*` — the `/profile/[username]` page's sections (`ProfileHeader`,
   `AboutCard`, `WorkExperienceCard`, `OrganizationExperienceCard`, `EducationCard`,
-  `TrainingCard`, `PublicationCard`, `HonorAwardCard`, `ActivityCard`). The route is keyed by
+  `TrainingCard`, `PublicationCard`, `HonorAwardCard`, `ProfileTabs`,
+  `ProfileActivityTimeline`). The route is keyed by
   `username`, not the user's id — `users/detail`, `education-histories/list`,
   `training-histories/list`, `organization-experiences/list`, `work-experiences/list`,
   `publications/list`, and `honor-awards/list` all take `{ username }` now
@@ -1499,8 +1504,10 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
   route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
   it's still `omitempty` on the Go side). `ProfilePage` also renders
-  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` is an X/Twitter-
-  style single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
+  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` has a quiet
+  primary-soft cover whose smaller decorative ring overlaps halfway across the larger ring's
+  left edge, and a
+  single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
   button top-right, then name+badge/`@username`/headline/affiliation/social links/
   stats flowing below) — deliberately doesn't show `coordinatingBodyName`/`organizationName`
   or a `feedCount` stat; affiliation renders as `"HMI Komisariat {chapterName} • Cabang {branchName}"`.
@@ -1543,16 +1550,29 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   endpoint; falls back to the same `sessionStorage[CHAT_NEW_RECIPIENT_KEY]` handoff
   otherwise). It also shows `users/social-media-accounts/list` links
   (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
-  `hover:text-primary`/`hover:bg-primary-soft` tint there). `ActivityCard` is real-API-backed
-  via `apis/users.ts#listUserActivity` (`users/activity/list`, gated like `getUserByUsername`
-  but also reads the viewer's own session cookie internally so nested feed/comment carry
-  `my_reaction`) — it shows only the 3 most recent entries on the profile page itself, each
-  rendered by the shared `ActivityEntryCard` (type is one of `post`/`quote_repost`/`repost`/
+  `hover:text-primary`/`hover:bg-primary-soft` tint there). The user profile has URL-backed
+  Activities (default) and Profile (`?tab=profile`) tabs through the shared `Tabs` component.
+  Activities shows the full
+  infinite-scroll history in the main column via `apis/users.ts#listUserActivity`
+  (`users/activity/list`, gated like `getUserByUsername` but also reading the viewer's
+  session cookie so nested feed/comment carry `my_reaction`), 20 rows per page. Entries
+  use the shared `ActivityEntryCard` (type is one of `post`/`quote_repost`/`repost`/
   `comment`; for a plain `repost` the entry's `feed` is the _original_ post, not one the user
-  authored, so it renders through `QuotedFeed` same as a quote repost's `repost_of`). The full,
-  paginated history lives at `/profile/[username]/activities`
-  (`components/pages/ProfileActivitiesPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
-  shape as `FeedTimeline`, backed by the `loadMoreUserActivity` Server Action).
+  authored, so it renders through `QuotedFeed` same as a quote repost's `repost_of`).
+  The user timeline passes the profile owner's name/avatar and renders each entry as a
+  separate static card with an action icon and a feed-detail link; its attachment area reuses
+  the feed presentation for photo galleries, YouTube/legacy videos, URL previews, news,
+  articles, and trainings. Activity endpoints already reuse the backend's full feed hydration,
+  so these linked-content fields require no second request. The card deliberately has no hover
+  background, border, or shadow change. On mobile the activity list follows the profile section
+  cards: it reaches both viewport edges, drops its horizontal borders and corner radius, then
+  restores the full border and `rounded-2xl` at `lg`. A comment activity's referenced-post box
+  uses the regular neutral border on all four sides, without a primary accent stripe.
+  Entity activity lists retain the compact row variant of the same component.
+  The Profile tab holds About, work and organization experience, education, training,
+  publications, and honors in that order. The old `/profile/[username]/activities` URL
+  redirects to the default tab while preserving `?as=`. Pagination still uses the
+  `loadMoreUserActivity` Server Action.
   `ProfileCompletionCard` is the "Lengkapi Profil" nudge, backed by
   `apis/users.ts#getProfileCompletion` (`users/profile-completion`): a title row with the percentage
   on the right, a horizontal progress bar, a right-aligned `{completed}/{total} Selesai` line, the
@@ -1564,10 +1584,9 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   carries `background={{fill, radius}}` for the track, which is what gives the pill-on-pill look in
   one element instead of a stacked pair whose seam rounds twice. Chart colors are literal hex, like
   every other chart here (a `var(--primary)` in an SVG presentation attribute is not reliable), and
-  reuse `Label`'s existing blue pair — `#164ea6` on a `#e2f0ff` track. The card's surface borrows the
-  sibling `ailene-lms` project's Today's Focus *treatment* — a soft tint fading to white over a
-  matching border — but not its color: `bg-linear-to-br from-[#e2f0ff] to-35% to-white`, reusing the
-  same `Label` blue the progress bar already sits on. The `to-35%` stop is deliberate, so the tint
+  reuse `Label`'s existing blue pair — `#164ea6` on a `#e2f0ff` track. The card's surface uses
+  `bg-linear-to-br from-secondary/20 to-35% to-surface` with the same `border-border` as
+  `SuggestedConnectionsCard` and the other sidebar cards. The `to-35%` stop is deliberate, so the tint
   clears the top-left corner instead of washing across the whole card; keep it when touching that
   line. It is the one surface in this app that deliberately sits outside the tosca palette, so the
   nudge reads as a distinct card rather than another white one.
@@ -1640,15 +1659,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `internal/feed`, which is why one `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covers all five rather
   than a copy per `apis/*.ts` entity file. It splits exactly the way a user's activity does: the
   profile page fetches `pageSize: 3` and renders the shared `components/profile/ActivityCard.tsx`
-  (titled "Postingan" here, "Aktivitas" on a user, via its `title`/`emptyMessage`/`seeAllHref`
-  props — `seeAllHref` replaced the old `username` prop so both callers can build their own link),
+  (titled "Postingan" here, via its `title`/`emptyMessage`/`seeAllHref` props),
   while the full history lives at `{entityProfileHref}/activities`, five explicit routes mirroring
   the five profile routes. Those render `components/pages/EntityActivitiesPage.tsx`, the twin of
-  `ProfileActivitiesPage.tsx` — same two-column shell, but with
+  the former standalone user activity page — same two-column shell, but with
   `components/entity/EntitySummarySidebar.tsx` in the aside: the logo,
   the name, and a link back — nothing else. No counts, since an entity's own live on its *parent's*
   list row and a sidebar isn't worth refetching them for, and no level line either, since the name
-  already reads `HMI Korkom {name}`. Unlike the profile twin it does pass `mobileBackTitle`,
+  already reads `HMI Korkom {name}`. It passes `mobileBackTitle`,
   since the aside is `lg:`-only and mobile would otherwise have no way back. Both pages share
   `components/profile/ActivityInfiniteList.tsx`, which owns the
   infinite-scroll-via-`IntersectionObserver` list and takes a `loadMore(page)` closure so each
@@ -1692,7 +1710,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   entity profile), and a destructive Mode User tab to `/settings`. It reuses `BottomNav`'s exported
   `usePressPulse`/`NavIconPulse`, so the tap feedback matches.
   **Leaving the timeline keeps the entity's point of view through `?as={entity_type}:{entity_id}`.**
-  `/feeds/[feed_id]`, `/profile/[username]`, `/profile/[username]/activities`, and the five entity
+  `/feeds/[feed_id]`, `/profile/[username]` (both tabs), and the five entity
   profile routes plus their `/activities` twins read that param
   through `lib/acting-entity.ts#resolveActingEntity` (`server-only`), which applies the official
   pages' own gate — `holdsGrantAtEntity`, so `Super Admin` alone does not qualify — and resolves

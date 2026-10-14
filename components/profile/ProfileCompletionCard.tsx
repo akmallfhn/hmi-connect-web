@@ -93,7 +93,7 @@ export default function ProfileCompletionCard({
   }
 
   return (
-    <div className="border border-x-0 border-info-soft-border bg-linear-to-br from-secondary/20 to-35% to-surface p-5 lg:rounded-2xl lg:border-x">
+    <div className="border border-x-0 border-border bg-linear-to-br from-secondary/20 to-35% to-surface p-5 lg:rounded-2xl lg:border-x">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-stack-sans-headline font-medium text-heading">
           Lengkapi Profil
