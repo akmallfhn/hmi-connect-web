@@ -54,6 +54,12 @@ fix the rule, not just the code.
   `PublicTrainingCard` also use Tabler icons throughout; the shared `Pagination` accepts
   caller-provided icons so that catalog can use Tabler without changing admin pages.
   Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
+  The admin sidebars are Tabler too: `AdminSidebar` types `AdminNavItem.icon` as `TablerIcon` (its
+  own burger/collapse/chevron/logout/close glyphs included, active nav icons at `stroke` 2.2 vs 1.8
+  idle), and `MasterSidebar`/`EntitySidebar` take every nav icon from the one
+  `components/navigations/admin-nav-icons.ts#ADMIN_NAV_ICON` map, keyed by concept (Badko, Cabang,
+  Korkom, Komisariat, Kader, ...), so a menu keeps the same icon from Master down to Komisariat.
+  Add a new concept there rather than importing an icon in a sidebar file.
 - Fonts come from `next/font/google`: Google Sans remains the general UI face, while
   Stack Sans Headline is exposed as `font-stack-sans-headline`. On the **admin** side it is
   reserved for page titles plus all sidebar chrome (including scoped entity names in
@@ -640,7 +646,7 @@ row (a separate reviewable entity, `VerificationRequestStatusEnum`: `pending` | 
 `rejected`) and bumps `User.verification_status` to `"pending"` — it no longer sets
 `verification_status` to `"verified"` directly; that only happens once an admin approves the
 request. Master, Organization, and Branch review queues share
-`components/pages/BranchVerificationListPage.tsx`: below `xl` each request is a separate card
+`components/pages/BranchVerificationListPage.tsx`: below `xl` each request is a separate card (one per row on phones, two per row from `sm`)
 with its identity, status, submitted date and time in WIB, organizational scope, and review
 actions visible without horizontal scrolling; the pagination shows only
 previous/current/next on mobile and is centered below the list on every screen size;
@@ -786,6 +792,13 @@ iconSm`.
   supplies a value and label, optionally a short description and a URL; URL items render
   links, while local-state items use `onChange`. Keep page-specific tab definitions and data
   behavior in the page components, not in this visual primitive.
+  `components/buttons/BackButton.tsx` is the "Kembali ke daftar …" control on every admin detail
+  page (Badko/Cabang/Korkom/Komisariat, member and user detail, user create, LK2 batch detail and
+  guideline). It calls `router.back()` so the list comes back with its search, filters, and page
+  still in the URL, and only pushes its `fallbackHref` when there is no history (a page opened in a
+  new tab). Don't swap it back for a `<Link>` to the bare list route, which drops those filters.
+  It relies on everything else inside a detail page using `router.replace`: the tab switch already
+  does, and `StructuralPage`'s period select replaces instead of pushing while `embedded`.
   `components/buttons/Switch.tsx` lives alongside it (not `components/fields/`, despite
   looking like a field primitive) — an accessible toggle built on a visually-hidden native
   checkbox + `peer-checked:` variants, used wherever a boolean gets a switch instead of a
@@ -2311,9 +2324,11 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   server-first pattern `ArticlesPage`/`SearchPage` use, not a client-fetched table; its empty results
   use the shared `components/states/EmptyState.tsx`. On narrow screens, `/master/users` and
   every scoped member roster render
-  `components/admin/MemberMobileCard.tsx` below `xl`, keeping status, verification, hierarchy,
-  registration date, detail navigation, and Master actions visible. Card metadata uses stacked
-  labels and values, with email full width and hierarchy/date in a wrapping grid. The desktop
+  `components/admin/MemberMobileCard.tsx` below `xl`: identity, status and verification (plus role
+  on Master), the email as the card's only detail row, detail navigation, and Master actions. The
+  Cabang/Komisariat and Terdaftar rows were removed from the card; they stay in the desktop table.
+  The cards stack one per row on phones and sit two per row from `sm` (`grid sm:grid-cols-2`), with
+  the footer pinned by `mt-auto` so paired cards line up. The desktop
   tables remain at `xl`, while `MemberFilterBar` exposes the table's name/date sorting through
   a mobile `Sort` button and dropdown beside `Filter`. Master alone shows an icon-only rounded
   `+` create button fixed at the lower right below `lg`; its labeled create button stays hidden
@@ -2454,7 +2469,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   scrolls** — `flex-1` on the middle alone lets a long menu squeeze the logo and the user/role
   block instead of scrolling. Navigation follows the sibling
   `ailene-os` `SidebarOS` treatment — muted white idle labels, a `primary`-tinted left-to-right
-  gradient with a `primary` icon for the active route, and a translucent profile footer.
+  gradient with a white (`text-on-dark`) icon for the active route, and a translucent profile
+  footer. The light mobile drawer keeps its active icon `text-primary-foreground`, since white would
+  vanish on its white panel.
   `NavList` uses a larger gap between top-level links/groups in both expanded and collapsed modes,
   while the links within each group retain their tighter spacing. Gradient and
   geometry belong to the root `app/(admin)/admin/layout.tsx` instead:
@@ -2871,7 +2888,7 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   option), so starting "Tambah Cabang" from a filtered view doesn't make you re-pick the Badko.
   `coordinating-bodies/*` has full CRUD on the backend (list/detail/create/update/delete, mirroring
   branches/chapters) and now on this side too, see `/master/coordinating-bodies` below.
-- `/master/chapters`, the branch-scoped "Kelola Komisariat", and the Korkom-scoped "Daftar Komisariat"
+- `/master/chapters`, the branch-scoped "Kelola Komisariat", the Korkom- and Organization-scoped "Daftar Komisariat"
   (`app/(admin)/admin/master/chapters/page.tsx`, `.../branches/[branch_id]/chapters/page.tsx`,
   `.../coordinating-chapters/[coordinating_chapter_id]/chapters/page.tsx`) all render the same
   `components/pages/AdminChapterListPage.tsx` — same Tabel/Card dual-view shape
@@ -2975,10 +2992,9 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `coordinating_chapter` scope gets a flat "Daftar Komisariat" item (view-only wording, same reasoning
   as Badko's own "Daftar Cabang"); `MasterSidebar`'s Komisariat item is relabeled "Kelola Komisariat"
   to match Master's real CRUD rights, mirroring "Kelola Cabang"/"Kelola Badko". Every Komisariat nav
-  item across both sidebars uses the `School` icon (not `GraduationCap`) so it reads as a physical
-  institution rather than a generic "education" glyph; `MasterSidebar`'s own "Kelola Cabang" item was
-  also switched from `Building2` to `GitBranch` to match the icon `EntitySidebar` already uses for
-  every other "Kelola Cabang"/"Daftar Cabang" entry.
+  item across both sidebars uses `ADMIN_NAV_ICON.chapter` (Tabler's `IconSchool`) so it reads as a
+  physical institution rather than a generic "education" glyph, and every Cabang item uses
+  `ADMIN_NAV_ICON.branch` (`IconGitBranch`).
 - "Kelola Korkom" (`/master/coordinating-chapters` and the branch-scoped
   `.../branches/[branch_id]/coordinating-chapters/`) is Korkom's own CRUD panel —
   `components/pages/AdminCoordinatingChapterListPage.tsx` gets the same Tabel/Card dual-view shape
@@ -3026,8 +3042,8 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `Promise.all`, flattens every page's results, and sorts the merged list by `start_date` descending
   — each card's subtitle reads `training.organizer_name` (the actual organizing Komisariat) rather
   than the Korkom's own name, since the Korkom itself never organized any of them. Both
-  `MasterSidebar` and the branch-scoped `EntitySidebar` "Kelola Korkom" items use the `Waypoints`
-  icon.
+  `MasterSidebar` and the `EntitySidebar` Korkom items use `ADMIN_NAV_ICON.coordinatingChapter`
+  (Tabler's `IconRoute`).
 - `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
   (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:
   this deployment manages the one configured `ORGANIZATION_ID`, so a list of one row is noise —
@@ -3157,14 +3173,22 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   is a second, independent flag from `allowEdit` since `CoordinatingBodyDetailPage`'s own
   Suspend/Aktifkan stays unconditional regardless of `allowEdit`, so `BranchDetailPage` needed a way
   to turn that off too once Badko lost edit rights everywhere. `EntitySidebar`'s Organization scope
-  adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko"; the `coordinating_body`
+  adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko", followed by the
+  read-only "Daftar Korkom" and "Daftar Komisariat" (`/organizations/[organization_id]/
+  coordinating-chapters` and `/chapters`, each with an `[id]` detail). Those four routes reuse
+  `AdminCoordinatingChapterListPage`/`AdminChapterListPage` with all three `allow*` flags off, which
+  also swaps the page heading to "Daftar …" and drops "Kelola" from its description, plus
+  `CoordinatingChapterDetailPage`/`ChapterDetailPage` with no edit, status, type, add-Komisariat or
+  invite rights, since both answer to their Cabang rather than to the organization. The lists send no
+  structural filter (this deployment manages one `ORGANIZATION_ID`); the detail routes `notFound()`
+  unless the parent Cabang's `organization_id` matches the route. The `coordinating_body`
   scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail
   — no group wrapper either, since Badko only has this one Cabang-related link). `MasterSidebar`'s
   pre-existing Cabang item is relabeled "Kelola Cabang" to match Master's real CRUD rights.
 - Badko, Cabang, Korkom, and Komisariat each have their own self-service "Pengaturan" page on their
   own scoped dashboard (`/coordinating-bodies/[coordinating_body_id]/settings`,
   `/branches/[branch_id]/settings`, `/coordinating-chapters/[coordinating_chapter_id]/settings`,
-  `/chapters/[chapter_id]/settings` — flat `EntitySidebar` items on all four scopes) —
+  `/chapters/[chapter_id]/settings` — in `EntitySidebar`'s closing profile group on every scope) —
   `components/pages/CoordinatingBodySettingsPage.tsx`, `BranchSettingsPage.tsx`,
   `CoordinatingChapterSettingsPage.tsx`, and `ChapterSettingsPage.tsx`. All four have the same two
   tabs: Profil (logo via `CoordinatingBodyLogoField`/`BranchLogoField`/
@@ -3264,9 +3288,10 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   `/coordinating-bodies/[coordinating_body_id]/structural`, `/branches/[branch_id]/structural`,
   `/coordinating-chapters/[coordinating_chapter_id]/structural`, `/chapters/[chapter_id]/structural`
   — `EntitySidebar`'s "Str. Kepengurusan" item, shortened from the page's own "Struktur Kepengurusan"
-  `AdminPageTitle` since the full label ran too wide in the sidebar; sits in the "Keanggotaan" group
-  for Organization/Cabang, right after Daftar Kader for Badko/Korkom/Komisariat which have no
-  groups) renders the real `structural_periods`/`structural_officers` roster (`apis/structurals.ts`,
+  `AdminPageTitle` since the full label ran too wide in the sidebar. Every scope closes its sidebar
+  with one profile group holding Str. Kepengurusan then Pengaturan, titled
+  `Profil {organization name}` for an organization and `Profil Badko`/`Profil Cabang`/
+  `Profil Korkom`/`Profil Komisariat` otherwise (`EntitySidebar#getProfileGroupName`) — renders the real `structural_periods`/`structural_officers` roster (`apis/structurals.ts`,
   see above) as a multi-tier org chart through **one shared component**,
   `components/pages/StructuralPage.tsx` — it takes `entityType`/`entityId` (a `StructuralEntityTypeEnum`
   and the route's own id) instead of a chapter-specific prop, so all five routes render the exact same

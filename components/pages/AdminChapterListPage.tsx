@@ -313,12 +313,18 @@ export default function AdminChapterListPage({
   );
   const isEmpty = chapters.length === 0;
 
+  const isReadOnly = !allowCreate && !allowEdit && !allowDelete;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <AdminPageTitle description="Kelola data Komisariat HMI.">
-            Komisariat
+          <AdminPageTitle
+            description={
+              isReadOnly ? "Daftar Komisariat HMI." : "Kelola data Komisariat HMI."
+            }
+          >
+            {isReadOnly ? "Daftar Komisariat" : "Komisariat"}
           </AdminPageTitle>
         </div>
         {allowCreate && (

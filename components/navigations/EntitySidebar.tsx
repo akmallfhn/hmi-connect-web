@@ -1,18 +1,7 @@
 "use client";
 
 import type { BranchTypeEnum } from "@/lib/types";
-import {
-  BookText,
-  GitBranch,
-  LayoutDashboard,
-  Network,
-  School,
-  Settings,
-  ShieldCheck,
-  Users,
-  Waypoints,
-  Workflow,
-} from "lucide-react";
+import { ADMIN_NAV_ICON } from "./admin-nav-icons";
 import Image from "next/image";
 import Link from "next/link";
 import LogoHmi from "../svg/LogoHmi";
@@ -53,136 +42,139 @@ function getBaseHref(scope: EntitySidebarScope, entityId: string) {
   return `/${scopePaths[scope]}/${entityId}`;
 }
 
+// Profile group heading per scope; an organization is named outright, like everywhere else.
+function getProfileGroupName(scope: EntitySidebarScope, entityName: string) {
+  switch (scope) {
+    case "organization":
+      return `Profil ${entityName}`;
+    case "coordinating_body":
+      return "Profil Badko";
+    case "branch":
+      return "Profil Cabang";
+    case "coordinating_chapter":
+      return "Profil Korkom";
+    case "chapter":
+      return "Profil Komisariat";
+  }
+}
+
+function getScopeNavItems(
+  scope: EntitySidebarScope,
+  base: string,
+): AdminNavEntry[] {
+  const membersItem: AdminNavEntry = {
+    label: "Daftar Kader",
+    href: `${base}/members`,
+    icon: ADMIN_NAV_ICON.members,
+  };
+  const verificationItem: AdminNavEntry = {
+    label: "Permintaan Verifikasi",
+    href: `${base}/verification`,
+    icon: ADMIN_NAV_ICON.verification,
+  };
+
+  switch (scope) {
+    case "organization":
+      return [
+        {
+          groupName: "Organisasi",
+          items: [
+            {
+              label: "Kelola Badko",
+              href: `${base}/coordinating-bodies`,
+              icon: ADMIN_NAV_ICON.coordinatingBody,
+            },
+            {
+              label: "Kelola Cabang",
+              href: `${base}/branches`,
+              icon: ADMIN_NAV_ICON.branch,
+            },
+            {
+              label: "Daftar Korkom",
+              href: `${base}/coordinating-chapters`,
+              icon: ADMIN_NAV_ICON.coordinatingChapter,
+            },
+            {
+              label: "Daftar Komisariat",
+              href: `${base}/chapters`,
+              icon: ADMIN_NAV_ICON.chapter,
+            },
+          ],
+        },
+        { groupName: "Keanggotaan", items: [membersItem, verificationItem] },
+      ];
+    case "coordinating_body":
+      return [
+        {
+          label: "Daftar Cabang",
+          href: `${base}/branches`,
+          icon: ADMIN_NAV_ICON.branch,
+        },
+        membersItem,
+      ];
+    case "branch":
+      return [
+        {
+          groupName: "Organisasi",
+          items: [
+            { label: "AD ART", href: `${base}/ad-art`, icon: ADMIN_NAV_ICON.adArt },
+            {
+              label: "Kelola Korkom",
+              href: `${base}/coordinating-chapters`,
+              icon: ADMIN_NAV_ICON.coordinatingChapter,
+            },
+            {
+              label: "Kelola Komisariat",
+              href: `${base}/chapters`,
+              icon: ADMIN_NAV_ICON.chapter,
+            },
+          ],
+        },
+        { groupName: "Keanggotaan", items: [membersItem, verificationItem] },
+      ];
+    case "coordinating_chapter":
+      return [
+        {
+          label: "Daftar Komisariat",
+          href: `${base}/chapters`,
+          icon: ADMIN_NAV_ICON.chapter,
+        },
+        membersItem,
+      ];
+    case "chapter":
+      return [membersItem];
+  }
+}
+
 function getNavItems(
   scope: EntitySidebarScope,
   entityId: string,
+  entityName: string,
 ): AdminNavEntry[] {
   const base = getBaseHref(scope, entityId);
-  const dashboardItem: AdminNavEntry = {
-    label: "Dashboard",
-    href: base,
-    icon: LayoutDashboard,
-    exact: true,
-  };
-
-  if (scope === "organization") {
-    return [
-      dashboardItem,
-      {
-        groupName: "Organisasi",
-        items: [
-          {
-            label: "Kelola Badko",
-            href: `${base}/coordinating-bodies`,
-            icon: Network,
-          },
-          {
-            label: "Kelola Cabang",
-            href: `${base}/branches`,
-            icon: GitBranch,
-          },
-        ],
-      },
-      {
-        groupName: "Keanggotaan",
-        items: [
-          { label: "Daftar Kader", href: `${base}/members`, icon: Users },
-          {
-            label: "Str. Kepengurusan",
-            href: `${base}/structural`,
-            icon: Workflow,
-          },
-          {
-            label: "Permintaan Verifikasi",
-            href: `${base}/verification`,
-            icon: ShieldCheck,
-          },
-        ],
-      },
-      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
-    ];
-  }
-
-  if (scope === "coordinating_body") {
-    return [
-      dashboardItem,
-      { label: "Daftar Cabang", href: `${base}/branches`, icon: GitBranch },
-      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
-      {
-        label: "Str. Kepengurusan",
-        href: `${base}/structural`,
-        icon: Workflow,
-      },
-      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
-    ];
-  }
-
-  if (scope === "coordinating_chapter") {
-    return [
-      dashboardItem,
-      {
-        label: "Daftar Komisariat",
-        href: `${base}/chapters`,
-        icon: School,
-      },
-      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
-      {
-        label: "Str. Kepengurusan",
-        href: `${base}/structural`,
-        icon: Workflow,
-      },
-      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
-    ];
-  }
-
-  if (scope === "chapter") {
-    return [
-      dashboardItem,
-      { label: "Daftar Kader", href: `${base}/members`, icon: Users },
-      {
-        label: "Str. Kepengurusan",
-        href: `${base}/structural`,
-        icon: Workflow,
-      },
-      { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
-    ];
-  }
-
   return [
-    dashboardItem,
     {
-      groupName: "Organisasi",
-      items: [
-        { label: "AD ART", href: `${base}/ad-art`, icon: BookText },
-        {
-          label: "Kelola Korkom",
-          href: `${base}/coordinating-chapters`,
-          icon: Waypoints,
-        },
-        {
-          label: "Kelola Komisariat",
-          href: `${base}/chapters`,
-          icon: School,
-        },
-      ],
+      label: "Dashboard",
+      href: base,
+      icon: ADMIN_NAV_ICON.dashboard,
+      exact: true,
     },
+    ...getScopeNavItems(scope, base),
     {
-      groupName: "Keanggotaan",
+      groupName: getProfileGroupName(scope, entityName),
       items: [
-        { label: "Daftar Kader", href: `${base}/members`, icon: Users },
         {
           label: "Str. Kepengurusan",
           href: `${base}/structural`,
-          icon: Workflow,
+          icon: ADMIN_NAV_ICON.structural,
         },
         {
-          label: "Permintaan Verifikasi",
-          href: `${base}/verification`,
-          icon: ShieldCheck,
+          label: "Pengaturan",
+          href: `${base}/settings`,
+          icon: ADMIN_NAV_ICON.settings,
         },
       ],
     },
-    { label: "Pengaturan", href: `${base}/settings`, icon: Settings },
   ];
 }
 
@@ -329,7 +321,7 @@ export default function EntitySidebar({
     <AdminSidebar
       storageKey={`${scope}_sidebar_collapsed`}
       homeHref={getBaseHref(scope, entityId)}
-      navItems={getNavItems(scope, entityId)}
+      navItems={getNavItems(scope, entityId, entityName)}
       renderHeader={(collapsed, tone) => (
         <EntityHeader
           scope={scope}

@@ -289,12 +289,20 @@ export default function AdminCoordinatingChapterListPage({
     initialSearch || initialStatus || (!hideBranchFilter && selectedBranch)
   );
 
+  const isReadOnly = !allowCreate && !allowEdit && !allowDelete;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <AdminPageTitle description="Kelola data Korkom (Koordinator Komisariat) HMI.">
-            Korkom
+          <AdminPageTitle
+            description={
+              isReadOnly
+                ? "Daftar Korkom (Koordinator Komisariat) HMI."
+                : "Kelola data Korkom (Koordinator Komisariat) HMI."
+            }
+          >
+            {isReadOnly ? "Daftar Korkom" : "Korkom"}
           </AdminPageTitle>
         </div>
         {allowCreate && (

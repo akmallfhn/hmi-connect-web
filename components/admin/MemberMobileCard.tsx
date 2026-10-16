@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { UserListEntry } from "@/apis/users";
-import { formatShortDateTime } from "@/lib/time-manipulation";
 import { Eye } from "lucide-react";
 import Link from "next/link";
 import Avatar from "../common/Avatar";
@@ -8,17 +7,9 @@ import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 
-function DetailItem({
-  label,
-  value,
-  className = "",
-}: {
-  label: string;
-  value: ReactNode;
-  className?: string;
-}) {
+function DetailItem({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className={`min-w-0 ${className}`}>
+    <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-1 break-words text-sm font-medium leading-5 text-heading">
         {value}
@@ -30,18 +21,16 @@ function DetailItem({
 export default function MemberMobileCard({
   user,
   detailHref,
-  showBranchContext,
   showRole = false,
   actions,
 }: {
   user: UserListEntry;
   detailHref: string;
-  showBranchContext: boolean;
   showRole?: boolean;
   actions?: ReactNode;
 }) {
   return (
-    <li className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <li className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="p-4">
         <Link
           href={detailHref}
@@ -66,24 +55,15 @@ export default function MemberMobileCard({
         </div>
       </div>
 
-      <dl className="mx-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border py-4">
+      <dl className="mx-4 border-t border-border py-4">
         <DetailItem
-          className="col-span-2"
           label="Email"
           value={<span className="break-all">{user.email || "—"}</span>}
         />
-        {showBranchContext && (
-          <DetailItem label="Cabang" value={user.branch_name || "—"} />
-        )}
-        <DetailItem label="Komisariat" value={user.chapter_name || "—"} />
-        <DetailItem
-          className={showBranchContext ? "col-span-2" : ""}
-          label="Terdaftar"
-          value={user.created_at ? formatShortDateTime(user.created_at) : "—"}
-        />
       </dl>
 
-      <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+      {/* mt-auto pins the footer down so two cards sharing a row line up. */}
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-border px-3 py-2">
         <Link
           href={detailHref}
           className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"

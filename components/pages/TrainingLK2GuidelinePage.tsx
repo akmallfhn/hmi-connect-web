@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   Award,
   BarChart3,
   Briefcase,
@@ -22,9 +21,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import AdminPageTitle from "../common/AdminPageTitle";
-import Link from "next/link";
 import type { ReactNode } from "react";
-import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import AchievementTrophyIllustration from "../illustrations/AchievementTrophyIllustration";
 import InstructionalGoalsIllustration from "../illustrations/InstructionalGoalsIllustration";
 import OrganizationGearIllustration from "../illustrations/OrganizationGearIllustration";
@@ -196,15 +194,9 @@ export default function TrainingLK2GuidelinePage({
 }: TrainingLK2GuidelinePageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link
-        href={`/branches/${branchId}/trainings`}
-        className="inline-block w-fit"
-      >
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar batch
-        </Button>
-      </Link>
+      <BackButton fallbackHref={`/branches/${branchId}/trainings`}>
+        Kembali ke daftar batch
+      </BackButton>
 
       <div className="mt-4">
         <AdminPageTitle description="Panduan resmi penyelenggaraan Latihan Kader 2 di tingkat Cabang.">

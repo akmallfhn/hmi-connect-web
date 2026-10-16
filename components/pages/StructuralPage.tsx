@@ -163,7 +163,9 @@ export default function StructuralPage({
     const params = new URLSearchParams(searchParams.toString());
     if (id === null) params.delete("period");
     else params.set("period", String(id));
-    router.push(`?${params.toString()}`);
+    // Embedded in a detail tab, a period switch must not become a history step the back button lands on.
+    if (embedded) router.replace(`?${params.toString()}`, { scroll: false });
+    else router.push(`?${params.toString()}`);
   }
 
   async function handleToggleStatus() {

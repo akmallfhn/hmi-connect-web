@@ -1,18 +1,16 @@
 "use client";
 
 import {
-  ArrowLeft,
   CalendarDays,
   FileText,
   UserCheck,
   Users as UsersIcon,
   type LucideIcon,
 } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import type { UserProfile } from "@/apis/users";
 import type { UserStatusEnum } from "@/lib/types";
-import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Avatar from "../common/Avatar";
 import AlumniStatusLabel from "../labels/AlumniStatusLabel";
@@ -99,12 +97,9 @@ export default function AdminMemberDetailPage({
 }: AdminMemberDetailPageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href={`${basePath}/members`} className="inline-block w-fit">
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar kader
-        </Button>
-      </Link>
+      <BackButton fallbackHref={`${basePath}/members`}>
+        Kembali ke daftar kader
+      </BackButton>
 
       <div className="mt-4 flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">

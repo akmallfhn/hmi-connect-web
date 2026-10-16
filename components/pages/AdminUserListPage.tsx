@@ -251,13 +251,12 @@ export default function AdminUserListPage({
           </div>
         ) : (
           <>
-            <ul className="space-y-3 xl:hidden">
+            <ul className="grid gap-3 sm:grid-cols-2 xl:hidden">
               {users.map((user) => (
                 <MemberMobileCard
                   key={user.id}
                   user={user}
                   detailHref={`/master/users/${encodeURIComponent(user.username)}`}
-                  showBranchContext
                   showRole
                   actions={renderUserActions(user)}
                 />

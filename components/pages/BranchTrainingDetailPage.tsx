@@ -2,7 +2,6 @@
 
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
-  ArrowLeft,
   BookOpen,
   ClipboardCheck,
   LayoutDashboard,
@@ -10,7 +9,6 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type {
@@ -21,6 +19,7 @@ import type {
   TrainingParticipant,
 } from "@/apis/trainings";
 import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import TrainingFormSheet from "../forms/TrainingFormSheet";
 import EmptyState from "../states/EmptyState";
 import TrainingEvaluationTab from "../trainings/TrainingEvaluationTab";
@@ -87,15 +86,9 @@ export default function BranchTrainingDetailPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link
-        href={`/branches/${branchId}/trainings`}
-        className="inline-block w-fit"
-      >
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar batch
-        </Button>
-      </Link>
+      <BackButton fallbackHref={`/branches/${branchId}/trainings`}>
+        Kembali ke daftar batch
+      </BackButton>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <AdminPageTitle className="min-w-0">

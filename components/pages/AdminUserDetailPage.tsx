@@ -2,7 +2,6 @@
 
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
-  ArrowLeft,
   Ban,
   Building,
   Building2,
@@ -18,7 +17,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +35,7 @@ import UserRoleLabel from "../labels/UserRoleLabel";
 import UserStatusLabel from "../labels/UserStatusLabel";
 import UserVerifiedLabel from "../labels/UserVerifiedLabel";
 import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import Avatar from "../common/Avatar";
 import AdminEditUserAccountForm from "../forms/AdminEditUserAccountForm";
 import AdminEditUserContactForm from "../forms/AdminEditUserContactForm";
@@ -201,12 +200,9 @@ export default function AdminUserDetailPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href="/master/users" className="inline-block w-fit">
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar user
-        </Button>
-      </Link>
+      <BackButton fallbackHref="/master/users">
+        Kembali ke daftar user
+      </BackButton>
 
       <div className="mt-4 flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">

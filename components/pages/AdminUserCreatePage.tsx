@@ -1,9 +1,8 @@
 "use client";
 
 import AdminPageTitle from "../common/AdminPageTitle";
-import { ArrowLeft, Loader2, Trash2, Upload } from "lucide-react";
+import { Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { ReactNode, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { createUser } from "@/lib/actions";
@@ -22,6 +21,7 @@ import {
   USERNAME_PATTERN,
 } from "@/lib/username";
 import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import { getInitials } from "../common/Avatar";
 import Input from "../fields/Input";
 import RadioButton from "../fields/RadioButton";
@@ -280,12 +280,9 @@ export default function AdminUserCreatePage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href="/master/users" className="inline-block w-fit">
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar user
-        </Button>
-      </Link>
+      <BackButton fallbackHref="/master/users">
+        Kembali ke daftar user
+      </BackButton>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

@@ -2,14 +2,14 @@
 
 import { logoutUser } from "@/lib/actions";
 import {
-  ChevronDown,
-  LogOut,
-  Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+  IconChevronDown,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconLogout,
+  IconMenu2,
+  IconX,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
@@ -20,7 +20,7 @@ import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 export interface AdminNavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   // Exact pathname match instead of the default startsWith — for a Dashboard-style item whose href is a prefix of every sibling route.
   exact?: boolean;
 }
@@ -55,7 +55,7 @@ const NAV_TONE: Record<
       "bg-linear-to-r from-primary/40 via-primary/15 to-transparent font-medium text-on-dark",
     idleLink:
       "text-on-dark/65 hover:bg-linear-to-r hover:from-on-dark/10 hover:to-transparent hover:text-on-dark",
-    activeIcon: "text-primary-foreground",
+    activeIcon: "text-on-dark",
     idleIcon: "text-on-dark/50 group-hover:text-on-dark/85",
     groupLabel: "text-on-dark/35",
     groupButton: "hover:bg-surface/5",
@@ -111,6 +111,7 @@ function NavLink({
       } ${isActive ? palette.activeLink : palette.idleLink}`}
     >
       <Icon
+        stroke={isActive ? 2.2 : 1.8}
         className={`size-5 shrink-0 transition-colors ${
           isActive ? palette.activeIcon : palette.idleIcon
         }`}
@@ -168,7 +169,7 @@ function NavGroup({
         >
           {groupName}
         </span>
-        <ChevronDown
+        <IconChevronDown
           className={`size-3.5 shrink-0 transition-transform duration-300 ${palette.groupLabel} ${
             isOpen ? "rotate-180" : ""
           }`}
@@ -277,7 +278,7 @@ function ProfileBlock({
       title="Keluar"
       className={logoutClasses}
     >
-      <LogOut className="size-4" />
+      <IconLogout className="size-4" />
     </Button>
   );
 
@@ -401,9 +402,9 @@ export default function AdminSidebar({
             className="shrink-0 text-on-dark/65 hover:bg-on-dark/10 hover:text-on-dark focus-visible:ring-secondary/50"
           >
             {isCollapsed ? (
-              <PanelLeftOpen className="size-4.5" />
+              <IconLayoutSidebarLeftExpand className="size-4.5" />
             ) : (
-              <PanelLeftClose className="size-4.5" />
+              <IconLayoutSidebarLeftCollapse className="size-4.5" />
             )}
           </Button>
         </div>
@@ -441,7 +442,7 @@ export default function AdminSidebar({
           aria-expanded={mobileOpen}
           className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted hover:text-heading"
         >
-          <Menu className="size-5" />
+          <IconMenu2 className="size-5" />
         </button>
       </div>
 
@@ -471,7 +472,7 @@ export default function AdminSidebar({
               aria-label="Tutup menu"
               className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted hover:text-heading"
             >
-              <X className="size-5" />
+              <IconX className="size-5" />
             </button>
           </div>
           <div className="mt-4 -mx-4 shrink-0 border-t border-border" />

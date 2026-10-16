@@ -2,7 +2,6 @@
 
 import {
   ArrowDownCircle,
-  ArrowLeft,
   ArrowUpCircle,
   Award,
   Ban,
@@ -18,7 +17,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -39,6 +37,7 @@ import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
+import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
 import EditBranchFormSheet from "../forms/EditBranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -261,12 +260,9 @@ export default function BranchDetailPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <Link href={backHref} className="inline-block w-fit">
-        <Button variant="ghost">
-          <ArrowLeft className="size-4" />
-          Kembali ke daftar Cabang
-        </Button>
-      </Link>
+      <BackButton fallbackHref={backHref}>
+        Kembali ke daftar Cabang
+      </BackButton>
 
       <section className="mt-4 rounded-xl border border-border bg-surface p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">

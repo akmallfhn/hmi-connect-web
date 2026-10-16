@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Building,
-  GitBranch,
-  LayoutDashboard,
-  Network,
-  School,
-  ShieldCheck,
-  Users,
-  Waypoints,
-} from "lucide-react";
+import { ADMIN_NAV_ICON } from "./admin-nav-icons";
 import Link from "next/link";
 import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
@@ -24,7 +15,7 @@ interface MasterSidebarProps {
 
 function getNavItems(organizationId?: string): AdminNavEntry[] {
   return [
-    { label: "Dashboard", href: "/master", icon: LayoutDashboard, exact: true },
+    { label: "Dashboard", href: "/master", icon: ADMIN_NAV_ICON.dashboard, exact: true },
     {
       groupName: "Organisasi",
       items: [
@@ -33,36 +24,36 @@ function getNavItems(organizationId?: string): AdminNavEntry[] {
               {
                 label: "Kelola Organisasi",
                 href: `/master/organizations/${organizationId}`,
-                icon: Building,
+                icon: ADMIN_NAV_ICON.organization,
               },
             ]
           : []),
         {
           label: "Kelola Badko",
           href: "/master/coordinating-bodies",
-          icon: Network,
+          icon: ADMIN_NAV_ICON.coordinatingBody,
         },
-        { label: "Kelola Cabang", href: "/master/branches", icon: GitBranch },
+        { label: "Kelola Cabang", href: "/master/branches", icon: ADMIN_NAV_ICON.branch },
         {
           label: "Kelola Korkom",
           href: "/master/coordinating-chapters",
-          icon: Waypoints,
+          icon: ADMIN_NAV_ICON.coordinatingChapter,
         },
         {
           label: "Kelola Komisariat",
           href: "/master/chapters",
-          icon: School,
+          icon: ADMIN_NAV_ICON.chapter,
         },
       ],
     },
     {
       groupName: "Keanggotaan",
       items: [
-        { label: "User Management", href: "/master/users", icon: Users },
+        { label: "User Management", href: "/master/users", icon: ADMIN_NAV_ICON.members },
         {
           label: "Permintaan Verifikasi",
           href: "/master/verification",
-          icon: ShieldCheck,
+          icon: ADMIN_NAV_ICON.verification,
         },
       ],
     },
