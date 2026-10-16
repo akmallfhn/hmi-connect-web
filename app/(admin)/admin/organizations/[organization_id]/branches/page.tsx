@@ -3,6 +3,10 @@ import { listBranchesAdmin } from "@/apis/branches";
 import { getCoordinatingBodyDetail } from "@/apis/coordinating-bodies";
 import AdminBranchListPage from "@/components/pages/AdminBranchListPage";
 import type { StatusEnum } from "@/lib/types";
+import {
+  NO_COORDINATING_BODY_FILTER,
+  NO_COORDINATING_BODY_LABEL,
+} from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Kelola Cabang",
@@ -37,13 +41,18 @@ export default async function OrganizationBranchesPage({
   const status = query.status ?? "";
   const page = Number(query.page ?? "1") || 1;
 
+  const withoutCoordinatingBody =
+    coordinatingBodyId === NO_COORDINATING_BODY_FILTER;
+
   const [coordinatingBody, result] = await Promise.all([
-    coordinatingBodyId
+    coordinatingBodyId && !withoutCoordinatingBody
       ? getCoordinatingBodyDetail(coordinatingBodyId)
       : Promise.resolve(null),
     listBranchesAdmin({
       organizationId: organization_id,
-      coordinatingBodyId: coordinatingBodyId || undefined,
+      coordinatingBodyId:
+        withoutCoordinatingBody ? undefined : coordinatingBodyId || undefined,
+      withoutCoordinatingBody,
       search: search || undefined,
       status: (status || undefined) as StatusEnum | undefined,
       page,
@@ -61,11 +70,14 @@ export default async function OrganizationBranchesPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedCoordinatingBody={
-        coordinatingBody
-          ? { id: coordinatingBody.id, name: coordinatingBody.name }
-          : null
+        withoutCoordinatingBody
+          ? { id: NO_COORDINATING_BODY_FILTER, name: NO_COORDINATING_BODY_LABEL }
+          : coordinatingBody
+            ? { id: coordinatingBody.id, name: coordinatingBody.name }
+            : null
       }
       allowDelete={false}
+      organizationId={organization_id}
       detailBasePath={`/organizations/${organization_id}/branches`}
     />
   );

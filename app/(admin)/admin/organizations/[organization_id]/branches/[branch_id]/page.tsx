@@ -39,7 +39,7 @@ export default async function OrganizationBranchDetailPage({
     searchParams,
   ]);
   const branch = await getBranchDetail(branch_id);
-  if (!branch || branch.coordinating_body?.organization_id !== organization_id) {
+  if (!branch || branch.organization_id !== organization_id) {
     notFound();
   }
 

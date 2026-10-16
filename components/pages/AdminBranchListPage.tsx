@@ -31,6 +31,10 @@ import EditBranchFormSheet from "../forms/EditBranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
+import {
+  NO_COORDINATING_BODY_FILTER,
+  NO_COORDINATING_BODY_LABEL,
+} from "@/lib/constants";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -58,6 +62,8 @@ interface AdminBranchListPageProps {
   selectedCoordinatingBody: { id: string; name: string } | null;
   allowEdit?: boolean;
   allowDelete?: boolean;
+  // Organization a Badko-less Cabang is created under; omitted, the server falls back to ORGANIZATION_ID.
+  organizationId?: string;
   detailBasePath?: string;
   hideCoordinatingBodyFilter?: boolean;
 }
@@ -104,6 +110,7 @@ export default function AdminBranchListPage({
   selectedCoordinatingBody,
   allowEdit = true,
   allowDelete = true,
+  organizationId,
   detailBasePath = "/master/branches",
   hideCoordinatingBodyFilter = false,
 }: AdminBranchListPageProps) {
@@ -139,9 +146,17 @@ export default function AdminBranchListPage({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const coordinatingBodyOption: SearchableOption | null = selectedCoordinatingBody
-    ? { label: selectedCoordinatingBody.name, value: selectedCoordinatingBody.id }
-    : null;
+  const noCoordinatingBodyOption: SearchableOption = {
+    label: NO_COORDINATING_BODY_LABEL,
+    value: NO_COORDINATING_BODY_FILTER,
+  };
+  const isNoCoordinatingBodyFilter =
+    selectedCoordinatingBody?.id === NO_COORDINATING_BODY_FILTER;
+  const coordinatingBodyOption: SearchableOption | null = isNoCoordinatingBodyFilter
+    ? noCoordinatingBodyOption
+    : selectedCoordinatingBody
+      ? { label: selectedCoordinatingBody.name, value: selectedCoordinatingBody.id }
+      : null;
 
   function pushParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -159,9 +174,16 @@ export default function AdminBranchListPage({
     const response = await fetch(`/api/coordinating-bodies/search?${params}`);
     const json = await response.json();
     const results: { id: string; name: string }[] = json.data ?? [];
+    const options = results.map((item) => ({ label: item.name, value: item.id }));
+    const query = inputValue.trim().toLocaleLowerCase("id-ID");
+    const hasMore = Boolean(json.hasMore);
+    // Every Badko first; the Badko-less choice closes the last page whenever the query could still mean it.
+    const showNoCoordinatingBody =
+      !hasMore &&
+      (!query || NO_COORDINATING_BODY_LABEL.toLocaleLowerCase("id-ID").includes(query));
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
-      hasMore: Boolean(json.hasMore),
+      options: showNoCoordinatingBody ? [...options, noCoordinatingBodyOption] : options,
+      hasMore,
     };
   }
 
@@ -319,7 +341,6 @@ export default function AdminBranchListPage({
                 pushParams({ coordinating_body_id: option ? String(option.value) : "" })
               }
               loadOptions={loadCoordinatingBodyOptions}
-              defaultOptions={coordinatingBodyOption ? [coordinatingBodyOption] : []}
             />
           </div>
         )}
@@ -410,7 +431,7 @@ export default function AdminBranchListPage({
                           <p className="truncate text-[13px] text-muted-foreground">
                             {branch.coordinating_body_name
                               ? `Badko ${branch.coordinating_body_name}`
-                              : "—"}
+                              : NO_COORDINATING_BODY_LABEL}
                           </p>
                         </div>
                       </Link>
@@ -467,7 +488,7 @@ export default function AdminBranchListPage({
                     <p className="truncate text-[13px] text-muted-foreground">
                       {branch.coordinating_body_name
                         ? `Badko ${branch.coordinating_body_name}`
-                        : "—"}
+                        : NO_COORDINATING_BODY_LABEL}
                     </p>
                   </div>
                 </div>
@@ -530,8 +551,11 @@ export default function AdminBranchListPage({
               setShowCreateForm(false);
               router.refresh();
             }}
-            defaultCoordinatingBody={coordinatingBodyOption}
+            defaultCoordinatingBody={
+              isNoCoordinatingBodyFilter ? null : coordinatingBodyOption
+            }
             lockCoordinatingBody={hideCoordinatingBodyFilter}
+            organizationId={organizationId}
           />
 
           <EditBranchFormSheet

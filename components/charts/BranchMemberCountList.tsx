@@ -5,6 +5,7 @@ import { Building2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { BranchListEntry } from "@/apis/branches";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 
 const PAGE_SIZE = 3;
 
@@ -21,8 +22,8 @@ function formatBranchName(name: string) {
   return `Cabang ${normalizedName || name}`;
 }
 
-function formatCoordinatingBodyName(name?: string) {
-  if (!name) return "Badko tidak tersedia";
+function formatCoordinatingBodyName(name: string | null) {
+  if (!name) return NO_COORDINATING_BODY_LABEL;
   const normalizedName = name.replace(/^(?:hmi\s+)?badko\s+/i, "").trim();
   return `Badko ${normalizedName || name}`;
 }

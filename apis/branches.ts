@@ -37,7 +37,7 @@ export type GetBranchesResult = {
 };
 
 async function fetchBranches(
-  options: GetBranchesOptions = {},
+  options: GetBranchesOptions = {}
 ): Promise<GetBranchesResult> {
   const { search, coordinatingBodyId, page, pageSize } = options;
   const cookieStore = await cookies();
@@ -49,7 +49,9 @@ async function fetchBranches(
     body: {
       organization_id: process.env.ORGANIZATION_ID,
       status: "active",
-      ...(coordinatingBodyId ? { coordinating_body_id: coordinatingBodyId } : {}),
+      ...(coordinatingBodyId
+        ? { coordinating_body_id: coordinatingBodyId }
+        : {}),
       ...(search ? { search } : {}),
       ...(page ? { page } : {}),
       ...(pageSize ? { page_size: pageSize } : {}),
@@ -66,14 +68,14 @@ async function fetchBranches(
 }
 
 export async function getBranches(
-  options: GetBranchesOptions = {},
+  options: GetBranchesOptions = {}
 ): Promise<Branch[]> {
   const { list } = await fetchBranches(options);
   return list;
 }
 
 export async function searchBranches(
-  options: GetBranchesOptions = {},
+  options: GetBranchesOptions = {}
 ): Promise<GetBranchesResult> {
   return fetchBranches(options);
 }
@@ -81,11 +83,13 @@ export async function searchBranches(
 // Mirrors POST /api/v1/branches/list's response — the admin table shape (/master/branches), unlike Branch above which is the {id,name} shape used for pickers elsewhere.
 export type BranchListEntry = {
   id: string;
-  coordinating_body_id: string;
+  organization_id: string;
+  // Null for a Cabang directly under the organization, such as the overseas ones.
+  coordinating_body_id: string | null;
   name: string;
   image_url: string | null;
   type: BranchTypeEnum;
-  coordinating_body_name?: string;
+  coordinating_body_name: string | null;
   status: StatusEnum;
   // Only present when include_aggregates is requested — active kader count under this branch.
   user_count?: number;
@@ -96,6 +100,8 @@ export type BranchListEntry = {
 export type ListBranchesOptions = {
   organizationId?: string;
   coordinatingBodyId?: string;
+  // Only Cabang without a Badko; can't be combined with coordinatingBodyId.
+  withoutCoordinatingBody?: boolean;
   search?: string;
   status?: StatusEnum;
   page?: number;
@@ -121,15 +127,22 @@ type BranchListAdminResponse = {
 
 // Requires Super Admin, or a manage grant on the entity named in the request — gated by MasterLayout for /master/branches.
 export async function listBranchesAdmin(
-  options: ListBranchesOptions = {},
+  options: ListBranchesOptions = {}
 ): Promise<PagedListResult<BranchListEntry>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken)
     return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { organizationId, coordinatingBodyId, search, status, page, pageSize } =
-    options;
+  const {
+    organizationId,
+    coordinatingBodyId,
+    withoutCoordinatingBody,
+    search,
+    status,
+    page,
+    pageSize,
+  } = options;
   const result = await callApi<BranchListAdminResponse>(
     "/api/v1/branches/list",
     {
@@ -138,15 +151,18 @@ export async function listBranchesAdmin(
       body: {
         organization_id: organizationId ?? process.env.ORGANIZATION_ID,
         include_aggregates: true,
-        ...(coordinatingBodyId
-          ? { coordinating_body_id: coordinatingBodyId }
-          : {}),
+        // null (not omitted) is how branches/list asks for Cabang without a Badko.
+        ...(withoutCoordinatingBody
+          ? { coordinating_body_id: null }
+          : coordinatingBodyId
+            ? { coordinating_body_id: coordinatingBodyId }
+            : {}),
         ...(search ? { search } : {}),
         ...(status ? { status } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },
-    },
+    }
   );
 
   if (!isSuccessStatus(result.status)) {
@@ -165,7 +181,7 @@ export async function listBranchesAdmin(
 }
 
 export async function listAllBranchesAdmin(
-  options: Omit<ListBranchesOptions, "page" | "pageSize"> = {},
+  options: Omit<ListBranchesOptions, "page" | "pageSize"> = {}
 ): Promise<BranchListEntry[]> {
   const pageSize = 100;
   const firstPage = await listBranchesAdmin({ ...options, page: 1, pageSize });
@@ -174,8 +190,8 @@ export async function listAllBranchesAdmin(
 
   const remainingPages = await Promise.all(
     Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
-      listBranchesAdmin({ ...options, page: index + 2, pageSize }),
-    ),
+      listBranchesAdmin({ ...options, page: index + 2, pageSize })
+    )
   );
 
   return [firstPage.list, ...remainingPages.map((page) => page.list)].flat();
@@ -184,7 +200,10 @@ export async function listAllBranchesAdmin(
 // Mirrors POST /api/v1/branches/detail's response.
 export type BranchDetail = {
   id: string;
-  coordinating_body_id: string;
+  organization_id: string;
+  organization_name: string | null;
+  // Null (and coordinating_body omitted) for a Cabang without a Badko.
+  coordinating_body_id: string | null;
   name: string;
   description: string | null;
   image_url: string | null;
@@ -201,7 +220,7 @@ export type BranchDetail = {
 };
 
 export async function getBranchDetail(
-  id: string,
+  id: string
 ): Promise<BranchDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -217,8 +236,10 @@ export async function getBranchDetail(
   return result.data;
 }
 
+// organization_id is required when coordinating_body_id is omitted; when both are sent they must match.
 export type CreateBranchPayload = {
-  coordinating_body_id: string;
+  organization_id?: string;
+  coordinating_body_id?: string;
   name: string;
   description?: string;
   image_url?: string;
@@ -227,7 +248,7 @@ export type CreateBranchPayload = {
 };
 
 export async function createBranch(
-  payload: CreateBranchPayload,
+  payload: CreateBranchPayload
 ): Promise<ApiEnvelope<BranchDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -238,16 +259,25 @@ export async function createBranch(
     };
   }
 
+  // A Cabang without a Badko still needs an organization to sit under.
+  const organizationId =
+    payload.organization_id ??
+    (payload.coordinating_body_id ? undefined : process.env.ORGANIZATION_ID);
+
   return callApi<BranchDetail>("/api/v1/branches/create", {
     method: "POST",
     token: sessionToken,
-    body: payload,
+    body: {
+      ...payload,
+      ...(organizationId ? { organization_id: organizationId } : {}),
+    },
   });
 }
 
 // type is rejected here by the backend — it moved to branches/set-type.
 export type UpdateBranchPayload = {
   id: string;
+  // An empty string detaches the Cabang from its Badko.
   coordinating_body_id?: string;
   name?: string;
   description?: string;
@@ -256,7 +286,7 @@ export type UpdateBranchPayload = {
 };
 
 export async function updateBranch(
-  payload: UpdateBranchPayload,
+  payload: UpdateBranchPayload
 ): Promise<ApiEnvelope<BranchDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -292,11 +322,15 @@ export async function deleteBranch(id: string): Promise<ApiEnvelope> {
 }
 
 // Suspension answers to the level above, never to the row itself — hence its own endpoint rather than update({status}).
-export async function suspendBranch(id: string): Promise<ApiEnvelope<BranchDetail>> {
+export async function suspendBranch(
+  id: string
+): Promise<ApiEnvelope<BranchDetail>> {
   return setEntityStatusBranch("suspend", id);
 }
 
-export async function activateBranch(id: string): Promise<ApiEnvelope<BranchDetail>> {
+export async function activateBranch(
+  id: string
+): Promise<ApiEnvelope<BranchDetail>> {
   return setEntityStatusBranch("activate", id);
 }
 
@@ -323,7 +357,7 @@ async function setEntityStatusBranch(
 // Promotion answers to the organization above the Badko, not to the Cabang itself — hence its own endpoint.
 export async function setBranchType(
   id: string,
-  type: BranchTypeEnum,
+  type: BranchTypeEnum
 ): Promise<ApiEnvelope<BranchDetail>> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;

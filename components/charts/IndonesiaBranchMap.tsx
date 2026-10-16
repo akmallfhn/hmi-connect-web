@@ -39,7 +39,8 @@ function formatBranchName(name: string) {
   return /^(hmi\s+)?cabang\s+/i.test(name) ? name : `HMI Cabang ${name}`;
 }
 
-function formatCoordinatingBodyName(name: string) {
+function formatCoordinatingBodyName(name: string | null) {
+  if (!name) return "-";
   return name.replace(/^(hmi\s+)?badko\s+/i, "").trim() || "-";
 }
 

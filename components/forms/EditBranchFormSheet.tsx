@@ -12,12 +12,19 @@ import SearchableSelect, { type SearchableOption } from "../fields/SearchableSel
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
+import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
+
+// Satisfied by both a list row and a detail response.
+type EditableBranch = Pick<
+  BranchListEntry,
+  "id" | "name" | "image_url" | "coordinating_body_id"
+> & { coordinating_body_name?: string | null };
 
 interface EditBranchFormSheetProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  branch: BranchListEntry | null;
+  branch: EditableBranch | null;
   // When true, the Badko field renders as fixed, read-only text instead of a searchable picker — used from a Badko's own scoped "Kelola Cabang" page so a Cabang can't be moved to another Badko.
   lockCoordinatingBody?: boolean;
 }
@@ -55,7 +62,7 @@ function EditBranchLoader({
   onClose,
   onSaved,
 }: {
-  branch: BranchListEntry;
+  branch: EditableBranch;
   lockCoordinatingBody: boolean;
   onClose: () => void;
   onSaved: () => void;
@@ -96,7 +103,7 @@ function EditBranchLoader({
       initialCoordinatingBody={
         detail?.coordinating_body
           ? { label: detail.coordinating_body.name, value: detail.coordinating_body.id }
-          : branch.coordinating_body_name
+          : branch.coordinating_body_id && branch.coordinating_body_name
             ? { label: branch.coordinating_body_name, value: branch.coordinating_body_id }
             : null
       }
@@ -153,11 +160,6 @@ function EditBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
-    if (!coordinatingBody) {
-      toast.error("Pilih Badko terlebih dahulu.");
-      return;
-    }
-
     setIsSaving(true);
     try {
       const result = await updateBranch({
@@ -165,7 +167,12 @@ function EditBranchFields({
         name: sanitizedName,
         description,
         image_url: imageUrl,
-        coordinating_body_id: String(coordinatingBody.value),
+        // An empty string detaches the Cabang; omitting it leaves a Badko-less Cabang as is.
+        ...(coordinatingBody
+          ? { coordinating_body_id: String(coordinatingBody.value) }
+          : initialCoordinatingBody
+            ? { coordinating_body_id: "" }
+            : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -207,7 +214,7 @@ function EditBranchFields({
             Badko
           </label>
           <p className="rounded-lg border border-border bg-surface-subtle px-3 py-2.5 text-sm text-heading">
-            {coordinatingBody?.label ?? "—"}
+            {coordinatingBody?.label ?? NO_COORDINATING_BODY_LABEL}
           </p>
         </div>
       ) : (
@@ -219,8 +226,12 @@ function EditBranchFields({
           onChange={setCoordinatingBody}
           loadOptions={loadCoordinatingBodyOptions}
           defaultOptions={initialCoordinatingBody ? [initialCoordinatingBody] : []}
-          required
         />
+      )}
+      {!lockCoordinatingBody && (
+        <p className="-mt-2 pl-1 text-[13px] text-muted-foreground">
+          Kosongkan untuk Cabang yang langsung di bawah PB HMI, seperti Cabang luar negeri.
+        </p>
       )}
 
       <TextArea

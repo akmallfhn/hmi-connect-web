@@ -11,6 +11,7 @@ import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
+import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -24,6 +25,7 @@ interface CreateBranchFormSheetProps {
   defaultCoordinatingBody?: SearchableOption | null;
   // When true, the Badko field renders as fixed, read-only text instead of a searchable picker — used from a Badko's own scoped "Kelola Cabang" page so a new Cabang can't be attached to another Badko.
   lockCoordinatingBody?: boolean;
+  organizationId?: string;
 }
 
 export default function CreateBranchFormSheet({
@@ -32,18 +34,20 @@ export default function CreateBranchFormSheet({
   onSaved,
   defaultCoordinatingBody = null,
   lockCoordinatingBody = false,
+  organizationId,
 }: CreateBranchFormSheetProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title="Tambah Cabang"
-      description="Buat Cabang HMI baru di bawah sebuah Badko."
+      description="Buat Cabang HMI baru, di bawah sebuah Badko atau langsung di bawah PB HMI."
     >
       {open && (
         <CreateBranchFields
           defaultCoordinatingBody={defaultCoordinatingBody}
           lockCoordinatingBody={lockCoordinatingBody}
+          organizationId={organizationId}
           onClose={onClose}
           onSaved={onSaved}
         />
@@ -56,11 +60,13 @@ export default function CreateBranchFormSheet({
 function CreateBranchFields({
   defaultCoordinatingBody,
   lockCoordinatingBody,
+  organizationId,
   onClose,
   onSaved,
 }: {
   defaultCoordinatingBody: SearchableOption | null;
   lockCoordinatingBody: boolean;
+  organizationId?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -90,11 +96,6 @@ function CreateBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
-    if (!coordinatingBody) {
-      toast.error("Pilih Badko terlebih dahulu.");
-      return;
-    }
-
     setIsSaving(true);
     try {
       const result = await createBranch({
@@ -102,7 +103,10 @@ function CreateBranchFields({
         image_url: imageUrl,
         type,
         status: "active",
-        coordinating_body_id: String(coordinatingBody.value),
+        ...(organizationId ? { organization_id: organizationId } : {}),
+        ...(coordinatingBody
+          ? { coordinating_body_id: String(coordinatingBody.value) }
+          : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -144,7 +148,7 @@ function CreateBranchFields({
             Badko
           </label>
           <p className="rounded-lg border border-border bg-surface-subtle px-3 py-2.5 text-sm text-heading">
-            {coordinatingBody?.label ?? "—"}
+            {coordinatingBody?.label ?? NO_COORDINATING_BODY_LABEL}
           </p>
         </div>
       ) : (
@@ -156,8 +160,12 @@ function CreateBranchFields({
           onChange={setCoordinatingBody}
           loadOptions={loadCoordinatingBodyOptions}
           defaultOptions={defaultCoordinatingBody ? [defaultCoordinatingBody] : []}
-          required
         />
+      )}
+      {!lockCoordinatingBody && (
+        <p className="-mt-2 pl-1 text-[13px] text-muted-foreground">
+          Kosongkan untuk Cabang yang langsung di bawah PB HMI, seperti Cabang luar negeri.
+        </p>
       )}
 
       <Select

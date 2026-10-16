@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { listAllBranchesAdmin } from "@/apis/branches";
 import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
 import { listEntityActivity } from "@/apis/feeds";
 import { getOrganizationDetail } from "@/apis/organizations";
@@ -48,14 +49,17 @@ export default async function OrganizationProfile({
     (await searchParams)?.as,
   );
 
-  const [coordinatingBodies, activity] = await Promise.all([
+  const [coordinatingBodies, branches, activity] = await Promise.all([
     listCoordinatingBodiesAdmin({
       organizationId: organization_id,
       status: "active",
       pageSize: 100,
     }),
+    listAllBranchesAdmin({ organizationId: organization_id, status: "active" }),
     listEntityActivity("organization", organization_id, { pageSize: 3 }),
   ]);
+  // Cabang without a Badko (the overseas ones) hang straight off the organization.
+  const directBranches = branches.filter((row) => !row.coordinating_body_id);
 
   return (
     <EntityProfilePage
@@ -70,16 +74,10 @@ export default async function OrganizationProfile({
         affiliations: [],
         stats: [
           { label: "Badko", value: coordinatingBodies.list.length },
-          {
-            label: "Cabang",
-            value: coordinatingBodies.list.reduce(
-              (total, row) => total + (row.branch_count ?? 0),
-              0,
-            ),
-          },
+          { label: "Cabang", value: branches.length },
           {
             label: "Kader",
-            value: coordinatingBodies.list.reduce(
+            value: branches.reduce(
               (total, row) => total + (row.user_count ?? 0),
               0,
             ),
@@ -87,15 +85,25 @@ export default async function OrganizationProfile({
         ],
         activities: activity.list,
         children: {
-          title: "Daftar Badko",
+          title:
+            directBranches.length > 0 ? "Daftar Badko & Cabang" : "Daftar Badko",
           emptyMessage: "Belum ada Badko yang terdaftar.",
-          items: coordinatingBodies.list.map((row) => ({
-            id: row.id,
-            name: formatEntityAuthorName("coordinating_body", row.name),
-            href: entityProfileHref("coordinating_body", row.id),
-            imageUrl: row.image_url,
-            meta: kaderMeta(row.user_count),
-          })),
+          items: [
+            ...coordinatingBodies.list.map((row) => ({
+              id: row.id,
+              name: formatEntityAuthorName("coordinating_body", row.name),
+              href: entityProfileHref("coordinating_body", row.id),
+              imageUrl: row.image_url,
+              meta: kaderMeta(row.user_count),
+            })),
+            ...directBranches.map((row) => ({
+              id: row.id,
+              name: formatEntityAuthorName("branch", row.name),
+              href: entityProfileHref("branch", row.id),
+              imageUrl: row.image_url,
+              meta: kaderMeta(row.user_count),
+            })),
+          ],
         },
       }}
       actingEntity={actingEntity}

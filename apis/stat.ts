@@ -172,8 +172,9 @@ export type BranchMapEntry = {
   status: StatusEnum;
   latitude: number | null;
   longitude: number | null;
-  coordinating_body_id: string;
-  coordinating_body_name: string;
+  // Null for a Cabang without a Badko.
+  coordinating_body_id: string | null;
+  coordinating_body_name: string | null;
   verified_member_count: number;
   chapter_count: number;
 };

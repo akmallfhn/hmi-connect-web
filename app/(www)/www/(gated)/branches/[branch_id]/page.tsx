@@ -48,11 +48,13 @@ export default async function BranchProfile({
     (await searchParams)?.as,
   );
 
-  // A Cabang's own kader/Komisariat counts are only exposed on its Badko's branch list row.
+  // A Cabang's own kader/Komisariat counts are only exposed on its parent's branch list row.
   const [siblings, chapters, coordinatingChapters, activity] =
     await Promise.all([
       listAllBranchesAdmin({
-        coordinatingBodyId: branch.coordinating_body_id,
+        ...(branch.coordinating_body_id
+          ? { coordinatingBodyId: branch.coordinating_body_id }
+          : { organizationId: branch.organization_id }),
         status: "active",
       }),
       listAllChaptersAdmin({ branchId: branch_id, status: "active" }),
@@ -65,11 +67,21 @@ export default async function BranchProfile({
     ]);
   const self = siblings.find((row) => row.id === branch_id);
 
-  const coordinatingBodyName = branch.coordinating_body?.name;
-  const coordinatingBodyHref = entityProfileHref(
-    "coordinating_body",
-    branch.coordinating_body_id,
-  );
+  // A Cabang without a Badko sits directly under its organization.
+  const parent = branch.coordinating_body
+    ? {
+        label: formatEntityAuthorName(
+          "coordinating_body",
+          branch.coordinating_body.name,
+        ),
+        href: entityProfileHref("coordinating_body", branch.coordinating_body.id),
+      }
+    : branch.organization_name
+      ? {
+          label: formatEntityAuthorName("organization", branch.organization_name),
+          href: entityProfileHref("organization", branch.organization_id),
+        }
+      : null;
 
   return (
     <EntityProfilePage
@@ -81,17 +93,7 @@ export default async function BranchProfile({
         description: branch.description,
         type: branch.type,
         createdAt: branch.created_at,
-        affiliations: coordinatingBodyName
-          ? [
-              {
-                label: formatEntityAuthorName(
-                  "coordinating_body",
-                  coordinatingBodyName,
-                ),
-                href: coordinatingBodyHref,
-              },
-            ]
-          : [],
+        affiliations: parent ? [parent] : [],
         stats: [
           {
             label: "Komisariat",

@@ -45,6 +45,7 @@ import AlertConfirmation from "../modals/AlertConfirmation";
 import StructuralPage from "./StructuralPage";
 import EmptyState from "../states/EmptyState";
 import LogoHmi from "../svg/LogoHmi";
+import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 import {
   TrainingLevelLabel,
   TrainingRegistrationLabel,
@@ -300,7 +301,7 @@ export default function BranchDetailPage({
               <p className="mt-1 text-sm text-muted-foreground">
                 {branch.coordinating_body
                   ? `Badko ${branch.coordinating_body.name}`
-                  : "HMI"}
+                  : NO_COORDINATING_BODY_LABEL}
               </p>
             </div>
           </div>

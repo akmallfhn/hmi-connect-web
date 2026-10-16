@@ -1,5 +1,10 @@
 export const SESSION_COOKIE_NAME = "session_token_hmi";
 
+// How a Cabang without a Badko is labelled; such Cabang sit directly under the organization.
+export const NO_COORDINATING_BODY_LABEL = "Cabang Istimewa/Luar Negeri";
+// The coordinating_body_id URL value that filters the Cabang list to those without a Badko.
+export const NO_COORDINATING_BODY_FILTER = "none";
+
 // Session cookie domain per DOMAIN_MODE — bare, no leading dot, so www. and admin. share one session.
 export function getSessionCookieDomain(): string | undefined {
   return process.env.DOMAIN_MODE === "local" ? "example.com" : "hmiconnect.id";

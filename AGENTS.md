@@ -1633,8 +1633,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   — no grant needed, unlike the admin `users/list` reads), `notFound()`s on a missing or `inactive`
   entity, then fetches its own relations. An entity's own kader/child counts are only exposed on its
   **parent's** list row (`include_aggregates`), so each route finds itself there — Cabang in
-  `listAllBranchesAdmin({coordinatingBodyId})`, Komisariat in `listAllChaptersAdmin({branchId})` —
+  `listAllBranchesAdmin({coordinatingBodyId})` (or `{organizationId}` for a Cabang without a Badko),
+  Komisariat in `listAllChaptersAdmin({branchId})` —
   rather than calling `stat/summary/*`, which needs a manage grant a plain member doesn't have.
+  A Badko-less Cabang names its organization as its parent affiliation instead, and the
+  organization profile counts Cabang/Kader from the full `branches/list` (not from Badko
+  aggregates, which miss those Cabang) and lists them after its Badko as "Daftar Badko & Cabang".
   `lib/entity-profile.ts` holds only what all five genuinely share and nothing per-entity:
   `kaderMeta`, `entityActivitiesMetadata`, and `entityProfileMetadata` (title/description/canonical/robots, so five `generateMetadata`s don't
   each rebuild the same object).
@@ -2913,6 +2917,20 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `legal_name` is sent verbatim (trimmed only) — `stripEntityNamePrefix` applies to `name` alone,
   since the `HMI Komisariat`/`HMI Korkom` display prefix is only ever added to the short label.
   Badko and Cabang have no `legal_name`; this pair is Komisariat/Korkom only.
+  **A Cabang's Badko is optional.** Every branch carries its own `organization_id`, and
+  `coordinating_body_id`/`coordinating_body_name` are `null` for one directly under the organization
+  (the overseas Cabang), so `BranchListEntry`/`BranchDetail`/`BranchMapEntry` type them nullable and
+  anything scoping a Cabang to its organization reads `branch.organization_id`, never
+  `coordinating_body.organization_id`. Leaving the Badko blank on create sends `organization_id`
+  instead (`AdminBranchListPage`'s `organizationId`, else `createBranch` falls back to
+  `ORGANIZATION_ID`); clearing it on edit sends `coordinating_body_id: ""`, which detaches the Cabang.
+  Such a Cabang shows `lib/constants.ts#NO_COORDINATING_BODY_LABEL` ("Cabang Istimewa/Luar Negeri")
+  wherever a Badko subtitle would go. The Cabang list's Badko filter offers that label as its last
+  option, listed after every Badko (no `defaultOptions`, so the full list loads on mount); picking it sets `coordinating_body_id=NO_COORDINATING_BODY_FILTER` (`none`) in the URL,
+  which the Master and Organization routes turn into `listBranchesAdmin`'s
+  `withoutCoordinatingBody` (`branches/list` with `coordinating_body_id: null`), so pagination
+  and search stay server-side. The `nationwide` branch
+  map excludes it — `international` coverage is exactly the Badko-less set.
   **No create sheet has a Deskripsi or an Aktif/Tidak Aktif Status field** — a new entity is always
   created `status: "active"`, and suspension belongs to the level above it (see Suspension below);
   Deskripsi is filled in later from the entity's own Pengaturan → Profil tab or the Edit sheet. Unlike its first pass,
@@ -3114,8 +3132,8 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit (Master
   and Organization) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
   (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
-  fetches the real detail via `getBranchDetail` before mounting its fields), each with a Badko
-  `SearchableSelect`, plus the `type` field on Create only (labelled "Status", see the Komisariat
+  fetches the real detail via `getBranchDetail` before mounting its fields), each with an
+  **optional** Badko `SearchableSelect`, plus the `type` field on Create only (labelled "Status", see the Komisariat
   entry above) — fields Badko's own sheets don't have, since a Badko
   has no changeable parent and no `full`/`provisional` concept; Edit has no Tipe field, since
   `branches/update` now 400s on one. Both sheets also take an optional `lockCoordinatingBody` prop (threaded from
@@ -3132,7 +3150,7 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   fetches `getStructuralOverview` and passes it through), Daftar Komisariat (table of
   this branch's chapters via `listAllChaptersAdmin`, including Asal Universitas), and Latihan Kader
   (`trainings/list` filtered to the `branch` organizer) tabs. The Organization detail route verifies
-  the fetched branch's `coordinating_body.organization_id` matches its own validated scope, the same
+  the fetched branch's own `organization_id` matches its own validated scope, the same
   way the Badko Organization detail route checks `organization_id`; the Badko-scoped detail route
   checks `coordinating_body_id` instead. That Badko-scoped detail route also passes `allowEdit={false}`
   and `allowStatusChange={false}` (no Edit Detail button, no Suspend/Aktifkan) — `allowStatusChange`
