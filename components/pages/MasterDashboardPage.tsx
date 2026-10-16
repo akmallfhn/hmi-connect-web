@@ -58,9 +58,13 @@ export default function MasterDashboardPage({
   showIndonesiaMap = false,
   showAttentionLists = false,
 }: MasterDashboardPageProps) {
+  // Organization reuses this page under its own route, so every card links inside that scope.
+  const basePath = organizationId ? `/organizations/${organizationId}` : "/master";
+  const membersPath = organizationId ? `${basePath}/members` : "/master/users";
   const stats = [
     {
       label: "Kader Terverifikasi",
+      href: `${membersPath}?status=active&verification_status=verified`,
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
@@ -68,6 +72,7 @@ export default function MasterDashboardPage({
     },
     {
       label: "Total Cabang",
+      href: `${basePath}/branches`,
       value: (summary?.branch_count ?? 0).toLocaleString("id-ID"),
       icon: Building2,
       iconBg: "bg-secondary-soft",
@@ -75,6 +80,7 @@ export default function MasterDashboardPage({
     },
     {
       label: "Total Komisariat",
+      href: `${basePath}/chapters`,
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-tertiary/10",
@@ -82,6 +88,7 @@ export default function MasterDashboardPage({
     },
     {
       label: "Total Badko",
+      href: `${basePath}/coordinating-bodies`,
       value: (summary?.coordinating_body_count ?? 0).toLocaleString("id-ID"),
       icon: Network,
       iconBg: "bg-primary-soft",

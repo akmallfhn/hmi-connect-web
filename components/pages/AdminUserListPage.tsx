@@ -201,14 +201,14 @@ export default function AdminUserListPage({
   }
 
   return (
-    <div className="p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+    <div className="p-4 pb-24 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <AdminPageTitle description="Kelola akun dan hak akses user HMI Connect.">
             User Management
           </AdminPageTitle>
         </div>
-        <div className="hidden lg:block">
+        <div className="hidden sm:block">
           <Button
             variant="primary"
             onClick={() => router.push("/master/users/create")}
@@ -222,7 +222,7 @@ export default function AdminUserListPage({
       <Button
         variant="primary"
         size="icon"
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-5 z-20 size-14! rounded-full shadow-lg lg:hidden"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-5 z-20 size-14! rounded-full! shadow-lg sm:hidden"
         aria-label="Tambah user"
         title="Tambah user"
         onClick={() => router.push("/master/users/create")}

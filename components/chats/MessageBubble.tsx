@@ -59,7 +59,7 @@ export default function MessageBubble({
             <div
               className={[
                 "select-none whitespace-pre-wrap px-1 pb-1 pt-2 text-sm leading-relaxed break-words",
-                isOwn ? "text-on-dark" : "text-heading",
+                isOwn ? "text-on-primary-action" : "text-heading",
               ].join(" ")}
             >
               {message.content}
@@ -86,7 +86,7 @@ export default function MessageBubble({
                 : [
                     "select-none whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words",
                     isOwn
-                      ? "bg-primary text-on-primary"
+                      ? "bg-primary text-on-primary-action"
                       : "bg-surface-muted text-heading",
                   ].join(" ")
             }

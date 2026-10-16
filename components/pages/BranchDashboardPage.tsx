@@ -52,9 +52,11 @@ export default function BranchDashboardPage({
   suspendedChapters,
 }: BranchDashboardPageProps) {
   const { branchName } = useBranch();
+  const basePath = `/branches/${branchId}`;
   const stats = [
     {
       label: "Kader Terverifikasi",
+      href: `${basePath}/members?status=active&verification_status=verified`,
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
@@ -62,6 +64,7 @@ export default function BranchDashboardPage({
     },
     {
       label: "Total Komisariat",
+      href: `${basePath}/chapters`,
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-secondary-soft",
@@ -69,6 +72,7 @@ export default function BranchDashboardPage({
     },
     {
       label: "Permintaan Verifikasi",
+      href: `${basePath}/verification?status=pending`,
       value: (summary?.pending_verification_request_count ?? 0).toLocaleString(
         "id-ID",
       ),

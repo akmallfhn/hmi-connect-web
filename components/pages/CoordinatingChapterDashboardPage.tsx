@@ -48,9 +48,11 @@ export default function CoordinatingChapterDashboardPage({
   trainingPriorities,
   suspendedChapters,
 }: CoordinatingChapterDashboardPageProps) {
+  const basePath = `/coordinating-chapters/${coordinatingChapterId}`;
   const stats = [
     {
       label: "Kader Terverifikasi",
+      href: `${basePath}/members?status=active&verification_status=verified`,
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
@@ -58,6 +60,7 @@ export default function CoordinatingChapterDashboardPage({
     },
     {
       label: "Total Komisariat",
+      href: `${basePath}/chapters`,
       value: (summary?.chapter_count ?? 0).toLocaleString("id-ID"),
       icon: Factory,
       iconBg: "bg-secondary-soft",

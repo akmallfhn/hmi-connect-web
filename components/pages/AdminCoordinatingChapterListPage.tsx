@@ -6,6 +6,7 @@ import {
   Eye,
   LayoutGrid,
   Pencil,
+  Plus,
   PlusCircle,
   Search,
   Table2,
@@ -22,6 +23,10 @@ import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Dropdown from "../common/Dropdown";
 import Label from "../common/Label";
+import ActiveFilterChips, {
+  type ActiveFilterChip,
+} from "../common/ActiveFilterChips";
+import FilterDropdown from "../common/FilterDropdown";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -275,14 +280,43 @@ export default function AdminCoordinatingChapterListPage({
             setDeleteTarget(coordinatingChapter);
           }}
           aria-label="Hapus Korkom"
-          className="text-destructive-foreground hover:bg-destructive-soft"
+          className="hover:bg-destructive-soft!"
         >
-          <Trash2 className="size-4" />
+          <Trash2 className="size-4 text-destructive-foreground" />
         </Button>
       );
     }
 
     return null;
+  }
+
+  const filterChips: ActiveFilterChip[] = [
+    ...(!hideBranchFilter && selectedBranch
+      ? [
+          {
+            key: "branch_id",
+            label: "Cabang",
+            value: selectedBranch.name,
+            onRemove: () => pushParams({ branch_id: "" }),
+          },
+        ]
+      : []),
+    ...(initialStatus
+      ? [
+          {
+            key: "status",
+            label: "Status",
+            value:
+              STATUS_FILTER_OPTIONS.find((option) => option.value === initialStatus)
+                ?.label ?? initialStatus,
+            onRemove: () => pushParams({ status: "" }),
+          },
+        ]
+      : []),
+  ];
+
+  function clearFilters() {
+    pushParams({ branch_id: "", status: "" });
   }
 
   const hasFilter = Boolean(
@@ -292,7 +326,7 @@ export default function AdminCoordinatingChapterListPage({
   const isReadOnly = !allowCreate && !allowEdit && !allowDelete;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className={`p-4 sm:p-6 lg:p-8 ${allowCreate ? "pb-24" : ""}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <AdminPageTitle
@@ -306,16 +340,27 @@ export default function AdminCoordinatingChapterListPage({
           </AdminPageTitle>
         </div>
         {allowCreate && (
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateForm(true)}
-            className="w-fit"
-          >
-            <PlusCircle className="size-4" />
-            Tambah Korkom
-          </Button>
+          <div className="hidden sm:block">
+            <Button variant="primary" onClick={() => setShowCreateForm(true)}>
+              <PlusCircle className="size-4" />
+              Tambah Korkom
+            </Button>
+          </div>
         )}
       </div>
+
+      {allowCreate && (
+        <Button
+          variant="primary"
+          size="icon"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-5 z-20 size-14! rounded-full! shadow-lg sm:hidden"
+          aria-label="Tambah Korkom"
+          title="Tambah Korkom"
+          onClick={() => setShowCreateForm(true)}
+        >
+          <Plus className="size-6" />
+        </Button>
+      )}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="w-full sm:max-w-xs">
@@ -327,60 +372,69 @@ export default function AdminCoordinatingChapterListPage({
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-        {!hideBranchFilter && (
-          <div className="w-full sm:max-w-xs">
-            <SearchableSelect
-              selectId="coordinating-chapter-branch-filter"
-              placeholder="Filter Cabang"
-              value={branchOption}
-              onChange={(option) =>
-                pushParams({ branch_id: option ? String(option.value) : "" })
-              }
-              loadOptions={loadBranchOptions}
-              defaultOptions={branchOption ? [branchOption] : []}
+        <div className="flex items-center gap-2 sm:flex-1">
+          <FilterDropdown
+            panelId="coordinating-chapter-filters"
+            ariaLabel="Filter daftar Korkom"
+            activeCount={filterChips.length}
+            onReset={clearFilters}
+          >
+            {!hideBranchFilter && (
+              <SearchableSelect
+                selectId="coordinating-chapter-branch-filter"
+                label="Cabang"
+                placeholder="Semua Cabang"
+                value={branchOption}
+                onChange={(option) =>
+                  pushParams({ branch_id: option ? String(option.value) : "" })
+                }
+                loadOptions={loadBranchOptions}
+                portalMenu={false}
+              />
+            )}
+            <Select
+              selectId="coordinating-chapter-status-filter"
+              label="Status"
+              placeholder="Semua Status"
+              value={initialStatus || null}
+              onChange={(value) => pushParams({ status: String(value ?? "") })}
+              options={STATUS_FILTER_OPTIONS}
             />
+          </FilterDropdown>
+          <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 ml-auto">
+            <button
+              type="button"
+              onClick={() => handleViewModeChange("table")}
+              aria-pressed={viewMode === "table"}
+              title="Tampilan Tabel"
+              className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+                viewMode === "table"
+                  ? "bg-primary-soft text-primary-foreground"
+                  : "text-muted-foreground hover:text-heading"
+              }`}
+            >
+              <Table2 className="size-3.5" />
+              <span className="hidden sm:inline">Tabel</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewModeChange("card")}
+              aria-pressed={viewMode === "card"}
+              title="Tampilan Card"
+              className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+                viewMode === "card"
+                  ? "bg-primary-soft text-primary-foreground"
+                  : "text-muted-foreground hover:text-heading"
+              }`}
+            >
+              <LayoutGrid className="size-3.5" />
+              <span className="hidden sm:inline">Card</span>
+            </button>
           </div>
-        )}
-        <div className="w-full sm:max-w-52">
-          <Select
-            selectId="coordinating-chapter-status-filter"
-            placeholder="Filter Status"
-            value={initialStatus || null}
-            onChange={(value) => pushParams({ status: String(value ?? "") })}
-            options={STATUS_FILTER_OPTIONS}
-          />
-        </div>
-        <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 sm:ml-auto">
-          <button
-            type="button"
-            onClick={() => handleViewModeChange("table")}
-            aria-pressed={viewMode === "table"}
-            title="Tampilan Tabel"
-            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
-              viewMode === "table"
-                ? "bg-primary-soft text-primary-foreground"
-                : "text-muted-foreground hover:text-heading"
-            }`}
-          >
-            <Table2 className="size-3.5" />
-            <span className="hidden sm:inline">Tabel</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleViewModeChange("card")}
-            aria-pressed={viewMode === "card"}
-            title="Tampilan Card"
-            className={`flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
-              viewMode === "card"
-                ? "bg-primary-soft text-primary-foreground"
-                : "text-muted-foreground hover:text-heading"
-            }`}
-          >
-            <LayoutGrid className="size-3.5" />
-            <span className="hidden sm:inline">Card</span>
-          </button>
         </div>
       </div>
+
+      <ActiveFilterChips chips={filterChips} onClearAll={clearFilters} />
 
       {coordinatingChapters.length === 0 ? (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">

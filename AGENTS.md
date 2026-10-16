@@ -36,7 +36,7 @@ fix the rule, not just the code.
   `--badge-foreground` (white) with accessible badge background tokens. The
   shared `Label` pill uses colored text, a soft background, and a 1px border
   using the text color at 30% opacity for every variant in both themes.
-  Primary buttons and icon actions use `--on-primary-action` (white) in both
+  Primary buttons, icon actions, and the viewer's own chat bubbles use `--on-primary-action` (white) in both
   modes; `--on-primary` remains dark in light mode for longer text on tosca.
   Filled destructive buttons use white text in both themes; their light red and
   hover tokens are dark enough to maintain WCAG AA contrast with white.
@@ -200,7 +200,12 @@ entity dashboard. This layout-level check protects every nested route under the 
 All five render the shared `EntitySidebar` shell (entity name above, session user below) with an
 exact-matched Dashboard item first, and every one of the five Dashboard bodies now renders an
 `AdminPageTitle` (naming the entity in its description) plus the shared `AdminDashboardBanner`
-below it, followed immediately by entity-specific `StatCard`s. Each scope calls exactly one of
+below it, followed immediately by entity-specific `StatCard`s. A `StatCard` with an `href` renders
+as a link to the list behind its number, inside the same admin scope: Kader Terverifikasi opens the
+scope's roster (`/master/users` on Master) pre-filtered to `status=active&verification_status=verified`,
+Total Badko/Cabang/Komisariat open that scope's list, and Cabang's Permintaan Verifikasi opens its
+queue at `status=pending`. A card with no page behind it (percentages, growth, Badko's Korkom and
+Komisariat totals) passes no `href` and stays a plain card. Each scope calls exactly one of
 the five matching summary endpoints: `summary/organization` (shared by Master and Organization),
 `summary/coordinating-body` (Badko), `summary/branch` (Cabang),
 `summary/coordinating-chapter` (Korkom), or `summary/chapter` (Komisariat). Komisariat additionally
@@ -751,10 +756,17 @@ them "Akses Ditolak" (see the accept route below).
   creating the first row, the CTA belongs in the empty state itself rather than in a header the
   empty view doesn't need (see `EntityAccessTab` below).
   List pages pass different copy for a genuinely empty collection versus an empty search/filter.
-  Admin list filter controls use action-oriented placeholders (`Filter Status`, `Filter Cabang`,
-  `Filter Badko`, etc.), never state-like placeholders such as `Semua ...`. Status filters pass
-  `null` to `Select` while the URL status is empty so the placeholder remains visible; the
-  `Semua Status` empty-value option stays in the dropdown as the explicit way to clear a selection.
+  Every admin list filters the same way: a search `Input` beside one `components/common/FilterDropdown.tsx`
+  button (its red badge counts active filters), with `ActiveFilterChips` under the row for removing
+  one filter or all of them. That covers the member rosters (`MemberFilterBar`), the verification
+  queue, and the Badko/Cabang/Korkom/Komisariat lists (`AdminCoordinatingBodyListPage`,
+  `AdminBranchListPage`, `AdminCoordinatingChapterListPage`, `AdminChapterListPage`), whose parent
+  picker (Badko or Cabang, hidden when the route already fixes it) and Status select now live inside
+  the panel. Inside the panel each field carries a `label`, so placeholders read `Semua Status`/
+  `Semua Cabang`/`Semua Badko`, and every `SearchableSelect` there passes `portalMenu={false}` so a
+  click in its menu doesn't count as a click outside the panel. Status filters pass `null` to
+  `Select` while the URL status is empty, and the `Semua Status` empty-value option stays as the
+  explicit way to clear it.
 - `components/fields/*` — controlled form primitives (`Input`, `NumberInput`, `Select`,
   `TextArea`, `RadioButton`, `CreateableSelect`, `SearchableSelect`, `PasswordInput`).
   `Input` takes an optional `trailing` node rendered inside the field's right edge (the
@@ -2330,9 +2342,15 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   The cards stack one per row on phones and sit two per row from `sm` (`grid sm:grid-cols-2`), with
   the footer pinned by `mt-auto` so paired cards line up. The desktop
   tables remain at `xl`, while `MemberFilterBar` exposes the table's name/date sorting through
-  a mobile `Sort` button and dropdown beside `Filter`. Master alone shows an icon-only rounded
-  `+` create button fixed at the lower right below `lg`; its labeled create button stays hidden
-  until the desktop header. Scoped member rosters remain read-only.
+  a mobile `Sort` button and dropdown beside `Filter`. Master alone shows an icon-only round
+  `+` create button fixed at the lower right below `sm`; from `sm` up the labeled "Tambah User"
+  button sits top-right in the header instead. Scoped member rosters remain read-only. The
+  Badko/Cabang/Korkom/Komisariat lists follow the same split for their "Tambah …" button whenever
+  their create flag allows it, adding `pb-24` below `sm` so the last row clears it. The floating
+  button passes `rounded-full!`, since `size="icon"` already sets `rounded-lg` and two border-radius
+  utilities resolve by stylesheet order, not class order. Those four lists also keep their
+  Tabel/Card toggle on the Filter button's line (`ml-auto` inside a shared flex row) rather than
+  letting it stretch to its own full-width row on phones.
   The backend has no `users/detail`-by-id endpoint (only by `username`, and only `users/update`/
   `users/delete` take an `id`), so — mirroring how `/profile/[username]` already solves this
   same backend shape — the read page is keyed by **username**, not id:
@@ -2943,7 +2961,7 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `ORGANIZATION_ID`); clearing it on edit sends `coordinating_body_id: ""`, which detaches the Cabang.
   Such a Cabang shows `lib/constants.ts#NO_COORDINATING_BODY_LABEL` ("Cabang Istimewa/Luar Negeri")
   wherever a Badko subtitle would go. The Cabang list's Badko filter offers that label as its last
-  option, listed after every Badko (no `defaultOptions`, so the full list loads on mount); picking it sets `coordinating_body_id=NO_COORDINATING_BODY_FILTER` (`none`) in the URL,
+  option, listed after every Badko (no `defaultOptions`, so the list loads on mount, and `page_size=100` so all Badko arrive in one page and the option shows without scrolling); picking it sets `coordinating_body_id=NO_COORDINATING_BODY_FILTER` (`none`) in the URL,
   which the Master and Organization routes turn into `listBranchesAdmin`'s
   `withoutCoordinatingBody` (`branches/list` with `coordinating_body_id: null`), so pagination
   and search stay server-side. The `nationwide` branch
@@ -3102,8 +3120,10 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   table entirely — this app only has one organization, so every row would repeat the same value.
   Table names always normalize to a single `Badko` prefix. Its columns are Nama Badko, Jumlah
   Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from `include_aggregates: true` — and
-  Status. Master retains the edit/delete action dropdown; Organization omits delete and renders
-  an Edit button in each table row and an Edit icon in each card. The prefixed Badko name links to a
+  Status. Both scopes use the same table-row "⋮" dropdown (Lihat Detail, Edit), and only Master's
+  adds Hapus (`allowDelete`); the card shows only Master's red Hapus icon and no action on
+  Organization. Every list card's trash icon carries `text-destructive-foreground` on the icon
+  itself, since the `ghost` Button's own `text-heading` would otherwise win and paint it black. The prefixed Badko name links to a
   shared detail page under the current scope
   (`/master/coordinating-bodies/[coordinating_body_id]` or
   `/organizations/[organization_id]/coordinating-bodies/[coordinating_body_id]`). That page has

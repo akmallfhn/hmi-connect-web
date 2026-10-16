@@ -40,6 +40,7 @@ export default async function ChapterDetailPage({
   ]);
   return (
     <ChapterDashboardPage
+      chapterId={chapter_id}
       chapterName={chapter?.name ?? "ini"}
       summary={summary}
       userGrowthDay={userGrowthDay?.list ?? []}

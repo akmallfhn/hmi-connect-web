@@ -11,6 +11,7 @@ import StatusDonut from "../charts/StatusDonut";
 import AdminPageTitle from "../common/AdminPageTitle";
 
 interface ChapterDashboardPageProps {
+  chapterId: string;
   chapterName: string;
   summary: ChapterSummary | null;
   userGrowthDay: UserGrowthEntry[];
@@ -20,6 +21,7 @@ interface ChapterDashboardPageProps {
 }
 
 export default function ChapterDashboardPage({
+  chapterId,
   chapterName,
   summary,
   userGrowthDay,
@@ -30,6 +32,7 @@ export default function ChapterDashboardPage({
   const stats = [
     {
       label: "Kader Terverifikasi",
+      href: `/chapters/${chapterId}/members?status=active&verification_status=verified`,
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",

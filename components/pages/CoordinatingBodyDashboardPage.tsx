@@ -52,9 +52,11 @@ export default function CoordinatingBodyDashboardPage({
   trainingPriorities,
   suspendedBranches,
 }: CoordinatingBodyDashboardPageProps) {
+  const basePath = `/coordinating-bodies/${coordinatingBodyId}`;
   const stats = [
     {
       label: "Kader Terverifikasi",
+      href: `${basePath}/members?status=active&verification_status=verified`,
       value: (summary?.verified_member_count ?? 0).toLocaleString("id-ID"),
       icon: BadgeCheck,
       iconBg: "bg-primary-soft",
@@ -62,6 +64,7 @@ export default function CoordinatingBodyDashboardPage({
     },
     {
       label: "Total Cabang",
+      href: `${basePath}/branches`,
       value: (summary?.branch_count ?? 0).toLocaleString("id-ID"),
       icon: Building2,
       iconBg: "bg-secondary-soft",
