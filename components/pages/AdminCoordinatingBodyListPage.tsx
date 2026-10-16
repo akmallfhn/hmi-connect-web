@@ -180,12 +180,10 @@ export default function AdminCoordinatingBodyListPage({
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            router.push(`${detailBasePath}/${coordinatingBody.id}`)
-          }
+          onClick={() => setEditTarget(coordinatingBody)}
         >
-          <Eye className="size-4" />
-          Lihat Detail
+          <Pencil className="size-4" />
+          Edit
         </Button>
       );
     }
@@ -235,25 +233,22 @@ export default function AdminCoordinatingBodyListPage({
   }
 
   function renderCardAction(coordinatingBody: CoordinatingBodyListEntry) {
-    if (allowDelete) {
-      return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDeleteTarget(coordinatingBody);
-          }}
-          aria-label="Hapus Badko"
-          className="text-destructive-foreground hover:bg-destructive-soft"
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      );
-    }
-
-    return null;
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (allowDelete) setDeleteTarget(coordinatingBody);
+          else setEditTarget(coordinatingBody);
+        }}
+        aria-label={allowDelete ? "Hapus Badko" : "Edit Badko"}
+        className={allowDelete ? "text-destructive-foreground hover:bg-destructive-soft" : undefined}
+      >
+        {allowDelete ? <Trash2 className="size-4" /> : <Pencil className="size-4" />}
+      </Button>
+    );
   }
 
   const isEmpty = coordinatingBodies.length === 0;

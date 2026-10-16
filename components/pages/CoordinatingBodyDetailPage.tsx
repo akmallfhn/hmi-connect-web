@@ -67,7 +67,7 @@ interface CoordinatingBodyDetailPageProps {
   selectedStructuralPeriodId: number | null;
   initialTab: CoordinatingBodyDetailTab;
   backHref: string;
-  // Master manages Badko directly; Organization's view of a Badko is read-only (mirrors allowDelete on the list page).
+  // Master and Organization may edit Badko details; deletion stays on the Master list.
   allowEdit?: boolean;
   // Only Master's own detail routes fetch grants; other scopes render no Akses tab.
   accessGrants?: AccessGrantEntry[] | null;

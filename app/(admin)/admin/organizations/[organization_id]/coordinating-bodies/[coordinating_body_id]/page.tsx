@@ -78,7 +78,6 @@ export default async function OrganizationCoordinatingBodyDetailPage({
       accessInviteDisabled={coordinatingBody.status === "inactive"}
       initialTab={parseTab(query.tab)}
       backHref={`/organizations/${organization_id}/coordinating-bodies`}
-      allowEdit={false}
     />
   );
 }

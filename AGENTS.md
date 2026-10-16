@@ -148,8 +148,9 @@ row per `(user, entity, capability)`), and `check-session` now returns `grants[]
 entity, one person may hold several, and `capability` is currently always `manage`. Two rules
 govern it: **governance** actions (create/update/delete/review) normally need a grant at _exactly_
 that entity, while **reads** are satisfied by a grant at that entity _or anywhere above it_.
-Cabang create/edit also accepts a grant at its Organization: create checks the chosen Badko's
-organization, edit checks the current Cabang's organization, and moving checks the destination.
+Badko edit also accepts a grant at its Organization. Cabang create/edit also accepts a grant at
+its Organization: create checks the chosen Badko's organization, edit checks the current Cabang's
+organization, and moving checks the destination.
 `Super Admin` sits outside `access_grants` entirely (its `grants` is `[]`) as the root of the
 grant chain. The `"Administrator"` role was removed in the same change, so `USER_ROLE_OPTIONS`
 only lists Super Admin (0) and General User (2) — there's still no fixed `role_name` union in
@@ -3067,9 +3068,9 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   table entirely — this app only has one organization, so every row would repeat the same value.
   Table names always normalize to a single `Badko` prefix. Its columns are Nama Badko, Jumlah
   Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from `include_aggregates: true` — and
-  Status. Master retains the edit/delete action dropdown; Organization deliberately omits delete
-  and renders one primary Edit button directly in every row. The prefixed Badko name links to a
-  shared read-only detail page under the current scope
+  Status. Master retains the edit/delete action dropdown; Organization omits delete and renders
+  an Edit button in each table row and an Edit icon in each card. The prefixed Badko name links to a
+  shared detail page under the current scope
   (`/master/coordinating-bodies/[coordinating_body_id]` or
   `/organizations/[organization_id]/coordinating-bodies/[coordinating_body_id]`). That page has
   Profil, Kepengurusan, Cabang, and Latihan Kader tabs: Profil reads the expanded
@@ -3083,8 +3084,10 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `/coordinating-bodies/[coordinating_body_id]/structural` page. The Organization detail route also verifies
   that the fetched Badko's `organization_id` matches its already-validated route scope. Its tab
   switcher uses a fully-rounded white bordered track with an orange active pill.
-  The Profil footer exposes the status mutation: an active Badko gets a destructive Suspend action,
-  an inactive one gets a primary Activate action, and both confirm through `AlertConfirmation`
+  Master and Organization can open Edit Detail from that page; editing accepts a grant at the Badko
+  or its Organization, while deletion remains Super Admin only. The Profil footer exposes the status
+  mutation: an active Badko gets a destructive Suspend action, an inactive one gets a primary
+  Activate action, and both confirm through `AlertConfirmation`
   before delegating to the existing `updateCoordinatingBody` Server Action.
   `components/forms/CoordinatingBodyFormSheet.tsx` is correspondingly the smallest of the three
   sheets — just Nama Badko + Status, no `SearchableSelect` at all.
