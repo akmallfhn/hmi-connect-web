@@ -596,6 +596,8 @@ should be typed here, not left as `string`. Currently mirrors these Postgres enu
 - `TrainingOrganizerTypeEnum` — `chapter | branch | coordinating_body | organization`
 - `Degree` — education degree levels (not a DB enum name 1:1, but same idea)
 - `ProfileCompletionStageEnum` — the six fixed `users/profile-completion` stage keys
+- `UserSortByEnum`/`CoordinatingBodySortByEnum`/`SortTypeEnum` — the sortable columns of `users/list`
+  (`created_at`, `full_name`) and `coordinating-bodies/list` (`index`, `name`), and their direction
 
 When the backend adds a new Postgres enum you need to model, add it here — don't
 inline a `string` union somewhere else in the tree.
@@ -3118,7 +3120,16 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   — there's nothing above a Badko to filter by. `coordinating-bodies/list` does return an
   `organization_name` per row, but it's deliberately left off `CoordinatingBodyListEntry` and the
   table entirely — this app only has one organization, so every row would repeat the same value.
-  Table names always normalize to a single `Badko` prefix. Its columns are Nama Badko, Jumlah
+  Table names always normalize to a single `Badko` prefix. The list sorts like the user list:
+  `sort_by`/`sort_type` live in the URL, both routes validate them through
+  `lib/coordinating-body-sort.ts#parseCoordinatingBodySort` and pass them to
+  `listCoordinatingBodiesAdmin`, and an absent sort means the backend default, west to east by
+  `index` (Aceh first, Papua last). The table's first column, No, is the row's position in the list
+  (`(currentPage - 1) * pageSize + position + 1`), never the DB `index`, so a gap in `index` never
+  shows as a skipped number; its `SortableHeader` sorts by `index` (`defaultDirection="asc"`, so it
+  toggles west↔east), and Nama Badko cycles
+  A–Z → Z–A → default. The card view has no headers, so it shows the user list's Sort dropdown
+  (`COORDINATING_BODY_SORT_OPTIONS`) beside Filter. Its columns are No, Nama Badko, Jumlah
   Cabang (`branch_count`), Jumlah Kader (`user_count`) — both from `include_aggregates: true` — and
   Status. Both scopes use the same table-row "⋮" dropdown (Lihat Detail, Edit), and only Master's
   adds Hapus (`allowDelete`); the card shows only Master's red Hapus icon and no action on

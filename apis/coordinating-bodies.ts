@@ -2,7 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type StatusEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type CoordinatingBodySortByEnum,
+  type SortTypeEnum,
+  type StatusEnum,
+} from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type CoordinatingBody = {
@@ -15,6 +20,7 @@ export type CoordinatingBodyDetail = {
   id: string;
   organization_id: string;
   name: string;
+  index: number | null;
   description: string | null;
   image_url: string | null;
   status: StatusEnum;
@@ -105,6 +111,8 @@ export async function searchCoordinatingBodies(
 export type CoordinatingBodyListEntry = {
   id: string;
   name: string;
+  // West-to-east position (Aceh first, Papua last); null when not set.
+  index: number | null;
   image_url: string | null;
   status: StatusEnum;
   user_count?: number;
@@ -115,6 +123,9 @@ export type ListCoordinatingBodiesOptions = {
   organizationId?: string;
   search?: string;
   status?: StatusEnum;
+  // Omitted, the backend sorts west to east by index.
+  sortBy?: CoordinatingBodySortByEnum;
+  sortType?: SortTypeEnum;
   page?: number;
   pageSize?: number;
 };
@@ -145,7 +156,8 @@ export async function listCoordinatingBodiesAdmin(
   if (!sessionToken)
     return { list: [], totalData: 0, totalPage: 1, currentPage: 1 };
 
-  const { organizationId, search, status, page, pageSize } = options;
+  const { organizationId, search, status, sortBy, sortType, page, pageSize } =
+    options;
   const result = await callApi<CoordinatingBodyListAdminResponse>(
     "/api/v1/coordinating-bodies/list",
     {
@@ -156,6 +168,7 @@ export async function listCoordinatingBodiesAdmin(
         include_aggregates: true,
         ...(search ? { search } : {}),
         ...(status ? { status } : {}),
+        ...(sortBy ? { sort_by: sortBy, sort_type: sortType ?? "asc" } : {}),
         page: page ?? 1,
         page_size: pageSize ?? 20,
       },

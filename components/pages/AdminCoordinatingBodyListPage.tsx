@@ -2,6 +2,8 @@
 
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
+  ArrowDownUp,
+  Check,
   EllipsisVertical,
   Eye,
   LayoutGrid,
@@ -19,6 +21,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CoordinatingBodyListEntry } from "@/apis/coordinating-bodies";
 import { deleteCoordinatingBody } from "@/lib/actions";
+import {
+  COORDINATING_BODY_DEFAULT_SORT,
+  COORDINATING_BODY_SORT_OPTIONS,
+  type CoordinatingBodySort,
+} from "@/lib/coordinating-body-sort";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Dropdown from "../common/Dropdown";
@@ -27,6 +34,7 @@ import ActiveFilterChips, {
   type ActiveFilterChip,
 } from "../common/ActiveFilterChips";
 import FilterDropdown from "../common/FilterDropdown";
+import SortableHeader from "../common/SortableHeader";
 import Pagination from "../common/Pagination";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -54,6 +62,7 @@ interface AdminCoordinatingBodyListPageProps {
   initialSearch: string;
   initialStatus: string;
   pageSize: number;
+  sort: CoordinatingBodySort;
   allowDelete?: boolean;
   detailBasePath?: string;
 }
@@ -102,6 +111,7 @@ export default function AdminCoordinatingBodyListPage({
   initialSearch,
   initialStatus,
   pageSize,
+  sort,
   allowDelete = true,
   detailBasePath = "/master/coordinating-bodies",
 }: AdminCoordinatingBodyListPageProps) {
@@ -246,6 +256,14 @@ export default function AdminCoordinatingBodyListPage({
     );
   }
 
+  const sortValue = sort ? `${sort.by}:${sort.type}` : COORDINATING_BODY_DEFAULT_SORT;
+
+  function changeSort(next: string) {
+    const [by, type] = next.split(":");
+    const isDefault = next === COORDINATING_BODY_DEFAULT_SORT;
+    pushParams({ sort_by: isDefault ? "" : by, sort_type: isDefault ? "" : type });
+  }
+
   const filterChips: ActiveFilterChip[] = [
     ...(initialStatus
       ? [
@@ -321,6 +339,40 @@ export default function AdminCoordinatingBodyListPage({
               options={STATUS_FILTER_OPTIONS}
             />
           </FilterDropdown>
+          {viewMode === "card" && (
+            <Dropdown
+              panelClassName="w-56 rounded-xl p-1.5"
+              trigger={({ open, toggle }) => (
+                <Button
+                  variant="light"
+                  onClick={toggle}
+                  aria-expanded={open}
+                  aria-label="Sort daftar Badko"
+                >
+                  <ArrowDownUp className="size-4" /> Sort
+                </Button>
+              )}
+            >
+              <div role="group" aria-label="Sort daftar Badko">
+                {COORDINATING_BODY_SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={sortValue === option.value}
+                    onClick={() => changeSort(option.value)}
+                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-surface-muted ${
+                      sortValue === option.value
+                        ? "bg-primary-soft font-semibold text-primary-foreground"
+                        : "text-heading"
+                    }`}
+                  >
+                    {option.label}
+                    {sortValue === option.value && <Check className="size-4" />}
+                  </button>
+                ))}
+              </div>
+            </Dropdown>
+          )}
           <div className="flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 ml-auto">
             <button
               type="button"
@@ -377,7 +429,18 @@ export default function AdminCoordinatingBodyListPage({
             <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Nama Badko</th>
+                  <SortableHeader
+                    label="No"
+                    sortKey="index"
+                    activeSort={sort}
+                    defaultDirection="asc"
+                    className="w-28"
+                  />
+                  <SortableHeader
+                    label="Nama Badko"
+                    sortKey="name"
+                    activeSort={sort}
+                  />
                   <th className="px-4 py-3">Jumlah Cabang</th>
                   <th className="px-4 py-3">Jumlah Kader</th>
                   <th className="px-4 py-3">Status</th>
@@ -385,8 +448,12 @@ export default function AdminCoordinatingBodyListPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-divider text-[13px]">
-                {coordinatingBodies.map((coordinatingBody) => (
+                {coordinatingBodies.map((coordinatingBody, position) => (
                   <tr key={coordinatingBody.id} className="align-middle">
+                    {/* Row number, not the DB index, so a gap in index never shows as a skipped number. */}
+                    <td className="px-4 py-3 text-heading">
+                      {(currentPage - 1) * pageSize + position + 1}
+                    </td>
                     <td className="px-4 py-3">
                       <Link
                         href={`${detailBasePath}/${coordinatingBody.id}`}

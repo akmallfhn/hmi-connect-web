@@ -4,6 +4,7 @@ export type VerificationStatusEnum = "unverified" | "pending" | "verified";
 export type VerificationRequestStatusEnum = "pending" | "approved" | "rejected";
 export type UserSortByEnum = "created_at" | "full_name";
 export type SortTypeEnum = "asc" | "desc";
+export type CoordinatingBodySortByEnum = "index" | "name";
 export type GenderEnum = "male" | "female";
 export type BranchTypeEnum = "full" | "provisional";
 export type TrainingStatusEnum = "LK1" | "LK2" | "LK3";

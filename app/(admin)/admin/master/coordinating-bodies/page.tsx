@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
 import AdminCoordinatingBodyListPage from "@/components/pages/AdminCoordinatingBodyListPage";
+import { parseCoordinatingBodySort } from "@/lib/coordinating-body-sort";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -14,7 +15,13 @@ export const metadata: Metadata = {
 const PAGE_SIZE = 18;
 
 interface MasterCoordinatingBodiesPageProps {
-  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    page?: string;
+    sort_by?: string;
+    sort_type?: string;
+  }>;
 }
 
 export default async function MasterCoordinatingBodiesPage({
@@ -24,10 +31,13 @@ export default async function MasterCoordinatingBodiesPage({
   const search = params.search?.trim() ?? "";
   const status = params.status ?? "";
   const page = Number(params.page ?? "1") || 1;
+  const sort = parseCoordinatingBodySort(params);
 
   const result = await listCoordinatingBodiesAdmin({
     search: search || undefined,
     status: (status || undefined) as StatusEnum | undefined,
+    sortBy: sort?.by,
+    sortType: sort?.type,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -41,6 +51,7 @@ export default async function MasterCoordinatingBodiesPage({
       initialSearch={search}
       initialStatus={status}
       pageSize={PAGE_SIZE}
+      sort={sort}
     />
   );
 }
