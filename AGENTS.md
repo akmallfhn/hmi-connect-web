@@ -146,8 +146,10 @@ guess from camelCase) or the caller holding at least one accepted **access grant
 row per `(user, entity, capability)`), and `check-session` now returns `grants[]` instead (see
 `docs/api/access.md` and `docs/api/auth.md` in the `ordina` backend repo). A grant points at any
 entity, one person may hold several, and `capability` is currently always `manage`. Two rules
-govern it: **governance** actions (create/update/delete/review) need a grant at _exactly_ that
-entity, while **reads** are satisfied by a grant at that entity _or anywhere above it_.
+govern it: **governance** actions (create/update/delete/review) normally need a grant at _exactly_
+that entity, while **reads** are satisfied by a grant at that entity _or anywhere above it_.
+Cabang create/edit also accepts a grant at its Organization: create checks the chosen Badko's
+organization, edit checks the current Cabang's organization, and moving checks the destination.
 `Super Admin` sits outside `access_grants` entirely (its `grants` is `[]`) as the root of the
 grant chain. The `"Administrator"` role was removed in the same change, so `USER_ROLE_OPTIONS`
 only lists Super Admin (0) and General User (2) — there's still no fixed `role_name` union in
@@ -3097,15 +3099,17 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `include_aggregates: true` — plus an optional Badko `SearchableSelect` filter
   (`hideCoordinatingBodyFilter` hides it once the scope is already a single fixed Badko). Row/card
   actions and the "Tambah Cabang" button are gated by two independent props: `allowEdit` (Tambah +
-  Edit access) and `allowDelete` (the destructive action) — only Master gets both; Organization and
-  the Badko scope both get neither (view-only, `Lihat Detail` only) since a Badko has no update/edit
-  right over its own Cabang rows, unlike a Cabang's genuine create/edit (no-delete) right over its own
+  Edit access) and `allowDelete` (the destructive action). Master gets both; Organization gets
+  `allowEdit` only; the Badko scope gets neither (view-only, `Lihat Detail` only). The backend lets
+  an Organization grant create a Cabang under a Badko in its organization and edit a Cabang there,
+  while deletion remains Super Admin only. A Badko has no update/edit right over its own Cabang
+  rows, unlike a Cabang's genuine create/edit (no-delete) right over its own
   Komisariat via "Kelola Komisariat". `apis/branches.ts`'s
   `BranchListEntry`/`BranchDetail` carry `image_url`/`description` the same way
   `CoordinatingBodyListEntry`/`CoordinatingBodyDetail` do (list has no `description`, detail has
   both). `components/forms/BranchLogoField.tsx` mirrors `CoordinatingBodyLogoField.tsx` (same
   `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit (Master
-  only, in practice) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
+  and Organization) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
   (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
   fetches the real detail via `getBranchDetail` before mounting its fields), each with a Badko
   `SearchableSelect`, plus the `type` field on Create only (labelled "Status", see the Komisariat

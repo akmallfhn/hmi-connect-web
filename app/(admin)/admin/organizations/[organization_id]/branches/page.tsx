@@ -65,7 +65,6 @@ export default async function OrganizationBranchesPage({
           ? { id: coordinatingBody.id, name: coordinatingBody.name }
           : null
       }
-      allowEdit={false}
       allowDelete={false}
       detailBasePath={`/organizations/${organization_id}/branches`}
     />

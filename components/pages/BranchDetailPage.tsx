@@ -69,7 +69,7 @@ interface BranchDetailPageProps {
   selectedStructuralPeriodId: number | null;
   initialTab: BranchDetailTab;
   backHref: string;
-  // Master manages Cabang directly; Organization's view of a Cabang is read-only (mirrors allowDelete on the list page).
+  // The Organization scope may edit its Cabang; Badko's own view remains read-only.
   allowEdit?: boolean;
   // Hides the Suspend/Aktifkan action — a Badko's own scoped "Kelola Cabang" detail page can't change its Cabang's status.
   allowStatusChange?: boolean;

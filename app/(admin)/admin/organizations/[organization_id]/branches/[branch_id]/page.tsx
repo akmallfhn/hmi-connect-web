@@ -68,7 +68,6 @@ export default async function OrganizationBranchDetailPage({
       accessInviteDisabled={branch.status === "inactive"}
       initialTab={parseTab(query.tab)}
       backHref={`/organizations/${organization_id}/branches`}
-      allowEdit={false}
       allowTypeChange={canManageEntity(user, "organization", organization_id)}
     />
   );
