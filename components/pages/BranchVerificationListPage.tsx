@@ -108,6 +108,47 @@ function Field({
   );
 }
 
+// Keep the review sign-off separate from the applicant's profile fields.
+function ReviewSummary({ detail }: { detail: VerificationRequestDetail }) {
+  const approved = detail.status === "approved";
+  const verb = approved ? "Disetujui" : "Ditolak";
+
+  return (
+    <div className="border-t border-border pt-4 text-[13px] text-muted-foreground">
+      <div className="space-y-1">
+        <p>
+          {verb} pada{" "}
+          {detail.reviewed_at ? formatSubmittedAt(detail.reviewed_at) : "—"}
+        </p>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0">{verb} oleh</span>
+          {detail.reviewer_full_name && (
+            <Avatar
+              src={detail.reviewer_avatar}
+              name={detail.reviewer_full_name}
+              size={20}
+            />
+          )}
+          <p className="min-w-0 break-words">
+            {detail.reviewer_full_name ?? "—"}
+            {detail.reviewer_full_name &&
+              detail.reviewer_username &&
+              ` (${detail.reviewer_username})`}
+          </p>
+        </div>
+      </div>
+      {!approved && detail.rejection_reason && (
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="font-medium">Alasan penolakan</p>
+          <p className="mt-1 whitespace-pre-wrap break-words">
+            {detail.rejection_reason}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Mounted only while open, so the reason field always seeds fresh — no reset effect needed.
 function RejectFields({
   requestId,
@@ -178,6 +219,7 @@ export interface VerificationRequestListPageProps {
   description: string;
   showBranchFilter?: boolean;
   selectedBranch?: { id: string; name: string } | null;
+  scopeBranchName?: string;
   allowReviewActions?: boolean;
 }
 
@@ -191,6 +233,7 @@ export function VerificationRequestListPage({
   description,
   showBranchFilter = false,
   selectedBranch = null,
+  scopeBranchName,
   allowReviewActions = true,
 }: VerificationRequestListPageProps) {
   const router = useRouter();
@@ -667,17 +710,16 @@ export function VerificationRequestListPage({
                 label="Komisariat"
                 value={detailData.chapter_name}
               />
-              {showBranchFilter && (
-                <Field
-                  icon={Building2}
-                  label="Cabang"
-                  value={
-                    detailData.branch_name ??
-                    detailTarget?.branch_name ??
-                    selectedBranch?.name
-                  }
-                />
-              )}
+              <Field
+                icon={Building2}
+                label="Cabang"
+                value={
+                  detailData.branch_name ??
+                  detailTarget?.branch_name ??
+                  selectedBranch?.name ??
+                  scopeBranchName
+                }
+              />
               <div className="sm:col-span-2">
                 <Field
                   icon={MapPin}
@@ -696,6 +738,10 @@ export function VerificationRequestListPage({
                 />
               </div>
             </div>
+
+            {detailData.status !== "pending" && (
+              <ReviewSummary detail={detailData} />
+            )}
           </div>
         ) : (
           <p className="py-6 text-center text-sm text-muted-foreground">
@@ -738,7 +784,7 @@ export function VerificationRequestListPage({
 
 type BranchVerificationListPageProps = Omit<
   VerificationRequestListPageProps,
-  "description" | "showBranchFilter" | "selectedBranch"
+  "description" | "showBranchFilter" | "selectedBranch" | "scopeBranchName"
 >;
 
 export default function BranchVerificationListPage(
@@ -750,6 +796,7 @@ export default function BranchVerificationListPage(
     <VerificationRequestListPage
       {...props}
       description={`Tinjau pengajuan verifikasi identitas kader di Cabang ${branchName}.`}
+      scopeBranchName={branchName}
     />
   );
 }

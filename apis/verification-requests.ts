@@ -40,6 +40,13 @@ export type VerificationRequestDetail = VerificationRequestListEntry & {
   province_name: string | null;
   // What the applicant declared on submission, not the target user's current users.is_alumni.
   is_alumni: boolean;
+  rejection_reason: string | null;
+  // reviewed_at is when it was approved or rejected; the reviewer fields resolve reviewed_by and are null while pending.
+  reviewed_by: string | null;
+  reviewer_full_name: string | null;
+  reviewer_username: string | null;
+  reviewer_avatar: string | null;
+  reviewed_at: string | null;
   updated_at: string;
 };
 

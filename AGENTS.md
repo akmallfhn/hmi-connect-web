@@ -2838,6 +2838,18 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   Status Keanggotaan renders the request's own declared `is_alumni` through the shared
   `AlumniStatusLabel` — the same Kader/Alumni pill the user detail pages show — since approving is
   what copies that declaration onto the user, so the reviewer sees it before deciding.
+  Cabang also appears as a `Field` in the detail modal for every admin scope, including the
+  Cabang queue. It prefers the detail response's `branch_name`, then the list row's name, the
+  selected Cabang filter, and finally the Cabang context name in the Cabang queue.
+  Once a request is no longer `pending`, the modal closes with `ReviewSummary`: two quiet,
+  left-aligned lines below a divider, separate from the applicant's `Field` rows. The first
+  shows "Disetujui/Ditolak pada" from `reviewed_at` (in WIB); the second shows "Disetujui/Ditolak
+  oleh", then the reviewer's avatar, full name, and `(username)` on one line. All text uses the
+  `--muted-foreground` token (`#5f6573` in light mode), with no status icon or decorative frame.
+  A rejection's `rejection_reason` sits below in its own text block. The reviewer comes from the detail
+  response's own `reviewer_full_name`/`reviewer_username`/`reviewer_avatar` (resolved from
+  `reviewed_by` by the backend; there is no user-by-id lookup here to do it), and shows "—" when
+  the reviewer's account was deleted.
   `verification-requests/detail` returns `email` and the resolved
   `district_name`/`city_id`/`city_name`/`province_id`/`province_name` chain directly (mirrors
   `users/detail`'s own district→city→province resolution); `verification-requests/list`/`/detail`/
