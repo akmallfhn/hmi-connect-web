@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Award,
   Ban,
   CalendarDays,
   GraduationCap,
@@ -10,10 +9,8 @@ import {
   Pencil,
   PlusCircle,
   Power,
-  ShieldCheck,
   Trash2,
   Users,
-  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -39,6 +36,7 @@ import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
+import Tabs, { type TabItem } from "../common/Tabs";
 import AddChapterToCoordinatingChapterSheet from "../forms/AddChapterToCoordinatingChapterSheet";
 import EditCoordinatingChapterFormSheet from "../forms/EditCoordinatingChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -78,21 +76,16 @@ interface CoordinatingChapterDetailPageProps {
   accessInviteDisabled?: boolean;
 }
 
-const TABS: {
-  id: CoordinatingChapterDetailTab;
-  label: string;
-  icon: LucideIcon;
-}[] = [
-  { id: "profile", label: "Profil", icon: Waypoints },
-  { id: "management", label: "Kepengurusan", icon: Users },
-  { id: "chapters", label: "Daftar Komisariat", icon: GraduationCap },
-  { id: "trainings", label: "Latihan Kader", icon: Award },
+const TABS: TabItem<CoordinatingChapterDetailTab>[] = [
+  { value: "profile", label: "Profil" },
+  { value: "management", label: "Kepengurusan" },
+  { value: "chapters", label: "Daftar Komisariat" },
+  { value: "trainings", label: "Latihan Kader" },
 ];
 
-const ACCESS_TAB = {
-  id: "access" as const,
+const ACCESS_TAB: TabItem<CoordinatingChapterDetailTab> = {
+  value: "access",
   label: "Akses",
-  icon: ShieldCheck,
 };
 
 function formatCoordinatingChapterName(name: string) {
@@ -128,13 +121,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
       <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
-        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
+        <p className="text-[13px] text-muted-foreground">{label}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">{value}</p>
       </div>
     </div>
   );
@@ -179,7 +172,7 @@ export default function CoordinatingChapterDetailPage({
 
   const visibleTabs = showTrainings
     ? TABS
-    : TABS.filter((tab) => tab.id !== "trainings");
+    : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
   function selectTab(tab: CoordinatingChapterDetailTab) {
@@ -334,7 +327,7 @@ export default function CoordinatingChapterDetailPage({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatPill
             icon={GraduationCap}
             label="Jumlah Komisariat"
@@ -354,38 +347,14 @@ export default function CoordinatingChapterDetailPage({
         </div>
       </section>
 
-      <div className="mt-6 overflow-x-auto">
-        <div
-          role="tablist"
-          aria-label="Detail Korkom"
-          className="inline-flex min-w-max rounded-full border border-border bg-surface p-1"
-        >
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                id={`coordinating-chapter-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`coordinating-chapter-panel-${tab.id}`}
-                onClick={() => selectTab(tab.id)}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                  isActive
-                    ? "bg-secondary text-on-secondary shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
-                }`}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Tabs
+        ariaLabel="Detail Korkom"
+        items={tabs}
+        activeValue={activeTab}
+        onChange={selectTab}
+        idPrefix="coordinating-chapter"
+        className="mt-6 w-full lg:w-fit"
+      />
 
       <div
         id={`coordinating-chapter-panel-${activeTab}`}

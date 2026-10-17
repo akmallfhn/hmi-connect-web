@@ -2,15 +2,12 @@
 
 import {
   Ban,
-  Building,
   CalendarDays,
   History,
   Pencil,
   Power,
   Network,
-  ShieldCheck,
   Users,
-  Workflow,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -33,6 +30,7 @@ import Button from "../buttons/Button";
 import EditOrganizationFormSheet from "../forms/EditOrganizationFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import Label from "../common/Label";
+import Tabs, { type TabItem } from "../common/Tabs";
 import StructuralPage from "./StructuralPage";
 import LogoHmi from "../svg/LogoHmi";
 
@@ -54,10 +52,10 @@ interface OrganizationDetailPageProps {
   allowStatusChange?: boolean;
 }
 
-const TABS: { id: OrganizationDetailTab; label: string; icon: LucideIcon }[] = [
-  { id: "profile", label: "Profil", icon: Building },
-  { id: "management", label: "Kepengurusan", icon: Workflow },
-  { id: "access", label: "Akses", icon: ShieldCheck },
+const TABS: TabItem<OrganizationDetailTab>[] = [
+  { value: "profile", label: "Profil" },
+  { value: "management", label: "Kepengurusan" },
+  { value: "access", label: "Akses" },
 ];
 
 function formatTimestamp(value?: string) {
@@ -83,13 +81,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
       <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
-        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
+        <p className="text-[13px] text-muted-foreground">{label}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">{value}</p>
       </div>
     </div>
   );
@@ -239,7 +237,7 @@ export default function OrganizationDetailPage({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatPill
             icon={Network}
             label="Jumlah Badko"
@@ -259,38 +257,14 @@ export default function OrganizationDetailPage({
         </div>
       </section>
 
-      <div className="mt-6 overflow-x-auto">
-        <div
-          role="tablist"
-          aria-label="Detail Organisasi"
-          className="inline-flex min-w-max rounded-full border border-border bg-surface p-1"
-        >
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                id={`organization-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`organization-panel-${tab.id}`}
-                onClick={() => selectTab(tab.id)}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                  isActive
-                    ? "bg-secondary text-on-secondary shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
-                }`}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Tabs
+        ariaLabel="Detail Organisasi"
+        items={TABS}
+        activeValue={activeTab}
+        onChange={selectTab}
+        idPrefix="organization"
+        className="mt-6 w-full lg:w-fit"
+      />
 
       <div
         id={`organization-panel-${activeTab}`}

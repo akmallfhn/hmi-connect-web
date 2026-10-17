@@ -802,11 +802,16 @@ outline | soft | secondarySoft | ghost | destructive` (`soft` is primary-light, 
   secondary twin); sizes: `sm | default | lg | pill | pillSm | icon |
 iconSm`.
   `components/common/Tabs.tsx` owns the shared segmented tabs on `/articles`, `/quran`,
-  and the user profile: a light-gray track and inactive controls with primary active controls.
+  the user profile, and admin detail pages for Organisasi, Badko, Cabang, Korkom,
+  and Komisariat: a light-gray track and
+  inactive controls with primary active controls.
   The track and every tab consistently use `rounded-lg`, never full pills. Each item
   supplies a value and label, optionally a short description and a URL; URL items render
-  links, while local-state items use `onChange`. Keep page-specific tab definitions and data
-  behavior in the page components, not in this visual primitive.
+  links, while local-state items use `onChange`. Admin detail pages pass `idPrefix` so tabs
+  retain their `aria-controls` links to the active panel. All five entity detail pages'
+  summary cards use one column on phones and wrap date values instead of truncating them.
+  Keep page-specific tab definitions
+  and data behavior in the page components, not in this visual primitive.
   `components/buttons/BackButton.tsx` is the "Kembali ke daftar …" control on every admin detail
   page (Badko/Cabang/Korkom/Komisariat, member and user detail, user create, LK2 batch detail and
   guideline). It calls `router.back()` so the list comes back with its search, filters, and page

@@ -3,15 +3,12 @@
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  Award,
   Ban,
   CalendarDays,
-  GraduationCap,
   History,
   MapPin,
   Pencil,
   Power,
-  ShieldCheck,
   University,
   Users,
   type LucideIcon,
@@ -38,6 +35,7 @@ import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
+import Tabs, { type TabItem } from "../common/Tabs";
 import EditChapterFormSheet from "../forms/EditChapterFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import StructuralPage from "./StructuralPage";
@@ -80,17 +78,13 @@ interface ChapterDetailPageProps {
   accessInviteDisabled?: boolean;
 }
 
-const TABS: { id: ChapterDetailTab; label: string; icon: LucideIcon }[] = [
-  { id: "profile", label: "Profil", icon: GraduationCap },
-  { id: "management", label: "Kepengurusan", icon: Users },
-  { id: "trainings", label: "Latihan Kader", icon: Award },
+const TABS: TabItem<ChapterDetailTab>[] = [
+  { value: "profile", label: "Profil" },
+  { value: "management", label: "Kepengurusan" },
+  { value: "trainings", label: "Latihan Kader" },
 ];
 
-const ACCESS_TAB = {
-  id: "access" as const,
-  label: "Akses",
-  icon: ShieldCheck,
-};
+const ACCESS_TAB: TabItem<ChapterDetailTab> = { value: "access", label: "Akses" };
 
 function formatChapterName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
@@ -120,13 +114,13 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
       <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
-        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
+        <p className="text-[13px] text-muted-foreground">{label}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">{value}</p>
       </div>
     </div>
   );
@@ -179,7 +173,7 @@ export default function ChapterDetailPage({
 
   const visibleTabs = showTrainings
     ? TABS
-    : TABS.filter((tab) => tab.id !== "trainings");
+    : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
   function selectTab(tab: ChapterDetailTab) {
@@ -343,7 +337,7 @@ export default function ChapterDetailPage({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <StatPill icon={Users} label="Jumlah Kader" value={memberCount} />
           <StatPill
             icon={CalendarDays}
@@ -358,38 +352,14 @@ export default function ChapterDetailPage({
         </div>
       </section>
 
-      <div className="mt-6 overflow-x-auto">
-        <div
-          role="tablist"
-          aria-label="Detail Komisariat"
-          className="inline-flex min-w-max rounded-full border border-border bg-surface p-1"
-        >
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                id={`chapter-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`chapter-panel-${tab.id}`}
-                onClick={() => selectTab(tab.id)}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                  isActive
-                    ? "bg-secondary text-on-secondary shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
-                }`}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Tabs
+        ariaLabel="Detail Komisariat"
+        items={tabs}
+        activeValue={activeTab}
+        onChange={selectTab}
+        idPrefix="chapter"
+        className="mt-6 w-full lg:w-fit"
+      />
 
       <div
         id={`chapter-panel-${activeTab}`}

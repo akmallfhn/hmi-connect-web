@@ -15,6 +15,7 @@ interface TabsProps<Value extends string> {
   activeValue: Value;
   onChange?: (value: Value) => void;
   className?: string;
+  idPrefix?: string;
 }
 
 export default function Tabs<Value extends string>({
@@ -23,6 +24,7 @@ export default function Tabs<Value extends string>({
   activeValue,
   onChange,
   className = "",
+  idPrefix,
 }: TabsProps<Value>) {
   return (
     <div
@@ -58,9 +60,13 @@ export default function Tabs<Value extends string>({
         return item.href ? (
           <Link
             key={item.value}
+            id={idPrefix ? `${idPrefix}-tab-${item.value}` : undefined}
             href={item.href}
             role="tab"
             aria-selected={active}
+            aria-controls={
+              idPrefix ? `${idPrefix}-panel-${item.value}` : undefined
+            }
             scroll={false}
             className={tabClassName}
           >
@@ -69,9 +75,13 @@ export default function Tabs<Value extends string>({
         ) : (
           <button
             key={item.value}
+            id={idPrefix ? `${idPrefix}-tab-${item.value}` : undefined}
             type="button"
             role="tab"
             aria-selected={active}
+            aria-controls={
+              idPrefix ? `${idPrefix}-panel-${item.value}` : undefined
+            }
             onClick={() => onChange?.(item.value)}
             className={tabClassName}
           >

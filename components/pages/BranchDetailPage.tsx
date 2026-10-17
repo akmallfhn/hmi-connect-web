@@ -3,16 +3,13 @@
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  Award,
   Ban,
-  Building,
   CalendarDays,
   GraduationCap,
   History,
   MapPin,
   Pencil,
   Power,
-  ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -28,17 +25,14 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import {
-  activateBranch,
-  setBranchType,
-  suspendBranch,
-} from "@/lib/actions";
+import { activateBranch, setBranchType, suspendBranch } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import Button from "../buttons/Button";
 import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
+import Tabs, { type TabItem } from "../common/Tabs";
 import EditBranchFormSheet from "../forms/EditBranchFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import StructuralPage from "./StructuralPage";
@@ -52,11 +46,7 @@ import {
 } from "../trainings/TrainingLabels";
 
 export type BranchDetailTab =
-  | "profile"
-  | "management"
-  | "chapters"
-  | "trainings"
-  | "access";
+  "profile" | "management" | "chapters" | "trainings" | "access";
 
 interface BranchDetailPageProps {
   branch: BranchDetail;
@@ -85,17 +75,16 @@ interface BranchDetailPageProps {
   accessInviteDisabled?: boolean;
 }
 
-const TABS: { id: BranchDetailTab; label: string; icon: LucideIcon }[] = [
-  { id: "profile", label: "Profil", icon: Building },
-  { id: "management", label: "Kepengurusan", icon: Users },
-  { id: "chapters", label: "Daftar Komisariat", icon: GraduationCap },
-  { id: "trainings", label: "Latihan Kader", icon: Award },
+const TABS: TabItem<BranchDetailTab>[] = [
+  { value: "profile", label: "Profil" },
+  { value: "management", label: "Kepengurusan" },
+  { value: "chapters", label: "Daftar Komisariat" },
+  { value: "trainings", label: "Latihan Kader" },
 ];
 
-const ACCESS_TAB = {
-  id: "access" as const,
+const ACCESS_TAB: TabItem<BranchDetailTab> = {
+  value: "access",
   label: "Akses",
-  icon: ShieldCheck,
 };
 
 function formatBranchName(name: string) {
@@ -131,13 +120,15 @@ function StatPill({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
       <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-muted-foreground">{label}</p>
-        <p className="truncate text-[15px] font-bold text-heading">{value}</p>
+        <p className="text-[13px] text-muted-foreground">{label}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -187,7 +178,7 @@ export default function BranchDetailPage({
 
   const visibleTabs = showTrainings
     ? TABS
-    : TABS.filter((tab) => tab.id !== "trainings");
+    : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
   function selectTab(tab: BranchDetailTab) {
@@ -260,9 +251,7 @@ export default function BranchDetailPage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <BackButton fallbackHref={backHref}>
-        Kembali ke daftar Cabang
-      </BackButton>
+      <BackButton fallbackHref={backHref}>Kembali ke daftar Cabang</BackButton>
 
       <section className="mt-4 rounded-xl border border-border bg-surface p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -286,7 +275,9 @@ export default function BranchDetailPage({
                   {formatBranchName(branch.name)}
                 </h2>
                 <Label variant={branch.status === "active" ? "green" : "red"}>
-                  {branch.status === "active" ? "Status: Aktif" : "Status: Tidak Aktif"}
+                  {branch.status === "active"
+                    ? "Status: Aktif"
+                    : "Status: Tidak Aktif"}
                 </Label>
                 <Label variant={branch.type === "full" ? "blue" : "yellow"}>
                   {branch.type === "full"
@@ -350,7 +341,7 @@ export default function BranchDetailPage({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatPill
             icon={GraduationCap}
             label="Jumlah Komisariat"
@@ -370,38 +361,14 @@ export default function BranchDetailPage({
         </div>
       </section>
 
-      <div className="mt-6 overflow-x-auto">
-        <div
-          role="tablist"
-          aria-label="Detail Cabang"
-          className="inline-flex min-w-max rounded-full border border-border bg-surface p-1"
-        >
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                id={`branch-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`branch-panel-${tab.id}`}
-                onClick={() => selectTab(tab.id)}
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                  isActive
-                    ? "bg-secondary text-on-secondary shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary-soft hover:text-secondary-foreground"
-                }`}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Tabs
+        ariaLabel="Detail Cabang"
+        items={tabs}
+        activeValue={activeTab}
+        onChange={selectTab}
+        idPrefix="branch"
+        className="mt-6 w-full lg:w-fit"
+      />
 
       <div
         id={`branch-panel-${activeTab}`}
@@ -411,9 +378,7 @@ export default function BranchDetailPage({
       >
         {activeTab === "profile" && (
           <section className="rounded-xl border border-border bg-surface p-5 sm:p-6">
-            <h3 className="text-base font-semibold text-heading">
-              Deskripsi
-            </h3>
+            <h3 className="text-base font-semibold text-heading">Deskripsi</h3>
             <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">
               {branch.description || "Belum ada deskripsi."}
             </p>
