@@ -42,9 +42,9 @@ fix the rule, not just the code.
   hover tokens are dark enough to maintain WCAG AA contrast with white.
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@tiptap/react` + Tiptap extensions for the frontend article composer,
-  `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` +
-  `@react-email/components` (installed, but unused — every transactional email is sent by the Go
-  backend, see Transactional email below), `sanitize-html` (server-side only, and used by exactly
+  `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` (only for the
+  `/pendataan-komisariat` census email — every transactional email is sent by the Go backend, see
+  Transactional email below), `@react-email/components` (installed, but unused), `sanitize-html` (server-side only, and used by exactly
   one module — `lib/article-body.ts`, which scrubs user-authored article body HTML before it is
   rendered; see `/articles/[article_slug]/[article_id]` below).
 - **Two icon sets, split by surface.** `lucide-react` stays the default for admin, forms,
@@ -724,8 +724,8 @@ only makes the call. There are no email templates in this repo (`components/emai
 no `render()`/`sendEmail()` call anywhere in `apis/*.ts`; don't reintroduce one for a flow the
 backend already owns.
 
-`lib/mailtrap.ts` (`import "server-only"`) is kept as the sending primitive for a future
-frontend-originated email, and nothing calls it today. It wraps the `mailtrap` npm package's
+`lib/mailtrap.ts` (`import "server-only"`) is the sending primitive for frontend-originated email;
+its only caller is the `/pendataan-komisariat` census form. It wraps the `mailtrap` npm package's
 `MailtrapClient` — one shared client, sender fixed to
 `{ name: "HMI Connect", email: "no-reply@hmiconnect.id" }` (it moved off the borrowed
 `sevenpreneur.com` sender once the real domain was in hand — note this only works while
@@ -2105,6 +2105,19 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   editorial article isn't a news-aggregator item, and the nav rail plus `BottomNav` already own
   going anywhere. There is deliberately no reaction/comment/share bar:
   an article is not a feed post, and none of those endpoints accept an article target.
+- `/pendataan-komisariat` (`app/(www)/www/pendataan-komisariat/page.tsx` ->
+  `components/pages/ChapterCensusPage.tsx`) is a public, pre-login census form: Data Pengisi (nama,
+  email, jabatan), Asal Cabang (a Badko `SearchableSelect`, plus `NO_COORDINATING_BODY_LABEL` for
+  Cabang without one, then a Cabang picker filtered to it), and a Komisariat list (nama, optional
+  free-text Asal Kampus, Penuh/Persiapan `RadioButton` defaulting to Penuh) with a count stepper and
+  an add button, closed by a review step. The route reads every active Badko and Cabang through
+  `listPublicCoordinatingBodies`/`listPublicBranches`, which use `CLIENT_SECRET` (the backend's
+  `coordinating-bodies/list` and `branches/list` accept it), and filters in memory, so there is no
+  Route Handler. Submitting calls the `submitChapterCensus` Server Action -> `lib/chapter-census.ts`,
+  which re-resolves the Badko/Cabang server-side, caps every field, drops honeypot submissions, and
+  emails the result to a fixed recipient through `lib/mailtrap.ts#sendEmail` - the one frontend
+  email today, since nothing is stored. It is allowlisted in `next.config.mts`, hidden from the
+  desktop rail, `noindex`, and disallowed in `robots.ts`.
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
   here instead of `href="#"`) — **no longer mobile-only**: `/quran` itself now has a real `lg:`
   treatment (the `#013334` banner renders through `components/common/PageBanner.tsx` with

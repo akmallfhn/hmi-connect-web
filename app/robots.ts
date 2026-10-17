@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         "/auth/forget-password",
         "/articles/create",
         "/trainings/create",
+        "/pendataan-komisariat",
         "/*/edit",
         "/*?as=",
       ],

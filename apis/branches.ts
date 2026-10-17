@@ -374,3 +374,45 @@ export async function setBranchType(
     body: { id, type },
   });
 }
+
+export type PublicBranch = {
+  id: string;
+  name: string;
+  coordinating_body_id: string | null;
+};
+
+// Client-secret read of every active Cabang, for the pre-login /pendataan-komisariat form.
+export async function listPublicBranches(): Promise<PublicBranch[]> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return [];
+
+  const rows: PublicBranch[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const result = await callApi<{
+      list: PublicBranch[];
+      metapaging?: { total_page: number };
+    }>("/api/v1/branches/list", {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        organization_id: process.env.ORGANIZATION_ID,
+        status: "active",
+        page,
+        page_size: 100,
+      },
+    });
+    if (!isSuccessStatus(result.status)) {
+      console.error("[listPublicBranches] request failed:", result);
+      return rows;
+    }
+    rows.push(
+      ...(result.data?.list ?? []).map(({ id, name, coordinating_body_id }) => ({
+        id,
+        name,
+        coordinating_body_id,
+      }))
+    );
+    if (page >= (result.data?.metapaging?.total_page ?? 1)) break;
+  }
+  return rows;
+}

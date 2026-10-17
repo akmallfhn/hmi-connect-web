@@ -289,3 +289,38 @@ async function setEntityStatusCoordinatingBody(
     body: { id },
   });
 }
+
+export type PublicCoordinatingBody = {
+  id: string;
+  name: string;
+};
+
+// Client-secret read of every active Badko, for the pre-login /pendataan-komisariat form.
+export async function listPublicCoordinatingBodies(): Promise<PublicCoordinatingBody[]> {
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return [];
+
+  const rows: PublicCoordinatingBody[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const result = await callApi<{
+      list: PublicCoordinatingBody[];
+      metapaging?: { total_page: number };
+    }>("/api/v1/coordinating-bodies/list", {
+      method: "POST",
+      token: clientSecret,
+      body: {
+        organization_id: process.env.ORGANIZATION_ID,
+        status: "active",
+        page,
+        page_size: 100,
+      },
+    });
+    if (!isSuccessStatus(result.status)) {
+      console.error("[listPublicCoordinatingBodies] request failed:", result);
+      return rows;
+    }
+    rows.push(...(result.data?.list ?? []).map(({ id, name }) => ({ id, name })));
+    if (page >= (result.data?.metapaging?.total_page ?? 1)) break;
+  }
+  return rows;
+}

@@ -9,6 +9,8 @@ import {
   type InviteAccessGrantPayload,
   type ListAccessGrantsOptions,
 } from "@/apis/access-grants";
+import { submitChapterCensus as submitChapterCensusApi } from "@/lib/chapter-census";
+import type { ChapterCensusPayload } from "@/lib/chapter-census-shared";
 import {
   approveVerificationRequest as approveVerificationRequestApi,
   getVerificationRequestDetail as getVerificationRequestDetailApi,
@@ -839,4 +841,9 @@ export async function loadMoreArticles(tab: ArticleFeedTab, page: number) {
 
 export async function updateArticle(payload: UpdateArticlePayload) {
   return updateArticleApi(payload);
+}
+
+// Public: /pendataan-komisariat sits outside login, so the server side re-validates everything.
+export async function submitChapterCensus(payload: ChapterCensusPayload) {
+  return submitChapterCensusApi(payload);
 }
