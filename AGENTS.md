@@ -470,13 +470,14 @@ Three layers, each with one job. Don't blend them.
    including list/detail/approve/reject; the approval email is the backend's own side effect), `stat.ts` (the
    `stat/*` aggregate endpoints, authorized by the read rule — a manage grant at or above the
    requested entity, or `Super Admin`. Note **every caller but `Super Admin` must name exactly one
-   entity**: omitting it returns `an entity id is required to scope this aggregate`. Seven of them
+   entity**: omitting it returns `an entity id is required to scope this aggregate`. Eight of them
    take `organization_id` as their widest scope (`branch-distribution`, `branch-status`,
    `branch-map`, `user-growth`, `chapter-status`, `training-priorities/list`,
-   `suspended-entities/list`), which is what lets `/organizations/[organization_id]` render the same
-   dashboard as `/master` — every one of its calls passes the route's own organization id, while
-   `/master` omits it and reads unrestricted as `Super Admin`. `chapter-distribution` and
-   `verification-count` deliberately do **not** take one; no dashboard needs them org-wide.
+   `suspended-entities/list`, and `verification-count`), which lets the organization sidebar
+   count pending members within its own scope and its dashboard share most of `/master`'s
+   widgets. The organization dashboard calls pass the route's own organization id, while
+   `/master` omits it and reads unrestricted as `Super Admin`. `chapter-distribution`
+   deliberately does **not** take one; no dashboard needs it org-wide.
    Mutual exclusivity is enforced in the types via `ExactlyOneScope<T>` (one scope id, or none)
    rather than hand-written `?: never` unions. `MasterDashboardPage` takes an optional
    `organizationId` and threads it into `IndonesiaBranchMap` and `MasterAttentionLists` so their
@@ -498,7 +499,7 @@ Three layers, each with one job. Don't blend them.
    mandatory Badko scope as `coordinating_body_id`. `getUserGrowth` takes an options object and
    sends at most one of `coordinating_body_id`, `branch_id`, `coordinating_chapter_id`, or
    `chapter_id`, matching the caller's dashboard scope. `getVerificationCount` replaces the old
-   two-bucket membership-status call and sends at most one of `branch_id`,
+   two-bucket membership-status call and sends at most one of `organization_id`, `branch_id`,
    `coordinating_chapter_id`, or `chapter_id`; its response keeps verified, pending, and unverified
    users as distinct buckets. `getTrainingPriorities` wraps the paginated
    `training-priorities/list` and requires its `entity` discriminator: Master, Organization, and
@@ -2509,7 +2510,10 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   section (uppercase tracking-wide label + chevron, defaults open, `useState` not persisted)
   styled after the sibling `sevenpreneur` project's `AppSidebarGroupMenu`/`AppSidebarMenuItem`;
   when the whole sidebar is icon-only, `NavGroup` drops its header entirely and just stacks the
-  group's items, matching that same reference's collapsed behavior. `components/navigations/
+  group's items, matching that same reference's collapsed behavior. `AdminNavItem.badgeCount`
+  renders a red numeric badge beside the expanded link or at its corner while collapsed, in both
+  the desktop rail and mobile drawer; zero hides it. The link's accessible name includes the count.
+  `components/navigations/
 MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, a `renderHeader`
   that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing when collapsed
   (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
@@ -2804,6 +2808,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   searchable Cabang filter. List rows now include `branch_id`/`branch_name` from the backend, so
   those two broad-scope tables render `Cabang {branch_name}` beneath the prefixed `Komisariat
 {chapter_name}` value.
+  The admin sidebar badge reads `pending_count` from `stat/verification-count`, which counts
+  non-deleted users whose `verification_status` is `pending`. Master omits the scope for a global
+  total; Organization sends its route `organization_id`; Cabang sends its route `branch_id`.
+  The existing `router.refresh()` after a review updates the layout's badge along with the queue.
   The backend also has no "all statuses" value for `verification-requests/list` (only one of
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
   filter on all three pages is "Semua Status", so

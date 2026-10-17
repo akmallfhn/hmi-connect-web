@@ -11,9 +11,13 @@ interface MasterSidebarProps {
   email?: string;
   // This deployment manages one organization, so its item links straight to that id — there is no list.
   organizationId?: string;
+  pendingVerificationCount?: number;
 }
 
-function getNavItems(organizationId?: string): AdminNavEntry[] {
+function getNavItems(
+  organizationId?: string,
+  pendingVerificationCount?: number,
+): AdminNavEntry[] {
   return [
     { label: "Dashboard", href: "/master", icon: ADMIN_NAV_ICON.dashboard, exact: true },
     {
@@ -54,6 +58,7 @@ function getNavItems(organizationId?: string): AdminNavEntry[] {
           label: "Permintaan Verifikasi",
           href: "/master/verification",
           icon: ADMIN_NAV_ICON.verification,
+          badgeCount: pendingVerificationCount,
         },
       ],
     },
@@ -65,12 +70,13 @@ export default function MasterSidebar({
   avatar,
   email,
   organizationId,
+  pendingVerificationCount,
 }: MasterSidebarProps) {
   return (
     <AdminSidebar
       storageKey="master_sidebar_collapsed"
       homeHref="/master"
-      navItems={getNavItems(organizationId)}
+      navItems={getNavItems(organizationId, pendingVerificationCount)}
       renderHeader={(collapsed) =>
         !collapsed ? (
           <Link href="/master" className="flex items-center">

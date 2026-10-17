@@ -28,6 +28,7 @@ interface EntitySidebarProps {
   fullName?: string;
   avatar?: string;
   email?: string;
+  pendingVerificationCount?: number;
 }
 
 const scopePaths: Record<EntitySidebarScope, string> = {
@@ -61,6 +62,7 @@ function getProfileGroupName(scope: EntitySidebarScope, entityName: string) {
 function getScopeNavItems(
   scope: EntitySidebarScope,
   base: string,
+  pendingVerificationCount?: number,
 ): AdminNavEntry[] {
   const membersItem: AdminNavEntry = {
     label: "Daftar Kader",
@@ -71,6 +73,7 @@ function getScopeNavItems(
     label: "Permintaan Verifikasi",
     href: `${base}/verification`,
     icon: ADMIN_NAV_ICON.verification,
+    badgeCount: pendingVerificationCount,
   };
 
   switch (scope) {
@@ -150,6 +153,7 @@ function getNavItems(
   scope: EntitySidebarScope,
   entityId: string,
   entityName: string,
+  pendingVerificationCount?: number,
 ): AdminNavEntry[] {
   const base = getBaseHref(scope, entityId);
   return [
@@ -159,7 +163,7 @@ function getNavItems(
       icon: ADMIN_NAV_ICON.dashboard,
       exact: true,
     },
-    ...getScopeNavItems(scope, base),
+    ...getScopeNavItems(scope, base, pendingVerificationCount),
     {
       groupName: getProfileGroupName(scope, entityName),
       items: [
@@ -316,12 +320,13 @@ export default function EntitySidebar({
   fullName,
   avatar,
   email,
+  pendingVerificationCount,
 }: EntitySidebarProps) {
   return (
     <AdminSidebar
       storageKey={`${scope}_sidebar_collapsed`}
       homeHref={getBaseHref(scope, entityId)}
-      navItems={getNavItems(scope, entityId, entityName)}
+      navItems={getNavItems(scope, entityId, entityName, pendingVerificationCount)}
       renderHeader={(collapsed, tone) => (
         <EntityHeader
           scope={scope}

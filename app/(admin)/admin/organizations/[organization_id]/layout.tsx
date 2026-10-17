@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getSession } from "@/apis/session";
+import { getVerificationCount } from "@/apis/stat";
 import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
@@ -39,6 +40,7 @@ export default async function OrganizationLayout({
     user?.organization_id === organization_id
       ? (user.organization_name ?? "HMI")
       : "HMI";
+  const verificationCount = await getVerificationCount({ organizationId: organization_id });
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
@@ -49,6 +51,7 @@ export default async function OrganizationLayout({
         fullName={user?.full_name}
         avatar={user?.avatar}
         email={user?.email}
+        pendingVerificationCount={verificationCount?.pending_count ?? 0}
       />
       <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
         {children}

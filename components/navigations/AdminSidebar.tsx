@@ -23,6 +23,7 @@ export interface AdminNavItem {
   icon: TablerIcon;
   // Exact pathname match instead of the default startsWith — for a Dashboard-style item whose href is a prefix of every sibling route.
   exact?: boolean;
+  badgeCount?: number;
 }
 
 export interface AdminNavGroup {
@@ -97,16 +98,18 @@ function NavLink({
   onNavigate?: () => void;
   tone?: SidebarTone;
 }) {
-  const { label, href, icon: Icon, exact } = item;
+  const { label, href, icon: Icon, exact, badgeCount = 0 } = item;
   const isActive = exact ? pathname === href : pathname.startsWith(href);
   const palette = NAV_TONE[tone];
+  const hasBadge = badgeCount > 0;
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      title={collapsed ? label : undefined}
+      title={collapsed ? `${label}${hasBadge ? ` (${badgeCount} menunggu)` : ""}` : undefined}
+      aria-label={`${label}${hasBadge ? `, ${badgeCount} menunggu verifikasi` : ""}`}
       aria-current={isActive ? "page" : undefined}
-      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
         collapsed ? "justify-center" : ""
       } ${isActive ? palette.activeLink : palette.idleLink}`}
     >
@@ -116,7 +119,15 @@ function NavLink({
           isActive ? palette.activeIcon : palette.idleIcon
         }`}
       />
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+      {hasBadge && (
+        <span
+          aria-hidden="true"
+          className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-badge-destructive px-1 text-[11px] font-bold leading-none text-badge-foreground ${collapsed ? "absolute -right-1 -top-1" : ""}`}
+        >
+          {badgeCount}
+        </span>
+      )}
     </Link>
   );
 }

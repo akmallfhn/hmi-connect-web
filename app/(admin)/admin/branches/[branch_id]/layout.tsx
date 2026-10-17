@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getBranchDetail } from "@/apis/branches";
 import { getSession } from "@/apis/session";
+import { getVerificationCount } from "@/apis/stat";
 import { canManageEntity } from "@/lib/access";
 import { getMainSiteOrigin } from "@/lib/constants";
 import EntitySidebar from "@/components/navigations/EntitySidebar";
@@ -44,6 +45,8 @@ export default async function BranchLayout({
     );
   }
 
+  const verificationCount = await getVerificationCount({ branchId: branch_id });
+
   return (
     <BranchProvider branchId={branch.id} branchName={branch.name}>
       <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
@@ -56,6 +59,7 @@ export default async function BranchLayout({
           fullName={user?.full_name}
           avatar={user?.avatar}
           email={user?.email}
+          pendingVerificationCount={verificationCount?.pending_count ?? 0}
         />
         <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
           {children}

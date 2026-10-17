@@ -113,27 +113,12 @@ export type VerificationCount = {
   pending_count: number;
 };
 
-type VerificationCountScope =
-  | {
-      branchId: string;
-      coordinatingChapterId?: never;
-      chapterId?: never;
-    }
-  | {
-      branchId?: never;
-      coordinatingChapterId: string;
-      chapterId?: never;
-    }
-  | {
-      branchId?: never;
-      coordinatingChapterId?: never;
-      chapterId: string;
-    }
-  | {
-      branchId?: never;
-      coordinatingChapterId?: never;
-      chapterId?: never;
-    };
+type VerificationCountScope = ExactlyOneScope<{
+  organizationId: string;
+  branchId: string;
+  coordinatingChapterId: string;
+  chapterId: string;
+}>;
 
 export type GetVerificationCountOptions = VerificationCountScope;
 
@@ -289,7 +274,7 @@ async function getSessionToken() {
 
 async function getEntitySummary<T>(
   endpoint: string,
-  body: Record<string, string>,
+  body: Record<string, string>
 ): Promise<T | null> {
   const token = await getSessionToken();
   const result = await callApi<T>(endpoint, { token, body });
@@ -297,25 +282,25 @@ async function getEntitySummary<T>(
 }
 
 export async function getOrganizationSummary(
-  organizationId: string,
+  organizationId: string
 ): Promise<OrganizationSummary | null> {
   return getEntitySummary<OrganizationSummary>(
     "/api/v1/stat/summary/organization",
-    { organization_id: organizationId },
+    { organization_id: organizationId }
   );
 }
 
 export async function getCoordinatingBodySummary(
-  coordinatingBodyId: string,
+  coordinatingBodyId: string
 ): Promise<CoordinatingBodySummary | null> {
   return getEntitySummary<CoordinatingBodySummary>(
     "/api/v1/stat/summary/coordinating-body",
-    { coordinating_body_id: coordinatingBodyId },
+    { coordinating_body_id: coordinatingBodyId }
   );
 }
 
 export async function getBranchSummary(
-  branchId: string,
+  branchId: string
 ): Promise<BranchSummary | null> {
   return getEntitySummary<BranchSummary>("/api/v1/stat/summary/branch", {
     branch_id: branchId,
@@ -323,16 +308,16 @@ export async function getBranchSummary(
 }
 
 export async function getCoordinatingChapterSummary(
-  coordinatingChapterId: string,
+  coordinatingChapterId: string
 ): Promise<CoordinatingChapterSummary | null> {
   return getEntitySummary<CoordinatingChapterSummary>(
     "/api/v1/stat/summary/coordinating-chapter",
-    { coordinating_chapter_id: coordinatingChapterId },
+    { coordinating_chapter_id: coordinatingChapterId }
   );
 }
 
 export async function getChapterSummary(
-  chapterId: string,
+  chapterId: string
 ): Promise<ChapterSummary | null> {
   return getEntitySummary<ChapterSummary>("/api/v1/stat/summary/chapter", {
     chapter_id: chapterId,
@@ -340,7 +325,7 @@ export async function getChapterSummary(
 }
 
 export async function getBranchDistribution(
-  options: GetBranchDistributionOptions = {},
+  options: GetBranchDistributionOptions = {}
 ): Promise<BranchDistribution | null> {
   const token = await getSessionToken();
   const { organizationId, coordinatingBodyId } = options;
@@ -354,13 +339,13 @@ export async function getBranchDistribution(
           ? { coordinating_body_id: coordinatingBodyId }
           : {}),
       },
-    },
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getChapterDistribution(
-  options: GetChapterDistributionOptions = {},
+  options: GetChapterDistributionOptions = {}
 ): Promise<ChapterDistribution | null> {
   const token = await getSessionToken();
   const { branchId, coordinatingChapterId } = options;
@@ -374,13 +359,13 @@ export async function getChapterDistribution(
           ? { coordinating_chapter_id: coordinatingChapterId }
           : {}),
       },
-    },
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getUserGrowth(
-  options: GetUserGrowthOptions = {},
+  options: GetUserGrowthOptions = {}
 ): Promise<UserGrowth | null> {
   const token = await getSessionToken();
   const {
@@ -410,28 +395,30 @@ export async function getUserGrowth(
 }
 
 export async function getVerificationCount(
-  options: GetVerificationCountOptions = {},
+  options: GetVerificationCountOptions = {}
 ): Promise<VerificationCount | null> {
   const token = await getSessionToken();
-  const { branchId, coordinatingChapterId, chapterId } = options;
+  const { organizationId, branchId, coordinatingChapterId, chapterId } =
+    options;
   const result = await callApi<VerificationCount>(
     "/api/v1/stat/verification-count",
     {
       token,
       body: {
+        ...(organizationId ? { organization_id: organizationId } : {}),
         ...(branchId ? { branch_id: branchId } : {}),
         ...(coordinatingChapterId
           ? { coordinating_chapter_id: coordinatingChapterId }
           : {}),
         ...(chapterId ? { chapter_id: chapterId } : {}),
       },
-    },
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getBranchStatus(
-  options: GetBranchStatusOptions = {},
+  options: GetBranchStatusOptions = {}
 ): Promise<BranchStatus | null> {
   const token = await getSessionToken();
   const { organizationId, coordinatingBodyId } = options;
@@ -448,11 +435,15 @@ export async function getBranchStatus(
 }
 
 export async function getChapterStatus(
-  options: GetChapterStatusOptions = {},
+  options: GetChapterStatusOptions = {}
 ): Promise<ChapterStatus | null> {
   const token = await getSessionToken();
-  const { organizationId, coordinatingBodyId, branchId, coordinatingChapterId } =
-    options;
+  const {
+    organizationId,
+    coordinatingBodyId,
+    branchId,
+    coordinatingChapterId,
+  } = options;
   const result = await callApi<ChapterStatus>("/api/v1/stat/chapter-status", {
     token,
     body: {
@@ -473,13 +464,13 @@ export async function getCoordinatingBodyStatus(): Promise<CoordinatingBodyStatu
   const token = await getSessionToken();
   const result = await callApi<CoordinatingBodyStatus>(
     "/api/v1/stat/coordinating-body-status",
-    { token, body: {} },
+    { token, body: {} }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getBranchMap(
-  options: GetBranchMapOptions = {},
+  options: GetBranchMapOptions = {}
 ): Promise<BranchMap | null> {
   const token = await getSessionToken();
   const {
@@ -504,7 +495,7 @@ export async function getBranchMap(
 }
 
 export async function getTrainingPriorities(
-  options: GetTrainingPrioritiesOptions,
+  options: GetTrainingPrioritiesOptions
 ): Promise<TrainingPriorities | null> {
   const token = await getSessionToken();
   const {
@@ -536,13 +527,13 @@ export async function getTrainingPriorities(
         page,
         page_size: pageSize,
       },
-    },
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }
 
 export async function getSuspendedEntities(
-  options: GetSuspendedEntitiesOptions,
+  options: GetSuspendedEntitiesOptions
 ): Promise<SuspendedEntities | null> {
   const token = await getSessionToken();
   const {
@@ -574,7 +565,7 @@ export async function getSuspendedEntities(
         page,
         page_size: pageSize,
       },
-    },
+    }
   );
   return isSuccessStatus(result.status) ? (result.data ?? null) : null;
 }

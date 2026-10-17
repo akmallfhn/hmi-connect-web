@@ -1,4 +1,5 @@
 import { getSession } from "@/apis/session";
+import { getVerificationCount } from "@/apis/stat";
 import { getMainSiteOrigin } from "@/lib/constants";
 import PageState from "@/components/states/PageState";
 import MasterSidebar from "@/components/navigations/MasterSidebar";
@@ -22,6 +23,8 @@ export default async function MasterLayout({
     );
   }
 
+  const verificationCount = await getVerificationCount();
+
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <MasterSidebar
@@ -29,6 +32,7 @@ export default async function MasterLayout({
         avatar={user?.avatar}
         email={user?.email}
         organizationId={user?.organization_id ?? process.env.ORGANIZATION_ID}
+        pendingVerificationCount={verificationCount?.pending_count ?? 0}
       />
       <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
         {children}
