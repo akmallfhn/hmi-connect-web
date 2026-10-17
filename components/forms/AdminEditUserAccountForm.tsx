@@ -25,7 +25,12 @@ import Input from "../fields/Input";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
 
-const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const AVATAR_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
 const AVATAR_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const AVATAR_TARGET_BYTES = 300 * 1024;
 
@@ -35,7 +40,10 @@ const STATUS_OPTIONS: { label: string; value: UserStatusEnum }[] = [
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
-const VERIFICATION_STATUS_OPTIONS: { label: string; value: VerificationStatusEnum }[] = [
+const VERIFICATION_STATUS_OPTIONS: {
+  label: string;
+  value: VerificationStatusEnum;
+}[] = [
   { label: "Belum Verifikasi", value: "unverified" },
   { label: "Menunggu Review", value: "pending" },
   { label: "Terverifikasi", value: "verified" },
@@ -62,7 +70,9 @@ export default function AdminEditUserAccountForm({
 }: AdminEditUserAccountFormProps) {
   return (
     <Modal open={open} onClose={onClose} title="Edit Akun & Peran">
-      {open && <AccountFields user={user} onClose={onClose} onSaved={onSaved} />}
+      {open && (
+        <AccountFields user={user} onClose={onClose} onSaved={onSaved} />
+      )}
     </Modal>
   );
 }
@@ -85,9 +95,8 @@ function AccountFields({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [roleId, setRoleId] = useState<number>(user.role_id);
   const [status, setStatus] = useState<UserStatusEnum>(user.status);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatusEnum>(
-    user.verification_status,
-  );
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatusEnum>(user.verification_status);
   const [isAlumni, setIsAlumni] = useState(user.is_alumni);
   const [usernameError, setUsernameError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -132,7 +141,10 @@ function AccountFields({
         .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
 
       if (uploadError) {
-        console.error("[AdminEditUserAccountForm] avatar upload error:", uploadError.message);
+        console.error(
+          "[AdminEditUserAccountForm] avatar upload error:",
+          uploadError.message
+        );
         toast.error("Gagal mengunggah foto. Coba lagi.");
         return;
       }
@@ -157,7 +169,11 @@ function AccountFields({
       toast.error("Nama lengkap dan email wajib diisi.");
       return;
     }
-    if (usernameChanged && trimmedUsername && !isUsernameFormatValid(trimmedUsername)) {
+    if (
+      usernameChanged &&
+      trimmedUsername &&
+      !isUsernameFormatValid(trimmedUsername)
+    ) {
       toast.error("Username tidak valid.");
       return;
     }
@@ -236,7 +252,7 @@ function AccountFields({
               alt={fullName || "Foto profil"}
               width={64}
               height={64}
-              className="size-full object-cover"
+              className="size-full bg-white object-cover dark:bg-black"
             />
           ) : (
             <div
@@ -309,7 +325,9 @@ function AccountFields({
           label="Status Verifikasi"
           placeholder="Pilih status verifikasi"
           value={verificationStatus}
-          onChange={(value) => setVerificationStatus(value as VerificationStatusEnum)}
+          onChange={(value) =>
+            setVerificationStatus(value as VerificationStatusEnum)
+          }
           options={VERIFICATION_STATUS_OPTIONS}
           required
         />

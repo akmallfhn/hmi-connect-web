@@ -39,7 +39,7 @@ export default async function FollowingCard({ userId }: { userId?: string }) {
                   alt={person.full_name}
                   width={TILE_SIZE}
                   height={TILE_SIZE}
-                  className="size-full object-cover"
+                  className="size-full bg-white object-cover dark:bg-black"
                 />
               ) : (
                 <span

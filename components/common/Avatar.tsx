@@ -38,7 +38,8 @@ export default function Avatar({
         width={size}
         height={size}
         style={{ width: size, height: size }}
-        className={`${shared} object-cover`}
+        // A solid backing keeps a transparent PNG from showing whatever sits behind it.
+        className={`${shared} bg-white object-cover dark:bg-black`}
       />
     );
   }

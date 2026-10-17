@@ -110,6 +110,8 @@ function drawAuthorAvatar(
   context.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
   context.clip();
   if (image) {
+    context.fillStyle = "#ffffff";
+    context.fillRect(x, y, size, size);
     coverImage(context, image, x, y, size, size);
   } else {
     context.fillStyle = "#e3f6f6";

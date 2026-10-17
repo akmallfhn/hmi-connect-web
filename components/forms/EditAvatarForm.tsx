@@ -171,7 +171,7 @@ function AvatarFields({
             alt={fullName ?? "Foto profil"}
             width={160}
             height={160}
-            className="size-full object-cover"
+            className="size-full bg-white object-cover dark:bg-black"
           />
         ) : (
           <div
