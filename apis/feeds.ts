@@ -98,10 +98,10 @@ export type Feed = {
   repost_of_id?: string;
   repost_of?: Feed;
   reaction_count: FeedReactionCount;
+  repost_count: number;
   my_reaction: ReactionTypeEnum | null;
   comment_count: number;
   comment_reply_count: number;
-  top_comment: FeedComment | null;
   created_at: string;
   updated_at: string;
 };

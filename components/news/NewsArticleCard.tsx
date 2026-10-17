@@ -1,7 +1,8 @@
 "use client";
 
 import { IconPhotoOff } from "@tabler/icons-react";
-import { ExternalLink, MoreHorizontal, Share2 } from "lucide-react";
+import { ExternalLink, MoreHorizontal } from "lucide-react";
+import { IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
 import type { NewsArticle } from "@/apis/news";
@@ -110,7 +111,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
               title="Bagikan berita"
               className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             >
-              <Share2 className="size-4" />
+              <IconShare2 className="size-4" />
             </Button>
             <Dropdown
               align="left"

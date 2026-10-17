@@ -5,7 +5,7 @@ import {
   IconBellPlus,
   IconBrandWhatsapp,
   IconCalendarStar,
-  IconShare,
+  IconShare2,
 } from "@tabler/icons-react";
 import type { TrainingDetail } from "@/apis/trainings";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
@@ -240,7 +240,7 @@ export default function PublicTrainingDetailPage({
                 onClick={() => setShareOpen(true)}
                 aria-label={`Bagikan ${training.name}`}
               >
-                <IconShare className="size-5" stroke={2} />
+                <IconShare2 className="size-5" stroke={2} />
               </Button>
               {canEditTraining && (
                 <Dropdown
@@ -410,7 +410,7 @@ export default function PublicTrainingDetailPage({
                     onClick={() => setShareOpen(true)}
                     aria-label={`Bagikan ${training.name}`}
                   >
-                    <IconShare className="size-5" stroke={2} />
+                    <IconShare2 className="size-5" stroke={2} />
                   </Button>
                   {canEditTraining && (
                     <Dropdown

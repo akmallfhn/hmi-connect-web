@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDownload, IconLink, IconShare3 } from "@tabler/icons-react";
+import { IconDownload, IconLink, IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -668,7 +668,7 @@ export default function FeedShareModal({ open, onClose, feed, content, url }: Fe
                 <span className="w-full truncate text-center text-xs text-muted-foreground">{platform.name}</span>
               </a>
             ))}
-            <MobileAction icon={<IconShare3 className="size-5" stroke={2} />} label="Lainnya" onClick={handleNativeShare} disabled={busy !== null} />
+            <MobileAction icon={<IconShare2 className="size-5" stroke={2} />} label="Lainnya" onClick={handleNativeShare} disabled={busy !== null} />
           </div>
         </div>
 

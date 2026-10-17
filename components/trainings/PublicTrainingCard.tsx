@@ -6,7 +6,7 @@ import {
   IconCalendarEvent,
   IconPhotoOff,
   IconSchool,
-  IconShare,
+  IconShare2,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -148,7 +148,7 @@ export default function PublicTrainingCard({
             variant="outline"
             size="icon"
           >
-            <IconShare className="size-5" />
+            <IconShare2 className="size-5" />
           </Button>
         </div>
       </article>

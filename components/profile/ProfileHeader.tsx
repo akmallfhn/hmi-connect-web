@@ -13,7 +13,7 @@ import {
   UserCheck,
   UserPlus,
 } from "lucide-react";
-import { IconShare3 } from "@tabler/icons-react";
+import { IconShare2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -136,7 +136,7 @@ export default function ProfileHeader({
         registrationNumber={registrationNumber}
         renderTrigger={(openModal) => (
           <Button variant="light" onClick={openModal}>
-            <IconShare3 className="size-4" stroke={2} />
+            <IconShare2 className="size-4" stroke={2} />
             Bagikan
           </Button>
         )}
@@ -153,7 +153,7 @@ export default function ProfileHeader({
         registrationNumber={registrationNumber}
         renderTrigger={(openModal) => (
           <Button variant="light" className="w-full" onClick={openModal}>
-            <IconShare3 className="size-4" stroke={2} />
+            <IconShare2 className="size-4" stroke={2} />
             Bagikan
           </Button>
         )}

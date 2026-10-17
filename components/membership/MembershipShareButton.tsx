@@ -1,6 +1,6 @@
 "use client";
 
-import { IconShare3 } from "@tabler/icons-react";
+import { IconShare2 } from "@tabler/icons-react";
 import Button from "../buttons/Button";
 import UserShareModal from "../common/UserShareModal";
 
@@ -26,7 +26,7 @@ export default function MembershipShareButton({
           className={className}
           onClick={openModal}
         >
-          <IconShare3 className="size-4" stroke={2} />
+          <IconShare2 className="size-4" stroke={2} />
           Bagikan
         </Button>
       )}

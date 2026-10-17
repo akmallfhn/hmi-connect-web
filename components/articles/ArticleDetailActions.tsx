@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil, Repeat2, Share2 } from "lucide-react";
+import { Pencil, Repeat2 } from "lucide-react";
+import { IconShare2 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ArticleDetail } from "@/apis/articles";
@@ -83,7 +84,7 @@ export default function ArticleDetailActions({
           title="Bagikan artikel"
           className={ACTION_CLASS}
         >
-          <Share2 className="size-4" />
+          <IconShare2 className="size-4" />
         </Button>
       </div>
 

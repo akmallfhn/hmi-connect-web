@@ -4,8 +4,8 @@ import Image from "next/image";
 import {
   IconHeart,
   IconMessageCircle,
-  IconRepeat,
-  IconShare,
+  IconRefresh,
+  IconShare2,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import {
@@ -64,7 +64,6 @@ import type {
 import {
   createFeedComment,
   deleteFeed,
-  listFeedComments,
   repostFeed,
   unrepostFeed,
 } from "@/lib/actions";
@@ -96,6 +95,13 @@ interface FeedItemCardProps {
   // Official-account pages pass this to every interaction so the entity, not
   // the human administrator, is the public actor.
   authorEntity?: ComposerAuthorEntity;
+}
+
+function formatActionCount(count: number) {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(count).toLowerCase();
 }
 
 function PhotoGrid({
@@ -379,6 +385,7 @@ export default function FeedItemCard({
     authorEntity,
   });
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const reactionButtonRef = useRef<HTMLButtonElement>(null);
   const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -393,6 +400,7 @@ export default function FeedItemCard({
   const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
+  const [repostCount, setRepostCount] = useState(feed.repost_count ?? 0);
   const [reposting, startRepostTransition] = useTransition();
   const isOwnFeed = Boolean(currentUserId) && feed.creator_id === currentUserId;
   // Acting as an entity, your personal posts aren't the entity's to edit or delete.
@@ -407,16 +415,10 @@ export default function FeedItemCard({
   const cannotRepost = isOwnPersonalFeed || isOwnEntityFeed;
   const hasOverflowActions = showViewPostAction || canManageFeed;
 
-  const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState<FeedComment[]>(
     initialComments ?? [],
   );
-  const [commentsLoaded, setCommentsLoaded] = useState(
-    initialComments !== undefined,
-  );
-  const [loadingComments, setLoadingComments] = useState(false);
   const [commentCount, setCommentCount] = useState(feed.comment_count);
-  const [topCommentDeleted, setTopCommentDeleted] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [postingComment, startCommentTransition] = useTransition();
 
@@ -448,6 +450,8 @@ export default function FeedItemCard({
       ? `${window.location.origin}/feeds/${feed.id}`
       : "";
   const totalCommentCount = commentCount + feed.comment_reply_count;
+  const actionClassName =
+    "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-2.5 text-sm text-muted-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3";
 
   function handleReactionButtonClick() {
     if (!requireVerified()) return;
@@ -480,6 +484,7 @@ export default function FeedItemCard({
 
     const nextReposted = !reposted;
     setReposted(nextReposted);
+    setRepostCount((count) => Math.max(0, count + (nextReposted ? 1 : -1)));
 
     startRepostTransition(async () => {
       const result = nextReposted
@@ -488,6 +493,7 @@ export default function FeedItemCard({
 
       if (!isSuccessStatus(result.status)) {
         setReposted(!nextReposted);
+        setRepostCount((count) => Math.max(0, count + (nextReposted ? -1 : 1)));
         toast.error(result.message ?? "Gagal memperbarui repost.");
       }
     });
@@ -498,27 +504,9 @@ export default function FeedItemCard({
     setShowQuoteRepost(true);
   }
 
-  function handleToggleComments() {
-    const nextShow = !showComments;
-    setShowComments(nextShow);
-
-    if (nextShow && !commentsLoaded) {
-      setLoadingComments(true);
-      listFeedComments(feed.id)
-        .then((result) => {
-          setComments(result.list);
-          setCommentsLoaded(true);
-        })
-        .finally(() => setLoadingComments(false));
-    }
-  }
-
   function handleCommentDeleted(commentId: string) {
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     setCommentCount((prev) => Math.max(0, prev - 1));
-    if (feed.top_comment?.id === commentId) {
-      setTopCommentDeleted(true);
-    }
   }
 
   function handleSubmitComment(event: FormEvent) {
@@ -546,7 +534,7 @@ export default function FeedItemCard({
       : "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x"}>
       {repostedBy && (
         <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground xl:text-[13px]">
-          <IconRepeat className="size-3.5" />
+          <IconRefresh className="size-3.5" />
           <Avatar
             src={repostedBy.avatar}
             name={repostedBy.fullName}
@@ -578,6 +566,7 @@ export default function FeedItemCard({
         {hasOverflowActions && (
           <Dropdown
             align="right"
+            closeOnScroll
             trigger={({ toggle }) => (
               <Button
                 variant="ghost"
@@ -663,50 +652,42 @@ export default function FeedItemCard({
         feed.repost_of_id && <DeletedQuotedFeed />
       )}
 
-      {reaction.reactionCount > 0 && (
-        <button
-          type="button"
-          onClick={() => setShowReactorsModal(true)}
-          className="mt-3 flex cursor-pointer items-center gap-1 text-xs text-muted-foreground xl:text-[13px]"
-        >
-          <span className="flex items-center -space-x-1">
-            {(reaction.reactionEmojis.length > 0
-              ? reaction.reactionEmojis
-              : ["👍"]
-            ).map((emoji, index) => (
-              <span
-                key={`${emoji}-${index}`}
-                className="flex size-4 items-center justify-center rounded-full bg-surface text-[10px] leading-none ring-1 ring-on-dark"
-              >
-                {emoji}
-              </span>
-            ))}
-          </span>
-          {reaction.reactionCount}
-        </button>
-      )}
-
-      <div className="mt-3 grid grid-cols-4 gap-1 border-t border-border pt-2">
-        <div className="relative">
-          <Button
-            variant="ghost"
+      <div className="mt-4 flex items-center gap-1 overflow-x-auto [scrollbar-width:none] lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+        <div className="relative flex shrink-0 items-center rounded-full transition-colors hover:bg-surface-muted focus-within:bg-surface-muted">
+          <button
+            ref={reactionButtonRef}
+            type="button"
             onClick={handleReactionButtonClick}
             disabled={reaction.reacting}
-            className={`w-full gap-1.5 rounded-lg py-2 hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
-              reaction.activeReaction ? "text-secondary-foreground" : "text-muted-foreground"
-            }`}
+            aria-label={reaction.activeReaction ? `Batalkan reaksi ${reaction.activeReactionInfo?.label ?? ""}`.trim() : "Beri reaksi"}
+            className={`inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full ${showViewPostAction ? "px-2.5 sm:px-3" : "pl-2.5"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60`}
           >
             {reaction.activeReactionInfo ? (
-              <span className="text-base leading-none">
+              <span className="text-xl leading-none" role="img" aria-label={reaction.activeReactionInfo.label}>
                 {reaction.activeReactionInfo.emoji}
               </span>
             ) : (
-              <IconHeart className="size-4" />
+              <IconHeart className="size-5 text-muted-foreground" />
             )}
-            {reaction.reactionCount > 0 && reaction.reactionCount}
-          </Button>
+            {showViewPostAction && (
+              <span className="text-sm text-muted-foreground">{formatActionCount(reaction.reactionCount)}</span>
+            )}
+          </button>
+          {!showViewPostAction && (reaction.reactionCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowReactorsModal(true)}
+              aria-label={`Lihat ${reaction.reactionCount.toLocaleString("id-ID")} reaksi`}
+              className="h-10 cursor-pointer rounded-r-full pr-3 text-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              {formatActionCount(reaction.reactionCount)}
+            </button>
+          ) : (
+            <span className="pr-3 text-sm text-muted-foreground">0</span>
+          ))}
           <ReactionPickerModal
             open={showReactionPicker}
+            anchorRef={reactionButtonRef}
             onClose={() => setShowReactionPicker(false)}
             activeReaction={reaction.activeReaction}
             onSelect={(type) =>
@@ -714,27 +695,38 @@ export default function FeedItemCard({
             }
           />
         </div>
-        <Button
-          variant="ghost"
-          onClick={handleToggleComments}
-          className={`gap-1.5 rounded-lg py-2 text-muted-foreground hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
-        >
-          <IconMessageCircle className="size-4" />
-          {totalCommentCount > 0 && totalCommentCount}
-        </Button>
+        {showViewPostAction ? (
+          <Link
+            href={actingHref(`/feeds/${feed.id}`)}
+            aria-label={`Lihat ${totalCommentCount.toLocaleString("id-ID")} komentar`}
+            className={actionClassName}
+          >
+            <IconMessageCircle className="size-5" />
+            {formatActionCount(totalCommentCount)}
+          </Link>
+        ) : (
+          <a
+            href={`#feed-comments-${feed.id}`}
+            aria-label={`Lihat ${totalCommentCount.toLocaleString("id-ID")} komentar`}
+            className={actionClassName}
+          >
+            <IconMessageCircle className="size-5" />
+            {formatActionCount(totalCommentCount)}
+          </a>
+        )}
         <Dropdown
-          align="right"
+          align="left"
           trigger={({ toggle }) => (
-            <Button
-              variant="ghost"
+            <button
+              type="button"
               onClick={toggle}
               disabled={reposting}
-              className={`w-full rounded-lg py-2 hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"} ${
-                reposted ? "text-secondary-foreground" : "text-muted-foreground"
-              }`}
+              aria-label={`Bagikan ulang, ${repostCount.toLocaleString("id-ID")} repost`}
+              className={`${actionClassName} ${reposted ? "text-secondary-foreground" : ""}`}
             >
-              <IconRepeat className="size-4" />
-            </Button>
+              <IconRefresh className="size-5" />
+              {formatActionCount(repostCount)}
+            </button>
           )}
         >
           <div className="flex flex-col py-1">
@@ -749,7 +741,7 @@ export default function FeedItemCard({
               }
               className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-disabled-foreground xl:text-[15px]"
             >
-              <IconRepeat className="size-4 text-muted-foreground" />
+              <IconRefresh className="size-4 text-muted-foreground" />
               {reposted ? "Batalkan Repost" : "Repost"}
             </button>
             <button
@@ -762,47 +754,19 @@ export default function FeedItemCard({
             </button>
           </div>
         </Dropdown>
-        <Button
-          variant="ghost"
+        <button
+          type="button"
           onClick={() => setShowShareModal(true)}
-          className={`rounded-lg py-2 text-muted-foreground hover:bg-surface-muted ${surface === "flat" ? "text-[13px]" : "text-sm xl:text-[15px]"}`}
+          aria-label="Bagikan postingan"
+          className={actionClassName}
         >
-          <IconShare className="size-4" />
-        </Button>
+          <IconShare2 className="size-5" />
+        </button>
       </div>
 
-      {!showComments && feed.top_comment && !topCommentDeleted && (
-        <div className="mt-3 border-t border-border pt-3">
-          <CommentItem
-            comment={feed.top_comment}
-            userStatus={userStatus}
-            verificationStatus={verificationStatus}
-            currentUserId={currentUserId}
-            currentUserName={currentUserName}
-            currentUserAvatar={currentUserAvatar}
-            authorEntity={authorEntity}
-            onDeleted={handleCommentDeleted}
-          />
-          {commentCount > 1 && (
-            <button
-              type="button"
-              onClick={handleToggleComments}
-              className="mt-2 pl-3 text-xs font-semibold text-muted-foreground hover:underline xl:text-[13px]"
-            >
-              Lihat {commentCount - 1} komentar lainnya
-            </button>
-          )}
-        </div>
-      )}
-
-      {showComments && (
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
-          {loadingComments && (
-            <p className="text-xs text-muted-foreground xl:text-[13px]">
-              Memuat komentar...
-            </p>
-          )}
-          {!loadingComments && commentsLoaded && comments.length === 0 && (
+      {defaultShowComments && (
+        <div id={`feed-comments-${feed.id}`} className="mt-3 flex scroll-mt-20 flex-col gap-3 border-t border-border pt-3">
+          {comments.length === 0 && (
             <p className="py-4 text-center text-[13px] text-muted-foreground xl:text-sm">
               Jadilah yang pertama berkomentar!
             </p>
@@ -866,6 +830,7 @@ export default function FeedItemCard({
         authorEntity={authorEntity}
         onCreated={(created) => {
           setShowQuoteRepost(false);
+          setRepostCount((count) => count + 1);
           onFeedCreated?.(created);
         }}
       />

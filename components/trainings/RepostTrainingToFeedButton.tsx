@@ -1,7 +1,7 @@
 "use client";
 
 import { Repeat2 } from "lucide-react";
-import { IconRepeat } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import type { TrainingListEntry } from "@/apis/trainings";
 import type { ComposerTrainingDraft } from "@/components/forms/CreateFeedForms";
@@ -63,7 +63,7 @@ export default function RepostTrainingToFeedButton({
       title="Repost ke feed"
     >
       {iconOnly ? (
-        <IconRepeat className="size-5" />
+        <IconRefresh className="size-5" />
       ) : (
         <Repeat2 className="size-5" />
       )}

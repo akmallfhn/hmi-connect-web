@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDownload, IconLink, IconShare3 } from "@tabler/icons-react";
+import { IconDownload, IconLink, IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -477,7 +477,7 @@ export default function ArticleShareModal({
               </a>
             ))}
             <MobileAction
-              icon={<IconShare3 className="size-5" stroke={2} />}
+              icon={<IconShare2 className="size-5" stroke={2} />}
               label="Lainnya"
               onClick={handleNativeShare}
               disabled={busy !== null}

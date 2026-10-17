@@ -1,7 +1,7 @@
 "use client";
 
-import { Eye, MoreHorizontal, Pencil, Repeat2, Share2 } from "lucide-react";
-import { IconPhotoOff } from "@tabler/icons-react";
+import { Eye, MoreHorizontal, Pencil, Repeat2 } from "lucide-react";
+import { IconPhotoOff, IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -149,7 +149,7 @@ export default function ArticleListRow({
               title="Bagikan artikel"
               className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
             >
-              <Share2 className="size-4" />
+              <IconShare2 className="size-4" />
             </Button>
             <Dropdown
               align="left"

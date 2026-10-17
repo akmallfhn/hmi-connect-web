@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Heart, Reply } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import CommentSubmitter from "./CommentSubmitter";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
@@ -69,6 +69,7 @@ export default function CommentItem({
     },
   );
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const reactionButtonRef = useRef<HTMLButtonElement>(null);
   const [showReactorsModal, setShowReactorsModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -182,6 +183,7 @@ export default function CommentItem({
 
           <span className="relative flex items-center gap-0.5">
             <button
+              ref={reactionButtonRef}
               type="button"
               onClick={handleReactionButtonClick}
               disabled={reaction.reacting}
@@ -209,6 +211,7 @@ export default function CommentItem({
             )}
             <ReactionPickerModal
               open={showReactionPicker}
+              anchorRef={reactionButtonRef}
               onClose={() => setShowReactionPicker(false)}
               activeReaction={reaction.activeReaction}
               onSelect={(type) =>

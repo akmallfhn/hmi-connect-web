@@ -8,6 +8,7 @@ interface DropdownProps {
   children: ReactNode;
   align?: "left" | "right";
   panelClassName?: string;
+  closeOnScroll?: boolean;
 }
 
 export default function Dropdown({
@@ -15,6 +16,7 @@ export default function Dropdown({
   children,
   align = "right",
   panelClassName,
+  closeOnScroll = false,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,11 +70,11 @@ export default function Dropdown({
           : triggerRect.left;
       const maxTop = Math.max(
         viewportPadding,
-        window.innerHeight - panelRect.height - viewportPadding,
+        window.innerHeight - panelRect.height - viewportPadding
       );
       const maxLeft = Math.max(
         viewportPadding,
-        window.innerWidth - panelRect.width - viewportPadding,
+        window.innerWidth - panelRect.width - viewportPadding
       );
 
       panel.style.top = `${Math.min(Math.max(unclampedTop, viewportPadding), maxTop)}px`;
@@ -82,13 +84,20 @@ export default function Dropdown({
 
     updatePosition();
     window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    const handleScroll = () => {
+      if (closeOnScroll) {
+        setOpen(false);
+      } else {
+        updatePosition();
+      }
+    };
+    window.addEventListener("scroll", handleScroll, true);
 
     return () => {
       window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("scroll", handleScroll, true);
     };
-  }, [align, open]);
+  }, [align, closeOnScroll, open]);
 
   return (
     <div className="relative" ref={containerRef}>
@@ -108,7 +117,7 @@ export default function Dropdown({
           >
             {children}
           </div>,
-          document.body,
+          document.body
         )}
     </div>
   );

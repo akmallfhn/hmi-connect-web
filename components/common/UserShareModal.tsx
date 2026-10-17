@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDownload, IconLink, IconShare3 } from "@tabler/icons-react";
+import { IconDownload, IconLink, IconShare2 } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -536,7 +536,7 @@ export default function UserShareModal({
           onClick={handleOpen}
           className={buttonClassName}
         >
-          <IconShare3 className="size-4" stroke={2} />
+          <IconShare2 className="size-4" stroke={2} />
           {buttonLabel}
         </Button>
       )}
@@ -603,7 +603,7 @@ export default function UserShareModal({
               disabled={busy !== null || !imageBlob}
               className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium text-heading transition hover:bg-media-backdrop/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <IconShare3 className="size-6" stroke={2} />
+              <IconShare2 className="size-6" stroke={2} />
               {busy === "share" || imagePreparing ? "Menyiapkan..." : "Share"}
             </button>
           </div>
@@ -659,7 +659,7 @@ export default function UserShareModal({
                   disabled={busy !== null || !imageBlob}
                 />
                 <DesktopAction
-                  icon={<IconShare3 className="size-5" stroke={2} />}
+                  icon={<IconShare2 className="size-5" stroke={2} />}
                   title={
                     busy === "share" || imagePreparing
                       ? "Menyiapkan..."

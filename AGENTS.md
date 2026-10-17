@@ -54,6 +54,7 @@ fix the rule, not just the code.
   `PublicTrainingCard` also use Tabler icons throughout; the shared `Pagination` accepts
   caller-provided icons so that catalog can use Tabler without changing admin pages.
   Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
+  Share actions on every surface use Tabler's `IconShare2`.
   The admin sidebars are Tabler too: `AdminSidebar` types `AdminNavItem.icon` as `TablerIcon` (its
   own burger/collapse/chevron/logout/close glyphs included, active nav icons at `stroke` 2.2 vs 1.8
   idle), and `MasterSidebar`/`EntitySidebar` take every nav icon from the one
@@ -1333,7 +1334,20 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
-  reactions/comments/repost/share actions. `TrainingAttachmentCard` uses a neutral
+  reactions/comments/repost/share actions. Those four controls sit together at the left
+  in one horizontally scrollable row, with full-round hover fills and compact reaction,
+  comment, and repost counts. On timelines, the heart and reaction count are one
+  button: clicking either opens the reaction picker or removes the current reaction,
+  and the selected reaction emoji replaces the heart. The reactors list remains
+  available from the count on a feed's detail page. Clicking the timeline comment
+  action navigates to `/feeds/[feed_id]`, where the comment list and submitter live;
+  the detail page's comment action jumps to that list. The backend no longer returns
+  a preview comment field; feed detail loads comments separately. Repost controls that use
+  Tabler icons use `IconRefresh`. The feed card's top-right "..." menu closes on page scroll
+  through the shared `Dropdown`'s `closeOnScroll` option.
+  `repost_count` comes from the backend's visible plain and quote repost aggregate, and
+  the card adjusts it optimistically when reposting or unreposting and increments it after
+  creating a quote repost. `TrainingAttachmentCard` uses a neutral
   card surface: poster and event details in the main link, then a separate footer
   for detail, reminder, and optional composer remove actions. Keep those actions
   outside the main link. Its reminder uses the shared primary `Button` variant;
@@ -1943,7 +1957,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `preventDefault`s, because the whole row is itself a `<Link>` and a nested `<a>` would break
   hydration. It sits inside the text column, `align="left"` so the panel opens flush under the
   button rather than off to one side. This replaced a `Pencil` chip that only appeared on your own
-  rows, which made those rows a different shape from every other one. A `Share2` icon button sits left of that
+  rows, which made those rows a different shape from every other one. An `IconShare2` button sits left of that
   trigger and opens the same `ArticleShareModal` the reader uses; the modal renders as a sibling of
   the row's `<Link>`, not inside it, since React events bubble through the portal and a click in
   the modal would otherwise navigate to the article. It sits **outside `(gated)`**, like the reader below: reading articles is public,
@@ -2089,7 +2103,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   here, the same call `ArticleListRow`'s own edit button already makes; Repeat2 hands a `ComposerArticleDraft` to the feed
   composer through the same `sessionStorage` compose-intent mechanism news uses (bouncing a
   logged-out visitor to `/auth/login?redirectTo=` first, since the composer needs an account); and
-  Share2 opens `components/articles/ArticleShareModal.tsx`, the article twin of `UserShareModal`:
+  `IconShare2` opens `components/articles/ArticleShareModal.tsx`, the article twin of `UserShareModal`:
   a 720×1280 PNG drawn on a canvas (the cover blurred behind, then a white card with cover, title,
   and author, then "Baca selengkapnya di" over the HMI Connect wordmark) previewed from the very
   blob that downloads, plus copy-link and the `ShareModal` platforms (`SHARE_PLATFORMS`) — a
@@ -2204,15 +2218,17 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   off. These previews are the generated PNG itself (a blob URL), since a scaled-down HTML replica
   with fixed type sizes would clip.
   `ReactionPickerModal.tsx` is the odd one out — it's _not_ built on `Modal`, it's a small
-  self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) that renders
-  `absolute bottom-full` next to whatever trigger renders it, so the trigger must sit
-  inside a `relative`-positioned wrapper. The reaction button (feed or comment/reply) opens
+  self-positioned horizontal dropdown (LinkedIn-style: emoji + label in a row) rendered
+  through a body portal. Feed and comment/reply triggers pass their button ref so it can
+  sit above the trigger without being clipped by a feed action row's horizontal overflow.
+  The reaction button (feed or comment/reply) opens
   it only when there's no active reaction yet; if the caller already reacted, clicking the
   button calls `unsendReaction` directly instead of reopening the picker — there's no
   default reaction until the user actually picks one the first time.
   `ReactorsListModal.tsx` lists who reacted to a feed/comment/reply (`reactions/list`,
   paginated), each row showing `full_name` + `@username` and linking to
-  `/profile/${reactor.username}`; opened by clicking the emoji+count summary.
+  `/profile/${reactor.username}`; opened by clicking the count on feed detail
+  or beside a comment/reply reaction trigger.
   `FollowListModal.tsx` is the same list-in-a-modal shape for `users/following/list`/
   `users/followers/list` (still `user_id`-keyed requests, unlike the username-keyed
   endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import type { ReactionTypeEnum } from "@/lib/types";
 
 interface ReactionPickerModalProps {
@@ -8,6 +9,7 @@ interface ReactionPickerModalProps {
   onClose: () => void;
   activeReaction: ReactionTypeEnum | null;
   onSelect: (type: ReactionTypeEnum) => void;
+  anchorRef: RefObject<HTMLButtonElement | null>;
 }
 
 export const REACTIONS: { type: ReactionTypeEnum; emoji: string; label: string }[] = [
@@ -26,14 +28,11 @@ export default function ReactionPickerModal({
   onClose,
   activeReaction,
   onSelect,
+  anchorRef,
 }: ReactionPickerModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  // On mobile the picker is `fixed` and dead-centered horizontally (never anchored to the
-  // trigger's x — trigger position varies too much between feed/comment/reply to keep it
-  // on-screen otherwise), only its `bottom` offset is computed to float above the trigger.
-  // On desktop (>= lg) it's a plain `absolute bottom-full left-0` next to the trigger, no
-  // JS needed — there's always enough room.
-  const [mobileBottom, setMobileBottom] = useState<number | null>(null);
+  // Position the portal beside its trigger without clipping inside scroll containers.
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -55,9 +54,7 @@ export default function ReactionPickerModal({
     };
   }, [open, onClose]);
 
-  // On mobile the picker is `fixed`, so it doesn't scroll with its trigger — close it on
-  // scroll instead of leaving it floating over unrelated content. `capture: true` catches
-  // scrolling on the feed's own scroll container too, not just window/document.
+  // Close the picker if the trigger scrolls away.
   useEffect(() => {
     if (!open) return;
 
@@ -74,34 +71,38 @@ export default function ReactionPickerModal({
     if (!open) return;
 
     function measure() {
-      if (window.matchMedia(DESKTOP_QUERY).matches) {
-        setMobileBottom(null);
-        return;
-      }
-      const parent = panelRef.current?.parentElement;
-      if (!parent) return;
-      const rect = parent.getBoundingClientRect();
-      setMobileBottom(window.innerHeight - rect.top + 8);
+      const anchor = anchorRef.current;
+      const panel = panelRef.current;
+      if (!anchor || !panel) return;
+      const anchorRect = anchor.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const desktop = window.matchMedia(DESKTOP_QUERY).matches;
+      const desiredLeft = desktop
+        ? anchorRect.left
+        : (window.innerWidth - panelRect.width) / 2;
+      const left = Math.min(
+        Math.max(8, desiredLeft),
+        Math.max(8, window.innerWidth - panelRect.width - 8),
+      );
+      const topAbove = anchorRect.top - panelRect.height - 8;
+      const top = topAbove >= 8 ? topAbove : anchorRect.bottom + 8;
+      setPosition({ top, left });
     }
 
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [open]);
+  }, [anchorRef, open]);
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       ref={panelRef}
-      style={mobileBottom !== null ? { bottom: mobileBottom } : undefined}
-      className={[
-        "z-50 flex gap-1 rounded-2xl border border-border bg-surface p-1.5 shadow-lg",
-        mobileBottom !== null
-          ? "fixed left-1/2 -translate-x-1/2"
-          : "absolute bottom-full left-0 mb-2",
-        "lg:absolute lg:bottom-full lg:left-0 lg:mb-2 lg:translate-x-0",
-      ].join(" ")}
+      role="dialog"
+      aria-label="Pilih reaksi"
+      style={position ?? { visibility: "hidden" }}
+      className="fixed z-[120] flex gap-1 rounded-2xl border border-border bg-surface p-1.5 shadow-lg"
     >
       {REACTIONS.map((reaction) => (
         <button
@@ -121,6 +122,7 @@ export default function ReactionPickerModal({
           </span>
         </button>
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }

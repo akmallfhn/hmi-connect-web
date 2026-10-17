@@ -1,7 +1,8 @@
 "use client";
 
 import { socialIconUrl } from "@/lib/constants";
-import { Check, Copy, Share2 } from "lucide-react";
+import { Check, Copy } from "lucide-react";
+import { IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -105,7 +106,7 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
             className="h-auto w-auto flex-col gap-1.5"
           >
             <span className="flex size-11 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
-              <Share2 className="size-5" />
+              <IconShare2 className="size-5" />
             </span>
             <span className="text-xs text-muted-foreground">Lainnya</span>
           </Button>
