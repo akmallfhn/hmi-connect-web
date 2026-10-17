@@ -4,7 +4,9 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import {
   isSuccessStatus,
+  type Degree,
   type GenderEnum,
+  type TrainingResultEnum,
   type VerificationRequestStatusEnum,
 } from "@/lib/types";
 import { callApi, type ApiEnvelope } from "./api";
@@ -48,6 +50,18 @@ export type VerificationRequestDetail = VerificationRequestListEntry & {
   reviewer_avatar: string | null;
   reviewed_at: string | null;
   updated_at: string;
+  // The applicant's earliest LK1 and earliest education, read live rather than snapshotted; each group is all-null when absent.
+  training_id: string | null;
+  training_result: TrainingResultEnum | null;
+  training_organizer_name: string | null;
+  training_year: number | null;
+  education_id: string | null;
+  education_institution_id: number | null;
+  education_institution_name: string | null;
+  education_degree: Degree | null;
+  education_major: string | null;
+  education_start_year: number | null;
+  education_end_year: number | null;
 };
 
 export type VerificationRequestReviewResult = VerificationRequestListEntry & {

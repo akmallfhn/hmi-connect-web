@@ -3,20 +3,25 @@
 import AdminPageTitle from "../common/AdminPageTitle";
 import {
   Building2,
-  Cake,
   CalendarDays,
   Check,
   Eye,
   GraduationCap,
-  IdCard,
-  MapPin,
-  Mail,
-  Phone,
   Search,
-  UserRound,
-  VenusAndMars,
   X as XIcon,
 } from "lucide-react";
+import {
+  IconBuildingBank,
+  IconCake,
+  IconCertificate,
+  IconGenderBigender,
+  IconId,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  IconUser,
+} from "@tabler/icons-react";
+import { ADMIN_NAV_ICON } from "../navigations/admin-nav-icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useState, type ComponentType } from "react";
 import { toast } from "sonner";
@@ -29,6 +34,7 @@ import {
   getVerificationRequestDetail,
   rejectVerificationRequest,
 } from "@/lib/actions";
+import { DEGREE_LABELS } from "@/lib/education";
 import { isSuccessStatus } from "@/lib/types";
 import ActiveFilterChips from "../common/ActiveFilterChips";
 import Avatar from "../common/Avatar";
@@ -46,6 +52,7 @@ import VerificationRequestStatusLabel from "../labels/VerificationRequestStatusL
 import AlertConfirmation from "../modals/AlertConfirmation";
 import Modal from "../modals/Modal";
 import EmptyState from "../states/EmptyState";
+import { TrainingResultLabel } from "../trainings/TrainingLabels";
 import { useBranch } from "@/hooks/useBranch";
 
 const STATUS_FILTER_OPTIONS = [
@@ -105,6 +112,98 @@ function Field({
         </p>
       </div>
     </div>
+  );
+}
+
+function HistorySection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="border-t border-border pt-4">
+      <p className="text-sm font-semibold text-heading">{title}</p>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+function HistoryRow({
+  icon: Icon,
+  title,
+  subtitle,
+  trailing,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  trailing?: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
+        <Icon className="size-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="break-words text-[15px] font-medium text-heading">
+          {title}
+        </p>
+        {subtitle && (
+          <p className="break-words text-sm text-muted-foreground">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {trailing && <span className="shrink-0">{trailing}</span>}
+    </div>
+  );
+}
+
+function EducationSummary({ detail }: { detail: VerificationRequestDetail }) {
+  if (!detail.education_id) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Belum ada riwayat pendidikan.
+      </p>
+    );
+  }
+  const degree = detail.education_degree
+    ? DEGREE_LABELS[detail.education_degree]
+    : null;
+  const years = detail.education_start_year
+    ? `${detail.education_start_year} – ${detail.education_end_year ?? "Sekarang"}`
+    : null;
+  return (
+    <HistoryRow
+      // The detail response carries no institution logo, so the icon stands in for one.
+      icon={IconBuildingBank}
+      title={detail.education_institution_name ?? "—"}
+      subtitle={[degree, detail.education_major, years]
+        .filter(Boolean)
+        .join(" · ")}
+    />
+  );
+}
+
+function TrainingSummary({ detail }: { detail: VerificationRequestDetail }) {
+  if (!detail.training_id) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Belum ada riwayat LK 1.
+      </p>
+    );
+  }
+  return (
+    <HistoryRow
+      icon={IconCertificate}
+      title={`LK 1 - ${detail.training_organizer_name ?? "—"}`}
+      subtitle={detail.training_year ? `Tahun ${detail.training_year}` : undefined}
+      trailing={
+        <TrainingResultLabel result={detail.training_result ?? undefined} />
+      }
+    />
   );
 }
 
@@ -255,6 +354,7 @@ export function VerificationRequestListPage({
   const [detailData, setDetailData] =
     useState<VerificationRequestDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
 
   const [approveTarget, setApproveTarget] =
     useState<VerificationRequestListEntry | null>(null);
@@ -675,24 +775,24 @@ export function VerificationRequestListPage({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field icon={Mail} label="Email" value={detailData.email} />
+              <Field icon={IconMail} label="Email" value={detailData.email} />
               <Field
-                icon={IdCard}
+                icon={IconId}
                 label="Nama Sesuai KTP"
                 value={detailData.ktp_full_name}
               />
               <Field
-                icon={Phone}
+                icon={IconPhone}
                 label="Nomor HP"
                 value={detailData.phone_number}
               />
               <Field
-                icon={Cake}
+                icon={IconCake}
                 label="Tanggal Lahir"
                 value={formatDate(detailData.date_of_birth)}
               />
               <Field
-                icon={VenusAndMars}
+                icon={IconGenderBigender}
                 label="Jenis Kelamin"
                 value={
                   detailData.gender
@@ -701,17 +801,17 @@ export function VerificationRequestListPage({
                 }
               />
               <Field
-                icon={UserRound}
+                icon={IconUser}
                 label="Status Keanggotaan"
                 value={<AlumniStatusLabel isAlumni={detailData.is_alumni} />}
               />
               <Field
-                icon={GraduationCap}
+                icon={ADMIN_NAV_ICON.chapter}
                 label="Komisariat"
                 value={detailData.chapter_name}
               />
               <Field
-                icon={Building2}
+                icon={ADMIN_NAV_ICON.branch}
                 label="Cabang"
                 value={
                   detailData.branch_name ??
@@ -722,7 +822,7 @@ export function VerificationRequestListPage({
               />
               <div className="sm:col-span-2">
                 <Field
-                  icon={MapPin}
+                  icon={IconMapPin}
                   label="Alamat Lengkap"
                   // An applicant may skip the address entirely, and "" is not nullish enough for Field's dash.
                   value={
@@ -738,6 +838,14 @@ export function VerificationRequestListPage({
                 />
               </div>
             </div>
+
+            <HistorySection title="Pendidikan">
+              <EducationSummary detail={detailData} />
+            </HistorySection>
+
+            <HistorySection title="Latihan Kader 1">
+              <TrainingSummary detail={detailData} />
+            </HistorySection>
 
             {detailData.status !== "pending" && (
               <ReviewSummary detail={detailData} />

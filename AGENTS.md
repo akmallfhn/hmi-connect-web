@@ -2849,6 +2849,11 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   Cabang also appears as a `Field` in the detail modal for every admin scope, including the
   Cabang queue. It prefers the detail response's `branch_name`, then the list row's name, the
   selected Cabang filter, and finally the Cabang context name in the Cabang queue.
+  Below the applicant's fields the modal shows Pendidikan and Latihan Kader 1, read straight off
+  `verification-requests/detail`'s `education_*` and `training_*` fields (the applicant's earliest
+  education and earliest LK1, live rather than snapshotted, all-null when absent). The LK1 row reads
+  `LK 1 - {organizer}` as plain text with `TrainingResultLabel` on the right; the education row
+  always uses Tabler's `IconBuildingBank`, since the response carries no institution logo.
   Once a request is no longer `pending`, the modal closes with `ReviewSummary`: two quiet,
   left-aligned lines below a divider, separate from the applicant's `Field` rows. The first
   shows "Disetujui/Ditolak pada" from `reviewed_at` (in WIB); the second shows "Disetujui/Ditolak
