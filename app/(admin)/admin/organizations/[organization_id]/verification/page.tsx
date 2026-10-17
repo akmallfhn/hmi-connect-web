@@ -50,12 +50,11 @@ export default async function OrganizationVerificationRequestsPage({
       currentPage={result.currentPage}
       initialStatus={status}
       initialSearch={search ?? ""}
-      description="Lihat seluruh pengajuan verifikasi identitas kader di Pengurus Besar HMI."
+      description="Tinjau seluruh pengajuan verifikasi identitas kader di Pengurus Besar HMI."
       showBranchFilter
       selectedBranch={
         branch ? { id: branch.id, name: branch.name } : null
       }
-      allowReviewActions={false}
     />
   );
 }

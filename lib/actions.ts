@@ -282,7 +282,7 @@ export async function revokeAccessGrant(id: string) {
   return revokeAccessGrantApi(id);
 }
 
-// Super Admin, or a manage grant on the request's branch — see apis/verification-requests.ts.
+// Super Admin, or a manage grant on the request's branch or its organization — see apis/verification-requests.ts.
 export async function approveVerificationRequest(id: string) {
   return approveVerificationRequestApi(id);
 }

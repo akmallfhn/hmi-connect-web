@@ -2792,7 +2792,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   addition to the frontend layout's own `canManageEntity` gate — note the backend middleware does
   not scope the rows to that grant, so the frontend filter is what narrows them.
   Permintaan Verifikasi (`app/(admin)/admin/branches/[branch_id]/verification/page.tsx`, the
-  Super Admin-only `/master/verification`, and the read-only
+  Super Admin-only `/master/verification`, and the
   `/organizations/[organization_id]/verification`, with no separate detail pages) is the UI for the
   `verification_requests`
   workflow the Verification flow section above describes — the admin-facing half that section
@@ -2832,9 +2832,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   a "..." dropdown: an outlined `Eye` "Lihat Detail" button (always shown, opens a `Modal` populated
   on demand via the `getVerificationRequestDetail` Server Action), plus `X`/`Check` reject/approve
   icon buttons that only render when `status === "pending"` (the backend 409s on re-review
-  otherwise), so Super Admin can perform the same review actions from the Master queue. The
-  Organization page passes `allowReviewActions={false}`, which omits those buttons and their
-  confirmation modals entirely while keeping detail viewing available. The detail
+  otherwise), so Super Admin can perform the same review actions from the Master queue, and an
+  Organization admin from theirs: the backend lets a `manage` grant on the request's branch **or on
+  that branch's organization** approve and reject, while a Badko or Korkom grant still only reads.
+  `allowReviewActions={false}` remains for a future read-only scope; no route passes it today. The detail
   modal's `Field` rows each carry a small icon badge (`bg-primary-soft
 text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) for Email/Nama
   Sesuai KTP/Nomor HP/Tanggal
