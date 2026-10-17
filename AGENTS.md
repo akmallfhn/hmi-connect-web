@@ -614,7 +614,7 @@ flow. That endpoint 409s unless the caller is still `unverified`, and only its
 `username is already taken` conflict sends the form back to step 1.
 
 1. **Profile** — avatar and full name are seeded from `getSession()` and remain editable;
-   username is required and only accepts letters, numbers, periods, and underscores.
+   username is required and only accepts letters, numbers, periods, and underscores; a period may not start or end it (`lib/username.ts`).
    Before this step can continue, the client debounces a request to
    `/www/api/users/check-username`, which delegates to the backend's
    `users/check-username`; only `is_available: true` unlocks the next step. Phone number
