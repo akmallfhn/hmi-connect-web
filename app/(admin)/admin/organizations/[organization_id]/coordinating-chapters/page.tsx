@@ -5,7 +5,7 @@ import AdminCoordinatingChapterListPage from "@/components/pages/AdminCoordinati
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Daftar Korkom",
+  title: "Kelola Korkom",
   robots: {
     index: false,
     follow: false,
@@ -59,8 +59,6 @@ export default async function OrganizationCoordinatingChaptersPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedBranch={branch ? { id: branch.id, name: branch.name } : null}
-      allowCreate={false}
-      allowEdit={false}
       allowDelete={false}
       detailBasePath={`/organizations/${organization_id}/coordinating-chapters`}
     />

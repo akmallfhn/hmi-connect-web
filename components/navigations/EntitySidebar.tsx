@@ -93,12 +93,12 @@ function getScopeNavItems(
               icon: ADMIN_NAV_ICON.branch,
             },
             {
-              label: "Daftar Korkom",
+              label: "Kelola Korkom",
               href: `${base}/coordinating-chapters`,
               icon: ADMIN_NAV_ICON.coordinatingChapter,
             },
             {
-              label: "Daftar Komisariat",
+              label: "Kelola Komisariat",
               href: `${base}/chapters`,
               icon: ADMIN_NAV_ICON.chapter,
             },

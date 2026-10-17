@@ -27,7 +27,7 @@ function parseTab(tab?: string): ChapterDetailTab {
   return "profile";
 }
 
-// Read-only: a Komisariat answers to its Cabang, not to the organization.
+// The organization may edit a Komisariat, but suspending or retyping it stays with its Cabang.
 export default async function OrganizationChapterDetailPage({
   params,
   searchParams,
@@ -64,6 +64,7 @@ export default async function OrganizationChapterDetailPage({
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      allowEdit
       showTrainings={false}
       accessGrants={accessGrants}
       initialTab={parseTab(query.tab)}

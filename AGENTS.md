@@ -2934,7 +2934,7 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   option), so starting "Tambah Cabang" from a filtered view doesn't make you re-pick the Badko.
   `coordinating-bodies/*` has full CRUD on the backend (list/detail/create/update/delete, mirroring
   branches/chapters) and now on this side too, see `/master/coordinating-bodies` below.
-- `/master/chapters`, the branch-scoped "Kelola Komisariat", the Korkom- and Organization-scoped "Daftar Komisariat"
+- `/master/chapters`, the branch- and Organization-scoped "Kelola Komisariat", the Korkom-scoped "Daftar Komisariat"
   (`app/(admin)/admin/master/chapters/page.tsx`, `.../branches/[branch_id]/chapters/page.tsx`,
   `.../coordinating-chapters/[coordinating_chapter_id]/chapters/page.tsx`) all render the same
   `components/pages/AdminChapterListPage.tsx` — same Tabel/Card dual-view shape
@@ -3231,12 +3231,13 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   Suspend/Aktifkan stays unconditional regardless of `allowEdit`, so `BranchDetailPage` needed a way
   to turn that off too once Badko lost edit rights everywhere. `EntitySidebar`'s Organization scope
   adds "Kelola Cabang" to its existing "Organisasi" group next to "Kelola Badko", followed by the
-  read-only "Daftar Korkom" and "Daftar Komisariat" (`/organizations/[organization_id]/
+  "Kelola Korkom" and "Kelola Komisariat" (`/organizations/[organization_id]/
   coordinating-chapters` and `/chapters`, each with an `[id]` detail). Those four routes reuse
-  `AdminCoordinatingChapterListPage`/`AdminChapterListPage` with all three `allow*` flags off, which
-  also swaps the page heading to "Daftar …" and drops "Kelola" from its description, plus
-  `CoordinatingChapterDetailPage`/`ChapterDetailPage` with no edit, status, type, add-Komisariat or
-  invite rights, since both answer to their Cabang rather than to the organization. The lists send no
+  `AdminCoordinatingChapterListPage`/`AdminChapterListPage` with `allowCreate`/`allowEdit` on and
+  `allowDelete` off, plus `CoordinatingChapterDetailPage`/`ChapterDetailPage` with `allowEdit` only.
+  The backend lets a `manage` grant on a Korkom's or Komisariat's **organization** create and update
+  it, alongside the Cabang (create) or the entity itself (update); suspension, type, grouping
+  Komisariat under a Korkom, and invites still answer to the Cabang, so those flags stay off. The lists send no
   structural filter (this deployment manages one `ORGANIZATION_ID`); the detail routes `notFound()`
   unless the parent Cabang's `organization_id` matches the route. The `coordinating_body`
   scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail

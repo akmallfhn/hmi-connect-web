@@ -5,7 +5,7 @@ import AdminChapterListPage from "@/components/pages/AdminChapterListPage";
 import type { StatusEnum } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Daftar Komisariat",
+  title: "Kelola Komisariat",
   robots: {
     index: false,
     follow: false,
@@ -59,8 +59,6 @@ export default async function OrganizationChaptersPage({
       initialStatus={status}
       pageSize={PAGE_SIZE}
       selectedBranch={branch ? { id: branch.id, name: branch.name } : null}
-      allowCreate={false}
-      allowEdit={false}
       allowDelete={false}
       detailBasePath={`/organizations/${organization_id}/chapters`}
     />

@@ -30,7 +30,7 @@ function parseTab(tab?: string): CoordinatingChapterDetailTab {
   return "profile";
 }
 
-// Read-only: a Korkom answers to its Cabang, not to the organization.
+// The organization may edit a Korkom, but suspending it or regrouping its Komisariat stays with its Cabang.
 export default async function OrganizationCoordinatingChapterDetailPage({
   params,
   searchParams,
@@ -72,6 +72,7 @@ export default async function OrganizationCoordinatingChapterDetailPage({
       structuralPeriods={structuralOverview.periods}
       selectedStructuralPeriod={structuralOverview.selectedPeriod}
       selectedStructuralPeriodId={structuralOverview.selectedPeriodId}
+      allowEdit
       showTrainings={false}
       accessGrants={accessGrants}
       initialTab={parseTab(query.tab)}
