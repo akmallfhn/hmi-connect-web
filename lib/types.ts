@@ -43,8 +43,8 @@ export type ReactionTypeEnum =
   | "angry";
 export type ReactionTargetTypeEnum = "feed" | "comment" | "comment_reply";
 export type ActivityTypeEnum = "post" | "quote_repost" | "repost" | "comment";
-export type NotificationTypeEnum = "like" | "comment" | "comment_reply" | "follow";
-export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | "user";
+export type NotificationTypeEnum = "like" | "comment" | "comment_reply" | "follow" | "access_invitation";
+export type NotificationEntityTypeEnum = "feed" | "comment" | "comment_reply" | "user" | "access_grant";
 // The six fixed stages users/profile-completion returns — `name` is the stable key, `description` is prose.
 export type ProfileCompletionStageEnum =
   | "training_histories"

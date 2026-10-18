@@ -1009,13 +1009,17 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   "Tandai semua dibaca") calls the
   `markNotificationsAsRead` Server Action (`notifications/mark-as-read`) and updates local
   state optimistically, no rollback since the backend call is fire-and-forget for this one.
-  A row only renders as a `Link` when `feed_id` is present (→ `/feeds/[feed_id]`, resolved
-  server-side up through the comment/comment_reply for every type except `follow`) or
-  `entity_type` is `user` (→ `/profile/[actor_username]`, for `follow` notifications, whose
-  `feed_id` is `null`). `entity_content` (also from the backend) is a text preview of the
-  liked/commented-on/replied-to entity — the row appends it inline after a colon (same
-  line, same size/color as the actor name/action text, no quotes) when present (`null` for
-  `follow`).
+  Feed reaction, comment, and reply rows link to `/feeds/[feed_id]` (resolved server-side
+  through comments/replies); follow rows link to `/profile/[actor_username]`. Follow rows
+  use `actor_is_followed_by_me` to show a primary `Followback` action that calls
+  `users/follow`, or a neutral `Following` button that calls `users/unfollow`. `access_invitation` rows use the
+  invited entity's `access_entity_image_url` (falling back to the HMI emblem), show the
+  actor inviting the viewer to manage the formatted entity name, and link to
+  `/invitations/[grant_id]`. A pending `access_grant_status` adds a primary `Terima`
+  action calling `access-grants/accept`; accepted invitations show `Diterima` instead.
+  Action buttons sit beside the row link so they do not trigger navigation. `entity_content`
+  (also from the backend) is a text preview of the liked/commented-on/replied-to entity —
+  the row appends it inline after a colon when present; it is null for follow and invitations.
 - `components/chats/*` (`/chats` + `/chats/[conversation_id]` + `/chats/new`, "Pesan" in the
   nav) — **real backend**, `apis/chats.ts` (`listConversations`, `deleteConversation`,
   `listMessages`, `sendChatMessage`, `updateChatMessage`, `deleteChatMessage`,

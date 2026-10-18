@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
 import {
   isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type AccessGrantStatusEnum,
   type NotificationEntityTypeEnum,
   type NotificationTypeEnum,
 } from "@/lib/types";
@@ -20,6 +22,12 @@ export type Notification = {
   actor_full_name: string;
   actor_username: string;
   actor_avatar?: string;
+  actor_is_followed_by_me?: boolean;
+  access_entity_type?: AccessEntityTypeEnum;
+  access_entity_id?: string;
+  access_entity_name?: string;
+  access_entity_image_url?: string | null;
+  access_grant_status?: AccessGrantStatusEnum;
   read_at: string | null;
   created_at: string;
 };
