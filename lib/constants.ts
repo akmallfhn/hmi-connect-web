@@ -16,6 +16,13 @@ export const PROD_MAIN_SITE_URL = "https://www.hmiconnect.id";
 export const DEV_ADMIN_SITE_URL = "https://admin.example.com:3000";
 export const PROD_ADMIN_SITE_URL = "https://admin.hmiconnect.id";
 
+// SMTP server for frontend-sent email; only the login (SMTP_USER/SMTP_PASS) stays in env.
+export const SMTP_HOST = "smtp.gmail.com";
+export const SMTP_PORT = 465;
+
+// Where /pendataan-komisariat submissions are delivered.
+export const CHAPTER_CENSUS_RECIPIENT = "akmalluthfiansyah@gmail.com";
+
 // Origin transactional email links must use — they're opened from an inbox, where a dev host resolves to nothing.
 export const EMAIL_SITE_ORIGIN = PROD_MAIN_SITE_URL;
 

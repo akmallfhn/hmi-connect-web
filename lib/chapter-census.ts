@@ -3,6 +3,7 @@ import "server-only";
 import { listPublicBranches } from "@/apis/branches";
 import { listPublicCoordinatingBodies } from "@/apis/coordinating-bodies";
 import {
+  CHAPTER_CENSUS_RECIPIENT,
   NO_COORDINATING_BODY_FILTER,
   NO_COORDINATING_BODY_LABEL,
 } from "./constants";
@@ -12,9 +13,7 @@ import {
   type ChapterCensusPayload,
   type ChapterCensusResult,
 } from "./chapter-census-shared";
-import { sendEmail } from "./mailtrap";
-
-const CHAPTER_CENSUS_RECIPIENT = "akmalluthfiansyah@gmail.com";
+import { MailerNotConfiguredError, sendEmail } from "./mailer";
 
 const TYPE_LABEL = { full: "Penuh", provisional: "Persiapan" } as const;
 
@@ -156,12 +155,16 @@ export async function submitChapterCensus(
   try {
     await sendEmail({
       mailRecipients: [CHAPTER_CENSUS_RECIPIENT],
+      replyTo: email,
       mailSubject: `Pendataan Komisariat — Cabang ${branch.name} (${chapters.length})`,
       mailBody: renderText(data),
       mailHtml: renderEmail(data),
     });
   } catch (err) {
     console.error("[submitChapterCensus] send failed:", err);
+    if (err instanceof MailerNotConfiguredError) {
+      return { ok: false, message: "Formulir belum siap menerima data. Hubungi pengurus HMI Connect." };
+    }
     return { ok: false, message: "Data gagal dikirim. Coba lagi beberapa saat lagi." };
   }
   return { ok: true };

@@ -42,8 +42,8 @@ fix the rule, not just the code.
   hover tokens are dark enough to maintain WCAG AA contrast with white.
 - `react-select` for searchable/creatable dropdowns, `sonner` for toasts,
   `@tiptap/react` + Tiptap extensions for the frontend article composer,
-  `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `mailtrap` (only for the
-  `/pendataan-komisariat` census email — every transactional email is sent by the Go backend, see
+  `@react-oauth/google` for Google sign-in, `lucide-react` for icons, `nodemailer` (only for the
+  `/pendataan-komisariat` census email, sent over SMTP from a Google account — every transactional email is sent by the Go backend, see
   Transactional email below), `@react-email/components` (installed, but unused), `sanitize-html` (server-side only, and used by exactly
   one module — `lib/article-body.ts`, which scrubs user-authored article body HTML before it is
   rendered; see `/articles/[article_slug]/[article_id]` below).
@@ -100,7 +100,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres _is_ this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
-| `MAILTRAP_API_TOKEN` | `lib/mailtrap.ts` | Server-side Mailtrap API token for `sendEmail()`, which nothing calls today (see Transactional email below). |
+| `SMTP_USER` / `SMTP_PASS` | `lib/mailer.ts` | Server-only SMTP login for the `/pendataan-komisariat` census email, the same pair the sibling `vanatama` project uses: the sending Google account and a Google [App Password](https://myaccount.google.com/apppasswords) for it, never the real password. The host (`smtp.gmail.com`), port (`465`, TLS), and recipient are constants in `lib/constants.ts` (`SMTP_HOST`, `SMTP_PORT`, `CHAPTER_CENSUS_RECIPIENT`), not env. Missing either makes the form answer "belum siap" instead of sending. |
 | `NEXT_PUBLIC_BASE_URL` | — (no consumer today) | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |
 | `NEXT_PUBLIC_DOMAIN_MODE` | — (no consumer today) | Set alongside `DOMAIN_MODE` in `.env`, `.env.example`, and every Doppler config, but nothing reads it — every domain switch goes through the server-side `DOMAIN_MODE`. Remove it from all three together, or wire it up deliberately. |
 
@@ -725,18 +725,15 @@ only makes the call. There are no email templates in this repo (`components/emai
 no `render()`/`sendEmail()` call anywhere in `apis/*.ts`; don't reintroduce one for a flow the
 backend already owns.
 
-`lib/mailtrap.ts` (`import "server-only"`) is the sending primitive for frontend-originated email;
-its only caller is the `/pendataan-komisariat` census form. It wraps the `mailtrap` npm package's
-`MailtrapClient` — one shared client, sender fixed to
-`{ name: "HMI Connect", email: "no-reply@hmiconnect.id" }` (it moved off the borrowed
-`sevenpreneur.com` sender once the real domain was in hand — note this only works while
-`hmiconnect.id` stays added and DNS-verified under this Mailtrap account's Sending Domains; an
-unverified sender domain doesn't bounce, it times out against Mailtrap's production
-`send.api.mailtrap.io`, so that's the first thing to check if sends start hanging), one
-`sendEmail({ mailRecipients, mailSubject, mailBody?, mailHtml? })` function. Same shape as the
-sibling `sevenpreneur` project's own `lib/mailtrap.ts`, minus its Prisma-backed `LogError` call
-(this repo has no DB access, so send failures here would just be `console.error`'d by the caller).
-`MAILTRAP_API_TOKEN` stays in `.env` for it.
+`lib/mailer.ts` (`import "server-only"`) is the sending primitive for frontend-originated email;
+its only caller is the `/pendataan-komisariat` census form. It mirrors the sibling `vanatama`
+project's contact inquiry: `nodemailer.createTransport` over the `SMTP_HOST`/`SMTP_PORT` constants
+(`smtp.gmail.com:465`, TLS) authenticated as the `SMTP_USER`/`SMTP_PASS` env pair,
+sending `from` that same account and passing the submitter as `replyTo` so a reply lands with them.
+It throws `MailerNotConfiguredError` when either login variable is missing, which the census turns into a
+"not ready" message rather than a generic failure. It replaced `lib/mailtrap.ts` and the `mailtrap`
+package, whose sender only worked while `hmiconnect.id` stayed verified under Mailtrap's Sending
+Domains.
 
 `EMAIL_SITE_ORIGIN` (`lib/constants.ts`) likewise stays: an email link needs an absolute URL, and
 it is **not** `getMainSiteOrigin()` — that helper follows `DOMAIN_MODE`, so a send triggered from a
@@ -2134,7 +2131,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `coordinating-bodies/list` and `branches/list` accept it), and filters in memory, so there is no
   Route Handler. Submitting calls the `submitChapterCensus` Server Action -> `lib/chapter-census.ts`,
   which re-resolves the Badko/Cabang server-side, caps every field, drops honeypot submissions, and
-  emails the result to a fixed recipient through `lib/mailtrap.ts#sendEmail` - the one frontend
+  emails the result through `lib/mailer.ts#sendEmail` (to `CHAPTER_CENSUS_RECIPIENT`, replying to the
+  submitter) - the one frontend
   email today, since nothing is stored. It is allowlisted in `next.config.mts`, hidden from the
   desktop rail, `noindex`, and disallowed in `robots.ts`.
 - `components/pages/QuranPage.tsx` (`/quran`, "Al-Qur'an" in `MobileQuickMenu` now routes
