@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  Heart,
-  MessageCircle,
-  Reply,
-  ShieldCheck,
-  UserPlus,
-} from "lucide-react";
+  IconHeartFilled,
+  IconMessageCircleFilled,
+  IconMessagesFilled,
+  IconShieldCheckFilled,
+  IconUserFilled,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 import type { Notification } from "@/apis/notifications";
 import { acceptAccessGrant, followUser, unfollowUser } from "@/lib/actions";
@@ -20,12 +21,12 @@ import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import LogoHmi from "../svg/LogoHmi";
 
-const TYPE_ICON: Record<Notification["type"], typeof Heart> = {
-  like: Heart,
-  comment: MessageCircle,
-  comment_reply: Reply,
-  follow: UserPlus,
-  access_invitation: ShieldCheck,
+const TYPE_ICON: Record<Notification["type"], TablerIcon> = {
+  like: IconHeartFilled,
+  comment: IconMessageCircleFilled,
+  comment_reply: IconMessagesFilled,
+  follow: IconUserFilled,
+  access_invitation: IconShieldCheckFilled,
 };
 
 function invitationScope(notification: Notification): string {

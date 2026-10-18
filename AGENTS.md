@@ -54,7 +54,8 @@ fix the rule, not just the code.
   `PublicTrainingCard` also use Tabler icons throughout; the shared `Pagination` accepts
   caller-provided icons so that catalog can use Tabler without changing admin pages.
   Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
-  Share actions on every surface use Tabler's `IconShare2`.
+  Notification item badges use Tabler's filled icons for likes, comments, replies, follows,
+  and access invitations. Share actions on every surface use Tabler's `IconShare2`.
   The admin sidebars are Tabler too: `AdminSidebar` types `AdminNavItem.icon` as `TablerIcon` (its
   own burger/collapse/chevron/logout/close glyphs included, active nav icons at `stroke` 2.2 vs 1.8
   idle), and `MasterSidebar`/`EntitySidebar` take every nav icon from the one
