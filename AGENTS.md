@@ -2348,13 +2348,18 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   _after_ compression in the composer.
   The algorithm is a plain Canvas resize/re-encode to JPEG, but it is now **two nested loops**:
   quality steps down from 0.82 to a 0.35 floor, and if that still misses `targetBytes` the
-  dimensions shrink by 0.75 and the whole quality sweep runs again, down to a 256px floor. It
-  short-circuits and returns the original untouched when the file is already under target at its
-  native size. GIFs are still skipped (canvas
-  would flatten the animation to one frame). Note the old "fall back to the original if the
-  compressed output isn't smaller" guard is **gone** — with dimension stepping the output is
-  reliably smaller, and keeping the guard would have let an already-large file through the
-  size check its caller then enforces.
+  dimensions shrink by 0.75 and the whole quality sweep runs again, down to a 256px floor. Only a
+  file **at or under 100KB** (`SKIP_BELOW_BYTES`) that is already within `maxDimension` is returned
+  untouched; everything else is re-encoded even when it is already under `targetBytes`. GIFs are
+  still skipped (canvas would flatten the animation to one frame). A source with any transparent
+  pixel (sampled at 256px, never for a JPEG source) encodes to **WebP** instead of JPEG, so an
+  entity logo keeps its transparent background; a browser without a WebP encoder answers with PNG,
+  and then the image is flattened onto white as JPEG — unless the original already meets target, in
+  which case the transparent original is kept. A re-encode that was **not resized** and came out no
+  smaller than the source returns the source instead (an already well-compressed JPEG grows at
+  0.82); that guard only fires without a resize, so it can never let an oversized file past the size
+  check its caller then enforces. Callers take the upload extension from the returned file's name,
+  which is why a `.webp` result needs no caller change.
   `handlePhotoFiles` awaits `compressImage` one file at a time (not
   `Promise.all`) so selecting several photos at once doesn't spike the main thread all at
   once — the Foto button shows a spinner and disables via `compressingPhotos` while that
