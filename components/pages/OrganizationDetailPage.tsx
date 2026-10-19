@@ -10,6 +10,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -26,6 +27,7 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import EntityAccessTab from "../admin/EntityAccessTab";
+import EntityChangeLogSheet from "../admin/EntityChangeLogSheet";
 import Button from "../buttons/Button";
 import EditOrganizationFormSheet from "../forms/EditOrganizationFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
@@ -121,6 +123,7 @@ export default function OrganizationDetailPage({
   const [seenTab, setSeenTab] = useState(initialTab);
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [activeTab, setActiveTab] = useState<OrganizationDetailTab>(initialTab);
 
@@ -206,6 +209,16 @@ export default function OrganizationDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowChangeLogSheet(true)}
+              className="size-9 shrink-0"
+              aria-label="Log Perubahan"
+              title="Log Perubahan"
+            >
+              <IconHistory className="size-5" stroke={1.8} />
+            </Button>
             {allowStatusChange &&
               (organization.status === "active" ? (
                 <Button
@@ -348,6 +361,13 @@ export default function OrganizationDetailPage({
           router.refresh();
         }}
         organization={organization}
+      />
+
+      <EntityChangeLogSheet
+        open={showChangeLogSheet}
+        onClose={() => setShowChangeLogSheet(false)}
+        entityType="organization"
+        entityId={organization.id}
       />
     </div>
   );

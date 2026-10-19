@@ -9,6 +9,10 @@ import {
   type InviteAccessGrantPayload,
   type ListAccessGrantsOptions,
 } from "@/apis/access-grants";
+import {
+  listEntityChangeLogs as listEntityChangeLogsApi,
+  type ListEntityChangeLogsOptions,
+} from "@/apis/entity-change-logs";
 import { submitChapterCensus as submitChapterCensusApi } from "@/lib/chapter-census";
 import type { ChapterCensusPayload } from "@/lib/chapter-census-shared";
 import {
@@ -282,6 +286,11 @@ export async function acceptAccessGrant(id: string) {
 
 export async function revokeAccessGrant(id: string) {
   return revokeAccessGrantApi(id);
+}
+
+// Super Admin, or a manage grant on the entity or above it — see apis/entity-change-logs.ts.
+export async function listEntityChangeLogs(options: ListEntityChangeLogsOptions) {
+  return listEntityChangeLogsApi(options);
 }
 
 // Super Admin, or a manage grant on the request's branch or its organization — see apis/verification-requests.ts.

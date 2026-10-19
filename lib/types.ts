@@ -65,6 +65,12 @@ export type AccessEntityTypeEnum =
 export type AccessCapabilityEnum = "manage";
 export type AccessGrantStatusEnum = "pending" | "accepted";
 export type StructuralEntityTypeEnum = AccessEntityTypeEnum;
+export type EntityChangeLogEventEnum =
+  | "create"
+  | "update"
+  | "admin_invited"
+  | "admin_accepted"
+  | "admin_revoked";
 
 export type StatusName =
   | "OK"

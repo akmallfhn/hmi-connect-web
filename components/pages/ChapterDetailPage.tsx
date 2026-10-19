@@ -13,6 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -32,6 +33,7 @@ import {
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
+import EntityChangeLogSheet from "../admin/EntityChangeLogSheet";
 import Button from "../buttons/Button";
 import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
@@ -162,6 +164,7 @@ export default function ChapterDetailPage({
   const [showTypeConfirmation, setShowTypeConfirmation] = useState(false);
   const [isUpdatingType, setIsUpdatingType] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
 
   const isFullType = chapter.type === "full";
   const nextType = isFullType ? "provisional" : "full";
@@ -290,6 +293,16 @@ export default function ChapterDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowChangeLogSheet(true)}
+              className="size-9 shrink-0"
+              aria-label="Log Perubahan"
+              title="Log Perubahan"
+            >
+              <IconHistory className="size-5" stroke={1.8} />
+            </Button>
             {allowTypeChange && (
               <Button
                 variant={isFullType ? "secondarySoft" : "soft"}
@@ -524,6 +537,13 @@ export default function ChapterDetailPage({
         confirmLabel={isFullType ? "Jadikan Persiapan" : "Jadikan Penuh"}
         confirmVariant="primary"
         loading={isUpdatingType}
+      />
+
+      <EntityChangeLogSheet
+        open={showChangeLogSheet}
+        onClose={() => setShowChangeLogSheet(false)}
+        entityType="chapter"
+        entityId={chapter.id}
       />
 
       {allowEdit && (

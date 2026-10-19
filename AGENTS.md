@@ -405,7 +405,14 @@ Three layers, each with one job. Don't blend them.
    affected `ChapterDetail`, not the Korkom. Removing only ungroups the Komisariat, which stays
    registered under its Cabang; a Komisariat already linked to another Korkom is refused with
    `already belongs to a coordinating chapter`, since a Komisariat belongs to at most one),
-   `chapters.ts`, `locations.ts`
+   `chapters.ts`, `entity-change-logs.ts` (`listEntityChangeLogs`, the read-only
+   `entity-change-logs/list` audit trail of one hierarchy entity — rows are written by DB
+   triggers, newest first, readable by `Super Admin` or a manage grant at or above the entity;
+   it backs `components/admin/EntityChangeLogSheet.tsx`, the "Log Perubahan" timeline sheet
+   opened by the always-visible Log button in the header of all five entity detail pages
+   (`Organization`/`CoordinatingBody`/`Branch`/`CoordinatingChapter`/`ChapterDetailPage`) on every
+   admin scope — every route reaching one is gated on a grant at or above that entity, Korkom
+   included as a Komisariat's ancestor, so no per-route flag is needed), `locations.ts`
    (provinces/cities/districts — grouped together since they're a single cascading lookup,
    not independent resources), `organizations.ts` (`organizations/detail`+`organizations/update`
    only — this deployment manages the one configured `ORGANIZATION_ID`, so there is no

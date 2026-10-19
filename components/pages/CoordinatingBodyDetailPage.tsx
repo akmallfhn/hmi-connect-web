@@ -12,6 +12,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -31,6 +32,7 @@ import {
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
+import EntityChangeLogSheet from "../admin/EntityChangeLogSheet";
 import Button from "../buttons/Button";
 import BackButton from "../buttons/BackButton";
 import Label from "../common/Label";
@@ -153,6 +155,7 @@ export default function CoordinatingBodyDetailPage({
   const [activeTab, setActiveTab] =
     useState<CoordinatingBodyDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
@@ -261,6 +264,16 @@ export default function CoordinatingBodyDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowChangeLogSheet(true)}
+              className="size-9 shrink-0"
+              aria-label="Log Perubahan"
+              title="Log Perubahan"
+            >
+              <IconHistory className="size-5" stroke={1.8} />
+            </Button>
             {coordinatingBody.status === "active" ? (
               <Button
                 variant="destructive"
@@ -521,6 +534,13 @@ export default function CoordinatingBodyDetailPage({
           coordinatingBody={coordinatingBody}
         />
       )}
+
+      <EntityChangeLogSheet
+        open={showChangeLogSheet}
+        onClose={() => setShowChangeLogSheet(false)}
+        entityType="coordinating_body"
+        entityId={coordinatingBody.id}
+      />
     </div>
   );
 }
