@@ -149,6 +149,9 @@ const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const MAX_PHOTOS = 5;
 const MAX_RAW_PHOTO_BYTES = 20 * 1024 * 1024;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+// Feed photos are served unoptimized at ~640px in the card and up to 92vh in the preview, so 1280px is plenty.
+const FEED_PHOTO_MAX_DIMENSION = 1280;
+const FEED_PHOTO_TARGET_BYTES = 150 * 1024;
 
 // The feed card's quick actions keep their labels; only the open composer goes icon-only.
 const ACTIONS = [
@@ -654,7 +657,10 @@ function FeedComposerFields({
           toast.error("Ukuran foto maksimal 20MB.");
           continue;
         }
-        const compressed = await compressImage(file);
+        const compressed = await compressImage(file, {
+          maxDimension: FEED_PHOTO_MAX_DIMENSION,
+          targetBytes: FEED_PHOTO_TARGET_BYTES,
+        });
         if (compressed.size > MAX_PHOTO_BYTES) {
           toast.error("Foto masih terlalu besar setelah dikompres.");
           continue;

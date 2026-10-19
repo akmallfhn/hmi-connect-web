@@ -2339,8 +2339,11 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   **That module is now shared by every image upload in the app**, not just the composer, and takes
   an options object (`{maxDimension, targetBytes}`, defaulting to 1920px / 500KB): avatars pass
   `{512, 300KB}` from all four places one can be set (`EditAvatarForm`, `ActivationPage`,
-  `AdminEditUserAccountForm`, `AdminUserCreatePage`), chat images pass `{1600, 500KB}`, and the
-  five entity-logo fields plus `TrainingFormSheet` take the defaults. Every caller that passes
+  `AdminEditUserAccountForm`, `AdminUserCreatePage`), chat images pass `{1600, 500KB}`, feed
+  photos pass `{1280, 150KB}` (`FEED_PHOTO_MAX_DIMENSION`/`FEED_PHOTO_TARGET_BYTES` — they render
+  `unoptimized` at ~640px in the card and up to 92vh in the preview, and the default 500KB left
+  most photos landing at 400KB+), and
+  the five entity-logo fields plus `TrainingFormSheet` take the defaults. Every caller that passes
   options also **rejects the file when the compressed result still exceeds its target**, which is
   why the raw pre-upload size caps those forms used to have (`MAX_AVATAR_BYTES` 2MB,
   `MAX_ATTACHMENT_BYTES` 8MB) are gone — gating on the raw size rejects large photos that
