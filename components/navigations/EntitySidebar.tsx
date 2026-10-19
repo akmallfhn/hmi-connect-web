@@ -4,6 +4,7 @@ import type { BranchTypeEnum } from "@/lib/types";
 import { ADMIN_NAV_ICON } from "./admin-nav-icons";
 import Image from "next/image";
 import Link from "next/link";
+import { usePendingVerificationCount } from "@/hooks/usePendingVerificationCount";
 import LogoHmi from "../svg/LogoHmi";
 import AdminSidebar, {
   type AdminNavEntry,
@@ -320,13 +321,20 @@ export default function EntitySidebar({
   fullName,
   avatar,
   email,
-  pendingVerificationCount,
+  pendingVerificationCount = 0,
 }: EntitySidebarProps) {
+  // Only Organisasi and Cabang carry a Permintaan Verifikasi item with a badge.
+  const liveVerificationCount = usePendingVerificationCount(
+    pendingVerificationCount,
+    scope === "organization" ? { organizationId: entityId } : { branchId: entityId },
+    scope === "organization" || scope === "branch",
+  );
+
   return (
     <AdminSidebar
       storageKey={`${scope}_sidebar_collapsed`}
       homeHref={getBaseHref(scope, entityId)}
-      navItems={getNavItems(scope, entityId, entityName, pendingVerificationCount)}
+      navItems={getNavItems(scope, entityId, entityName, liveVerificationCount)}
       renderHeader={(collapsed, tone) => (
         <EntityHeader
           scope={scope}

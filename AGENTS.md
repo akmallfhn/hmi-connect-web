@@ -2864,6 +2864,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   non-deleted users whose `verification_status` is `pending`. Master omits the scope for a global
   total; Organization sends its route `organization_id`; Cabang sends its route `branch_id`.
   The existing `router.refresh()` after a review updates the layout's badge along with the queue.
+  Since a layout does not re-render on client navigation, `MasterSidebar`/`EntitySidebar` keep the
+  layout's count only as a seed: `hooks/usePendingVerificationCount.ts` refetches it through
+  `/admin/api/stat/verification-count` on every pathname change, on tab focus/visibility, and every
+  30 seconds while visible. There is no realtime broadcast on `verification_requests` to subscribe to.
   The backend also has no "all statuses" value for `verification-requests/list` (only one of
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
   filter on all three pages is "Semua Status", so

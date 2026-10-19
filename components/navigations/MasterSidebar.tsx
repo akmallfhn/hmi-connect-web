@@ -2,6 +2,7 @@
 
 import { ADMIN_NAV_ICON } from "./admin-nav-icons";
 import Link from "next/link";
+import { usePendingVerificationCount } from "@/hooks/usePendingVerificationCount";
 import AdminSidebar, { type AdminNavEntry } from "./AdminSidebar";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
@@ -70,13 +71,15 @@ export default function MasterSidebar({
   avatar,
   email,
   organizationId,
-  pendingVerificationCount,
+  pendingVerificationCount = 0,
 }: MasterSidebarProps) {
+  const liveVerificationCount = usePendingVerificationCount(pendingVerificationCount, {});
+
   return (
     <AdminSidebar
       storageKey="master_sidebar_collapsed"
       homeHref="/master"
-      navItems={getNavItems(organizationId, pendingVerificationCount)}
+      navItems={getNavItems(organizationId, liveVerificationCount)}
       renderHeader={(collapsed) =>
         !collapsed ? (
           <Link href="/master" className="flex items-center">
