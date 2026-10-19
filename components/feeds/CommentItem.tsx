@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Reply } from "lucide-react";
+import { IconHeart, IconMessageCircle } from "@tabler/icons-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import CommentSubmitter from "./CommentSubmitter";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
+import Dropdown from "../common/Dropdown";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
@@ -16,9 +18,8 @@ import {
   createCommentReply,
   deleteComment,
   deleteCommentReply,
-  listCommentReplies,
 } from "@/lib/actions";
-import { formatRelativeTime } from "@/lib/time-manipulation";
+import { formatCompactTime, formatShortDateTime } from "@/lib/time-manipulation";
 import { resolveCommentAuthor } from "@/lib/feed-author";
 import { useInteractionGuard } from "@/hooks/useInteractionGuard";
 import {
@@ -28,29 +29,137 @@ import {
 } from "@/lib/types";
 import { useActingHref } from "@/hooks/useActingEntity";
 
-interface CommentItemProps {
-  comment: FeedComment;
+interface ViewerProps {
   userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
   currentUserId?: string;
   currentUserName?: string;
   currentUserAvatar?: string;
-  isReply?: boolean;
-  onDeleted?: (commentId: string) => void;
   authorEntity?: ComposerAuthorEntity;
 }
 
+interface CommentItemProps extends ViewerProps {
+  comment: FeedComment;
+  // Second argument is how many replies went with it, so the feed's total stays right.
+  onDeleted?: (commentId: string, removedReplies: number) => void;
+  onReplyCountChange?: (delta: number) => void;
+}
+
+// One thread: the comment, then its replies at the same indent, joined by a line under each avatar.
 export default function CommentItem({
   comment,
+  onDeleted,
+  onReplyCountChange,
+  ...viewer
+}: CommentItemProps) {
+  const requireVerified = useInteractionGuard({
+    userId: viewer.currentUserId,
+    userStatus: viewer.userStatus,
+    verificationStatus: viewer.verificationStatus,
+  });
+  const [replies, setReplies] = useState<FeedComment[]>(comment.replies ?? []);
+  const [replyTarget, setReplyTarget] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [postingReply, setPostingReply] = useState(false);
+
+  function openReply(name: string) {
+    if (!requireVerified()) return;
+    setReplyTarget(name);
+  }
+
+  function closeReply() {
+    setReplyTarget(null);
+    setReplyText("");
+  }
+
+  function handleSubmitReply(event: FormEvent) {
+    event.preventDefault();
+    if (!requireVerified()) return;
+
+    const trimmed = replyText.trim();
+    if (!trimmed) return;
+
+    setPostingReply(true);
+    createCommentReply(comment.id, trimmed, viewer.authorEntity)
+      .then((result) => {
+        if (isSuccessStatus(result.status) && result.data) {
+          setReplies((prev) => [...prev, result.data as FeedComment]);
+          onReplyCountChange?.(1);
+          closeReply();
+        } else {
+          toast.error(result.message ?? "Gagal mengirim balasan.");
+        }
+      })
+      .finally(() => setPostingReply(false));
+  }
+
+  function handleReplyDeleted(replyId: string) {
+    setReplies((prev) => prev.filter((reply) => reply.id !== replyId));
+    onReplyCountChange?.(-1);
+  }
+
+  return (
+    <div className="border-b border-divider py-5 last:border-b-0">
+      <CommentRow
+        comment={comment}
+        connectBelow={replies.length > 0}
+        replyCount={replies.length}
+        onReply={openReply}
+        onDeleted={(id) => onDeleted?.(id, replies.length)}
+        {...viewer}
+      />
+      {replies.map((reply, index) => (
+        <CommentRow
+          key={reply.id}
+          comment={reply}
+          isReply
+          connectBelow={index < replies.length - 1}
+          onReply={openReply}
+          onDeleted={handleReplyDeleted}
+          {...viewer}
+        />
+      ))}
+      {replyTarget && (
+        <div className="mt-4">
+          <CommentSubmitter
+            avatar={viewer.authorEntity?.imageUrl ?? viewer.currentUserAvatar}
+            name={viewer.authorEntity?.name ?? viewer.currentUserName}
+            avatarSize={32}
+            value={replyText}
+            onChange={setReplyText}
+            onSubmit={handleSubmitReply}
+            onCancel={closeReply}
+            placeholder={`Balas ${replyTarget}...`}
+            disabled={postingReply}
+            autoFocus
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CommentRowProps extends ViewerProps {
+  comment: FeedComment;
+  isReply?: boolean;
+  connectBelow: boolean;
+  replyCount?: number;
+  onReply: (authorName: string) => void;
+  onDeleted: (commentId: string) => void;
+}
+
+function CommentRow({
+  comment,
+  isReply = false,
+  connectBelow,
+  replyCount = 0,
+  onReply,
+  onDeleted,
   userStatus,
   verificationStatus,
   currentUserId,
-  currentUserName,
-  currentUserAvatar,
-  isReply = false,
-  onDeleted,
   authorEntity,
-}: CommentItemProps) {
+}: CommentRowProps) {
   const actingHref = useActingHref();
   const requireVerified = useInteractionGuard({
     userId: currentUserId,
@@ -79,14 +188,6 @@ export default function CommentItem({
     Boolean(currentUserId) &&
     comment.user_id === currentUserId;
 
-  const [expanded, setExpanded] = useState(false);
-  const [replies, setReplies] = useState<FeedComment[]>([]);
-  const [replyCount, setReplyCount] = useState(comment.reply_count);
-  const [repliesLoaded, setRepliesLoaded] = useState(false);
-  const [loadingReplies, setLoadingReplies] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [postingReply, setPostingReply] = useState(false);
-
   function handleReactionButtonClick() {
     if (!requireVerified()) return;
     if (reaction.activeReaction) {
@@ -94,43 +195,6 @@ export default function CommentItem({
       return;
     }
     setShowReactionPicker(true);
-  }
-
-  function handleToggleExpanded() {
-    const next = !expanded;
-    setExpanded(next);
-
-    if (next && !repliesLoaded) {
-      setLoadingReplies(true);
-      listCommentReplies(comment.id)
-        .then((result) => {
-          setReplies(result.list);
-          setRepliesLoaded(true);
-        })
-        .finally(() => setLoadingReplies(false));
-    }
-  }
-
-  function handleSubmitReply(event: FormEvent) {
-    event.preventDefault();
-    if (!requireVerified()) return;
-
-    const trimmed = replyText.trim();
-    if (!trimmed) return;
-
-    setPostingReply(true);
-    createCommentReply(comment.id, trimmed, authorEntity)
-      .then((result) => {
-        if (isSuccessStatus(result.status) && result.data) {
-          setReplies((prev) => [...prev, result.data as FeedComment]);
-          setRepliesLoaded(true);
-          setReplyCount((prev) => prev + 1);
-          setReplyText("");
-        } else {
-          toast.error(result.message ?? "Gagal mengirim balasan.");
-        }
-      })
-      .finally(() => setPostingReply(false));
   }
 
   function handleDelete() {
@@ -141,7 +205,7 @@ export default function CommentItem({
     request
       .then((result) => {
         if (isSuccessStatus(result.status)) {
-          onDeleted?.(comment.id);
+          onDeleted(comment.id);
         } else {
           toast.error(result.message ?? "Gagal menghapus komentar.");
         }
@@ -152,59 +216,102 @@ export default function CommentItem({
       });
   }
 
-  function handleReplyDeleted(replyId: string) {
-    setReplies((prev) => prev.filter((reply) => reply.id !== replyId));
-    setReplyCount((prev) => Math.max(0, prev - 1));
-  }
+  const actionClassName =
+    "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2 text-[13px] text-muted-foreground transition-colors hover:bg-surface-muted disabled:opacity-60";
 
   return (
-    <div className="flex items-start gap-2">
-      <Link
-        href={actingHref(author.href)}
-        aria-label={`Lihat profil ${author.name}`}
-        className="shrink-0 rounded-full"
-      >
-        <FeedAuthorAvatar author={author} size={isReply ? 28 : 32} />
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="rounded-xl bg-surface-muted px-3 py-2">
-          <p className="text-xs font-semibold text-heading xl:text-[13px]">
-            {author.name}
+    <div className="flex gap-3">
+      <div className="flex shrink-0 flex-col items-center">
+        <Link
+          href={actingHref(author.href)}
+          aria-label={`Lihat profil ${author.name}`}
+          className="rounded-full"
+        >
+          <FeedAuthorAvatar author={author} size={40} />
+        </Link>
+        {connectBelow && (
+          <span aria-hidden="true" className="my-2 w-0.5 flex-1 rounded-full bg-border" />
+        )}
+      </div>
+
+      <div className={`min-w-0 flex-1 ${connectBelow ? "pb-5" : ""}`}>
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 pt-0.5 text-sm leading-5 xl:text-[15px]">
+            <Link
+              href={actingHref(author.href)}
+              className="font-semibold text-heading"
+            >
+              {author.name}
+            </Link>
+            <time
+              dateTime={comment.created_at}
+              title={formatShortDateTime(comment.created_at)}
+              className="ml-2 text-[13px] text-muted-foreground"
+            >
+              {formatCompactTime(comment.created_at)}
+            </time>
           </p>
-          <p className="break-words text-sm text-content-foreground xl:text-[15px]">
-            {comment.message}
-          </p>
+          {isOwnComment && (
+            <Dropdown
+              align="right"
+              closeOnScroll
+              trigger={({ toggle }) => (
+                <button
+                  type="button"
+                  onClick={toggle}
+                  aria-label="Opsi komentar"
+                  className="-mr-1 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-surface-muted"
+                >
+                  <MoreHorizontal className="size-4" />
+                </button>
+              )}
+            >
+              <div className="flex flex-col py-1">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft"
+                >
+                  <Trash2 className="size-4" />
+                  {isReply ? "Hapus balasan" : "Hapus komentar"}
+                </button>
+              </div>
+            </Dropdown>
+          )}
         </div>
 
-        <div className="mt-1 flex items-center gap-3 pl-3 text-xs text-muted-foreground xl:text-[13px]">
-          <span className="text-[11px] xl:text-xs">
-            {formatRelativeTime(comment.created_at)}
-          </span>
+        <p className="mt-1 whitespace-pre-line break-words text-sm leading-6 text-content-foreground xl:text-[15px]">
+          {comment.message}
+        </p>
 
-          <span className="relative flex items-center gap-0.5">
+        <div className="-ml-2 mt-1.5 flex items-center gap-1">
+          <span className="relative flex items-center">
             <button
               ref={reactionButtonRef}
               type="button"
               onClick={handleReactionButtonClick}
               disabled={reaction.reacting}
-              aria-label={reaction.activeReactionInfo?.label ?? "Suka"}
-              className={`cursor-pointer transition ${
-                reaction.activeReaction ? "text-secondary-foreground" : "text-muted-foreground"
-              }`}
+              aria-label={
+                reaction.activeReaction
+                  ? `Batalkan reaksi ${reaction.activeReactionInfo?.label ?? ""}`.trim()
+                  : "Beri reaksi"
+              }
+              className={actionClassName}
             >
               {reaction.activeReactionInfo ? (
-                <span className="text-sm leading-none xl:text-[15px]">
+                <span className="text-base leading-none">
                   {reaction.activeReactionInfo.emoji}
                 </span>
               ) : (
-                <Heart className="size-3.5" />
+                <IconHeart className="size-[18px]" />
               )}
             </button>
             {reaction.reactionCount > 0 && (
               <button
                 type="button"
                 onClick={() => setShowReactorsModal(true)}
-                className="cursor-pointer font-semibold text-muted-foreground"
+                aria-label={`Lihat ${reaction.reactionCount} reaksi`}
+                className="-ml-1.5 h-8 cursor-pointer rounded-full pr-2 text-[13px] text-muted-foreground"
               >
                 {reaction.reactionCount}
               </button>
@@ -220,84 +327,17 @@ export default function CommentItem({
             />
           </span>
 
-          {!isReply && (
-            <button
-              type="button"
-              onClick={handleToggleExpanded}
-              aria-label="Balas"
-              className="cursor-pointer text-muted-foreground"
-            >
-              <Reply className="size-3.5" />
-            </button>
-          )}
-          {!isReply && replyCount > 0 && (
-            <button
-              type="button"
-              onClick={handleToggleExpanded}
-              className="cursor-pointer font-semibold text-secondary-foreground underline-offset-2 hover:underline"
-            >
-              {expanded
-                ? `Sembunyikan ${replyCount} balasan`
-                : `Tampilkan ${replyCount} balasan`}
-            </button>
-          )}
-          {isOwnComment && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="cursor-pointer font-semibold text-destructive-foreground underline-offset-2 hover:underline"
-            >
-              Delete
-            </button>
-          )}
+          {/* A reply to a reply still joins this thread, since replies only nest one level. */}
+          <button
+            type="button"
+            onClick={() => onReply(author.name)}
+            aria-label={`Balas ${author.name}`}
+            className={actionClassName}
+          >
+            <IconMessageCircle className="size-[18px]" />
+            {!isReply && replyCount > 0 && replyCount}
+          </button>
         </div>
-
-        {!isReply && expanded && (
-          <div className="mt-2 flex flex-col gap-2 pl-3">
-            {loadingReplies && (
-              <p className="text-xs text-muted-foreground xl:text-[13px]">
-                Memuat balasan...
-              </p>
-            )}
-            {replies.map((reply) => (
-              <CommentItem
-                key={reply.id}
-                comment={reply}
-                userStatus={userStatus}
-                verificationStatus={verificationStatus}
-                currentUserId={currentUserId}
-                currentUserName={currentUserName}
-                currentUserAvatar={currentUserAvatar}
-                authorEntity={authorEntity}
-                isReply
-                onDeleted={handleReplyDeleted}
-              />
-            ))}
-
-            {currentUserId ? (
-              <CommentSubmitter
-                avatar={authorEntity?.imageUrl ?? currentUserAvatar}
-                name={authorEntity?.name ?? currentUserName}
-                avatarSize={28}
-                value={replyText}
-                onChange={setReplyText}
-                onSubmit={handleSubmitReply}
-                placeholder="Tulis balasan..."
-                disabled={postingReply}
-              />
-            ) : (
-              <div className="rounded-xl border border-dashed border-border-strong bg-surface px-3 py-2 text-xs text-muted-foreground xl:text-[13px]">
-                <Link
-                  href="/auth/login"
-                  className="font-semibold text-primary-foreground hover:underline"
-                >
-                  Login
-                </Link>{" "}
-                untuk membalas komentar.
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <ReactorsListModal

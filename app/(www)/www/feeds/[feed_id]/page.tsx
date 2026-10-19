@@ -9,6 +9,7 @@ import { resolveActingEntity } from "@/lib/acting-entity";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { getSession } from "@/apis/session";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
+import RightSidebar from "@/components/feeds/RightSidebar";
 import PageMargin from "@/components/common/PageMargin";
 import ActingAwareBottomNav from "@/components/official/ActingAwareBottomNav";
 import { ActingEntityProvider } from "@/hooks/useActingEntity";
@@ -90,9 +91,10 @@ export default async function FeedDetailPage({
         />
 
         <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-          <div className="mx-auto grid max-w-[600px] grid-cols-1 gap-1.5 lg:gap-4">
+          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-8">
             <main className="min-w-0">
               <FeedItemCard
+                surface="page"
                 feed={feed}
                 currentUserId={user?.id}
                 currentUserName={user?.full_name}
@@ -105,6 +107,10 @@ export default async function FeedDetailPage({
                 authorEntity={actingEntity ?? undefined}
               />
             </main>
+
+            <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+              <RightSidebar userId={user?.id} />
+            </aside>
           </div>
         </PageMargin>
 

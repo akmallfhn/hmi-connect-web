@@ -10,6 +10,8 @@ export type Reactor = {
   full_name: string;
   username: string;
   avatar?: string;
+  // The reaction this person (or entity) sent.
+  type: ReactionTypeEnum;
   author_entity_type: AccessEntityTypeEnum | null;
   author_entity_id: string | null;
   author_entity_name: string | null;

@@ -159,7 +159,6 @@ import {
   deleteComment as deleteCommentApi,
   deleteCommentReply as deleteCommentReplyApi,
   deleteFeed as deleteFeedApi,
-  listCommentReplies as listCommentRepliesApi,
   listEntityActivity as listEntityActivityApi,
   listFeedComments as listFeedCommentsApi,
   listFeeds as listFeedsApi,
@@ -666,10 +665,6 @@ export async function createFeedComment(
   authorEntity?: EntityAuthor,
 ) {
   return createFeedCommentApi({ feedId, message, authorEntity });
-}
-
-export async function listCommentReplies(commentId: string, page?: number) {
-  return listCommentRepliesApi(commentId, { page });
 }
 
 export async function createCommentReply(

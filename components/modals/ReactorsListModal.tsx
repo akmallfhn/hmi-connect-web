@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import Modal from "./Modal";
+import { REACTIONS } from "./ReactionPickerModal";
 import type { Reactor } from "@/apis/reactions";
 import { listReactors } from "@/lib/actions";
 import type { ReactionTargetTypeEnum } from "@/lib/types";
@@ -78,6 +79,8 @@ export default function ReactorsListModal({
             isEntity: false,
           };
 
+          const reaction = REACTIONS.find((item) => item.type === reactor.type);
+
           return (
             <Link
               key={`${reactor.id}-${reactor.author_entity_type ?? "user"}-${reactor.author_entity_id ?? "self"}`}
@@ -86,7 +89,7 @@ export default function ReactorsListModal({
               className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-muted"
             >
               <FeedAuthorAvatar author={author} size={40} />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-heading">
                   {author.name}
                 </p>
@@ -96,6 +99,14 @@ export default function ReactorsListModal({
                   </p>
                 )}
               </div>
+              {reaction && (
+                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-heading">
+                  <span className="text-base leading-none" aria-hidden="true">
+                    {reaction.emoji}
+                  </span>
+                  {reaction.label}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -1348,10 +1348,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
   reactions/comments/repost/share actions. Those four controls sit together at the left
   in one horizontally scrollable row, with full-round hover fills and compact reaction,
-  comment, and repost counts. On timelines, the heart and reaction count are one
-  button: clicking either opens the reaction picker or removes the current reaction,
-  and the selected reaction emoji replaces the heart. The reactors list remains
-  available from the count on a feed's detail page. Clicking the timeline comment
+  comment, and repost counts. On every surface, detail page included, the heart and reaction
+  count are one button: clicking either opens the reaction picker or removes the current
+  reaction, and the selected reaction emoji replaces the heart. Who reacted is only opened from
+  the detail page's stats row, never from that count. Clicking the timeline comment
   action navigates to `/feeds/[feed_id]`, where the comment list and submitter live;
   the detail page's comment action jumps to that list. The backend no longer returns
   a preview comment field; feed detail loads comments separately. Repost controls that use
@@ -1417,14 +1417,34 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   since linking a post to itself is a dead action, and the "..." trigger is hidden once no item is left; "Edit post" (opens `EditFeedForm`, see `components/forms/*` below)
   and "Delete post" (opens `AlertConfirmation`, then calls `apis/feeds.ts#deleteFeed` on
   confirm) only show up when the caller owns the feed (`creator_id === currentUserId`).
-  `CommentItem.tsx` renders one comment (or,
-  recursively via its own `isReply` prop, one reply) — each gets its own `useReaction`
-  (see `hooks/`) scoped to `target_type: "comment"` vs `"comment_reply"`, and replies are
-  lazy-loaded from `feeds/comments/replies/list` the first time a comment's "Balas" toggle
-  is expanded. The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
+  On `/feeds/[feed_id]` the card header also carries a follow toggle for the post's author,
+  `Ikuti` (`primary`) or `Diikuti` (`soft`), seeded from `feeds/detail`'s
+  `is_creator_followed_by_me` and toggled optimistically through `followUser`/`unfollowUser`.
+  The backend only sends that key to a signed-in viewer on someone else's personal feed, so its
+  presence is the whole gate — timeline cards never get it, and entity mode hides it, since
+  following is personal.
+  The header row is vertically centered, so the toggle and the "..." menu sit level with the
+  author's name and timestamp in the top-right corner. The comment submitter and the logged-out
+  prompt beside it use the field primitives' `rounded-lg` `border-border-strong` outline, with
+  the same `ring-2 ring-primary/15` on focus as `TextArea`.
+  `CommentItem.tsx` renders one Substack-style **thread**: the comment, then every reply at the
+  same indent and avatar size, each row joined to the next by a line under its avatar, with a
+  divider only between threads. Rows are plain text (no bubble) with a name + compact time line,
+  the message, and heart/reply actions; each row gets its own `useReaction` scoped to
+  `target_type: "comment"` vs `"comment_reply"`. Replies are never behind a click:
+  `/feeds/[feed_id]` loads the whole tree in one go through `listAllFeedComments`, which sends
+  `feeds/comments/list`'s `include_replies: true` so each comment arrives with its `replies`
+  nested (the backend batches them per page). That is the only way replies are read — the old
+  `feeds/comments/replies/list` endpoint was removed from the backend along with
+  `listCommentReplies` here, so don't reintroduce a per-comment fetch. Replying to a reply opens the same
+  thread's composer, since replies nest one level. The feed card's detail section stacks a stats
+  row (`N Reaksi · M Komentar`, replies counted, with the post's timestamp on the right; the
+  reaction count opens `ReactorsListModal`), then the `CommentSubmitter` card, then the threads
+  newest first, so a new comment lands right under the composer. The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
   **deleted** — the desktop-rail redesign dropped it from the home feed, `/search`,
   `/notifications`, `/settings`, `/profile/[username]`, and finally `/feeds/[feed_id]`
-  (now a single centered `max-w-[600px]` column), each of which lost the
+  (which now shares the home feed's two-column grid, with `RightSidebar` as its `lg:`-only
+  sticky aside), each of which lost the
   `getUserByUsername`/`listEducationHistories` fetches that fed it. The rail already shows who you
   are on every page, so don't bring a per-page identity card back. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
@@ -1438,7 +1458,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
   `ExploreSearchBar` → `FollowingCard` → `NewsCard` → the footer note, and it is the
-  home feed's only aside — `SuggestedConnectionsCard` left it when the follow suggestions moved
+  only aside on the home feed and on `/feeds/[feed_id]` — `SuggestedConnectionsCard` left it when the follow suggestions moved
   into the timeline at every breakpoint (see `Feed.tsx`'s insertion plan below); repeating them
   beside a timeline that already carries them is the same list twice. It takes a `userId`,
   threaded from `FeedPage`, purely for `FollowingCard`.
@@ -2240,8 +2260,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   default reaction until the user actually picks one the first time.
   `ReactorsListModal.tsx` lists who reacted to a feed/comment/reply (`reactions/list`,
   paginated), each row showing `full_name` + `@username` and linking to
-  `/profile/${reactor.username}`; opened by clicking the count on feed detail
-  or beside a comment/reply reaction trigger.
+  `/profile/${reactor.username}`, plus a pill with the emoji and label of the reaction that
+  row sent (`reactions/list` returns each reactor's `type`); opened by clicking the count on
+  feed detail, the detail page's stats row, or beside a comment/reply reaction trigger.
   `FollowListModal.tsx` is the same list-in-a-modal shape for `users/following/list`/
   `users/followers/list` (still `user_id`-keyed requests, unlike the username-keyed
   endpoints above), opened from `ProfileHeader`'s Mengikuti/Pengikut counts.

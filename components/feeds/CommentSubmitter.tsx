@@ -1,7 +1,6 @@
 "use client";
 
-import { Send } from "lucide-react";
-import { FormEvent, KeyboardEvent, useEffect, useRef } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 
@@ -12,10 +11,15 @@ interface CommentSubmitterProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
+  onCancel?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
+const LINE_HEIGHT = 24;
+
+// Substack-style reply card: actions only appear once the field is in use.
 export default function CommentSubmitter({
   avatar,
   name,
@@ -23,10 +27,15 @@ export default function CommentSubmitter({
   value,
   onChange,
   onSubmit,
+  onCancel,
   placeholder = "Tulis komentar...",
   disabled = false,
+  autoFocus = false,
 }: CommentSubmitterProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [focused, setFocused] = useState(autoFocus);
+  const expanded = focused || value.length > 0 || Boolean(onCancel);
+  const verticalPadding = Math.max(0, (avatarSize - LINE_HEIGHT) / 2);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -35,36 +44,70 @@ export default function CommentSubmitter({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [value]);
 
+  useEffect(() => {
+    if (autoFocus) textareaRef.current?.focus();
+  }, [autoFocus]);
+
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
+    } else if (event.key === "Escape" && onCancel) {
+      onCancel();
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex items-end gap-2">
-      <Avatar src={avatar} name={name ?? "Kader"} size={avatarSize} />
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        className="max-h-40 flex-1 resize-none rounded-2xl border border-border bg-surface-muted px-4 py-2 text-sm leading-5 outline-none focus:border-primary [&::-webkit-scrollbar]:hidden"
-      />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={disabled || !value.trim()}
-        className="shrink-0 rounded-full text-primary-foreground hover:bg-primary-soft"
-        aria-label="Kirim"
-      >
-        <Send className="size-4" />
-      </Button>
+    <form
+      onSubmit={onSubmit}
+      className="rounded-lg border border-border-strong bg-surface px-3 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 sm:px-4 sm:py-3"
+    >
+      <div className="flex items-start gap-3">
+        <Avatar src={avatar} name={name ?? "Kader"} size={avatarSize} />
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            paddingTop: verticalPadding,
+            paddingBottom: verticalPadding,
+          }}
+          className="max-h-48 min-w-0 flex-1 resize-none bg-transparent text-[15px] leading-6 text-heading outline-none placeholder:text-placeholder [&::-webkit-scrollbar]:hidden"
+        />
+      </div>
+      {expanded && (
+        <div className="mt-2 flex items-center justify-end gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              disabled={disabled}
+            >
+              Batal
+            </Button>
+          )}
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            // Keep focus on the field so the blur doesn't collapse the row before the click lands.
+            onMouseDown={(event) => event.preventDefault()}
+            disabled={disabled || !value.trim()}
+          >
+            {disabled ? "Mengirim..." : "Kirim"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

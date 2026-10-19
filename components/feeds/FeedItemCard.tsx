@@ -59,11 +59,13 @@ import type {
 import {
   createFeedComment,
   deleteFeed,
+  followUser,
   repostFeed,
+  unfollowUser,
   unrepostFeed,
 } from "@/lib/actions";
 import { resolveFeedAuthor } from "@/lib/feed-author";
-import { formatRelativeTime } from "@/lib/time-manipulation";
+import { formatRelativeTime, formatShortDateTime } from "@/lib/time-manipulation";
 import { useInteractionGuard } from "@/hooks/useInteractionGuard";
 import {
   isSuccessStatus,
@@ -73,7 +75,8 @@ import {
 import { useActingHref } from "@/hooks/useActingEntity";
 
 interface FeedItemCardProps {
-  surface?: "card" | "flat";
+  // "page" drops the mobile top/bottom border, which would double the drill-in header's own.
+  surface?: "card" | "flat" | "page";
   feed: Feed;
   currentUserId?: string;
   currentUserName?: string;
@@ -240,11 +243,19 @@ export default function FeedItemCard({
   const canManageFeed = isOwnPersonalFeed || isOwnEntityFeed;
   const cannotRepost = isOwnPersonalFeed || isOwnEntityFeed;
   const hasOverflowActions = showViewPostAction || canManageFeed;
+  // Only feeds/detail sends the follow state; following is personal, so entity mode hides it.
+  const showFollowButton =
+    !authorEntity && feed.is_creator_followed_by_me !== undefined;
+  const [isFollowingCreator, setIsFollowingCreator] = useState(
+    Boolean(feed.is_creator_followed_by_me),
+  );
+  const [followingCreator, startFollowTransition] = useTransition();
 
   const [comments, setComments] = useState<FeedComment[]>(
     initialComments ?? [],
   );
   const [commentCount, setCommentCount] = useState(feed.comment_count);
+  const [replyTotal, setReplyTotal] = useState(feed.comment_reply_count);
   const [commentText, setCommentText] = useState("");
   const [postingComment, startCommentTransition] = useTransition();
 
@@ -278,7 +289,7 @@ export default function FeedItemCard({
     typeof window !== "undefined"
       ? `${window.location.origin}/feeds/${feed.id}`
       : "";
-  const totalCommentCount = commentCount + feed.comment_reply_count;
+  const totalCommentCount = commentCount + replyTotal;
   const actionClassName =
     "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-2.5 text-sm text-muted-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3";
 
@@ -328,14 +339,35 @@ export default function FeedItemCard({
     });
   }
 
+  function toggleFollowCreator() {
+    const nextFollowing = !isFollowingCreator;
+    setIsFollowingCreator(nextFollowing);
+
+    startFollowTransition(async () => {
+      const result = nextFollowing
+        ? await followUser(feed.creator_id)
+        : await unfollowUser(feed.creator_id);
+
+      if (!isSuccessStatus(result.status)) {
+        setIsFollowingCreator(!nextFollowing);
+        toast.error(result.message ?? "Gagal memperbarui status mengikuti.");
+      }
+    });
+  }
+
   function handleQuoteRepost() {
     if (!requireVerified()) return;
     setShowQuoteRepost(true);
   }
 
-  function handleCommentDeleted(commentId: string) {
+  function handleCommentDeleted(commentId: string, removedReplies: number) {
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     setCommentCount((prev) => Math.max(0, prev - 1));
+    setReplyTotal((prev) => Math.max(0, prev - removedReplies));
+  }
+
+  function handleReplyCountChange(delta: number) {
+    setReplyTotal((prev) => Math.max(0, prev + delta));
   }
 
   function handleSubmitComment(event: FormEvent) {
@@ -348,7 +380,8 @@ export default function FeedItemCard({
     startCommentTransition(async () => {
       const result = await createFeedComment(feed.id, trimmed, authorEntity);
       if (isSuccessStatus(result.status) && result.data) {
-        setComments((prev) => [...prev, result.data as FeedComment]);
+        // The list is newest first, so a fresh comment lands right under the composer.
+        setComments((prev) => [{ ...(result.data as FeedComment), replies: [] }, ...prev]);
         setCommentCount((prev) => prev + 1);
         setCommentText("");
       } else {
@@ -360,7 +393,9 @@ export default function FeedItemCard({
   return (
     <article className={surface === "flat"
       ? "border-b border-border bg-surface py-5"
-      : "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x"}>
+      : surface === "page"
+        ? "bg-surface p-5 lg:rounded-2xl lg:border lg:border-border"
+        : "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x"}>
       {repostedBy && (
         <div className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground xl:text-[13px]">
           <IconRefresh className="size-3.5" />
@@ -372,10 +407,10 @@ export default function FeedItemCard({
           <span>{repostedBy.fullName} membagikan ulang</span>
         </div>
       )}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <Link
           href={actingHref(author.href)}
-          className="flex min-w-0 items-start gap-3"
+          className="flex min-w-0 items-center gap-3"
         >
           {/* Two instances, not one CSS-scaled node: Avatar sizes itself with inline width/height. */}
           <span className="lg:hidden">
@@ -392,55 +427,67 @@ export default function FeedItemCard({
             </p>
           </div>
         </Link>
-        {hasOverflowActions && (
-          <Dropdown
-            align="right"
-            closeOnScroll
-            trigger={({ toggle }) => (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggle}
-                className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
-                aria-label="Opsi lainnya"
-              >
-                <MoreHorizontal className="size-4" />
-              </Button>
-            )}
-          >
-            <div className="flex flex-col py-1">
-              {showViewPostAction && (
-                <Link
-                  href={actingHref(`/feeds/${feed.id}`)}
-                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
+        <div className="flex shrink-0 items-center gap-1">
+          {showFollowButton && (
+            <Button
+              variant={isFollowingCreator ? "soft" : "primary"}
+              size="sm"
+              onClick={toggleFollowCreator}
+              disabled={followingCreator}
+            >
+              {isFollowingCreator ? "Diikuti" : "Ikuti"}
+            </Button>
+          )}
+          {hasOverflowActions && (
+            <Dropdown
+              align="right"
+              closeOnScroll
+              trigger={({ toggle }) => (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggle}
+                  className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
+                  aria-label="Opsi lainnya"
                 >
-                  <Eye className="size-4 text-muted-foreground" />
-                  Lihat post
-                </Link>
+                  <MoreHorizontal className="size-4" />
+                </Button>
               )}
-              {canManageFeed && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setShowEditForm(true)}
+            >
+              <div className="flex flex-col py-1">
+                {showViewPostAction && (
+                  <Link
+                    href={actingHref(`/feeds/${feed.id}`)}
                     className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
                   >
-                    <Pencil className="size-4 text-muted-foreground" />
-                    Edit post
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft xl:text-[15px]"
-                  >
-                    <Trash2 className="size-4" />
-                    Delete post
-                  </button>
-                </>
-              )}
-            </div>
-          </Dropdown>
-        )}
+                    <Eye className="size-4 text-muted-foreground" />
+                    Lihat post
+                  </Link>
+                )}
+                {canManageFeed && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowEditForm(true)}
+                      className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted xl:text-[15px]"
+                    >
+                      <Pencil className="size-4 text-muted-foreground" />
+                      Edit post
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-destructive-foreground transition hover:bg-destructive-soft xl:text-[15px]"
+                    >
+                      <Trash2 className="size-4" />
+                      Delete post
+                    </button>
+                  </>
+                )}
+              </div>
+            </Dropdown>
+          )}
+        </div>
       </div>
 
       <p className={`mt-3 whitespace-pre-line break-words text-content-foreground ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
@@ -492,7 +539,7 @@ export default function FeedItemCard({
             onClick={handleReactionButtonClick}
             disabled={reaction.reacting}
             aria-label={reaction.activeReaction ? `Batalkan reaksi ${reaction.activeReactionInfo?.label ?? ""}`.trim() : "Beri reaksi"}
-            className={`inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full ${showViewPostAction ? "px-2.5 sm:px-3" : "pl-2.5"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60`}
+            className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60 sm:px-3"
           >
             {reaction.activeReactionInfo ? (
               <span className="text-xl leading-none" role="img" aria-label={reaction.activeReactionInfo.label}>
@@ -501,22 +548,9 @@ export default function FeedItemCard({
             ) : (
               <IconHeart className="size-5 text-muted-foreground" />
             )}
-            {showViewPostAction && (
-              <span className="text-sm text-muted-foreground">{formatActionCount(reaction.reactionCount)}</span>
-            )}
+            {/* The count toggles too; who reacted lives in the detail page's stats row. */}
+            <span className="text-sm text-muted-foreground">{formatActionCount(reaction.reactionCount)}</span>
           </button>
-          {!showViewPostAction && (reaction.reactionCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => setShowReactorsModal(true)}
-              aria-label={`Lihat ${reaction.reactionCount.toLocaleString("id-ID")} reaksi`}
-              className="h-10 cursor-pointer rounded-r-full pr-3 text-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              {formatActionCount(reaction.reactionCount)}
-            </button>
-          ) : (
-            <span className="pr-3 text-sm text-muted-foreground">0</span>
-          ))}
           <ReactionPickerModal
             open={showReactionPicker}
             anchorRef={reactionButtonRef}
@@ -597,48 +631,78 @@ export default function FeedItemCard({
       </div>
 
       {defaultShowComments && (
-        <div id={`feed-comments-${feed.id}`} className="mt-3 flex scroll-mt-20 flex-col gap-3 border-t border-border pt-3">
-          {comments.length === 0 && (
-            <p className="py-4 text-center text-[13px] text-muted-foreground xl:text-sm">
-              Jadilah yang pertama berkomentar!
-            </p>
-          )}
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              userStatus={userStatus}
-              verificationStatus={verificationStatus}
-              currentUserId={currentUserId}
-              currentUserName={currentUserName}
-              currentUserAvatar={currentUserAvatar}
-              authorEntity={authorEntity}
-              onDeleted={handleCommentDeleted}
-            />
-          ))}
-
-          {currentUserId ? (
-            <CommentSubmitter
-              avatar={authorEntity?.imageUrl ?? currentUserAvatar}
-              name={authorEntity?.name ?? currentUserName}
-              value={commentText}
-              onChange={setCommentText}
-              onSubmit={handleSubmitComment}
-              placeholder="Tulis komentar..."
-              disabled={postingComment}
-            />
-          ) : (
-            <div className="rounded-xl border border-dashed border-border-strong bg-surface-subtle px-4 py-3 text-sm text-muted-foreground xl:text-[15px]">
-              <Link
-                href="/auth/login"
-                className="font-semibold text-primary-foreground hover:underline"
+        <section id={`feed-comments-${feed.id}`} className="mt-3 scroll-mt-20">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-border py-3 text-[13px] text-muted-foreground sm:text-sm">
+            <p className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowReactorsModal(true)}
+                disabled={reaction.reactionCount === 0}
+                className="cursor-pointer disabled:cursor-default"
               >
-                Login
-              </Link>{" "}
-              untuk menambahkan komentar.
-            </div>
-          )}
-        </div>
+                <span className="font-semibold text-heading">
+                  {reaction.reactionCount.toLocaleString("id-ID")}
+                </span>{" "}
+                Reaksi
+              </button>
+              <span aria-hidden="true">·</span>
+              <span>
+                <span className="font-semibold text-heading">
+                  {totalCommentCount.toLocaleString("id-ID")}
+                </span>{" "}
+                Komentar
+              </span>
+            </p>
+            <time dateTime={feed.created_at}>{formatShortDateTime(feed.created_at)}</time>
+          </div>
+
+          <div className="mt-4">
+            {currentUserId ? (
+              <CommentSubmitter
+                avatar={authorEntity?.imageUrl ?? currentUserAvatar}
+                name={authorEntity?.name ?? currentUserName}
+                avatarSize={36}
+                value={commentText}
+                onChange={setCommentText}
+                onSubmit={handleSubmitComment}
+                placeholder="Tulis komentar..."
+                disabled={postingComment}
+              />
+            ) : (
+              <div className="rounded-lg border border-border-strong px-4 py-3.5 text-sm text-muted-foreground xl:text-[15px]">
+                <Link
+                  href="/auth/login"
+                  className="font-semibold text-primary-foreground hover:underline"
+                >
+                  Login
+                </Link>{" "}
+                untuk menambahkan komentar.
+              </div>
+            )}
+          </div>
+
+          <div className="mt-2">
+            {comments.length === 0 && (
+              <p className="py-8 text-center text-[13px] text-muted-foreground xl:text-sm">
+                Jadilah yang pertama berkomentar!
+              </p>
+            )}
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                userStatus={userStatus}
+                verificationStatus={verificationStatus}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                currentUserAvatar={currentUserAvatar}
+                authorEntity={authorEntity}
+                onDeleted={handleCommentDeleted}
+                onReplyCountChange={handleReplyCountChange}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       <EditFeedForm

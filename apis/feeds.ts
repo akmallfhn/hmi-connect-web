@@ -102,6 +102,8 @@ export type Feed = {
   my_reaction: ReactionTypeEnum | null;
   comment_count: number;
   comment_reply_count: number;
+  // feeds/detail only, and only for a signed-in viewer on someone else's personal feed.
+  is_creator_followed_by_me?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -159,6 +161,8 @@ export type FeedComment = {
   reaction_count: FeedReactionCount;
   my_reaction: ReactionTypeEnum | null;
   reply_count: number;
+  // Only on feeds/comments/list called with include_replies — every reply, oldest first.
+  replies?: FeedComment[];
   created_at: string;
   updated_at: string;
 };
@@ -327,19 +331,29 @@ export async function updateFeed(
 
 export async function listFeedComments(
   feedId: string,
-  options: { page?: number; pageSize?: number; token?: string } = {},
+  options: {
+    page?: number;
+    pageSize?: number;
+    token?: string;
+    includeReplies?: boolean;
+  } = {},
 ): Promise<{ list: FeedComment[]; hasMore: boolean }> {
   const sessionToken = options.token ?? (await getSessionToken());
   const authToken = sessionToken ?? process.env.CLIENT_SECRET;
   if (!authToken) return { list: [], hasMore: false };
 
-  const { page = 1, pageSize = 20 } = options;
+  const { page = 1, pageSize = 20, includeReplies = false } = options;
   const result = await callApi<ListResponse<FeedComment>>(
     "/api/v1/feeds/comments/list",
     {
       method: "POST",
       token: authToken,
-      body: { feed_id: feedId, page, page_size: pageSize },
+      body: {
+        feed_id: feedId,
+        page,
+        page_size: pageSize,
+        ...(includeReplies ? { include_replies: true } : {}),
+      },
     },
   );
 
@@ -354,6 +368,7 @@ export async function listFeedComments(
   };
 }
 
+// Every comment with its replies nested, pages exhausted — the whole thread for a feed detail page.
 export async function listAllFeedComments(
   feedId: string,
   options: { pageSize?: number; token?: string } = {},
@@ -368,6 +383,7 @@ export async function listAllFeedComments(
       page,
       pageSize,
       token: options.token,
+      includeReplies: true,
     });
     comments.push(...result.list);
     hasMore = result.hasMore;
@@ -404,34 +420,6 @@ export async function createFeedComment(payload: {
         : {}),
     },
   });
-}
-
-export async function listCommentReplies(
-  commentId: string,
-  options: { page?: number; pageSize?: number } = {},
-): Promise<{ list: FeedComment[]; hasMore: boolean }> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
-
-  const { page = 1, pageSize = 20 } = options;
-  const result = await callApi<ListResponse<FeedComment>>(
-    "/api/v1/feeds/comments/replies/list",
-    {
-      method: "POST",
-      token: sessionToken,
-      body: { comment_id: commentId, page, page_size: pageSize },
-    },
-  );
-
-  if (!isSuccessStatus(result.status)) {
-    console.error("[listCommentReplies] request failed:", result);
-    return { list: [], hasMore: false };
-  }
-
-  return {
-    list: result.data?.list ?? [],
-    hasMore: hasMoreFromMetapaging(result.data?.metapaging),
-  };
 }
 
 export async function createCommentReply(payload: {
