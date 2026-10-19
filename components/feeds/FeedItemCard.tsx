@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import ImagePreviewOverlay from "../modals/ImagePreviewOverlay";
 import {
   IconHeart,
   IconMessageCircle,
@@ -10,20 +11,14 @@ import {
 import Link from "next/link";
 import {
   Ban,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   MoreHorizontal,
   Pencil,
   Quote,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition,
@@ -188,173 +183,6 @@ function ScrollablePhoto({
   );
 }
 
-function ImagePreviewModal({
-  photo,
-  photos,
-  onPhotoChange,
-  onClose,
-}: {
-  photo: FeedUploadAttachment | null;
-  photos: FeedUploadAttachment[];
-  onPhotoChange: (photo: FeedUploadAttachment) => void;
-  onClose: () => void;
-}) {
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
-  const isOpen = photo !== null;
-  const orderedPhotos = useMemo(
-    () =>
-      [...photos].sort((a, b) => a.reference_index - b.reference_index),
-    [photos],
-  );
-  const currentIndex = photo
-    ? orderedPhotos.findIndex((item) => item.id === photo.id)
-    : -1;
-  const currentPhoto =
-    currentIndex >= 0 ? orderedPhotos[currentIndex] : photo;
-  const canNavigate = orderedPhotos.length > 1 && currentIndex >= 0;
-
-  const movePhoto = useCallback(
-    (direction: -1 | 1) => {
-      if (!canNavigate) return;
-      const nextIndex =
-        (currentIndex + direction + orderedPhotos.length) % orderedPhotos.length;
-      onPhotoChange(orderedPhotos[nextIndex]);
-    },
-    [canNavigate, currentIndex, onPhotoChange, orderedPhotos],
-  );
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const scrollY = window.scrollY;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    const previousOverflow = document.body.style.overflow;
-    const previousPosition = document.body.style.position;
-    const previousTop = document.body.style.top;
-    const previousWidth = document.body.style.width;
-
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-    return () => {
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.body.style.overflow = previousOverflow;
-      document.body.style.position = previousPosition;
-      document.body.style.top = previousTop;
-      document.body.style.width = previousWidth;
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        movePhoto(-1);
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        movePhoto(1);
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose, movePhoto]);
-
-  if (!currentPhoto) return null;
-
-  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
-    const touch = event.touches[0];
-    swipeStart.current = { x: touch.clientX, y: touch.clientY };
-  }
-
-  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
-    const start = swipeStart.current;
-    const touch = event.changedTouches[0];
-    swipeStart.current = null;
-    if (!start || !touch) return;
-
-    const horizontalDistance = touch.clientX - start.x;
-    const verticalDistance = touch.clientY - start.y;
-    if (
-      Math.abs(horizontalDistance) < 48 ||
-      Math.abs(horizontalDistance) <= Math.abs(verticalDistance)
-    ) {
-      return;
-    }
-    movePhoto(horizontalDistance > 0 ? -1 : 1);
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-[80] bg-media-backdrop/90"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Pratinjau gambar"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 cursor-zoom-out"
-        onClick={onClose}
-        aria-label="Tutup pratinjau gambar"
-      />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-8">
-        <div
-          className="pointer-events-auto relative max-h-full w-full max-w-6xl touch-pan-y"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <Image
-            src={currentPhoto.reference_url}
-            alt=""
-            width={1600}
-            height={1200}
-            className="mx-auto max-h-[92vh] w-auto max-w-full object-contain"
-            unoptimized
-          />
-        </div>
-      </div>
-      {canNavigate && (
-        <>
-          <button
-            type="button"
-            onClick={() => movePhoto(-1)}
-            className="absolute left-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-backdrop/45 text-on-dark backdrop-blur-sm transition hover:bg-on-dark/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:left-6 sm:size-11"
-            aria-label="Gambar sebelumnya"
-          >
-            <ChevronLeft className="size-6" />
-          </button>
-          <button
-            type="button"
-            onClick={() => movePhoto(1)}
-            className="absolute right-3 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-backdrop/45 text-on-dark backdrop-blur-sm transition hover:bg-on-dark/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:right-6 sm:size-11"
-            aria-label="Gambar berikutnya"
-          >
-            <ChevronRight className="size-6" />
-          </button>
-          <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-media-backdrop/45 px-3 py-1 text-xs font-medium text-on-dark backdrop-blur-sm">
-            {currentIndex + 1} / {orderedPhotos.length}
-          </p>
-        </>
-      )}
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-on-dark/10 text-on-dark transition hover:bg-on-dark/20"
-        aria-label="Tutup"
-      >
-        <X className="size-5" />
-      </button>
-    </div>
-  );
-}
-
 export default function FeedItemCard({
   surface = "card",
   feed,
@@ -394,9 +222,7 @@ export default function FeedItemCard({
   const [content, setContent] = useState(feed.content);
   const [updatedAt, setUpdatedAt] = useState(feed.updated_at);
   const isEdited = updatedAt !== feed.created_at;
-  const [previewPhoto, setPreviewPhoto] = useState<FeedUploadAttachment | null>(
-    null,
-  );
+  const [previewPhotoId, setPreviewPhotoId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [reposted, setReposted] = useState(Boolean(initialReposted));
@@ -427,6 +253,9 @@ export default function FeedItemCard({
   const photoAttachments = attachments.filter(
     (item): item is FeedUploadAttachment => item.type === "photo",
   );
+  const previewImages = [...photoAttachments]
+    .sort((a, b) => a.reference_index - b.reference_index)
+    .map((photo) => ({ id: photo.id, url: photo.reference_url }));
   const videoAttachment = attachments.find(
     (item): item is FeedUploadAttachment => item.type === "video",
   );
@@ -619,7 +448,10 @@ export default function FeedItemCard({
       </p>
 
       {photoAttachments.length > 0 && (
-        <PhotoGrid photos={photoAttachments} onPreview={setPreviewPhoto} />
+        <PhotoGrid
+          photos={photoAttachments}
+          onPreview={(photo) => setPreviewPhotoId(photo.id)}
+        />
       )}
       {videoAttachment &&
         (videoYouTubeId ? (
@@ -856,11 +688,12 @@ export default function FeedItemCard({
         content={content}
         url={shareUrl}
       />
-      <ImagePreviewModal
-        photo={previewPhoto}
-        photos={photoAttachments}
-        onPhotoChange={setPreviewPhoto}
-        onClose={() => setPreviewPhoto(null)}
+      <ImagePreviewOverlay
+        images={previewImages}
+        activeId={previewPhotoId}
+        onActiveChange={setPreviewPhotoId}
+        onClose={() => setPreviewPhotoId(null)}
+        downloadName={`hmi-connect-feed-${feed.id}`}
       />
     </article>
   );

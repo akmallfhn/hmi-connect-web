@@ -35,8 +35,6 @@ export default function NotificationsPage({
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
 
-  const unreadCount = items.filter((item) => !item.read_at).length;
-
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
 
@@ -82,15 +80,13 @@ export default function NotificationsPage({
     markNotificationsAsRead([id]);
   }
 
-  function handleMarkAllRead() {
-    if (unreadCount === 0) return;
-    setItems((prev) =>
-      prev.map((item) =>
-        item.read_at ? item : { ...item, read_at: new Date().toISOString() }
-      )
-    );
+  // Opening the page reads everything server-side; rows keep their unread tint for this visit.
+  const markedAllRef = useRef(false);
+  useEffect(() => {
+    if (markedAllRef.current) return;
+    markedAllRef.current = true;
     markNotificationsAsRead();
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -101,34 +97,13 @@ export default function NotificationsPage({
         username={viewer.username}
         verificationStatus={viewer.verificationStatus}
         mobileBackTitle="Notifikasi"
-        mobileMenu={
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            disabled={unreadCount === 0}
-            className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm font-medium text-heading transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-subtle-foreground disabled:hover:bg-transparent"
-          >
-            Tandai semua dibaca
-          </button>
-        }
-        mobileMenuLabel="Menu notifikasi"
       />
 
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
         <main className="min-w-0">
-          <div className="hidden items-center justify-between pb-5 lg:flex">
-            <h1 className="font-stack-sans-headline text-2xl font-medium text-heading">
-              Notifikasi
-            </h1>
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              disabled={unreadCount === 0}
-              className="cursor-pointer text-sm font-medium text-primary-foreground transition hover:text-primary-dark disabled:cursor-not-allowed disabled:text-subtle-foreground"
-            >
-              Tandai semua dibaca
-            </button>
-          </div>
+          <h1 className="hidden pb-5 font-stack-sans-headline text-2xl font-medium text-heading lg:block">
+            Notifikasi
+          </h1>
           <div className="flex flex-col divide-y divide-divider bg-surface">
             {items.length === 0 && (
               <p className="px-5 py-10 text-center text-sm text-muted-foreground">

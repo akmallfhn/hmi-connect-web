@@ -144,7 +144,7 @@ export async function downloadImageBlob(
   fileName: string,
   shareTitle: string,
 ) {
-  const file = new File([blob], fileName, { type: "image/png" });
+  const file = new File([blob], fileName, { type: blob.type || "image/png" });
   if (isIOSBrowser() && canShareImageFile(file)) {
     await navigator.share({ title: shareTitle, files: [file] });
     return;
@@ -159,4 +159,26 @@ export async function downloadImageBlob(
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+const IMAGE_EXTENSION: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+};
+
+// A cross-origin <a download> just navigates, so fetch the bytes first; open the image if CORS refuses.
+export async function downloadRemoteImage(url: string, baseName: string) {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    const extension = IMAGE_EXTENSION[blob.type] ?? "jpg";
+    await downloadImageBlob(blob, `${baseName}.${extension}`, baseName);
+  } catch (error) {
+    if ((error as Error).name === "AbortError") return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }

@@ -1012,11 +1012,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   shape as `FeedTimeline`/`ProfileActivityTimeline`, backed by the `loadMoreNotifications`
   Server Action; it takes only `viewer` plus the initial page now — its `ProfileSidebar` aside and
   the `profile` prop feeding it are gone, and the page is a single plain-white column under a
-  `font-stack-sans-headline` "Notifikasi" title, with "Tandai semua dibaca" rendered always and
-  `disabled` at zero unread rather than conditionally mounted) — clicking an unread row (or
-  "Tandai semua dibaca") calls the
-  `markNotificationsAsRead` Server Action (`notifications/mark-as-read`) and updates local
-  state optimistically, no rollback since the backend call is fire-and-forget for this one.
+  `font-stack-sans-headline` "Notifikasi" title). There is no "Tandai semua dibaca" button any
+  more: opening the page calls `markNotificationsAsRead()` once with no ids (every notification,
+  older pages included), while rows keep their unread tint for the rest of that visit so new ones
+  still stand out; clicking a row also marks just that one, fire-and-forget with no rollback.
   Feed reaction, comment, and reply rows link to `/feeds/[feed_id]` (resolved server-side
   through comments/replies); follow rows link to `/profile/[actor_username]`. Follow rows
   use `actor_is_followed_by_me` to show a primary `Followback` action that calls
@@ -1339,7 +1338,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   inline `width`/`height`, which a Tailwind size class cannot override — the same
   one-instance-per-breakpoint pattern `SendMessageButton` and `ProfileCompletionCard` already use.
   It renders its
-  content and its one attachment slot (photo grid, video,
+  content and its one attachment slot (photo grid — clicking a photo opens the shared
+  `components/modals/ImagePreviewOverlay.tsx`, also used by `FeedAttachments` and by
+  `ProfileHeader`'s avatar on someone else's profile, with swipe/arrow navigation and a download
+  button through `lib/share-canvas.ts#downloadRemoteImage`, which fetches the bytes because a
+  cross-origin `<a download>` only navigates, and opens the image in a new tab if CORS refuses —, video,
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus

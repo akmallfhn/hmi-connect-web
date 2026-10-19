@@ -25,6 +25,7 @@ import UserShareModal from "../common/UserShareModal";
 import EditAvatarForm from "../forms/EditAvatarForm";
 import EditProfileForm from "../forms/EditProfileForm";
 import FollowListModal from "../modals/FollowListModal";
+import ImagePreviewOverlay from "../modals/ImagePreviewOverlay";
 import SendMessageButton from "./SendMessageButton";
 import SocialLinks from "./SocialLinks";
 
@@ -82,6 +83,7 @@ export default function ProfileHeader({
   const [followLoading, setFollowLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
+  const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
   const [followListType, setFollowListType] = useState<
     "following" | "followers" | null
   >(null);
@@ -231,6 +233,15 @@ export default function ProfileHeader({
                 <Camera className="size-6" />
               </span>
             </button>
+          ) : avatar ? (
+            <button
+              type="button"
+              onClick={() => setIsAvatarPreviewOpen(true)}
+              className="relative -mt-14 shrink-0 cursor-zoom-in overflow-hidden rounded-full border-4 border-surface lg:-mt-16"
+              aria-label={`Lihat foto profil ${displayName}`}
+            >
+              <Avatar src={avatar} name={displayName} size={112} />
+            </button>
           ) : (
             <Avatar
               src={avatar}
@@ -356,6 +367,16 @@ export default function ProfileHeader({
             avatar={avatar}
           />
         </>
+      )}
+
+      {avatar && !isOwnProfile && (
+        <ImagePreviewOverlay
+          images={[{ id: "avatar", url: avatar }]}
+          activeId={isAvatarPreviewOpen ? "avatar" : null}
+          onActiveChange={() => {}}
+          onClose={() => setIsAvatarPreviewOpen(false)}
+          downloadName={`foto-profil-${username ?? "kader"}`}
+        />
       )}
 
       {userId && followListType && (
