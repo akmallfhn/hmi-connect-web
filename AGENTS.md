@@ -80,6 +80,12 @@ fix the rule, not just the code.
   duplicating title/description styles or adding a broad descendant selector.
 - No ORM/DB in this repo — this app is a pure frontend/BFF in front of a separate Go
   backend. All real data lives behind `BASE_URL`.
+- **Google Analytics 4** follows Sevenpreneur's integration: `app/layout.tsx` renders
+  `GoogleAnalytics` from `@next/third-parties/google` with `GOOGLE_ANALYTICS_ID` from env.
+  The shared root covers main and admin surfaces, only when the ID is configured,
+  `NODE_ENV=production`, and `DOMAIN_MODE` is not `local`. There is no manual page-view
+  hook; client-navigation page views rely on GA4 Enhanced Measurement's browser-history
+  setting to avoid duplicate events.
 
 ## Commands
 
@@ -101,6 +107,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `CLIENT_SECRET` | the Google callback route, `apis/auth.ts`, and the public reads in `apis/{articles,feeds,reactions,trainings,users}.ts` | Server-only bearer secret. Exchanges the Google token on `/api/v1/auth/login`, authorizes the password-reset flow, and is the fallback token for every public read (articles, feed/comment detail, reactions, trainings, profiles) so a logged-out visitor — or a crawler hitting the sitemap — can load them. |
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
+| `GOOGLE_ANALYTICS_ID` | `app/layout.tsx` | GA4 measurement ID passed to `GoogleAnalytics` from `@next/third-parties/google`, matching Sevenpreneur's pattern. Current production value is `G-L0VGNEPGBW`. The ID is public in the rendered tag but read server-side; no `NEXT_PUBLIC_` twin is needed. |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres _is_ this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | `lib/chapter-census-sheets.ts` | Server-only credentials from the Google service account JSON. Store the private key as a quoted env value with escaped `\n`; never use `NEXT_PUBLIC_` or commit the credential file. The writer authenticates with the Sheets scope, with a 10-second auth timeout and no automatic retry. |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | `lib/chapter-census-sheets.ts` | Spreadsheet ID from its URL. The destination tab is fixed as `Pendataan Komisariat` in the writer, not an env setting. The spreadsheet must grant the service account Editor access, and the tab must exist. Missing credentials or spreadsheet ID makes the form answer "belum siap". Enable the Google Sheets API in the service account's Cloud project. |

@@ -1,4 +1,5 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { config as fontAwesomeConfig } from "@fortawesome/fontawesome-svg-core";
 import {
   Amiri_Quran,
@@ -57,6 +58,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const googleOauthId = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ID;
+  const googleAnalyticsId = process.env.GOOGLE_ANALYTICS_ID;
+  const analyticsEnabled =
+    !!googleAnalyticsId &&
+    process.env.NODE_ENV === "production" &&
+    process.env.DOMAIN_MODE !== "local";
 
   return (
     <html
@@ -74,6 +80,7 @@ export default function RootLayout({
           </GoogleOAuthProvider>
           <Toaster richColors position="top-center" />
         </AppThemeProvider>
+        {analyticsEnabled && <GoogleAnalytics gaId={googleAnalyticsId!} />}
       </body>
     </html>
   );
