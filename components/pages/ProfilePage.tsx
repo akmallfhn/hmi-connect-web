@@ -25,7 +25,8 @@ import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
 import ProfileActivityTimeline from "../profile/ProfileActivityTimeline";
 import ProfileCompletionCard from "../profile/ProfileCompletionCard";
 import ProfileHeader from "../profile/ProfileHeader";
-import ProfileTabs from "../profile/ProfileTabs";
+import ProfileSections from "../profile/ProfileSections";
+import ServerQueryHydration from "../query/ServerQueryHydration";
 import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
 import WorkExperienceCard from "../profile/WorkExperienceCard";
@@ -107,12 +108,12 @@ export default function ProfilePage({
   };
   const hasProfileDetails = Boolean(
     profile.bio ||
-      profile.workExperiences.length ||
-      profile.organizationExperiences.length ||
-      profile.educationHistories.length ||
-      profile.trainingHistories.length ||
-      profile.publications.length ||
-      profile.honorAwards.length,
+    profile.workExperiences.length ||
+    profile.organizationExperiences.length ||
+    profile.educationHistories.length ||
+    profile.trainingHistories.length ||
+    profile.publications.length ||
+    profile.honorAwards.length,
   );
 
   return (
@@ -163,30 +164,46 @@ export default function ProfilePage({
                   />
                 </div>
               )}
-              <div>
-                <ProfileTabs
-                  username={profile.username}
-                  activeTab={activeTab}
-                />
-                {activeTab === "activities" && (
-                  <section
-                    aria-label="Activities"
-                    className="mt-4"
-                  >
-                    <ProfileActivityTimeline
-                      username={profile.username}
-                      owner={{
-                        name: profile.fullName ?? "Kader",
-                        avatar: profile.avatar,
-                      }}
-                      initialItems={profile.activities}
-                      initialHasMore={profile.activitiesHasMore}
-                      isSignedIn={Boolean(viewer.userId)}
-                    />
+              <ProfileSections
+                username={profile.username}
+                activityPanel={
+                  <section aria-label="Activities" className="mt-4">
+                    <ServerQueryHydration
+                      queryKey={[
+                        "profile-activity",
+                        viewer.userId ?? "public",
+                        profile.username,
+                      ]}
+                      data={
+                        activeTab === "activities"
+                          ? {
+                              pages: [
+                                {
+                                  list: profile.activities,
+                                  hasMore: profile.activitiesHasMore,
+                                },
+                              ],
+                              pageParams: [1],
+                            }
+                          : undefined
+                      }
+                    >
+                      <ProfileActivityTimeline
+                        username={profile.username}
+                        owner={{
+                          name: profile.fullName ?? "Kader",
+                          avatar: profile.avatar,
+                        }}
+                        initialItems={profile.activities}
+                        initialHasMore={profile.activitiesHasMore}
+                        initialLoaded={activeTab === "activities"}
+                        viewerId={viewer.userId}
+                        isSignedIn={Boolean(viewer.userId)}
+                      />
+                    </ServerQueryHydration>
                   </section>
-                )}
-              </div>
-              {activeTab === "profile" && (
+                }
+              >
                 <>
                   {!isOwnProfile && !hasProfileDetails && (
                     <p className="border border-x-0 border-border bg-surface p-6 text-center text-sm text-muted-foreground lg:rounded-2xl lg:border-x">
@@ -226,7 +243,7 @@ export default function ProfilePage({
                     isOwnProfile={isOwnProfile}
                   />
                 </>
-              )}
+              </ProfileSections>
             </div>
 
             <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">

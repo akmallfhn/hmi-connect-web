@@ -30,12 +30,9 @@ import type {
   VerificationRequestListEntry,
 } from "@/apis/verification-requests";
 import {
-  approveVerificationRequest,
   getVerificationRequestDetail,
-  rejectVerificationRequest,
 } from "@/lib/actions";
 import { DEGREE_LABELS } from "@/lib/education";
-import { isSuccessStatus } from "@/lib/types";
 import ActiveFilterChips from "../common/ActiveFilterChips";
 import Avatar from "../common/Avatar";
 import FilterDropdown from "../common/FilterDropdown";
@@ -54,6 +51,7 @@ import Modal from "../modals/Modal";
 import EmptyState from "../states/EmptyState";
 import { TrainingResultLabel } from "../trainings/TrainingLabels";
 import { useBranch } from "@/hooks/useBranch";
+import { useVerificationReview } from "@/hooks/useVerificationReview";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -251,24 +249,21 @@ function ReviewSummary({ detail }: { detail: VerificationRequestDetail }) {
 // Mounted only while open, so the reason field always seeds fresh — no reset effect needed.
 function RejectFields({
   requestId,
+  branchId,
   onClose,
   onRejected,
 }: {
   requestId: string;
+  branchId?: string;
   onClose: () => void;
   onRejected: () => void;
 }) {
   const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { mutateAsync: review, isPending: loading } = useVerificationReview();
 
   async function handleSubmit() {
-    setLoading(true);
     try {
-      const result = await rejectVerificationRequest(requestId, reason);
-      if (!isSuccessStatus(result.status)) {
-        toast.error(result.message ?? "Gagal menolak permintaan verifikasi.");
-        return;
-      }
+      await review({ id: requestId, branchId, decision: "rejected", reason });
       toast.success("Permintaan verifikasi berhasil ditolak.");
       onRejected();
       onClose();
@@ -277,9 +272,9 @@ function RejectFields({
         "[VerificationRequestListPage] rejectVerificationRequest threw:",
         err
       );
-      toast.error("Gagal menolak permintaan verifikasi.");
-    } finally {
-      setLoading(false);
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menolak permintaan verifikasi."
+      );
     }
   }
 
@@ -358,7 +353,14 @@ export function VerificationRequestListPage({
 
   const [approveTarget, setApproveTarget] =
     useState<VerificationRequestListEntry | null>(null);
-  const [approving, setApproving] = useState(false);
+  const { mutate: review, isPending: approving } = useVerificationReview();
+  const [reviewed, setReviewed] =
+    useState<Record<string, "approved" | "rejected">>({});
+  const visibleRequests = requests
+    .map((request) => reviewed[request.id]
+      ? { ...request, status: reviewed[request.id] }
+      : request)
+    .filter((request) => !initialStatus || request.status === initialStatus);
 
   const [rejectTarget, setRejectTarget] =
     useState<VerificationRequestListEntry | null>(null);
@@ -425,22 +427,19 @@ export function VerificationRequestListPage({
 
   function handleApprove() {
     if (!approveTarget) return;
-    setApproving(true);
-    approveVerificationRequest(approveTarget.id)
-      .then((result) => {
-        if (isSuccessStatus(result.status)) {
+    const target = approveTarget;
+    review(
+      { id: target.id, branchId: target.branch_id, decision: "approved" },
+      {
+        onSuccess: () => {
+          setReviewed((previous) => ({ ...previous, [target.id]: "approved" }));
           toast.success("Permintaan verifikasi berhasil disetujui.");
           router.refresh();
-        } else {
-          toast.error(
-            result.message ?? "Gagal menyetujui permintaan verifikasi."
-          );
-        }
-      })
-      .finally(() => {
-        setApproving(false);
-        setApproveTarget(null);
-      });
+        },
+        onError: (error) => toast.error(error.message),
+        onSettled: () => setApproveTarget(null),
+      }
+    );
   }
 
   return (
@@ -521,7 +520,7 @@ export function VerificationRequestListPage({
       />
 
       <div className="mt-6">
-        {requests.length === 0 ? (
+        {visibleRequests.length === 0 ? (
           <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <EmptyState
               title={
@@ -539,7 +538,7 @@ export function VerificationRequestListPage({
         ) : (
           <>
             <ul className="grid gap-3 sm:grid-cols-2 xl:hidden">
-              {requests.map((request) => (
+              {visibleRequests.map((request) => (
                 <li
                   key={request.id}
                   className="overflow-hidden rounded-2xl border border-border bg-surface"
@@ -651,7 +650,7 @@ export function VerificationRequestListPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-divider text-[13px]">
-                  {requests.map((request) => (
+                  {visibleRequests.map((request) => (
                     <tr key={request.id} className="align-middle">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -738,11 +737,11 @@ export function VerificationRequestListPage({
         )}
       </div>
 
-      {requests.length > 0 && (
+      {visibleRequests.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <Pagination currentPage={currentPage} totalPages={totalPage} />
           <p className="text-center text-sm text-muted-foreground">
-            Menampilkan {requests.length} dari {totalData} permintaan
+            Menampilkan {visibleRequests.length} dari {totalData} permintaan
           </p>
         </div>
       )}
@@ -879,8 +878,15 @@ export function VerificationRequestListPage({
             {rejectTarget && (
               <RejectFields
                 requestId={rejectTarget.id}
+                branchId={rejectTarget.branch_id}
                 onClose={() => setRejectTarget(null)}
-                onRejected={() => router.refresh()}
+                onRejected={() => {
+                  setReviewed((previous) => ({
+                    ...previous,
+                    [rejectTarget.id]: "rejected",
+                  }));
+                  router.refresh();
+                }}
               />
             )}
           </Modal>

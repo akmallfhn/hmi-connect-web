@@ -74,11 +74,13 @@ function notificationHref(notification: Notification): string | null {
 interface NotificationRowProps {
   notification: Notification;
   onRead: (id: string) => void;
+  onUpdate?: (id: string, patch: Partial<Notification>) => void;
 }
 
 export default function NotificationRow({
   notification,
   onRead,
+  onUpdate,
 }: NotificationRowProps) {
   const router = useRouter();
   const [followedHere, setFollowedHere] = useState<boolean | null>(null);
@@ -122,10 +124,12 @@ export default function NotificationRow({
 
       if (isInvitation) {
         setAcceptedHere(true);
+        onUpdate?.(notification.id, { access_grant_status: "accepted" });
         toast.success("Undangan admin diterima.");
         router.refresh();
       } else {
         setFollowedHere(!isFollowing);
+        onUpdate?.(notification.id, { actor_is_followed_by_me: !isFollowing });
       }
       handleRead();
     } catch (error) {

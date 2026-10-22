@@ -12,15 +12,13 @@ import {
 } from "lucide-react";
 import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useLocalTabs } from "@/hooks/useLocalTabs";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { OrganizationDetail } from "@/apis/organizations";
-import {
-  activateOrganization,
-  suspendOrganization,
-} from "@/lib/actions";
+import { activateOrganization, suspendOrganization } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import type {
   StructuralPeriodDetail,
@@ -89,7 +87,9 @@ function StatPill({
       </div>
       <div className="min-w-0">
         <p className="text-[13px] text-muted-foreground">{label}</p>
-        <p className="break-words text-[15px] font-bold leading-snug text-heading">{value}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -115,22 +115,13 @@ export default function OrganizationDetailPage({
   canInviteAccess,
   canRevokeAccess,
   accessInviteDisabled = false,
-  initialTab,
   allowStatusChange = false,
 }: OrganizationDetailPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [seenTab, setSeenTab] = useState(initialTab);
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [activeTab, setActiveTab] = useState<OrganizationDetailTab>(initialTab);
-
-  if (seenTab !== initialTab) {
-    setSeenTab(initialTab);
-    setActiveTab(initialTab);
-  }
 
   async function handleStatusChange() {
     const nextStatus = organization.status === "active" ? "inactive" : "active";
@@ -164,14 +155,7 @@ export default function OrganizationDetailPage({
     }
   }
 
-  function selectTab(tab: OrganizationDetailTab) {
-    setActiveTab(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "profile") params.delete("tab");
-    else params.set("tab", tab);
-    const query = params.toString();
-    router.replace(query ? `?${query}` : "?", { scroll: false });
-  }
+  const { activeTab, selectTab } = useLocalTabs(TABS, "profile");
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

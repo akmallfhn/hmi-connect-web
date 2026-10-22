@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { getSession } from "@/apis/session";
 import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
 import MainSiteDesktopShell from "@/components/navigations/MainSiteDesktopShell";
+import ActivityQuerySync from "@/components/query/ActivityQuerySync";
 import { manageGrants } from "@/lib/access";
 import { listGrantEntityLogos } from "@/lib/acting-entity";
 import { getAdminSiteOrigin, PROD_MAIN_SITE_URL } from "@/lib/constants";
@@ -62,6 +63,7 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
 
   return (
     <HeaderAdminAccessProvider value={adminAccess}>
+      <ActivityQuerySync key={user?.id ?? "anonymous"} userId={user?.id} />
       <MainSiteDesktopShell
         userId={user?.id}
         avatar={user?.avatar}

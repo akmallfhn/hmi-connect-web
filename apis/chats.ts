@@ -58,9 +58,9 @@ function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
 
 export async function listConversations(
   options: { page?: number; pageSize?: number } = {}
-): Promise<{ list: ConversationSummary[]; hasMore: boolean }> {
+): Promise<{ list: ConversationSummary[]; hasMore: boolean; ok: boolean }> {
   const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  if (!sessionToken) return { list: [], hasMore: false, ok: false };
 
   const { page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<ConversationSummary>>(
@@ -70,10 +70,11 @@ export async function listConversations(
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listConversations] request failed:", result);
-    return { list: [], hasMore: false };
+    return { list: [], hasMore: false, ok: false };
   }
 
   return {
+    ok: true,
     list: result.data?.list ?? [],
     hasMore: hasMoreFromMetapaging(result.data?.metapaging),
   };
@@ -188,15 +189,15 @@ export async function deleteChatMessage(id: string): Promise<ApiEnvelope> {
 
 export async function markMessagesAsRead(
   conversationId: string
-): Promise<{ markedCount: number }> {
+): Promise<{ ok: boolean; markedCount: number }> {
   const sessionToken = await getSessionToken();
-  if (!sessionToken) return { markedCount: 0 };
+  if (!sessionToken) return { ok: false, markedCount: 0 };
 
   const result = await callApi<{ marked_count: number }>(
     "/api/v1/messages/mark-as-read",
     { method: "POST", token: sessionToken, body: { conversation_id: conversationId } }
   );
 
-  if (!isSuccessStatus(result.status)) return { markedCount: 0 };
-  return { markedCount: result.data?.marked_count ?? 0 };
+  if (!isSuccessStatus(result.status)) return { ok: false, markedCount: 0 };
+  return { ok: true, markedCount: result.data?.marked_count ?? 0 };
 }

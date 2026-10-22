@@ -7,11 +7,11 @@ import type { ChatMessage } from "@/apis/chats";
 import {
   listMessages,
   loadMoreMessages,
-  markMessagesAsRead,
   sendChatMessage,
 } from "@/lib/actions";
 import { CHAT_PENDING_MESSAGE_KEY } from "@/lib/constants";
 import { useRealtimeTopic } from "@/hooks/useRealtimeTopic";
+import { useConversationRead } from "@/hooks/useConversationRead";
 import Button from "../buttons/Button";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 import {
@@ -57,6 +57,7 @@ export default function ChatThreadPage({
   viewerId,
 }: ChatThreadPageProps) {
   const router = useRouter();
+  const { mutate: markRead } = useConversationRead(viewerId);
   const conversation = useConversationSummary(conversationId);
   const { loading: conversationsLoading } = useChatConversations();
 
@@ -108,9 +109,8 @@ export default function ChatThreadPage({
   useRealtimeTopic(`messages:${conversationId}`, refetchLatest);
 
   useEffect(() => {
-    if (loading) return;
-    markMessagesAsRead(conversationId);
-  }, [conversationId, loading, messages.length]);
+    if (viewerId) markRead(conversationId);
+  }, [conversationId, viewerId, messages.length, markRead]);
 
   function loadOlderMessages() {
     if (loadingMore || !hasMore) return;

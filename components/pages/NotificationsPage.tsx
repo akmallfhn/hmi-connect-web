@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import type { Notification } from "@/apis/notifications";
-import { loadMoreNotifications, markNotificationsAsRead } from "@/lib/actions";
+import { useNotificationRead } from "@/hooks/useNotificationRead";
+import {
+  activityKeys,
+  mapActivity,
+  notificationsQueryOptions,
+  uniqueActivityItems,
+  type ActivityData,
+} from "@/lib/activity-query";
 import type { VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import BottomNav from "../navigations/BottomNav";
@@ -28,29 +36,26 @@ export default function NotificationsPage({
   initialItems,
   initialHasMore,
 }: NotificationsPageProps) {
-  const [items, setItems] = useState(initialItems);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const client = useQueryClient();
+  const query = useInfiniteQuery(
+    notificationsQueryOptions(viewer.userId, {
+      list: initialItems,
+      hasMore: initialHasMore,
+    }),
+  );
+  const { mutate: markRead } = useNotificationRead(viewer.userId, {
+    pages: [{ list: initialItems, hasMore: initialHasMore }],
+    pageParams: [1],
+  });
+  const items = uniqueActivityItems(query.data);
+  const hasMore = query.hasNextPage;
+  const loadingMore = query.isFetchingNextPage;
+  const { fetchNextPage, isFetching } = query;
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef(1);
-  const loadingRef = useRef(false);
 
   const loadNextPage = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-
-    loadingRef.current = true;
-    setLoadingMore(true);
-    try {
-      const nextPage = pageRef.current + 1;
-      const result = await loadMoreNotifications(nextPage);
-      setItems((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      pageRef.current = nextPage;
-    } finally {
-      loadingRef.current = false;
-      setLoadingMore(false);
-    }
-  }, [hasMore]);
+    if (hasMore && !isFetching) await fetchNextPage();
+  }, [hasMore, isFetching, fetchNextPage]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -62,7 +67,7 @@ export default function NotificationsPage({
           loadNextPage();
         }
       },
-      { rootMargin: "600px 0px" }
+      { rootMargin: "600px 0px" },
     );
 
     observer.observe(sentinel);
@@ -70,23 +75,16 @@ export default function NotificationsPage({
   }, [hasMore, loadNextPage]);
 
   function handleRead(id: string) {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id && !item.read_at
-          ? { ...item, read_at: new Date().toISOString() }
-          : item
-      )
-    );
-    markNotificationsAsRead([id]);
+    markRead([id]);
   }
 
-  // Opening the page reads everything server-side; rows keep their unread tint for this visit.
+  // Update every badge through the shared cache before the server responds.
   const markedAllRef = useRef(false);
   useEffect(() => {
     if (markedAllRef.current) return;
     markedAllRef.current = true;
-    markNotificationsAsRead();
-  }, []);
+    markRead(undefined);
+  }, [markRead]);
 
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -116,6 +114,15 @@ export default function NotificationsPage({
                 key={item.id}
                 notification={item}
                 onRead={handleRead}
+                onUpdate={(id, patch) =>
+                  client.setQueryData<ActivityData<Notification>>(
+                    activityKeys.notifications(viewer.userId),
+                    (data) =>
+                      mapActivity(data, (item) =>
+                        item.id === id ? { ...item, ...patch } : item,
+                      ),
+                  )
+                }
               />
             ))}
 

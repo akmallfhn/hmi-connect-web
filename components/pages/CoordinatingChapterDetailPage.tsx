@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useLocalTabs } from "@/hooks/useLocalTabs";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
@@ -144,7 +145,6 @@ export default function CoordinatingChapterDetailPage({
   structuralPeriods,
   selectedStructuralPeriod,
   selectedStructuralPeriodId,
-  initialTab,
   backHref,
   allowEdit = false,
   allowStatusChange = false,
@@ -155,10 +155,6 @@ export default function CoordinatingChapterDetailPage({
   accessInviteDisabled = false,
 }: CoordinatingChapterDetailPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [seenTab, setSeenTab] = useState(initialTab);
-  const [activeTab, setActiveTab] =
-    useState<CoordinatingChapterDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -168,24 +164,12 @@ export default function CoordinatingChapterDetailPage({
     useState<ChapterListEntry | null>(null);
   const [isRemovingChapter, setIsRemovingChapter] = useState(false);
 
-  if (seenTab !== initialTab) {
-    setSeenTab(initialTab);
-    setActiveTab(initialTab);
-  }
-
   const visibleTabs = showTrainings
     ? TABS
     : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
-  function selectTab(tab: CoordinatingChapterDetailTab) {
-    setActiveTab(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "profile") params.delete("tab");
-    else params.set("tab", tab);
-    const query = params.toString();
-    router.replace(query ? `?${query}` : "?", { scroll: false });
-  }
+  const { activeTab, selectTab } = useLocalTabs(tabs, "profile");
 
   async function handleStatusChange() {
     const nextStatus =

@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useLocalTabs } from "@/hooks/useLocalTabs";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
@@ -144,7 +145,6 @@ export default function BranchDetailPage({
   structuralPeriods,
   selectedStructuralPeriod,
   selectedStructuralPeriodId,
-  initialTab,
   backHref,
   allowEdit = true,
   allowStatusChange = true,
@@ -156,9 +156,6 @@ export default function BranchDetailPage({
   accessInviteDisabled = false,
 }: BranchDetailPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [seenTab, setSeenTab] = useState(initialTab);
-  const [activeTab, setActiveTab] = useState<BranchDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [showChangeLogSheet, setShowChangeLogSheet] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -174,24 +171,12 @@ export default function BranchDetailPage({
     0
   );
 
-  if (seenTab !== initialTab) {
-    setSeenTab(initialTab);
-    setActiveTab(initialTab);
-  }
-
   const visibleTabs = showTrainings
     ? TABS
     : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
-  function selectTab(tab: BranchDetailTab) {
-    setActiveTab(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "profile") params.delete("tab");
-    else params.set("tab", tab);
-    const query = params.toString();
-    router.replace(query ? `?${query}` : "?", { scroll: false });
-  }
+  const { activeTab, selectTab } = useLocalTabs(tabs, "profile");
 
   async function handleStatusChange() {
     const nextStatus = branch.status === "active" ? "inactive" : "active";

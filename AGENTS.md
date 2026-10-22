@@ -9,6 +9,18 @@ fix the rule, not just the code.
 ## Stack
 
 - **Next.js 16** (App Router, Turbopack), **React 19**, **TypeScript** (strict).
+- **TanStack React Query v5** manages shared client server-state for notification badges/lists,
+  conversation badges/lists, pending-verification counts/reviews, article tabs, and profile activity.
+  `components/query/AppQueryProvider.tsx` owns an in-memory QueryClient per mounted app (30-second
+  stale time, five-minute garbage collection, one read retry, no mutation retries). Personal query
+  keys include the viewer id; verification counts include the entity scope. Keep initial reads in
+  Server Components and hydrate refreshed article/profile data with `ServerQueryHydration`.
+  Subsequent tab reads and pagination use existing Server Actions. No credentials enter the cache.
+  `lib/activity-cache.ts` and `lib/verification-cache.ts` own optimistic updates and selective rollback:
+  cancel in-flight reads before patching; invalidate after the last related mutation settles.
+  Notification/conversation list reads expose `ok` so a failed refetch retains cached data instead
+  of replacing a real badge/list with a fabricated empty result.
+  Article create/edit invalidates `article-feed`.
 - **Tailwind CSS v4** (`app/globals.css`, `@theme inline` tokens — brand colors are
   `--primary` (tosca) and `--secondary` (orange)).
 - **Main-site dark mode** uses `next-themes` in the root layout (its script must
@@ -94,6 +106,7 @@ npm run dev     # next dev --experimental-https (HTTPS locally, needed for the G
 npm run build
 npm run start
 npm run lint
+npm run test:query # shared cache, optimistic read, rollback, and scope regression tests
 ```
 
 Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script).
@@ -824,11 +837,16 @@ iconSm`.
   inactive controls with primary active controls.
   The track and every tab consistently use `rounded-lg`, never full pills. Each item
   supplies a value and label, optionally a short description and a URL; URL items render
-  links, while local-state items use `onChange`. Admin detail pages pass `idPrefix` so tabs
+  links; supplying `onChange` intercepts ordinary navigation for a local switch while modifier-clicks
+  still open the real URL. Optional `onPrefetch` handles pointer/focus/touch intent. Local-state items
+  use `onChange`. Admin detail pages pass `idPrefix` so tabs
   retain their `aria-controls` links to the active panel. All five entity detail pages'
   summary cards use one column on phones and wrap date values instead of truncating them.
   Keep page-specific tab definitions
-  and data behavior in the page components, not in this visual primitive.
+  and data behavior in the page components, not in this visual primitive. The five admin detail
+  components use `useLocalTabs` with native history: all their tab datasets are already server-fetched,
+  so changing `?tab=` must not trigger another full server fetch. Period selection and mutations
+  still use server navigation/refresh.
   `components/buttons/BackButton.tsx` is the "Kembali ke daftar …" control on every admin detail
   page (Badko/Cabang/Korkom/Komisariat, member and user detail, user create, LK2 batch detail and
   guideline). It calls `router.back()` so the list comes back with its search, filters, and page
@@ -992,16 +1010,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   server-first pages) since it's shared by every route without a common data-fetching
   ancestor. Its two callers — `MainSiteDesktopSidebar`'s Notifications item and
   `MobileGreetingBar`'s bell — share
-  `hooks/useNotificationsBell.ts` — a small hook (same idea as `useReaction`, just for the
-  bell instead of reactions) that fetches the list via the `listNotifications` Server Action
-  on mount (`apis/notifications.ts#listNotifications`, `notifications/list`,
-  session-cookie-scoped like `feeds.ts`), exposes the unread count, and wires up
-  `handleRead`/`handleMarkAllRead`. **Both callers read only `unreadCount` now**, since neither
-  renders a list — the `handleRead`/`handleMarkAllRead` half and
-  `components/notifications/NotificationsDropdownPanel.tsx` (5 most recent via its own
-  `DROPDOWN_LIMIT`, plus a "Lihat semua notifikasi" link) are both left without a caller by the
-  desktop-rail redesign. Keep them only if a dropdown is coming back; otherwise the full
-  `/notifications` page is the one place notifications are listed. Both badges stay
+  `hooks/useNotificationsBell.ts`, which observes the same viewer-scoped infinite query as the full
+  `/notifications` page. `lib/activity-query.ts` owns query options; `useNotificationRead` patches
+  all cached pages before calling the mark-read Server Action and restores affected rows on failure.
+  Both bell callers use only `unreadCount`; `NotificationsDropdownPanel` still has no caller.
+  `ActivityQuerySync` in the www layout owns one realtime subscription per activity topic. Badges stay
   live via `hooks/useNotificationsRealtime.ts`, which subscribes to the Supabase Realtime
   Broadcast channel `notifications:<userId>` — the backend's `notifications` table (this is
   the one exception to "no direct DB usage," see Stack above: the Go backend's Postgres
@@ -1016,17 +1029,13 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   actually receives anything. The broadcast payload only carries the raw row (id/recipient_id/actor_id/type/
   entity_type/entity_id/read_at/created_at), not the enriched actor/entity fields
   `notifications/list` returns, so the hook is a "something changed, refetch" signal —
-  both callers respond by re-running `listNotifications(1)` rather than reading the payload
-  directly. `NotificationRow.tsx` (`components/notifications/`) renders each row on the full
-  `/notifications` page
-  (`components/pages/NotificationsPage.tsx`, same infinite-scroll-via-`IntersectionObserver`
-  shape as `FeedTimeline`/`ProfileActivityTimeline`, backed by the `loadMoreNotifications`
-  Server Action; it takes only `viewer` plus the initial page now — its `ProfileSidebar` aside and
-  the `profile` prop feeding it are gone, and the page is a single plain-white column under a
-  `font-stack-sans-headline` "Notifikasi" title). There is no "Tandai semua dibaca" button any
-  more: opening the page calls `markNotificationsAsRead()` once with no ids (every notification,
-  older pages included), while rows keep their unread tint for the rest of that visit so new ones
-  still stand out; clicking a row also marks just that one, fire-and-forget with no rollback.
+  the shared query is invalidated instead of independently refetching in each badge. Realtime
+  invalidation waits while a related read mutation is pending; settlement reconciles with the backend.
+  `NotificationRow.tsx` renders the full `/notifications` list, whose infinite pagination uses
+  `useInfiniteQuery` and `IntersectionObserver`. Opening the page optimistically marks all cached
+  notifications read (older pages are marked server-side too), clearing badges and unread tints
+  immediately. Clicking a row marks just that row. Failed mutations roll back and show a toast.
+  Invitation acceptance and follow actions also patch the cached row so remounting preserves them.
   Feed reaction, comment, and reply rows link to `/feeds/[feed_id]` (resolved server-side
   through comments/replies); follow rows link to `/profile/[actor_username]`. Follow rows
   use `actor_is_followed_by_me` to show a primary `Followback` action that calls
@@ -1064,13 +1073,16 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `realtime.broadcast_changes`/`private: true` mechanism as the existing notifications bell.
   `hooks/useRealtimeTopic.ts` is the generic version of that subscription (topic string +
   onChange callback); `hooks/useNotificationsRealtime.ts` is now a two-line wrapper over it,
-  and chat components call it directly. `hooks/useUnreadChatCount.ts` mirrors
-  `useNotificationsBell`'s "independent per-component fetch" shape for `BottomNav`'s Pesan
-  badge, since `BottomNav` renders on every page, not just under `/chats`.
+  and the open thread uses it directly for messages. `ActivityQuerySync` owns the conversation-topic
+  subscription; `useUnreadChatCount` and `ChatConversationsProvider` observe one viewer-scoped
+  infinite query. Opening a thread calls `useConversationRead` immediately, without waiting for the
+  message list, so the badge and conversation marker clear together. Failed reads restore that
+  conversation's unread flag; `markMessagesAsRead` returns `{ ok, markedCount }` to distinguish a
+  failed write from a successful zero-row update.
   There's no `conversations/detail` endpoint on the backend, so a thread's header info
   (name/avatar/username) can't be fetched standalone — `components/chats/ChatConversationsContext.tsx`
-  solves this by owning the conversation list once at the `/chats` shell level
-  (`ChatConversationsProvider`, fetched + realtime-refreshed there) so both the sidebar
+  exposes the shared conversation query through the `/chats` shell
+  (`ChatConversationsProvider`) so both the sidebar
   (`useChatConversations()`) and the open thread (`useConversationSummary(conversationId)`,
   a `.find()` over the same array) read from one fetch instead of the thread re-querying.
   `app/(www)/www/(gated)/chats/layout.tsx` is the only nested `layout.tsx` in this codebase
@@ -1645,6 +1657,10 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
   `hover:text-primary`/`hover:bg-primary-soft` tint there). The user profile has URL-backed
   Activities (default) and Profile (`?tab=profile`) tabs through the shared `Tabs` component.
+  `ProfileSections` switches the server-rendered panels with `useLocalTabs`, avoiding a whole-page
+  refetch. `ProfileActivityTimeline` caches infinite pages by viewer and profile username. A direct
+  Profile-tab visit loads activity only when first opened; server refreshes hydrate fresh activity
+  data whenever the route has fetched it.
   Activities shows the full
   infinite-scroll history in the main column via `apis/users.ts#listUserActivity`
   (`users/activity/list`, gated like `getUserByUsername` but also reading the viewer's
@@ -1978,16 +1994,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   it is absent or blank. Reposts from both the list and detail page go through
   `components/articles/article-compose-draft.ts` so their feed attachment previews receive the same
   title, description, cover, category, and author fields without fetching detail per row.
-  Four signed-in tabs — Semua, News, Mengikuti, Tulisan Saya — use the shared `Tabs` component (one
-  `rounded-full border` track holding `bg-tertiary text-white` for the active pill and a
-  very light gray background for both the track and inactive pills), but as URL state
-  (`?tab=following`/`?tab=me`/`?tab=news`, absent for
-  Semua) rendered as plain `<Link>`s rather than `useState`, so switching one is a server refetch
-  through
-  `listArticleFeed` for editorial tabs or `listNewsArticles` for News, the same way
-  `?q=` drives `/search`; the route passes a tab/category key so
-  `ArticlesPage` remounts with fresh pagination instead of leaking the previous tab's rows in.
-  `scroll={false}` on those links keeps the viewport still while switching. Each tab carries its own
+  Four signed-in tabs (Semua, News, Mengikuti, Tulisan Saya) use the shared `Tabs` control and
+  `?tab=following`/`?tab=me`/`?tab=news` (absent for Semua). Direct visits remain server-rendered.
+  Ordinary clicks update native history and switch a viewer-and-tab-scoped `useInfiniteQuery`;
+  modifier-clicks retain real links. `lib/article-query.ts` owns editorial/news query options,
+  60-second stale time, and independent pagination. Focus/pointer/touch intent prefetches the target
+  tab; revisiting a cached tab restores its rows immediately. Back/forward reads the URL and the
+  viewport stays still. Server visits hydrate fresh data; subsequent reads use the existing
+  `loadMoreArticles`/`loadMoreNewsArticles` actions. Each tab carries its own
   empty copy, since "no published articles yet" and "you haven't written one" are different facts.
   Further editorial pages come from the `loadMoreArticles` Server Action through the usual
   infinite-scroll-via-`IntersectionObserver` shape. A `draft`/`unpublished` row shows a `Label`
@@ -2898,11 +2912,13 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   The admin sidebar badge reads `pending_count` from `stat/verification-count`, which counts
   non-deleted users whose `verification_status` is `pending`. Master omits the scope for a global
   total; Organization sends its route `organization_id`; Cabang sends its route `branch_id`.
-  The existing `router.refresh()` after a review updates the layout's badge along with the queue.
-  Since a layout does not re-render on client navigation, `MasterSidebar`/`EntitySidebar` keep the
-  layout's count only as a seed: `hooks/usePendingVerificationCount.ts` refetches it through
-  `/admin/api/stat/verification-count` on every pathname change, on tab focus/visibility, and every
-  30 seconds while visible. There is no realtime broadcast on `verification_requests` to subscribe to.
+  `usePendingVerificationCount` observes a scope-keyed React Query, seeded from the server and
+  refreshed through `/api/stat/verification-count` on mount/navigation, window focus/reconnect, and every
+  30 seconds while visible. `useVerificationReview` optimistically decrements cached global,
+  organization, and matching-branch counts on approve/reject, restores them on failure, then
+  invalidates after the last review settles. Polling/focus refetches pause during reviews.
+  Successful reviews patch the visible queue immediately; `router.refresh()` reconciles server
+  pagination. There is no realtime broadcast on `verification_requests` to subscribe to.
   The backend also has no "all statuses" value for `verification-requests/list` (only one of
   `pending`/`approved`/`rejected` at a time, defaulting to `pending` when omitted) — but the default
   filter on all three pages is "Semua Status", so
@@ -3590,9 +3606,11 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   Server Action wrapper — see "Data layer conventions".
 - Don't reach for `router.push()` + `router.refresh()` when the destination route's
   access depends on server state you just mutated (session status, auth). Hard-navigate.
-- This app is server-first: prefer fetching in Server Components and passing props down
-  over client-side `useEffect` fetches. The only client-side `fetch` calls that exist
-  today are the intentional debounced-search Route Handler calls described above.
+- This app is server-first: fetch initial page data in Server Components and pass/hydrate it down.
+  Use TanStack Query for shared client server-state, cached tab reads, and related mutations;
+  do not rebuild independent `useEffect` fetch loops for those features. Query functions still call
+  existing Server Actions (or the existing abortable verification-count Route Handler).
+  Debounced-search Route Handlers remain intentional client fetches.
 - Use `next/link`'s `<Link>` for any link whose target is a route inside this app (even
   a conditional one, e.g. ``href={userId ? `/profile/${userId}` : "#"}``). Plain `<a>`
   is only for placeholder `href="#"` links with no real destination yet, or genuine

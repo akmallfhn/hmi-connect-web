@@ -6,9 +6,10 @@ import Tabs from "../common/Tabs";
 interface ProfileTabsProps {
   username: string;
   activeTab: "activities" | "profile";
+  onChange?: (value: "activities" | "profile") => void;
 }
 
-export default function ProfileTabs({ username, activeTab }: ProfileTabsProps) {
+export default function ProfileTabs({ username, activeTab, onChange }: ProfileTabsProps) {
   const actingHref = useActingHref();
   const baseHref = `/profile/${encodeURIComponent(username)}`;
 
@@ -25,6 +26,7 @@ export default function ProfileTabs({ username, activeTab }: ProfileTabsProps) {
           },
         ]}
         activeValue={activeTab}
+        onChange={onChange}
         className="w-full sm:w-fit"
       />
     </nav>

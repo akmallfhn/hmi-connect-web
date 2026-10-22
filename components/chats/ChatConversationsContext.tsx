@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import type { ConversationSummary } from "@/apis/chats";
-import { listConversations, loadMoreConversations } from "@/lib/actions";
-import { useRealtimeTopic } from "@/hooks/useRealtimeTopic";
+import { conversationsQueryOptions, uniqueActivityItems } from "@/lib/activity-query";
 
 interface ChatConversationsContextValue {
   conversations: ConversationSummary[];
@@ -21,104 +14,31 @@ interface ChatConversationsContextValue {
   refetch: () => void;
 }
 
-const ChatConversationsContext =
-  createContext<ChatConversationsContextValue | null>(null);
+const ChatConversationsContext = createContext<ChatConversationsContextValue | null>(null);
 
-interface ChatConversationsProviderProps {
-  userId?: string;
-  children: ReactNode;
-}
-
-export function ChatConversationsProvider({
-  userId,
-  children,
-}: ChatConversationsProviderProps) {
-  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-
-  const refetch = useCallback(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-    listConversations(1).then((result) => {
-      setConversations(result.list);
-      setHasMore(result.hasMore);
-      setPage(1);
-      setLoading(false);
-    });
-  }, [userId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const timeoutId = setTimeout(() => {
-      if (cancelled) return;
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-      listConversations(1).then((result) => {
-        if (cancelled) return;
-        setConversations(result.list);
-        setHasMore(result.hasMore);
-        setPage(1);
-        setLoading(false);
-      });
-    }, 0);
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [userId]);
-
-  useRealtimeTopic(userId ? `conversations:${userId}` : undefined, refetch);
-
-  function loadMore() {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    loadMoreConversations(nextPage).then((result) => {
-      setConversations((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      setPage(nextPage);
-      setLoadingMore(false);
-    });
-  }
-
+export function ChatConversationsProvider({ userId, children }: { userId?: string; children: ReactNode }) {
+  const query = useInfiniteQuery(conversationsQueryOptions(userId));
   return (
-    <ChatConversationsContext.Provider
-      value={{
-        conversations,
-        loading,
-        hasMore,
-        loadingMore,
-        loadMore,
-        refetch,
-      }}
-    >
+    <ChatConversationsContext.Provider value={{
+      conversations: uniqueActivityItems(query.data),
+      loading: Boolean(userId) && query.isPending,
+      hasMore: query.hasNextPage,
+      loadingMore: query.isFetchingNextPage,
+      loadMore: () => { if (query.hasNextPage && !query.isFetching) void query.fetchNextPage(); },
+      refetch: () => { void query.refetch(); },
+    }}>
       {children}
     </ChatConversationsContext.Provider>
   );
 }
 
 export function useChatConversations(): ChatConversationsContextValue {
-  const ctx = useContext(ChatConversationsContext);
-  if (!ctx) {
-    throw new Error(
-      "useChatConversations must be used within ChatConversationsProvider"
-    );
-  }
-  return ctx;
+  const context = useContext(ChatConversationsContext);
+  if (!context) throw new Error("useChatConversations must be used within ChatConversationsProvider");
+  return context;
 }
 
-export function useConversationSummary(
-  conversationId: string | undefined
-): ConversationSummary | undefined {
+export function useConversationSummary(conversationId: string | undefined): ConversationSummary | undefined {
   const { conversations } = useChatConversations();
-  return conversationId
-    ? conversations.find((conversation) => conversation.id === conversationId)
-    : undefined;
+  return conversations.find((conversation) => conversation.id === conversationId);
 }

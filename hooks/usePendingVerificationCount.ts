@@ -1,71 +1,62 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  verificationCountKey,
+  verificationReviewKey,
+  type PendingVerificationScope,
+} from "@/lib/verification-cache";
 
-const POLL_INTERVAL_MS = 30_000;
-
-export type PendingVerificationScope = {
-  organizationId?: string;
-  branchId?: string;
-};
-
-// Layouts don't re-render on client navigation, so the server-seeded badge is refetched here.
 export function usePendingVerificationCount(
   initialCount: number,
   scope: PendingVerificationScope,
   enabled = true,
 ): number {
-  const pathname = usePathname();
-  const [seenInitial, setSeenInitial] = useState(initialCount);
-  const [count, setCount] = useState(initialCount);
-
-  if (seenInitial !== initialCount) {
-    setSeenInitial(initialCount);
-    setCount(initialCount);
-  }
-
   const { organizationId, branchId } = scope;
-
+  const client = useQueryClient();
+  const pathname = usePathname();
   useEffect(() => {
-    if (!enabled) return;
-
-    const params = new URLSearchParams();
-    if (organizationId) params.set("organization_id", organizationId);
-    else if (branchId) params.set("branch_id", branchId);
-    const query = params.toString();
-    const url = `/api/stat/verification-count${query ? `?${query}` : ""}`;
-    let controller: AbortController | null = null;
-
-    async function refetch() {
-      if (document.visibilityState !== "visible") return;
-      controller?.abort();
-      const current = new AbortController();
-      controller = current;
-      try {
-        const response = await fetch(url, { signal: current.signal, cache: "no-store" });
-        if (!response.ok) return;
-        const body = (await response.json()) as { data?: { pending_count?: number } | null };
-        const next = body.data?.pending_count;
-        if (typeof next === "number") setCount(next);
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          console.error("[usePendingVerificationCount] refetch failed:", error);
-        }
-      }
+    if (enabled && !client.isMutating({ mutationKey: verificationReviewKey })) {
+      void client.invalidateQueries(
+        {
+          queryKey: [...verificationCountKey, { organizationId, branchId }],
+        },
+        { cancelRefetch: false },
+      );
     }
-
-    refetch();
-    const interval = window.setInterval(refetch, POLL_INTERVAL_MS);
-    document.addEventListener("visibilitychange", refetch);
-    window.addEventListener("focus", refetch);
-    return () => {
-      controller?.abort();
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", refetch);
-      window.removeEventListener("focus", refetch);
-    };
-  }, [enabled, organizationId, branchId, pathname]);
-
-  return count;
+  }, [client, enabled, organizationId, branchId, pathname]);
+  const query = useQuery({
+    queryKey: [...verificationCountKey, { organizationId, branchId }],
+    queryFn: async ({ signal }) => {
+      const params = new URLSearchParams();
+      if (organizationId) params.set("organization_id", organizationId);
+      if (branchId) params.set("branch_id", branchId);
+      const response = await fetch(`/api/stat/verification-count?${params}`, {
+        signal,
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("Jumlah verifikasi gagal dimuat.");
+      const body = (await response.json()) as {
+        data?: { pending_count?: number };
+      };
+      if (typeof body.data?.pending_count !== "number")
+        throw new Error("Jumlah verifikasi tidak valid.");
+      return body.data.pending_count;
+    },
+    initialData: initialCount,
+    initialDataUpdatedAt: 0,
+    staleTime: 0,
+    enabled,
+    refetchInterval: () =>
+      client.isMutating({ mutationKey: verificationReviewKey })
+        ? false
+        : 30_000,
+    refetchOnWindowFocus: () =>
+      !client.isMutating({ mutationKey: verificationReviewKey }),
+    refetchOnReconnect: () =>
+      !client.isMutating({ mutationKey: verificationReviewKey }),
+  });
+  return query.data;
 }

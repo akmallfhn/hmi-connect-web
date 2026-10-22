@@ -12,6 +12,7 @@ import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import AppThemeProvider from "@/components/theme/AppThemeProvider";
+import AppQueryProvider from "@/components/query/AppQueryProvider";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
 
@@ -72,13 +73,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col scroll-smooth">
         <AppThemeProvider>
-          <ScrollToTop />
-          <GoogleOAuthProvider clientId={googleOauthId!}>
-            <div className="font-google-sans flex min-h-full flex-1 flex-col">
-              {children}
-            </div>
-          </GoogleOAuthProvider>
-          <Toaster richColors position="top-center" />
+          <AppQueryProvider>
+            <ScrollToTop />
+            <GoogleOAuthProvider clientId={googleOauthId!}>
+              <div className="font-google-sans flex min-h-full flex-1 flex-col">
+                {children}
+              </div>
+            </GoogleOAuthProvider>
+            <Toaster richColors position="top-center" />
+          </AppQueryProvider>
         </AppThemeProvider>
         {analyticsEnabled && <GoogleAnalytics gaId={googleAnalyticsId!} />}
       </body>

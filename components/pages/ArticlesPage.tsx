@@ -1,31 +1,55 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import type { ArticleFeedTab, ArticleListEntry } from "@/apis/articles";
 import type { NewsArticle } from "@/apis/news";
-import { loadMoreArticles, loadMoreNewsArticles } from "@/lib/actions";
+import {
+  articleFeedQueryOptions,
+  type ArticlesTab,
+  type ArticleFeedPage,
+} from "@/lib/article-query";
 import type { VerificationStatusEnum } from "@/lib/types";
 import ArticleListRow from "../articles/ArticleListRow";
+import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
 import Tabs from "../common/Tabs";
 import NewsArticleCard from "../news/NewsArticleCard";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 
-type ArticlesTab = ArticleFeedTab | "news";
-
-const TABS: { tab: ArticlesTab; label: string; empty: string }[] = [
-  { tab: "all", label: "Semua", empty: "Belum ada artikel yang terbit." },
-  { tab: "news", label: "News", empty: "Belum ada berita." },
-  { tab: "following", label: "Mengikuti", empty: "Belum ada artikel dari orang yang kamu ikuti." },
-  { tab: "me", label: "Tulisan Saya", empty: "Kamu belum menulis artikel." },
+const TABS: {
+  value: ArticlesTab;
+  label: string;
+  empty: string;
+  href: string;
+}[] = [
+  {
+    value: "all",
+    label: "Semua",
+    empty: "Belum ada artikel yang terbit.",
+    href: "/articles",
+  },
+  {
+    value: "news",
+    label: "News",
+    empty: "Belum ada berita.",
+    href: "/articles?tab=news",
+  },
+  {
+    value: "following",
+    label: "Mengikuti",
+    empty: "Belum ada artikel dari orang yang kamu ikuti.",
+    href: "/articles?tab=following",
+  },
+  {
+    value: "me",
+    label: "Tulisan Saya",
+    empty: "Kamu belum menulis artikel.",
+    href: "/articles?tab=me",
+  },
 ];
-
-const TAB_ITEMS = TABS.map(({ tab, label }) => ({
-  value: tab,
-  label,
-  href: tab === "all" ? "/articles" : `/articles?tab=${tab}`,
-}));
 
 interface ViewerProps {
   fullName?: string;
@@ -35,151 +59,71 @@ interface ViewerProps {
   verificationStatus?: VerificationStatusEnum;
 }
 
-type ArticlesPageProps = {
-  viewer: ViewerProps;
-  showPrivateTabs: boolean;
-} & (
+type ArticlesPageProps = { viewer: ViewerProps; showPrivateTabs: boolean } & (
   | {
       activeTab: ArticleFeedTab;
       initialItems: ArticleListEntry[];
       initialHasMore: boolean;
     }
-  | {
-      activeTab: "news";
-      initialItems: NewsArticle[];
-      initialHasMore: boolean;
-    }
+  | { activeTab: "news"; initialItems: NewsArticle[]; initialHasMore: boolean }
 );
 
-function ArticleFeed({
-  activeTab,
-  initialItems,
-  initialHasMore,
-  viewerId,
-}: {
-  activeTab: ArticleFeedTab;
-  initialItems: ArticleListEntry[];
-  initialHasMore: boolean;
-  viewerId?: string;
-}) {
-  const [items, setItems] = useState(initialItems);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef(1);
-  const loadingRef = useRef(false);
-
-  const loadNextPage = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-    loadingRef.current = true;
-    setLoadingMore(true);
-    try {
-      const nextPage = pageRef.current + 1;
-      const result = await loadMoreArticles(activeTab, nextPage);
-      setItems((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      pageRef.current = nextPage;
-    } finally {
-      loadingRef.current = false;
-      setLoadingMore(false);
-    }
-  }, [activeTab, hasMore]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadNextPage();
-      },
-      { rootMargin: "600px 0px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loadNextPage]);
-
-  return (
-    <>
-      <div className="mt-2 flex flex-col divide-y divide-divider">
-        {items.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted-foreground lg:text-[15px]">
-            {TABS.find((item) => item.tab === activeTab)?.empty}
-          </p>
-        )}
-        {items.map((article) => (
-          <ArticleListRow key={article.id} article={article} viewerId={viewerId} />
-        ))}
-      </div>
-      {hasMore && <div ref={sentinelRef} className="h-4" />}
-      {loadingMore && <p className="py-4 text-center text-sm text-disabled-foreground">Memuat...</p>}
-    </>
-  );
-}
-
-function NewsFeed({
-  initialItems,
-  initialHasMore,
-}: {
-  initialItems: NewsArticle[];
-  initialHasMore: boolean;
-}) {
-  const [items, setItems] = useState(initialItems);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef(1);
-  const loadingRef = useRef(false);
-
-  const loadNextPage = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-    loadingRef.current = true;
-    setLoadingMore(true);
-    try {
-      const nextPage = pageRef.current + 1;
-      const result = await loadMoreNewsArticles(nextPage);
-      setItems((prev) => [...prev, ...result.list]);
-      setHasMore(result.hasMore);
-      pageRef.current = nextPage;
-    } finally {
-      loadingRef.current = false;
-      setLoadingMore(false);
-    }
-  }, [hasMore]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadNextPage();
-      },
-      { rootMargin: "600px 0px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, loadNextPage]);
-
-  return (
-    <>
-      <div className="mt-2 flex flex-col divide-y divide-divider">
-        {items.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            Belum ada berita.
-          </p>
-        )}
-        {items.map((article) => (
-          <NewsArticleCard key={article.id} article={article} variant="list" />
-        ))}
-      </div>
-      {hasMore && <div ref={sentinelRef} className="h-4" />}
-      {loadingMore && <p className="py-4 text-center text-sm text-disabled-foreground">Memuat...</p>}
-    </>
-  );
-}
-
 export default function ArticlesPage(props: ArticlesPageProps) {
-  const { viewer, activeTab, showPrivateTabs } = props;
+  const { viewer, showPrivateTabs } = props;
+  const searchParams = useSearchParams();
+  const client = useQueryClient();
+  const requestedTab = searchParams.get("tab");
+  const activeTab = showPrivateTabs
+    ? (TABS.find((item) => item.value === requestedTab)?.value ?? "all")
+    : "all";
+  const initial: ArticleFeedPage | undefined =
+    activeTab !== props.activeTab
+      ? undefined
+      : props.activeTab === "news"
+        ? {
+            kind: "news",
+            list: props.initialItems,
+            hasMore: props.initialHasMore,
+          }
+        : {
+            kind: "articles",
+            list: props.initialItems,
+            hasMore: props.initialHasMore,
+          };
+  const query = useInfiniteQuery(
+    articleFeedQueryOptions(activeTab, viewer.userId, initial),
+  );
+  const { fetchNextPage, hasNextPage, isFetching } = query;
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetching) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void fetchNextPage();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetching]);
+
+  function selectTab(tab: ArticlesTab) {
+    if (tab === activeTab) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "all") params.delete("tab");
+    else params.set("tab", tab);
+    const queryString = params.toString();
+    window.history.pushState(
+      null,
+      "",
+      queryString ? `?${queryString}` : "/articles",
+    );
+  }
+
+  const empty = query.data?.pages.every((page) => page.list.length === 0);
+  const seen = new Set<string>();
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
       <Header
@@ -198,23 +142,78 @@ export default function ArticlesPage(props: ArticlesPageProps) {
           {showPrivateTabs && (
             <Tabs
               ariaLabel="Konten artikel"
-              items={TAB_ITEMS}
+              items={TABS}
               activeValue={activeTab}
+              onChange={selectTab}
+              onPrefetch={(tab) => {
+                void client.prefetchInfiniteQuery(
+                  articleFeedQueryOptions(tab, viewer.userId),
+                );
+              }}
               className="w-full lg:w-fit"
             />
           )}
-          {props.activeTab === "news" ? (
-            <NewsFeed
-              initialItems={props.initialItems}
-              initialHasMore={props.initialHasMore}
-            />
-          ) : (
-            <ArticleFeed
-              activeTab={props.activeTab}
-              initialItems={props.initialItems}
-              initialHasMore={props.initialHasMore}
-              viewerId={viewer.userId}
-            />
+          <div
+            aria-busy={query.isPending}
+            className="mt-2 flex flex-col divide-y divide-divider"
+          >
+            {query.isPending && (
+              <p
+                role="status"
+                className="py-12 text-center text-sm text-muted-foreground"
+              >
+                Memuat...
+              </p>
+            )}
+            {query.isError && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                <p>Gagal memuat konten.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void query.refetch();
+                  }}
+                >
+                  Coba lagi
+                </Button>
+              </div>
+            )}
+            {empty && (
+              <p className="py-12 text-center text-sm text-muted-foreground">
+                {TABS.find((item) => item.value === activeTab)?.empty}
+              </p>
+            )}
+            {query.data?.pages.map((page) =>
+              page.kind === "news"
+                ? page.list.map((article) => {
+                    if (seen.has(article.id)) return null;
+                    seen.add(article.id);
+                    return (
+                      <NewsArticleCard
+                        key={article.id}
+                        article={article}
+                        variant="list"
+                      />
+                    );
+                  })
+                : page.list.map((article) => {
+                    if (seen.has(article.id)) return null;
+                    seen.add(article.id);
+                    return (
+                      <ArticleListRow
+                        key={article.id}
+                        article={article}
+                        viewerId={viewer.userId}
+                      />
+                    );
+                  }),
+            )}
+          </div>
+          {hasNextPage && <div ref={sentinelRef} className="h-4" />}
+          {query.isFetchingNextPage && (
+            <p className="py-4 text-center text-sm text-disabled-foreground">
+              Memuat...
+            </p>
           )}
         </main>
       </PageMargin>

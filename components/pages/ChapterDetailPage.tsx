@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { IconHistory } from "@tabler/icons-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useLocalTabs } from "@/hooks/useLocalTabs";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
@@ -25,11 +26,7 @@ import type {
   StructuralPeriodSummary,
 } from "@/apis/structurals";
 import type { TrainingListEntry } from "@/apis/trainings";
-import {
-  activateChapter,
-  setChapterType,
-  suspendChapter,
-} from "@/lib/actions";
+import { activateChapter, setChapterType, suspendChapter } from "@/lib/actions";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { isSuccessStatus } from "@/lib/types";
 import EntityAccessTab from "../admin/EntityAccessTab";
@@ -50,10 +47,7 @@ import {
 } from "../trainings/TrainingLabels";
 
 export type ChapterDetailTab =
-  | "profile"
-  | "management"
-  | "trainings"
-  | "access";
+  "profile" | "management" | "trainings" | "access";
 
 interface ChapterDetailPageProps {
   chapter: ChapterDetail;
@@ -86,7 +80,10 @@ const TABS: TabItem<ChapterDetailTab>[] = [
   { value: "trainings", label: "Latihan Kader" },
 ];
 
-const ACCESS_TAB: TabItem<ChapterDetailTab> = { value: "access", label: "Akses" };
+const ACCESS_TAB: TabItem<ChapterDetailTab> = {
+  value: "access",
+  label: "Akses",
+};
 
 function formatChapterName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
@@ -122,7 +119,9 @@ function StatPill({
       </div>
       <div className="min-w-0">
         <p className="text-[13px] text-muted-foreground">{label}</p>
-        <p className="break-words text-[15px] font-bold leading-snug text-heading">{value}</p>
+        <p className="break-words text-[15px] font-bold leading-snug text-heading">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -145,7 +144,6 @@ export default function ChapterDetailPage({
   structuralPeriods,
   selectedStructuralPeriod,
   selectedStructuralPeriodId,
-  initialTab,
   backHref,
   allowEdit = false,
   allowStatusChange = false,
@@ -156,9 +154,6 @@ export default function ChapterDetailPage({
   accessInviteDisabled = false,
 }: ChapterDetailPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [seenTab, setSeenTab] = useState(initialTab);
-  const [activeTab, setActiveTab] = useState<ChapterDetailTab>(initialTab);
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showTypeConfirmation, setShowTypeConfirmation] = useState(false);
@@ -169,24 +164,12 @@ export default function ChapterDetailPage({
   const isFullType = chapter.type === "full";
   const nextType = isFullType ? "provisional" : "full";
 
-  if (seenTab !== initialTab) {
-    setSeenTab(initialTab);
-    setActiveTab(initialTab);
-  }
-
   const visibleTabs = showTrainings
     ? TABS
     : TABS.filter((tab) => tab.value !== "trainings");
   const tabs = accessGrants ? [...visibleTabs, ACCESS_TAB] : visibleTabs;
 
-  function selectTab(tab: ChapterDetailTab) {
-    setActiveTab(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "profile") params.delete("tab");
-    else params.set("tab", tab);
-    const query = params.toString();
-    router.replace(query ? `?${query}` : "?", { scroll: false });
-  }
+  const { activeTab, selectTab } = useLocalTabs(tabs, "profile");
 
   async function handleStatusChange() {
     const nextStatus = chapter.status === "active" ? "inactive" : "active";
@@ -275,7 +258,9 @@ export default function ChapterDetailPage({
                   {formatChapterName(chapter.name)}
                 </h2>
                 <Label variant={chapter.status === "active" ? "green" : "red"}>
-                  {chapter.status === "active" ? "Status: Aktif" : "Status: Tidak Aktif"}
+                  {chapter.status === "active"
+                    ? "Status: Aktif"
+                    : "Status: Tidak Aktif"}
                 </Label>
                 <Label variant={chapter.type === "full" ? "blue" : "yellow"}>
                   {chapter.type === "full"
@@ -514,7 +499,9 @@ export default function ChapterDetailPage({
             : `${formatChapterName(chapter.name)} akan diaktifkan kembali.`
         }
         confirmLabel={
-          chapter.status === "active" ? "Suspend Komisariat" : "Aktifkan Komisariat"
+          chapter.status === "active"
+            ? "Suspend Komisariat"
+            : "Aktifkan Komisariat"
         }
         confirmVariant={chapter.status === "active" ? "destructive" : "primary"}
         loading={isUpdatingStatus}

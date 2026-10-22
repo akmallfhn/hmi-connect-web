@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChangeEvent,
   DragEvent,
@@ -205,6 +206,7 @@ export default function ArticleComposerPage({
   draft,
 }: ArticleComposerPageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isEditing = Boolean(draft);
   // Alphabetical, since the endpoint's own order is by id and means nothing to the author.
   const categoryOptions = categories
@@ -452,6 +454,7 @@ export default function ArticleComposerPage({
         : "Artikel berhasil diterbitkan.",
       { id: toastId }
     );
+    void queryClient.invalidateQueries({ queryKey: ["article-feed"] });
     setIsPublishModalOpen(false);
     const { slug_url, id } = result.article;
     router.push(`/articles/${slug_url || "artikel"}/${id}`);

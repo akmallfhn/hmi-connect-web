@@ -55,9 +55,9 @@ function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
 
 export async function listNotifications(
   options: { page?: number; pageSize?: number } = {}
-): Promise<{ list: Notification[]; hasMore: boolean }> {
+): Promise<{ list: Notification[]; hasMore: boolean; ok: boolean }> {
   const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  if (!sessionToken) return { list: [], hasMore: false, ok: false };
 
   const { page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<Notification>>("/api/v1/notifications/list", {
@@ -68,10 +68,11 @@ export async function listNotifications(
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listNotifications] request failed:", result);
-    return { list: [], hasMore: false };
+    return { list: [], hasMore: false, ok: false };
   }
 
   return {
+    ok: true,
     list: result.data?.list ?? [],
     hasMore: hasMoreFromMetapaging(result.data?.metapaging),
   };

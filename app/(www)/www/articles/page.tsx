@@ -3,6 +3,7 @@ import { listArticleFeed, type ArticleFeedTab } from "@/apis/articles";
 import { listNewsArticles } from "@/apis/news";
 import { getSession } from "@/apis/session";
 import ArticlesPage from "@/components/pages/ArticlesPage";
+import ServerQueryHydration from "@/components/query/ServerQueryHydration";
 
 export const metadata: Metadata = {
   title: "Artikel",
@@ -31,14 +32,19 @@ export default async function ArticlesRoute({
   if (user?.id && tab === "news") {
     const news = await listNewsArticles({ page: 1, pageSize: 12 });
     return (
-      <ArticlesPage
-        key="news"
-        viewer={viewer}
-        showPrivateTabs
-        activeTab="news"
-        initialItems={news.list}
-        initialHasMore={news.hasMore}
-      />
+      <ServerQueryHydration
+        queryKey={["article-feed", user.id, "news"]}
+        data={{ pages: [{ kind: "news", ...news }], pageParams: [1] }}
+      >
+        <ArticlesPage
+          key="news"
+          viewer={viewer}
+          showPrivateTabs
+          activeTab="news"
+          initialItems={news.list}
+          initialHasMore={news.hasMore}
+        />
+      </ServerQueryHydration>
     );
   }
 
@@ -48,13 +54,18 @@ export default async function ArticlesRoute({
   const articles = await listArticleFeed({ tab: activeTab });
 
   return (
-    <ArticlesPage
-      key={activeTab}
-      viewer={viewer}
-      activeTab={activeTab}
-      showPrivateTabs={Boolean(user?.id)}
-      initialItems={articles.list}
-      initialHasMore={articles.hasMore}
-    />
+    <ServerQueryHydration
+      queryKey={["article-feed", user?.id ?? "public", activeTab]}
+      data={{ pages: [{ kind: "articles", ...articles }], pageParams: [1] }}
+    >
+      <ArticlesPage
+        key={activeTab}
+        viewer={viewer}
+        activeTab={activeTab}
+        showPrivateTabs={Boolean(user?.id)}
+        initialItems={articles.list}
+        initialHasMore={articles.hasMore}
+      />
+    </ServerQueryHydration>
   );
 }

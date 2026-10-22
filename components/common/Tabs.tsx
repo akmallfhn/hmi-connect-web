@@ -14,6 +14,7 @@ interface TabsProps<Value extends string> {
   items: readonly TabItem<Value>[];
   activeValue: Value;
   onChange?: (value: Value) => void;
+  onPrefetch?: (value: Value) => void;
   className?: string;
   idPrefix?: string;
 }
@@ -23,6 +24,7 @@ export default function Tabs<Value extends string>({
   items,
   activeValue,
   onChange,
+  onPrefetch,
   className = "",
   idPrefix,
 }: TabsProps<Value>) {
@@ -62,6 +64,11 @@ export default function Tabs<Value extends string>({
             key={item.value}
             id={idPrefix ? `${idPrefix}-tab-${item.value}` : undefined}
             href={item.href}
+            prefetch={onChange ? false : true}
+            onNavigate={onChange ? (event) => { event.preventDefault(); onChange(item.value); } : undefined}
+            onPointerEnter={() => onPrefetch?.(item.value)}
+            onFocus={() => onPrefetch?.(item.value)}
+            onTouchStart={() => onPrefetch?.(item.value)}
             role="tab"
             aria-selected={active}
             aria-controls={
