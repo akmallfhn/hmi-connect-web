@@ -1,39 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  BadgeCheck,
-  CircleDot,
-  Factory,
-  LoaderCircle,
-  MapPin,
-  Network,
-  Search,
-} from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { LoaderCircle, Minus, Plus, RotateCcw, Search } from "lucide-react";
 import type { BranchMapEntry } from "@/apis/stat";
 import Input from "@/components/fields/Input";
 import MapSquare from "@/components/svg/MapSquare";
+import { useBranchMapViewport } from "@/hooks/useBranchMapViewport";
 import { projectBranchMapPosition } from "@/lib/branch-map-coordinates";
-
-type BranchMapPoint = {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  coordinatingBodyName: string;
-  type: BranchMapEntry["type"];
-  totalVerifiedKader: number;
-  totalChapters: number;
-};
+import {
+  branchMapPointKind,
+  MAX_MAP_ZOOM,
+  MIN_MAP_ZOOM,
+} from "@/lib/branch-map-viewport";
+import BranchMapPopover, { type BranchMapPoint } from "./BranchMapPopover";
 
 type BranchMapSearchResult = {
   query: string;
   entries: BranchMapEntry[];
 };
-
-function formatNumber(value: number) {
-  return value.toLocaleString("id-ID");
-}
 
 function formatBranchName(name: string) {
   return /^(hmi\s+)?cabang\s+/i.test(name) ? name : `HMI Cabang ${name}`;
@@ -44,93 +28,63 @@ function formatCoordinatingBodyName(name: string | null) {
   return name.replace(/^(hmi\s+)?badko\s+/i, "").trim() || "-";
 }
 
-function formatBranchType(type: BranchMapEntry["type"]) {
-  return type === "full" ? "Penuh" : "Persiapan";
-}
-
-function BranchPoint({ point }: { point: BranchMapPoint }) {
-  const isProvisional = point.type === "provisional";
-  const horizontalPosition =
-    point.x < 16
-      ? "left-0"
-      : point.x > 84
-        ? "right-0"
-        : "left-1/2 -translate-x-1/2";
-  const verticalPosition = point.y < 35 ? "top-full mt-3" : "bottom-full mb-3";
-  const tooltipId = `branch-map-tooltip-${point.id}`;
-
+function BranchPoint({
+  point,
+  x,
+  y,
+  visible,
+  active,
+  popoverId,
+  onSelect,
+}: {
+  point: BranchMapPoint;
+  x: number;
+  y: number;
+  visible: boolean;
+  active: boolean;
+  popoverId: string;
+  onSelect: (id: string, anchor: HTMLButtonElement) => void;
+}) {
+  const kind = branchMapPointKind(
+    point.totalVerifiedKader,
+    point.totalChapters,
+    point.type
+  );
+  const color =
+    kind === "empty"
+      ? "bg-disabled-foreground shadow-sm"
+      : kind === "provisional"
+        ? "bg-map-provisional shadow-[0_3px_10px_var(--shadow-provisional)]"
+        : "bg-secondary shadow-[0_3px_10px_var(--shadow-secondary)]";
+  const pulseColor =
+    kind === "empty"
+      ? "bg-disabled-foreground/30"
+      : kind === "provisional"
+        ? "bg-map-provisional/45"
+        : "bg-secondary/45";
   return (
-    <div
-      className="group absolute z-10 -translate-x-1/2 -translate-y-1/2 hover:z-20 focus-within:z-20"
-      style={{ left: `${point.x}%`, top: `${point.y}%` }}
+    <button
+      type="button"
+      data-map-point
+      aria-label={point.name}
+      aria-haspopup="dialog"
+      aria-expanded={active}
+      aria-controls={active ? popoverId : undefined}
+      tabIndex={visible ? 0 : -1}
+      onClick={(event) => onSelect(point.id, event.currentTarget)}
+      style={{ left: x, top: y, visibility: visible ? "visible" : "hidden" }}
+      className={`group absolute flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "z-20" : "z-10"}`}
     >
-      <button
-        type="button"
-        aria-describedby={tooltipId}
-        aria-label={`${point.name}, ${point.coordinatingBodyName}, status ${formatBranchType(point.type)}: ${formatNumber(point.totalVerifiedKader)} kader terverifikasi dan ${formatNumber(point.totalChapters)} Komisariat`}
-        className="relative flex size-8 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute size-5 animate-ping rounded-full motion-reduce:animate-none ${pulseColor}`}
+      />
+      <span
+        className={`pointer-events-none relative flex size-3.5 items-center justify-center rounded-full border-2 border-on-dark transition-shadow group-hover:ring-4 group-hover:ring-heading/10 ${active ? "ring-4 ring-heading/15" : ""} ${color}`}
       >
-        <span
-          className={`absolute size-5 animate-ping rounded-full motion-reduce:animate-none ${
-            isProvisional ? "bg-map-provisional/45" : "bg-secondary/45"
-          }`}
-        />
-        <span
-          className={`relative flex size-4 items-center justify-center rounded-full border-2 border-on-dark transition group-hover:scale-125 group-focus-within:scale-125 ${
-            isProvisional
-              ? "bg-map-provisional shadow-[0_3px_10px_var(--shadow-provisional)]"
-              : "bg-secondary shadow-[0_3px_10px_var(--shadow-secondary)]"
-          }`}
-        >
-          <span className="size-1.5 rounded-full bg-surface" />
-        </span>
-      </button>
-
-      <div
-        id={tooltipId}
-        role="tooltip"
-        className={`pointer-events-none invisible absolute z-30 w-72 translate-y-1 rounded-xl border border-border bg-surface p-3.5 opacity-0 shadow-[0_12px_32px_var(--shadow-card)] transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${horizontalPosition} ${verticalPosition}`}
-      >
-        <div className="flex items-center gap-2">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
-            <MapPin className="size-4" />
-          </span>
-          <p className="text-sm leading-5 font-bold text-heading">
-            {point.name}
-          </p>
-        </div>
-        <div className="mt-3 space-y-2 border-t border-border pt-3">
-          <div className="flex items-start gap-2 text-[13px] text-muted-foreground">
-            <Network className="mt-0.5 size-3.5 shrink-0" />
-            <span className="flex-1">Badko</span>
-            <span className="max-w-36 text-right font-semibold text-heading">
-              {point.coordinatingBodyName}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-            <CircleDot className="size-3.5" />
-            <span className="flex-1">Status</span>
-            <span className="font-semibold text-heading">
-              {formatBranchType(point.type)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-            <BadgeCheck className="size-3.5" />
-            <span className="flex-1">Kader Terverifikasi</span>
-            <span className="font-semibold text-heading">
-              {formatNumber(point.totalVerifiedKader)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-            <Factory className="size-3.5" />
-            <span className="flex-1">Jumlah Komisariat</span>
-            <span className="font-semibold text-heading">
-              {formatNumber(point.totalChapters)}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+        <span className="size-1.5 rounded-full bg-surface" />
+      </span>
+    </button>
   );
 }
 
@@ -145,6 +99,24 @@ export default function IndonesiaBranchMap({
   organizationId,
   coordinatingBodyId,
 }: IndonesiaBranchMapProps) {
+  const [selected, setSelected] = useState<{
+    id: string;
+    anchor: HTMLButtonElement;
+  } | null>(null);
+  const closeDetails = useCallback(() => setSelected(null), []);
+  const {
+    viewportRef,
+    view,
+    size,
+    dragging,
+    transform,
+    zoomBy,
+    reset,
+    handlers,
+  } = useBranchMapViewport(closeDetails);
+  const mapId = useId();
+  const popoverId = `${mapId}-detail`;
+  const instructionsId = `${mapId}-instructions`;
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] =
     useState<BranchMapSearchResult | null>(null);
@@ -229,6 +201,10 @@ export default function IndonesiaBranchMap({
     [branches]
   );
 
+  const activePoint = selected
+    ? points.find((point) => point.id === selected.id)
+    : undefined;
+
   return (
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -237,7 +213,7 @@ export default function IndonesiaBranchMap({
             Sebaran Kader HMI di Indonesia
           </p>
           <p className="text-sm text-muted-foreground">
-            Arahkan ke titik Cabang untuk melihat ringkasan
+            Klik atau ketuk titik Cabang untuk melihat ringkasan
           </p>
         </div>
 
@@ -246,7 +222,10 @@ export default function IndonesiaBranchMap({
             inputId="branch-map-search"
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              reset();
+            }}
             placeholder="Cari Cabang"
             aria-label="Cari Cabang pada peta"
             icon={
@@ -261,27 +240,146 @@ export default function IndonesiaBranchMap({
         </div>
       </div>
 
-      <div className="mt-5 rounded-xl bg-primary/5">
-        <div className="relative aspect-[1600/613] overflow-visible">
-          <MapSquare
-            aria-label="Peta Indonesia dengan titik persebaran Cabang HMI"
-            role="img"
-            className="absolute inset-0 size-full text-primary-foreground"
-          />
-
-          {points.map((point) => (
-            <BranchPoint key={point.id} point={point} />
-          ))}
-
+      <div className="relative mt-5 overflow-hidden rounded-xl border border-border bg-surface-subtle">
+        <div className="relative h-72 sm:h-auto sm:min-h-72 sm:aspect-[1600/690]">
+          <div
+            ref={viewportRef}
+            role="region"
+            aria-label="Peta persebaran Cabang HMI"
+            aria-describedby={instructionsId}
+            tabIndex={0}
+            {...handlers}
+            className={`absolute inset-0 touch-none overflow-hidden select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+          >
+            <MapSquare
+              aria-label="Peta Indonesia"
+              role="img"
+              style={{
+                width: transform.width,
+                height: transform.height,
+                transform: `translate(${transform.x}px, ${transform.y}px)`,
+              }}
+              className="pointer-events-none absolute left-0 top-0 max-w-none text-primary-foreground/50"
+            />
+            {points.map((point) => {
+              const x = transform.x + (point.x / 100) * transform.width;
+              const y = transform.y + (point.y / 100) * transform.height;
+              return (
+                <BranchPoint
+                  key={point.id}
+                  point={point}
+                  x={x}
+                  y={y}
+                  visible={
+                    size.width > 0 &&
+                    x >= 0 &&
+                    x <= size.width &&
+                    y >= 0 &&
+                    y <= size.height
+                  }
+                  active={selected?.id === point.id}
+                  popoverId={popoverId}
+                  onSelect={(id, anchor) =>
+                    setSelected((previous) =>
+                      previous?.id === id ? null : { id, anchor }
+                    )
+                  }
+                />
+              );
+            })}
+          </div>
+          <span
+            className="pointer-events-none absolute left-3 top-3 rounded-lg border border-border bg-surface/95 px-2 py-1 text-xs tabular-nums text-muted-foreground"
+            aria-label="Tingkat zoom peta"
+          >
+            {Math.round(view.zoom * 100)}%
+          </span>
+          <div
+            role="group"
+            aria-label="Kontrol peta"
+            className="absolute right-3 top-3 z-30 flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
+          >
+            <button
+              type="button"
+              aria-label="Perbesar peta"
+              title="Perbesar peta"
+              disabled={view.zoom >= MAX_MAP_ZOOM}
+              onClick={() => zoomBy(2)}
+              className="flex size-11 cursor-pointer items-center justify-center text-heading hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-default disabled:text-disabled-foreground"
+            >
+              <Plus className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Perkecil peta"
+              title="Perkecil peta"
+              disabled={view.zoom <= MIN_MAP_ZOOM}
+              onClick={() => zoomBy(0.5)}
+              className="flex size-11 cursor-pointer items-center justify-center border-y border-border text-heading hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-default disabled:text-disabled-foreground"
+            >
+              <Minus className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Reset tampilan peta"
+              title="Reset tampilan peta"
+              onClick={reset}
+              className="flex size-11 cursor-pointer items-center justify-center text-heading hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+            >
+              <RotateCcw className="size-4" />
+            </button>
+          </div>
           {!isSearchPending && normalizedSearch && points.length === 0 && (
-            <div className="absolute inset-x-0 bottom-4 mx-auto w-fit rounded-full border border-border bg-surface/95 px-4 py-2 text-xs font-medium text-muted-foreground shadow-sm">
+            <div
+              role="status"
+              className="pointer-events-none absolute inset-x-3 bottom-3 mx-auto w-fit max-w-full rounded-lg border border-border bg-surface/95 px-4 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm"
+            >
               {searchFailed
                 ? "Pencarian gagal dimuat. Coba lagi."
                 : "Cabang tidak ditemukan atau belum memiliki koordinat."}
             </div>
           )}
         </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border bg-surface px-3 py-3 text-xs text-muted-foreground sm:px-4">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-secondary" />
+            Penuh
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-map-provisional" />
+            Persiapan
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-disabled-foreground" />
+            Belum ada progres
+            <span className="sr-only">
+              {" "}
+              (kader terverifikasi atau Komisariat masih 0)
+            </span>
+          </span>
+        </div>
       </div>
+      <p id={instructionsId} className="mt-2 text-xs text-muted-foreground">
+        <span className="pointer-coarse:hidden">
+          Geser untuk menjelajah. Klik dua kali atau Ctrl + scroll untuk zoom.
+        </span>
+        <span className="hidden pointer-coarse:inline">
+          Cubit dengan dua jari untuk zoom. Geser untuk menjelajah.
+        </span>
+        <span className="sr-only">
+          {" "}
+          Gunakan tombol + atau - untuk zoom, tombol panah untuk menggeser, dan
+          Home untuk reset.
+        </span>
+      </p>
+      {selected && activePoint && (
+        <BranchMapPopover
+          point={activePoint}
+          anchor={selected.anchor}
+          id={popoverId}
+          onClose={closeDetails}
+        />
+      )}
     </section>
   );
 }

@@ -266,20 +266,37 @@ Master uses the configured `ORGANIZATION_ID`. Master and Organization request `s
 coverage and no coordinating-body filter. The map geometry lives in
 `components/svg/MapSquare.tsx`, converted from the former `Map Square.svg`: the original 5,217
 colored rectangles are consolidated into two lightweight paths using `currentColor` (rendered as
-`text-primary`) plus a 45%-opacity primary layer. `IndonesiaBranchMap` accepts the endpoint's
+`text-primary-foreground/50` to keep the artwork subdued behind the markers) plus a 45%-opacity
+layer of that same color. `IndonesiaBranchMap` accepts the endpoint's
 `BranchMapEntry[]`; `lib/branch-map-coordinates.ts#projectBranchMapPosition` projects each row's real
 latitude/longitude into the SVG's 0-100 percentage space using compact per-island geographic and
 artwork bounds (there is deliberately no duplicate city/Cabang coordinate lookup). Rows with null or
 out-of-Indonesia coordinates are omitted from the plotted-point count instead of being guessed.
-Each point's tooltip shows label-value rows for its Badko, translated Cabang type
-(`Penuh`/`Persiapan`), `verified_member_count`, and `chapter_count`; tooltip copy is never smaller
-than 13px and every value uses the shared near-black text color. A Cabang search input sits at the right side of the map
-card header, uses the shared `components/fields/Input.tsx` primitive, and debounces through
-`/admin/api/stat/branch-map`; that Route Handler delegates to
-`apis/stat.ts#getBranchMap`, while the Badko variant always includes its fixed
-`coordinating_body_id`. The map and point layer deliberately keep overflow visible so edge points
-and their hover/focus tooltips are not clipped; provisional Cabang use pink pins while full Cabang
-retain the secondary-color pins. Master and Organization both fetch the first five rows from
+Each point opens a click/tap/keyboard-accessible non-modal detail popover with label-value rows
+for its Badko, translated Cabang type (`Penuh`/`Persiapan`), `verified_member_count`, and
+`chapter_count`. Popover copy is at least 13px; values use the heading text token. `BranchMapPopover`
+portals the panel to the document body, clamps/flips it inside the viewport, and closes on outside
+pointer/focus, Escape, page/nested scrolling, wheel, resizing, or map navigation. It has an explicit
+close control; Escape/close returns focus to its marker. Hover alone does not open a panel.
+A Cabang search input sits at the right side of the map card header, uses the shared
+`components/fields/Input.tsx` primitive, and debounces through `/admin/api/stat/branch-map`;
+that Route Handler delegates to `apis/stat.ts#getBranchMap`, while the Badko variant always
+includes its fixed `coordinating_body_id`. Changing the search restores the map overview.
+The map viewport clips the zoomed artwork/points while the portalled detail panel remains unclipped.
+`hooks/useBranchMapViewport.ts` supports +/minus/reset controls, mouse/touch dragging, two-finger
+pinch/pan, pointer-anchored double-click or Ctrl/trackpad wheel zoom, and keyboard +/minus/arrows/Home.
+Ordinary wheel scrolling still scrolls the page. Touch gestures belong to the map surface; the page
+remains scrollable outside it. `lib/branch-map-viewport.ts` owns fit/anchor/clamp calculations and
+1x-32x zoom limits, enough to inspect the artwork's individual four-unit squares on a phone. Pins
+are a separate screen-space layer: the 14px dots and 44px hit areas never scale with the artwork.
+All three point colors have a 20px `animate-ping` halo, disabled under reduced motion; the halo
+also stays in screen space. Every marker has a 6px surface-colored center dot. Empty points use
+solid `disabled-foreground` and a softer 30%-opacity halo, matching the legend's
+"Belum ada progres" state while remaining clickable.
+The overview leaves padding for edge pins, and panning is bounded so the map cannot be lost.
+Markers are gray whenever `verified_member_count === 0` OR `chapter_count === 0`, taking precedence
+over type; otherwise provisional Cabang are pink and full Cabang use the secondary color. The same
+three colors are explained in the legend. Master and Organization both fetch the first five rows from
 `training-priorities/list` with `entity: "branch"`, without a Badko filter, and render the real Prioritas Pengkaderan card;
 the backend already orders provisional Cabang by the lowest active-member and Komisariat counts.
 Priority-row names are displayed with a scope-aware `Cabang` or `Komisariat` prefix. The card uses
@@ -3500,8 +3517,7 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   group, since `OfficerNode` already nests other interactive elements) so a plain-black
   `role="tooltip"` pill — `bg-[#172033]`, matching this app's near-black text color — fades in above
   it on hover with the position's full, unclamped name, the same `opacity-0`→`group-hover:opacity-100`
-  transition pattern `IndonesiaBranchMap`'s point tooltips use, just styled dark/minimal instead of
-  that white informational-card treatment. The roster renders in one of **two views**, picked by a
+  opacity transition pattern used by the chart tooltips, with a dark/minimal treatment. The roster renders in one of **two views**, picked by a
   Bagan/Tabel toggle in the period header row (persisted to `localStorage` under
   `structural_view_mode`, read after mount so the client's first render matches the server's, same
   shape as the admin lists' own Tabel/Card toggle): the org chart above, or `OfficerTable`, a flat

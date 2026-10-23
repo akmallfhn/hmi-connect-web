@@ -11,8 +11,8 @@ type MapRegion = {
   };
 };
 
-const VIEW_WIDTH = 1600;
-const VIEW_HEIGHT = 613;
+export const BRANCH_MAP_WIDTH = 1600;
+export const BRANCH_MAP_HEIGHT = 613;
 
 // MapSquare is decorative artwork, not a true projection — these per-island bounds place stat/branch-map's real coordinates without a second Cabang/city name list.
 const MAP_REGIONS: MapRegion[] = [
@@ -96,7 +96,7 @@ const MAP_REGIONS: MapRegion[] = [
 function contains(
   { lat: [north, south], lng: [west, east] }: CoordinateBounds,
   latitude: number,
-  longitude: number
+  longitude: number,
 ) {
   return (
     latitude <= north &&
@@ -113,12 +113,12 @@ function clampFraction(value: number) {
 // Projects coordinates returned by stat/branch-map onto MapSquare's artwork.
 export function projectBranchMapPosition(
   latitude: number,
-  longitude: number
+  longitude: number,
 ): { x: number; y: number } | null {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
 
   const region = MAP_REGIONS.find(({ coverage }) =>
-    coverage.some((bounds) => contains(bounds, latitude, longitude))
+    coverage.some((bounds) => contains(bounds, latitude, longitude)),
   );
   if (!region) return null;
 
@@ -128,19 +128,19 @@ export function projectBranchMapPosition(
     lat: [latNorth, latSouth],
     lng: [lngWest, lngEast],
   } = region.projection;
-  const xFraction = clampFraction(
-    (longitude - lngWest) / (lngEast - lngWest)
-  );
+  const xFraction = clampFraction((longitude - lngWest) / (lngEast - lngWest));
   const yFraction = clampFraction(
-    (latNorth - latitude) / (latNorth - latSouth)
+    (latNorth - latitude) / (latNorth - latSouth),
   );
 
   return {
     x:
-      ((pixelXStart + xFraction * (pixelXEnd - pixelXStart)) / VIEW_WIDTH) *
+      ((pixelXStart + xFraction * (pixelXEnd - pixelXStart)) /
+        BRANCH_MAP_WIDTH) *
       100,
     y:
-      ((pixelYStart + yFraction * (pixelYEnd - pixelYStart)) / VIEW_HEIGHT) *
+      ((pixelYStart + yFraction * (pixelYEnd - pixelYStart)) /
+        BRANCH_MAP_HEIGHT) *
       100,
   };
 }
