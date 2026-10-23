@@ -11,7 +11,7 @@ fix the rule, not just the code.
 - **Next.js 16** (App Router, Turbopack), **React 19**, **TypeScript** (strict).
 - **TanStack React Query v5** manages shared client server-state for notification badges/lists,
   conversation badges/lists, feed/comment/reply reactions, pending-verification counts/reviews,
-  article tabs, and profile activity.
+  article tabs, and profile post/activity/article timelines.
   `components/query/AppQueryProvider.tsx` owns an in-memory QueryClient per mounted app (30-second
   stale time, five-minute garbage collection, one read retry, no mutation retries). Personal query
   keys include the viewer id; verification counts include the entity scope. Keep initial reads in
@@ -1692,11 +1692,20 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   otherwise). It also shows `users/social-media-accounts/list` links
   (hover state is deliberately neutral gray, not brand-colored — don't reintroduce a
   `hover:text-primary`/`hover:bg-primary-soft` tint there). The user profile has URL-backed
-  Activities (default) and Profile (`?tab=profile`) tabs through the shared `Tabs` component.
+  Post (`?tab=posts`), Activities (`?tab=activities`), Articles (`?tab=articles`), and Profile
+  tabs through the shared `Tabs` component, in that order. Post/Activities/Articles are omitted
+  when their first API page returns `list: []`; the Profile panel always remains, but the entire tab
+  bar is omitted when Profile is the only available panel. The first available tab is
+  the default `/profile/[username]` panel, so a URL naming a hidden content tab falls back to that
+  available default instead of exposing an empty panel, then `ProfileSections` removes the invalid
+  `tab` parameter while preserving other query parameters such as `as`.
   `ProfileSections` switches the server-rendered panels with `useLocalTabs`, avoiding a whole-page
-  refetch. `ProfileActivityTimeline` caches infinite pages by viewer and profile username. A direct
-  Profile-tab visit loads activity only when first opened; server refreshes hydrate fresh activity
-  data whenever the route has fetched it.
+  refetch. `ProfilePostTimeline`, `ProfileActivityTimeline`, and `ProfileArticlesTimeline` cache
+  infinite pages by viewer and profile username. The route fetches page one of all three in parallel
+  so it can decide which tabs exist, then hydrates those caches; later pages load only when scrolled.
+  Post uses `apis/users.ts#listUserFeeds` (`users/feeds/list`), 20 rows per page, and renders the
+  returned personal posts/quote reposts through `FeedItemCard`; the endpoint excludes plain reposts,
+  comments, and entity-authored posts.
   Activities shows the full
   infinite-scroll history in the main column via `apis/users.ts#listUserActivity`
   (`users/activity/list`, gated like `getUserByUsername` but also reading the viewer's
@@ -1713,10 +1722,16 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   cards: it reaches both viewport edges, drops its horizontal borders and corner radius, then
   restores the full border and `rounded-2xl` at `lg`. A comment activity's referenced-post box
   uses the regular neutral border on all four sides, without a primary accent stripe.
+  Articles sits immediately to the right of Activities and lists the profile owner's published
+  editorial articles through `apis/users.ts#listUserArticles` (`users/articles/list`), newest first,
+  20 rows per page. It reuses `ArticleListRow`; draft and unpublished work never appear because the
+  endpoint filters it server-side. Article create/edit invalidates both `article-feed` and
+  `profile-articles`.
   Entity activity lists retain the compact row variant of the same component.
   The Profile tab holds About, work and organization experience, education, training,
   publications, and honors in that order. The old `/profile/[username]/activities` URL
-  redirects to the default tab while preserving `?as=`. Pagination still uses the
+  redirects to `?tab=activities` while preserving `?as=`; an empty Activity list still makes
+  `ProfileSections` fall back to its first available tab. Pagination still uses the
   `loadMoreUserActivity` Server Action.
   `ProfileCompletionCard` is the "Lengkapi Profil" nudge, backed by
   `apis/users.ts#getProfileCompletion` (`users/profile-completion`): a title row with the percentage

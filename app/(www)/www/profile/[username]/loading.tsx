@@ -17,8 +17,10 @@ export default function ProfileLoading() {
           <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
             <ProfileHeaderSkeleton />
             <div className="px-4 lg:px-0">
-              <div className="grid h-10 w-full grid-cols-2 gap-1 rounded-lg border border-border bg-surface-subtle p-1 sm:w-52">
+              <div className="grid h-10 w-full grid-cols-4 gap-1 rounded-lg border border-border bg-surface-subtle p-1 sm:w-[412px]">
                 <div className="rounded-lg bg-border" />
+                <div className="rounded-lg bg-surface-muted" />
+                <div className="rounded-lg bg-surface-muted" />
                 <div className="rounded-lg bg-surface-muted" />
               </div>
             </div>

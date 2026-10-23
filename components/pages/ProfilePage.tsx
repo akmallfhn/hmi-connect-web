@@ -1,5 +1,6 @@
 import type { Institution } from "@/apis/institutions";
-import type { ActivityEntry } from "@/apis/feeds";
+import type { ActivityEntry, FeedTimelineItem } from "@/apis/feeds";
+import type { ArticleListEntry } from "@/apis/articles";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
   EducationHistoryEntry,
@@ -11,7 +12,10 @@ import type {
   TrainingHistoryEntry,
   WorkExperienceEntry,
 } from "@/apis/users";
-import type { VerificationStatusEnum } from "@/lib/types";
+import type {
+  UserStatusEnum,
+  VerificationStatusEnum,
+} from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
@@ -23,13 +27,16 @@ import EducationCard from "../profile/EducationCard";
 import HonorAwardCard from "../profile/HonorAwardCard";
 import OrganizationExperienceCard from "../profile/OrganizationExperienceCard";
 import ProfileActivityTimeline from "../profile/ProfileActivityTimeline";
+import ProfileArticlesTimeline from "../profile/ProfileArticlesTimeline";
 import ProfileCompletionCard from "../profile/ProfileCompletionCard";
 import ProfileHeader from "../profile/ProfileHeader";
 import ProfileSections from "../profile/ProfileSections";
+import ProfilePostTimeline from "../profile/ProfilePostTimeline";
 import ServerQueryHydration from "../query/ServerQueryHydration";
 import PublicationCard from "../profile/PublicationCard";
 import TrainingCard from "../profile/TrainingCard";
 import WorkExperienceCard from "../profile/WorkExperienceCard";
+import type { ProfileTab } from "../profile/ProfileTabs";
 
 interface ViewerProps {
   fullName?: string;
@@ -39,6 +46,7 @@ interface ViewerProps {
   email?: string;
   userId?: string;
   username?: string;
+  userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
 }
 
@@ -64,8 +72,12 @@ interface ProfileProps extends ViewerProps {
   trainingHistories: TrainingHistoryEntry[];
   publications: PublicationEntry[];
   honorAwards: HonorAwardEntry[];
+  posts: FeedTimelineItem[];
+  postsHasMore: boolean;
   activities: ActivityEntry[];
   activitiesHasMore: boolean;
+  articles: ArticleListEntry[];
+  articlesHasMore: boolean;
 }
 
 interface ProfilePageProps {
@@ -78,7 +90,7 @@ interface ProfilePageProps {
   socialMediaPlatforms: SocialMediaPlatform[];
   // Null unless this is the viewer's own, verified, still-incomplete profile.
   profileCompletion: ProfileCompletion | null;
-  activeTab: "activities" | "profile";
+  availableTabs: ProfileTab[];
 }
 
 export default function ProfilePage({
@@ -89,7 +101,7 @@ export default function ProfilePage({
   institutions,
   socialMediaPlatforms,
   profileCompletion,
-  activeTab,
+  availableTabs,
 }: ProfilePageProps) {
   const completionForms = {
     userId: profile.userId,
@@ -166,6 +178,42 @@ export default function ProfilePage({
               )}
               <ProfileSections
                 username={profile.username}
+                availableTabs={availableTabs}
+                postPanel={
+                  <section aria-label="Post" className="mt-4">
+                    <ServerQueryHydration
+                      queryKey={[
+                        "profile-posts",
+                        viewer.userId ?? "public",
+                        profile.username,
+                      ]}
+                      data={{
+                        pages: [
+                          {
+                            list: profile.posts,
+                            hasMore: profile.postsHasMore,
+                          },
+                        ],
+                        pageParams: [1],
+                      }}
+                    >
+                      <ProfilePostTimeline
+                        username={profile.username}
+                        profileUserId={profile.userId}
+                        initialItems={profile.posts}
+                        initialHasMore={profile.postsHasMore}
+                        viewer={{
+                          id: viewer.userId,
+                          name: viewer.fullName,
+                          avatar: viewer.avatar,
+                          status: viewer.userStatus,
+                          verificationStatus: viewer.verificationStatus,
+                        }}
+                        actingEntity={actingEntity}
+                      />
+                    </ServerQueryHydration>
+                  </section>
+                }
                 activityPanel={
                   <section aria-label="Activities" className="mt-4">
                     <ServerQueryHydration
@@ -174,19 +222,15 @@ export default function ProfilePage({
                         viewer.userId ?? "public",
                         profile.username,
                       ]}
-                      data={
-                        activeTab === "activities"
-                          ? {
-                              pages: [
-                                {
-                                  list: profile.activities,
-                                  hasMore: profile.activitiesHasMore,
-                                },
-                              ],
-                              pageParams: [1],
-                            }
-                          : undefined
-                      }
+                      data={{
+                        pages: [
+                          {
+                            list: profile.activities,
+                            hasMore: profile.activitiesHasMore,
+                          },
+                        ],
+                        pageParams: [1],
+                      }}
                     >
                       <ProfileActivityTimeline
                         username={profile.username}
@@ -196,9 +240,40 @@ export default function ProfilePage({
                         }}
                         initialItems={profile.activities}
                         initialHasMore={profile.activitiesHasMore}
-                        initialLoaded={activeTab === "activities"}
+                        initialLoaded
                         viewerId={viewer.userId}
                         isSignedIn={Boolean(viewer.userId)}
+                      />
+                    </ServerQueryHydration>
+                  </section>
+                }
+                articlesPanel={
+                  <section
+                    aria-label="Articles"
+                    className="mt-4 border border-x-0 border-border bg-surface px-5 lg:rounded-2xl lg:border-x lg:px-6"
+                  >
+                    <ServerQueryHydration
+                      queryKey={[
+                        "profile-articles",
+                        viewer.userId ?? "public",
+                        profile.username,
+                      ]}
+                      data={{
+                        pages: [
+                          {
+                            list: profile.articles,
+                            hasMore: profile.articlesHasMore,
+                          },
+                        ],
+                        pageParams: [1],
+                      }}
+                    >
+                      <ProfileArticlesTimeline
+                        username={profile.username}
+                        initialItems={profile.articles}
+                        initialHasMore={profile.articlesHasMore}
+                        initialLoaded
+                        viewerId={viewer.userId}
                       />
                     </ServerQueryHydration>
                   </section>

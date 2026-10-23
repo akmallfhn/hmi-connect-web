@@ -13,9 +13,12 @@ import {
   listSocialMediaAccounts,
   listTrainingHistories,
   listUserActivity,
+  listUserArticles,
+  listUserFeeds,
   listWorkExperiences,
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
+import type { ProfileTab } from "@/components/profile/ProfileTabs";
 import { resolveActingEntity } from "@/lib/acting-entity";
 
 interface ProfileRouteProps {
@@ -70,8 +73,7 @@ export default async function Profile({
   searchParams,
 }: ProfileRouteProps) {
   const { username } = await params;
-  const { as, tab } = (await searchParams) ?? {};
-  const activeTab = tab === "profile" ? "profile" : "activities";
+  const { as } = (await searchParams) ?? {};
   const { sessionToken, user: viewer } = await getSession();
   const [profile, actingEntity] = await Promise.all([
     getUserByUsername(username, sessionToken),
@@ -93,7 +95,9 @@ export default async function Profile({
     { list: honorAwards },
     { list: publications },
     { list: socialMediaAccounts },
+    { list: posts, hasMore: postsHasMore },
     { list: activities, hasMore: activitiesHasMore },
+    { list: articles, hasMore: articlesHasMore },
     institutions,
     socialMediaPlatforms,
     viewerProfile,
@@ -106,9 +110,9 @@ export default async function Profile({
     listHonorAwards(username),
     listPublications(username),
     listSocialMediaAccounts(profile.id),
-    activeTab === "activities"
-      ? listUserActivity(username, { page: 1, pageSize: 20 })
-      : Promise.resolve({ list: [], hasMore: false }),
+    listUserFeeds(username, { page: 1, pageSize: 20 }),
+    listUserActivity(username, { page: 1, pageSize: 20 }),
+    listUserArticles(username, { page: 1, pageSize: 20 }),
     isOwnProfile ? getInstitutions() : Promise.resolve([]),
     isOwnProfile
       ? getSocialMediaPlatforms({ page: 1, pageSize: 20 })
@@ -121,6 +125,12 @@ export default async function Profile({
       ? getProfileCompletion(sessionToken)
       : Promise.resolve(null),
   ]);
+
+  const availableTabs: ProfileTab[] = [];
+  if (posts.length > 0) availableTabs.push("posts");
+  if (activities.length > 0) availableTabs.push("activities");
+  if (articles.length > 0) availableTabs.push("articles");
+  availableTabs.push("profile");
 
   return (
     <ProfilePage
@@ -149,8 +159,12 @@ export default async function Profile({
         trainingHistories,
         publications,
         honorAwards,
+        posts,
+        postsHasMore,
         activities,
         activitiesHasMore,
+        articles,
+        articlesHasMore,
         userId: profile.id,
         username,
       }}
@@ -160,6 +174,7 @@ export default async function Profile({
         email: viewerProfile?.email,
         userId: viewer?.id,
         username: viewer?.username,
+        userStatus: viewer?.status,
         verificationStatus: viewer?.verification_status,
       }}
       isOwnProfile={isOwnProfile}
@@ -169,7 +184,7 @@ export default async function Profile({
       profileCompletion={
         profileCompletion?.is_completed ? null : profileCompletion
       }
-      activeTab={activeTab}
+      availableTabs={availableTabs}
     />
   );
 }

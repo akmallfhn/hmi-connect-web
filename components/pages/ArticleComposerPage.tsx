@@ -455,6 +455,7 @@ export default function ArticleComposerPage({
       { id: toastId }
     );
     void queryClient.invalidateQueries({ queryKey: ["article-feed"] });
+    void queryClient.invalidateQueries({ queryKey: ["profile-articles"] });
     setIsPublishModalOpen(false);
     const { slug_url, id } = result.article;
     router.push(`/articles/${slug_url || "artikel"}/${id}`);

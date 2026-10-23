@@ -3,7 +3,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { callApi, type ApiEnvelope } from "./api";
-import type { ActivityEntry } from "./feeds";
+import type { ActivityEntry, FeedTimelineItem } from "./feeds";
+import type { ArticleListEntry } from "./articles";
 import {
   isSuccessStatus,
   type Degree,
@@ -1119,6 +1120,88 @@ export async function listUserActivity(
 
   if (!isSuccessStatus(result.status)) {
     console.error("[listUserActivity] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
+  return { list, hasMore };
+}
+
+// Personal feed rows only: original posts and quote reposts, never comments,
+// plain reposts, or posts written on behalf of an entity.
+export async function listUserFeeds(
+  username: string,
+  options: ListOptions = {},
+): Promise<ListResult<FeedTimelineItem>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const authToken = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!authToken) return { list: [], hasMore: false };
+
+  const { search, page, pageSize } = options;
+  const result = await callApi<ListResponse<FeedTimelineItem>>(
+    "/api/v1/users/feeds/list",
+    {
+      method: "POST",
+      token: authToken,
+      body: {
+        username,
+        ...(search ? { search } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    },
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listUserFeeds] request failed:", result);
+    return { list: [], hasMore: false };
+  }
+
+  const list = result.data?.list ?? [];
+  const metapaging = result.data?.metapaging;
+  const hasMore = metapaging
+    ? metapaging.current_page < metapaging.total_page
+    : false;
+  return { list, hasMore };
+}
+
+export type ListUserArticlesOptions = ListOptions & {
+  categoryId?: number;
+};
+
+// Published editorial articles for whichever public profile is being viewed.
+export async function listUserArticles(
+  username: string,
+  options: ListUserArticlesOptions = {},
+): Promise<ListResult<ArticleListEntry>> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const authToken = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!authToken) return { list: [], hasMore: false };
+
+  const { search, categoryId, page, pageSize } = options;
+  const result = await callApi<ListResponse<ArticleListEntry>>(
+    "/api/v1/users/articles/list",
+    {
+      method: "POST",
+      token: authToken,
+      body: {
+        username,
+        ...(search ? { search } : {}),
+        ...(categoryId !== undefined ? { category_id: categoryId } : {}),
+        ...(page ? { page } : {}),
+        ...(pageSize ? { page_size: pageSize } : {}),
+      },
+    },
+  );
+
+  if (!isSuccessStatus(result.status)) {
+    console.error("[listUserArticles] request failed:", result);
     return { list: [], hasMore: false };
   }
 

@@ -119,6 +119,8 @@ import {
   listFollowers as listFollowersApi,
   listFollowing as listFollowingApi,
   listUserActivity as listUserActivityApi,
+  listUserArticles as listUserArticlesApi,
+  listUserFeeds as listUserFeedsApi,
   listUsers as listUsersApi,
   updateEducationHistory as updateEducationHistoryApi,
   updateHonorAward as updateHonorAwardApi,
@@ -493,6 +495,14 @@ export async function listFollowers(userId: string, page?: number) {
 
 export async function loadMoreUserActivity(username: string, page: number) {
   return listUserActivityApi(username, { page, pageSize: 20 });
+}
+
+export async function loadMoreUserArticles(username: string, page: number) {
+  return listUserArticlesApi(username, { page, pageSize: 20 });
+}
+
+export async function loadMoreUserFeeds(username: string, page: number) {
+  return listUserFeedsApi(username, { page, pageSize: 20 });
 }
 
 export async function loadMoreEntityActivity(

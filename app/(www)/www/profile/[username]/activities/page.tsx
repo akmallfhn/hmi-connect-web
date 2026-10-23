@@ -13,7 +13,7 @@ export default async function Activities({
   const { as } = (await searchParams) ?? {};
   const profileHref = `/profile/${encodeURIComponent(username)}`;
   const actingParam =
-    typeof as === "string" ? `?as=${encodeURIComponent(as)}` : "";
+    typeof as === "string" ? `&as=${encodeURIComponent(as)}` : "";
 
-  redirect(`${profileHref}${actingParam}`);
+  redirect(`${profileHref}?tab=activities${actingParam}`);
 }
