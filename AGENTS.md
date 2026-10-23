@@ -1634,6 +1634,10 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   `EditHonorAwardForm.tsx`, add/edit/remove several rows in one Modal, submitted together via
   `Promise.all`, same `userId`-not-actually-in-the-payload guard the sibling forms keep for
   consistency), same "hide the whole card if empty and not your own profile" rule.
+  Training-history levels use the broader `TrainingHistoryLevelEnum` and the shared
+  `lib/training-history.ts` labels/options: LK1/LK2/LK3 plus Senior Course (SC), Latihan Khusus
+  Kohati (LKK), and Latihan Kader Sensitif Gender (LKSG). Keep `TrainingStatusEnum` restricted to
+  LK1/LK2/LK3 because it models actual training-event levels, not profile history rows.
   `WorkExperienceCard`'s fields (`company_name`, `position_title`, `start_year`, optional
   `end_year`, optional `description`) are `organization-experiences`' shape verbatim with
   `company_name` standing in for `organization_name`; `HonorAwardCard`'s four fields (`title`,

@@ -8,6 +8,11 @@ export type CoordinatingBodySortByEnum = "index" | "name";
 export type GenderEnum = "male" | "female";
 export type BranchTypeEnum = "full" | "provisional";
 export type TrainingStatusEnum = "LK1" | "LK2" | "LK3";
+export type TrainingHistoryLevelEnum =
+  | TrainingStatusEnum
+  | "SC"
+  | "LKK"
+  | "LKSG";
 export type TrainingResultEnum = "passed" | "conditional_pass" | "failed";
 export type TrainingOrganizerTypeEnum =
   | "chapter"

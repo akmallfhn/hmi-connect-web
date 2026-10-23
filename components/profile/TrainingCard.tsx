@@ -4,6 +4,7 @@ import { Award, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { TrainingResultEnum } from "@/lib/types";
+import { TRAINING_HISTORY_LEVEL_LABELS } from "@/lib/training-history";
 import type { TrainingHistoryEntry } from "@/apis/users";
 import Button from "../buttons/Button";
 import EditTrainingForm from "../forms/EditTrainingForm";
@@ -52,7 +53,7 @@ export default function TrainingCard({
             </div>
             <div>
               <p className="text-sm font-semibold text-heading xl:text-[15px]">
-                Latihan Kader {entry.level.replace("LK", "")} ({entry.level})
+                {TRAINING_HISTORY_LEVEL_LABELS[entry.level]}
               </p>
               <p className="text-sm text-muted-foreground xl:text-[15px]">
                 {entry.organizer_name} • {RESULT_LABELS[entry.result]}

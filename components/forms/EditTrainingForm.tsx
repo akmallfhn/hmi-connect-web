@@ -11,20 +11,15 @@ import {
 } from "@/lib/actions";
 import {
   isSuccessStatus,
+  type TrainingHistoryLevelEnum,
   type TrainingResultEnum,
-  type TrainingStatusEnum,
 } from "@/lib/types";
+import { TRAINING_HISTORY_LEVEL_OPTIONS } from "@/lib/training-history";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
-
-const LEVEL_OPTIONS: { label: string; value: TrainingStatusEnum }[] = [
-  { label: "Latihan Kader 1 (LK1)", value: "LK1" },
-  { label: "Latihan Kader 2 (LK2)", value: "LK2" },
-  { label: "Latihan Kader 3 (LK3)", value: "LK3" },
-];
 
 const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },
@@ -34,7 +29,7 @@ const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
 
 type TrainingDraft = {
   id: string;
-  level: TrainingStatusEnum;
+  level: TrainingHistoryLevelEnum;
   result: TrainingResultEnum;
   organizerName: string;
   year: string;
@@ -230,9 +225,9 @@ function TrainingFields({
             value={draft.level}
             disabled={draft.removed}
             onChange={(value) =>
-              updateDraft(draft.id, "level", value as TrainingStatusEnum)
+              updateDraft(draft.id, "level", value as TrainingHistoryLevelEnum)
             }
-            options={LEVEL_OPTIONS}
+            options={TRAINING_HISTORY_LEVEL_OPTIONS}
           />
           <Input
             inputId={`training-organizer-${index}`}

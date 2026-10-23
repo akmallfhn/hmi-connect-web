@@ -11,8 +11,8 @@ import {
   type GenderEnum,
   type ProfileCompletionStageEnum,
   type SortTypeEnum,
+  type TrainingHistoryLevelEnum,
   type TrainingResultEnum,
-  type TrainingStatusEnum,
   type UserSortByEnum,
   type UserStatusEnum,
   type VerificationRequestStatusEnum,
@@ -384,7 +384,7 @@ export async function verifyUser(
 
 export type TrainingHistoryEntry = {
   id: string;
-  level: TrainingStatusEnum;
+  level: TrainingHistoryLevelEnum;
   result: TrainingResultEnum;
   organizer_name: string;
   year: number;
@@ -1292,7 +1292,7 @@ export async function deleteEducationHistory(id: string): Promise<ApiEnvelope> {
 }
 
 export type CreateTrainingHistoryPayload = {
-  level: TrainingStatusEnum;
+  level: TrainingHistoryLevelEnum;
   result: TrainingResultEnum;
   organizer_name: string;
   year: number;
@@ -1322,7 +1322,7 @@ export async function createTrainingHistory(
 
 export type UpdateTrainingHistoryPayload = {
   id: string;
-  level?: TrainingStatusEnum;
+  level?: TrainingHistoryLevelEnum;
   result?: TrainingResultEnum;
   organizer_name?: string;
   year?: number;

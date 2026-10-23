@@ -39,10 +39,12 @@ import {
 import { DEGREE_OPTIONS } from "@/lib/education";
 import { supabase } from "@/lib/supabase";
 import { formatDateRange } from "@/lib/time-manipulation";
+import { TRAINING_HISTORY_LEVEL_OPTIONS } from "@/lib/training-history";
 import {
   isSuccessStatus,
   type Degree,
   type GenderEnum,
+  type TrainingHistoryLevelEnum,
   type TrainingResultEnum,
   type TrainingStatusEnum,
 } from "@/lib/types";
@@ -107,17 +109,11 @@ type EducationHistoryDraft = {
 type TrainingHistoryDraft = {
   clientId: string;
   id?: string;
-  level: TrainingStatusEnum;
+  level: TrainingHistoryLevelEnum;
   result: TrainingResultEnum;
   organizerName: string;
   year: string;
 };
-
-const LEVEL_OPTIONS: { label: string; value: TrainingStatusEnum }[] = [
-  { label: "Latihan Kader 1 (LK1)", value: "LK1" },
-  { label: "Latihan Kader 2 (LK2)", value: "LK2" },
-  { label: "Latihan Kader 3 (LK3)", value: "LK3" },
-];
 
 const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },
@@ -1142,10 +1138,10 @@ export default function TrainingRegistrationPage({
                                   updateHistoryDraft(
                                     draft.clientId,
                                     "level",
-                                    value as TrainingStatusEnum
+                                    value as TrainingHistoryLevelEnum
                                   )
                                 }
-                                options={LEVEL_OPTIONS}
+                                options={TRAINING_HISTORY_LEVEL_OPTIONS}
                                 disabled={submitting}
                                 required
                               />
