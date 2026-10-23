@@ -30,9 +30,17 @@ export default function SuggestedConnectionsCarousel({
 
   return (
     <section className="border border-x-0 border-border bg-surface py-4 lg:rounded-2xl lg:border-x">
-      <h2 className="font-stack-sans-headline px-4 text-sm font-medium text-heading xl:text-[15px]">
-        {title}
-      </h2>
+      <div className="flex items-center justify-between gap-3 px-4">
+        <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
+          {title}
+        </h2>
+        <Link
+          href="/people-recommendation"
+          className="shrink-0 text-xs font-semibold text-primary-foreground xl:text-[13px]"
+        >
+          Lihat semua
+        </Link>
+      </div>
 
       {/* Without scroll-px-4 the snap pulls the first card flush left, past the heading. */}
       <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

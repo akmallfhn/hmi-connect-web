@@ -12,10 +12,12 @@ import Button from "../buttons/Button";
 
 interface FollowRecommendationRowProps {
   connection: FollowRecommendationEntry;
+  variant?: "compact" | "list";
 }
 
 export default function FollowRecommendationRow({
   connection,
+  variant = "compact",
 }: FollowRecommendationRowProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,54 @@ export default function FollowRecommendationRow({
     }
   }
 
+  const followButton = (
+    <Button
+      variant={isFollowing ? "outline" : "soft"}
+      size="sm"
+      onClick={handleFollowToggle}
+      disabled={loading}
+      className="shrink-0"
+    >
+      {isFollowing ? "Mengikuti" : "Ikuti"}
+    </Button>
+  );
+
+  if (variant === "list") {
+    return (
+      <div className="border-b border-border">
+        <div className="rounded-xl px-3 py-4 transition-colors hover:bg-surface-muted">
+          <div className="flex items-center gap-3">
+            <Link href={profileHref} className="shrink-0">
+              <Avatar
+                src={connection.avatar}
+                name={connection.full_name}
+                size={40}
+              />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <Link
+                href={profileHref}
+                className="block truncate text-sm font-semibold text-heading lg:text-[15px]"
+              >
+                {connection.full_name}
+              </Link>
+              <Link
+                href={profileHref}
+                className="block truncate text-[13px] text-subtle-foreground lg:text-sm"
+              >
+                @{connection.username}
+              </Link>
+            </div>
+            {followButton}
+          </div>
+          <p className="ml-[52px] mt-2 line-clamp-2 text-[13px] leading-5 text-muted-foreground lg:text-sm">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-3">
       <Link href={profileHref} className="shrink-0">
@@ -63,14 +113,7 @@ export default function FollowRecommendationRow({
           {subtitle}
         </p>
       </div>
-      <Button
-        variant={isFollowing ? "outline" : "soft"}
-        size="sm"
-        onClick={handleFollowToggle}
-        disabled={loading}
-      >
-        {isFollowing ? "Mengikuti" : "Ikuti"}
-      </Button>
+      {followButton}
     </div>
   );
 }

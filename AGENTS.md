@@ -1317,11 +1317,13 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   between the timeline strip and a profile — on the same
   optimistic-with-rollback actions, and an `X` that drops the card. **That dismissal is local
   to the mount** — there is no endpoint to remember it — so don't document it as a preference.
-  It has no "see all" link either: nothing routes to a full recommendations list.
+  Its justify-between heading includes a non-underlining "Lihat semua" link to the full
+  `/people-recommendation` list, matching the profile/entity sidebar card.
   **Both of them introduce a person through the one shared
   `lib/follow-recommendation.ts#followRecommendationSubtitle`**, so the same face never reads
   two ways between the timeline strip and a profile sidebar. Its order is `headline` →
-  `Cabang {branch_name}` → `education_institution_name` → the literal `Pengguna HMI Connect`,
+  `HMI Cabang {branch_name}` (through `formatEntityAuthorName`, so stored prefixes do not double) →
+  `education_institution_name` → the literal `Pengguna HMI Connect`,
   and it is typed to return a `string`, not `string | undefined` — a card whose second line is
   blank reads as a rendering bug rather than as a quiet profile, so there is deliberately no
   empty case for a caller to guard. `headline` and the six `education_*` fields are real parts
@@ -1536,7 +1538,13 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `SuggestedConnectionsCard.tsx` (now rendered by
   `ProfilePage` and `EntityProfilePage`, not the home feed) is real-API-backed — an async Server Component that calls
   `apis/users.ts#listFollowRecommendations({ pageSize: 5 })` and renders nothing if the list
-  comes back empty; it has no "see all" link, just the raw list. Its `title` prop still exists but
+  comes back empty. Its justify-between heading links "Lihat semua" without a hover underline to
+  `/people-recommendation`; that gated page fetches 20 recommendations initially and continues
+  through a TanStack infinite query backed by the `loadMoreFollowRecommendations` Server Action.
+  Its rows use `FollowRecommendationRow`'s `list` variant, matching the People search result shape
+  with the avatar aligned only to the full-name/username block, the headline/Cabang subtitle
+  indented beneath that block, and an Ikuti button. The card's
+  `title` prop still exists but
   both callers now take the default "Mungkin Kamu Kenal" — `ProfilePage` dropped its longer
   "Orang yang Mungkin Kamu Kenal" override once the card sat in a narrower column. Each row is
   `FollowRecommendationRow.tsx` (client), which shows the subtitle

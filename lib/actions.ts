@@ -116,6 +116,7 @@ import {
   deleteUser as deleteUserApi,
   deleteWorkExperience as deleteWorkExperienceApi,
   followUser as followUserApi,
+  listFollowRecommendations as listFollowRecommendationsApi,
   listFollowers as listFollowersApi,
   listFollowing as listFollowingApi,
   listUserActivity as listUserActivityApi,
@@ -491,6 +492,10 @@ export async function listFollowing(userId: string, page?: number) {
 
 export async function listFollowers(userId: string, page?: number) {
   return listFollowersApi(userId, { page });
+}
+
+export async function loadMoreFollowRecommendations(page: number) {
+  return listFollowRecommendationsApi({ page, pageSize: 20 });
 }
 
 export async function loadMoreUserActivity(username: string, page: number) {
