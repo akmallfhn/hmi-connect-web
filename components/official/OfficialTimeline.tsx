@@ -77,7 +77,11 @@ export default function OfficialTimeline({
 
   function handleFeedCreated(feed: Feed) {
     setItems((prev) => [
-      { type: "feed", created_at: feed.created_at, feed },
+      {
+        type: feed.repost_of_id ? "quote_repost" : "post",
+        created_at: feed.created_at,
+        feed,
+      },
       ...prev,
     ]);
   }
@@ -109,14 +113,6 @@ export default function OfficialTimeline({
             userStatus={userStatus}
             verificationStatus={verificationStatus}
             authorEntity={authorEntity}
-            repostedBy={
-              item.type === "repost"
-                ? {
-                    fullName: item.reposter_full_name,
-                    avatar: item.reposter_avatar,
-                  }
-                : undefined
-            }
             onDeleted={handleFeedDeleted}
             onFeedCreated={handleFeedCreated}
           />

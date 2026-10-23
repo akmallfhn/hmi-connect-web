@@ -1329,8 +1329,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `FollowRecommendationEntry` omitted them and fell back through
   `coordinating_body_name`/`chapter_name` instead — don't reinstate that chain, and mirror the
   whole documented response rather than only the fields one subtitle happens to read.
-  `FeedTimeline.tsx` (client) owns pagination state, the "X membagikan ulang" repost
-  header, prepends a new feed via `handleFeedCreated` (passed to both `CreateFeedForms`'s
+  `feeds/list` returns only `post` and `quote_repost` entries; plain reposts appear in user/entity
+  activity endpoints and do not contribute to feed-list pagination totals.
+  `FeedTimeline.tsx` (client) owns pagination state and prepends a new feed via
+  `handleFeedCreated` (passed to both `CreateFeedForms`'s
   `onCreated` and each `FeedItemCard`'s `onFeedCreated` — the latter fires from quote
   repost, since that also creates a new top-level feed), and removes a feed from local
   state when `FeedItemCard`'s `onDeleted` fires. A feed can be posted **as an entity** — `feeds/create` takes
@@ -1881,8 +1883,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   entity profile paths (`supportsActingEntity`) and passes every other link through untouched. Add
   `useActingHref` to any new component that links to either inside a feed card.
   The timeline is `FeedTimeline`'s entity twin: the same `CreateFeedForms` composer above the same
-  `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (reposts
-  keep their "X membagikan ulang" header), with no news/suggested/quick-menu inserts. The entity's
+  `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (posts
+  and quote reposts only), with no news/suggested/quick-menu inserts. The entity's
   own posts live on its profile, via `listEntityActivity`. Posting as
   the entity is what `CreateFeedForms`' `authorEntity` prop does — it sends `feeds/create`'s
   `author_entity_type`/`author_entity_id` pair and swaps the composer's own avatar and name for the

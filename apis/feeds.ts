@@ -108,21 +108,11 @@ export type Feed = {
   updated_at: string;
 };
 
-export type FeedTimelineItem =
-  | {
-      type: "repost";
-      created_at: string;
-      reposter_id: string;
-      reposter_full_name: string;
-      reposter_username: string;
-      reposter_avatar?: string;
-      feed: Feed;
-    }
-  | {
-      type: "feed";
-      created_at: string;
-      feed: Feed;
-    };
+export type FeedTimelineItem = {
+  type: "post" | "quote_repost";
+  created_at: string;
+  feed: Feed;
+};
 
 export type CreateFeedPayload = {
   content: string;

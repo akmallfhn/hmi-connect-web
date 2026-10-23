@@ -173,7 +173,11 @@ export default function FeedTimeline({
 
   function handleFeedCreated(feed: Feed) {
     setItems((prev) => [
-      { type: "feed", created_at: feed.created_at, feed },
+      {
+        type: feed.repost_of_id ? "quote_repost" : "post",
+        created_at: feed.created_at,
+        feed,
+      },
       ...prev,
     ]);
   }
@@ -184,14 +188,6 @@ export default function FeedTimeline({
   // A thin timeline never reaches the later slots, so they land after the last post instead.
   const trailingInsertions = insertions.filter(
     (insertion) => insertion.after >= items.length
-  );
-
-  const repostedFeedIds = new Set(
-    items
-      .filter(
-        (item) => item.type === "repost" && item.reposter_id === currentUserId
-      )
-      .map((item) => item.feed.id)
   );
 
   return (
@@ -228,15 +224,6 @@ export default function FeedTimeline({
               currentUserAvatar={currentUserAvatar}
               userStatus={userStatus}
               verificationStatus={verificationStatus}
-              initialReposted={repostedFeedIds.has(item.feed.id)}
-              repostedBy={
-                item.type === "repost"
-                  ? {
-                      fullName: item.reposter_full_name,
-                      avatar: item.reposter_avatar,
-                    }
-                  : undefined
-              }
               onDeleted={handleFeedDeleted}
               onFeedCreated={handleFeedCreated}
             />
