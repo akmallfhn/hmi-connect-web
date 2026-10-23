@@ -11,6 +11,7 @@ interface FilterDropdownProps {
   onReset: () => void;
   // "split" lays two child columns side by side from lg up; below that they stack.
   layout?: "stack" | "split";
+  align?: "start" | "end";
   children: ReactNode;
 }
 
@@ -20,6 +21,7 @@ export default function FilterDropdown({
   activeCount,
   onReset,
   layout = "stack",
+  align = "start",
   children,
 }: FilterDropdownProps) {
   const split = layout === "split";
@@ -70,7 +72,7 @@ export default function FilterDropdown({
           id={panelId}
           role="group"
           aria-label={ariaLabel}
-          className={`absolute left-0 top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-border bg-surface p-4 shadow-lg ${
+          className={`absolute ${align === "end" ? "right-0" : "left-0"} top-full z-40 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-border bg-surface p-4 shadow-lg ${
             split ? "lg:w-[36rem] lg:max-w-none" : ""
           }`}
         >

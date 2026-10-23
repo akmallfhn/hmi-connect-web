@@ -4,6 +4,10 @@ import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { LoaderCircle, Minus, Plus, RotateCcw, Search } from "lucide-react";
 import type { BranchMapEntry } from "@/apis/stat";
 import Input from "@/components/fields/Input";
+import FilterDropdown from "@/components/common/FilterDropdown";
+import ActiveFilterChips from "@/components/common/ActiveFilterChips";
+import Select from "@/components/fields/Select";
+import SearchableSelect from "@/components/fields/SearchableSelect";
 import MapSquare from "@/components/svg/MapSquare";
 import { useBranchMapViewport } from "@/hooks/useBranchMapViewport";
 import { projectBranchMapPosition } from "@/lib/branch-map-coordinates";
@@ -18,6 +22,35 @@ type BranchMapSearchResult = {
   query: string;
   entries: BranchMapEntry[];
 };
+
+const MAP_POINT_STATES = {
+  full: {
+    label: "Cabang Penuh",
+    color: "text-green-800",
+    pulseColor: "bg-green-800/30",
+    swatchColor: "bg-green-800",
+  },
+  provisional: {
+    label: "Cabang Persiapan",
+    color: "text-pink-600",
+    pulseColor: "bg-pink-600/30",
+    swatchColor: "bg-pink-600",
+  },
+  empty: {
+    label: "Belum ada progres",
+    color: "text-secondary",
+    pulseColor: "bg-secondary/30",
+    swatchColor: "bg-secondary",
+  },
+};
+
+const STATUS_OPTIONS = [
+  { label: "Semua Status", value: "" },
+  ...Object.entries(MAP_POINT_STATES).map(([value, { label }]) => ({
+    value,
+    label,
+  })),
+];
 
 function formatBranchName(name: string) {
   return /^(hmi\s+)?cabang\s+/i.test(name) ? name : `HMI Cabang ${name}`;
@@ -50,41 +83,54 @@ function BranchPoint({
     point.totalChapters,
     point.type
   );
-  const color =
-    kind === "empty"
-      ? "bg-disabled-foreground shadow-sm"
-      : kind === "provisional"
-        ? "bg-map-provisional shadow-[0_3px_10px_var(--shadow-provisional)]"
-        : "bg-secondary shadow-[0_3px_10px_var(--shadow-secondary)]";
-  const pulseColor =
-    kind === "empty"
-      ? "bg-disabled-foreground/30"
-      : kind === "provisional"
-        ? "bg-map-provisional/45"
-        : "bg-secondary/45";
+  const { color, pulseColor } = MAP_POINT_STATES[kind];
+  const positionStyle = {
+    left: x,
+    top: y,
+    visibility: visible ? ("visible" as const) : ("hidden" as const),
+  };
   return (
-    <button
-      type="button"
-      data-map-point
-      aria-label={point.name}
-      aria-haspopup="dialog"
-      aria-expanded={active}
-      aria-controls={active ? popoverId : undefined}
-      tabIndex={visible ? 0 : -1}
-      onClick={(event) => onSelect(point.id, event.currentTarget)}
-      style={{ left: x, top: y, visibility: visible ? "visible" : "hidden" }}
-      className={`group absolute flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "z-20" : "z-10"}`}
-    >
+    <>
       <span
         aria-hidden="true"
-        className={`pointer-events-none absolute size-5 animate-ping rounded-full motion-reduce:animate-none ${pulseColor}`}
-      />
-      <span
-        className={`pointer-events-none relative flex size-3.5 items-center justify-center rounded-full border-2 border-on-dark transition-shadow group-hover:ring-4 group-hover:ring-heading/10 ${active ? "ring-4 ring-heading/15" : ""} ${color}`}
+        style={positionStyle}
+        className="pointer-events-none absolute z-0 size-5 -translate-x-1/2 -translate-y-1/2"
       >
-        <span className="size-1.5 rounded-full bg-surface" />
+        <span
+          className={`block size-full animate-ping rounded-full motion-reduce:animate-none ${pulseColor}`}
+        />
       </span>
-    </button>
+      <button
+        type="button"
+        data-map-point
+        aria-label={point.name}
+        aria-haspopup="dialog"
+        aria-expanded={active}
+        aria-controls={active ? popoverId : undefined}
+        tabIndex={visible ? 0 : -1}
+        onClick={(event) => onSelect(point.id, event.currentTarget)}
+        style={positionStyle}
+        className={`absolute flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "z-20" : "z-10"}`}
+      >
+        <svg
+          aria-hidden="true"
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          className={`pointer-events-none relative size-3.5 shrink-0 ${color}`}
+        >
+          <circle
+            cx="7"
+            cy="7"
+            r="6"
+            fill="currentColor"
+            stroke="var(--on-dark)"
+            strokeWidth="2"
+          />
+          <circle cx="7" cy="7" r="3" fill="var(--surface)" />
+        </svg>
+      </button>
+    </>
   );
 }
 
@@ -110,6 +156,7 @@ export default function IndonesiaBranchMap({
     size,
     dragging,
     transform,
+    snapPoint,
     zoomBy,
     reset,
     handlers,
@@ -123,6 +170,40 @@ export default function IndonesiaBranchMap({
   const [isSearching, setIsSearching] = useState(false);
   const [searchFailed, setSearchFailed] = useState(false);
   const normalizedSearch = search.trim();
+  const [badkoId, setBadkoId] = useState("");
+  const [branchStatus, setBranchStatus] = useState("");
+  const badkoOptions = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const branch of initialBranches) {
+      if (branch.coordinating_body_id) {
+        names.set(
+          branch.coordinating_body_id,
+          formatCoordinatingBodyName(branch.coordinating_body_name)
+        );
+      }
+    }
+    return [...names]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "id"));
+  }, [initialBranches]);
+  const selectedBadko =
+    badkoOptions.find((option) => option.value === badkoId) ?? null;
+  const loadBadkoOptions = useCallback(
+    async (input: string) => ({
+      options: badkoOptions.filter((option) =>
+        option.label
+          .toLocaleLowerCase("id")
+          .includes(input.toLocaleLowerCase("id"))
+      ),
+      hasMore: false,
+    }),
+    [badkoOptions]
+  );
+  function clearFilters() {
+    setBadkoId("");
+    setBranchStatus("");
+    reset();
+  }
   const branches = useMemo(
     () =>
       normalizedSearch
@@ -177,6 +258,16 @@ export default function IndonesiaBranchMap({
   const points = useMemo(
     () =>
       branches.flatMap((branch): BranchMapPoint[] => {
+        if (badkoId && branch.coordinating_body_id !== badkoId) return [];
+        if (
+          branchStatus &&
+          branchMapPointKind(
+            branch.verified_member_count,
+            branch.chapter_count,
+            branch.type
+          ) !== branchStatus
+        )
+          return [];
         if (branch.latitude === null || branch.longitude === null) return [];
         const position = projectBranchMapPosition(
           branch.latitude,
@@ -198,8 +289,39 @@ export default function IndonesiaBranchMap({
           },
         ];
       }),
-    [branches]
+    [branches, badkoId, branchStatus]
   );
+
+  const filterChips = [
+    ...(selectedBadko && !coordinatingBodyId
+      ? [
+          {
+            key: "badko",
+            label: "Badko",
+            value: selectedBadko.label,
+            onRemove: () => {
+              setBadkoId("");
+              reset();
+            },
+          },
+        ]
+      : []),
+    ...(branchStatus
+      ? [
+          {
+            key: "status",
+            label: "Status Cabang",
+            value:
+              STATUS_OPTIONS.find((option) => option.value === branchStatus)
+                ?.label ?? branchStatus,
+            onRemove: () => {
+              setBranchStatus("");
+              reset();
+            },
+          },
+        ]
+      : []),
+  ];
 
   const activePoint = selected
     ? points.find((point) => point.id === selected.id)
@@ -217,28 +339,65 @@ export default function IndonesiaBranchMap({
           </p>
         </div>
 
-        <div className="w-full sm:w-64">
-          <Input
-            inputId="branch-map-search"
-            type="search"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              reset();
-            }}
-            placeholder="Cari Cabang"
-            aria-label="Cari Cabang pada peta"
-            icon={
-              isSearchPending ? (
-                <LoaderCircle className="size-4 animate-spin text-primary-foreground" />
-              ) : (
-                <Search className="size-4" />
-              )
-            }
-            className="text-sm"
-          />
+        <div className="flex w-full items-center gap-3 sm:w-auto">
+          <div className="min-w-0 flex-1 sm:w-64">
+            <Input
+              inputId={`${mapId}-search`}
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                reset();
+              }}
+              placeholder="Cari Cabang"
+              aria-label="Cari Cabang pada peta"
+              icon={
+                isSearchPending ? (
+                  <LoaderCircle className="size-4 animate-spin text-primary-foreground" />
+                ) : (
+                  <Search className="size-4" />
+                )
+              }
+              className="text-sm"
+            />
+          </div>
+          <FilterDropdown
+            panelId={`${mapId}-filters`}
+            ariaLabel="Filter peta Cabang"
+            activeCount={filterChips.length}
+            onReset={clearFilters}
+            align="end"
+          >
+            {!coordinatingBodyId && (
+              <SearchableSelect
+                selectId={`${mapId}-badko`}
+                label="Badko"
+                placeholder="Semua Badko"
+                value={selectedBadko}
+                defaultOptions={badkoOptions}
+                loadOptions={loadBadkoOptions}
+                onChange={(option) => {
+                  setBadkoId(option ? String(option.value) : "");
+                  reset();
+                }}
+                portalMenu={false}
+              />
+            )}
+            <Select
+              selectId={`${mapId}-status`}
+              label="Status Cabang"
+              placeholder="Semua Status"
+              value={branchStatus || null}
+              options={STATUS_OPTIONS}
+              onChange={(value) => {
+                setBranchStatus(String(value ?? ""));
+                reset();
+              }}
+            />
+          </FilterDropdown>
         </div>
       </div>
+      <ActiveFilterChips chips={filterChips} onClearAll={clearFilters} />
 
       <div className="relative mt-5 overflow-hidden rounded-xl border border-border bg-surface-subtle">
         <div className="relative h-72 sm:h-auto sm:min-h-72 sm:aspect-[1600/690]">
@@ -259,11 +418,13 @@ export default function IndonesiaBranchMap({
                 height: transform.height,
                 transform: `translate(${transform.x}px, ${transform.y}px)`,
               }}
-              className="pointer-events-none absolute left-0 top-0 max-w-none text-primary-foreground/50"
+              className="pointer-events-none absolute left-0 top-0 max-w-none text-primary-foreground/55"
             />
             {points.map((point) => {
-              const x = transform.x + (point.x / 100) * transform.width;
-              const y = transform.y + (point.y / 100) * transform.height;
+              const { x, y } = snapPoint({
+                x: transform.x + (point.x / 100) * transform.width,
+                y: transform.y + (point.y / 100) * transform.height,
+              });
               return (
                 <BranchPoint
                   key={point.id}
@@ -329,34 +490,32 @@ export default function IndonesiaBranchMap({
               <RotateCcw className="size-4" />
             </button>
           </div>
-          {!isSearchPending && normalizedSearch && points.length === 0 && (
-            <div
-              role="status"
-              className="pointer-events-none absolute inset-x-3 bottom-3 mx-auto w-fit max-w-full rounded-lg border border-border bg-surface/95 px-4 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm"
-            >
-              {searchFailed
-                ? "Pencarian gagal dimuat. Coba lagi."
-                : "Cabang tidak ditemukan atau belum memiliki koordinat."}
-            </div>
-          )}
+          {!isSearchPending &&
+            (normalizedSearch || filterChips.length > 0) &&
+            points.length === 0 && (
+              <div
+                role="status"
+                className="pointer-events-none absolute inset-x-3 bottom-3 mx-auto w-fit max-w-full rounded-lg border border-border bg-surface/95 px-4 py-2 text-center text-xs font-medium text-muted-foreground shadow-sm"
+              >
+                {searchFailed
+                  ? "Pencarian gagal dimuat. Coba lagi."
+                  : "Cabang tidak ditemukan atau belum memiliki koordinat."}
+              </div>
+            )}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border bg-surface px-3 py-3 text-xs text-muted-foreground sm:px-4">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-secondary" />
-            Penuh
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-map-provisional" />
-            Persiapan
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-disabled-foreground" />
-            Belum ada progres
-            <span className="sr-only">
-              {" "}
-              (kader terverifikasi atau Komisariat masih 0)
+          {Object.entries(MAP_POINT_STATES).map(([kind, state]) => (
+            <span key={kind} className="inline-flex items-center gap-1.5">
+              <span className={`size-2.5 rounded-full ${state.swatchColor}`} />
+              {state.label}
+              {kind === "empty" && (
+                <span className="sr-only">
+                  {" "}
+                  (kader terverifikasi atau Komisariat masih 0)
+                </span>
+              )}
             </span>
-          </span>
+          ))}
         </div>
       </div>
       <p id={instructionsId} className="mt-2 text-xs text-muted-foreground">

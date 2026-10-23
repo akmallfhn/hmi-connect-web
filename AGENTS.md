@@ -282,6 +282,12 @@ A Cabang search input sits at the right side of the map card header, uses the sh
 `components/fields/Input.tsx` primitive, and debounces through `/admin/api/stat/branch-map`;
 that Route Handler delegates to `apis/stat.ts#getBranchMap`, while the Badko variant always
 includes its fixed `coordinating_body_id`. Changing the search restores the map overview.
+The search row ends with the shared `FilterDropdown` aligned to the right, with an active-count
+badge, removable `ActiveFilterChips`, and reset. Its Badko picker is built from the initial map
+entries and hidden when the route already fixes a Badko. The Status Cabang picker filters the
+three legend states (`full`, `provisional`, `empty`) using `branchMapPointKind`, so an empty
+Cabang stays in "Belum ada progres" regardless of its type. These filters intersect locally
+with the current server-search results without requesting data again or widening the route scope.
 The map viewport clips the zoomed artwork/points while the portalled detail panel remains unclipped.
 `hooks/useBranchMapViewport.ts` supports +/minus/reset controls, mouse/touch dragging, two-finger
 pinch/pan, pointer-anchored double-click or Ctrl/trackpad wheel zoom, and keyboard +/minus/arrows/Home.
@@ -289,14 +295,21 @@ Ordinary wheel scrolling still scrolls the page. Touch gestures belong to the ma
 remains scrollable outside it. `lib/branch-map-viewport.ts` owns fit/anchor/clamp calculations and
 1x-32x zoom limits, enough to inspect the artwork's individual four-unit squares on a phone. Pins
 are a separate screen-space layer: the 14px dots and 44px hit areas never scale with the artwork.
-All three point colors have a 20px `animate-ping` halo, disabled under reduced motion; the halo
-also stays in screen space. Every marker has a 6px surface-colored center dot. Empty points use
-solid `disabled-foreground` and a softer 30%-opacity halo, matching the legend's
+All three point colors have a 20px, 30%-opacity `animate-ping` halo, disabled under reduced motion;
+the halo also stays in screen space and every halo sits below every marker core. Marker cores use
+the same 14px SVG circle with a 2px white outline and a 6px surface-colored center dot, without
+CSS borders or colored glow. `useBranchMapViewport` snaps centers to physical screen pixels using
+the viewport origin and device-pixel ratio; resize and captured scroll updates preserve that grid
+at browser zoom levels such as 90%, where rounding CSS pixels still produces uneven rasterization.
+Empty points use solid `destructive`, matching the legend's
 "Belum ada progres" state while remaining clickable.
 The overview leaves padding for edge pins, and panning is bounded so the map cannot be lost.
-Markers are gray whenever `verified_member_count === 0` OR `chapter_count === 0`, taking precedence
-over type; otherwise provisional Cabang are pink and full Cabang use the secondary color. The same
-three colors are explained in the legend. Master and Organization both fetch the first five rows from
+Markers are destructive red whenever `verified_member_count === 0` OR `chapter_count === 0`, taking
+precedence over type; otherwise provisional entries use `chart-orange` and full entries use the
+emerald `chart-success` green. `MAP_POINT_STATES` in `IndonesiaBranchMap` owns the marker, pulse,
+legend and filter colors/copy together. The legend/filter labels are "Komisariat Penuh",
+"Komisariat Persiapan", and "Belum ada progres"; classification still uses the endpoint's
+Cabang type and counts. Master and Organization both fetch the first five rows from
 `training-priorities/list` with `entity: "branch"`, without a Badko filter, and render the real Prioritas Pengkaderan card;
 the backend already orders provisional Cabang by the lowest active-member and Komisariat counts.
 Priority-row names are displayed with a scope-aware `Cabang` or `Komisariat` prefix. The card uses

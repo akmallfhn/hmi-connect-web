@@ -23,6 +23,7 @@ import {
 export function useBranchMapViewport(onInteraction: () => void) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [pixelGrid, setPixelGrid] = useState({ ratio: 1, left: 0, top: 0 });
   const [view, setView] = useState(INITIAL_MAP_VIEW);
   const [dragging, setDragging] = useState(false);
   const viewRef = useRef(view);
@@ -46,12 +47,32 @@ export function useBranchMapViewport(onInteraction: () => void) {
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
+    let gridFrame = 0;
+    const updatePixelGrid = () => {
+      const { left, top } = viewport.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      setPixelGrid((previous) =>
+        previous.ratio === ratio &&
+        previous.left === left &&
+        previous.top === top
+          ? previous
+          : { ratio, left, top },
+      );
+    };
+    const schedulePixelGrid = () => {
+      if (gridFrame) return;
+      gridFrame = window.requestAnimationFrame(() => {
+        gridFrame = 0;
+        updatePixelGrid();
+      });
+    };
     const observer = new ResizeObserver(([entry]) => {
       const nextSize = {
         width: entry.contentRect.width,
         height: entry.contentRect.height,
       };
       geometryRef.current = getMapGeometry(nextSize);
+      updatePixelGrid();
       setSize(nextSize);
       applyView(clampMapView(viewRef.current, geometryRef.current));
     });
@@ -83,12 +104,28 @@ export function useBranchMapViewport(onInteraction: () => void) {
     };
     viewport.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("blur", onBlur);
+    window.addEventListener("scroll", schedulePixelGrid, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", schedulePixelGrid);
     return () => {
+      window.cancelAnimationFrame(gridFrame);
       observer.disconnect();
       viewport.removeEventListener("wheel", onWheel);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("scroll", schedulePixelGrid, true);
+      window.removeEventListener("resize", schedulePixelGrid);
     };
   }, [applyView]);
+
+  function snapPoint({ x, y }: MapPosition): MapPosition {
+    const { ratio, left, top } = pixelGrid;
+    return {
+      x: Math.round((left + x) * ratio) / ratio - left,
+      y: Math.round((top + y) * ratio) / ratio - top,
+    };
+  }
 
   function position(event: PointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -208,6 +245,7 @@ export function useBranchMapViewport(onInteraction: () => void) {
     size,
     dragging,
     transform: getMapTransform(view, getMapGeometry(size)),
+    snapPoint,
     zoomBy,
     reset: () => applyView(INITIAL_MAP_VIEW),
     handlers: {
