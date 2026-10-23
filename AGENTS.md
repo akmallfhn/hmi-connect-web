@@ -10,7 +10,8 @@ fix the rule, not just the code.
 
 - **Next.js 16** (App Router, Turbopack), **React 19**, **TypeScript** (strict).
 - **TanStack React Query v5** manages shared client server-state for notification badges/lists,
-  conversation badges/lists, pending-verification counts/reviews, article tabs, and profile activity.
+  conversation badges/lists, feed/comment/reply reactions, pending-verification counts/reviews,
+  article tabs, and profile activity.
   `components/query/AppQueryProvider.tsx` owns an in-memory QueryClient per mounted app (30-second
   stale time, five-minute garbage collection, one read retry, no mutation retries). Personal query
   keys include the viewer id; verification counts include the entity scope. Keep initial reads in
@@ -1599,10 +1600,13 @@ AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dar
   callsites — `FeedTimeline` (via `Feed`/`FeedPage`), `OfficialTimeline`, and
   `/feeds/[feed_id]`.
 - `hooks/useReaction.ts` — the reaction state machine (optimistic active-reaction +
-  total + per-type breakdown, with rollback on API failure) shared by feed, comment, and
+  total + per-type breakdown, with selective rollback on API failure) shared by feed, comment, and
   reply reactions so the send/unsend/rollback logic isn't triplicated. Takes a
-  `ReactionTargetTypeEnum` + target id + the target's initial `my_reaction`/`reaction_count`;
-  returns `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
+  `ReactionTargetTypeEnum` + target id + viewer id + the target's initial
+  `my_reaction`/`reaction_count`; its actor-and-target-keyed cache keeps timeline and detail cards
+  synchronized across navigation without waiting for a server refresh. The pure cache updates live
+  in `lib/reaction-cache.ts`. It returns
+  `{ activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply }`.
   Its optional `authorEntity` is what makes a reaction the entity's rather than the caller's, and
   it **also suppresses the seeded `my_reaction`**: a feed row's `my_reaction` is the viewer's own
   personal reaction, so seeding it while acting as an entity would light the button up for a

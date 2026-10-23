@@ -210,6 +210,7 @@ export default function FeedItemCard({
   });
   const author = resolveFeedAuthor(feed);
   const reaction = useReaction("feed", feed.id, {
+    viewerId: currentUserId,
     myReaction: feed.my_reaction,
     total: feed.reaction_count.total,
     byType: feed.reaction_count.by_type,

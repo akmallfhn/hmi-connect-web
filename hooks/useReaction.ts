@@ -1,30 +1,31 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import {
+  useIsMutating,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { REACTIONS } from "@/components/modals/ReactionPickerModal";
 import { sendReaction, unsendReaction } from "@/lib/actions";
 import type { EntityAuthor } from "@/apis/feeds";
-import { isSuccessStatus, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
-
-type ReactionBreakdown = Partial<Record<ReactionTypeEnum, number>>;
-
-function adjustBreakdown(
-  breakdown: ReactionBreakdown,
-  type: ReactionTypeEnum,
-  delta: number
-): ReactionBreakdown {
-  const nextCount = (breakdown[type] ?? 0) + delta;
-  const next = { ...breakdown };
-  if (nextCount <= 0) {
-    delete next[type];
-  } else {
-    next[type] = nextCount;
-  }
-  return next;
-}
+import {
+  isSuccessStatus,
+  type ReactionTargetTypeEnum,
+  type ReactionTypeEnum,
+} from "@/lib/types";
+import {
+  createReactionState,
+  reactionKeys,
+  restoreReactionInCache,
+  updateReactionInCache,
+  type ReactionBreakdown,
+  type ReactionState,
+} from "@/lib/reaction-cache";
 
 interface UseReactionInitial {
+  viewerId?: string;
   myReaction: ReactionTypeEnum | null;
   total: number;
   byType?: ReactionBreakdown;
@@ -36,16 +37,51 @@ interface UseReactionInitial {
 export function useReaction(
   targetType: ReactionTargetTypeEnum,
   targetId: string,
-  initial: UseReactionInitial
+  initial: UseReactionInitial,
 ) {
-  const [activeReaction, setActiveReaction] = useState<ReactionTypeEnum | null>(
-    initial.authorEntity ? null : initial.myReaction
+  const client = useQueryClient();
+  const queryKey = reactionKeys.state(
+    initial.viewerId,
+    initial.authorEntity,
+    targetType,
+    targetId,
   );
-  const [reactionCount, setReactionCount] = useState(initial.total);
-  const [reactionBreakdown, setReactionBreakdown] = useState<ReactionBreakdown>(
-    initial.byType ?? {}
+  const mutationKey = reactionKeys.mutation(queryKey);
+  const initialState = createReactionState(
+    initial,
+    Boolean(initial.authorEntity),
   );
-  const [reacting, startTransition] = useTransition();
+  const { data: state } = useQuery<ReactionState>({
+    queryKey,
+    enabled: false,
+    initialData: initialState,
+  });
+  const mutation = useMutation({
+    mutationKey,
+    mutationFn: async (nextType: ReactionTypeEnum | null) => {
+      const result = nextType
+        ? await sendReaction(
+            targetType,
+            targetId,
+            nextType,
+            initial.authorEntity,
+          )
+        : await unsendReaction(targetType, targetId, initial.authorEntity);
+      if (!isSuccessStatus(result.status)) {
+        throw new Error(result.message ?? "Gagal memperbarui reaksi.");
+      }
+    },
+    onMutate: (nextType) =>
+      updateReactionInCache(client, queryKey, state, nextType),
+    onError: (error, _nextType, context) => {
+      restoreReactionInCache(client, queryKey, context);
+      toast.error(error.message);
+    },
+  });
+  const reacting = useIsMutating({ mutationKey }) > 0;
+  const activeReaction = state.activeReaction;
+  const reactionCount = state.total;
+  const reactionBreakdown = state.byType;
 
   const activeReactionInfo = activeReaction
     ? REACTIONS.find((reaction) => reaction.type === activeReaction)
@@ -57,44 +93,16 @@ export function useReaction(
     .filter((emoji): emoji is string => Boolean(emoji));
 
   function apply(nextType: ReactionTypeEnum | null) {
-    const previousType = activeReaction;
-    if (nextType === previousType) return;
-
-    setActiveReaction(nextType);
-    setReactionCount((prev) => {
-      if (previousType === null && nextType !== null) return prev + 1;
-      if (previousType !== null && nextType === null) return Math.max(0, prev - 1);
-      return prev;
-    });
-    setReactionBreakdown((prev) => {
-      let next = prev;
-      if (previousType) next = adjustBreakdown(next, previousType, -1);
-      if (nextType) next = adjustBreakdown(next, nextType, 1);
-      return next;
-    });
-
-    startTransition(async () => {
-      const result = nextType
-        ? await sendReaction(targetType, targetId, nextType, initial.authorEntity)
-        : await unsendReaction(targetType, targetId, initial.authorEntity);
-
-      if (!isSuccessStatus(result.status)) {
-        setActiveReaction(previousType);
-        setReactionCount((prev) => {
-          if (previousType === null && nextType !== null) return Math.max(0, prev - 1);
-          if (previousType !== null && nextType === null) return prev + 1;
-          return prev;
-        });
-        setReactionBreakdown((prev) => {
-          let next = prev;
-          if (nextType) next = adjustBreakdown(next, nextType, -1);
-          if (previousType) next = adjustBreakdown(next, previousType, 1);
-          return next;
-        });
-        toast.error(result.message ?? "Gagal memperbarui reaksi.");
-      }
-    });
+    if (reacting || nextType === activeReaction) return;
+    mutation.mutate(nextType);
   }
 
-  return { activeReaction, activeReactionInfo, reactionCount, reactionEmojis, reacting, apply };
+  return {
+    activeReaction,
+    activeReactionInfo,
+    reactionCount,
+    reactionEmojis,
+    reacting,
+    apply,
+  };
 }

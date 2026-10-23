@@ -171,6 +171,7 @@ function CommentRow({
     isReply ? "comment_reply" : "comment",
     comment.id,
     {
+      viewerId: currentUserId,
       myReaction: comment.my_reaction,
       total: comment.reaction_count.total,
       byType: comment.reaction_count.by_type,
