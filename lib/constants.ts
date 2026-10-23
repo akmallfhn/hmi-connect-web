@@ -51,6 +51,10 @@ export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
 // sessionStorage key carrying the just-sent message from /chats/new into the real thread, so it isn't hidden by that route's own first fetch.
 export const CHAT_PENDING_MESSAGE_KEY = "hmi-chat-pending-message";
 
+// Versioned and user-scoped by the caller so the home onboarding modal appears once per account/browser.
+export const PEOPLE_RECOMMENDATION_MODAL_STORAGE_PREFIX =
+  "hmi-connect:people-recommendation-modal:v1";
+
 // Brand icon tiles in the public hmi-connect bucket — the same assets/ set lookup_social_media's own logo_url points at.
 export function socialIconUrl(slug: string): string {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hmi-connect/assets/icon_${slug}.svg`;

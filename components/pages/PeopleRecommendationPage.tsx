@@ -86,8 +86,8 @@ export default function PeopleRecommendationPage({
         mobileBackTitle="Mungkin Kamu Kenal"
       />
 
-      <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-        <main className="mx-auto min-w-0 max-w-3xl">
+      <PageMargin noMobilePadding className="pb-6 pt-4 lg:pt-6">
+        <main className="min-w-0">
           <h1 className="hidden px-3 pb-5 font-stack-sans-headline text-2xl font-medium text-heading lg:block">
             Mungkin Kamu Kenal
           </h1>
@@ -109,13 +109,15 @@ export default function PeopleRecommendationPage({
                 Belum ada rekomendasi orang untukmu.
               </p>
             ) : (
-              recommendations.map((connection) => (
-                <FollowRecommendationRow
-                  key={connection.id}
-                  connection={connection}
-                  variant="list"
-                />
-              ))
+              <div className="grid grid-cols-2 gap-3 px-3 sm:grid-cols-3 lg:grid-cols-4 lg:px-0 xl:grid-cols-5">
+                {recommendations.map((connection) => (
+                  <FollowRecommendationRow
+                    key={connection.id}
+                    connection={connection}
+                    variant="card"
+                  />
+                ))}
+              </div>
             )}
 
             {hasNextPage && <div ref={sentinelRef} className="h-12" />}

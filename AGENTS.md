@@ -416,6 +416,8 @@ plain page anyway.
 - `SessionUser.has_password` (from `check-session`) is what decides between `password/add` and
   `password/change` — `false` for an account that has only ever signed in with Google. Don't
   infer it from anything else.
+- `SessionUser.following_count` also comes straight from `check-session`; it counts active,
+  non-deleted users followed by the caller and gates the one-time home recommendation modal.
 - Three routes carry the flow, none of them gated: `/auth/login` (`AuthLoginPage` — the Google
   button, then an `atau` divider, then the identifier/password form with a "Lupa password?"
   link), `/auth/forget-password` (`AuthForgetPasswordPage` — one email field, then an
@@ -1294,8 +1296,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   after 20. Every slot renders at **all** breakpoints: the two news strips are unfiltered, while
   `RightSidebar`'s own card narrows to one category, so the sidebar and the timeline are never
   showing the same articles. Two slots can't share an `after`, since the lookup is a `Map` keyed
-  by it. `listFollowRecommendations` and `listNewsArticles` are each fetched
-  **once at double the slot size and sliced**, never a page per slot:
+  by it. `listFollowRecommendations` is fetched once at 20 rows to serve both five-card timeline
+  slots plus the optional onboarding modal, while `listNewsArticles` is fetched once at double
+  its five-card slot size; both are sliced locally, never fetched once per slot:
   `follow-recommendations/list` ranks rather than lists, so its page 2 can hand back someone
   page 1 already returned. A slot whose slice comes back empty is left out of the plan
   entirely, and the array is built in reading order because an unreached slot renders below the
@@ -1319,6 +1322,16 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   to the mount** — there is no endpoint to remember it — so don't document it as a preference.
   Its justify-between heading includes a non-underlining "Lihat semua" link to the full
   `/people-recommendation` list, matching the profile/entity sidebar card.
+  The same first recommendations response also feeds `PeopleRecommendationModal`: the home route
+  passes `check-session`'s `following_count` through `FeedPage` into `Feed`, which renders the
+  modal only for a verified viewer following zero people and only when recommendations exist.
+  Its client gate writes the versioned, user-scoped
+  `hmi-connect:people-recommendation-modal:v1:{userId}` localStorage key before opening, so React
+  Strict Mode cannot open it twice and the prompt appears once per account/browser. If storage is
+  unavailable it fails closed rather than nagging on every visit. The narrow bottom-sheet/desktop
+  modal reuses up to 20 compact `FollowRecommendationRow`s from the already-fetched list, separated
+  like the sidebar rows and using the soft `+ Ikuti` button, then links to
+  `/people-recommendation`; do not add a duplicate recommendations request for it.
   **Both of them introduce a person through the one shared
   `lib/follow-recommendation.ts#followRecommendationSubtitle`**, so the same face never reads
   two ways between the timeline strip and a profile sidebar. Its order is `headline` →
@@ -1541,9 +1554,11 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   comes back empty. Its justify-between heading links "Lihat semua" without a hover underline to
   `/people-recommendation`; that gated page fetches 20 recommendations initially and continues
   through a TanStack infinite query backed by the `loadMoreFollowRecommendations` Server Action.
-  Its rows use `FollowRecommendationRow`'s `list` variant, matching the People search result shape
-  with the avatar aligned only to the full-name/username block, the headline/Cabang subtitle
-  indented beneath that block, and an Ikuti button. The card's
+  Its responsive grid uses `FollowRecommendationRow`'s `card` variant: two cards per row on mobile,
+  three at `sm`, four at `lg`, and five at `xl`, filling the normal `PageMargin` width. Each card
+  has the same solid `primary-soft` header behind an overlapping avatar, followed by full name,
+  username, headline/HMI Cabang subtitle, and a full-width soft Ikuti button; unlike the feed
+  carousel it has no dismiss X. The sidebar card's
   `title` prop still exists but
   both callers now take the default "Mungkin Kamu Kenal" — `ProfilePage` dropped its longer
   "Orang yang Mungkin Kamu Kenal" override once the card sat in a narrower column. Each row is

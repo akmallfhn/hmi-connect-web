@@ -5,6 +5,7 @@ import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import FeedTimeline, { type TimelineInsertion } from "./FeedTimeline";
 import MobileQuickMenu from "./MobileQuickMenu";
 import NewsCarousel from "./NewsCarousel";
+import PeopleRecommendationModal from "../modals/PeopleRecommendationModal";
 import SuggestedConnectionsCarousel from "./SuggestedConnectionsCarousel";
 
 interface FeedProps {
@@ -13,6 +14,7 @@ interface FeedProps {
   currentUserId?: string;
   userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
+  followingCount?: number;
 }
 
 // Feed indices the inline cards sit after — early enough to be seen, then widening out.
@@ -21,6 +23,7 @@ const FIRST_NEWS_AFTER = 6;
 const SECOND_NEWS_AFTER = 13;
 const SECOND_SUGGESTIONS_AFTER = 20;
 const ITEMS_PER_SLOT = 5;
+const MODAL_RECOMMENDATION_LIMIT = 20;
 
 export default async function Feed({
   fullName,
@@ -28,11 +31,12 @@ export default async function Feed({
   currentUserId,
   userStatus,
   verificationStatus,
+  followingCount,
 }: FeedProps) {
-  // One fetch sliced per slot — recommendations rank, so their page 2 can repeat page 1.
+  // One ranked recommendations page serves both timeline slots and the onboarding modal.
   const [{ list, hasMore }, recommendations, news] = await Promise.all([
     listFeeds({ page: 1, pageSize: 20 }),
-    listFollowRecommendations({ pageSize: ITEMS_PER_SLOT * 2 }),
+    listFollowRecommendations({ pageSize: MODAL_RECOMMENDATION_LIMIT }),
     listNewsArticles({ pageSize: ITEMS_PER_SLOT * 2 }),
   ]);
 
@@ -70,6 +74,18 @@ export default async function Feed({
 
   return (
     <div className="flex flex-col gap-1.5 lg:gap-4">
+      {currentUserId &&
+        verificationStatus === "verified" &&
+        followingCount === 0 &&
+        recommendations.list.length > 0 && (
+          <PeopleRecommendationModal
+            userId={currentUserId}
+            recommendations={recommendations.list.slice(
+              0,
+              MODAL_RECOMMENDATION_LIMIT,
+            )}
+          />
+        )}
       <FeedTimeline
         initialItems={list}
         initialHasMore={hasMore}

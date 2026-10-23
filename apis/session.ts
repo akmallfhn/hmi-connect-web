@@ -44,6 +44,7 @@ export type SessionUser = {
   verification_status?: VerificationStatusEnum;
   is_alumni?: boolean;
   is_subscribe?: boolean;
+  following_count?: number;
   has_password?: boolean; // false for a Google-only account — decides between password/add and password/change
   access_token?: string;
 };

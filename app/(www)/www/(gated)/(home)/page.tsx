@@ -33,6 +33,7 @@ export default async function HomePage() {
       username={user?.username}
       userStatus={user?.status}
       verificationStatus={user?.verification_status}
+      followingCount={user?.following_count}
     />
   );
 }

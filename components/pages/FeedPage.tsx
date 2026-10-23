@@ -13,6 +13,7 @@ interface FeedPageProps {
   username?: string;
   userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
+  followingCount?: number;
 }
 
 export default function FeedPage({
@@ -22,6 +23,7 @@ export default function FeedPage({
   username,
   userStatus,
   verificationStatus,
+  followingCount,
 }: FeedPageProps) {
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -53,6 +55,7 @@ export default function FeedPage({
             currentUserId={userId}
             userStatus={userStatus}
             verificationStatus={verificationStatus}
+            followingCount={followingCount}
           />
         </main>
 
