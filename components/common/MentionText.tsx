@@ -7,21 +7,28 @@ import { parseMentions } from "@/lib/mentions";
 interface MentionTextProps {
   children: string;
   interactive?: boolean;
+  className?: string;
 }
 
 export default function MentionText({
   children,
   interactive = true,
+  className,
 }: MentionTextProps) {
   const actingHref = useActingHref();
 
   return parseMentions(children).map((segment, index) => {
     if (segment.type === "text") return segment.value;
 
-    const className = "font-medium text-primary-foreground hover:underline";
+    const tokenClassName = [
+      "font-medium text-primary-foreground hover:underline",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
     if (!interactive) {
       return (
-        <span key={`${segment.value}-${index}`} className={className}>
+        <span key={`${segment.value}-${index}`} className={tokenClassName}>
           {segment.value}
         </span>
       );
@@ -36,7 +43,7 @@ export default function MentionText({
         <Link
           key={`${segment.name}-${index}`}
           href={actingHref(`/search?${params}`)}
-          className={className}
+          className={tokenClassName}
         >
           {segment.value}
         </Link>
@@ -47,7 +54,7 @@ export default function MentionText({
       <Link
         key={`${segment.username}-${index}`}
         href={actingHref(`/profile/${encodeURIComponent(segment.username)}`)}
-        className={className}
+        className={tokenClassName}
       >
         {segment.value}
       </Link>
