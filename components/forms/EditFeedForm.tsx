@@ -6,6 +6,7 @@ import type { Feed } from "@/apis/feeds";
 import { updateFeed } from "@/lib/actions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
+import MentionTextarea from "../fields/MentionTextarea";
 import Modal from "../modals/Modal";
 
 interface EditFeedFormProps {
@@ -81,12 +82,13 @@ function EditFeedFields({
 
   return (
     <div className="flex flex-col gap-4">
-      <textarea
+      <MentionTextarea
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onValueChange={setContent}
         placeholder="Apa yang ingin kamu bagikan?"
         rows={6}
         disabled={isSaving}
+        autoResizeMaxHeight={288}
         className="max-h-72 min-h-36 w-full resize-none rounded-xl border border-border-strong bg-surface px-3 py-2.5 text-sm leading-6 text-heading outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-muted"
       />
       <div className="flex justify-end gap-3 border-t border-border pt-4">

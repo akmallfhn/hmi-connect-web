@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import CommentSubmitter from "./CommentSubmitter";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import Dropdown from "../common/Dropdown";
+import MentionText from "../common/MentionText";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import ReactionPickerModal from "../modals/ReactionPickerModal";
@@ -282,7 +283,7 @@ function CommentRow({
         </div>
 
         <p className="mt-1 whitespace-pre-line break-words text-sm leading-6 text-content-foreground xl:text-[15px]">
-          {comment.message}
+          <MentionText>{comment.message}</MentionText>
         </p>
 
         <div className="-ml-2 mt-1.5 flex items-center gap-1">

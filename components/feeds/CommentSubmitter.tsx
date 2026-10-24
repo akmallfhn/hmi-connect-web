@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useState } from "react";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
+import MentionTextarea from "../fields/MentionTextarea";
 
 interface CommentSubmitterProps {
   avatar?: string;
@@ -32,21 +33,9 @@ export default function CommentSubmitter({
   disabled = false,
   autoFocus = false,
 }: CommentSubmitterProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(autoFocus);
   const expanded = focused || value.length > 0 || Boolean(onCancel);
   const verticalPadding = Math.max(0, (avatarSize - LINE_HEIGHT) / 2);
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [value]);
-
-  useEffect(() => {
-    if (autoFocus) textareaRef.current?.focus();
-  }, [autoFocus]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -64,14 +53,16 @@ export default function CommentSubmitter({
     >
       <div className="flex items-start gap-3">
         <Avatar src={avatar} name={name ?? "Kader"} size={avatarSize} />
-        <textarea
-          ref={textareaRef}
+        <MentionTextarea
           rows={1}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onValueChange={onChange}
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          autoFocus={autoFocus}
+          autoResizeMaxHeight={192}
+          containerClassName="min-w-0 flex-1"
           placeholder={placeholder}
           aria-label={placeholder}
           style={{
@@ -80,7 +71,7 @@ export default function CommentSubmitter({
             paddingTop: verticalPadding,
             paddingBottom: verticalPadding,
           }}
-          className="max-h-48 min-w-0 flex-1 resize-none bg-transparent text-[15px] leading-6 text-heading outline-none placeholder:text-placeholder [&::-webkit-scrollbar]:hidden"
+          className="max-h-48 w-full resize-none bg-transparent text-[15px] leading-6 text-heading outline-none placeholder:text-placeholder [&::-webkit-scrollbar]:hidden"
         />
       </div>
       {expanded && (

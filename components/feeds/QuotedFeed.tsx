@@ -7,6 +7,7 @@ import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import type { Feed, FeedUploadAttachment } from "@/apis/feeds";
 import { useActingHref } from "@/hooks/useActingEntity";
+import MentionText from "../common/MentionText";
 
 // The read-only preview of an original feed embedded in a quote repost — used both when
 // rendering an existing quote repost (FeedItemCard) and while composing one (CreateFeedForms).
@@ -38,7 +39,7 @@ export default function QuotedFeed({
         </div>
       </div>
       <p className="mt-2 line-clamp-4 whitespace-pre-line break-words text-sm text-heading">
-        {feed.content}
+        <MentionText interactive={!linkToDetail}>{feed.content}</MentionText>
       </p>
       {photo && (
         <div className="relative mt-2 aspect-video w-full overflow-hidden rounded-lg bg-surface-muted">

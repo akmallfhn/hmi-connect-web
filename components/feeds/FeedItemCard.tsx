@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
+import MentionText from "../common/MentionText";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
@@ -492,7 +493,7 @@ export default function FeedItemCard({
       </div>
 
       <p className={`mt-3 whitespace-pre-line break-words text-content-foreground ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
-        {content}
+        <MentionText>{content}</MentionText>
       </p>
 
       {photoAttachments.length > 0 && (

@@ -51,6 +51,7 @@ import type {
 } from "@/apis/feeds";
 import LogoHmi from "../svg/LogoHmi";
 import TrainingAttachmentCard from "../feeds/TrainingAttachmentCard";
+import MentionTextarea from "../fields/MentionTextarea";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
 export type ComposerAuthorEntity = {
@@ -613,13 +614,6 @@ function FeedComposerFields({
     }, 0);
   }
 
-  function handleContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    const textarea = event.target;
-    textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
-    setContent(textarea.value);
-  }
-
   async function handlePhotoFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
@@ -795,15 +789,16 @@ function FeedComposerFields({
         </div>
       </div>
 
-      <textarea
-        ref={textareaRef}
+      <MentionTextarea
+        inputRef={textareaRef}
         value={content}
-        onChange={handleContentChange}
+        onValueChange={setContent}
         placeholder={
           quoteFeed ? "Tambahkan komentar..." : "Apa yang ingin kamu bagikan?"
         }
         rows={5}
         disabled={submitting}
+        autoResizeMaxHeight={220}
         className="max-h-56 min-h-36 w-full resize-none rounded-xl border border-transparent bg-surface px-0 py-2 text-base leading-7 text-heading placeholder:text-muted-foreground/70 focus:outline-none disabled:cursor-not-allowed disabled:text-muted-foreground"
       />
 

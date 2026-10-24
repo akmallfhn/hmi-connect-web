@@ -1074,7 +1074,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   notifications read (older pages are marked server-side too), clearing badges and unread tints
   immediately. Clicking a row marks just that row. Failed mutations roll back and show a toast.
   Invitation acceptance and follow actions also patch the cached row so remounting preserves them.
-  Feed reaction, comment, and reply rows link to `/feeds/[feed_id]` (resolved server-side
+  Feed reaction, comment, reply, and mention rows link to `/feeds/[feed_id]` (resolved server-side
   through comments/replies); follow rows link to `/profile/[actor_username]`. Follow rows
   use `actor_is_followed_by_me` to show a primary `Followback` action that calls
   `users/follow`, or a neutral `Following` button that calls `users/unfollow`. `access_invitation` rows use the
@@ -1517,7 +1517,17 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   thread's composer, since replies nest one level. The feed card's detail section stacks a stats
   row (`N Reaksi · M Komentar`, replies counted, with the post's timestamp on the right; the
   reaction count opens `ReactorsListModal`), then the `CommentSubmitter` card, then the threads
-  newest first, so a new comment lands right under the composer. The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
+  newest first, so a new comment lands right under the composer.
+  `CommentSubmitter` uses the shared `MentionTextarea`: after `@` plus a keyword it debounces the
+  existing `/api/users/search` member search, supports arrow/Enter selection, and inserts the
+  selected username into the plain-text body. Its portalled suggestion panel is anchored directly
+  below the text caret rather than the textarea edge, is 320px wide within viewport margins, and
+  scrolls internally above a 240px maximum height. `MentionText` renders valid `@username` tokens in
+  feed/comment/reply bodies with the primary green text token and links them to `/profile/[username]`.
+  The backend DB trigger owns `mention` notification creation for active, non-self users, collapses
+  repeated usernames, and avoids a duplicate mention row when the normal parent comment/reply
+  notification already reaches that recipient.
+  The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
   **deleted** — the desktop-rail redesign dropped it from the home feed, `/search`,
   `/notifications`, `/settings`, `/profile/[username]`, and finally `/feeds/[feed_id]`
   (which now shares the home feed's two-column grid, with `RightSidebar` as its `lg:`-only
@@ -2449,7 +2459,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photos to the public
-  Supabase `hmi-connect/feed_media` folder before submitting their URLs. **A video is a YouTube
+  Supabase `hmi-connect/feed_media` folder before submitting their URLs. Its composer and
+  `EditFeedForm` use the same `MentionTextarea` as comments, so feed mentions share autocomplete,
+  rendering, and notification semantics rather than storing a second rich-text format. **A video is a YouTube
   link, never an upload**: the composer takes a pasted URL, `lib/youtube.ts#parseYouTubeId`
   validates it (watch, youtu.be, shorts, embed, live), and it is sent as a canonical
   `youtube.com/watch?v=` url on a `video` attachment. `FeedItemCard` renders a YouTube `video`

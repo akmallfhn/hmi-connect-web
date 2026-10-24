@@ -15,6 +15,7 @@ import { useActingHref } from "@/hooks/useActingEntity";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { formatRelativeTime } from "@/lib/time-manipulation";
 import Avatar from "../common/Avatar";
+import MentionText from "../common/MentionText";
 import FeedAttachments from "../feeds/FeedAttachments";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 import QuotedFeed from "../feeds/QuotedFeed";
@@ -70,7 +71,7 @@ export default function ActivityEntryCard({
         {type === "comment" && comment ? (
           <>
             <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm leading-6 text-heading xl:text-[15px]">
-              {comment.message}
+              <MentionText interactive={false}>{comment.message}</MentionText>
             </p>
             <div className="mt-2 rounded-xl border border-border p-3">
               <div className="flex items-center gap-2">
@@ -80,7 +81,7 @@ export default function ActivityEntryCard({
                 </p>
               </div>
               <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground xl:text-sm">
-                {feed.content}
+                <MentionText interactive={false}>{feed.content}</MentionText>
               </p>
             </div>
           </>
@@ -89,7 +90,7 @@ export default function ActivityEntryCard({
         ) : (
           <>
             <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-heading xl:text-[15px]">
-              {feed.content}
+              <MentionText interactive={false}>{feed.content}</MentionText>
             </p>
             {feed.repost_of ? (
               <QuotedFeed feed={feed.repost_of} />
@@ -152,7 +153,7 @@ export default function ActivityEntryCard({
         {type === "comment" && comment ? (
           <>
             <p className="line-clamp-5 whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base">
-              {comment.message}
+              <MentionText>{comment.message}</MentionText>
             </p>
             <div className="mt-4 rounded-xl border border-border bg-surface-subtle px-4 py-3">
               <div className="flex items-center gap-2">
@@ -162,7 +163,7 @@ export default function ActivityEntryCard({
                 </p>
               </div>
               <p className="mt-2 line-clamp-2 break-words text-sm leading-5 text-muted-foreground">
-                {feed.content || "Lihat postingan"}
+                <MentionText>{feed.content || "Lihat postingan"}</MentionText>
               </p>
             </div>
           </>
@@ -172,7 +173,7 @@ export default function ActivityEntryCard({
           <>
             {feed.content && (
               <p className="line-clamp-5 whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base">
-                {feed.content}
+                <MentionText>{feed.content}</MentionText>
               </p>
             )}
             {feed.repost_of ? (

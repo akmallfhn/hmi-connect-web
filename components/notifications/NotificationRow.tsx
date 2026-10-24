@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   IconHeartFilled,
+  IconAt,
   IconMessageCircleFilled,
   IconMessagesFilled,
   IconShieldCheckFilled,
@@ -20,11 +21,13 @@ import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import LogoHmi from "../svg/LogoHmi";
+import MentionText from "../common/MentionText";
 
 const TYPE_ICON: Record<Notification["type"], TablerIcon> = {
   like: IconHeartFilled,
   comment: IconMessageCircleFilled,
   comment_reply: IconMessagesFilled,
+  mention: IconAt,
   follow: IconUserFilled,
   access_invitation: IconShieldCheckFilled,
 };
@@ -53,6 +56,10 @@ function notificationText(notification: Notification): string {
       return "mengomentari postinganmu";
     case "comment_reply":
       return "membalas komentarmu";
+    case "mention":
+      if (notification.entity_type === "comment") return "menyebutmu dalam komentar";
+      if (notification.entity_type === "comment_reply") return "menyebutmu dalam balasan";
+      return "menyebutmu dalam postingan";
     case "follow":
       return "mulai mengikutimu";
     case "access_invitation":
@@ -179,7 +186,11 @@ export default function NotificationRow({
         <p className="line-clamp-2 text-sm text-heading">
           <span className="font-semibold">{notification.actor_full_name}</span>{" "}
           {notificationText(notification)}
-          {notification.entity_content && `: ${notification.entity_content}`}
+          {notification.entity_content && (
+            <>
+              : <MentionText interactive={false}>{notification.entity_content}</MentionText>
+            </>
+          )}
         </p>
         <span className="mt-1 block text-xs text-muted-foreground">
           {formatRelativeTime(notification.created_at)}
