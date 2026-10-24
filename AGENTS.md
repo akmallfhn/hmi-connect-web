@@ -1418,7 +1418,8 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `components/modals/ImagePreviewOverlay.tsx`, also used by `FeedAttachments` and by
   `ProfileHeader`'s avatar on someone else's profile, with swipe/arrow navigation and a download
   button through `lib/share-canvas.ts#downloadRemoteImage`, which fetches the bytes because a
-  cross-origin `<a download>` only navigates, and opens the image in a new tab if CORS refuses —, video,
+  cross-origin `<a download>` only navigates, and opens the image in a new tab if CORS refuses;
+  closing the overlay restores the exact pre-open page position instantly —, video,
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
   Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
@@ -1559,6 +1560,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   comes back empty. Its justify-between heading links "Lihat semua" without a hover underline to
   `/people-recommendation`; that gated page fetches 20 recommendations initially and continues
   through a TanStack infinite query backed by the `loadMoreFollowRecommendations` Server Action.
+  Returning from one of its profile links uses the browser's saved list position without a smooth
+  scroll from the top. The root layout deliberately has no global `scroll-smooth` class so browser
+  history and overlay scroll restoration remain instant.
   Its responsive grid uses `FollowRecommendationRow`'s `card` variant: two cards per row on mobile,
   three at `sm`, four at `lg`, and five at `xl`, filling the normal `PageMargin` width. Each card
   has the same solid `primary-soft` header behind an overlapping avatar, followed by full name,

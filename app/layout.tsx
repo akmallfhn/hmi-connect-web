@@ -69,9 +69,9 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} ${crayonize.variable} h-full scroll-smooth antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} ${crayonize.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col scroll-smooth">
+      <body className="min-h-full flex flex-col">
         <AppThemeProvider>
           <AppQueryProvider>
             <ScrollToTop />

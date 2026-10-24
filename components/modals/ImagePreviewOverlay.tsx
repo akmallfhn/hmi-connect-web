@@ -61,7 +61,7 @@ export default function ImagePreviewOverlay({
       document.body.style.position = previousPosition;
       document.body.style.top = previousTop;
       document.body.style.width = previousWidth;
-      window.scrollTo(0, scrollY);
+      window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
     };
   }, [isOpen]);
 
