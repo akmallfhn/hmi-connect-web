@@ -176,13 +176,19 @@ function EditChapterFields({
   }
 
   async function loadBranchOptions(inputValue: string, page: number) {
-    const params = new URLSearchParams({ page: String(page) });
+    const params = new URLSearchParams({
+      page: String(page),
+      exclude_special: "true",
+    });
     if (inputValue) params.set("q", inputValue);
     const response = await fetch(`/api/branches/search?${params}`);
     const json = await response.json();
-    const results: { id: string; name: string }[] = json.data ?? [];
+    const results: { id: string; name: string; is_special?: boolean }[] =
+      json.data ?? [];
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
+      options: results
+        .filter((item) => !item.is_special)
+        .map((item) => ({ label: item.name, value: item.id })),
       hasMore: Boolean(json.hasMore),
     };
   }

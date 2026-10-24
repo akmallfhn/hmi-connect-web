@@ -3180,6 +3180,13 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `coordinating_body.organization_id`. Leaving the Badko blank on create sends `organization_id`
   instead (`AdminBranchListPage`'s `organizationId`, else `createBranch` falls back to
   `ORGANIZATION_ID`); clearing it on edit sends `coordinating_body_id: ""`, which detaches the Cabang.
+  `CreateBranchFormSheet` provides a "Jadikan cabang istimewa" checkbox beneath the Badko picker:
+  checking it immediately clears `coordinatingBody` to `null`, hides the Badko select, and sends
+  `is_special: true` with `coordinating_body_id` omitted.
+  Because special branches accept members directly and cannot have chapters or coordinating chapters,
+  `CreateChapterFormSheet`, `EditChapterFormSheet`, `CreateCoordinatingChapterFormSheet`, and
+  `EditCoordinatingChapterFormSheet` exclude special branches from their branch picker via
+  `/api/branches/search?exclude_special=true` and client filtering.
   Such a Cabang shows `lib/constants.ts#NO_COORDINATING_BODY_LABEL` ("Cabang Istimewa/Luar Negeri")
   wherever a Badko subtitle would go. The Cabang list's Badko filter offers that label as its last
   option, listed after every Badko (no `defaultOptions`, so the list loads on mount, and `page_size=100` so all Badko arrive in one page and the option shows without scrolling); picking it sets `coordinating_body_id=NO_COORDINATING_BODY_FILTER` (`none`) in the URL,

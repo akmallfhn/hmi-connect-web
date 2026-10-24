@@ -7,12 +7,14 @@ export async function GET(request: Request) {
   const search = searchParams.get("q") ?? undefined;
   const coordinatingBodyId =
     searchParams.get("coordinating_body_id") || undefined;
+  const excludeSpecial = searchParams.get("exclude_special") === "true";
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "20");
 
   const { list, hasMore } = await searchBranches({
     search,
     coordinatingBodyId,
+    excludeSpecial,
     page,
     pageSize,
   });

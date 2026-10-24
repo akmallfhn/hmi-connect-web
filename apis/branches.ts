@@ -29,6 +29,7 @@ type BranchesListResponse = {
 export type GetBranchesOptions = {
   search?: string;
   coordinatingBodyId?: string;
+  excludeSpecial?: boolean;
   page?: number;
   pageSize?: number;
 };
@@ -41,7 +42,7 @@ export type GetBranchesResult = {
 async function fetchBranches(
   options: GetBranchesOptions = {}
 ): Promise<GetBranchesResult> {
-  const { search, coordinatingBodyId, page, pageSize } = options;
+  const { search, coordinatingBodyId, excludeSpecial, page, pageSize } = options;
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -60,7 +61,10 @@ async function fetchBranches(
     },
   });
 
-  const list = result.data?.list ?? [];
+  const rawList = result.data?.list ?? [];
+  const list = excludeSpecial
+    ? rawList.filter((branch) => !branch.is_special)
+    : rawList;
   const metapaging = result.data?.metapaging;
   const hasMore = metapaging
     ? metapaging.current_page < metapaging.total_page
@@ -91,6 +95,7 @@ export type BranchListEntry = {
   name: string;
   image_url: string | null;
   type: BranchTypeEnum;
+  is_special: boolean;
   coordinating_body_name: string | null;
   status: StatusEnum;
   // Only present when include_aggregates is requested — active kader count under this branch.
@@ -210,6 +215,7 @@ export type BranchDetail = {
   description: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
+  is_special: boolean;
   status: StatusEnum;
   created_at: string;
   updated_at: string;
@@ -245,6 +251,7 @@ export type CreateBranchPayload = {
   name: string;
   description?: string;
   image_url?: string;
+  is_special?: boolean;
   type?: BranchTypeEnum;
   status?: StatusEnum;
 };
@@ -266,13 +273,18 @@ export async function createBranch(
     payload.organization_id ??
     (payload.coordinating_body_id ? undefined : process.env.ORGANIZATION_ID);
 
+  const body = {
+    ...payload,
+    ...(organizationId ? { organization_id: organizationId } : {}),
+  };
+  if (payload.is_special) {
+    delete body.coordinating_body_id;
+  }
+
   return callApi<BranchDetail>("/api/v1/branches/create", {
     method: "POST",
     token: sessionToken,
-    body: {
-      ...payload,
-      ...(organizationId ? { organization_id: organizationId } : {}),
-    },
+    body,
   });
 }
 
@@ -284,6 +296,7 @@ export type UpdateBranchPayload = {
   name?: string;
   description?: string;
   image_url?: string;
+  is_special?: boolean;
   status?: StatusEnum;
 };
 

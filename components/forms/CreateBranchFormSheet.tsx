@@ -76,6 +76,7 @@ function CreateBranchFields({
   const [type, setType] = useState<BranchTypeEnum>("full");
   const [coordinatingBody, setCoordinatingBody] =
     useState<SearchableOption | null>(defaultCoordinatingBody);
+  const [isSpecial, setIsSpecial] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   async function loadCoordinatingBodyOptions(inputValue: string, page: number) {
@@ -103,8 +104,9 @@ function CreateBranchFields({
         image_url: imageUrl,
         type,
         status: "active",
+        is_special: isSpecial,
         ...(organizationId ? { organization_id: organizationId } : {}),
-        ...(coordinatingBody
+        ...(!isSpecial && coordinatingBody
           ? { coordinating_body_id: String(coordinatingBody.value) }
           : {}),
       });
@@ -152,20 +154,45 @@ function CreateBranchFields({
           </p>
         </div>
       ) : (
-        <SearchableSelect
-          selectId="branch-coordinating-body"
-          label="Badko"
-          placeholder="Cari Badko..."
-          value={coordinatingBody}
-          onChange={setCoordinatingBody}
-          loadOptions={loadCoordinatingBodyOptions}
-          defaultOptions={defaultCoordinatingBody ? [defaultCoordinatingBody] : []}
-        />
+        !isSpecial && (
+          <SearchableSelect
+            selectId="branch-coordinating-body"
+            label="Badko"
+            placeholder="Cari Badko..."
+            value={coordinatingBody}
+            onChange={setCoordinatingBody}
+            loadOptions={loadCoordinatingBodyOptions}
+            defaultOptions={defaultCoordinatingBody ? [defaultCoordinatingBody] : []}
+          />
+        )
       )}
+
       {!lockCoordinatingBody && (
-        <p className="-mt-2 pl-1 text-[13px] text-muted-foreground">
-          Kosongkan untuk Cabang yang langsung di bawah PB HMI, seperti Cabang luar negeri.
-        </p>
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="branch-is-special"
+            className="flex w-fit cursor-pointer items-center gap-2 text-sm text-heading select-none"
+          >
+            <input
+              id="branch-is-special"
+              type="checkbox"
+              checked={isSpecial}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsSpecial(checked);
+                if (checked) {
+                  setCoordinatingBody(null);
+                }
+              }}
+              className="size-4 rounded border-border-strong accent-primary"
+              disabled={isSaving}
+            />
+            Jadikan cabang istimewa
+          </label>
+          <p className="pl-6 text-[13px] text-muted-foreground">
+            Cabang istimewa berada langsung di bawah PB HMI dan menerima kader secara langsung tanpa komisariat.
+          </p>
+        </div>
       )}
 
       <Select
