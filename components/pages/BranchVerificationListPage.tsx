@@ -65,7 +65,7 @@ const GENDER_LABEL: Record<string, string> = {
   female: "Perempuan",
 };
 
-function formatDate(value?: string) {
+function formatDate(value?: string | null) {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("id-ID", {
     day: "numeric",
@@ -573,7 +573,7 @@ export function VerificationRequestListPage({
                       Asal Organisasi
                     </p>
                     <div className="space-y-2 text-[13px] text-heading">
-                      {showBranchFilter && (
+                      {(showBranchFilter || !request.chapter_id) && (
                         <div className="flex items-start gap-2">
                           <Building2
                             className="mt-0.5 size-4 shrink-0 text-primary-foreground"
@@ -585,17 +585,17 @@ export function VerificationRequestListPage({
                           </span>
                         </div>
                       )}
-                      <div className="flex items-start gap-2">
-                        <GraduationCap
-                          className="mt-0.5 size-4 shrink-0 text-primary-foreground"
-                          aria-hidden="true"
-                        />
-                        <span className="min-w-0 break-words">
-                          {request.chapter_name
-                            ? `Komisariat ${request.chapter_name}`
-                            : "Komisariat —"}
-                        </span>
-                      </div>
+                      {request.chapter_id && (
+                        <div className="flex items-start gap-2">
+                          <GraduationCap
+                            className="mt-0.5 size-4 shrink-0 text-primary-foreground"
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0 break-words">
+                            Komisariat {request.chapter_name ?? "—"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -641,9 +641,7 @@ export function VerificationRequestListPage({
                 <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Kader</th>
-                    <th className="px-4 py-3">
-                      {showBranchFilter ? "Cabang / Komisariat" : "Komisariat"}
-                    </th>
+                    <th className="px-4 py-3">Asal Organisasi</th>
                     <th className="px-4 py-3">Diajukan</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Aksi</th>
@@ -670,10 +668,10 @@ export function VerificationRequestListPage({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-heading">
-                        {request.chapter_name ? (
+                        {request.chapter_id ? (
                           <div className="min-w-0">
                             <p className="truncate">
-                              Komisariat {request.chapter_name}
+                              Komisariat {request.chapter_name ?? "—"}
                             </p>
                             {showBranchFilter && (
                               <p className="truncate text-[13px] text-muted-foreground">
@@ -685,7 +683,18 @@ export function VerificationRequestListPage({
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <div className="min-w-0">
+                            <p className="truncate">
+                              Cabang{" "}
+                              {request.branch_name ??
+                                selectedBranch?.name ??
+                                scopeBranchName ??
+                                "—"}
+                            </p>
+                            <p className="truncate text-[13px] text-muted-foreground">
+                              Keanggotaan langsung
+                            </p>
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3 text-heading">
@@ -805,11 +814,6 @@ export function VerificationRequestListPage({
                 value={<AlumniStatusLabel isAlumni={detailData.is_alumni} />}
               />
               <Field
-                icon={ADMIN_NAV_ICON.chapter}
-                label="Komisariat"
-                value={detailData.chapter_name}
-              />
-              <Field
                 icon={ADMIN_NAV_ICON.branch}
                 label="Cabang"
                 value={
@@ -819,6 +823,13 @@ export function VerificationRequestListPage({
                   scopeBranchName
                 }
               />
+              {detailData.chapter_id && (
+                <Field
+                  icon={ADMIN_NAV_ICON.chapter}
+                  label="Komisariat"
+                  value={detailData.chapter_name}
+                />
+              )}
               <div className="sm:col-span-2">
                 <Field
                   icon={IconMapPin}

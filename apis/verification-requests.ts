@@ -17,12 +17,13 @@ export type VerificationRequestListEntry = {
   user_id: string;
   full_name: string;
   username: string;
-  email?: string;
-  avatar?: string;
-  chapter_id: string;
-  chapter_name?: string;
-  branch_id?: string;
-  branch_name?: string;
+  email: string;
+  avatar: string | null;
+  // Null for a direct member of a special branch.
+  chapter_id: string | null;
+  chapter_name: string | null;
+  branch_id: string;
+  branch_name: string | null;
   status: VerificationRequestStatusEnum;
   created_at: string;
 };
@@ -30,7 +31,7 @@ export type VerificationRequestListEntry = {
 export type VerificationRequestDetail = VerificationRequestListEntry & {
   ktp_full_name: string;
   phone_number: string;
-  date_of_birth: string;
+  date_of_birth: string | null;
   gender: GenderEnum;
   // Both halves of the address are optional on submission; the derived chain is null with district_id.
   address_street: string | null;

@@ -2991,7 +2991,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   default to show requests from every Cabang and send it only when the viewer chooses the
   searchable Cabang filter. List rows now include `branch_id`/`branch_name` from the backend, so
   those two broad-scope tables render `Cabang {branch_name}` beneath the prefixed `Komisariat
-{chapter_name}` value.
+{chapter_name}` value. `chapter_id`/`chapter_name` are nullable for a direct member of a special
+  Cabang: those rows render the Cabang as their only organizational origin with a quiet
+  "Keanggotaan langsung" note, and both the mobile card and detail modal omit the Komisariat row
+  instead of showing a fabricated dash.
   The admin sidebar badge reads `pending_count` from `stat/verification-count`, which counts
   non-deleted users whose `verification_status` is `pending`. Master omits the scope for a global
   total; Organization sends its route `organization_id`; Cabang sends its route `branch_id`.
