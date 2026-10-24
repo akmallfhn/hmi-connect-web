@@ -1246,6 +1246,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   Feed (search/feed), Official (search/entity), and Artikel (search/article). There is no
   training search tab. The URL holds the keyword (q) and category (tab); omitting tab
   selects People. The route fetches the active category's first page server-side. The
+  clickable hashtag route is `/search?q=%23{name}&tab=feed`: Feed resolves it through the
+  backend's exact `feed_hashtags` relation, while the other tabs search the same word without
+  the leading hash when the visitor switches categories. Hashtag links always canonicalize
+  their query to lowercase.
   search field debounces input by 400ms, fetches new first pages through the shared Server
   Action, and replaces the URL without remounting the input; Enter searches immediately.
   Each tab shows a 20px primary badge with white text, capped at 99, beside its label. The active tab uses
@@ -1519,11 +1523,12 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   reaction count opens `ReactorsListModal`), then the `CommentSubmitter` card, then the threads
   newest first, so a new comment lands right under the composer.
   `CommentSubmitter` uses the shared `MentionTextarea`: after `@` plus a keyword it debounces the
-  existing `/api/users/search` member search, supports arrow/Enter selection, and inserts the
-  selected username into the plain-text body. Its portalled suggestion panel is anchored directly
+  existing `/api/users/search` member search; after `#` it uses `/api/hashtags/search`, backed by
+  `hashtags/list`. Both support arrow/Enter selection and insert a canonical plain-text token. Its portalled suggestion panel is anchored directly
   below the text caret rather than the textarea edge, is 320px wide within viewport margins, and
-  scrolls internally above a 240px maximum height. `MentionText` renders valid `@username` tokens in
-  feed/comment/reply bodies with the primary green text token and links them to `/profile/[username]`.
+  scrolls internally above a 240px maximum height. `MentionText` renders valid `@username` and
+  `#hashtag` tokens in feed/comment/reply bodies with the primary green text token; mentions link to
+  `/profile/[username]`, while hashtags link to the Feed tab of the shared search page.
   The backend DB trigger owns `mention` notification creation for active, non-self users, collapses
   repeated usernames, and avoids a duplicate mention row when the normal parent comment/reply
   notification already reaches that recipient.
@@ -2460,8 +2465,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photos to the public
   Supabase `hmi-connect/feed_media` folder before submitting their URLs. Its composer and
-  `EditFeedForm` use the same `MentionTextarea` as comments, so feed mentions share autocomplete,
-  rendering, and notification semantics rather than storing a second rich-text format. **A video is a YouTube
+  `EditFeedForm` use the same `MentionTextarea` as comments, so mentions and hashtags share autocomplete
+  and rendering rather than storing a second rich-text format. Mention notification semantics stay separate
+  from the relational feed hashtag index. **A video is a YouTube
   link, never an upload**: the composer takes a pasted URL, `lib/youtube.ts#parseYouTubeId`
   validates it (watch, youtu.be, shorts, embed, live), and it is sent as a canonical
   `youtube.com/watch?v=` url on a `video` attachment. `FeedItemCard` renders a YouTube `video`

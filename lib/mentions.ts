@@ -2,18 +2,24 @@ import { USERNAME_PATTERN } from "./username";
 
 export type MentionSegment =
   | { type: "text"; value: string }
-  | { type: "mention"; value: string; username: string };
+  | { type: "mention"; value: string; username: string }
+  | { type: "hashtag"; value: string; name: string };
 
-export type ActiveMention = {
+export type ActiveSocialToken = {
+  type: "mention" | "hashtag";
   start: number;
   end: number;
   query: string;
 };
 
 const MENTION_QUERY_PATTERN = /(^|[^A-Za-z0-9._])@([A-Za-z0-9._]*)$/u;
+const HASHTAG_QUERY_PATTERN = /(^|[^A-Za-z0-9_])#([A-Za-z0-9_]*)$/u;
 
 function mentionPattern() {
-  return new RegExp(`(^|[^A-Za-z0-9._])@(${USERNAME_PATTERN})`, "gu");
+  return new RegExp(
+    `(^|[^A-Za-z0-9._])@(${USERNAME_PATTERN})|(^|[^A-Za-z0-9_])#([A-Za-z0-9_]+)`,
+    "gu",
+  );
 }
 
 export function parseMentions(value: string): MentionSegment[] {
@@ -21,20 +27,22 @@ export function parseMentions(value: string): MentionSegment[] {
   let cursor = 0;
 
   for (const match of value.matchAll(mentionPattern())) {
-    const boundary = match[1] ?? "";
     const username = match[2];
+    const hashtag = match[4];
+    const boundary = username ? (match[1] ?? "") : (match[3] ?? "");
     const matchIndex = match.index ?? 0;
-    const mentionStart = matchIndex + boundary.length;
+    const tokenStart = matchIndex + boundary.length;
 
-    if (mentionStart > cursor) {
-      segments.push({ type: "text", value: value.slice(cursor, mentionStart) });
+    if (tokenStart > cursor) {
+      segments.push({ type: "text", value: value.slice(cursor, tokenStart) });
     }
-    segments.push({
-      type: "mention",
-      value: `@${username}`,
-      username,
-    });
-    cursor = mentionStart + username.length + 1;
+    if (username) {
+      segments.push({ type: "mention", value: `@${username}`, username });
+      cursor = tokenStart + username.length + 1;
+    } else {
+      segments.push({ type: "hashtag", value: `#${hashtag}`, name: hashtag.toLowerCase() });
+      cursor = tokenStart + hashtag.length + 1;
+    }
   }
 
   if (cursor < value.length) {
@@ -44,24 +52,27 @@ export function parseMentions(value: string): MentionSegment[] {
   return segments;
 }
 
-export function activeMentionAt(value: string, caret: number): ActiveMention | null {
+export function activeSocialTokenAt(value: string, caret: number): ActiveSocialToken | null {
   const beforeCaret = value.slice(0, caret);
-  const match = MENTION_QUERY_PATTERN.exec(beforeCaret);
+  const mentionMatch = MENTION_QUERY_PATTERN.exec(beforeCaret);
+  const hashtagMatch = HASHTAG_QUERY_PATTERN.exec(beforeCaret);
+  const match = mentionMatch ?? hashtagMatch;
   if (!match) return null;
 
   const query = match[2];
   const start = caret - query.length - 1;
-  return { start, end: caret, query };
+  return { type: mentionMatch ? "mention" : "hashtag", start, end: caret, query };
 }
 
-export function replaceActiveMention(
+export function replaceActiveSocialToken(
   value: string,
-  mention: ActiveMention,
-  username: string,
+  token: ActiveSocialToken,
+  replacement: string,
 ) {
-  const inserted = `@${username}${/^\s/u.test(value.slice(mention.end)) ? "" : " "}`;
+  const prefix = token.type === "mention" ? "@" : "#";
+  const inserted = `${prefix}${replacement}${/^\s/u.test(value.slice(token.end)) ? "" : " "}`;
   return {
-    value: `${value.slice(0, mention.start)}${inserted}${value.slice(mention.end)}`,
-    caret: mention.start + inserted.length,
+    value: `${value.slice(0, token.start)}${inserted}${value.slice(token.end)}`,
+    caret: token.start + inserted.length,
   };
 }

@@ -21,9 +21,25 @@ export default function MentionText({
     const className = "font-medium text-primary-foreground hover:underline";
     if (!interactive) {
       return (
-        <span key={`${segment.username}-${index}`} className={className}>
+        <span key={`${segment.value}-${index}`} className={className}>
           {segment.value}
         </span>
+      );
+    }
+
+    if (segment.type === "hashtag") {
+      const params = new URLSearchParams({
+        q: `#${segment.name}`,
+        tab: "feed",
+      });
+      return (
+        <Link
+          key={`${segment.name}-${index}`}
+          href={actingHref(`/search?${params}`)}
+          className={className}
+        >
+          {segment.value}
+        </Link>
       );
     }
 

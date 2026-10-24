@@ -11,10 +11,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { SearchPersonResult } from "@/apis/search";
+import type { HashtagSuggestion } from "@/apis/hashtags";
 import {
-  activeMentionAt,
-  replaceActiveMention,
-  type ActiveMention,
+  activeSocialTokenAt,
+  replaceActiveSocialToken,
+  type ActiveSocialToken,
 } from "@/lib/mentions";
 import Avatar from "../common/Avatar";
 
@@ -25,6 +26,9 @@ const MENU_MAX_HEIGHT = 240;
 const VIEWPORT_MARGIN = 12;
 
 type CaretAnchor = { left: number; top: number };
+type Suggestion =
+  | { type: "mention"; person: SearchPersonResult }
+  | { type: "hashtag"; hashtag: HashtagSuggestion };
 
 interface MentionTextareaProps
   extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange"> {
@@ -109,13 +113,13 @@ export default function MentionTextarea({
   const listboxId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const requestIdRef = useRef(0);
-  const [activeMention, setActiveMention] = useState<ActiveMention | null>(null);
-  const [results, setResults] = useState<SearchPersonResult[]>([]);
+  const [activeToken, setActiveToken] = useState<ActiveSocialToken | null>(null);
+  const [results, setResults] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState<CaretAnchor | null>(null);
-  const query = activeMention?.query ?? "";
-  const menuOpen = activeMention !== null && query.length > 0;
+  const query = activeToken?.query ?? "";
+  const menuOpen = activeToken !== null && query.length > 0;
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -137,17 +141,24 @@ export default function MentionTextarea({
           q: query,
           page_size: String(SUGGESTION_LIMIT),
         });
-        const response = await fetch(`/api/users/search?${params}`, {
+        const endpoint = activeToken?.type === "hashtag"
+          ? "/api/hashtags/search"
+          : "/api/users/search";
+        const response = await fetch(`${endpoint}?${params}`, {
           signal: controller.signal,
         });
-        if (!response.ok) throw new Error(`People search failed with ${response.status}`);
-        const json = (await response.json()) as { data?: SearchPersonResult[] };
+        if (!response.ok) throw new Error(`Suggestion search failed with ${response.status}`);
+        const json = (await response.json()) as { data?: SearchPersonResult[] | HashtagSuggestion[] };
         if (requestId !== requestIdRef.current) return;
-        setResults(json.data ?? []);
+        setResults(
+          activeToken?.type === "hashtag"
+            ? ((json.data ?? []) as HashtagSuggestion[]).map((hashtag) => ({ type: "hashtag", hashtag }))
+            : ((json.data ?? []) as SearchPersonResult[]).map((person) => ({ type: "mention", person })),
+        );
         setActiveIndex(0);
       } catch (error) {
         if (controller.signal.aborted) return;
-        console.error("[MentionTextarea] people search failed:", error);
+        console.error("[MentionTextarea] suggestion search failed:", error);
         if (requestId === requestIdRef.current) setResults([]);
       } finally {
         if (requestId === requestIdRef.current) setLoading(false);
@@ -158,7 +169,7 @@ export default function MentionTextarea({
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [menuOpen, query]);
+  }, [activeToken?.type, menuOpen, query]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -176,22 +187,25 @@ export default function MentionTextarea({
     };
   }, [menuOpen]);
 
-  function syncActiveMention(textarea: HTMLTextAreaElement) {
+  function syncActiveToken(textarea: HTMLTextAreaElement) {
     const caret = textarea.selectionStart ?? textarea.value.length;
-    const nextMention = activeMentionAt(textarea.value, caret);
-    if ((nextMention?.query ?? "") !== query) {
+    const nextToken = activeSocialTokenAt(textarea.value, caret);
+    if ((nextToken?.query ?? "") !== query || nextToken?.type !== activeToken?.type) {
       setResults([]);
-      setLoading(Boolean(nextMention?.query));
+      setLoading(Boolean(nextToken?.query));
     }
-    setMenuAnchor(nextMention?.query ? caretAnchor(textarea) : null);
-    setActiveMention(nextMention);
+    setMenuAnchor(nextToken?.query ? caretAnchor(textarea) : null);
+    setActiveToken(nextToken);
   }
 
-  function selectPerson(person: SearchPersonResult) {
-    if (!activeMention) return;
-    const next = replaceActiveMention(value, activeMention, person.username);
+  function selectSuggestion(suggestion: Suggestion) {
+    if (!activeToken) return;
+    const replacement = suggestion.type === "mention"
+      ? suggestion.person.username
+      : suggestion.hashtag.name;
+    const next = replaceActiveSocialToken(value, activeToken, replacement);
     onValueChange(next.value);
-    setActiveMention(null);
+    setActiveToken(null);
     setMenuAnchor(null);
     setResults([]);
     window.setTimeout(() => {
@@ -214,13 +228,13 @@ export default function MentionTextarea({
       }
       if (event.key === "Enter" || event.key === "Tab") {
         event.preventDefault();
-        selectPerson(results[activeIndex]);
+        selectSuggestion(results[activeIndex]);
         return;
       }
     }
     if (menuOpen && event.key === "Escape") {
       event.preventDefault();
-      setActiveMention(null);
+      setActiveToken(null);
       setMenuAnchor(null);
       return;
     }
@@ -249,22 +263,22 @@ export default function MentionTextarea({
         value={value}
         onChange={(event) => {
           onValueChange(event.target.value);
-          syncActiveMention(event.target);
+          syncActiveToken(event.target);
         }}
         onKeyDown={handleKeyDown}
         onFocus={(event) => {
-          syncActiveMention(event.currentTarget);
+          syncActiveToken(event.currentTarget);
           onFocus?.(event);
         }}
         onBlur={(event) => {
           if (!containerRef.current?.contains(event.relatedTarget)) {
-            setActiveMention(null);
+            setActiveToken(null);
             setMenuAnchor(null);
           }
           onBlur?.(event);
         }}
         onSelect={(event) => {
-          syncActiveMention(event.currentTarget);
+          syncActiveToken(event.currentTarget);
           onSelect?.(event);
         }}
         className={className}
@@ -275,7 +289,7 @@ export default function MentionTextarea({
         <div
           id={listboxId}
           role="listbox"
-          aria-label="Saran username"
+          aria-label={activeToken?.type === "hashtag" ? "Saran hashtag" : "Saran username"}
           style={{
             left: Math.min(
               Math.max(menuAnchor.left, VIEWPORT_MARGIN),
@@ -288,32 +302,50 @@ export default function MentionTextarea({
           className="font-google-sans fixed z-[120] overflow-y-auto rounded-xl border border-border bg-surface p-1.5 shadow-xl"
         >
           {loading ? (
-            <p className="px-3 py-3 text-sm text-muted-foreground">Mencari pengguna...</p>
+            <p className="px-3 py-3 text-sm text-muted-foreground">
+              {activeToken?.type === "hashtag" ? "Mencari hashtag..." : "Mencari pengguna..."}
+            </p>
           ) : results.length === 0 ? (
-            <p className="px-3 py-3 text-sm text-muted-foreground">Username tidak ditemukan.</p>
+            <p className="px-3 py-3 text-sm text-muted-foreground">
+              {activeToken?.type === "hashtag" ? "Hashtag tidak ditemukan." : "Username tidak ditemukan."}
+            </p>
           ) : (
-            results.map((person, index) => (
+            results.map((suggestion, index) => (
               <button
-                key={person.id}
+                key={suggestion.type === "mention" ? `user-${suggestion.person.id}` : `hashtag-${suggestion.hashtag.id}`}
                 type="button"
                 role="option"
                 aria-selected={index === activeIndex}
                 onPointerDown={(event) => event.preventDefault()}
-                onClick={() => selectPerson(person)}
+                onClick={() => selectSuggestion(suggestion)}
                 onMouseEnter={() => setActiveIndex(index)}
                 className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
                   index === activeIndex ? "bg-primary-soft" : "hover:bg-surface-muted"
                 }`}
               >
-                <Avatar src={person.avatar} name={person.full_name} size={36} />
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-heading">
-                    {person.full_name}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    @{person.username}
-                  </span>
-                </span>
+                {suggestion.type === "mention" ? (
+                  <>
+                    <Avatar src={suggestion.person.avatar} name={suggestion.person.full_name} size={36} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-heading">
+                        {suggestion.person.full_name}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        @{suggestion.person.username}
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-base font-semibold text-primary-foreground">#</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-heading">#{suggestion.hashtag.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {suggestion.hashtag.feed_count} postingan
+                      </span>
+                    </span>
+                  </>
+                )}
               </button>
             ))
           )}
