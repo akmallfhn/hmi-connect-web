@@ -20,6 +20,10 @@ import { isSuccessStatus, type GenderEnum } from "@/lib/types";
 
 const STEPS = ["Data KTP", "Cabang & Komisariat", "Alamat"];
 
+type BranchOption = SearchableOption & {
+  isSpecial: boolean;
+};
+
 type FormData = {
   ktpFullName: string;
   phoneNumber: string;
@@ -29,7 +33,7 @@ type FormData = {
   province: SearchableOption | null;
   city: SearchableOption | null;
   district: SearchableOption | null;
-  branch: SearchableOption | null;
+  branch: BranchOption | null;
   chapter: SearchableOption | null;
   isAlumni: boolean | null;
 };
@@ -86,7 +90,11 @@ export default function VerificationPage({
   }
 
   function handleBranchChange(option: SearchableOption | null) {
-    setFormData((prev) => ({ ...prev, branch: option, chapter: null }));
+    setFormData((prev) => ({
+      ...prev,
+      branch: option as BranchOption | null,
+      chapter: null,
+    }));
   }
 
   const provinceOptions: SearchableOption[] = provinces.map((item) => ({
@@ -94,9 +102,10 @@ export default function VerificationPage({
     value: item.id,
   }));
 
-  const branchOptions: SearchableOption[] = branches.map((item) => ({
+  const branchOptions: BranchOption[] = branches.map((item) => ({
     label: item.name,
     value: item.id,
+    isSpecial: item.is_special,
   }));
 
   async function loadProvinceOptions(inputValue: string, page: number) {
@@ -157,10 +166,14 @@ export default function VerificationPage({
 
     const response = await fetch(`/api/branches/search?${params}`);
     const json = await response.json();
-    const results: { id: string; name: string }[] = json.data ?? [];
+    const results: Branch[] = json.data ?? [];
 
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
+      options: results.map((item) => ({
+        label: item.name,
+        value: item.id,
+        isSpecial: item.is_special,
+      })),
       hasMore: Boolean(json.hasMore),
     };
   }
@@ -193,9 +206,11 @@ export default function VerificationPage({
     formData.dateOfBirth.trim() !== "" &&
     formData.gender !== null;
 
+  const selectedBranchIsSpecial = formData.branch?.isSpecial === true;
+
   const isStep1Valid =
     formData.branch !== null &&
-    formData.chapter !== null &&
+    (selectedBranchIsSpecial || formData.chapter !== null) &&
     formData.isAlumni !== null;
 
   const isStep2Valid =
@@ -214,7 +229,9 @@ export default function VerificationPage({
 
     try {
       const result = await verifyUser({
-        chapter_id: String(formData.chapter?.value ?? ""),
+        ...(formData.chapter
+          ? { chapter_id: String(formData.chapter.value) }
+          : { branch_id: String(formData.branch?.value ?? "") }),
         ktp_full_name: formData.ktpFullName,
         phone_number: formData.phoneNumber,
         date_of_birth: formData.dateOfBirth,
@@ -380,23 +397,25 @@ export default function VerificationPage({
                   debounceMs={400}
                   required
                 />
-                <SearchableSelect
-                  key={`chapter-${formData.branch?.value ?? "none"}`}
-                  selectId="chapter"
-                  label="Asal Komisariat"
-                  placeholder="Cari komisariat..."
-                  value={formData.chapter}
-                  onChange={(option) => updateFormData("chapter", option)}
-                  loadOptions={loadChapterOptions}
-                  debounceMs={400}
-                  disabled={!formData.branch}
-                  noOptionsMessage={
-                    formData.branch
-                      ? "Komisariat tidak ditemukan."
-                      : "Pilih cabang terlebih dahulu."
-                  }
-                  required
-                />
+                {!selectedBranchIsSpecial && (
+                  <SearchableSelect
+                    key={`chapter-${formData.branch?.value ?? "none"}`}
+                    selectId="chapter"
+                    label="Asal Komisariat"
+                    placeholder="Cari komisariat..."
+                    value={formData.chapter}
+                    onChange={(option) => updateFormData("chapter", option)}
+                    loadOptions={loadChapterOptions}
+                    debounceMs={400}
+                    disabled={!formData.branch}
+                    noOptionsMessage={
+                      formData.branch
+                        ? "Komisariat tidak ditemukan."
+                        : "Pilih cabang terlebih dahulu."
+                    }
+                    required
+                  />
+                )}
 
                 <div className="flex flex-col gap-1">
                   <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">

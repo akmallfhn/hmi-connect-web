@@ -686,7 +686,10 @@ flow. That endpoint 409s unless the caller is still `unverified`, and only its
    backend saves `full_name` as the request's `ktp_full_name` too, which is why the name
    field is labelled "sesuai KTP".
 2. **Cabang & Komisariat** — the same cascading Branch → Chapter picker plus Belum/Sudah
-   `is_alumni` question as the Verification flow's step 2; only `chapter_id` is sent.
+   `is_alumni` question as the Verification flow's step 2. A regular Cabang requires and sends
+   `chapter_id`; selecting a Cabang whose `is_special` is `true` hides the Komisariat picker and
+   sends `branch_id` for direct membership instead. Branch picker options must preserve `is_special`
+   from both server-rendered defaults and paginated search results.
 3. **University** — institution (searchable + creatable, backed by
    `/www/api/institutions/search` + `createInstitution` action), major, degree, start/end
    year.
@@ -750,9 +753,11 @@ verification form is the same instruction twice.
    `coordinatingChapterId` — it returns nothing when given neither, since an unscoped
    `chapters/list` would answer with every Komisariat the caller can see), and this cascading
    picker always passes `branchId`: a Komisariat pick with no Cabang context wouldn't make sense
-   in this flow. The Korkom scope exists for the Daftar Kader Komisariat filter below. Only `chapter_id` is submitted
-   to `users/verification`, branch/coordinating body and organization are derived server-side
-   from the chapter. Cabang options are the bare branch name with **no `Cabang ` prefix** — the
+   in this flow. The Korkom scope exists for the Daftar Kader Komisariat filter below. Regular
+   Cabang require and submit `chapter_id`, from which the backend derives the branch. A Cabang
+   whose `is_special` is `true` hides the Komisariat picker and submits `branch_id`, creating a
+   direct branch membership. Branch options retain `is_special`
+   through both the initial read and `/www/api/branches/search`. Cabang options are the bare branch name with **no `Cabang ` prefix** — the
    field's own label already says Asal Cabang, and the prefix used to appear on searched options
    but not on the server-rendered `defaultOptions`, so the list changed shape as soon as anyone
    typed. Komisariat options do keep their prefix. Below the Komisariat picker sits the one non-organizational question on this

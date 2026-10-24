@@ -83,13 +83,17 @@ const AVATAR_TARGET_BYTES = 300 * 1024;
 type UsernameAvailability =
   "idle" | "checking" | "available" | "unavailable" | "error";
 
+type BranchOption = OrganizationOption & {
+  isSpecial: boolean;
+};
+
 type FormData = {
   avatar: string;
   fullName: string;
   username: string;
   phoneNumber: string;
   gender: GenderEnum | null;
-  branch: OrganizationOption | null;
+  branch: BranchOption | null;
   chapter: OrganizationOption | null;
   isAlumni: boolean | null;
   institution: SearchableOption | null;
@@ -216,7 +220,11 @@ export default function ActivationPage({
   }
 
   function handleBranchChange(option: OrganizationOption | null) {
-    setFormData((prev) => ({ ...prev, branch: option, chapter: null }));
+    setFormData((prev) => ({
+      ...prev,
+      branch: option as BranchOption | null,
+      chapter: null,
+    }));
   }
 
   async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
@@ -301,9 +309,10 @@ export default function ActivationPage({
     };
   }
 
-  const branchOptions: OrganizationOption[] = branches.map((item) => ({
+  const branchOptions: BranchOption[] = branches.map((item) => ({
     label: item.name,
     value: item.id,
+    isSpecial: item.is_special,
   }));
 
   async function loadBranchOptions(inputValue: string, page: number) {
@@ -312,10 +321,14 @@ export default function ActivationPage({
 
     const response = await fetch(`/api/branches/search?${params}`);
     const json = await response.json();
-    const results: { id: string; name: string }[] = json.data ?? [];
+    const results: Branch[] = json.data ?? [];
 
     return {
-      options: results.map((item) => ({ label: item.name, value: item.id })),
+      options: results.map((item) => ({
+        label: item.name,
+        value: item.id,
+        isSpecial: item.is_special,
+      })),
       hasMore: Boolean(json.hasMore),
     };
   }
@@ -362,9 +375,11 @@ export default function ActivationPage({
     formData.phoneNumber.trim() !== "" &&
     formData.gender !== null;
 
+  const selectedBranchIsSpecial = formData.branch?.isSpecial === true;
+
   const isOrganizationStepValid =
     formData.branch !== null &&
-    formData.chapter !== null &&
+    (selectedBranchIsSpecial || formData.chapter !== null) &&
     formData.isAlumni !== null;
 
   const isEducationStepValid =
@@ -412,14 +427,19 @@ export default function ActivationPage({
         education_major: formData.major,
         education_start_year: Number(formData.startYear),
         education_end_year: Number(formData.endYear),
-        chapter_id: String(formData.chapter?.value ?? ""),
+        ...(formData.chapter
+          ? { chapter_id: String(formData.chapter.value) }
+          : { branch_id: String(formData.branch?.value ?? "") }),
         phone_number: formData.phoneNumber.trim(),
         gender: formData.gender as GenderEnum,
         is_alumni: formData.isAlumni === true,
       });
 
       if (!isSuccessStatus(result.status)) {
-        console.error("[ActivationPage] activateAndVerifyUser rejected:", result);
+        console.error(
+          "[ActivationPage] activateAndVerifyUser rejected:",
+          result
+        );
         // This endpoint answers CONFLICT for three reasons; only this one is the username's.
         const isUsernameConflict =
           result.status === "CONFLICT" &&
@@ -692,23 +712,25 @@ export default function ActivationPage({
                   debounceMs={400}
                   required
                 />
-                <SearchableSelect
-                  key={`chapter-${formData.branch?.value ?? "none"}`}
-                  selectId="chapter"
-                  label="Asal Komisariat"
-                  placeholder="Cari komisariat..."
-                  value={formData.chapter}
-                  onChange={(option) => updateFormData("chapter", option)}
-                  loadOptions={loadChapterOptions}
-                  debounceMs={400}
-                  disabled={!formData.branch}
-                  noOptionsMessage={
-                    formData.branch
-                      ? "Komisariat tidak ditemukan."
-                      : "Pilih cabang terlebih dahulu."
-                  }
-                  required
-                />
+                {!selectedBranchIsSpecial && (
+                  <SearchableSelect
+                    key={`chapter-${formData.branch?.value ?? "none"}`}
+                    selectId="chapter"
+                    label="Asal Komisariat"
+                    placeholder="Cari komisariat..."
+                    value={formData.chapter}
+                    onChange={(option) => updateFormData("chapter", option)}
+                    loadOptions={loadChapterOptions}
+                    debounceMs={400}
+                    disabled={!formData.branch}
+                    noOptionsMessage={
+                      formData.branch
+                        ? "Komisariat tidak ditemukan."
+                        : "Pilih cabang terlebih dahulu."
+                    }
+                    required
+                  />
+                )}
 
                 <div className="flex flex-col gap-1">
                   <label className="flex items-center gap-0.5 pl-1 text-[15px] font-medium text-heading">

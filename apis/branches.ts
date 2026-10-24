@@ -12,6 +12,8 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 export type Branch = {
   id: string;
   name: string;
+  // Special branches accept members directly, without a chapter.
+  is_special: boolean;
 };
 
 type BranchesListResponse = {

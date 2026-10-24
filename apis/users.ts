@@ -20,6 +20,10 @@ import {
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
+type VerificationMembershipTarget =
+  | { chapter_id: string; branch_id?: string }
+  | { branch_id: string; chapter_id?: never };
+
 // Mirrors POST /api/v1/users/activation-verification — activates the caller and files their verification request in one transaction.
 export type ActivationVerificationPayload = {
   username: string;
@@ -34,12 +38,11 @@ export type ActivationVerificationPayload = {
   education_major?: string;
   education_start_year: number;
   education_end_year?: number;
-  chapter_id: string;
   phone_number: string;
   date_of_birth?: string;
   gender: GenderEnum;
   is_alumni?: boolean;
-};
+} & VerificationMembershipTarget;
 
 export type ActivationVerificationResult = {
   user_id: string;
@@ -50,6 +53,8 @@ export type ActivationVerificationResult = {
   status: UserStatusEnum;
   verification_status: VerificationStatusEnum;
   verification_request_id: string;
+  verification_branch_id: string;
+  verification_chapter_id: string | null;
   verification_request_status: VerificationRequestStatusEnum;
 };
 
@@ -336,7 +341,6 @@ export async function activateAndVerifyUser(
 }
 
 export type VerificationPayload = {
-  chapter_id: string;
   ktp_full_name: string;
   phone_number: string;
   date_of_birth: string;
@@ -345,13 +349,14 @@ export type VerificationPayload = {
   district_id: number;
   // The applicant's own alumni (KAHMI) declaration — only reaches users.is_alumni once the request is approved.
   is_alumni?: boolean;
-};
+} & VerificationMembershipTarget;
 
 // Mirrors POST /api/v1/users/verification's response — a pending verification_requests row, not an immediate verification.
 export type VerificationResult = {
   id: string;
   user_id: string;
-  chapter_id: string;
+  branch_id: string;
+  chapter_id: string | null;
   ktp_full_name: string;
   phone_number: string;
   date_of_birth: string;
