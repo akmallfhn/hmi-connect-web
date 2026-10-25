@@ -2459,9 +2459,11 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   re-spell either bound at a callsite.
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
-  of local timeline state, uses `emoji-picker-react`, and uploads photos to the public
-  the S3-compatible provider through `media/presign` → direct PUT → `media/confirm` before
-  submitting their `media_ids`. Its composer and
+  of local timeline state, uses `emoji-picker-react`, and uploads photos to the
+  S3-compatible provider through `media/presign` → same-origin `/api/media/upload-edge` PUT → `media/confirm` before
+  submitting their `media_ids`. The edge route forwards only `Content-Type`, `Cache-Control`,
+  and `X-Amz-Meta-Asset-Id` to R2 and caps request bodies at 10 MiB; the browser-to-Next request
+  is same-origin, so it does not use R2 CORS. Its composer and
   `EditFeedForm` use the same `MentionTextarea` as comments, so mentions and hashtags share autocomplete
   and rendering rather than storing a second rich-text format. Mention notification semantics stay separate
   from the relational feed hashtag index. **A video is a YouTube

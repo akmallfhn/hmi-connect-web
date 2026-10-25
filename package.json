@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:query": "tsx --test tests/query-cache.test.ts",
-    "test:media": "tsx --test tests/optimize-image.test.ts tests/media-upload.test.ts",
+    "test:media": "tsx --test tests/optimize-image.test.ts tests/media-upload.test.ts tests/media-upload-edge.test.ts",
     "postinstall": "patch-package"
   },
   "dependencies": {

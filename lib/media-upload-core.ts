@@ -5,6 +5,11 @@ import type {
   PresignMediaResult,
 } from "@/apis/media";
 import type { ApiEnvelope } from "@/apis/api";
+import {
+  LEGACY_R2_UPLOAD_TARGET_HEADER,
+  MEDIA_UPLOAD_EDGE_PATH,
+  MEDIA_UPLOAD_TARGET_HEADER,
+} from "@/lib/media-upload-transport";
 import { isSuccessStatus } from "@/lib/types";
 
 export class MediaUploadError extends Error {}
@@ -51,6 +56,10 @@ export async function uploadMediaFileWithDependencies(
   const assetId = presigned.data.asset_id;
   try {
     const headers = new Headers(presigned.data.required_headers);
+    const uploadTarget =
+      headers.get(LEGACY_R2_UPLOAD_TARGET_HEADER) ?? presigned.data.upload_url;
+    headers.delete(LEGACY_R2_UPLOAD_TARGET_HEADER);
+    headers.set(MEDIA_UPLOAD_TARGET_HEADER, uploadTarget);
     if (!headers.has("Content-Type")) headers.set("Content-Type", file.type);
     const wait = dependencies.wait ?? waitFor;
     let uploadSucceeded = false;
@@ -58,7 +67,7 @@ export async function uploadMediaFileWithDependencies(
 
     for (let attempt = 0; attempt < UPLOAD_ATTEMPTS; attempt += 1) {
       try {
-        const upload = await dependencies.fetcher(presigned.data.upload_url, {
+        const upload = await dependencies.fetcher(MEDIA_UPLOAD_EDGE_PATH, {
           method: "PUT",
           headers,
           body: file,

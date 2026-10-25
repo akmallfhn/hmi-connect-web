@@ -5,12 +5,17 @@ import {
   MediaUploadError,
   uploadMediaFileWithDependencies,
 } from "../lib/media-upload-core";
+import {
+  MEDIA_UPLOAD_EDGE_PATH,
+  MEDIA_UPLOAD_TARGET_HEADER,
+} from "../lib/media-upload-transport";
 
 test("direct upload presigns the final file and sends every signed header", async () => {
   const file = new File([new Uint8Array(123)], "optimized.webp", {
     type: "image/webp",
   }) as unknown as globalThis.File;
   let requestPayload: unknown;
+  let uploadInput: RequestInfo | URL | undefined;
   let uploadInit: RequestInit | undefined;
   const result = await uploadMediaFileWithDependencies(file, "feed_image", {
     async presign(payload) {
@@ -38,7 +43,8 @@ test("direct upload presigns the final file and sends every signed header", asyn
     async remove() {
       return { status: "OK" };
     },
-    async fetcher(_input, init) {
+    async fetcher(input, init) {
+      uploadInput = input;
       uploadInit = init;
       return new Response(null, { status: 200 });
     },
@@ -52,6 +58,11 @@ test("direct upload presigns the final file and sends every signed header", asyn
   });
   assert.equal(uploadInit?.method, "PUT");
   assert.equal(uploadInit?.body, file);
+  assert.equal(uploadInput, MEDIA_UPLOAD_EDGE_PATH);
+  assert.equal(
+    new Headers(uploadInit?.headers).get(MEDIA_UPLOAD_TARGET_HEADER),
+    "https://r2.example/signed",
+  );
   assert.equal(
     new Headers(uploadInit?.headers).get("X-Amz-Meta-Asset-Id"),
     "asset-1",
@@ -60,6 +71,47 @@ test("direct upload presigns the final file and sends every signed header", asyn
     assetId: "asset-1",
     publicUrl: "https://cdn.example/file.webp",
   });
+});
+
+test("legacy gateway response is normalized to the same-origin upload route", async () => {
+  const file = new File([new Uint8Array(4)], "avatar.jpg", {
+    type: "image/jpeg",
+  }) as unknown as globalThis.File;
+  let uploadHeaders = new Headers();
+
+  await uploadMediaFileWithDependencies(file, "avatar", {
+    async presign() {
+      return {
+        status: "CREATED",
+        data: {
+          asset_id: "asset-legacy",
+          upload_url: "https://upload.hmiconnect.id",
+          required_headers: {
+            "Content-Type": "image/jpeg",
+            "X-R2-Upload-URL": "https://account.r2.cloudflarestorage.com/hmi-connect/avatars/file.jpg?signed=1",
+          },
+          expires_at: new Date().toISOString(),
+        },
+      };
+    },
+    async confirm(assetId) {
+      return { status: "OK", data: { asset_id: assetId } };
+    },
+    async remove() {
+      return { status: "OK" };
+    },
+    async fetcher(input, init) {
+      assert.equal(input, MEDIA_UPLOAD_EDGE_PATH);
+      uploadHeaders = new Headers(init?.headers);
+      return new Response(null, { status: 200 });
+    },
+  });
+
+  assert.equal(
+    uploadHeaders.get(MEDIA_UPLOAD_TARGET_HEADER),
+    "https://account.r2.cloudflarestorage.com/hmi-connect/avatars/file.jpg?signed=1",
+  );
+  assert.equal(uploadHeaders.has("X-R2-Upload-URL"), false);
 });
 
 test("failed direct upload cleans up pending metadata", async () => {
