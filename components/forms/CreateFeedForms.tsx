@@ -614,23 +614,32 @@ function FeedComposerFields({
           !PHOTO_TYPES.includes(file.type) ||
           !PHOTO_EXTENSIONS.includes(extension)
         ) {
-          toast.error("Format foto hanya JPG, PNG, WEBP, atau AVIF.");
+          toast.error("Format foto hanya JPG, PNG, atau WEBP.");
           continue;
         }
         if (file.size > MAX_RAW_PHOTO_BYTES) {
           toast.error("Ukuran foto maksimal 20MB.");
           continue;
         }
-        const compressed = await optimizeImage(file, "feed_image");
-        if (compressed.size > MAX_PHOTO_BYTES) {
-          toast.error("Foto masih terlalu besar setelah dikompres.");
-          continue;
+        try {
+          const compressed = await optimizeImage(file, "feed_image");
+          if (compressed.size > MAX_PHOTO_BYTES) {
+            toast.error("Foto masih terlalu besar setelah dikompres.");
+            continue;
+          }
+          accepted.push({
+            id: `${file.name}-${file.lastModified}-${randomId()}`,
+            file: compressed,
+            previewUrl: createPreviewUrl(compressed),
+          });
+        } catch (error) {
+          console.error("[CreateFeedForms] photo optimization failed:", error);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Foto tidak dapat diproses.",
+          );
         }
-        accepted.push({
-          id: `${file.name}-${file.lastModified}-${randomId()}`,
-          file: compressed,
-          previewUrl: createPreviewUrl(compressed),
-        });
       }
     } finally {
       setCompressingPhotos(false);
@@ -993,7 +1002,7 @@ function FeedComposerFields({
       <input
         ref={photoInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp,.avif"
+        accept=".jpg,.jpeg,.png,.webp"
         multiple
         className="hidden"
         onChange={handlePhotoFiles}
