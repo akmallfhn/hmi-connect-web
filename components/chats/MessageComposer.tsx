@@ -15,60 +15,17 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 import { useTheme } from "@/hooks/use-theme";
 
 const MAX_TEXTAREA_HEIGHT = 120;
 const CHAT_IMAGE_TARGET_BYTES = 500 * 1024;
 
-function getExtension(file: File) {
-  return file.name.split(".").pop()?.toLowerCase() ?? "";
-}
-
-function randomId() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function isStoragePolicyError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.toLowerCase().includes("row-level security")
-  );
-}
-
-async function uploadPublicStorageFile(
-  filePath: string,
-  file: File
-): Promise<string> {
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("missing public url");
-
-  return data.publicUrl;
-}
-
-// Direct-to-storage upload, same convention as CreateFeedForms' feed_media.
-async function uploadChatAttachment(
-  file: File,
-  userId: string | undefined
-): Promise<string> {
-  const extension = getExtension(file);
-  const fileName = `${Date.now()}-${randomId()}.${extension}`;
-  const filePath = `chat_media/${userId ?? "anonymous"}/${fileName}`;
-  return uploadPublicStorageFile(filePath, file);
-}
-
 interface MessageComposerProps {
-  userId?: string;
   onSend: (content: string, attachmentUrl?: string) => Promise<void>;
 }
 
 export default function MessageComposer({
-  userId,
   onSend,
 }: MessageComposerProps) {
   const { theme } = useTheme();
@@ -157,7 +114,8 @@ export default function MessageComposer({
           toast.error("Gambar tidak dapat dikompres hingga ukuran yang diizinkan.");
           return;
         }
-        attachmentUrl = await uploadChatAttachment(compressed, userId);
+        const uploaded = await uploadPublicMediaFile(compressed, "chat_image");
+        attachmentUrl = uploaded.publicUrl;
       }
       await onSend(trimmed, attachmentUrl);
       setText("");
@@ -166,13 +124,9 @@ export default function MessageComposer({
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch (error) {
       console.error("[MessageComposer] send failed:", error);
-      if (isStoragePolicyError(error)) {
-        toast.error(
-          "Upload gambar ditolak Supabase. Izinkan folder chat_media di bucket hmi-connect."
-        );
-      } else {
-        toast.error("Gagal mengirim pesan. Coba lagi.");
-      }
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengirim pesan. Coba lagi.",
+      );
     } finally {
       setSending(false);
     }

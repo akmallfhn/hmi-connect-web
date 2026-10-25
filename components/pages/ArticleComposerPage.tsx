@@ -41,7 +41,7 @@ import Select from "@/components/fields/Select";
 import Modal from "@/components/modals/Modal";
 import { createArticle, updateArticle } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 
 const ARTICLE_IMAGE_TYPES = [
   "image/jpeg",
@@ -57,14 +57,6 @@ const MAX_ARTICLE_IMAGE_RAW_BYTES = 20 * 1024 * 1024;
 const MAX_ARTICLE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type ArticleImageFolder = "covers" | "content";
-
-// Same RLS-rejection signature every other bucket-folder upload in this app detects.
-function isStoragePolicyError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.toLowerCase().includes("row-level security")
-  );
-}
 
 async function uploadArticleImage(
   file: File,
@@ -85,24 +77,10 @@ async function uploadArticleImage(
   if (compressed.size > MAX_ARTICLE_IMAGE_BYTES) {
     throw new Error("Gambar masih terlalu besar setelah dikompres.");
   }
-  const extension =
-    compressed.name.split(".").pop()?.toLowerCase() ?? pickedExtension;
-
-  const filePath = `articles/${folder}/${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, compressed, {
-      cacheControl: "3600",
-      contentType: compressed.type,
-      upsert: false,
-    });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("missing public url");
-
-  return data.publicUrl;
+  const category =
+    folder === "covers" ? "article_cover" : "article_content";
+  const { publicUrl } = await uploadPublicMediaFile(compressed, category);
+  return publicUrl;
 }
 
 function ArticleBodyImage({
@@ -258,9 +236,6 @@ export default function ArticleComposerPage({
   });
 
   function articleUploadMessage(error: unknown, fallback: string) {
-    if (isStoragePolicyError(error)) {
-      return "Upload ditolak Supabase. Izinkan folder articles di bucket hmi-connect.";
-    }
     return error instanceof Error ? error.message : fallback;
   }
 

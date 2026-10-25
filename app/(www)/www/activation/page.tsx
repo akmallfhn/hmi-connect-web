@@ -39,7 +39,6 @@ export default async function Activation() {
 
   return (
     <ActivationPage
-      userId={user?.id}
       fullName={user?.full_name}
       avatar={user?.avatar}
       institutions={institutions}

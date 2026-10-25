@@ -15,6 +15,11 @@ import {
 export { MediaUploadError } from "@/lib/media-upload-core";
 export type { UploadedMedia } from "@/lib/media-upload-core";
 
+export type UploadedPublicMedia = {
+  assetId: string;
+  publicUrl: string;
+};
+
 const defaultDependencies: UploadDependencies = {
   presign: presignMedia,
   confirm: confirmMedia,
@@ -28,4 +33,15 @@ export async function uploadMediaFile(
   dependencies: UploadDependencies = defaultDependencies,
 ): Promise<UploadedMedia> {
   return uploadMediaFileWithDependencies(file, category, dependencies);
+}
+
+export async function uploadPublicMediaFile(
+  file: File,
+  category: MediaCategory,
+): Promise<UploadedPublicMedia> {
+  const uploaded = await uploadMediaFile(file, category);
+  if (!uploaded.publicUrl) {
+    throw new Error("URL publik media tidak tersedia.");
+  }
+  return { assetId: uploaded.assetId, publicUrl: uploaded.publicUrl };
 }

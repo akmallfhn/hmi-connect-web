@@ -26,7 +26,7 @@ import {
   logoutUser,
 } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 import { DEGREE_OPTIONS } from "@/lib/education";
 import {
   isSuccessStatus,
@@ -128,7 +128,6 @@ function emptyFormData(fullName?: string, avatar?: string): FormData {
 }
 
 interface ActivationPageProps {
-  userId?: string;
   fullName?: string;
   avatar?: string;
   institutions: Institution[];
@@ -136,7 +135,6 @@ interface ActivationPageProps {
 }
 
 export default function ActivationPage({
-  userId,
   fullName,
   avatar,
   institutions,
@@ -253,30 +251,8 @@ export default function ActivationPage({
         toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
         return;
       }
-      const compressedExtension =
-        compressed.name.split(".").pop()?.toLowerCase() ?? fileExtension;
-      const ownerKey = userId ?? crypto.randomUUID();
-      const filePath = `avatars/${ownerKey}-${Date.now()}.${compressedExtension}`;
-      const { error: uploadError } = await supabase.storage
-        .from("hmi-connect")
-        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) {
-        console.error("[ActivationPage] avatar upload failed:", uploadError);
-        toast.error("Gagal mengunggah foto. Coba lagi.");
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from("hmi-connect")
-        .getPublicUrl(filePath);
-
-      if (!data.publicUrl) {
-        toast.error("Gagal mendapatkan URL foto.");
-        return;
-      }
-
-      updateFormData("avatar", data.publicUrl);
+      const { publicUrl } = await uploadPublicMediaFile(compressed, "avatar");
+      updateFormData("avatar", publicUrl);
       toast.success("Foto profil berhasil diunggah.");
     } catch (err) {
       console.error("[ActivationPage] avatar upload threw:", err);

@@ -49,7 +49,7 @@ export default function MessageBubble({
               onClick={() => onOpenImage(message.attachment_url!)}
               className="block w-full cursor-zoom-in overflow-hidden rounded-lg"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment URL isn't optimized by Next/Image */}
               <img
                 src={message.attachment_url}
                 alt="Lampiran"
@@ -71,7 +71,7 @@ export default function MessageBubble({
             onClick={() => onOpenImage(message.attachment_url!)}
             className="block cursor-zoom-in overflow-hidden rounded-lg"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage, not worth Next/Image optimization here */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment URL isn't optimized by Next/Image */}
             <img
               src={message.attachment_url}
               alt="Lampiran"

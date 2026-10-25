@@ -173,7 +173,7 @@ export default function ChatThreadPage({
         onLoadMore={loadOlderMessages}
         onOpenImage={setLightboxUrl}
       />
-      <MessageComposer userId={viewerId} onSend={handleSend} />
+      <MessageComposer onSend={handleSend} />
 
       {lightboxUrl && (
         <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />

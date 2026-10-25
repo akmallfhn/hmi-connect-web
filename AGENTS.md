@@ -122,7 +122,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
 | `GOOGLE_ANALYTICS_ID` | `app/layout.tsx` | GA4 measurement ID passed to `GoogleAnalytics` from `@next/third-parties/google`, matching Sevenpreneur's pattern. Current production value is `G-L0VGNEPGBW`. The ID is public in the rendered tag but read server-side; no `NEXT_PUBLIC_` twin is needed. |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client. Legacy upload surfaces still use the public `hmi-connect` bucket, while avatar edits, feed photos, and training posters use the backend's provider-agnostic presign flow and R2 CDN; existing Supabase URLs stay valid. Since the Go backend's Postgres is this Supabase project, the client also owns notifications Realtime Broadcast in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here. |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client, used for notifications Realtime Broadcast and public asset URLs; image and document uploads use the backend Media API and R2. Existing Supabase URLs remain valid. Since the Go backend's Postgres is this Supabase project, the client also owns notifications Realtime Broadcast in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here. |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | `lib/chapter-census-sheets.ts` | Server-only credentials from the Google service account JSON. Store the private key as a quoted env value with escaped `\n`; never use `NEXT_PUBLIC_` or commit the credential file. The writer authenticates with the Sheets scope, with a 10-second auth timeout and no automatic retry. |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | `lib/chapter-census-sheets.ts` | Spreadsheet ID from its URL. The destination tab is fixed as `Pendataan Komisariat` in the writer, not an env setting. The spreadsheet must grant the service account Editor access, and the tab must exist. Missing credentials or spreadsheet ID makes the form answer "belum siap". Enable the Google Sheets API in the service account's Cloud project. |
 | `NEXT_PUBLIC_BASE_URL` | — (no consumer today) | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |
@@ -1186,10 +1186,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   short single line is to center the whole (correctly content-sized) textarea box within its
   wrapper — Enter-to-send/Shift+Enter-newline, emoji button reusing `emoji-picker-react` same
   as `CreateFeedForms` — including a click-outside listener to close the picker, the same
-  pattern `Dropdown.tsx` already uses — and a real image attachment upload straight to the
-  public `hmi-connect` bucket's `chat_media/` folder, same direct-to-storage convention as
-  `feed_media` — unlike a mock feature, a real message needs a real, shareable URL, not a
-  same-tab-only blob URL. That image runs through `lib/compress-image.ts` at
+  pattern `Dropdown.tsx` already uses — and a real image attachment upload through the
+  backend Media API's public `chat_image` category to R2 — unlike a mock feature, a real
+  message needs a real, shareable URL, not a same-tab-only blob URL. That image runs through
+  `lib/compress-image.ts` at
   `{maxDimension: 1600, targetBytes: 500KB}` on send rather than on pick, so the preview appears
   instantly; there is deliberately no raw pre-compression size cap any more — see the
   `compress-image` note under `CreateFeedForms` below). The composer's send button is
@@ -2198,17 +2198,13 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   the new article's own `/articles/{slug_url}/{id}` — a plain push is right here, unlike
   activation's hard navigation, because the reader's access doesn't depend on anything the
   mutation changed. The cover and every inserted body image are
-  real uploads: both go straight to the public `hmi-connect` bucket's `articles/covers/` and
-  `articles/content/` folders (same direct-to-storage convention as `feed_media`/`chat_media`), keyed
-  by `crypto.randomUUID()`, and only the resulting public URL is held in state — there are no
+  real uploads: both use the backend Media API's public `article_cover`/`article_content`
+  categories and R2, and only the resulting public URL is held in state — there are no
   data-URL previews any more, so an image survives the eventual publish call instead of being
   inlined into the body HTML. Both run through `lib/compress-image.ts` at its defaults, with a raw
   20MB sanity cap before compression and a 5MB rejection after it (never a raw-size gate, see
-  `CreateFeedForms` above), and take their extension/`contentType` from the compressed file, since
-  compression re-encodes to JPEG. A Supabase RLS rejection is detected by the same
-  `isStoragePolicyError` signature every other upload callsite uses and surfaces as a toast naming
-  the `articles` folder, since a missing storage policy is otherwise indistinguishable from a
-  generic failure. An uploaded cover
+  `CreateFeedForms` above), and pass the compressed file to Media API, which uses its actual
+  filename and MIME type. An uploaded cover
   exposes adjacent replace/delete controls over the image. Body images use a custom React Tiptap
   node view: clicking one gives it a blue selection ring, while hover or selection reveals its
   top-right destructive `Button` with a trash icon; those editor-only controls are not emitted
@@ -2639,10 +2635,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `users/create`; on success it hard-navigates to the new user's detail page if an admin-assigned
   `username` was set, otherwise back to the list (a `users/create` response has no username
   unless the admin typed one in — there's no self-service activation step here). Its avatar field
-  uploads straight to the public `hmi-connect` bucket the same way `EditAvatarForm` does, except
-  the resulting URL is just kept in local state (`avatars/admin-create-<timestamp>.<ext>`, not
-  `avatars/<userId>-...`, since there's no user id yet) and only sent along with the rest of the
-  form on submit, rather than persisted immediately on change like the self-service form does.
+  uploads through the backend Media API's public `avatar` category to R2, except the resulting
+  URL is just kept in local state and only sent along with the rest of the form on submit, rather
+  than persisted immediately on change like the self-service form does.
   `components/navigations/AdminSidebar.tsx` is the reusable shell behind every admin sidebar —
   desktop-only collapse (`isCollapsed`, persisted to `localStorage` under a caller-supplied
   `storageKey` so sibling sidebars don't clobber each other's state, read after mount like the
@@ -2927,8 +2922,8 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   while enforcing the required levels (LK1 for an LK2 registration; LK1 and LK2 for LK3), but
   hides and skips that section entirely when the event itself is LK1. It uploads an optional
   PDF/DOC/DOCX paper directly to
-  Supabase Storage under `training/training_documents/{training_id}/`, then passes the resulting
-  public `paper_url` to `trainings/register`. The submit button remains disabled until every
+  backend Media API's public `document` category to R2, then passes the resulting public
+  `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
   After their top-level Dashboard item, the Badko/Korkom/Komisariat scopes of `EntitySidebar` pass
   one flat `Daftar Kader` item to `AdminSidebar`; Organization instead groups `Daftar Kader` and
@@ -3187,7 +3182,7 @@ text-primary` circle, same treatment as `AdminMemberDetailPage`'s `StatPill`) fo
   the three and no Suspend/Aktifkan either (pure browse-only "Daftar Komisariat"). Create/edit are
   `components/forms/CreateChapterFormSheet.tsx`/`EditChapterFormSheet.tsx` — `components/forms/
 ChapterLogoField.tsx` (mirrors `BranchLogoField.tsx`/`CoordinatingBodyLogoField.tsx`, uploads into the
-  `chapters/` storage folder), Nama Komisariat, Nama Resmi, Cabang `SearchableSelect` — or fixed read-only text
+  `entity_image` Media API category), Nama Komisariat, Nama Resmi, Cabang `SearchableSelect` — or fixed read-only text
   when the create sheet's `lockBranch` prop is set from a branch-scoped route, the same treatment
   `CreateBranchFormSheet`'s `lockCoordinatingBody` gives Badko — and Asal Universitas. Create also
   has the `type` field, labelled **"Status"** rather than "Tipe" (label only — the values and the
@@ -3285,8 +3280,8 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `CoordinatingChapterListEntry`/`listCoordinatingChaptersAdmin`/`createCoordinatingChapter`/
   `updateCoordinatingChapter`/`deleteCoordinatingChapter` surface, and `CoordinatingChapterDetail`
   now carries `description`/`image_url` (previously just id/branch/name/status/timestamps).
-  `components/forms/CoordinatingChapterLogoField.tsx` mirrors `ChapterLogoField.tsx` (uploads into a
-  new `coordinating-chapters/` storage folder). `CreateCoordinatingChapterFormSheet.tsx`/
+  `components/forms/CoordinatingChapterLogoField.tsx` mirrors `ChapterLogoField.tsx` (uploads with
+  the `entity_image` Media API category). `CreateCoordinatingChapterFormSheet.tsx`/
   `EditCoordinatingChapterFormSheet.tsx` mirror the Chapter pair field-for-field (Nama Resmi
   included) minus Tipe/institution (a Korkom has neither) — Edit needs the same detail-fetch loader Chapter's edit does, since
   `coordinating-chapters/list` omits `description` the same way `chapters/list` does, and neither
@@ -3431,7 +3426,7 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `BranchListEntry`/`BranchDetail` carry `image_url`/`description` the same way
   `CoordinatingBodyListEntry`/`CoordinatingBodyDetail` do (list has no `description`, detail has
   both). `components/forms/BranchLogoField.tsx` mirrors `CoordinatingBodyLogoField.tsx` (same
-  `size`/`layout` props, uploads into the `branches/` storage folder instead). Create/edit (Master
+  `size`/`layout` props, uploads with the `entity_image` Media API category). Create/edit (Master
   and Organization) are `components/forms/CreateBranchFormSheet.tsx`/`EditBranchFormSheet.tsx`
   (split for the same reason as Badko's — `branches/list` doesn't return `description`, so Edit
   fetches the real detail via `getBranchDetail` before mounting its fields), each with an

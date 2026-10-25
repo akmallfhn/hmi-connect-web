@@ -11,7 +11,7 @@ export default function ImageLightbox({ url, onClose }: ImageLightboxProps) {
       className="fixed inset-0 z-[110] flex items-center justify-center bg-media-backdrop/80 p-4"
       onClick={onClose}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment served by Supabase Storage */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- remote attachment URL isn't optimized by Next/Image */}
       <img
         src={url}
         alt="Lampiran"

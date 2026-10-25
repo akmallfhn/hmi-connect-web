@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 import Button from "../buttons/Button";
 
 const LOGO_ALLOWED_TYPES = [
@@ -17,29 +17,6 @@ const LOGO_ALLOWED_TYPES = [
 const LOGO_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const LOGO_MAX_RAW_BYTES = 20 * 1024 * 1024;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
-
-async function uploadCoordinatingBodyLogo(file: File, fileExt: string) {
-  const filePath = `coordinating-bodies/${Date.now()}.${fileExt}`;
-
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("missing public url");
-
-  return data.publicUrl;
-}
-
-// Same RLS-rejection signature CreateFeedForms/MessageComposer already detect for their own bucket folders.
-function isStoragePolicyError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.toLowerCase().includes("row-level security")
-  );
-}
 
 interface CoordinatingBodyLogoFieldProps {
   imageUrl: string;
@@ -98,22 +75,16 @@ export default function CoordinatingBodyLogoField({
         toast.error("Logo masih terlalu besar setelah dikompres.");
         return;
       }
-      const compressedExt =
-        compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
-      const publicUrl = await uploadCoordinatingBodyLogo(
+      const { publicUrl } = await uploadPublicMediaFile(
         compressed,
-        compressedExt
+        "entity_image",
       );
       onChange(publicUrl);
     } catch (error) {
       console.error("[CoordinatingBodyLogoField] logo upload threw:", error);
-      if (isStoragePolicyError(error)) {
-        toast.error(
-          "Upload logo ditolak Supabase. Izinkan folder coordinating-bodies di bucket hmi-connect."
-        );
-      } else {
-        toast.error("Gagal mengunggah logo. Coba lagi.");
-      }
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengunggah logo. Coba lagi.",
+      );
     } finally {
       setUploading(false);
     }

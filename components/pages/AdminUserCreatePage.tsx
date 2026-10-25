@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { createUser } from "@/lib/actions";
 import { compressImage } from "@/lib/compress-image";
 import { USER_ROLE_OPTIONS } from "@/lib/constants";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 import {
   isSuccessStatus,
   type GenderEnum,
@@ -129,32 +129,13 @@ export default function AdminUserCreatePage() {
         toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
         return;
       }
-      const compressedExt =
-        compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
-      const filePath = `avatars/admin-create-${Date.now()}.${compressedExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("hmi-connect")
-        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) {
-        console.error(
-          "[AdminUserCreatePage] avatar upload error:",
-          uploadError.message
-        );
-        toast.error("Gagal mengunggah foto. Coba lagi.");
-        return;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("hmi-connect")
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData?.publicUrl) {
-        toast.error("Gagal mendapatkan URL foto.");
-        return;
-      }
-
-      setAvatar(publicUrlData.publicUrl);
+      const { publicUrl } = await uploadPublicMediaFile(compressed, "avatar");
+      setAvatar(publicUrl);
+    } catch (error) {
+      console.error("[AdminUserCreatePage] avatar upload threw:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengunggah foto. Coba lagi.",
+      );
     } finally {
       setIsUploadingAvatar(false);
     }

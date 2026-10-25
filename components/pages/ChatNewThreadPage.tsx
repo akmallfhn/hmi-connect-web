@@ -126,7 +126,6 @@ export default function ChatNewThreadPage({
 
       <MessageComposer
         key={recipient.id}
-        userId={viewerId}
         onSend={handleSend}
       />
 

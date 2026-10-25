@@ -37,7 +37,7 @@ import {
   updateTrainingHistory,
 } from "@/lib/actions";
 import { DEGREE_OPTIONS } from "@/lib/education";
-import { supabase } from "@/lib/supabase";
+import { uploadPublicMediaFile } from "@/lib/media-upload";
 import { formatDateRange } from "@/lib/time-manipulation";
 import { TRAINING_HISTORY_LEVEL_OPTIONS } from "@/lib/training-history";
 import {
@@ -243,31 +243,9 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-async function uploadTrainingDocument(
-  file: File,
-  trainingId: string,
-  userId: string
-) {
-  const extension = file.name.split(".").pop()?.toLowerCase();
-  if (!extension) throw new Error("Ekstensi dokumen tidak ditemukan.");
-
-  const filePath = [
-    "training",
-    "training_documents",
-    trainingId,
-    `${userId}-${Date.now()}.${extension}`,
-  ].join("/");
-
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("URL dokumen tidak tersedia.");
-
-  return data.publicUrl;
+async function uploadTrainingDocument(file: File) {
+  const { publicUrl } = await uploadPublicMediaFile(file, "document");
+  return publicUrl;
 }
 
 function TrainingEventCard({ training }: { training: TrainingDetail }) {
@@ -701,7 +679,7 @@ export default function TrainingRegistrationPage({
       }
 
       const paperUrl = paperFile
-        ? await uploadTrainingDocument(paperFile, training.id, registrant.id)
+        ? await uploadTrainingDocument(paperFile)
         : undefined;
       const registrationResult = await registerTraining({
         training_id: training.id,

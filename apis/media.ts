@@ -8,6 +8,10 @@ export type MediaCategory =
   | "avatar"
   | "feed_image"
   | "event_banner"
+  | "chat_image"
+  | "entity_image"
+  | "article_cover"
+  | "article_content"
   | "document";
 
 export type PresignMediaPayload = {
