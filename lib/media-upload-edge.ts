@@ -135,7 +135,34 @@ async function readUploadBody(request: Request): Promise<UploadBodyResult> {
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get("Origin");
-  return origin !== null && origin === new URL(request.url).origin;
+  if (origin === null) return false;
+
+  try {
+    const requestURL = new URL(request.url);
+    const forwardedHost = firstForwardedValue(
+      request.headers.get("x-forwarded-host"),
+    );
+    const host =
+      forwardedHost ?? request.headers.get("host") ?? requestURL.host;
+    const protocol =
+      firstForwardedValue(request.headers.get("x-forwarded-proto")) ??
+      requestURL.protocol.slice(0, -1);
+    if (!host || (protocol !== "http" && protocol !== "https")) return false;
+
+    const originURL = new URL(origin);
+    return (
+      originURL.origin === origin &&
+      originURL.origin === `${protocol}://${host}` &&
+      originURL.username === "" &&
+      originURL.password === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
+function firstForwardedValue(value: string | null) {
+  return value?.split(",", 1)[0]?.trim() || null;
 }
 
 function isValidR2Target(value: string) {

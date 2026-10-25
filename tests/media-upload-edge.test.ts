@@ -85,6 +85,20 @@ test("upload edge rejects cross-origin and invalid storage targets", async () =>
   );
   assert.equal(crossOrigin.status, 403);
 
+  const malformedOrigin = await proxyMediaUpload(
+    new Request("https://hmiconnect.id/api/media/upload-edge", {
+      method: "PUT",
+      headers: {
+        Origin: "https://hmiconnect.id/attacker-path",
+        "Content-Type": "image/jpeg",
+        [MEDIA_UPLOAD_TARGET_HEADER]: target,
+      },
+      body: new Uint8Array([1]),
+    }),
+    fetcher,
+  );
+  assert.equal(malformedOrigin.status, 403);
+
   const invalidTarget = await proxyMediaUpload(
     new Request("https://hmiconnect.id/api/media/upload-edge", {
       method: "PUT",
@@ -99,6 +113,31 @@ test("upload edge rejects cross-origin and invalid storage targets", async () =>
   );
   assert.equal(invalidTarget.status, 400);
   assert.equal(calls, 0);
+});
+
+test("upload edge validates origin against forwarded public host", async () => {
+  const request = new Request(
+    "http://railway-internal:3000/api/media/upload-edge",
+    {
+      method: "PUT",
+      headers: {
+        Origin: "https://www.hmiconnect.id",
+        "x-forwarded-host": "www.hmiconnect.id",
+        "x-forwarded-proto": "https",
+        Host: "railway-internal:3000",
+        "Content-Type": "image/jpeg",
+        [MEDIA_UPLOAD_TARGET_HEADER]: target,
+      },
+      body: new Uint8Array([1]),
+    },
+  );
+
+  const response = await proxyMediaUpload(
+    request,
+    async () => new Response(null, { status: 200 }),
+  );
+
+  assert.equal(response.status, 200);
 });
 
 test("upload edge preserves storage rejection status", async () => {

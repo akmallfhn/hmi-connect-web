@@ -29,11 +29,11 @@ export type UploadDependencies = {
   wait?: (milliseconds: number) => Promise<void>;
 };
 
-const UPLOAD_ATTEMPTS = 3;
-const UPLOAD_RETRY_DELAYS_MS = [250, 750] as const;
+const UPLOAD_ATTEMPTS = 4;
+const UPLOAD_RETRY_DELAYS_MS = [500, 1500, 3000] as const;
 
 type UploadFailure =
-  | { kind: "http"; status: number }
+  | { kind: "http"; status: number; message?: string }
   | { kind: "network" };
 
 export async function uploadMediaFileWithDependencies(
@@ -77,7 +77,11 @@ export async function uploadMediaFileWithDependencies(
           break;
         }
 
-        lastFailure = { kind: "http", status: upload.status };
+        lastFailure = {
+          kind: "http",
+          status: upload.status,
+          message: await readUploadErrorMessage(upload),
+        };
         if (!isRetryableUploadStatus(upload.status)) break;
       } catch {
         // A rejected fetch is ambiguous: the request may have reached R2 while
@@ -102,11 +106,13 @@ export async function uploadMediaFileWithDependencies(
           };
         }
         throw new MediaUploadError(
-          "Koneksi ke penyimpanan terputus saat mengunggah media. Coba lagi atau ganti jaringan.",
+          "Koneksi unggahan ke server terputus. Periksa jaringan lalu coba lagi.",
         );
       }
       throw new MediaUploadError(
-        `Upload media gagal (${lastFailure?.status ?? "unknown"}).`,
+        `Upload media gagal (${lastFailure?.status ?? "unknown"})${
+          lastFailure?.message ? `: ${lastFailure.message}` : "."
+        }`,
       );
     }
 
@@ -125,6 +131,23 @@ export async function uploadMediaFileWithDependencies(
     if (error instanceof MediaUploadError) throw error;
     throw new MediaUploadError("Gagal mengunggah media.");
   }
+}
+
+async function readUploadErrorMessage(response: Response) {
+  try {
+    const body: unknown = await response.clone().json();
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      "message" in body &&
+      typeof body.message === "string"
+    ) {
+      return body.message;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
 }
 
 function isRetryableUploadStatus(status: number) {

@@ -142,10 +142,20 @@ test("failed direct upload cleans up pending metadata", async () => {
       },
       async fetcher() {
         uploadAttempts += 1;
-        return new Response(null, { status: 403 });
+        return Response.json(
+          { message: "Upload origin is not allowed." },
+          { status: 403 },
+        );
       },
     }),
-    MediaUploadError,
+    (error: unknown) => {
+      assert.ok(error instanceof MediaUploadError);
+      assert.equal(
+        error.message,
+        "Upload media gagal (403): Upload origin is not allowed.",
+      );
+      return true;
+    },
   );
   assert.deepEqual(removed, ["asset-2"]);
   assert.equal(uploadAttempts, 1);
@@ -158,6 +168,7 @@ test("network failure retries before confirming and does not clean up", async ()
   let uploadAttempts = 0;
   let confirmAttempts = 0;
   let removeAttempts = 0;
+  const retryDelays: number[] = [];
 
   const result = await uploadMediaFileWithDependencies(file, "avatar", {
     async presign() {
@@ -190,10 +201,13 @@ test("network failure retries before confirming and does not clean up", async ()
       if (uploadAttempts < 3) throw new TypeError("Failed to fetch");
       return new Response(null, { status: 200 });
     },
-    async wait() {},
+    async wait(milliseconds) {
+      retryDelays.push(milliseconds);
+    },
   });
 
   assert.equal(uploadAttempts, 3);
+  assert.deepEqual(retryDelays, [500, 1500]);
   assert.equal(confirmAttempts, 1);
   assert.equal(removeAttempts, 0);
   assert.equal(result.assetId, "asset-3");
@@ -238,7 +252,7 @@ test("ambiguous network failure recovers when R2 already stored the object", asy
     async wait() {},
   });
 
-  assert.equal(uploadAttempts, 3);
+  assert.equal(uploadAttempts, 4);
   assert.equal(removeAttempts, 0);
   assert.deepEqual(result, {
     assetId: "asset-4",
