@@ -32,9 +32,9 @@ import ArticleAttachmentCard from "../feeds/ArticleAttachmentCard";
 import NewsAttachmentCard from "../feeds/NewsAttachmentCard";
 import QuotedFeed from "../feeds/QuotedFeed";
 import YouTubeEmbed from "../feeds/YouTubeEmbed";
-import { createFeed } from "@/lib/actions";
-import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { createFeed, deleteMedia } from "@/lib/actions";
+import { uploadMediaFile } from "@/lib/media-upload";
+import { optimizeImage } from "@/lib/optimize-image";
 import { parseYouTubeId, youTubeWatchUrl } from "@/lib/youtube";
 import {
   isSuccessStatus,
@@ -145,14 +145,11 @@ type PhotoDraft = {
   previewUrl: string;
 };
 
-const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 const MAX_PHOTOS = 5;
 const MAX_RAW_PHOTO_BYTES = 20 * 1024 * 1024;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-// Feed photos are served unoptimized at ~640px in the card and up to 92vh in the preview, so 1280px is plenty.
-const FEED_PHOTO_MAX_DIMENSION = 1280;
-const FEED_PHOTO_TARGET_BYTES = 150 * 1024;
 
 // The feed card's quick actions keep their labels; only the open composer goes icon-only.
 const ACTIONS = [
@@ -202,33 +199,6 @@ function isValidUrl(value: string) {
   } catch {
     return false;
   }
-}
-
-async function uploadPublicStorageFile(filePath: string, file: File) {
-  const { error } = await supabase.storage
-    .from("hmi-connect")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage.from("hmi-connect").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("missing public url");
-
-  return data.publicUrl;
-}
-
-function isStoragePolicyError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.toLowerCase().includes("row-level security")
-  );
-}
-
-async function uploadFeedPhoto(file: File, userId: string | undefined) {
-  const extension = getExtension(file);
-  const fileName = `photo-${Date.now()}-${randomId()}.${extension}`;
-  const filePath = `feed_media/${userId ?? "anonymous"}/${fileName}`;
-  return uploadPublicStorageFile(filePath, file);
 }
 
 // The composer previews through the same card the published feed renders, so the two can't drift.
@@ -651,10 +621,7 @@ function FeedComposerFields({
           toast.error("Ukuran foto maksimal 20MB.");
           continue;
         }
-        const compressed = await compressImage(file, {
-          maxDimension: FEED_PHOTO_MAX_DIMENSION,
-          targetBytes: FEED_PHOTO_TARGET_BYTES,
-        });
+        const compressed = await optimizeImage(file, "feed_image");
         if (compressed.size > MAX_PHOTO_BYTES) {
           toast.error("Foto masih terlalu besar setelah dikompres.");
           continue;
@@ -698,15 +665,22 @@ function FeedComposerFields({
     }
 
     setSubmitting(true);
+    const uploadedAssetIDs: string[] = [];
     try {
       let attachment: NonNullable<CreateFeedPayload["attachment"]> | undefined;
 
       if (!quoteFeed) {
         if (photos.length > 0) {
-          const urls = await Promise.all(
-            photos.map((photo) => uploadFeedPhoto(photo.file, userId))
-          );
-          attachment = { type: "photo", urls };
+          const uploaded = [];
+          for (const photo of photos) {
+            const item = await uploadMediaFile(photo.file, "feed_image");
+            uploaded.push(item);
+            uploadedAssetIDs.push(item.assetId);
+          }
+          attachment = {
+            type: "photo",
+            media_ids: uploaded.map((item) => item.assetId),
+          };
         } else if (youtubeActive && youtubeId) {
           attachment = { type: "video", urls: [youTubeWatchUrl(youtubeId)] };
         } else if (urlActive && urlValue.trim()) {
@@ -733,6 +707,7 @@ function FeedComposerFields({
       });
 
       if (!isSuccessStatus(result.status) || !result.data) {
+        await Promise.allSettled(uploadedAssetIDs.map(deleteMedia));
         toast.error(
           result.message ??
             (quoteFeed
@@ -752,18 +727,15 @@ function FeedComposerFields({
       setContent("");
       onClose();
     } catch (err) {
+      await Promise.allSettled(uploadedAssetIDs.map(deleteMedia));
       console.error("[CreateFeedForms] create feed threw:", err);
-      if (isStoragePolicyError(err)) {
-        toast.error(
-          "Upload media ditolak Supabase. Izinkan folder feed_media di bucket hmi-connect."
-        );
-      } else {
-        toast.error(
-          quoteFeed
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : quoteFeed
             ? "Gagal membuat quote repost. Coba lagi."
             : "Gagal membuat postingan. Coba lagi."
-        );
-      }
+      );
     } finally {
       setSubmitting(false);
     }

@@ -116,9 +116,10 @@ export type FeedTimelineItem = {
 
 export type CreateFeedPayload = {
   content: string;
-  // Exactly one of urls / reference_id / article_id — the backend 400s on any two together.
+  // Exactly one target family is allowed; photos use owned, confirmed media IDs.
   attachment?:
-    | { type: FeedUploadAttachmentTypeEnum; urls: string[] }
+    | { type: "photo"; media_ids: string[] }
+    | { type: "video" | "url"; urls: string[] }
     | { type: "news" | "training"; reference_id: string }
     | { type: "article"; article_id: string };
   repost_of_id?: string;

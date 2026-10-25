@@ -89,6 +89,13 @@ import {
 } from "@/apis/structurals";
 import { logoutUser as logoutUserApi } from "@/apis/session";
 import {
+  confirmMedia as confirmMediaApi,
+  deleteMedia as deleteMediaApi,
+  downloadMedia as downloadMediaApi,
+  presignMedia as presignMediaApi,
+  type PresignMediaPayload,
+} from "@/apis/media";
+import {
   addPassword as addPasswordApi,
   changePassword as changePasswordApi,
   loginWithEmail as loginWithEmailApi,
@@ -624,6 +631,22 @@ export async function deleteSocialMediaAccount(id: string) {
 
 export async function logoutUser() {
   return logoutUserApi();
+}
+
+export async function presignMedia(payload: PresignMediaPayload) {
+  return presignMediaApi(payload);
+}
+
+export async function confirmMedia(assetId: string) {
+  return confirmMediaApi(assetId);
+}
+
+export async function downloadMedia(assetId: string) {
+  return downloadMediaApi(assetId);
+}
+
+export async function deleteMedia(assetId: string) {
+  return deleteMediaApi(assetId);
 }
 
 export async function loginWithEmail(identifier: string, password: string) {

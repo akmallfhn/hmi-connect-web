@@ -7,14 +7,10 @@ import { toast } from "sonner";
 import Button from "../buttons/Button";
 import { getInitials } from "../common/Avatar";
 import Modal from "../modals/Modal";
-import { updateMyProfile } from "@/lib/actions";
-import { compressImage } from "@/lib/compress-image";
-import { supabase } from "@/lib/supabase";
+import { deleteMedia, updateMyProfile } from "@/lib/actions";
+import { uploadMediaFile } from "@/lib/media-upload";
+import { optimizeImage } from "@/lib/optimize-image";
 import { isSuccessStatus } from "@/lib/types";
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
-const AVATAR_TARGET_BYTES = 300 * 1024;
 
 interface EditAvatarFormProps {
   open: boolean;
@@ -73,7 +69,7 @@ function AvatarFields({
   async function persistAvatar(url: string) {
     if (!userId) {
       toast.error("ID pengguna tidak ditemukan.");
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -82,7 +78,7 @@ function AvatarFields({
 
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? "Gagal menyimpan foto profil.");
-        return;
+        return false;
       }
 
       toast.success(
@@ -91,9 +87,11 @@ function AvatarFields({
           : "Foto profil berhasil dihapus."
       );
       onSaved();
+      return true;
     } catch (err) {
       console.error("[EditAvatarForm] updateMyProfile threw:", err);
       toast.error("Gagal menyimpan foto profil.");
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -108,50 +106,22 @@ function AvatarFields({
     event.target.value = "";
     if (!file) return;
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
-      return;
-    }
-    const fileExt = file.name.split(".").pop()?.toLowerCase();
-    if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
-      toast.error("Ekstensi file tidak valid.");
-      return;
-    }
-
     setIsUploading(true);
     try {
-      const compressed = await compressImage(file, {
-        maxDimension: 512,
-        targetBytes: AVATAR_TARGET_BYTES,
-      });
-      if (compressed.size > AVATAR_TARGET_BYTES) {
-        toast.error("Foto tidak dapat dikompres hingga ukuran yang diizinkan.");
-        return;
+      const optimized = await optimizeImage(file, "avatar");
+      const uploaded = await uploadMediaFile(optimized, "avatar");
+      if (!uploaded.publicUrl) throw new Error("URL foto tidak tersedia.");
+      const saved = await persistAvatar(uploaded.publicUrl);
+      if (saved) {
+        setAvatarUrl(uploaded.publicUrl);
+      } else {
+        await deleteMedia(uploaded.assetId);
       }
-      const compressedExt =
-        compressed.name.split(".").pop()?.toLowerCase() ?? fileExt;
-      const filePath = `avatars/${userId}-${Date.now()}.${compressedExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("hmi-connect")
-        .upload(filePath, compressed, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) {
-        console.error("[EditAvatarForm] upload error:", uploadError.message);
-        toast.error("Gagal mengunggah foto. Coba lagi.");
-        return;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("hmi-connect")
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData?.publicUrl) {
-        toast.error("Gagal mendapatkan URL foto.");
-        return;
-      }
-
-      setAvatarUrl(publicUrlData.publicUrl);
-      await persistAvatar(publicUrlData.publicUrl);
+    } catch (error) {
+      console.error("[EditAvatarForm] avatar upload threw:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengunggah foto.",
+      );
     } finally {
       setIsUploading(false);
     }
@@ -186,7 +156,7 @@ function AvatarFields({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp,.avif"
+        accept=".jpg,.jpeg,.png,.webp"
         className="hidden"
         onChange={handleFileChange}
       />

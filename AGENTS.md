@@ -122,7 +122,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
 | `GOOGLE_ANALYTICS_ID` | `app/layout.tsx` | GA4 measurement ID passed to `GoogleAnalytics` from `@next/third-parties/google`, matching Sevenpreneur's pattern. Current production value is `G-L0VGNEPGBW`. The ID is public in the rendered tag but read server-side; no `NEXT_PUBLIC_` twin is needed. |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client. Used for direct-to-storage uploads (e.g. `EditAvatarForm`) against the public `hmi-connect` bucket, and — since the Go backend's Postgres _is_ this Supabase project — for the notifications Realtime Broadcast subscription in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here; every read/write to backend data goes through `BASE_URL`, this client only touches Storage and the Realtime broadcast channel, see Stack above and the `Header`/`BottomNav` notes below. |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client. Legacy upload surfaces still use the public `hmi-connect` bucket, while avatar edits, feed photos, and training posters use the backend's provider-agnostic presign flow and R2 CDN; existing Supabase URLs stay valid. Since the Go backend's Postgres is this Supabase project, the client also owns notifications Realtime Broadcast in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here. |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | `lib/chapter-census-sheets.ts` | Server-only credentials from the Google service account JSON. Store the private key as a quoted env value with escaped `\n`; never use `NEXT_PUBLIC_` or commit the credential file. The writer authenticates with the Sheets scope, with a 10-second auth timeout and no automatic retry. |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | `lib/chapter-census-sheets.ts` | Spreadsheet ID from its URL. The destination tab is fixed as `Pendataan Komisariat` in the writer, not an env setting. The spreadsheet must grant the service account Editor access, and the tab must exist. Missing credentials or spreadsheet ID makes the form answer "belum siap". Enable the Google Sheets API in the service account's Cloud project. |
 | `NEXT_PUBLIC_BASE_URL` | — (no consumer today) | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |
@@ -2464,7 +2464,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `components/forms/CreateFeedForms.tsx` is the LinkedIn-style composer card/modal at the
   top of the feed timeline. It calls `feeds/create`, inserts the created feed at the top
   of local timeline state, uses `emoji-picker-react`, and uploads photos to the public
-  Supabase `hmi-connect/feed_media` folder before submitting their URLs. Its composer and
+  the S3-compatible provider through `media/presign` → direct PUT → `media/confirm` before
+  submitting their `media_ids`. Its composer and
   `EditFeedForm` use the same `MentionTextarea` as comments, so mentions and hashtags share autocomplete
   and rendering rather than storing a second rich-text format. Mention notification semantics stay separate
   from the relational feed hashtag index. **A video is a YouTube
@@ -2482,7 +2483,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   Substack-style row of Tabler icon buttons (photo, YouTube, link, emoji) beside Batal/Posting —
   no text labels. The feed-card prompt's own Foto/Video/URL quick actions keep their labels. The emoji
   picker sits in a portaled `Dropdown`, so the modal's scroll area can't clip it.
-  `feeds/create` takes one `attachment` object — `{type, urls}` for `photo`/`video`/`url`,
+  `feeds/create` takes one `attachment` object — `{type, media_ids}` for new photos,
+  `{type, urls}` for external `video`/`url` and legacy photo callers,
   `{type, reference_id}` for `news`/`training`, never both — so the composer's own
   `attachmentMode` is what locks the buttons: photos keep the photo button live up to five, while
   any other attachment (video, url, news, article) disables all three until its own X clears it. The
@@ -2496,15 +2498,19 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   field, which is the backend's). Both preview through the very card the published feed renders
   (`NewsAttachmentCard`/`ArticleAttachmentCard`), so composer and feed can't drift.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
-  run through `lib/compress-image.ts` before they're staged or uploaded.
-  **That module is now shared by every image upload in the app**, not just the composer, and takes
-  an options object (`{maxDimension, targetBytes}`, defaulting to 1920px / 500KB): avatars pass
-  `{512, 300KB}` from all four places one can be set (`EditAvatarForm`, `ActivationPage`,
-  `AdminEditUserAccountForm`, `AdminUserCreatePage`), chat images pass `{1600, 500KB}`, feed
-  photos pass `{1280, 150KB}` (`FEED_PHOTO_MAX_DIMENSION`/`FEED_PHOTO_TARGET_BYTES` — they render
-  `unoptimized` at ~640px in the card and up to 92vh in the preview, and the default 500KB left
-  most photos landing at 400KB+), and
-  the five entity-logo fields plus `TrainingFormSheet` take the defaults. Every caller that passes
+  run through `lib/optimize-image.ts` before they're staged or uploaded. That utility verifies
+  JPEG/PNG/WebP signatures, inspects dimensions, preserves small already-optimized files, resizes
+  only above the category limit, compares JPEG/WebP candidates for opaque images and PNG/WebP for
+  transparent images, and keeps the original when savings are negligible. Avatar, feed, and event
+  policies are 512px/2MB, 1920px/5MB, and 1920px/5MB respectively; filenames and MIME types follow
+  the selected bytes. It yields before canvas encoding and the feed picker still processes files
+  sequentially to avoid a burst of main-thread work.
+  `lib/compress-image.ts` remains the legacy helper for upload surfaces not migrated to the media
+  API yet, and takes an options object (`{maxDimension, targetBytes}`, defaulting to 1920px / 500KB):
+  the three remaining avatar setup/admin surfaces (`ActivationPage`, `AdminEditUserAccountForm`,
+  `AdminUserCreatePage`) pass `{512, 300KB}`, chat images pass `{1600, 500KB}`, and the five
+  entity-logo fields plus `ArticleComposerPage` take the defaults. Feed photos, `EditAvatarForm`,
+  and training posters no longer use this helper. Every caller that passes
   options also **rejects the file when the compressed result still exceeds its target**, which is
   why the raw pre-upload size caps those forms used to have (`MAX_AVATAR_BYTES` 2MB,
   `MAX_ATTACHMENT_BYTES` 8MB) are gone — gating on the raw size rejects large photos that
@@ -2524,7 +2530,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   0.82); that guard only fires without a resize, so it can never let an oversized file past the size
   check its caller then enforces. Callers take the upload extension from the returned file's name,
   which is why a `.webp` result needs no caller change.
-  `handlePhotoFiles` awaits `compressImage` one file at a time (not
+  `handlePhotoFiles` awaits `optimizeImage` one file at a time (not
   `Promise.all`) so selecting several photos at once doesn't spike the main thread all at
   once — the Foto button shows a spinner and disables via `compressingPhotos` while that
   runs, no queue infrastructure needed for a bounded, sequential, client-only job like this.
@@ -2892,7 +2898,8 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   an event that still carries a pair shows its organizer disabled and never sends `organizer_name`,
   since a blank value would clear it under the pair. The detail page's Edit/Hapus menu is shown to
   the contact person only (and never to a logged-out viewer, whose id is also `undefined`). Poster upload
-  lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`. The `/trainings`
+  lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`, and uses the R2-backed media
+  presign flow after `event_banner` optimization. The `/trainings`
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
   the register Server Component performs its own session check and redirects anonymous visitors
   to `/auth/login?redirectTo=/trainings/{training_id}/register`. `apis/trainings.ts#listTrainings` and
