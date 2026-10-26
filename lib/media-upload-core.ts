@@ -23,6 +23,7 @@ export type UploadDependencies = {
   presign: (
     payload: PresignMediaPayload,
   ) => Promise<ApiEnvelope<PresignMediaResult>>;
+  fallback?: (assetId: string) => Promise<ApiEnvelope<PresignMediaResult>>;
   confirm: (assetId: string) => Promise<ApiEnvelope<ConfirmMediaResult>>;
   remove: (assetId: string) => Promise<ApiEnvelope>;
   fetcher: typeof fetch;
@@ -55,65 +56,46 @@ export async function uploadMediaFileWithDependencies(
 
   const assetId = presigned.data.asset_id;
   try {
-    const headers = new Headers(presigned.data.required_headers);
-    const uploadTarget =
-      headers.get(LEGACY_R2_UPLOAD_TARGET_HEADER) ?? presigned.data.upload_url;
-    headers.delete(LEGACY_R2_UPLOAD_TARGET_HEADER);
-    headers.set(MEDIA_UPLOAD_TARGET_HEADER, uploadTarget);
-    if (!headers.has("Content-Type")) headers.set("Content-Type", file.type);
     const wait = dependencies.wait ?? waitFor;
-    let uploadSucceeded = false;
-    let lastFailure: UploadFailure | undefined;
+    let failure = await uploadToTarget(
+      file,
+      presigned.data,
+      dependencies.fetcher,
+      wait,
+    );
 
-    for (let attempt = 0; attempt < UPLOAD_ATTEMPTS; attempt += 1) {
-      try {
-        const upload = await dependencies.fetcher(MEDIA_UPLOAD_EDGE_PATH, {
-          method: "PUT",
-          headers,
-          body: file,
-        });
-        if (upload.ok) {
-          uploadSucceeded = true;
-          break;
+    if (failure && shouldRecoverOrFallback(failure)) {
+      const recovered = await recoverConfirmed(assetId, dependencies.confirm);
+      if (recovered) return recovered;
+
+      if (dependencies.fallback) {
+        const fallback = await dependencies.fallback(assetId);
+        if (!isSuccessStatus(fallback.status) || !fallback.data) {
+          throw new MediaUploadError(
+            fallback.message ?? "Penyimpanan cadangan tidak tersedia.",
+          );
         }
-
-        lastFailure = {
-          kind: "http",
-          status: upload.status,
-          message: await readUploadErrorMessage(upload),
-        };
-        if (!isRetryableUploadStatus(upload.status)) break;
-      } catch {
-        // A rejected fetch is ambiguous: the request may have reached R2 while
-        // the mobile connection lost the response. Retrying PUT on the same
-        // object key is safe, and confirm below recovers that ambiguous success.
-        lastFailure = { kind: "network" };
+        if (fallback.data.asset_id !== assetId) {
+          throw new MediaUploadError("ID media berubah saat beralih penyimpanan.");
+        }
+        failure = await uploadToTarget(
+          file,
+          fallback.data,
+          dependencies.fetcher,
+          wait,
+        );
+        if (failure && shouldRecoverOrFallback(failure)) {
+          const fallbackRecovered = await recoverConfirmed(
+            assetId,
+            dependencies.confirm,
+          );
+          if (fallbackRecovered) return fallbackRecovered;
+        }
       }
-
-      const retryDelay = UPLOAD_RETRY_DELAYS_MS[attempt];
-      if (retryDelay !== undefined) await wait(retryDelay);
     }
 
-    if (!uploadSucceeded) {
-      if (lastFailure?.kind === "network") {
-        const recovered = await dependencies.confirm(assetId).catch(
-          () => undefined,
-        );
-        if (recovered && isSuccessStatus(recovered.status) && recovered.data) {
-          return {
-            assetId: recovered.data.asset_id,
-            publicUrl: recovered.data.public_url,
-          };
-        }
-        throw new MediaUploadError(
-          "Koneksi unggahan ke server terputus. Periksa jaringan lalu coba lagi.",
-        );
-      }
-      throw new MediaUploadError(
-        `Upload media gagal (${lastFailure?.status ?? "unknown"})${
-          lastFailure?.message ? `: ${lastFailure.message}` : "."
-        }`,
-      );
+    if (failure) {
+      throw uploadFailureError(failure);
     }
 
     const confirmed = await dependencies.confirm(assetId);
@@ -131,6 +113,82 @@ export async function uploadMediaFileWithDependencies(
     if (error instanceof MediaUploadError) throw error;
     throw new MediaUploadError("Gagal mengunggah media.");
   }
+}
+
+async function uploadToTarget(
+  file: File,
+  presigned: PresignMediaResult,
+  fetcher: typeof fetch,
+  wait: (milliseconds: number) => Promise<void>,
+): Promise<UploadFailure | undefined> {
+  const headers = new Headers(presigned.required_headers);
+  const uploadTarget =
+    headers.get(LEGACY_R2_UPLOAD_TARGET_HEADER) ?? presigned.upload_url;
+  headers.delete(LEGACY_R2_UPLOAD_TARGET_HEADER);
+  headers.set(MEDIA_UPLOAD_TARGET_HEADER, uploadTarget);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", file.type);
+
+  let lastFailure: UploadFailure | undefined;
+  for (let attempt = 0; attempt < UPLOAD_ATTEMPTS; attempt += 1) {
+    try {
+      const upload = await fetcher(MEDIA_UPLOAD_EDGE_PATH, {
+        method: "PUT",
+        headers,
+        body: file,
+      });
+      if (upload.ok) return undefined;
+
+      lastFailure = {
+        kind: "http",
+        status: upload.status,
+        message: await readUploadErrorMessage(upload),
+      };
+      if (!isRetryableUploadStatus(upload.status)) break;
+    } catch {
+      // A rejected fetch is ambiguous: the provider may have stored the object
+      // while the mobile connection lost the response. PUT is safe to retry.
+      lastFailure = { kind: "network" };
+    }
+
+    const retryDelay = UPLOAD_RETRY_DELAYS_MS[attempt];
+    if (retryDelay !== undefined) await wait(retryDelay);
+  }
+  return lastFailure ?? { kind: "network" };
+}
+
+async function recoverConfirmed(
+  assetId: string,
+  confirm: UploadDependencies["confirm"],
+): Promise<UploadedMedia | undefined> {
+  const recovered = await confirm(assetId).catch(() => undefined);
+  if (!recovered || !isSuccessStatus(recovered.status) || !recovered.data) {
+    return undefined;
+  }
+  return {
+    assetId: recovered.data.asset_id,
+    publicUrl: recovered.data.public_url,
+  };
+}
+
+function shouldRecoverOrFallback(failure: UploadFailure) {
+  return (
+    failure.kind === "network" ||
+    isRetryableUploadStatus(failure.status) ||
+    failure.message === "Storage rejected the upload."
+  );
+}
+
+function uploadFailureError(failure: UploadFailure) {
+  if (failure.kind === "network") {
+    return new MediaUploadError(
+      "Koneksi unggahan ke server terputus. Periksa jaringan lalu coba lagi.",
+    );
+  }
+  return new MediaUploadError(
+    `Upload media gagal (${failure.status})${
+      failure.message ? `: ${failure.message}` : "."
+    }`,
+  );
 }
 
 async function readUploadErrorMessage(response: Response) {

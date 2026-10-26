@@ -259,3 +259,76 @@ test("ambiguous network failure recovers when R2 already stored the object", asy
     publicUrl: "https://cdn.example/avatar.jpg",
   });
 });
+
+test("failed R2 upload switches the same asset id to Supabase", async () => {
+  const file = new File([new Uint8Array(10)], "avatar.jpg", {
+    type: "image/jpeg",
+  }) as unknown as globalThis.File;
+  let uploadAttempts = 0;
+  let confirmAttempts = 0;
+  let fallbackAssetId = "";
+  let removeAttempts = 0;
+
+  const result = await uploadMediaFileWithDependencies(file, "avatar", {
+    async presign() {
+      return {
+        status: "CREATED",
+        data: {
+          asset_id: "asset-fallback",
+          upload_url: "https://r2.example/signed",
+          required_headers: {},
+          expires_at: new Date().toISOString(),
+        },
+      };
+    },
+    async fallback(assetId) {
+      fallbackAssetId = assetId;
+      return {
+        status: "OK",
+        data: {
+          asset_id: assetId,
+          upload_url: "https://project.storage.supabase.co/storage/v1/s3/hmi-connect/avatars/file.jpg?signed=1",
+          required_headers: { "Content-Type": "image/jpeg" },
+          expires_at: new Date().toISOString(),
+        },
+      };
+    },
+    async confirm(assetId) {
+      confirmAttempts += 1;
+      if (confirmAttempts === 1) return { status: "NOT_FOUND" };
+      return {
+        status: "OK",
+        data: {
+          asset_id: assetId,
+          public_url:
+            "https://project.supabase.co/storage/v1/object/public/hmi-connect/avatars/file.jpg",
+        },
+      };
+    },
+    async remove() {
+      removeAttempts += 1;
+      return { status: "OK" };
+    },
+    async fetcher(_input, init) {
+      uploadAttempts += 1;
+      const target = new Headers(init?.headers).get(
+        MEDIA_UPLOAD_TARGET_HEADER,
+      );
+      if (target?.includes("storage.supabase.co")) {
+        return new Response(null, { status: 200 });
+      }
+      throw new TypeError("Failed to fetch");
+    },
+    async wait() {},
+  });
+
+  assert.equal(uploadAttempts, 5);
+  assert.equal(confirmAttempts, 2);
+  assert.equal(fallbackAssetId, "asset-fallback");
+  assert.equal(removeAttempts, 0);
+  assert.deepEqual(result, {
+    assetId: "asset-fallback",
+    publicUrl:
+      "https://project.supabase.co/storage/v1/object/public/hmi-connect/avatars/file.jpg",
+  });
+});

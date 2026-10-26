@@ -4,6 +4,7 @@ import type { MediaCategory } from "@/apis/media";
 import {
   confirmMedia,
   deleteMedia,
+  fallbackMedia,
   presignMedia,
 } from "@/lib/actions";
 import {
@@ -22,6 +23,7 @@ export type UploadedPublicMedia = {
 
 const defaultDependencies: UploadDependencies = {
   presign: presignMedia,
+  fallback: fallbackMedia,
   confirm: confirmMedia,
   remove: deleteMedia,
   fetcher: fetch,

@@ -3,6 +3,7 @@ import { MEDIA_UPLOAD_TARGET_HEADER } from "@/lib/media-upload-transport";
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const R2_HOST_SUFFIX = ".r2.cloudflarestorage.com";
 const R2_BUCKET_PATH = "/hmi-connect/";
+const SUPABASE_S3_BUCKET_PATH = "/storage/v1/s3/hmi-connect/";
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -13,7 +14,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
-const ALLOWED_R2_HEADERS = new Set([
+const ALLOWED_STORAGE_HEADERS = new Set([
   "cache-control",
   "content-type",
   "x-amz-meta-asset-id",
@@ -34,7 +35,7 @@ export async function proxyMediaUpload(
   }
 
   const target = request.headers.get(MEDIA_UPLOAD_TARGET_HEADER);
-  if (!target || !isValidR2Target(target)) {
+  if (!target || !isValidStorageTarget(target)) {
     return errorResponse(400, "Upload target is invalid.");
   }
 
@@ -53,10 +54,18 @@ export async function proxyMediaUpload(
     }
   }
 
+  const startedAt = Date.now();
+  const targetHost = new URL(target).host;
   let bodyResult: UploadBodyResult;
   try {
     bodyResult = await readUploadBody(request);
-  } catch {
+  } catch (error) {
+    logUploadFailure("client body interrupted", {
+      targetHost,
+      contentLength,
+      elapsedMs: Date.now() - startedAt,
+      error: describeError(error),
+    });
     return errorResponse(400, "Upload body could not be read.");
   }
   if (!bodyResult.ok) {
@@ -70,7 +79,7 @@ export async function proxyMediaUpload(
   for (const [name, value] of request.headers) {
     const normalizedName = name.toLowerCase();
     if (
-      ALLOWED_R2_HEADERS.has(normalizedName) &&
+      ALLOWED_STORAGE_HEADERS.has(normalizedName) &&
       normalizedName !== "content-type"
     ) {
       headers.set(name, value);
@@ -78,6 +87,7 @@ export async function proxyMediaUpload(
   }
   headers.set("Content-Type", contentType);
 
+  const receivedAt = Date.now();
   let upstream: Response;
   try {
     upstream = await fetcher(target, {
@@ -85,11 +95,26 @@ export async function proxyMediaUpload(
       headers,
       body: bodyResult.body,
     });
-  } catch {
+  } catch (error) {
+    logUploadFailure("storage request failed", {
+      targetHost,
+      bytes: bodyResult.body.byteLength,
+      receiveMs: receivedAt - startedAt,
+      storageMs: Date.now() - receivedAt,
+      error: describeError(error),
+    });
     return errorResponse(502, "Storage request failed.");
   }
 
   if (!upstream.ok) {
+    logUploadFailure("storage rejected upload", {
+      targetHost,
+      bytes: bodyResult.body.byteLength,
+      receiveMs: receivedAt - startedAt,
+      storageMs: Date.now() - receivedAt,
+      status: upstream.status,
+      storageCode: await readStorageErrorCode(upstream),
+    });
     return errorResponse(upstream.status, "Storage rejected the upload.");
   }
 
@@ -165,17 +190,23 @@ function firstForwardedValue(value: string | null) {
   return value?.split(",", 1)[0]?.trim() || null;
 }
 
-function isValidR2Target(value: string) {
+function isValidStorageTarget(value: string) {
   try {
     const target = new URL(value);
+    const isR2 =
+      target.hostname.endsWith(R2_HOST_SUFFIX) &&
+      target.pathname.startsWith(R2_BUCKET_PATH) &&
+      target.pathname.length > R2_BUCKET_PATH.length;
+    const isSupabase =
+      target.hostname === configuredSupabaseS3Host() &&
+      target.pathname.startsWith(SUPABASE_S3_BUCKET_PATH) &&
+      target.pathname.length > SUPABASE_S3_BUCKET_PATH.length;
     return (
       target.protocol === "https:" &&
-      target.hostname.endsWith(R2_HOST_SUFFIX) &&
       target.port === "" &&
       target.username === "" &&
       target.password === "" &&
-      target.pathname.startsWith(R2_BUCKET_PATH) &&
-      target.pathname.length > R2_BUCKET_PATH.length &&
+      (isR2 || isSupabase) &&
       target.searchParams.has("X-Amz-Credential") &&
       target.searchParams.has("X-Amz-Signature") &&
       target.searchParams.has("X-Amz-Expires")
@@ -183,6 +214,38 @@ function isValidR2Target(value: string) {
   } catch {
     return false;
   }
+}
+
+function configuredSupabaseS3Host() {
+  const configuredURL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!configuredURL) return undefined;
+  try {
+    const hostname = new URL(configuredURL).hostname.toLowerCase();
+    const match = /^([a-z0-9]+)\.supabase\.co$/.exec(hostname);
+    return match ? `${match[1]}.storage.supabase.co` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Never log the full target URL: its query string carries the upload signature.
+function logUploadFailure(stage: string, details: Record<string, unknown>) {
+  console.error(`[proxyMediaUpload] ${stage}:`, details);
+}
+
+async function readStorageErrorCode(response: Response) {
+  try {
+    const body = await response.text();
+    return /<Code>([^<]{1,64})<\/Code>/.exec(body)?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
+function describeError(error: unknown) {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause instanceof Error ? `: ${error.cause.message}` : "";
+  return `${error.name}: ${error.message}${cause}`;
 }
 
 function errorResponse(status: number, message: string) {

@@ -92,6 +92,7 @@ import {
   confirmMedia as confirmMediaApi,
   deleteMedia as deleteMediaApi,
   downloadMedia as downloadMediaApi,
+  fallbackMedia as fallbackMediaApi,
   presignMedia as presignMediaApi,
   type PresignMediaPayload,
 } from "@/apis/media";
@@ -639,6 +640,10 @@ export async function presignMedia(payload: PresignMediaPayload) {
 
 export async function confirmMedia(assetId: string) {
   return confirmMediaApi(assetId);
+}
+
+export async function fallbackMedia(assetId: string) {
+  return fallbackMediaApi(assetId);
 }
 
 export async function downloadMedia(assetId: string) {

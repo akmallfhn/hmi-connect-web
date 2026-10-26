@@ -157,3 +157,53 @@ test("upload edge preserves storage rejection status", async () => {
   assert.equal(response.status, 403);
   assert.deepEqual(await response.json(), { message: "Storage rejected the upload." });
 });
+
+test("upload edge accepts only the configured Supabase S3 project", async () => {
+  const previousURL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://projectref.supabase.co";
+  try {
+    const validTarget =
+      "https://projectref.storage.supabase.co/storage/v1/s3/hmi-connect/avatars/user/file.jpg?X-Amz-Credential=test&X-Amz-Signature=test&X-Amz-Expires=300";
+    let forwardedURL = "";
+    const valid = await proxyMediaUpload(
+      new Request("https://hmiconnect.id/api/media/upload-edge", {
+        method: "PUT",
+        headers: {
+          Origin: "https://hmiconnect.id",
+          "Content-Type": "image/jpeg",
+          [MEDIA_UPLOAD_TARGET_HEADER]: validTarget,
+        },
+        body: new Uint8Array([1]),
+      }),
+      async (input) => {
+        forwardedURL = String(input);
+        return new Response(null, { status: 200 });
+      },
+    );
+    assert.equal(valid.status, 200);
+    assert.equal(forwardedURL, validTarget);
+
+    const lookalike = await proxyMediaUpload(
+      new Request("https://hmiconnect.id/api/media/upload-edge", {
+        method: "PUT",
+        headers: {
+          Origin: "https://hmiconnect.id",
+          "Content-Type": "image/jpeg",
+          [MEDIA_UPLOAD_TARGET_HEADER]: validTarget.replace(
+            "projectref.storage.supabase.co",
+            "other-project.storage.supabase.co",
+          ),
+        },
+        body: new Uint8Array([1]),
+      }),
+      async () => new Response(null, { status: 200 }),
+    );
+    assert.equal(lookalike.status, 400);
+  } finally {
+    if (previousURL === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = previousURL;
+    }
+  }
+});

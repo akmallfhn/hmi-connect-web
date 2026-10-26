@@ -66,6 +66,18 @@ export async function presignMedia(
   });
 }
 
+export async function fallbackMedia(
+  assetId: string,
+): Promise<ApiEnvelope<PresignMediaResult>> {
+  const token = await sessionToken();
+  if (!token) return unauthorized();
+  return callApi<PresignMediaResult>("/api/v1/media/fallback", {
+    method: "POST",
+    token,
+    body: { asset_id: assetId },
+  });
+}
+
 export async function confirmMedia(
   assetId: string,
 ): Promise<ApiEnvelope<ConfirmMediaResult>> {

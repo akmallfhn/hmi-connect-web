@@ -122,7 +122,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
 | `GOOGLE_ANALYTICS_ID` | `app/layout.tsx` | GA4 measurement ID passed to `GoogleAnalytics` from `@next/third-parties/google`, matching Sevenpreneur's pattern. Current production value is `G-L0VGNEPGBW`. The ID is public in the rendered tag but read server-side; no `NEXT_PUBLIC_` twin is needed. |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only) | Browser-side Supabase client, used for notifications Realtime Broadcast and public asset URLs; image and document uploads use the backend Media API and R2. Existing Supabase URLs remain valid. Since the Go backend's Postgres is this Supabase project, the client also owns notifications Realtime Broadcast in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here. |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase.ts` (both), `lib/constants.ts#socialIconUrl` (URL only), `lib/media-upload-edge.ts` (URL only) | Browser-side Supabase client, used for notifications Realtime Broadcast and public asset URLs. Image and document uploads use the backend Media API with R2 primary and Supabase Storage fallback; the edge route derives the exact allowed Supabase S3 host from this project URL. Existing Supabase URLs remain valid. Since the Go backend's Postgres is this Supabase project, the client also owns notifications Realtime Broadcast in `hooks/useNotificationsRealtime.ts`. There's still no ORM/direct table querying here. |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | `lib/chapter-census-sheets.ts` | Server-only credentials from the Google service account JSON. Store the private key as a quoted env value with escaped `\n`; never use `NEXT_PUBLIC_` or commit the credential file. The writer authenticates with the Sheets scope, with a 10-second auth timeout and no automatic retry. |
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | `lib/chapter-census-sheets.ts` | Spreadsheet ID from its URL. The destination tab is fixed as `Pendataan Komisariat` in the writer, not an env setting. The spreadsheet must grant the service account Editor access, and the tab must exist. Missing credentials or spreadsheet ID makes the form answer "belum siap". Enable the Google Sheets API in the service account's Cloud project. |
 | `NEXT_PUBLIC_BASE_URL` | — (no consumer today) | The **backend's** public base URL, the browser-visible twin of `BASE_URL` — not this app's own origin. Nothing reads it right now; the site's own origin lives in the `DEV_`/`PROD_` constants in `lib/constants.ts`. Don't wire it into anything frontend-URL-shaped (it was once wrongly used as `metadataBase`, which pointed canonical/OG tags at the API host). |
@@ -1187,7 +1187,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   wrapper — Enter-to-send/Shift+Enter-newline, emoji button reusing `emoji-picker-react` same
   as `CreateFeedForms` — including a click-outside listener to close the picker, the same
   pattern `Dropdown.tsx` already uses — and a real image attachment upload through the
-  backend Media API's public `chat_image` category to R2 — unlike a mock feature, a real
+  backend Media API's public `chat_image` category to the configured storage flow — unlike a mock feature, a real
   message needs a real, shareable URL, not a same-tab-only blob URL. That image runs through
   `lib/compress-image.ts` at
   `{maxDimension: 1600, targetBytes: 500KB}` on send rather than on pick, so the preview appears
@@ -2199,7 +2199,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   activation's hard navigation, because the reader's access doesn't depend on anything the
   mutation changed. The cover and every inserted body image are
   real uploads: both use the backend Media API's public `article_cover`/`article_content`
-  categories and R2, and only the resulting public URL is held in state — there are no
+  categories and the shared R2-with-Supabase-fallback flow, and only the resulting public URL is held in state — there are no
   data-URL previews any more, so an image survives the eventual publish call instead of being
   inlined into the body HTML. Both run through `lib/compress-image.ts` at its defaults, with a raw
   20MB sanity cap before compression and a 5MB rejection after it (never a raw-size gate, see
@@ -2462,8 +2462,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   of local timeline state, uses `emoji-picker-react`, and uploads photos to the
   S3-compatible provider through `media/presign` → same-origin `/api/media/upload-edge` PUT → `media/confirm` before
   submitting their `media_ids`. The edge route forwards only `Content-Type`, `Cache-Control`,
-  and `X-Amz-Meta-Asset-Id` to R2 and caps request bodies at 10 MiB; the browser-to-Next request
-  is same-origin, so it does not use R2 CORS. Its composer and
+  and `X-Amz-Meta-Asset-Id` to storage and caps request bodies at 10 MiB; the browser-to-Next request
+  is same-origin, so it does not use provider CORS. R2 is primary. After an ambiguous or provider-side
+  PUT failure, the client first attempts `media/confirm`; if the object is absent it calls
+  `media/fallback`, repeats the same edge PUT against Supabase Storage, and confirms the same
+  `media_assets.id`. The edge allowlist accepts R2 plus only the Supabase S3 hostname derived from
+  `NEXT_PUBLIC_SUPABASE_URL`, never an arbitrary Supabase project. Its composer and
   `EditFeedForm` use the same `MentionTextarea` as comments, so mentions and hashtags share autocomplete
   and rendering rather than storing a second rich-text format. Mention notification semantics stay separate
   from the relational feed hashtag index. **A video is a YouTube
@@ -2637,7 +2641,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `users/create`; on success it hard-navigates to the new user's detail page if an admin-assigned
   `username` was set, otherwise back to the list (a `users/create` response has no username
   unless the admin typed one in — there's no self-service activation step here). Its avatar field
-  uploads through the backend Media API's public `avatar` category to R2, except the resulting
+  uploads through the backend Media API's public `avatar` category to the shared storage flow, except the resulting
   URL is just kept in local state and only sent along with the rest of the form on submit, rather
   than persisted immediately on change like the self-service form does.
   `components/navigations/AdminSidebar.tsx` is the reusable shell behind every admin sidebar —
@@ -2895,7 +2899,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   an event that still carries a pair shows its organizer disabled and never sends `organizer_name`,
   since a blank value would clear it under the pair. The detail page's Edit/Hapus menu is shown to
   the contact person only (and never to a logged-out viewer, whose id is also `undefined`). Poster upload
-  lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`, and uses the R2-backed media
+  lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`, and uses the shared media
   presign flow after `event_banner` optimization. The `/trainings`
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;
   the register Server Component performs its own session check and redirects anonymous visitors
@@ -2924,7 +2928,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   while enforcing the required levels (LK1 for an LK2 registration; LK1 and LK2 for LK3), but
   hides and skips that section entirely when the event itself is LK1. It uploads an optional
   PDF/DOC/DOCX paper directly to
-  backend Media API's public `document` category to R2, then passes the resulting public
+  backend Media API's public `document` category to the shared storage flow, then passes the resulting public
   `paper_url` to `trainings/register`. The submit button remains disabled until every
   visible required field is complete and valid, or whenever `is_registration_open` is false.
   After their top-level Dashboard item, the Badko/Korkom/Komisariat scopes of `EntitySidebar` pass
