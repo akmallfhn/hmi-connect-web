@@ -4,6 +4,7 @@ import {
   IconArrowBackUp,
   IconArticle,
   IconBell,
+  IconBook2,
   IconBrandHipchat,
   IconChevronDown,
   IconCreditCard,
@@ -56,7 +57,7 @@ interface MainSiteDesktopSidebarProps {
 
 const NAV_ITEMS = [
   {
-    label: "Home",
+    label: "Beranda",
     href: "/",
     icon: IconSmartHome,
     matches: (pathname: string) => pathname === "/",
@@ -68,20 +69,20 @@ const NAV_ITEMS = [
     matches: (pathname: string) => pathname === "/search",
   },
   {
-    label: "Chat",
+    label: "Pesan",
     href: "/chats",
     icon: IconBrandHipchat,
     matches: (pathname: string) =>
       pathname === "/chats" || pathname.startsWith("/chats/"),
   },
   {
-    label: "Notifications",
+    label: "Notifikasi",
     href: "/notifications",
     icon: IconBell,
     matches: (pathname: string) => pathname === "/notifications",
   },
   {
-    label: "Articles",
+    label: "Artikel",
     href: "/articles",
     icon: IconArticle,
     // /articles/create has no nav entry of its own, so it lights this one up too.
@@ -89,7 +90,7 @@ const NAV_ITEMS = [
       pathname === "/articles" || pathname.startsWith("/articles/"),
   },
   {
-    label: "LK Center",
+    label: "Training Center",
     href: "/trainings",
     icon: IconSchool,
     // Covers the event detail, registration, and /trainings/create routes too.
@@ -391,17 +392,24 @@ export default function MainSiteDesktopSidebar({
                 className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-foreground transition hover:bg-surface-muted hover:text-heading"
               >
                 <IconDots className="size-5" />
-                More
+                Lainnya
               </button>
             )}
           >
             <div className="py-1 font-stack-sans-headline font-normal">
               <Link
+                href="/organizational-documents"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
+              >
+                <IconBook2 className="size-4 text-muted-foreground" />
+                Pedoman Organisasi
+              </Link>
+              <Link
                 href="/settings"
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
               >
                 <IconSettings className="size-4 text-muted-foreground" />
-                Settings
+                Pengaturan
               </Link>
               {userId ? (
                 <button

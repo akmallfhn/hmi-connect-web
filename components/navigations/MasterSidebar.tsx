@@ -49,6 +49,11 @@ function getNavItems(
           href: "/master/chapters",
           icon: ADMIN_NAV_ICON.chapter,
         },
+        {
+          label: "Pedoman Organisasi",
+          href: "/master/organizational-documents",
+          icon: ADMIN_NAV_ICON.organizationalDocument,
+        },
       ],
     },
     {

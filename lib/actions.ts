@@ -194,6 +194,14 @@ import {
 } from "@/apis/articles";
 import { listNewsArticles as listNewsArticlesApi } from "@/apis/news";
 import {
+  createOrganizationalDocument as createOrganizationalDocumentApi,
+  deleteOrganizationalDocument as deleteOrganizationalDocumentApi,
+  getOrganizationalDocumentDetail as getOrganizationalDocumentDetailApi,
+  updateOrganizationalDocument as updateOrganizationalDocumentApi,
+  type CreateOrganizationalDocumentPayload,
+  type UpdateOrganizationalDocumentPayload,
+} from "@/apis/organizational-documents";
+import {
   listNotifications as listNotificationsApi,
   markNotificationsAsRead as markNotificationsAsReadApi,
 } from "@/apis/notifications";
@@ -888,6 +896,27 @@ export async function loadMoreArticles(tab: ArticleFeedTab, page: number) {
 
 export async function updateArticle(payload: UpdateArticlePayload) {
   return updateArticleApi(payload);
+}
+
+export async function createOrganizationalDocument(
+  payload: CreateOrganizationalDocumentPayload
+) {
+  return createOrganizationalDocumentApi(payload);
+}
+
+export async function updateOrganizationalDocument(
+  payload: UpdateOrganizationalDocumentPayload
+) {
+  return updateOrganizationalDocumentApi(payload);
+}
+
+export async function deleteOrganizationalDocument(id: number) {
+  return deleteOrganizationalDocumentApi(id);
+}
+
+// The list omits table_of_contents, so the edit sheet loads the full row when it opens.
+export async function getOrganizationalDocumentDetail(id: number) {
+  return getOrganizationalDocumentDetailApi(id);
 }
 
 // Public: /pendataan-komisariat sits outside login, so the server side re-validates everything.

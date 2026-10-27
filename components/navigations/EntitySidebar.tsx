@@ -103,6 +103,11 @@ function getScopeNavItems(
               href: `${base}/chapters`,
               icon: ADMIN_NAV_ICON.chapter,
             },
+            {
+              label: "Pedoman Organisasi",
+              href: `${base}/organizational-documents`,
+              icon: ADMIN_NAV_ICON.organizationalDocument,
+            },
           ],
         },
         { groupName: "Keanggotaan", items: [membersItem, verificationItem] },
@@ -121,7 +126,6 @@ function getScopeNavItems(
         {
           groupName: "Organisasi",
           items: [
-            { label: "AD ART", href: `${base}/ad-art`, icon: ADMIN_NAV_ICON.adArt },
             {
               label: "Kelola Korkom",
               href: `${base}/coordinating-chapters`,

@@ -23,7 +23,7 @@ export const ADMIN_NAV_ICON = {
   chapter: IconSchool,
   members: IconUsers,
   structural: IconHierarchy2,
+  organizationalDocument: IconBook2,
   verification: IconShieldCheck,
-  adArt: IconBook2,
   settings: IconSettings,
 } satisfies Record<string, TablerIcon>;

@@ -12,7 +12,8 @@ export type MediaCategory =
   | "entity_image"
   | "article_cover"
   | "article_content"
-  | "document";
+  | "document"
+  | "document_cover";
 
 export type PresignMediaPayload = {
   filename: string;

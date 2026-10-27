@@ -10,11 +10,23 @@ interface SheetProps {
   onClose: () => void;
   title: string;
   description?: string;
+  // "xl" is for forms with a wide editor inside; everything else keeps the default narrow sheet.
+  size?: "md" | "xl";
   children: ReactNode;
 }
 
+// A sheet opened from inside another stacks above it, and Escape should only close the top one.
+const openSheets: object[] = [];
+
 // Right-side slide-over for create/edit forms — same chrome as Modal.tsx, anchored to the right edge instead of centered.
-export default function Sheet({ open, onClose, title, description, children }: SheetProps) {
+export default function Sheet({
+  open,
+  onClose,
+  title,
+  description,
+  size = "md",
+  children,
+}: SheetProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -28,11 +40,16 @@ export default function Sheet({ open, onClose, title, description, children }: S
   useEffect(() => {
     if (!open) return;
 
+    const token = {};
+    openSheets.push(token);
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && openSheets.at(-1) === token) onClose();
     }
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      openSheets.splice(openSheets.indexOf(token), 1);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -44,12 +61,20 @@ export default function Sheet({ open, onClose, title, description, children }: S
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute inset-y-0 right-0 flex h-full w-full max-w-md flex-col border-l border-border bg-surface shadow-xl">
+      <div
+        className={`absolute inset-y-0 right-0 flex h-full w-full flex-col border-l border-border bg-surface shadow-xl ${
+          size === "xl" ? "max-w-2xl" : "max-w-md"
+        }`}
+      >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
-            <h2 className="font-stack-sans-headline text-base font-medium text-heading">{title}</h2>
+            <h2 className="font-stack-sans-headline text-base font-medium text-heading">
+              {title}
+            </h2>
             {description && (
-              <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {description}
+              </p>
             )}
           </div>
           <Button

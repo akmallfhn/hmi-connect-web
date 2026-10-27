@@ -347,7 +347,7 @@ real organization-wide dashboard, `/master/users` has the real User Management C
 `/master/verification` has the organization-wide verification review queue, and
 `/master/branches`/`/master/chapters`/`/master/coordinating-bodies` have the real Badko/Cabang/
 Komisariat CRUD panels (see Component conventions below). `MasterPlaceholderPage` is also used
-by the still-unimplemented Cabang SK/AD ART/Konfercab pages, but not by anything under `/master`;
+by the still-unimplemented Cabang SK/Konfercab pages, but not by anything under `/master`;
 the SK and Konfercab routes are currently hidden from the Cabang sidebar.
 
 ## Sitemap & robots
@@ -375,7 +375,7 @@ endpoint enumerates users or feeds without a session (`users/list` needs a grant
 backend exposes a listing behind `requireClientSecret`, each becomes its own
 `app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
 `app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
-activation, verification, settings, chats, notifications, `/official/`, invitations, reset links,
+activation, verification, settings, chats, notifications, organizational documents, `/official/`, invitations, reset links,
 forget-password, the article composer and editors, `/trainings/create`) plus any `?as=` URL, whose canonical is the
 plain page anyway.
 
@@ -476,7 +476,9 @@ Three layers, each with one job. Don't blend them.
    `auth.ts` (the rest of the `auth/*` resource — email/username login plus the whole
    password add/change/forget/reset flow, see Auth & session flow above; `session.ts` keeps
    `check-session`/`logout`/the cookie helpers, since those are what every other file reads),
-   `articles.ts` (the **editorial** `articles/*` + `article-categories/list` resource — entirely
+   `organizational-documents.ts` (`listOrganizationalDocuments`/`getOrganizationalDocumentDetail`,
+  session-cookie reads of the `organizational-documents/*` resource; see that route below),
+  `articles.ts` (the **editorial** `articles/*` + `article-categories/list` resource — entirely
    separate from `news.ts`, which wraps the third-party aggregator tables; don't conflate them.
    `listArticles`/`listArticleFeed`/`getArticleDetail`/`listArticleCategories`/`createArticle`. The
    two public read
@@ -905,16 +907,17 @@ iconSm`.
   is `bg-surface dark:bg-[#141414]`: white in light mode and `#141414` in dark mode,
   slightly brighter than the dark page surface. It contains the horizontal
   wordmark linking home, then
-  eight nav links (Home `/`, Explore `/search`, Chat `/chats`, Notifications `/notifications`,
-  Articles `/articles`, LK Center `/trainings` (matching every `/trainings/*` route), Al-Quran
+  eight nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
+  Artikel `/articles`, Training Center `/trainings` (matching every `/trainings/*` route), Al-Quran
   `/quran`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
-  "Posting" button, and a bottom-anchored "More" `Dropdown` (Settings, plus Keluar or Masuk).
+  "Posting" button, and a bottom-anchored "Lainnya" `Dropdown` (Pedoman Organisasi
+  `/organizational-documents`, Pengaturan, plus Keluar or Masuk).
   News is reached through the News tab on `/articles`, not a separate nav link.
   `MobileQuickMenu`'s first tile also opens `/articles`. The former `/news` and
   `/news/[category_slug]` routes were removed; the News tab is the single unfiltered list.
-  Labels are English here, unlike the Indonesian copy everywhere else in the app — except the
-  "Posting" button, which matches `BottomNav`'s own Indonesian label for the same action, since one
+  Labels are Indonesian like the rest of the app, except the long-standing Explore, Al-Quran, E-KTA,
+  and Profile; "Posting" matches `BottomNav`'s own label for the same action, since one
   action named two ways in two navs reads as two features. They are set in
   `font-stack-sans-headline`. Each item carries its own `matches(pathname)` predicate rather than a
   shared `startsWith` rule, since Home must match exactly while Chat/Quran/Articles must also
@@ -972,7 +975,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   per-page-load fetch serving exactly one route, so if anything else moves, move that fetch into
   the settings route instead. **The rail carries no admin scope at all**, for the same reason the
   old avatar dropdown didn't: a list that grows with however many entities someone administers
-  belongs on `/settings`, which is where "Settings" under More points.
+  belongs on `/settings`, which is where "Pengaturan" under Lainnya points.
   There is deliberately no mobile notification affordance in `Header` itself — the bell only
   shows up on mobile inside `MobileGreetingBar` (see below), so it doesn't need a second,
   sitewide top-right-corner bar competing for space on every page. `Header` also takes three optional props for pages reached by drilling in rather than
@@ -2279,6 +2282,62 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   editorial article isn't a news-aggregator item, and the nav rail plus `BottomNav` already own
   going anywhere. There is deliberately no reaction/comment/share bar:
   an article is not a feed post, and none of those endpoints accept an article target.
+- `/organizational-documents` (`app/(www)/www/(gated)/organizational-documents/page.tsx` ->
+  `components/pages/OrganizationalDocumentListPage.tsx`) lists the backend's
+  `organizational-documents/list` (AD/ART, PDK, and similar PDFs) with `?search=`/`?page=` URL state:
+  thumbnail cards shaped like `PublicTrainingCard` in a two/three-column grid from `lg`, and the
+  compact row list below it; the page has no description under its title,
+  and `/organizational-documents/[document_slug]/[document_id]` renders
+  `OrganizationalDocumentDetailPage`, the canvas-rendered `pdfjs-dist` viewer: pages scroll
+  continuously and only pages near the viewport keep a canvas; search highlights every match in
+  yellow (the active one orange) from a background text index; pinch or ctrl/trackpad wheel zooms
+  continuously (100–300%, where 100% fills the reader width and stays centered with no sideways scroll) with a live CSS scale committed on release; the nested, clickable TOC highlights exactly one entry.
+  Desktop keeps a toolbar of `soft` `Button`s. Mobile is a fixed full-screen reader with its own
+  header (title in Stack Sans Headline plus page count), no `BottomNav`, page navigation floating
+  bottom-center, and search/download/TOC floating on the right. Like an
+  article, only `document_id` resolves; the slug is decorative. `apis/organizational-documents.ts`
+  reads both with the session cookie, since the backend's reads are `requireAuth`. The table of contents comes from the row's
+  `table_of_contents` (`[{title, page, children}]`) and falls back to the PDF's own bookmarks when
+  empty; the panel hides when neither exists. The pdf.js worker is served from
+  `public/documents/pdf.worker.min.mjs`. A `file_url` on this app's own origin is stripped to a path
+  by the detail route so it loads same-origin in local dev too. A PDF on R2 needs `GET` in the bucket's CORS for pdf.js to
+  fetch it. The admin `/branches/{id}/ad-art` route that first hosted this viewer is gone.
+  The backend contract is a numeric `id`, a required `organization_id`, and media references
+  (`file_media_id` for the `document` category, optional `image_media_id` for `document_cover`)
+  resolved into `file_url`/`image_url`, plus a required `published_at`; there is no description.
+  Admins manage them at `/master/organizational-documents` and
+  `/organizations/[organization_id]/organizational-documents` ("Pedoman Organisasi" in both
+  sidebars' Organisasi group) through `AdminOrganizationalDocumentListPage` (search, a Status
+  filter, and delete behind `AlertConfirmation`); each row shows the 16:9 cover, the title with its
+  page count beneath, the publication date, and the uploader's avatar and name from the backend's
+  flattened `created_by_name`/`created_by_username`/`created_by_avatar`. The backend shows inactive rows to whoever may
+  manage them: Super Admin, or a `manage` grant at the document's organization. Three sheets split the work, sharing their fields from
+  `components/forms/OrganizationalDocumentFields.tsx` (PDF and cover fields, the detail loader, the
+  draft outline editor, and the page-count/outline helpers):
+  `CreateOrganizationalDocumentFormSheet` (title, PDF, cover, publication date, a `Switch` for
+  active/inactive, and, once a PDF is uploaded, a summary row opening a nested `size="xl"` sheet for
+  the table of contents); `EditOrganizationalDocumentFormSheet` (the same metadata without any table
+  of contents, refusing a replacement PDF shorter than the last page the outline points at); and
+  `EditOrganizationalDocumentOutlineSheet` (the "Atur Daftar Isi" row action, saving only
+  `table_of_contents`). Both edit sheets load the full row through the
+  `getOrganizationalDocumentDetail` Server Action, since the list omits `table_of_contents`; there
+  are no create/edit routes. The page count is never typed: it is read from the PDF with pdf.js
+  (`inspectPdf`), including for an existing document saved without one. The outline editor
+  (`components/admin/DocumentOutlineEditor.tsx`) works on a draft and only hands rows back on
+  "Simpan Daftar Isi": indented rows that `buildOutlineTree` nests into the stored tree, four levels
+  max, laid out with container queries. Bookmarks found in a newly uploaded PDF prefill an empty
+  outline. `Sheet` keeps a module-level stack so Escape only
+  closes the topmost sheet. The PDF is compressed in the browser with `pdf-lib`
+  (`lib/organizational-document-media.ts#compressPdf`), aiming at `PDF_TARGET_BYTES` (500KB): JPEG
+  images in DeviceRGB/DeviceGray are re-encoded from the original, level by level (1600px at 0.8
+  down to a 1000px/0.6 floor), until the file fits; text, fonts, and vectors are untouched, so a
+  text-heavy PDF stops at the floor above target (a 167-page text PDF measured during development
+  bottomed out near 1MB because its fonts and text streams alone were about 780KB). Up to 30MB raw is accepted, at most 10MB after
+  compression. Covers are center-cropped to 16:9 and stepped down to about 100KB by
+  `prepareDocumentCover` (WebP, widths 1280 to 960, quality never below 0.62). Updates send only
+  the fields that changed; an empty `image_media_id` clears the cover. The backend authorizes writes
+  for Super Admin or an exact organization grant, matching the organization layout's
+  `canManageEntity` gate.
 - `/pendataan-komisariat` (`app/(www)/www/pendataan-komisariat/page.tsx` ->
   `components/pages/ChapterCensusPage.tsx`) is a public, pre-login census form: Data Pengisi (nama,
   email, jabatan), Asal Cabang (a Badko `SearchableSelect`, plus `NO_COORDINATING_BODY_LABEL` for
@@ -2761,7 +2820,7 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   (`/branches/{id}`, exact-matched, real analytics via `BranchDashboardPage` and branch-scoped
   `stat/summary/branch`, `chapter-distribution`, `user-growth`, `verification-count`, and `chapter-status`
   calls), then two `AdminNavGroup`s —
-  "Organisasi" (AD ART at `/branches/{id}/ad-art`, still a placeholder; Kelola Komisariat at
+  "Organisasi" (Kelola Korkom; Kelola Komisariat at
   `/branches/{id}/chapters`, real — see below) and "Keanggotaan" (Daftar Kader at
   `/branches/{id}/members`, real — see further below; Permintaan Verifikasi at
   `/branches/{id}/verification`, real — see further below). The "Program" group that held Latihan
