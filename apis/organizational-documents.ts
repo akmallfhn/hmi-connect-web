@@ -63,7 +63,8 @@ export type CreateOrganizationalDocumentPayload = {
   file_media_id: string;
   image_media_id?: string;
   page_count?: number;
-  table_of_contents: DocumentOutlineItem[];
+  // Omitted on create, where the backend defaults it to []; set later from the outline sheet.
+  table_of_contents?: DocumentOutlineItem[];
   status: StatusEnum;
   published_at: string;
 };

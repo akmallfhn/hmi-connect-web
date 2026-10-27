@@ -2314,9 +2314,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   manage them: Super Admin, or a `manage` grant at the document's organization. Three sheets split the work, sharing their fields from
   `components/forms/OrganizationalDocumentFields.tsx` (PDF and cover fields, the detail loader, the
   draft outline editor, and the page-count/outline helpers):
-  `CreateOrganizationalDocumentFormSheet` (title, PDF, cover, publication date, a `Switch` for
-  active/inactive, and, once a PDF is uploaded, a summary row opening a nested `size="xl"` sheet for
-  the table of contents); `EditOrganizationalDocumentFormSheet` (the same metadata without any table
+  `CreateOrganizationalDocumentFormSheet` (title, PDF, cover, publication date, and a `Switch` for
+  active/inactive only; it sends no `table_of_contents`, which the backend defaults to `[]`); `EditOrganizationalDocumentFormSheet` (the same metadata without any table
   of contents, refusing a replacement PDF shorter than the last page the outline points at); and
   `EditOrganizationalDocumentOutlineSheet` (the "Atur Daftar Isi" row action, saving only
   `table_of_contents`). Both edit sheets load the full row through the
@@ -2325,8 +2324,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   (`inspectPdf`), including for an existing document saved without one. The outline editor
   (`components/admin/DocumentOutlineEditor.tsx`) works on a draft and only hands rows back on
   "Simpan Daftar Isi": indented rows that `buildOutlineTree` nests into the stored tree, four levels
-  max, laid out with container queries. Bookmarks found in a newly uploaded PDF prefill an empty
-  outline. `Sheet` keeps a module-level stack so Escape only
+  max, laid out with container queries. Its "Ambil dari Bookmark" button reads the PDF's own
+  bookmarks on demand. `Sheet` keeps a module-level stack so Escape only
   closes the topmost sheet. The PDF is compressed in the browser with `pdf-lib`
   (`lib/organizational-document-media.ts#compressPdf`), aiming at `PDF_TARGET_BYTES` (500KB): JPEG
   images in DeviceRGB/DeviceGray are re-encoded from the original, level by level (1600px at 0.8
