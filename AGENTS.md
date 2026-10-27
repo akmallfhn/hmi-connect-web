@@ -684,7 +684,8 @@ flow. That endpoint 409s unless the caller is still `unverified`, and only its
    Before this step can continue, the client debounces a request to
    `/www/api/users/check-username`, which delegates to the backend's
    `users/check-username`; only `is_available: true` unlocks the next step. Phone number
-   and gender sit here too (`date_of_birth` is optional on the endpoint and not asked). **There is no separate KTP-name field** — the
+   and gender sit here too, and date of birth is required in the frontend and sent as
+   `date_of_birth` to the activation-verification endpoint. **There is no separate KTP-name field** — the
    backend saves `full_name` as the request's `ktp_full_name` too, which is why the name
    field is labelled "sesuai KTP".
 2. **Cabang & Komisariat** — the same cascading Branch → Chapter picker plus Belum/Sudah
@@ -776,10 +777,10 @@ verification form is the same instruction twice.
    resets when the parent changes — don't try to reset them by clearing `value` alone,
    `SearchableSelect` doesn't watch for that. Only `district_id` is submitted; city/province
    are derived server-side from it.
-   **Every field here is required**, as are `date_of_birth` on step 1: `users/verification`
-   now demands `date_of_birth`, `address_street`, and `district_id`, since this page is where a
-   member fills in what `users/activation-verification` left out (activation asks for none of
-   the three). A request filed by activation still carries them as `null`, so
+   **Every field here is required**, as is `date_of_birth` on activation step 1:
+   `users/verification` requires `date_of_birth`, `address_street`, and `district_id`, while
+   activation now collects the date of birth and leaves only the address fields for this page.
+   A request filed by activation still carries the address fields as `null`, so
    `VerificationRequestDetail`'s `address_street`/`district_id` **and** the whole derived
    `district_name`/`city_*`/`province_*` chain stay typed required-and-nullable, and the admin
    review modal's single "Alamat Lengkap" `Field` coalesces its joined value to `undefined` when

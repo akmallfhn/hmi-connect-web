@@ -39,7 +39,7 @@ export type ActivationVerificationPayload = {
   education_start_year: number;
   education_end_year?: number;
   phone_number: string;
-  date_of_birth?: string;
+  date_of_birth: string;
   gender: GenderEnum;
   is_alumni?: boolean;
 } & VerificationMembershipTarget;

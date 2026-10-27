@@ -92,6 +92,7 @@ type FormData = {
   fullName: string;
   username: string;
   phoneNumber: string;
+  dateOfBirth: string;
   gender: GenderEnum | null;
   branch: BranchOption | null;
   chapter: OrganizationOption | null;
@@ -112,6 +113,7 @@ function emptyFormData(fullName?: string, avatar?: string): FormData {
     fullName: fullName ?? "",
     username: "",
     phoneNumber: "",
+    dateOfBirth: "",
     gender: null,
     branch: null,
     chapter: null,
@@ -349,6 +351,7 @@ export default function ActivationPage({
     usernameHasValidFormat &&
     usernameAvailability === "available" &&
     formData.phoneNumber.trim() !== "" &&
+    formData.dateOfBirth !== "" &&
     formData.gender !== null;
 
   const selectedBranchIsSpecial = formData.branch?.isSpecial === true;
@@ -407,6 +410,7 @@ export default function ActivationPage({
           ? { chapter_id: String(formData.chapter.value) }
           : { branch_id: String(formData.branch?.value ?? "") }),
         phone_number: formData.phoneNumber.trim(),
+        date_of_birth: formData.dateOfBirth,
         gender: formData.gender as GenderEnum,
         is_alumni: formData.isAlumni === true,
       });
@@ -643,6 +647,16 @@ export default function ActivationPage({
                   value={formData.phoneNumber}
                   onValueChange={(value) =>
                     updateFormData("phoneNumber", value)
+                  }
+                  required
+                />
+                <Input
+                  inputId="date-of-birth"
+                  type="date"
+                  label="Tanggal Lahir"
+                  value={formData.dateOfBirth}
+                  onChange={(event) =>
+                    updateFormData("dateOfBirth", event.target.value)
                   }
                   required
                 />

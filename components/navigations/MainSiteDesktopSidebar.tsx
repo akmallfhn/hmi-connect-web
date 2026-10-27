@@ -90,6 +90,14 @@ const NAV_ITEMS = [
       pathname === "/articles" || pathname.startsWith("/articles/"),
   },
   {
+    label: "Pedoman Organisasi",
+    href: "/organizational-documents",
+    icon: IconBook2,
+    matches: (pathname: string) =>
+      pathname === "/organizational-documents" ||
+      pathname.startsWith("/organizational-documents/"),
+  },
+  {
     label: "Training Center",
     href: "/trainings",
     icon: IconSchool,
@@ -397,13 +405,6 @@ export default function MainSiteDesktopSidebar({
             )}
           >
             <div className="py-1 font-stack-sans-headline font-normal">
-              <Link
-                href="/organizational-documents"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
-              >
-                <IconBook2 className="size-4 text-muted-foreground" />
-                Pedoman Organisasi
-              </Link>
               <Link
                 href="/settings"
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
