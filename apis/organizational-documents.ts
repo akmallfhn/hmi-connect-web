@@ -2,7 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
-import { isSuccessStatus, type StatusEnum, type StatusName } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type OrganizationalDocumentTypeEnum,
+  type StatusEnum,
+  type StatusName,
+} from "@/lib/types";
 import { callApi } from "./api";
 
 export type DocumentOutlineItem = {
@@ -15,6 +20,7 @@ export type OrganizationalDocumentListEntry = {
   id: number;
   organization_id: string;
   title: string;
+  type: OrganizationalDocumentTypeEnum;
   file_media_id: string;
   file_url: string;
   image_media_id: string | null;
@@ -60,6 +66,7 @@ export type OrganizationalDocumentWriteResult =
 export type CreateOrganizationalDocumentPayload = {
   organization_id: string;
   title: string;
+  type: OrganizationalDocumentTypeEnum;
   file_media_id: string;
   image_media_id?: string;
   page_count?: number;

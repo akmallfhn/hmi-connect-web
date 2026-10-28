@@ -1,9 +1,19 @@
 import type { DocumentOutlineItem } from "@/apis/organizational-documents";
+import type { OrganizationalDocumentTypeEnum } from "@/lib/types";
 
 export const ORGANIZATIONAL_DOCUMENTS_PATH = "/organizational-documents";
 export const PDF_WORKER_SRC = "/documents/pdf.worker.min.mjs";
 // The backend accepts four outline levels; the editor counts depth from 0.
 export const MAX_OUTLINE_DEPTH = 3;
+
+export const ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS: {
+  label: string;
+  value: OrganizationalDocumentTypeEnum;
+}[] = [
+  { label: "PDK", value: "pdk" },
+  { label: "PD-PRT BPL", value: "pd-prt-bpl" },
+  { label: "Konstitusi", value: "konstitusi" },
+];
 
 export function organizationalDocumentHref(document: {
   id: number;

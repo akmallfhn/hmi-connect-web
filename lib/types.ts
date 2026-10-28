@@ -7,6 +7,11 @@ export type SortTypeEnum = "asc" | "desc";
 export type CoordinatingBodySortByEnum = "index" | "name";
 export type GenderEnum = "male" | "female";
 export type BranchTypeEnum = "full" | "provisional";
+
+export type OrganizationalDocumentTypeEnum =
+  | "pdk"
+  | "pd-prt-bpl"
+  | "konstitusi";
 export type TrainingStatusEnum = "LK1" | "LK2" | "LK3";
 export type TrainingHistoryLevelEnum =
   | TrainingStatusEnum

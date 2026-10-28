@@ -4,9 +4,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { OrganizationalDocumentDetail } from "@/apis/organizational-documents";
 import { updateOrganizationalDocument } from "@/lib/actions";
+import { ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS } from "@/lib/organizational-document";
+import type { OrganizationalDocumentTypeEnum } from "@/lib/types";
 import { localDateKey } from "@/lib/time-manipulation";
 import Switch from "../buttons/Switch";
 import Input from "../fields/Input";
+import Select from "../fields/Select";
 import Sheet from "../modals/Sheet";
 import {
   DocumentCoverField,
@@ -65,6 +68,9 @@ function EditDocumentFields({
 }) {
   const initialPublishedDate = localDateKey(new Date(document.published_at));
   const [title, setTitle] = useState(document.title);
+  const [type, setType] = useState<OrganizationalDocumentTypeEnum>(
+    document.type
+  );
   const [pdf, setPdf] = useState<UploadedPdf>({
     mediaId: document.file_media_id,
     url: document.file_url,
@@ -113,6 +119,7 @@ function EditDocumentFields({
       const result = await updateOrganizationalDocument({
         id: document.id,
         ...(title.trim() !== document.title ? { title: title.trim() } : {}),
+        ...(type !== document.type ? { type } : {}),
         ...(pdf.mediaId !== document.file_media_id
           ? { file_media_id: pdf.mediaId }
           : {}),
@@ -150,6 +157,18 @@ function EditDocumentFields({
         errorMessage={
           showErrors && !title.trim() ? "Judul pedoman wajib diisi." : undefined
         }
+      />
+
+      <Select
+        selectId="document-type"
+        label="Tipe Dokumen"
+        placeholder="Pilih tipe dokumen"
+        value={type}
+        onChange={(value) =>
+          setType(value as OrganizationalDocumentTypeEnum)
+        }
+        options={ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS}
+        required
       />
 
       <DocumentPdfField

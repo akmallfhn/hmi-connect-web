@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { createOrganizationalDocument } from "@/lib/actions";
+import {
+  ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS,
+} from "@/lib/organizational-document";
+import type { OrganizationalDocumentTypeEnum } from "@/lib/types";
 import Switch from "../buttons/Switch";
 import Input from "../fields/Input";
+import Select from "../fields/Select";
 import Sheet from "../modals/Sheet";
 import {
   DocumentCoverField,
@@ -57,6 +62,7 @@ function CreateDocumentFields({
   defaultPublishedDate,
 }: Omit<CreateOrganizationalDocumentFormSheetProps, "open">) {
   const [title, setTitle] = useState("");
+  const [type, setType] = useState<OrganizationalDocumentTypeEnum | "">("");
   const [pdf, setPdf] = useState<UploadedPdf | null>(null);
   const [cover, setCover] = useState<UploadedCover | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
@@ -74,6 +80,10 @@ function CreateDocumentFields({
       toast.error("Judul pedoman wajib diisi.");
       return;
     }
+    if (!type) {
+      toast.error("Tipe dokumen wajib dipilih.");
+      return;
+    }
     if (!pdf) {
       toast.error("Unggah file PDF pedoman terlebih dahulu.");
       return;
@@ -88,6 +98,7 @@ function CreateDocumentFields({
       const result = await createOrganizationalDocument({
         organization_id: organizationId,
         title: title.trim(),
+        type,
         file_media_id: pdf.mediaId,
         ...(cover ? { image_media_id: cover.mediaId } : {}),
         ...(pageCount ? { page_count: pageCount } : {}),
@@ -117,6 +128,18 @@ function CreateDocumentFields({
         errorMessage={
           showErrors && !title.trim() ? "Judul pedoman wajib diisi." : undefined
         }
+      />
+
+      <Select
+        selectId="document-type"
+        label="Tipe Dokumen"
+        placeholder="Pilih tipe dokumen"
+        value={type}
+        onChange={(value) =>
+          setType(value as OrganizationalDocumentTypeEnum)
+        }
+        options={ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS}
+        required
       />
 
       <DocumentPdfField

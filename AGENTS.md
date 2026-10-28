@@ -2307,7 +2307,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `public/documents/pdf.worker.min.mjs`. A `file_url` on this app's own origin is stripped to a path
   by the detail route so it loads same-origin in local dev too. A PDF on R2 needs `GET` in the bucket's CORS for pdf.js to
   fetch it. The admin `/branches/{id}/ad-art` route that first hosted this viewer is gone.
-  The backend contract is a numeric `id`, a required `organization_id`, and media references
+  The backend contract is a numeric `id`, a required `organization_id`, a required `type`
+  (`pdk`, `pd-prt-bpl`, or `konstitusi`), and media references
   (`file_media_id` for the `document` category, optional `image_media_id` for `document_cover`)
   resolved into `file_url`/`image_url`, plus a required `published_at`; there is no description.
   Admins manage them at `/master/organizational-documents` and
@@ -2319,7 +2320,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   manage them: Super Admin, or a `manage` grant at the document's organization. Three sheets split the work, sharing their fields from
   `components/forms/OrganizationalDocumentFields.tsx` (PDF and cover fields, the detail loader, the
   draft outline editor, and the page-count/outline helpers):
-  `CreateOrganizationalDocumentFormSheet` (title, PDF, cover, publication date, and a `Switch` for
+  `CreateOrganizationalDocumentFormSheet` (title, document type, PDF, cover, publication date, and a `Switch` for
   active/inactive only; it sends no `table_of_contents`, which the backend defaults to `[]`); `EditOrganizationalDocumentFormSheet` (the same metadata without any table
   of contents, refusing a replacement PDF shorter than the last page the outline points at); and
   `EditOrganizationalDocumentOutlineSheet` (the "Atur Daftar Isi" row action, saving only
