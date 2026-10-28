@@ -2288,10 +2288,15 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   going anywhere. There is deliberately no reaction/comment/share bar:
   an article is not a feed post, and none of those endpoints accept an article target.
 - `/organizational-documents` (`app/(www)/www/(gated)/organizational-documents/page.tsx` ->
-  `components/pages/OrganizationalDocumentListPage.tsx`) lists the backend's
-  `organizational-documents/list` (AD/ART, PDK, and similar PDFs) with `?search=`/`?page=` URL state:
-  thumbnail cards shaped like `PublicTrainingCard` in a two/three-column grid from `lg`, and the
-  compact row list below it; the page has no description under its title,
+  `components/pages/OrganizationalDocumentListPage.tsx`) reads every active page from the backend's
+  `organizational-documents/list` and groups the result into the fixed Konstitusi, PDK, and PD-PRT BPL
+  categories. Each category has hardcoded explanatory copy, treats its newest `published_at` (then
+  highest id on a tie) as the large "Berlaku Saat Ini" document, and presents the remaining documents
+  as smaller chronological "Riwayat versi" rows. Every current and historical cover stays at 16:9.
+  `?search=` filters categories and historical titles
+  in memory while keeping the category's real current document visible for context; there is no list
+  pagination on this member-facing hierarchy. The API's paginated read remains unchanged for admin.
+  The page title has no description beneath it,
   and `/organizational-documents/[document_slug]/[document_id]` renders
   `OrganizationalDocumentDetailPage`, the canvas-rendered `pdfjs-dist` viewer: pages scroll
   continuously and only pages near the viewport keep a canvas; search highlights every match in

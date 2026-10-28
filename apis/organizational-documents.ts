@@ -124,6 +124,39 @@ export async function listOrganizationalDocuments(
   };
 }
 
+// The member catalog presents every active version as one hierarchy per document type,
+// so it needs the complete result rather than one arbitrary API page.
+export async function listAllOrganizationalDocuments(
+  options: Omit<
+    Parameters<typeof listOrganizationalDocuments>[0],
+    "page" | "pageSize"
+  > = {}
+): Promise<OrganizationalDocumentListEntry[]> {
+  const pageSize = 100;
+  const firstPage = await listOrganizationalDocuments({
+    ...options,
+    page: 1,
+    pageSize,
+  });
+
+  if (firstPage.totalPage <= 1) return firstPage.list;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.totalPage - 1 }, (_, index) =>
+      listOrganizationalDocuments({
+        ...options,
+        page: index + 2,
+        pageSize,
+      })
+    )
+  );
+
+  return [
+    ...firstPage.list,
+    ...remainingPages.flatMap((result) => result.list),
+  ];
+}
+
 // Answers 404 for a missing or deleted document, or an inactive one the caller cannot manage; all surface as null.
 export async function getOrganizationalDocumentDetail(
   id: number

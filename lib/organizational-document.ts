@@ -10,10 +10,31 @@ export const ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS: {
   label: string;
   value: OrganizationalDocumentTypeEnum;
 }[] = [
+  { label: "Konstitusi", value: "konstitusi" },
   { label: "PDK", value: "pdk" },
   { label: "PD-PRT BPL", value: "pd-prt-bpl" },
-  { label: "Konstitusi", value: "konstitusi" },
 ];
+
+export const ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS: Record<
+  OrganizationalDocumentTypeEnum,
+  { label: string; description: string }
+> = {
+  pdk: {
+    label: "PDK",
+    description:
+      "Pedoman Dasar KOHATI yang menjadi acuan arah, identitas, dan tata kelola organisasi KOHATI.",
+  },
+  konstitusi: {
+    label: "Konstitusi",
+    description:
+      "Landasan aturan tertinggi HMI yang memuat Anggaran Dasar, Anggaran Rumah Tangga, dan ketentuan organisasi.",
+  },
+  "pd-prt-bpl": {
+    label: "PD-PRT BPL",
+    description:
+      "Pedoman Dasar dan Pedoman Rumah Tangga BPL sebagai acuan pengelolaan latihan dan perkaderan HMI.",
+  },
+};
 
 export function organizationalDocumentHref(document: {
   id: number;

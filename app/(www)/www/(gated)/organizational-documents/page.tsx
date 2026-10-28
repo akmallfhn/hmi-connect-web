@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
-import { listOrganizationalDocuments } from "@/apis/organizational-documents";
+import { listAllOrganizationalDocuments } from "@/apis/organizational-documents";
 import OrganizationalDocumentListPage from "@/components/pages/OrganizationalDocumentListPage";
 
 export const metadata: Metadata = {
@@ -14,13 +14,12 @@ export const metadata: Metadata = {
 export default async function OrganizationalDocuments({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; page?: string }>;
+  searchParams: Promise<{ search?: string }>;
 }) {
-  const { search = "", page } = await searchParams;
-  const currentPage = Math.max(1, Number(page) || 1);
+  const { search = "" } = await searchParams;
   const [{ user }, documents] = await Promise.all([
     getSession(),
-    listOrganizationalDocuments({ search: search.trim(), page: currentPage }),
+    listAllOrganizationalDocuments(),
   ]);
 
   return (
@@ -33,10 +32,8 @@ export default async function OrganizationalDocuments({
         username: user?.username,
         verificationStatus: user?.verification_status,
       }}
-      documents={documents.list}
+      documents={documents.filter((document) => document.status === "active")}
       search={search.trim()}
-      currentPage={documents.currentPage}
-      totalPages={documents.totalPage}
     />
   );
 }
