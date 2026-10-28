@@ -1,11 +1,14 @@
 import { listFeeds } from "@/apis/feeds";
+import { getPrayerWidget, resolvePrayerCityId } from "@/apis/prayer-schedules";
 import { listNewsArticles } from "@/apis/news";
 import { listFollowRecommendations } from "@/apis/users";
+import { prayerWidgetKey } from "@/lib/prayer-schedule";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import FeedTimeline, { type TimelineInsertion } from "./FeedTimeline";
 import MobileQuickMenu from "./MobileQuickMenu";
 import NewsCarousel from "./NewsCarousel";
 import PeopleRecommendationModal from "../modals/PeopleRecommendationModal";
+import PrayerWidget from "../prayer/PrayerWidget";
 import SuggestedConnectionsCarousel from "./SuggestedConnectionsCarousel";
 
 interface FeedProps {
@@ -19,6 +22,7 @@ interface FeedProps {
 
 // Feed indices the inline cards sit after — early enough to be seen, then widening out.
 const FIRST_SUGGESTIONS_AFTER = 1;
+const PRAYER_WIDGET_AFTER = 3;
 const FIRST_NEWS_AFTER = 6;
 const SECOND_NEWS_AFTER = 13;
 const SECOND_SUGGESTIONS_AFTER = 20;
@@ -34,11 +38,17 @@ export default async function Feed({
   followingCount,
 }: FeedProps) {
   // One ranked recommendations page serves both timeline slots and the onboarding modal.
-  const [{ list, hasMore }, recommendations, news] = await Promise.all([
-    listFeeds({ page: 1, pageSize: 20 }),
-    listFollowRecommendations({ pageSize: MODAL_RECOMMENDATION_LIMIT }),
-    listNewsArticles({ pageSize: ITEMS_PER_SLOT * 2 }),
-  ]);
+  const [{ list, hasMore }, recommendations, news, prayer] =
+    await Promise.all([
+      listFeeds({ page: 1, pageSize: 20 }),
+      listFollowRecommendations({ pageSize: MODAL_RECOMMENDATION_LIMIT }),
+      listNewsArticles({ pageSize: ITEMS_PER_SLOT * 2 }),
+      resolvePrayerCityId().then(async ({ cityId, isFallback }) => ({
+        widget: cityId ? await getPrayerWidget(cityId) : null,
+        isFallback,
+      })),
+    ]);
+  const prayerWidget = prayer.widget;
 
   const firstSuggestions = recommendations.list.slice(0, ITEMS_PER_SLOT);
   const secondSuggestions = recommendations.list.slice(ITEMS_PER_SLOT);
@@ -51,6 +61,19 @@ export default async function Feed({
     insertions.push({
       after: FIRST_SUGGESTIONS_AFTER,
       node: <SuggestedConnectionsCarousel connections={firstSuggestions} />,
+    });
+  }
+  if (prayerWidget) {
+    insertions.push({
+      after: PRAYER_WIDGET_AFTER,
+      node: (
+        <PrayerWidget
+          key={prayerWidgetKey(prayerWidget, prayerWidget.city_id)}
+          widget={prayerWidget}
+          variant="feed"
+          isFallbackCity={prayer.isFallback}
+        />
+      ),
     });
   }
   if (firstNews.length > 0) {

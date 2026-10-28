@@ -60,6 +60,7 @@ export async function searchProvinces(
   });
 }
 
+// Province-scoped, for every cascading Province → City picker.
 export async function searchCities(
   provinceId: number,
   options: LocationListOptions = {}
@@ -67,6 +68,18 @@ export async function searchCities(
   const { search, page, pageSize } = options;
   return fetchLocationList<City>("/api/v1/cities/list", {
     province_id: provinceId,
+    ...(search ? { search } : {}),
+    ...(page ? { page } : {}),
+    ...(pageSize ? { page_size: pageSize } : {}),
+  });
+}
+
+// Every city nationwide; reserved for the prayer-schedule city picker, which has no province step.
+export async function searchCitiesNationwide(
+  options: LocationListOptions = {}
+): Promise<LocationListResult<City>> {
+  const { search, page, pageSize } = options;
+  return fetchLocationList<City>("/api/v1/cities/list", {
     ...(search ? { search } : {}),
     ...(page ? { page } : {}),
     ...(pageSize ? { page_size: pageSize } : {}),

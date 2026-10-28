@@ -63,6 +63,7 @@ interface SearchableSelectProps {
   menuPlacement?: MenuPlacement;
   portalMenu?: boolean;
   showOptionAvatar?: boolean;
+  isClearable?: boolean;
 }
 
 export default function SearchableSelect({
@@ -81,6 +82,7 @@ export default function SearchableSelect({
   menuPlacement = "auto",
   portalMenu = true,
   showOptionAvatar = false,
+  isClearable = true,
 }: SearchableSelectProps) {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<SearchableOption[]>(defaultOptions);
@@ -170,7 +172,7 @@ export default function SearchableSelect({
             inputValue={inputValue}
             onInputChange={handleInputChange}
             onChange={handleChange}
-            isClearable
+            isClearable={isClearable}
             options={options}
             filterOption={null}
             isLoading={isLoading}

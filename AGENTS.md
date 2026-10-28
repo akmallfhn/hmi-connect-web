@@ -908,9 +908,9 @@ iconSm`.
   is `bg-surface dark:bg-[#141414]`: white in light mode and `#141414` in dark mode,
   slightly brighter than the dark page surface. It contains the horizontal
   wordmark linking home, then
-  eight nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
+  nine nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
   Artikel `/articles`, Training Center `/trainings` (matching every `/trainings/*` route), Al-Quran
-  `/quran`, E-KTA `/membership`), then a Profile row, a
+  `/quran`, Jadwal Sholat `/prayer-schedules`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
   "Posting" button, and a bottom-anchored "Lainnya" `Dropdown` (Pedoman Organisasi
   `/organizational-documents`, Pengaturan, plus Keluar or Masuk).
@@ -1305,7 +1305,7 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   (`{after, node, mobileOnly?}`, `after` being a 0-based index counting posts only). It is
   deliberately **not a modulo**: the pools behind these cards are finite, so a repeating cycle
   would replay rows the reader already scrolled past. Today's plan is follow
-  suggestions after index 1, news after 6, news again after 13, then follow suggestions again
+  suggestions after index 1, the prayer widget after 3, news after 6, news again after 13, then follow suggestions again
   after 20. Every slot renders at **all** breakpoints: the two news strips are unfiltered, while
   `RightSidebar`'s own card narrows to one category, so the sidebar and the timeline are never
   showing the same articles. Two slots can't share an `after`, since the lookup is a `Map` keyed
@@ -2416,6 +2416,46 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   single pass, no sorting) and renders one bordered card per surah with its own name as a
   header row, rather than one flat list — the gradient header's `coverageLabel` then
   summarizes those groups as e.g. "Al-Fatihah 1-7, Al-Baqarah 1-141".
+- `/prayer-schedules` (`app/(www)/www/(gated)/prayer-schedules/page.tsx` ->
+  `components/pages/PrayerSchedulePage.tsx`) is backed by `apis/prayer-schedules.ts`, which wraps the
+  session-only `prayer-schedules/widget` (today plus the countdown to the next obligatory prayer) and
+  `prayer-schedules` (one month, requested with `page_size: 31`). Both key on a `lookup_cities.id`;
+  `resolvePrayerCityId` picks it as `?city_id` → the `PRAYER_CITY_COOKIE_NAME` cookie → the viewer's
+  `users/detail` `city_id` → a fallback picked by the browser's zone. `PrayerWidget` writes
+  `Intl`'s IANA zone into the `BROWSER_TIMEZONE_COOKIE_NAME` cookie. It acts only when the city is a
+  fallback, the stored value just changed, and the new zone names a city other than Jakarta Pusat.
+  Then `page` calls `router.refresh()` and `feed` refetches only itself. An unchanged value does
+  nothing, so neither path can loop. `lib/prayer-schedule.ts#TIMEZONE_FALLBACK_CITY`, shared by
+  client and server, maps `Asia/Jakarta`/`Asia/Pontianak` to Jakarta Pusat, `Asia/Makassar` to
+  Kota Makassar, and `Asia/Jayapura` to Kota Ambon. Each is found by a nationwide name search, since
+  there are no seeded ids to pin. Any other zone, or a failed lookup, falls back to Jakarta Pusat.
+  Only the chosen city and the zone are persisted, both as one-year cookies; nothing is stored on
+  the backend.
+  Month navigation is `?month=&year=` URL state refetched server-side. `components/prayer/PrayerWidget.tsx`
+  renders a `bg-brand-deep` banner with the hand-drawn `MosqueSkyline` SVG, the countdown (ticked
+  client-side from `next_prayer_in_seconds`, with `router.refresh()` at zero; `prayerWidgetKey`
+  remounts it on fresh data), and the eight times. The time that has most recently passed sits on a
+  white card, and the next prayer is tinted primary. Every variant difference lives in the
+  widget's `VARIANTS` config, and the markup is shared. Both variants stack the banner below `lg` and
+  split it into skyline and text from `lg`. Below `lg`, `page` lists the eight times vertically and
+  `feed` (inserted by `Feed.tsx`) shows only the banner's next prayer. From `lg` up, both show the
+  eight times in one row. `feed` also links to the monthly page and sets `updateInPlace`: a city
+  change, a newly learned zone, or the next prayer arriving refetches only the widget through
+  `/api/prayer-schedules/widget` (`?city_id=` or `?timezone=`), never `router.refresh()`. A home
+  refresh would re-run every home query and could reshuffle the suggestion and news carousels.
+  `page` navigates or refreshes instead, since its monthly table depends on the city too. The widget
+  keeps its data in state and counts down from the moment that data arrived. Add a new surface as
+  another `VARIANTS` entry rather than more branches. The city picker is the inline
+  `PrayerCitySelect` (`SearchableSelect`, no modal), searching every city through
+  `/api/cities/search-all` → `apis/locations.ts#searchCitiesNationwide`, which calls `cities/list`
+  without a `province_id` (optional on the backend). That nationwide search is reserved for this
+  picker. Every other city lookup must stay province-scoped: `searchCities` requires a `provinceId`,
+  both `/api/cities/search` routes (www and admin) answer empty without one, and each cascading form
+  (verification, training registration, admin user create/contact edit) loads no cities until a
+  province is picked. Picking a city writes
+  the cookie, then pushes
+  `?city_id` on the page or refetches the widget in the feed. `PrayerMonthTable` sticks the date column to the
+  left, highlights the city's own today, and tints Friday.
 - `components/modals/Modal.tsx` — generic modal chrome (backdrop + panel + close
   button), no opinion on what's inside or who's open. It's imported directly by whatever
   needs a dialog (`Edit*Form.tsx`, `ReactorsListModal.tsx`, `ShareModal.tsx`,

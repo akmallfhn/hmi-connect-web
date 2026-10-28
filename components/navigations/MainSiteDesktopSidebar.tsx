@@ -7,6 +7,7 @@ import {
   IconBook2,
   IconBrandHipchat,
   IconChevronDown,
+  IconClockHour4,
   IconCreditCard,
   IconDots,
   IconListSearch,
@@ -111,6 +112,12 @@ const NAV_ITEMS = [
     icon: IconMosque,
     matches: (pathname: string) =>
       pathname === "/quran" || pathname.startsWith("/quran/"),
+  },
+  {
+    label: "Jadwal Sholat",
+    href: "/prayer-schedules",
+    icon: IconClockHour4,
+    matches: (pathname: string) => pathname === "/prayer-schedules",
   },
   {
     label: "E-KTA",

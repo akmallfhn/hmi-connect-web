@@ -48,6 +48,12 @@ export const COMPOSE_INTENT_TRAINING_KEY = "hmi-compose-intent-training";
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
 
+// Cookie remembering the viewer's last prayer-schedule city, so /prayer-schedules can SSR it without a ?city_id.
+export const PRAYER_CITY_COOKIE_NAME = "hmi-prayer-city";
+
+// Cookie carrying the browser's IANA time zone, which picks the prayer-schedule fallback city.
+export const BROWSER_TIMEZONE_COOKIE_NAME = "hmi-timezone";
+
 // sessionStorage key carrying the just-sent message from /chats/new into the real thread, so it isn't hidden by that route's own first fetch.
 export const CHAT_PENDING_MESSAGE_KEY = "hmi-chat-pending-message";
 
