@@ -1630,13 +1630,17 @@ lg:block` — the overlapping card reads better without one competing with the g
   much shadow weight.
   `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (an unscoped
   `ReactNode`, wrapped in `lg:hidden` by `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
-  above the timeline. Its four entries use `components/icons/{NewsIcon,EKTAIcon,EventIcon,
-AlQuranIcon}.tsx` — colorful SVG illustrations with their original shapes. Dark mode adjusts
+  above the timeline. Its six entries, four per row, use `components/icons/{NewsIcon,EKTAIcon,
+EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG illustrations with their
+  original shapes. The last two were converted from designer SVGs (since deleted; DocumentIcon was
+  later simplified to two books) with a padded
+  `viewBox`, so their canvas renders the same size as the first four. Dark mode adjusts
   only the `--icon-*` palette in `app/globals.css`; its matte charcoal icon canvas keeps the artwork legible against
   near-black surfaces. `AlQuranIcon` embeds a ~55KB base64 PNG texture from the source asset
   as a module-level `PATTERN_DATA_URI` constant. Artikel (`/articles`), E-KTA
-  (`/membership`), Latihan Kader (`/trainings`), and Al-Qur'an (`/quran`, see `QuranPage`
-  below) all route through `Link`.
+  (`/membership`), Latihan Kader (`/trainings`), Al-Qur'an (`/quran`, see `QuranPage`
+  below), Pedoman Organisasi (`/organizational-documents`), and Jadwal Sholat
+  (`/prayer-schedules`) all route through `Link`.
 - `hooks/useInteractionGuard.ts` — the one gate every feed interaction runs through, shared by
   `FeedItemCard` and `CommentItem` (it replaced a `requireVerified` copy in each, so the rule lives
   in one place). `verification_status === "verified"` passes; no session pushes `/auth/login`; an
