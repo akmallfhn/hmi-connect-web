@@ -609,7 +609,14 @@ Three layers, each with one job. Don't blend them.
    Marked `import "server-only"`.
    Holds _every_ operation for that resource
    (list/search/create/whatever) so "what can I do with institutions" has one place to
-   look. These functions know the backend's request/response shape; nothing outside this
+   look. `institutions.ts` includes the authenticated lookup reads/crowd-sourced create used by
+   member forms plus the Super Admin update/delete operations used by `/master/institutions`.
+   That admin read explicitly sends `include_aggregates: true` for the non-deleted Komisariat count
+   and distinct education-history user count, while member autocomplete leaves the aggregate work off;
+   its admin list exposes the backend metapaging while preserving the existing incremental-search
+   result shape. Admin delete is a backend soft delete: the row disappears from institution reads and
+   pickers while existing Komisariat/education-history references remain intact. These functions know
+   the backend's request/response shape; nothing outside this
    layer should construct a `callApi()` call by hand.
 2. **`lib/actions.ts`** — Next.js Server Actions (`"use server"`). Thin wrappers that
    delegate straight to `apis/*.ts`; this is the layer Client Components import from when
@@ -2841,7 +2848,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
   (exact-matched) followed by two `AdminNavGroup`s: "Keanggotaan" (User Management and the
   organization-wide Permintaan Verifikasi review queue) and
-  "Organisasi" (Badko/Cabang/Komisariat) — mirroring the same group-naming convention
+  "Organisasi" (Organisasi/Badko/Cabang/Korkom/Komisariat, Pedoman Organisasi, and the
+  Super Admin-only `/master/institutions` CRUD for institution name, alias, logo, cascading
+  province/city/district, and address; its list shows/sorts the backend's Komisariat and kader
+  reference counts) — mirroring the same group-naming convention
   `EntitySidebar`'s Cabang-scoped "Organisasi"/"Keanggotaan"/"Program" groups use below.
   `components/navigations/EntitySidebar.tsx` is the single scoped-entity sidebar rendered by all
   five entity layouts, including `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout

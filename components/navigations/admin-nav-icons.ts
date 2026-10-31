@@ -1,5 +1,6 @@
 import {
   IconBook2,
+  IconBuildingBank,
   IconBuildingCommunity,
   IconGitBranch,
   IconHierarchy2,
@@ -24,6 +25,7 @@ export const ADMIN_NAV_ICON = {
   members: IconUsers,
   structural: IconHierarchy2,
   organizationalDocument: IconBook2,
+  institution: IconBuildingBank,
   verification: IconShieldCheck,
   settings: IconSettings,
 } satisfies Record<string, TablerIcon>;

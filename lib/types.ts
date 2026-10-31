@@ -5,6 +5,7 @@ export type VerificationRequestStatusEnum = "pending" | "approved" | "rejected";
 export type UserSortByEnum = "created_at" | "full_name";
 export type SortTypeEnum = "asc" | "desc";
 export type CoordinatingBodySortByEnum = "index" | "name";
+export type InstitutionSortByEnum = "name" | "chapter_count" | "user_count";
 export type GenderEnum = "male" | "female";
 export type BranchTypeEnum = "full" | "provisional";
 

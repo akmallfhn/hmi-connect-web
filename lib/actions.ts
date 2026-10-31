@@ -73,8 +73,14 @@ import {
   type UpdateCoordinatingChapterPayload,
 } from "@/apis/coordinating-chapters";
 import {
+  createInstitutionAdmin as createInstitutionAdminApi,
   createInstitution as createInstitutionApi,
+  deleteInstitution as deleteInstitutionApi,
+  getInstitutionDetail as getInstitutionDetailApi,
+  updateInstitution as updateInstitutionApi,
   type Institution,
+  type InstitutionPayload,
+  type UpdateInstitutionPayload,
 } from "@/apis/institutions";
 import {
   createStructuralOfficer as createStructuralOfficerApi,
@@ -686,6 +692,22 @@ export async function createInstitution(
   name: string
 ): Promise<Institution | null> {
   return createInstitutionApi(name);
+}
+
+export async function createInstitutionAdmin(payload: InstitutionPayload) {
+  return createInstitutionAdminApi(payload);
+}
+
+export async function getInstitutionDetail(id: number) {
+  return getInstitutionDetailApi(id);
+}
+
+export async function updateInstitution(payload: UpdateInstitutionPayload) {
+  return updateInstitutionApi(payload);
+}
+
+export async function deleteInstitution(id: number) {
+  return deleteInstitutionApi(id);
 }
 
 export async function loadMoreFeeds(page: number) {

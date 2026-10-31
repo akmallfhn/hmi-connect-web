@@ -54,6 +54,11 @@ function getNavItems(
           href: "/master/organizational-documents",
           icon: ADMIN_NAV_ICON.organizationalDocument,
         },
+        {
+          label: "Kelola Institusi",
+          href: "/master/institutions",
+          icon: ADMIN_NAV_ICON.institution,
+        },
       ],
     },
     {
