@@ -43,20 +43,29 @@ interface AdminInstitutionListPageProps {
   sort: InstitutionSort;
 }
 
-function InstitutionAvatar({ institution }: { institution: InstitutionListEntry }) {
+// Square rounded-lg badge, the same shape every other admin entity list uses for its logo.
+function InstitutionLogo({
+  institution,
+  className,
+}: {
+  institution: InstitutionListEntry;
+  className: string;
+}) {
   return (
-    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted">
+    <span
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted ${className}`}
+    >
       {institution.image_url ? (
         <Image
           src={institution.image_url}
           alt={institution.name}
-          width={44}
-          height={44}
+          width={48}
+          height={48}
           className="size-full object-cover"
         />
       ) : (
         <IconBuildingBank
-          className="size-6 text-muted-foreground"
+          className="size-5 text-muted-foreground"
           stroke={1.8}
         />
       )}
@@ -300,7 +309,10 @@ export default function AdminInstitutionListPage({
                   <tr key={institution.id}>
                     <td className="px-4 py-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        <InstitutionAvatar institution={institution} />
+                        <InstitutionLogo
+                          institution={institution}
+                          className="size-10"
+                        />
                         <div className="min-w-0">
                           <p className="truncate font-medium text-heading">
                             {institution.name}
@@ -335,7 +347,10 @@ export default function AdminInstitutionListPage({
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-surface p-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <InstitutionAvatar institution={institution} />
+                  <InstitutionLogo
+                    institution={institution}
+                    className="size-12"
+                  />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-heading">
                       {institution.name}

@@ -3469,8 +3469,8 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   regular Cabang); the Organization scope may only create under the organization itself, since its
   grant governs nothing below. Parent is immutable after create. Logos are media assets:
   `SpecialBodyLogoField` uploads to `entity_image` and the forms send its `image_media_id` (never
-  `image_url`, which the backend now derives from the asset); edit sends it only when the logo
-  changed, so a legacy URL-only logo survives, and an empty string clears it.
+  `image_url`, which the backend derives from the asset on every read since `special_bodies` has no
+  `image_url` column); edit sends it only when the logo changed, and an empty string clears it.
   Balitbang and LPP are typed but have no admin menu yet, nor do the Badko-to-Komisariat scopes.
 - `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
   (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:

@@ -85,7 +85,7 @@ export default function InstitutionLogoField({
         Logo Institusi
       </label>
       <div className="flex items-center gap-4">
-        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted">
+        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-muted">
           {imageUrl ? (
             <Image
               src={imageUrl}
