@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
 import { uploadPublicMediaFile } from "@/lib/media-upload";
 import Button from "../buttons/Button";
-import LogoHmi from "../svg/LogoHmi";
+import type { SpecialBodyTypeEnum } from "@/lib/types";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
 
 const LOGO_ALLOWED_TYPES = [
   "image/jpeg",
@@ -19,16 +20,23 @@ const LOGO_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 const LOGO_MAX_RAW_BYTES = 20 * 1024 * 1024;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 
+export type SpecialBodyLogoValue = {
+  mediaId: string;
+  imageUrl: string;
+};
+
 interface SpecialBodyLogoFieldProps {
+  type: SpecialBodyTypeEnum;
   label: string;
   imageUrl: string;
-  onChange: (imageUrl: string) => void;
+  onChange: (value: SpecialBodyLogoValue) => void;
   onUploadingChange?: (uploading: boolean) => void;
   disabled?: boolean;
 }
 
-// special-bodies/* still takes a plain image_url, so the upload's public URL is what gets stored.
+// Uploads an entity_image asset; the asset id is what gets saved, the public URL only drives the preview.
 export default function SpecialBodyLogoField({
+  type,
   label,
   imageUrl,
   onChange,
@@ -70,11 +78,11 @@ export default function SpecialBodyLogoField({
         toast.error("Logo masih terlalu besar setelah dikompres.");
         return;
       }
-      const { publicUrl } = await uploadPublicMediaFile(
+      const { assetId, publicUrl } = await uploadPublicMediaFile(
         compressed,
         "entity_image",
       );
-      onChange(publicUrl);
+      onChange({ mediaId: assetId, imageUrl: publicUrl });
     } catch (error) {
       console.error("[SpecialBodyLogoField] logo upload threw:", error);
       toast.error(
@@ -103,7 +111,7 @@ export default function SpecialBodyLogoField({
               className="size-full object-cover"
             />
           ) : (
-            <LogoHmi className="h-10 w-auto" />
+            <SpecialBodyLogoFallback type={type} className="h-12 w-auto" />
           )}
         </div>
         <div className="flex flex-col gap-2">
@@ -132,7 +140,7 @@ export default function SpecialBodyLogoField({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => onChange("")}
+              onClick={() => onChange({ mediaId: "", imageUrl: "" })}
               disabled={isBusy}
               className="w-fit"
             >

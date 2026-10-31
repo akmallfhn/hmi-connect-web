@@ -6,7 +6,9 @@ import { createSpecialBody } from "@/lib/actions";
 import { ADMIN_ENTITY_LABEL } from "@/lib/access";
 import {
   SPECIAL_BODY_LABEL,
-  suggestSpecialBodyName,
+  formatSpecialBodyName,
+  specialBodyLevelLabel,
+  stripSpecialBodyName,
 } from "@/lib/special-body";
 import {
   isSuccessStatus,
@@ -22,7 +24,9 @@ import SearchableSelect, {
 import Select from "../fields/Select";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
-import SpecialBodyLogoField from "./SpecialBodyLogoField";
+import SpecialBodyLogoField, {
+  type SpecialBodyLogoValue,
+} from "./SpecialBodyLogoField";
 
 type ParentOption = { id: string; name: string };
 
@@ -99,7 +103,10 @@ function CreateSpecialBodyFields({
   const [name, setName] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [logo, setLogo] = useState<SpecialBodyLogoValue>({
+    mediaId: "",
+    imageUrl: "",
+  });
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -114,7 +121,8 @@ function CreateSpecialBodyFields({
 
   function applyParent(next: ParentOption | null, level = parentLevel) {
     if (nameTouched) return;
-    setName(next ? suggestSpecialBodyName(type, level, next.name) : "");
+    if (level === "organization") setName(next ? "PB HMI" : "");
+    else setName(next ? stripSpecialBodyName(level, next.name) : "");
   }
 
   function changeLevel(level: AccessEntityTypeEnum) {
@@ -131,10 +139,10 @@ function CreateSpecialBodyFields({
 
   async function handleSubmit() {
     if (!selectedParent) {
-      toast.error(`Pilih ${ADMIN_ENTITY_LABEL[parentLevel]} induknya.`);
+      toast.error(`Pilih ${specialBodyLevelLabel(parentLevel)} yang menaungi ${label} ini.`);
       return;
     }
-    const trimmedName = name.trim();
+    const trimmedName = stripSpecialBodyName(parentLevel, name);
     if (!trimmedName) {
       toast.error(`Nama ${label} wajib diisi.`);
       return;
@@ -148,7 +156,7 @@ function CreateSpecialBodyFields({
         parent_entity_id: selectedParent.id,
         name: trimmedName,
         ...(description.trim() ? { description: description.trim() } : {}),
-        ...(imageUrl ? { image_url: imageUrl } : {}),
+        ...(logo.mediaId ? { image_media_id: logo.mediaId } : {}),
       });
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? `Gagal menambahkan ${label}.`);
@@ -167,9 +175,10 @@ function CreateSpecialBodyFields({
   return (
     <div className="flex flex-col gap-4">
       <SpecialBodyLogoField
+        type={type}
         label={`Logo ${label}`}
-        imageUrl={imageUrl}
-        onChange={setImageUrl}
+        imageUrl={logo.imageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />
@@ -177,14 +186,14 @@ function CreateSpecialBodyFields({
       {parentLevels.length > 1 ? (
         <Select
           selectId="special-body-parent-level"
-          label="Tingkat"
-          placeholder="Pilih tingkat"
+          label="Tingkatan"
+          placeholder="Pilih tingkatan"
           value={parentLevel}
           onChange={(value) =>
             value && changeLevel(value as AccessEntityTypeEnum)
           }
           options={parentLevels.map((level) => ({
-            label: ADMIN_ENTITY_LABEL[level],
+            label: specialBodyLevelLabel(level),
             value: level,
           }))}
           required
@@ -193,9 +202,11 @@ function CreateSpecialBodyFields({
 
       {parentLevel === "organization" ? (
         <div className="flex flex-col gap-1">
-          <p className="pl-1 text-[15px] font-medium text-heading">Induk</p>
+          <p className="pl-1 text-[15px] font-medium text-heading">
+            Dinaungi Oleh
+          </p>
           <p className="rounded-lg border border-border bg-surface-muted px-3 py-2.5 text-sm text-heading">
-            {organization?.name ?? "Organisasi tidak ditemukan"}
+            {organization ? "PB HMI" : "Organisasi tidak ditemukan"}
           </p>
         </div>
       ) : null}
@@ -272,17 +283,27 @@ function CreateSpecialBodyFields({
         />
       )}
 
-      <Input
-        inputId="special-body-name"
-        label={`Nama ${label}`}
-        placeholder={`Contoh: ${label} HMI Cabang Banda Aceh`}
-        value={name}
-        onChange={(event) => {
-          setName(event.target.value);
-          setNameTouched(true);
-        }}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="special-body-name"
+          label={`Nama ${label}`}
+          placeholder="Contoh: Samarinda"
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value);
+            setNameTouched(true);
+          }}
+          required
+        />
+        {name.trim() && (
+          <p className="pl-1 text-xs text-muted-foreground">
+            Tampil sebagai{" "}
+            <span className="font-medium text-heading">
+              {formatSpecialBodyName(type, parentLevel, name)}
+            </span>
+          </p>
+        )}
+      </div>
 
       <TextArea
         textAreaId="special-body-description"

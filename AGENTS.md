@@ -3453,14 +3453,24 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `parent_entity_id` (KOHATI under any of the five levels, BPL under an organization or branch, one
   of each type per parent), mirrored in `lib/special-body.ts#SPECIAL_BODY_PARENT_TYPES`. The list
   carries no parent name, so `listSpecialBodiesAdmin` dedupes the page's parents and resolves each
-  through its own `*/detail` read. All four routes are thin wrappers over
+  through its own `*/detail` read. The backend orders by `type` then `name`, so the wrapper reads
+  every matching page (100 rows each) and re-sorts by level (PB HMI first, then Badko, Cabang,
+  Korkom, Komisariat) then name before paginating locally. The stored `name` is the bare unit name
+  ("Samarinda"); `lib/special-body.ts#formatSpecialBodyName` renders "KOHATI Cabang Samarinda",
+  "BPL Komisariat X", or "KOHATI PB HMI" at the organization level, and the forms strip any typed
+  type/HMI/level prefix before saving. The "Dinaungi Oleh" column uses `formatSpecialBodyParent`
+  ("HMI Cabang X", organization written as "PB HMI"), and the Tingkatan labels name the
+  organization level "PB HMI". A body without a logo falls back to `LogoKohati`/`LogoBpl` through
+  `components/svg/SpecialBodyLogoFallback.tsx`; the KOHATI nav item uses Tabler's `IconFlower`. All four routes are thin wrappers over
   `lib/special-body-route.ts#loadSpecialBodyPage`, rendering `AdminSpecialBodyListPage`. Governance
   is an **exact** grant on the parent, not ancestry, so each row's Edit and Suspend/Aktifkan only
   show when `canManageEntity` holds for its parent; delete is Super Admin on `/master` only.
   Master's create sheet picks a level and then a parent (Korkom and Komisariat cascade from a
   regular Cabang); the Organization scope may only create under the organization itself, since its
-  grant governs nothing below. Parent is immutable after create. `image_url` is still a plain URL on
-  this resource, so `SpecialBodyLogoField` uploads to `entity_image` and stores the public URL.
+  grant governs nothing below. Parent is immutable after create. Logos are media assets:
+  `SpecialBodyLogoField` uploads to `entity_image` and the forms send its `image_media_id` (never
+  `image_url`, which the backend now derives from the asset); edit sends it only when the logo
+  changed, so a legacy URL-only logo survives, and an empty string clears it.
   Balitbang and LPP are typed but have no admin menu yet, nor do the Badko-to-Komisariat scopes.
 - `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
   (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:

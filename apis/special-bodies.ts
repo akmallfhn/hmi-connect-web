@@ -14,6 +14,7 @@ import {
   type StatusEnum,
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { specialBodyLevelRank } from "@/lib/special-body";
 
 export type SpecialBodyListEntry = {
   id: string;
@@ -27,6 +28,7 @@ export type SpecialBodyListEntry = {
 
 export type SpecialBodyDetail = SpecialBodyListEntry & {
   description?: string | null;
+  image_media_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -74,15 +76,15 @@ export type CreateSpecialBodyPayload = {
   parent_entity_id: string;
   name: string;
   description?: string;
-  image_url?: string;
+  image_media_id?: string;
 };
 
-// Empty strings clear description/image_url; type and parent are immutable after create.
+// Empty strings clear description/logo; type and parent are immutable after create.
 export type UpdateSpecialBodyPayload = {
   id: string;
   name?: string;
   description?: string;
-  image_url?: string;
+  image_media_id?: string;
 };
 
 async function getSessionToken() {
@@ -122,37 +124,74 @@ async function resolveParent(
   }
 }
 
+const FETCH_PAGE_SIZE = 100;
+const MAX_FETCH_PAGES = 50;
+
+// The backend orders by type then name, so every page is read and re-sorted PB HMI first, then down the levels.
+async function fetchAllSpecialBodies(
+  sessionToken: string,
+  options: ListSpecialBodiesOptions
+): Promise<SpecialBodyListEntry[] | null> {
+  const rows: SpecialBodyListEntry[] = [];
+  for (let page = 1; page <= MAX_FETCH_PAGES; page++) {
+    const result = await callApi<SpecialBodyListResponse>(
+      "/api/v1/special-bodies/list",
+      {
+        method: "POST",
+        token: sessionToken,
+        body: {
+          ...(options.type ? { type: options.type } : {}),
+          ...(options.parentEntityType
+            ? { parent_entity_type: options.parentEntityType }
+            : {}),
+          ...(options.parentEntityId
+            ? { parent_entity_id: options.parentEntityId }
+            : {}),
+          ...(options.status ? { status: options.status } : {}),
+          ...(options.search ? { search: options.search } : {}),
+          page,
+          page_size: FETCH_PAGE_SIZE,
+        },
+      }
+    );
+    if (!isSuccessStatus(result.status) || !result.data) {
+      return page === 1 ? null : rows;
+    }
+    rows.push(...(result.data.list ?? []));
+    const totalPage = result.data.metapaging?.total_page ?? 1;
+    if (page >= totalPage) break;
+  }
+  return rows.sort(
+    (a, b) =>
+      specialBodyLevelRank(a.parent_entity_type) -
+        specialBodyLevelRank(b.parent_entity_type) ||
+      a.name.localeCompare(b.name, "id")
+  );
+}
+
 export async function listSpecialBodiesAdmin(
   options: ListSpecialBodiesOptions = {}
 ): Promise<ListSpecialBodiesResult> {
-  const currentPage = options.page ?? 1;
-  const empty = { list: [], totalData: 0, totalPage: 1, currentPage };
+  const pageSize = options.pageSize ?? 20;
+  const requestedPage = Math.max(1, options.page ?? 1);
+  const empty = {
+    list: [],
+    totalData: 0,
+    totalPage: 1,
+    currentPage: requestedPage,
+  };
   const sessionToken = await getSessionToken();
   if (!sessionToken) return empty;
 
-  const result = await callApi<SpecialBodyListResponse>(
-    "/api/v1/special-bodies/list",
-    {
-      method: "POST",
-      token: sessionToken,
-      body: {
-        ...(options.type ? { type: options.type } : {}),
-        ...(options.parentEntityType
-          ? { parent_entity_type: options.parentEntityType }
-          : {}),
-        ...(options.parentEntityId
-          ? { parent_entity_id: options.parentEntityId }
-          : {}),
-        ...(options.status ? { status: options.status } : {}),
-        ...(options.search ? { search: options.search } : {}),
-        page: currentPage,
-        ...(options.pageSize ? { page_size: options.pageSize } : {}),
-      },
-    }
-  );
-  if (!isSuccessStatus(result.status) || !result.data) return empty;
+  const allRows = await fetchAllSpecialBodies(sessionToken, options);
+  if (!allRows) return empty;
 
-  const rows = result.data.list ?? [];
+  const totalPage = Math.max(1, Math.ceil(allRows.length / pageSize));
+  const currentPage = Math.min(requestedPage, totalPage);
+  const rows = allRows.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
   const parentKey = (row: SpecialBodyListEntry) =>
     `${row.parent_entity_type}:${row.parent_entity_id}`;
   const uniqueRows = [
@@ -169,16 +208,14 @@ export async function listSpecialBodiesAdmin(
       )
     )
   );
-  const metapaging = result.data.metapaging;
-
   return {
     list: rows.map((row) => ({
       ...row,
       parent: parents.get(parentKey(row)) ?? null,
     })),
-    totalData: metapaging?.total_data ?? rows.length,
-    totalPage: metapaging?.total_page ?? 1,
-    currentPage: metapaging?.current_page ?? currentPage,
+    totalData: allRows.length,
+    totalPage,
+    currentPage,
   };
 }
 
@@ -248,6 +285,9 @@ async function writeSpecialBody<T = unknown>(
 
 function specialBodyErrorMessage(result: ApiEnvelope<unknown>): string {
   const message = result.message ?? "";
+  if (message.includes("media")) {
+    return "Logo tidak valid atau belum selesai diunggah. Unggah ulang logonya.";
+  }
   if (message.includes("already has a special body")) {
     return "Entitas ini sudah memiliki lembaga dengan jenis yang sama.";
   }

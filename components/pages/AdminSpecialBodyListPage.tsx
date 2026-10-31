@@ -20,12 +20,13 @@ import {
   deleteSpecialBody,
   suspendSpecialBody,
 } from "@/lib/actions";
-import { ADMIN_ENTITY_LABEL } from "@/lib/access";
 import {
   SPECIAL_BODY_FULL_NAME,
   SPECIAL_BODY_LABEL,
   SPECIAL_BODY_PARENT_TYPES,
+  formatSpecialBodyName,
   formatSpecialBodyParent,
+  specialBodyLevelLabel,
 } from "@/lib/special-body";
 import {
   isSuccessStatus,
@@ -47,7 +48,7 @@ import CreateSpecialBodyFormSheet from "../forms/CreateSpecialBodyFormSheet";
 import EditSpecialBodyFormSheet from "../forms/EditSpecialBodyFormSheet";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import EmptyState from "../states/EmptyState";
-import LogoHmi from "../svg/LogoHmi";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
 
 const STATUS_FILTER_OPTIONS = [
   { label: "Semua Status", value: "" },
@@ -73,8 +74,14 @@ interface AdminSpecialBodyListPageProps {
 }
 
 function parentLabel(body: SpecialBodyAdminEntry): string {
-  if (!body.parent) return `${ADMIN_ENTITY_LABEL[body.parent_entity_type]} tidak ditemukan`;
+  if (!body.parent) {
+    return `${specialBodyLevelLabel(body.parent_entity_type)} tidak ditemukan`;
+  }
   return formatSpecialBodyParent(body.parent_entity_type, body.parent.name);
+}
+
+function displayName(body: SpecialBodyAdminEntry): string {
+  return formatSpecialBodyName(body.type, body.parent_entity_type, body.name);
 }
 
 function SpecialBodyLogo({ body, className }: { body: SpecialBodyAdminEntry; className: string }) {
@@ -85,13 +92,13 @@ function SpecialBodyLogo({ body, className }: { body: SpecialBodyAdminEntry; cla
       {body.image_url ? (
         <Image
           src={body.image_url}
-          alt={body.name}
+          alt={displayName(body)}
           width={48}
           height={48}
           className="size-full object-cover"
         />
       ) : (
-        <LogoHmi className="h-7 w-auto" />
+        <SpecialBodyLogoFallback type={body.type} className="h-7 w-auto" />
       )}
     </span>
   );
@@ -111,7 +118,7 @@ function ParentCell({ body }: { body: SpecialBodyAdminEntry }) {
       <p className="truncate text-heading">{parentLabel(body)}</p>
       {body.parent?.branchName && (
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          Cabang {body.parent.branchName}
+          {formatSpecialBodyParent("branch", body.parent.branchName)}
         </p>
       )}
     </div>
@@ -223,7 +230,7 @@ export default function AdminSpecialBodyListPage({
             variant="ghost"
             size="icon"
             onClick={toggle}
-            aria-label={`Aksi untuk ${body.name}`}
+            aria-label={`Aksi untuk ${displayName(body)}`}
           >
             <EllipsisVertical className="size-4" />
           </Button>
@@ -268,9 +275,9 @@ export default function AdminSpecialBodyListPage({
   }
 
   const levelOptions = [
-    { label: "Semua Tingkat", value: "" },
+    { label: "Semua Tingkatan", value: "" },
     ...SPECIAL_BODY_PARENT_TYPES[type].map((level) => ({
-      label: ADMIN_ENTITY_LABEL[level],
+      label: specialBodyLevelLabel(level),
       value: level,
     })),
   ];
@@ -280,7 +287,7 @@ export default function AdminSpecialBodyListPage({
       ? [
           {
             key: "level",
-            label: "Tingkat",
+            label: "Tingkatan",
             value:
               levelOptions.find((option) => option.value === initialLevel)
                 ?.label ?? initialLevel,
@@ -363,8 +370,8 @@ export default function AdminSpecialBodyListPage({
           {levelOptions.length > 2 && (
             <Select
               selectId="special-body-level-filter"
-              label="Tingkat"
-              placeholder="Semua Tingkat"
+              label="Tingkatan"
+              placeholder="Semua Tingkatan"
               value={initialLevel || null}
               onChange={(value) => pushParams({ level: String(value ?? "") })}
               options={levelOptions}
@@ -410,8 +417,8 @@ export default function AdminSpecialBodyListPage({
                 <thead className="border-b border-border bg-surface-muted text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Nama {label}</th>
-                    <th className="px-4 py-3">Induk</th>
-                    <th className="px-4 py-3">Tingkat</th>
+                    <th className="px-4 py-3">Dinaungi Oleh</th>
+                    <th className="px-4 py-3">Tingkatan</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
@@ -423,7 +430,7 @@ export default function AdminSpecialBodyListPage({
                         <div className="flex min-w-0 items-center gap-3">
                           <SpecialBodyLogo body={body} className="size-10" />
                           <p className="truncate text-sm font-semibold text-heading">
-                            {body.name}
+                            {displayName(body)}
                           </p>
                         </div>
                       </td>
@@ -431,7 +438,7 @@ export default function AdminSpecialBodyListPage({
                         <ParentCell body={body} />
                       </td>
                       <td className="px-4 py-3 text-heading">
-                        {ADMIN_ENTITY_LABEL[body.parent_entity_type]}
+                        {specialBodyLevelLabel(body.parent_entity_type)}
                       </td>
                       <td className="px-4 py-3">
                         <StatusLabel body={body} />
@@ -458,7 +465,7 @@ export default function AdminSpecialBodyListPage({
                   <SpecialBodyLogo body={body} className="size-11" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-heading">
-                      {body.name}
+                      {displayName(body)}
                     </p>
                     <StatusLabel body={body} size="sm" />
                   </div>
@@ -466,7 +473,8 @@ export default function AdminSpecialBodyListPage({
                 {renderActions(body)}
                 <div className="col-span-full border-t border-border pt-3 text-xs">
                   <p className="text-muted-foreground">
-                    {ADMIN_ENTITY_LABEL[body.parent_entity_type]}
+                    Dinaungi oleh ·{" "}
+                    {specialBodyLevelLabel(body.parent_entity_type)}
                   </p>
                   <div className="mt-0.5 text-[13px]">
                     <ParentCell body={body} />
@@ -519,8 +527,8 @@ export default function AdminSpecialBodyListPage({
         title={statusSuspending ? `Suspend ${label} ini?` : `Aktifkan ${label} ini?`}
         message={
           statusSuspending
-            ? `${statusTarget?.name ?? label} akan dinonaktifkan sampai diaktifkan kembali.`
-            : `${statusTarget?.name ?? label} akan aktif kembali.`
+            ? `${statusTarget ? displayName(statusTarget) : label} akan dinonaktifkan sampai diaktifkan kembali.`
+            : `${statusTarget ? displayName(statusTarget) : label} akan aktif kembali.`
         }
         confirmLabel={statusSuspending ? "Suspend" : "Aktifkan"}
         confirmVariant={statusSuspending ? "destructive" : "primary"}
@@ -533,7 +541,7 @@ export default function AdminSpecialBodyListPage({
           onClose={() => setDeleteTarget(null)}
           onConfirm={() => void handleDelete()}
           title={`Hapus ${label} ini?`}
-          message={`Apakah kamu yakin ingin menghapus ${deleteTarget?.name ?? label}? Slot ${label} di induknya akan kosong kembali.`}
+          message={`Apakah kamu yakin ingin menghapus ${deleteTarget ? displayName(deleteTarget) : label}? Slot ${label} di induknya akan kosong kembali.`}
           confirmLabel="Hapus"
           loading={isSubmitting}
         />

@@ -2,6 +2,7 @@ import {
   IconBook2,
   IconBuildingBank,
   IconBuildingCommunity,
+  IconFlower,
   IconGitBranch,
   IconHierarchy2,
   IconLayoutDashboard,
@@ -12,7 +13,6 @@ import {
   IconShieldCheck,
   IconSitemap,
   IconUsers,
-  IconWoman,
   type TablerIcon,
 } from "@tabler/icons-react";
 
@@ -24,7 +24,7 @@ export const ADMIN_NAV_ICON = {
   branch: IconGitBranch,
   coordinatingChapter: IconRoute,
   chapter: IconSchool,
-  kohati: IconWoman,
+  kohati: IconFlower,
   bpl: IconPresentation,
   members: IconUsers,
   structural: IconHierarchy2,

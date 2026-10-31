@@ -7,13 +7,19 @@ import type {
   SpecialBodyDetail,
 } from "@/apis/special-bodies";
 import { getSpecialBodyDetail, updateSpecialBody } from "@/lib/actions";
-import { SPECIAL_BODY_LABEL } from "@/lib/special-body";
+import {
+  SPECIAL_BODY_LABEL,
+  formatSpecialBodyName,
+  stripSpecialBodyName,
+} from "@/lib/special-body";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
-import SpecialBodyLogoField from "./SpecialBodyLogoField";
+import SpecialBodyLogoField, {
+  type SpecialBodyLogoValue,
+} from "./SpecialBodyLogoField";
 
 interface EditSpecialBodyFormSheetProps {
   open: boolean;
@@ -112,16 +118,25 @@ function EditSpecialBodyFields({
   onSaved: () => void;
 }) {
   const label = SPECIAL_BODY_LABEL[specialBody.type];
-  const [name, setName] = useState(specialBody.name);
+  const [name, setName] = useState(
+    stripSpecialBodyName(specialBody.parent_entity_type, specialBody.name),
+  );
   const [description, setDescription] = useState(
     specialBody.description ?? "",
   );
-  const [imageUrl, setImageUrl] = useState(specialBody.image_url ?? "");
+  const [logo, setLogo] = useState<SpecialBodyLogoValue>({
+    mediaId: specialBody.image_media_id ?? "",
+    imageUrl: specialBody.image_url ?? "",
+  });
+  const [logoChanged, setLogoChanged] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit() {
-    const trimmedName = name.trim();
+    const trimmedName = stripSpecialBodyName(
+      specialBody.parent_entity_type,
+      name,
+    );
     if (!trimmedName) {
       toast.error(`Nama ${label} wajib diisi.`);
       return;
@@ -133,7 +148,7 @@ function EditSpecialBodyFields({
         id: specialBody.id,
         name: trimmedName,
         description: description.trim(),
-        image_url: imageUrl,
+        ...(logoChanged ? { image_media_id: logo.mediaId } : {}),
       });
       if (!isSuccessStatus(result.status)) {
         toast.error(result.message ?? `Gagal memperbarui ${label}.`);
@@ -152,30 +167,51 @@ function EditSpecialBodyFields({
   return (
     <div className="flex flex-col gap-4">
       <SpecialBodyLogoField
+        type={specialBody.type}
         label={`Logo ${label}`}
-        imageUrl={imageUrl}
-        onChange={setImageUrl}
+        imageUrl={logo.imageUrl}
+        onChange={(value) => {
+          setLogo(value);
+          setLogoChanged(true);
+        }}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />
 
       <div className="flex flex-col gap-1">
-        <p className="pl-1 text-[15px] font-medium text-heading">Induk</p>
+        <p className="pl-1 text-[15px] font-medium text-heading">
+          Dinaungi Oleh
+        </p>
         <p className="rounded-lg border border-border bg-surface-muted px-3 py-2.5 text-sm text-heading">
           {parentLabel}
         </p>
         <p className="pl-1 text-xs text-muted-foreground">
-          Induk tidak bisa diubah setelah dibuat.
+          Penaung tidak bisa diubah setelah dibuat.
         </p>
       </div>
 
-      <Input
-        inputId="special-body-name"
-        label={`Nama ${label}`}
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="special-body-name"
+          label={`Nama ${label}`}
+          placeholder="Contoh: Samarinda"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
+        {name.trim() && (
+          <p className="pl-1 text-xs text-muted-foreground">
+            Tampil sebagai{" "}
+            <span className="font-medium text-heading">
+              {formatSpecialBodyName(
+                specialBody.type,
+                specialBody.parent_entity_type,
+                name,
+              )}
+            </span>
+          </p>
+        )}
+      </div>
 
       <TextArea
         textAreaId="special-body-description"
