@@ -1,4 +1,8 @@
-export type ImageUploadCategory = "avatar" | "feed_image" | "event_banner";
+export type ImageUploadCategory =
+  | "avatar"
+  | "feed_image"
+  | "event_banner"
+  | "institution_image";
 
 export class ImageOptimizationError extends Error {}
 
@@ -57,6 +61,12 @@ export const IMAGE_POLICIES: Record<ImageUploadCategory, ImagePolicy> = {
     maxBytes: 5 * 1024 * 1024,
     jpegQuality: 0.87,
     webpQuality: 0.85,
+  },
+  institution_image: {
+    maxDimension: 512,
+    maxBytes: 2 * 1024 * 1024,
+    jpegQuality: 0.86,
+    webpQuality: 0.84,
   },
 };
 

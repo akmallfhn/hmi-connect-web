@@ -615,7 +615,10 @@ Three layers, each with one job. Don't blend them.
    and distinct education-history user count, while member autocomplete leaves the aggregate work off;
    its admin list exposes the backend metapaging while preserving the existing incremental-search
    result shape. Admin delete is a backend soft delete: the row disappears from institution reads and
-   pickers while existing Komisariat/education-history references remain intact. These functions know
+   pickers while existing Komisariat/education-history references remain intact. Institution logos
+   upload through the Media API's `institution_image` category (JPEG/PNG/WebP, 2 MiB) and are written
+   as `image_media_id`, never `image_url`; edit sends it only when the logo changed, so a legacy
+   Supabase logo without a media id survives, and an empty string clears it. These functions know
    the backend's request/response shape; nothing outside this
    layer should construct a `callApi()` call by hand.
 2. **`lib/actions.ts`** — Next.js Server Actions (`"use server"`). Thin wrappers that
@@ -2619,8 +2622,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   run through `lib/optimize-image.ts` before they're staged or uploaded. That utility verifies
   JPEG/PNG/WebP signatures, inspects dimensions, preserves small already-optimized files, resizes
   only above the category limit, compares JPEG/WebP candidates for opaque images and PNG/WebP for
-  transparent images, and keeps the original when savings are negligible. Avatar, feed, and event
-  policies are 512px/2MB, 1920px/5MB, and 1920px/5MB respectively; filenames and MIME types follow
+  transparent images, and keeps the original when savings are negligible. Avatar, feed, event, and
+  institution-logo policies are 512px/2MB, 1920px/5MB, 1920px/5MB, and 512px/2MB respectively; filenames and MIME types follow
   the selected bytes. It yields before canvas encoding and the feed picker still processes files
   sequentially to avoid a burst of main-thread work.
   `lib/compress-image.ts` remains the legacy helper for upload surfaces not migrated to the media

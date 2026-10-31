@@ -12,7 +12,9 @@ import Input from "../fields/Input";
 import type { SearchableOption } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import InstitutionLocationFields from "./InstitutionLocationFields";
-import InstitutionLogoField from "./InstitutionLogoField";
+import InstitutionLogoField, {
+  type InstitutionLogoValue,
+} from "./InstitutionLogoField";
 
 interface EditInstitutionFormSheetProps {
   open: boolean;
@@ -102,7 +104,11 @@ function EditInstitutionFields({
 }) {
   const [name, setName] = useState(institution.name);
   const [alias, setAlias] = useState(institution.alias ?? "");
-  const [imageUrl, setImageUrl] = useState(institution.image_url ?? "");
+  const [logo, setLogo] = useState<InstitutionLogoValue>({
+    mediaId: institution.image_media_id ?? "",
+    imageUrl: institution.image_url ?? "",
+  });
+  const [logoChanged, setLogoChanged] = useState(false);
   const [address, setAddress] = useState(institution.address ?? "");
   const [province, setProvince] = useState<SearchableOption | null>(
     institution.province_id && institution.province_name
@@ -135,7 +141,7 @@ function EditInstitutionFields({
         id: institution.id,
         name: normalizedName,
         alias: alias.trim(),
-        image_url: imageUrl,
+        ...(logoChanged ? { image_media_id: logo.mediaId } : {}),
         district_id: district ? Number(district.value) : 0,
         address: address.trim(),
       });
@@ -157,8 +163,11 @@ function EditInstitutionFields({
   return (
     <div className="flex flex-col gap-4">
       <InstitutionLogoField
-        imageUrl={imageUrl}
-        onChange={setImageUrl}
+        imageUrl={logo.imageUrl}
+        onChange={(value) => {
+          setLogo(value);
+          setLogoChanged(true);
+        }}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

@@ -18,6 +18,7 @@ export type Institution = {
 };
 
 export type InstitutionDetail = Institution & {
+  image_media_id?: string | null;
   district_id?: number | null;
   district_name?: string | null;
   city_id?: number | null;
@@ -64,7 +65,7 @@ export type GetInstitutionsResult = {
 export type InstitutionPayload = {
   name: string;
   alias?: string;
-  image_url?: string;
+  image_media_id?: string;
   district_id?: number;
   address?: string;
 };
@@ -254,6 +255,9 @@ function institutionWriteErrorMessage(
   status: StatusName | undefined,
   message?: string
 ): string {
+  if (message?.includes("media")) {
+    return "Logo institusi tidak valid atau belum selesai diunggah. Unggah ulang logonya.";
+  }
   switch (status) {
     case "FORBIDDEN":
       return "Kamu tidak punya akses untuk mengelola institusi.";

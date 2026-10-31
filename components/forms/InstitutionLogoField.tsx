@@ -5,23 +5,22 @@ import { Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
-import { compressImage } from "@/lib/compress-image";
+import { optimizeImage } from "@/lib/optimize-image";
 import { uploadPublicMediaFile } from "@/lib/media-upload";
 import Button from "../buttons/Button";
 
-const LOGO_ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-];
-const LOGO_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
+const LOGO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const LOGO_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 const LOGO_MAX_RAW_BYTES = 20 * 1024 * 1024;
-const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+
+export type InstitutionLogoValue = {
+  mediaId: string;
+  imageUrl: string;
+};
 
 interface InstitutionLogoFieldProps {
   imageUrl: string;
-  onChange: (imageUrl: string) => void;
+  onChange: (value: InstitutionLogoValue) => void;
   onUploadingChange?: (uploading: boolean) => void;
   disabled?: boolean;
 }
@@ -47,7 +46,7 @@ export default function InstitutionLogoField({
     if (!file) return;
 
     if (!LOGO_ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Format hanya boleh JPG, PNG, WEBP, atau AVIF.");
+      toast.error("Format hanya boleh JPG, PNG, atau WEBP.");
       return;
     }
     const fileExt = file.name.split(".").pop()?.toLowerCase();
@@ -62,16 +61,12 @@ export default function InstitutionLogoField({
 
     setUploading(true);
     try {
-      const compressed = await compressImage(file);
-      if (compressed.size > LOGO_MAX_BYTES) {
-        toast.error("Logo masih terlalu besar setelah dikompres.");
-        return;
-      }
-      const { publicUrl } = await uploadPublicMediaFile(
-        compressed,
-        "entity_image",
+      const optimized = await optimizeImage(file, "institution_image");
+      const { assetId, publicUrl } = await uploadPublicMediaFile(
+        optimized,
+        "institution_image",
       );
-      onChange(publicUrl);
+      onChange({ mediaId: assetId, imageUrl: publicUrl });
     } catch (error) {
       console.error("[InstitutionLogoField] logo upload threw:", error);
       toast.error(
@@ -107,7 +102,7 @@ export default function InstitutionLogoField({
           <input
             ref={inputRef}
             type="file"
-            accept=".jpg,.jpeg,.png,.webp,.avif"
+            accept=".jpg,.jpeg,.png,.webp"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -129,7 +124,7 @@ export default function InstitutionLogoField({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => onChange("")}
+              onClick={() => onChange({ mediaId: "", imageUrl: "" })}
               disabled={isBusy}
               className="w-fit"
             >
@@ -138,7 +133,7 @@ export default function InstitutionLogoField({
             </Button>
           )}
           <p className="text-xs text-muted-foreground">
-            Rasio persegi, maksimal 5MB.
+            Rasio persegi, JPG/PNG/WEBP, maksimal 2MB.
           </p>
         </div>
       </div>
