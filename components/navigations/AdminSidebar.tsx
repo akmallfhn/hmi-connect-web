@@ -420,7 +420,7 @@ export default function AdminSidebar({
           </Button>
         </div>
         <div className="mt-4 -mx-4 shrink-0 border-t border-on-dark/10" />
-        <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <NavList
             navItems={navItems}
             pathname={pathname}
@@ -487,7 +487,7 @@ export default function AdminSidebar({
             </button>
           </div>
           <div className="mt-4 -mx-4 shrink-0 border-t border-border" />
-          <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4">
+          <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <NavList
               navItems={navItems}
               pathname={pathname}

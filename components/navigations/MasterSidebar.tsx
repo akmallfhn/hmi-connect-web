@@ -54,11 +54,13 @@ function getNavItems(
           href: "/master/organizational-documents",
           icon: ADMIN_NAV_ICON.organizationalDocument,
         },
-        {
-          label: "Kelola Institusi",
-          href: "/master/institutions",
-          icon: ADMIN_NAV_ICON.institution,
-        },
+      ],
+    },
+    {
+      groupName: "Badan Khusus",
+      items: [
+        { label: "Kelola KOHATI", href: "/master/kohati", icon: ADMIN_NAV_ICON.kohati },
+        { label: "Kelola BPL", href: "/master/bpl", icon: ADMIN_NAV_ICON.bpl },
       ],
     },
     {
@@ -70,6 +72,16 @@ function getNavItems(
           href: "/master/verification",
           icon: ADMIN_NAV_ICON.verification,
           badgeCount: pendingVerificationCount,
+        },
+      ],
+    },
+    {
+      groupName: "Lookup",
+      items: [
+        {
+          label: "Kelola Institusi",
+          href: "/master/institutions",
+          icon: ADMIN_NAV_ICON.institution,
         },
       ],
     },

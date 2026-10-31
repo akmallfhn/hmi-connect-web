@@ -83,6 +83,16 @@ import {
   type UpdateInstitutionPayload,
 } from "@/apis/institutions";
 import {
+  activateSpecialBody as activateSpecialBodyApi,
+  createSpecialBody as createSpecialBodyApi,
+  deleteSpecialBody as deleteSpecialBodyApi,
+  getSpecialBodyDetail as getSpecialBodyDetailApi,
+  suspendSpecialBody as suspendSpecialBodyApi,
+  updateSpecialBody as updateSpecialBodyApi,
+  type CreateSpecialBodyPayload,
+  type UpdateSpecialBodyPayload,
+} from "@/apis/special-bodies";
+import {
   createStructuralOfficer as createStructuralOfficerApi,
   createStructuralPeriod as createStructuralPeriodApi,
   deleteStructuralOfficer as deleteStructuralOfficerApi,
@@ -708,6 +718,30 @@ export async function updateInstitution(payload: UpdateInstitutionPayload) {
 
 export async function deleteInstitution(id: number) {
   return deleteInstitutionApi(id);
+}
+
+export async function getSpecialBodyDetail(id: string) {
+  return getSpecialBodyDetailApi(id);
+}
+
+export async function createSpecialBody(payload: CreateSpecialBodyPayload) {
+  return createSpecialBodyApi(payload);
+}
+
+export async function updateSpecialBody(payload: UpdateSpecialBodyPayload) {
+  return updateSpecialBodyApi(payload);
+}
+
+export async function deleteSpecialBody(id: string) {
+  return deleteSpecialBodyApi(id);
+}
+
+export async function suspendSpecialBody(id: string) {
+  return suspendSpecialBodyApi(id);
+}
+
+export async function activateSpecialBody(id: string) {
+  return activateSpecialBodyApi(id);
 }
 
 export async function loadMoreFeeds(page: number) {

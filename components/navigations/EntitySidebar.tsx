@@ -110,6 +110,21 @@ function getScopeNavItems(
             },
           ],
         },
+        {
+          groupName: "Badan Khusus",
+          items: [
+            {
+              label: "Kelola KOHATI",
+              href: `${base}/kohati`,
+              icon: ADMIN_NAV_ICON.kohati,
+            },
+            {
+              label: "Kelola BPL",
+              href: `${base}/bpl`,
+              icon: ADMIN_NAV_ICON.bpl,
+            },
+          ],
+        },
         { groupName: "Keanggotaan", items: [membersItem, verificationItem] },
       ];
     case "coordinating_body":

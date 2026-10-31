@@ -79,6 +79,8 @@ export type AccessEntityTypeEnum =
   | "branch"
   | "chapter"
   | "coordinating_chapter";
+// The units special-bodies/* holds; each hangs off one hierarchy entity rather than being a level.
+export type SpecialBodyTypeEnum = "kohati" | "bpl" | "balitbang" | "lpp";
 export type AccessCapabilityEnum = "manage";
 export type AccessGrantStatusEnum = "pending" | "accepted";
 export type StructuralEntityTypeEnum = AccessEntityTypeEnum;

@@ -2798,6 +2798,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   flow, which un-sticks the `sticky top-0` mobile bar and drops it off-screen for as long as the
   drawer is open.
   The nav also carries `overscroll-contain` so reaching the end of the menu doesn't chain outward.
+  Both the rail's and the drawer's nav scroll containers hide their scrollbar
+  (`[scrollbar-width:none]` plus `[&::-webkit-scrollbar]:hidden`) while still scrolling.
   One `matchMedia("(min-width: 1024px)")` listener closes the drawer if the viewport grows to
   desktop — the drawer is `lg:hidden`, so without it a resize while open leaves the page pinned
   with the burger gone and no way to unlock it. Closing on
@@ -2849,12 +2851,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
 MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, a `renderHeader`
   that renders the `LogoHmiConnectHorizontal` logo when expanded, nothing when collapsed
   (matching the original pre-extraction behavior), and its own `NAV_ITEMS` — a top-level Dashboard
-  (exact-matched) followed by two `AdminNavGroup`s: "Keanggotaan" (User Management and the
-  organization-wide Permintaan Verifikasi review queue) and
-  "Organisasi" (Organisasi/Badko/Cabang/Korkom/Komisariat, Pedoman Organisasi, and the
-  Super Admin-only `/master/institutions` CRUD for institution name, alias, logo, cascading
-  province/city/district, and address; its list shows/sorts the backend's Komisariat and kader
-  reference counts) — mirroring the same group-naming convention
+  (exact-matched) followed by four `AdminNavGroup`s in order: "Organisasi"
+  (Organisasi/Badko/Cabang/Korkom/Komisariat and Pedoman Organisasi), "Badan Khusus" (Kelola
+  KOHATI and Kelola BPL, see the special-bodies entry below), "Keanggotaan" (User Management and
+  the organization-wide Permintaan Verifikasi review queue), and "Lookup" (the Super Admin-only
+  `/master/institutions` CRUD for institution name, alias, logo, cascading province/city/district,
+  and address; its list shows/sorts the backend's Komisariat and kader reference counts). The
+  Organization `EntitySidebar` carries the same "Badan Khusus" group between its "Organisasi" and
+  "Keanggotaan" groups — mirroring the same group-naming convention
   `EntitySidebar`'s Cabang-scoped "Organisasi"/"Keanggotaan"/"Program" groups use below.
   `components/navigations/EntitySidebar.tsx` is the single scoped-entity sidebar rendered by all
   five entity layouts, including `app/(admin)/admin/branches/[branch_id]/layout.tsx`. That layout
@@ -3442,6 +3446,22 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   than the Korkom's own name, since the Korkom itself never organized any of them. Both
   `MasterSidebar` and the `EntitySidebar` Korkom items use `ADMIN_NAV_ICON.coordinatingChapter`
   (Tabler's `IconRoute`).
+- "Kelola KOHATI"/"Kelola BPL" (`/master/{kohati,bpl}` and `/organizations/[organization_id]/
+  {kohati,bpl}`) list every KOHATI or BPL in the deployment through `apis/special-bodies.ts`, which
+  wraps the backend's `special-bodies/*` resource (list/detail/create/update/delete/suspend/activate).
+  A special body is not a hierarchy level: each hangs off one parent named by `parent_entity_type` +
+  `parent_entity_id` (KOHATI under any of the five levels, BPL under an organization or branch, one
+  of each type per parent), mirrored in `lib/special-body.ts#SPECIAL_BODY_PARENT_TYPES`. The list
+  carries no parent name, so `listSpecialBodiesAdmin` dedupes the page's parents and resolves each
+  through its own `*/detail` read. All four routes are thin wrappers over
+  `lib/special-body-route.ts#loadSpecialBodyPage`, rendering `AdminSpecialBodyListPage`. Governance
+  is an **exact** grant on the parent, not ancestry, so each row's Edit and Suspend/Aktifkan only
+  show when `canManageEntity` holds for its parent; delete is Super Admin on `/master` only.
+  Master's create sheet picks a level and then a parent (Korkom and Komisariat cascade from a
+  regular Cabang); the Organization scope may only create under the organization itself, since its
+  grant governs nothing below. Parent is immutable after create. `image_url` is still a plain URL on
+  this resource, so `SpecialBodyLogoField` uploads to `entity_image` and stores the public URL.
+  Balitbang and LPP are typed but have no admin menu yet, nor do the Badko-to-Komisariat scopes.
 - `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
   (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:
   this deployment manages the one configured `ORGANIZATION_ID`, so a list of one row is noise —
