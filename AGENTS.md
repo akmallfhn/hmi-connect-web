@@ -135,7 +135,8 @@ the `/www` segment (see `app/(www)/www/`), and hides `/www` from direct access. 
 holds the cookie-based redirect rules (no session → `/auth/login`, has session → don't
 show login again). Paths listed in that first rule's negative lookahead opt out of it:
 `profile/*`, `trainings*`, and `feeds/*` because they're genuinely public;
-`api/attachment-palette` is public so those pages can color their attachments; and
+`api/attachment-palette` is public so those pages can color their attachments;
+`institutions/*` is public so institution pages can be crawled; and
 `invitations/*` because it isn't — that route needs to redirect to login with its own
 `redirectTo` so the emailed link survives signing in, which a config-level redirect can't do.
 `auth/forget-password` and `reset-password/*` are allowlisted for the plainest reason of all:
@@ -356,7 +357,8 @@ Split per content type, the same shape as the sibling `sevenpreneur` project's `
 `app/(sitemap)/sitemap.xml/route.ts` is a **sitemap index** naming one sitemap per type —
 `/basic/sitemap.xml` (the fixed public pages: `/auth/login`, `/articles`, `/trainings`),
 `/articles/sitemap.xml` (every published article at its real `slug_url`, `lastmod` from
-`updated_at`, cover as a sitemap image), and `/trainings/sitemap.xml` (every training, poster as
+`updated_at`, cover as a sitemap image), `/institutions/sitemap.xml` (every institution at its
+slug, logo as an image, no `lastmod`), and `/trainings/sitemap.xml` (every training, poster as
 an image, deliberately **no** `lastmod`, since `trainings/list` has no `updated_at` and a wrong one
 is worse than none). Anything with a dynamic id gets its own file rather than joining `basic`. They
 are route handlers at the app root, not under `(www)`: root routes resolve before
@@ -2561,8 +2563,25 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   the pointer cursor as the only hover cue; the edit button sits outside that link. The backend
   derives `slug` on create and rename (`universitas-indonesia`, then `-2`, `-3` on collisions),
   but only the id resolves, so a stale or missing slug still lands on the right institution.
-  That gated route renders `InstitutionDetailPage`, which for now shows only the logo, name,
-  alias, and location; the rest of the page is still to be designed.
+  That route is public (outside `(gated)`, with `institutions/.*` in `next.config.mts`'s
+  no-session allowlist) and indexable: `generateMetadata` sets the title, a description (the
+  institution's own, else one built from its name, city, and address), OG/Twitter cards, and a
+  canonical at the real slug, and the page emits `CollegeOrUniversity` JSON-LD. Its reads go through
+  `apis/institutions.ts#callInstitutionRead`, which tries the session first (follow state needs a
+  viewer) and falls back to `CLIENT_SECRET`; `institutions/list`, `detail`, and `members/list` all
+  accept the client secret on the backend. `/institutions/sitemap.xml` lists every institution.
+  `InstitutionDetailPage` is laid out like `ProfilePage` (the same cover, two-column grid, and
+  `SuggestedConnectionsCard` aside): a header card with the square logo overlapping the banner,
+  the name, "Perguruan Tinggi di {city_name}" (or "di Indonesia"), and the address as one line
+  (`lib/institution.ts#institutionAddressLine`: street, Kecamatan, city, Provinsi, missing parts
+  skipped). The optional `description` (edited on `/master/institutions`) sits in its own "Tentang"
+  card below. Then "{N} orang pernah bersekolah di sini" counts and lists
+  `institutions/members/list`: active users with an education history there, one card each through
+  `InstitutionMemberGrid`, which reuses `FollowRecommendationRow`'s `card` variant with the member's
+  degree, major, and years as its `subtitle`, the server's `is_followed_by_me` as
+  `initialFollowing`, and `hideFollow` on the viewer's own card and for signed-out visitors. Pages
+  are `INSTITUTION_MEMBERS_PAGE_SIZE` (21, so three-column rows fill evenly) and later ones load
+  through the `loadMoreInstitutionMembers` Server Action on an infinite query.
   `EditProfileForm`/`EditAvatarForm` both call `apis/users.ts#updateMyProfile`
   (`users/update-my-profile`) rather than `updateUser` (`users/update`) — the backend split
   self-service profile editing out from the admin-scoped endpoint, and `users/update` is now

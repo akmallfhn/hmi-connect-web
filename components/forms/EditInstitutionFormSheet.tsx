@@ -9,6 +9,7 @@ import type {
 import { getInstitutionDetail, updateInstitution } from "@/lib/actions";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import TextArea from "../fields/TextArea";
 import type { SearchableOption } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import InstitutionLocationFields from "./InstitutionLocationFields";
@@ -104,6 +105,7 @@ function EditInstitutionFields({
 }) {
   const [name, setName] = useState(institution.name);
   const [alias, setAlias] = useState(institution.alias ?? "");
+  const [description, setDescription] = useState(institution.description ?? "");
   const [logo, setLogo] = useState<InstitutionLogoValue>({
     mediaId: institution.image_media_id ?? "",
     imageUrl: institution.image_url ?? "",
@@ -141,6 +143,7 @@ function EditInstitutionFields({
         id: institution.id,
         name: normalizedName,
         alias: alias.trim(),
+        description: description.trim(),
         ...(logoChanged ? { image_media_id: logo.mediaId } : {}),
         district_id: district ? Number(district.value) : 0,
         address: address.trim(),
@@ -187,6 +190,16 @@ function EditInstitutionFields({
         placeholder="Contoh: UI"
         value={alias}
         onChange={(event) => setAlias(event.target.value)}
+      />
+
+      <TextArea
+        textAreaId="institution-description"
+        label="Deskripsi"
+        placeholder="Profil singkat institusi, tampil di halaman institusi."
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
+        rows={4}
+        characterLength={500}
       />
 
       <InstitutionLocationFields

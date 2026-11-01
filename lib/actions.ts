@@ -77,6 +77,7 @@ import {
   createInstitution as createInstitutionApi,
   deleteInstitution as deleteInstitutionApi,
   getInstitutionDetail as getInstitutionDetailApi,
+  listInstitutionMembers as listInstitutionMembersApi,
   updateInstitution as updateInstitutionApi,
   type Institution,
   type InstitutionPayload,
@@ -718,6 +719,10 @@ export async function updateInstitution(payload: UpdateInstitutionPayload) {
 
 export async function deleteInstitution(id: number) {
   return deleteInstitutionApi(id);
+}
+
+export async function loadMoreInstitutionMembers(institutionId: number, page: number) {
+  return listInstitutionMembersApi(institutionId, { page });
 }
 
 export async function getSpecialBodyDetail(id: string) {

@@ -3,7 +3,10 @@ import { formatEntityAuthorName } from "@/lib/feed-author";
 
 // How a suggested person is introduced, most self-descriptive first — never empty.
 export function followRecommendationSubtitle(
-  connection: FollowRecommendationEntry
+  connection: Pick<
+    FollowRecommendationEntry,
+    "headline" | "branch_name" | "education_institution_name"
+  >
 ): string {
   const headline = connection.headline?.trim();
   if (headline) return headline;

@@ -6,5 +6,6 @@ export function GET() {
     { path: "/basic/sitemap.xml" },
     { path: "/articles/sitemap.xml" },
     { path: "/trainings/sitemap.xml" },
+    { path: "/institutions/sitemap.xml" },
   ]);
 }

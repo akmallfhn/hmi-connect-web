@@ -11,19 +11,34 @@ import { isSuccessStatus } from "@/lib/types";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 
+// The person fields every caller can supply; recommendation-only fields stay optional.
+export type FollowRowConnection = Pick<
+  FollowRecommendationEntry,
+  "id" | "full_name" | "username" | "avatar" | "headline" | "branch_name"
+> &
+  Partial<FollowRecommendationEntry>;
+
 interface FollowRecommendationRowProps {
-  connection: FollowRecommendationEntry;
+  connection: FollowRowConnection;
   variant?: "compact" | "card";
+  // Recommendations are never followed yet; other lists pass the server's follow state.
+  initialFollowing?: boolean;
+  subtitle?: string;
+  // Set on the viewer's own card, which has no one to follow.
+  hideFollow?: boolean;
 }
 
 export default function FollowRecommendationRow({
   connection,
   variant = "compact",
+  initialFollowing = false,
+  subtitle: subtitleOverride,
+  hideFollow = false,
 }: FollowRecommendationRowProps) {
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(initialFollowing);
   const [loading, setLoading] = useState(false);
   const profileHref = `/profile/${connection.username}`;
-  const subtitle = followRecommendationSubtitle(connection);
+  const subtitle = subtitleOverride ?? followRecommendationSubtitle(connection);
 
   async function handleFollowToggle() {
     if (loading) return;
@@ -103,17 +118,19 @@ export default function FollowRecommendationRow({
             {subtitle}
           </p>
 
-          <div className="mt-auto w-full pt-4">
-            <Button
-              variant={isFollowing ? "outline" : "soft"}
-              size="sm"
-              onClick={handleFollowToggle}
-              disabled={loading}
-              className="w-full"
-            >
-              {isFollowing ? "Mengikuti" : "Ikuti"}
-            </Button>
-          </div>
+          {!hideFollow && (
+            <div className="mt-auto w-full pt-4">
+              <Button
+                variant={isFollowing ? "outline" : "soft"}
+                size="sm"
+                onClick={handleFollowToggle}
+                disabled={loading}
+                className="w-full"
+              >
+                {isFollowing ? "Mengikuti" : "Ikuti"}
+              </Button>
+            </div>
+          )}
         </div>
       </article>
     );
@@ -135,7 +152,7 @@ export default function FollowRecommendationRow({
           {subtitle}
         </p>
       </div>
-      {compactFollowButton}
+      {!hideFollow && compactFollowButton}
     </div>
   );
 }

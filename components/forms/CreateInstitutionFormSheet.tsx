@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createInstitutionAdmin } from "@/lib/actions";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import TextArea from "../fields/TextArea";
 import type { SearchableOption } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import InstitutionLocationFields from "./InstitutionLocationFields";
@@ -46,6 +47,7 @@ function CreateInstitutionFields({
 }) {
   const [name, setName] = useState("");
   const [alias, setAlias] = useState("");
+  const [description, setDescription] = useState("");
   const [logo, setLogo] = useState<InstitutionLogoValue>({
     mediaId: "",
     imageUrl: "",
@@ -70,6 +72,7 @@ function CreateInstitutionFields({
       const result = await createInstitutionAdmin({
         name: normalizedName,
         ...(normalizedAlias ? { alias: normalizedAlias } : {}),
+        ...(description.trim() ? { description: description.trim() } : {}),
         ...(logo.mediaId ? { image_media_id: logo.mediaId } : {}),
         ...(district ? { district_id: Number(district.value) } : {}),
         ...(address.trim() ? { address: address.trim() } : {}),
@@ -113,6 +116,16 @@ function CreateInstitutionFields({
         placeholder="Contoh: UI"
         value={alias}
         onChange={(event) => setAlias(event.target.value)}
+      />
+
+      <TextArea
+        textAreaId="institution-description"
+        label="Deskripsi"
+        placeholder="Profil singkat institusi, tampil di halaman institusi."
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
+        rows={4}
+        characterLength={500}
       />
 
       <InstitutionLocationFields

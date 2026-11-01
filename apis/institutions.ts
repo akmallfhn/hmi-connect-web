@@ -4,9 +4,11 @@ import { cookies } from "next/headers";
 import { callApi } from "./api";
 import {
   isSuccessStatus,
+  type Degree,
   type InstitutionSortByEnum,
   type SortTypeEnum,
   type StatusName,
+  type VerificationStatusEnum,
 } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
@@ -19,6 +21,7 @@ export type Institution = {
 };
 
 export type InstitutionDetail = Institution & {
+  description?: string | null;
   image_media_id?: string | null;
   district_id?: number | null;
   district_name?: string | null;
@@ -66,6 +69,7 @@ export type GetInstitutionsResult = {
 export type InstitutionPayload = {
   name: string;
   alias?: string;
+  description?: string;
   image_media_id?: string;
   district_id?: number;
   address?: string;
@@ -91,6 +95,18 @@ async function getSessionToken() {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
+// Public reads try the session first (follow state needs a viewer) and fall back to the client secret signed out.
+async function callInstitutionRead<T>(path: string, body: object) {
+  const sessionToken = await getSessionToken();
+  if (sessionToken) {
+    const result = await callApi<T>(path, { method: "POST", token: sessionToken, body });
+    if (result.status !== "UNAUTHORIZED") return result;
+  }
+  const clientSecret = process.env.CLIENT_SECRET;
+  if (!clientSecret) return { status: "UNAUTHORIZED" as const };
+  return callApi<T>(path, { method: "POST", token: clientSecret, body });
+}
+
 async function fetchInstitutions(
   options: GetInstitutionsOptions = {}
 ): Promise<GetInstitutionsResult> {
@@ -103,31 +119,16 @@ async function fetchInstitutions(
     pageSize,
   } = options;
   const currentPage = page ?? 1;
-  const sessionToken = await getSessionToken();
 
-  if (!sessionToken) {
-    return {
-      list: [],
-      hasMore: false,
-      totalData: 0,
-      totalPage: 1,
-      currentPage,
-    };
-  }
-
-  const result = await callApi<InstitutionsListResponse>(
+  const result = await callInstitutionRead<InstitutionsListResponse>(
     "/api/v1/institutions/list",
     {
-      method: "POST",
-      token: sessionToken,
-      body: {
-        ...(search ? { search } : {}),
-        ...(sortBy ? { sort_by: sortBy } : {}),
-        ...(sortType ? { sort_type: sortType } : {}),
-        ...(includeAggregates ? { include_aggregates: true } : {}),
-        ...(page ? { page } : {}),
-        ...(pageSize ? { page_size: pageSize } : {}),
-      },
+      ...(search ? { search } : {}),
+      ...(sortBy ? { sort_by: sortBy } : {}),
+      ...(sortType ? { sort_type: sortType } : {}),
+      ...(includeAggregates ? { include_aggregates: true } : {}),
+      ...(page ? { page } : {}),
+      ...(pageSize ? { page_size: pageSize } : {}),
     }
   );
 
@@ -172,16 +173,11 @@ export async function listInstitutionsAdmin(
 export async function getInstitutionDetail(
   id: number
 ): Promise<InstitutionDetail | null> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken || !Number.isSafeInteger(id) || id < 1) return null;
+  if (!Number.isSafeInteger(id) || id < 1) return null;
 
-  const result = await callApi<InstitutionDetail>(
+  const result = await callInstitutionRead<InstitutionDetail>(
     "/api/v1/institutions/detail",
-    {
-      method: "POST",
-      token: sessionToken,
-      body: { id },
-    }
+    { id }
   );
 
   if (!isSuccessStatus(result.status)) return null;
@@ -225,6 +221,59 @@ export async function deleteInstitution(
   return {
     ok: false,
     message: institutionWriteErrorMessage(result.status, result.message),
+  };
+}
+
+// One person who studied at the institution, with their latest education there.
+export type InstitutionMember = {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar?: string;
+  headline?: string;
+  verification_status: VerificationStatusEnum;
+  is_alumni: boolean;
+  branch_name?: string;
+  chapter_name?: string;
+  degree: Degree;
+  major?: string;
+  start_year: number;
+  end_year?: number;
+  is_followed_by_me: boolean;
+};
+
+// A multiple of three, so every page fills whole rows of the three-column member grid.
+export const INSTITUTION_MEMBERS_PAGE_SIZE = 21;
+
+export type InstitutionMembersResult = {
+  list: InstitutionMember[];
+  totalData: number;
+  hasMore: boolean;
+};
+
+export async function listInstitutionMembers(
+  institutionId: number,
+  options: { page?: number; pageSize?: number; search?: string } = {}
+): Promise<InstitutionMembersResult> {
+  const empty = { list: [], totalData: 0, hasMore: false };
+  if (!Number.isSafeInteger(institutionId) || institutionId < 1) return empty;
+
+  const result = await callInstitutionRead<{
+    list: InstitutionMember[];
+    metapaging?: { total_data: number; total_page: number; current_page: number };
+  }>("/api/v1/institutions/members/list", {
+    institution_id: institutionId,
+    page: options.page ?? 1,
+    page_size: options.pageSize ?? INSTITUTION_MEMBERS_PAGE_SIZE,
+    ...(options.search ? { search: options.search } : {}),
+  });
+  if (!isSuccessStatus(result.status) || !result.data) return empty;
+
+  const metapaging = result.data.metapaging;
+  return {
+    list: result.data.list ?? [],
+    totalData: metapaging?.total_data ?? 0,
+    hasMore: metapaging ? metapaging.current_page < metapaging.total_page : false,
   };
 }
 
