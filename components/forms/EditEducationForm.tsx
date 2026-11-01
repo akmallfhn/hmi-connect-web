@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Institution } from "@/apis/institutions";
@@ -22,52 +22,12 @@ import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
 
-type EducationDraft = {
-  id: string;
-  institutionName: string;
-  institution: SearchableOption | null;
-  degree: Degree;
-  major: string;
-  startYear: string;
-  endYear: string;
-  isNew: boolean;
-  removed: boolean;
-};
-
-function toDrafts(entries: EducationHistoryEntry[]): EducationDraft[] {
-  return entries.map((entry) => ({
-    id: entry.id,
-    institutionName: entry.institution_name,
-    institution: null,
-    degree: entry.degree,
-    major: entry.major,
-    startYear: String(entry.start_year),
-    endYear: entry.end_year ? String(entry.end_year) : "",
-    isNew: false,
-    removed: false,
-  }));
-}
-
-function emptyDraft(): EducationDraft {
-  return {
-    id: `new-${crypto.randomUUID()}`,
-    institutionName: "",
-    institution: null,
-    degree: "sarjana",
-    major: "",
-    startYear: "",
-    endYear: "",
-    isNew: true,
-    removed: false,
-  };
-}
-
 interface EditEducationFormProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  userId?: string;
-  entries: EducationHistoryEntry[];
+  // null adds a new entry; an entry edits (or deletes) that one row.
+  entry: EducationHistoryEntry | null;
   institutions: Institution[];
 }
 
@@ -75,31 +35,26 @@ export default function EditEducationForm({
   open,
   onClose,
   onSaved,
-  userId,
-  entries,
+  entry,
   institutions,
 }: EditEducationFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Pendidikan">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={entry ? "Edit Pendidikan" : "Tambah Pendidikan"}
+    >
       {open && (
         <EducationFields
+          key={entry?.id ?? "new"}
           onClose={onClose}
           onSaved={onSaved}
-          userId={userId}
-          entries={entries}
+          entry={entry}
           institutions={institutions}
         />
       )}
     </Modal>
   );
-}
-
-interface EducationFieldsProps {
-  onClose: () => void;
-  onSaved: () => void;
-  userId?: string;
-  entries: EducationHistoryEntry[];
-  institutions: Institution[];
 }
 
 async function loadInstitutionOptions(inputValue: string, page: number) {
@@ -114,7 +69,7 @@ async function loadInstitutionOptions(inputValue: string, page: number) {
     options: results.map((item) => ({
       label: item.name,
       value: item.id,
-      image: item.image_url,
+      image: item.image_url ?? undefined,
     })),
     hasMore: Boolean(json.hasMore),
   };
@@ -125,234 +80,222 @@ async function createInstitutionOption(
 ): Promise<SearchableOption | null> {
   const created = await createInstitution(name);
   if (!created) return null;
-  return { label: created.name, value: created.id, image: created.image_url };
+  return {
+    label: created.name,
+    value: created.id,
+    image: created.image_url ?? undefined,
+  };
 }
 
-// Mounted only while open, so drafts always seed fresh from entries — no reset effect needed.
+// Mounted only while open (and keyed by entry), so fields always seed fresh — no reset effect needed.
 function EducationFields({
   onClose,
   onSaved,
-  userId,
-  entries,
+  entry,
   institutions,
-}: EducationFieldsProps) {
-  const [drafts, setDrafts] = useState<EducationDraft[]>(() => toDrafts(entries));
+}: Omit<EditEducationFormProps, "open">) {
+  const [institution, setInstitution] = useState<SearchableOption | null>(
+    entry
+      ? {
+          label: entry.institution_name,
+          value: entry.institution_id,
+          image: entry.image_url,
+        }
+      : null
+  );
+  const [degree, setDegree] = useState<Degree>(entry?.degree ?? "sarjana");
+  const [major, setMajor] = useState(entry?.major ?? "");
+  const [startYear, setStartYear] = useState(
+    entry ? String(entry.start_year) : ""
+  );
+  const [endYear, setEndYear] = useState(
+    entry?.end_year ? String(entry.end_year) : ""
+  );
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const institutionOptions: SearchableOption[] = institutions.map((item) => ({
     label: item.name,
     value: item.id,
-    image: item.image_url,
+    image: item.image_url ?? undefined,
   }));
 
-  function updateDraft<K extends keyof EducationDraft>(
-    id: string,
-    key: K,
-    value: EducationDraft[K]
-  ) {
-    setDrafts((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, [key]: value } : draft))
-    );
-  }
-
-  function addDraft() {
-    setDrafts((prev) => [...prev, emptyDraft()]);
-  }
-
-  function toggleRemoved(id: string) {
-    setDrafts((prev) =>
-      prev.map((draft) =>
-        draft.id === id ? { ...draft, removed: !draft.removed } : draft
-      )
-    );
-  }
-
   async function handleSubmit() {
-    if (!userId) {
-      toast.error("ID pengguna tidak ditemukan.");
+    if (!institution) {
+      toast.error("Pilih universitas terlebih dahulu.");
       return;
     }
-
-    const newDrafts = drafts.filter((draft) => draft.isNew && !draft.removed);
-    const missingInstitution = newDrafts.find((draft) => !draft.institution);
-    const missingStartYear = newDrafts.find((draft) => !draft.startYear.trim());
-    if (missingInstitution || missingStartYear) {
-      toast.error("Lengkapi universitas dan tahun masuk untuk entri baru.");
+    const start = Number(startYear);
+    if (!startYear.trim() || !Number.isInteger(start)) {
+      toast.error("Tahun masuk wajib diisi.");
+      return;
+    }
+    const end = endYear.trim() ? Number(endYear) : null;
+    if (end !== null && end < start) {
+      toast.error("Tahun lulus tidak boleh sebelum tahun masuk.");
       return;
     }
 
     setIsSaving(true);
     try {
-      const results = await Promise.all(
-        drafts.map((draft) => {
-          if (draft.isNew) {
-            if (draft.removed) return null;
-            return createEducationHistory({
-              institution_id: Number(draft.institution!.value),
-              degree: draft.degree,
-              major: draft.major,
-              start_year: Number(draft.startYear),
-              end_year: draft.endYear ? Number(draft.endYear) : undefined,
-            });
-          }
-          if (draft.removed) {
-            return deleteEducationHistory(draft.id);
-          }
-          return updateEducationHistory({
-            id: draft.id,
-            degree: draft.degree,
-            major: draft.major,
-            start_year: Number(draft.startYear),
-            end_year: draft.endYear ? Number(draft.endYear) : undefined,
+      const result = entry
+        ? await updateEducationHistory({
+            id: entry.id,
+            institution_id: Number(institution.value),
+            degree,
+            major,
+            start_year: start,
+            // 0 clears end_year on the backend, putting the education back to ongoing.
+            end_year: end ?? 0,
+          })
+        : await createEducationHistory({
+            institution_id: Number(institution.value),
+            degree,
+            major,
+            start_year: start,
+            end_year: end ?? undefined,
           });
-        })
-      );
 
-      const attempted = results.filter(Boolean);
-      const failed = attempted.filter(
-        (result) => !isSuccessStatus(result!.status)
-      );
-
-      if (failed.length > 0) {
-        toast.error(
-          `${failed.length} dari ${attempted.length} perubahan gagal disimpan.`
-        );
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal menyimpan pendidikan.");
         return;
       }
-
-      toast.success("Riwayat pendidikan berhasil diperbarui.");
+      toast.success(
+        entry ? "Pendidikan berhasil diperbarui." : "Pendidikan berhasil ditambahkan."
+      );
       onSaved();
     } catch (err) {
-      console.error("[EditEducationForm] history mutation threw:", err);
-      toast.error("Gagal menyimpan perubahan.");
+      console.error("[EditEducationForm] save threw:", err);
+      toast.error("Gagal menyimpan pendidikan.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!entry) return;
+    setIsSaving(true);
+    try {
+      const result = await deleteEducationHistory(entry.id);
+      if (!isSuccessStatus(result.status)) {
+        toast.error(result.message ?? "Gagal menghapus pendidikan.");
+        return;
+      }
+      toast.success("Pendidikan berhasil dihapus.");
+      onSaved();
+    } catch (err) {
+      console.error("[EditEducationForm] delete threw:", err);
+      toast.error("Gagal menghapus pendidikan.");
     } finally {
       setIsSaving(false);
     }
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {drafts.map((draft, index) => (
-        <div
-          key={draft.id}
-          className={[
-            "flex flex-col gap-4 rounded-xl border p-4",
-            draft.removed
-              ? "border-destructive/30 bg-destructive-soft/30"
-              : "border-border",
-          ].join(" ")}
-        >
-          {(draft.isNew || draft.removed) && (
-            <div className="flex flex-wrap gap-2">
-              {draft.isNew && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-primary px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Baru
-                </span>
-              )}
-              {draft.removed && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-destructive px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Akan dihapus
-                </span>
-              )}
-            </div>
-          )}
+    <div className="flex flex-col gap-4">
+      <CreateableSelect
+        selectId="edu-institution"
+        label="Universitas"
+        placeholder="Cari universitas..."
+        value={institution}
+        onChange={setInstitution}
+        loadOptions={loadInstitutionOptions}
+        defaultOptions={institutionOptions}
+        onCreateOption={createInstitutionOption}
+        createLabel={(input) => `Tambah universitas "${input}"`}
+        debounceMs={400}
+        disabled={isSaving}
+        required
+      />
+      <Input
+        inputId="edu-major"
+        label="Jurusan"
+        placeholder="Contoh: Teknik Informatika"
+        value={major}
+        disabled={isSaving}
+        onChange={(e) => setMajor(e.target.value)}
+      />
+      <Select
+        selectId="edu-degree"
+        label="Jenjang Pendidikan"
+        placeholder="Pilih jenjang"
+        value={degree}
+        disabled={isSaving}
+        onChange={(value) => setDegree(value as Degree)}
+        options={DEGREE_OPTIONS}
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <NumberInput
+          inputId="edu-start"
+          label="Tahun Masuk"
+          placeholder="2020"
+          value={startYear}
+          disabled={isSaving}
+          onValueChange={setStartYear}
+          required
+        />
+        <NumberInput
+          inputId="edu-end"
+          label="Tahun Lulus"
+          placeholder="Kosongkan jika masih berjalan"
+          value={endYear}
+          disabled={isSaving}
+          onValueChange={setEndYear}
+        />
+      </div>
 
-          {draft.isNew ? (
-            <CreateableSelect
-              selectId={`edu-institution-${index}`}
-              label="Universitas"
-              placeholder="Cari universitas..."
-              value={draft.institution}
-              onChange={(option) => updateDraft(draft.id, "institution", option)}
-              loadOptions={loadInstitutionOptions}
-              defaultOptions={institutionOptions}
-              onCreateOption={createInstitutionOption}
-              createLabel={(input) => `Tambah universitas "${input}"`}
-              debounceMs={400}
-              disabled={draft.removed}
-              required
-            />
-          ) : (
-            <p className="text-sm font-semibold text-heading">
-              {draft.institutionName}
-            </p>
-          )}
-
-          <Input
-            inputId={`edu-major-${index}`}
-            label="Jurusan"
-            placeholder="Contoh: Teknik Informatika"
-            value={draft.major}
-            disabled={draft.removed}
-            onChange={(e) => updateDraft(draft.id, "major", e.target.value)}
-          />
-          <Select
-            selectId={`edu-degree-${index}`}
-            label="Jenjang Pendidikan"
-            placeholder="Pilih jenjang"
-            value={draft.degree}
-            disabled={draft.removed}
-            onChange={(value) => updateDraft(draft.id, "degree", value as Degree)}
-            options={DEGREE_OPTIONS}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <NumberInput
-              inputId={`edu-start-${index}`}
-              label="Tahun Masuk"
-              placeholder="2020"
-              value={draft.startYear}
-              disabled={draft.removed}
-              onValueChange={(value) => updateDraft(draft.id, "startYear", value)}
-            />
-            <NumberInput
-              inputId={`edu-end-${index}`}
-              label="Tahun Lulus"
-              placeholder="2024"
-              value={draft.endYear}
-              disabled={draft.removed}
-              onValueChange={(value) => updateDraft(draft.id, "endYear", value)}
-            />
-          </div>
-
-          <div className="flex justify-end border-t border-border pt-4">
+      {confirmingDelete ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-heading">Hapus riwayat pendidikan ini?</p>
+          <div className="flex justify-end gap-2">
             <Button
-              variant={draft.removed ? "outline" : "destructive"}
+              variant="outline"
               size="sm"
-              onClick={() => toggleRemoved(draft.id)}
+              onClick={() => setConfirmingDelete(false)}
+              disabled={isSaving}
             >
-              {draft.removed ? (
-                <>
-                  <RotateCcw className="size-3.5" />
-                  Batalkan
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  Hapus
-                </>
-              )}
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => void handleDelete()}
+              disabled={isSaving}
+            >
+              {isSaving ? "Menghapus..." : "Ya, Hapus"}
             </Button>
           </div>
         </div>
-      ))}
-
-      <Button
-        variant="ghost"
-        onClick={addDraft}
-        className="w-full gap-1.5 rounded-lg border border-dashed border-border-strong py-2.5 text-primary-foreground hover:bg-primary-soft"
-      >
-        <Plus className="size-4" />
-        Tambah Pendidikan
-      </Button>
-
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onClose} disabled={isSaving}>
-          Batal
-        </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? "Menyimpan..." : "Simpan"}
-        </Button>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+          {entry ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={isSaving}
+              className="text-destructive-foreground hover:bg-destructive-soft!"
+            >
+              <Trash2 className="size-3.5" />
+              Hapus
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} disabled={isSaving}>
+              Batal
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => void handleSubmit()}
+              disabled={isSaving}
+            >
+              {isSaving ? "Menyimpan..." : "Simpan"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

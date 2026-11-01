@@ -2544,6 +2544,20 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateMyProfile` directly) rather than batching into the profile form's own "Simpan"
   button, since it's opened from a separate trigger (clicking the avatar itself).
+  `EditEducationForm` is the one single-entry form among them rather than a batch draft:
+  `EducationCard` puts a "Tambah" button beside the Pendidikan title (`entry={null}`) and renders
+  each item as its own bordered card holding the institution link plus a matching ghost "Edit"
+  button (`entry={item}`), whose form can change the
+  university, major, degree, and both years, and carries the delete action behind an inline
+  confirmation. An empty Tahun Lulus means still studying; on update it is sent as `end_year: 0`,
+  which the backend treats as clearing it (`null` would leave it unchanged).
+  `ProfileCompletionCard`'s education stage opens the same form in add mode. Each item's square
+  `rounded-lg` logo and text link to `/institutions/{institution_slug}/{institution_id}`
+  (`lib/institution.ts#institutionHref`); the edit button sits outside that link. The backend
+  derives `slug` on create and rename (`universitas-indonesia`, then `-2`, `-3` on collisions),
+  but only the id resolves, so a stale or missing slug still lands on the right institution.
+  That gated route renders `InstitutionDetailPage`, which for now shows only the logo, name,
+  alias, and location; the rest of the page is still to be designed.
   `EditProfileForm`/`EditAvatarForm` both call `apis/users.ts#updateMyProfile`
   (`users/update-my-profile`) rather than `updateUser` (`users/update`) — the backend split
   self-service profile editing out from the admin-scoped endpoint, and `users/update` is now

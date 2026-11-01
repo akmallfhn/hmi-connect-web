@@ -13,6 +13,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 export type Institution = {
   id: number;
   name: string;
+  slug?: string;
   alias?: string | null;
   image_url?: string | null;
 };

@@ -113,7 +113,6 @@ export default function ProfilePage({
     institutions,
     socialMediaPlatforms,
     socialMediaAccounts: profile.socialMediaAccounts,
-    educationHistories: profile.educationHistories,
     trainingHistories: profile.trainingHistories,
     organizationExperiences: profile.organizationExperiences,
     workExperiences: profile.workExperiences,
@@ -297,7 +296,6 @@ export default function ProfilePage({
                     isOwnProfile={isOwnProfile}
                   />
                   <EducationCard
-                    userId={profile.userId}
                     entries={profile.educationHistories}
                     institutions={institutions}
                     isOwnProfile={isOwnProfile}

@@ -399,6 +399,7 @@ export type EducationHistoryEntry = {
   id: string;
   institution_id: number;
   institution_name: string;
+  institution_slug?: string;
   image_url?: string;
   degree: Degree;
   major: string;

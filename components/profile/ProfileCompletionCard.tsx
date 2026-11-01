@@ -7,7 +7,6 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import type { Institution } from "@/apis/institutions";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
-  EducationHistoryEntry,
   OrganizationExperienceEntry,
   ProfileCompletion,
   SocialMediaAccountEntry,
@@ -32,7 +31,6 @@ export interface ProfileCompletionForms {
   institutions: Institution[];
   socialMediaPlatforms: SocialMediaPlatform[];
   socialMediaAccounts: SocialMediaAccountEntry[];
-  educationHistories: EducationHistoryEntry[];
   trainingHistories: TrainingHistoryEntry[];
   organizationExperiences: OrganizationExperienceEntry[];
   workExperiences: WorkExperienceEntry[];
@@ -199,8 +197,7 @@ export default function ProfileCompletionCard({
         open={openForm === "education"}
         onClose={closeForm}
         onSaved={handleSaved}
-        userId={forms.userId}
-        entries={forms.educationHistories}
+        entry={null}
         institutions={forms.institutions}
       />
       <EditTrainingForm
