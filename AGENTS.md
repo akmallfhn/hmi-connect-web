@@ -2574,13 +2574,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `SuggestedConnectionsCard` aside): a header card with the square logo overlapping the banner,
   the name, "Perguruan Tinggi di {city_name}" (or "di Indonesia"), and the address as one line
   (`lib/institution.ts#institutionAddressLine`: street, Kecamatan, city, Provinsi, missing parts
-  skipped). The optional `description` (edited on `/master/institutions`) sits in its own "Tentang"
-  card below. Then "{N} orang pernah bersekolah di sini" counts and lists
+  skipped). Institutions have no description. Then "{N} orang pernah bersekolah di sini" counts and lists
   `institutions/members/list`: active users with an education history there, one card each through
   `InstitutionMemberGrid`, which reuses `FollowRecommendationRow`'s `card` variant with the member's
   degree, major, and years as its `subtitle`, the server's `is_followed_by_me` as
   `initialFollowing`, and `hideFollow` on the viewer's own card and for signed-out visitors. Pages
-  are `INSTITUTION_MEMBERS_PAGE_SIZE` (21, so three-column rows fill evenly) and later ones load
+  are `INSTITUTION_MEMBERS_PAGE_SIZE` (18, so two- and three-column rows both fill evenly) and later ones load
   through the `loadMoreInstitutionMembers` Server Action on an infinite query.
   `EditProfileForm`/`EditAvatarForm` both call `apis/users.ts#updateMyProfile`
   (`users/update-my-profile`) rather than `updateUser` (`users/update`) — the backend split

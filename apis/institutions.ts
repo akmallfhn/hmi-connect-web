@@ -21,7 +21,6 @@ export type Institution = {
 };
 
 export type InstitutionDetail = Institution & {
-  description?: string | null;
   image_media_id?: string | null;
   district_id?: number | null;
   district_name?: string | null;
@@ -69,7 +68,6 @@ export type GetInstitutionsResult = {
 export type InstitutionPayload = {
   name: string;
   alias?: string;
-  description?: string;
   image_media_id?: string;
   district_id?: number;
   address?: string;
@@ -243,7 +241,7 @@ export type InstitutionMember = {
 };
 
 // A multiple of three, so every page fills whole rows of the three-column member grid.
-export const INSTITUTION_MEMBERS_PAGE_SIZE = 21;
+export const INSTITUTION_MEMBERS_PAGE_SIZE = 18;
 
 export type InstitutionMembersResult = {
   list: InstitutionMember[];

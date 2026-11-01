@@ -22,7 +22,7 @@ interface InstitutionDetailPageProps {
   };
 }
 
-// Mirrors ProfilePage: a cover-and-logo header with city and address, the description card, then the people who studied here.
+// Mirrors ProfilePage: a cover-and-logo header with city and address, then the people who studied here.
 export default function InstitutionDetailPage({
   institution,
   members,
@@ -30,7 +30,6 @@ export default function InstitutionDetailPage({
 }: InstitutionDetailPageProps) {
   const locationLine = institutionLocationLine(institution);
   const addressLine = institutionAddressLine(institution);
-  const description = institution.description?.trim();
 
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -89,17 +88,6 @@ export default function InstitutionDetailPage({
                 )}
               </div>
             </section>
-
-            {description && (
-              <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
-                <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-                  Tentang {institution.name}
-                </h2>
-                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-content-foreground xl:text-[15px]">
-                  {description}
-                </p>
-              </section>
-            )}
 
             <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
               <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">

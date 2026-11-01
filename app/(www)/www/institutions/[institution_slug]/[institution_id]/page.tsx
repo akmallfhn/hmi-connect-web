@@ -18,10 +18,8 @@ interface InstitutionRouteProps {
   params: Promise<{ institution_slug: string; institution_id: string }>;
 }
 
-// Falls back to the institution's own identity so every page has a unique description.
+// Built from the institution's own identity so every page has a unique description.
 function metaDescription(institution: InstitutionDetail): string {
-  const own = institution.description?.trim();
-  if (own) return own;
   return [
     `${institution.name}, ${institutionLocationLine(institution)}.`,
     institutionAddressLine(institution) ? `${institutionAddressLine(institution)}.` : null,
@@ -104,7 +102,7 @@ export default async function InstitutionRoute({ params }: InstitutionRouteProps
     <>
       <script
         type="application/ld+json"
-        // Escaping "<" keeps a name or description from closing the script tag early.
+        // Escaping "<" keeps a name or address from closing the script tag early.
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
