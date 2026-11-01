@@ -1,279 +1,142 @@
 "use client";
 
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { HonorAwardEntry } from "@/apis/users";
 import { createHonorAward, deleteHonorAward, updateHonorAward } from "@/lib/actions";
-import { isSuccessStatus } from "@/lib/types";
-import Button from "../buttons/Button";
+import { pastYears } from "@/lib/year-options";
 import Input from "../fields/Input";
-import NumberInput from "../fields/NumberInput";
+import YearSelect from "../fields/YearSelect";
 import TextArea from "../fields/TextArea";
 import Modal from "../modals/Modal";
-
-type HonorAwardDraft = {
-  id: string;
-  title: string;
-  issuer: string;
-  year: string;
-  description: string;
-  isNew: boolean;
-  removed: boolean;
-};
-
-function toDrafts(entries: HonorAwardEntry[]): HonorAwardDraft[] {
-  return entries.map((entry) => ({
-    id: entry.id,
-    title: entry.title,
-    issuer: entry.issuer,
-    year: String(entry.year),
-    description: entry.description ?? "",
-    isNew: false,
-    removed: false,
-  }));
-}
-
-function emptyDraft(): HonorAwardDraft {
-  return {
-    id: `new-${crypto.randomUUID()}`,
-    title: "",
-    issuer: "",
-    year: "",
-    description: "",
-    isNew: true,
-    removed: false,
-  };
-}
+import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
+import { runProfileEntryMutation } from "./profile-entry-mutation";
 
 interface EditHonorAwardFormProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  userId?: string;
-  entries: HonorAwardEntry[];
+  // null adds a new entry; an entry edits (or deletes) that one row.
+  entry: HonorAwardEntry | null;
 }
 
 export default function EditHonorAwardForm({
   open,
   onClose,
   onSaved,
-  userId,
-  entries,
+  entry,
 }: EditHonorAwardFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Honor & Penghargaan">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={entry ? "Edit Penghargaan" : "Tambah Penghargaan"}
+    >
       {open && (
         <HonorAwardFields
+          key={entry?.id ?? "new"}
           onClose={onClose}
           onSaved={onSaved}
-          userId={userId}
-          entries={entries}
+          entry={entry}
         />
       )}
     </Modal>
   );
 }
 
-interface HonorAwardFieldsProps {
-  onClose: () => void;
-  onSaved: () => void;
-  userId?: string;
-  entries: HonorAwardEntry[];
-}
-
-// Mounted only while open, so drafts always seed fresh from entries — no reset effect needed.
-function HonorAwardFields({ onClose, onSaved, userId, entries }: HonorAwardFieldsProps) {
-  const [drafts, setDrafts] = useState<HonorAwardDraft[]>(() => toDrafts(entries));
+// Mounted only while open (and keyed by entry), so fields always seed fresh — no reset effect needed.
+function HonorAwardFields({
+  onClose,
+  onSaved,
+  entry,
+}: Omit<EditHonorAwardFormProps, "open">) {
+  const [title, setTitle] = useState(entry?.title ?? "");
+  const [issuer, setIssuer] = useState(entry?.issuer ?? "");
+  const [year, setYear] = useState(entry ? String(entry.year) : "");
+  const [description, setDescription] = useState(entry?.description ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
-  function updateDraft<K extends keyof HonorAwardDraft>(
-    id: string,
-    key: K,
-    value: HonorAwardDraft[K]
-  ) {
-    setDrafts((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, [key]: value } : draft))
-    );
-  }
-
-  function addDraft() {
-    setDrafts((prev) => [...prev, emptyDraft()]);
-  }
-
-  function toggleRemoved(id: string) {
-    setDrafts((prev) =>
-      prev.map((draft) =>
-        draft.id === id ? { ...draft, removed: !draft.removed } : draft
-      )
-    );
-  }
-
-  async function handleSubmit() {
-    if (!userId) {
-      toast.error("ID pengguna tidak ditemukan.");
-      return;
-    }
-
-    const activeDrafts = drafts.filter((draft) => !draft.removed);
-    const incompleteDraft = activeDrafts.find(
-      (draft) => !draft.title.trim() || !draft.issuer.trim() || !draft.year.trim()
-    );
-    if (incompleteDraft) {
+  function handleSubmit() {
+    if (!title.trim() || !issuer.trim() || !year.trim()) {
       toast.error("Lengkapi judul, penerbit, dan tahun.");
       return;
     }
-
-    setIsSaving(true);
-    try {
-      const results = await Promise.all(
-        drafts.map((draft) => {
-          if (draft.isNew) {
-            if (draft.removed) return null;
-            return createHonorAward({
-              title: draft.title,
-              issuer: draft.issuer,
-              year: Number(draft.year),
-              description: draft.description,
-            });
-          }
-          if (draft.removed) {
-            return deleteHonorAward(draft.id);
-          }
-          return updateHonorAward({
-            id: draft.id,
-            title: draft.title,
-            issuer: draft.issuer,
-            year: Number(draft.year),
-            description: draft.description,
-          });
-        })
-      );
-
-      const attempted = results.filter(Boolean);
-      const failed = attempted.filter((result) => !isSuccessStatus(result!.status));
-
-      if (failed.length > 0) {
-        toast.error(
-          `${failed.length} dari ${attempted.length} perubahan gagal disimpan.`
-        );
-        return;
+    const fields = {
+      title: title.trim(),
+      issuer: issuer.trim(),
+      year: Number(year),
+      description: description.trim(),
+    };
+    void runProfileEntryMutation(
+      () => (entry ? updateHonorAward({ id: entry.id, ...fields }) : createHonorAward(fields)),
+      {
+        success: entry ? "Penghargaan berhasil diperbarui." : "Penghargaan berhasil ditambahkan.",
+        failure: "Gagal menyimpan penghargaan.",
+        setSaving: setIsSaving,
+        onDone: onSaved,
+        tag: "EditHonorAwardForm",
       }
+    );
+  }
 
-      toast.success("Honor & penghargaan berhasil diperbarui.");
-      onSaved();
-    } catch (err) {
-      console.error("[EditHonorAwardForm] mutation threw:", err);
-      toast.error("Gagal menyimpan perubahan.");
-    } finally {
-      setIsSaving(false);
-    }
+  function handleDelete() {
+    if (!entry) return;
+    void runProfileEntryMutation(() => deleteHonorAward(entry.id), {
+      success: "Penghargaan berhasil dihapus.",
+      failure: "Gagal menghapus penghargaan.",
+      setSaving: setIsSaving,
+      onDone: onSaved,
+      tag: "EditHonorAwardForm",
+    });
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {drafts.map((draft, index) => (
-        <div
-          key={draft.id}
-          className={[
-            "flex flex-col gap-4 rounded-xl border p-4",
-            draft.removed
-              ? "border-destructive/30 bg-destructive-soft/30"
-              : "border-border",
-          ].join(" ")}
-        >
-          {(draft.isNew || draft.removed) && (
-            <div className="flex flex-wrap gap-2">
-              {draft.isNew && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-primary px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Baru
-                </span>
-              )}
-              {draft.removed && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-destructive px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Akan dihapus
-                </span>
-              )}
-            </div>
-          )}
+    <div className="flex flex-col gap-4">
+      <Input
+        inputId="honor-title"
+        label="Judul"
+        placeholder="Contoh: Kader Teladan"
+        value={title}
+        disabled={isSaving}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      <Input
+        inputId="honor-issuer"
+        label="Penerbit"
+        placeholder="Contoh: HMI Cabang Banda Aceh"
+        value={issuer}
+        disabled={isSaving}
+        onChange={(e) => setIssuer(e.target.value)}
+        required
+      />
+      <YearSelect
+        selectId="honor-year"
+        label="Tahun"
+        value={year}
+        onChange={setYear}
+        years={pastYears()}
+        disabled={isSaving}
+        required
+      />
+      <TextArea
+        textAreaId="honor-description"
+        label="Deskripsi"
+        placeholder="Ceritakan konteks penghargaan ini"
+        value={description}
+        disabled={isSaving}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
+        characterLength={240}
+      />
 
-          <Input
-            inputId={`honor-award-title-${index}`}
-            label="Judul"
-            placeholder="Contoh: Kader Teladan"
-            value={draft.title}
-            disabled={draft.removed}
-            onChange={(e) => updateDraft(draft.id, "title", e.target.value)}
-            required
-          />
-          <Input
-            inputId={`honor-award-issuer-${index}`}
-            label="Penerbit"
-            placeholder="Contoh: HMI Cabang Banda Aceh"
-            value={draft.issuer}
-            disabled={draft.removed}
-            onChange={(e) => updateDraft(draft.id, "issuer", e.target.value)}
-            required
-          />
-          <NumberInput
-            inputId={`honor-award-year-${index}`}
-            label="Tahun"
-            placeholder="2023"
-            value={draft.year}
-            disabled={draft.removed}
-            onValueChange={(value) => updateDraft(draft.id, "year", value)}
-            required
-          />
-          <TextArea
-            textAreaId={`honor-award-description-${index}`}
-            label="Deskripsi"
-            placeholder="Ceritakan konteks penghargaan ini"
-            value={draft.description}
-            disabled={draft.removed}
-            onChange={(e) => updateDraft(draft.id, "description", e.target.value)}
-            rows={3}
-            characterLength={240}
-          />
-
-          <div className="flex justify-end border-t border-border pt-4">
-            <Button
-              variant={draft.removed ? "outline" : "destructive"}
-              size="sm"
-              onClick={() => toggleRemoved(draft.id)}
-            >
-              {draft.removed ? (
-                <>
-                  <RotateCcw className="size-3.5" />
-                  Batalkan
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  Hapus
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      ))}
-
-      <Button
-        variant="ghost"
-        onClick={addDraft}
-        className="w-full gap-1.5 rounded-lg border border-dashed border-border-strong py-2.5 text-primary-foreground hover:bg-primary-soft"
-      >
-        <Plus className="size-4" />
-        Tambah Honor & Penghargaan
-      </Button>
-
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onClose} disabled={isSaving}>
-          Batal
-        </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? "Menyimpan..." : "Simpan"}
-        </Button>
-      </div>
+      <ProfileEntryFormFooter
+        isSaving={isSaving}
+        onCancel={onClose}
+        onSubmit={handleSubmit}
+        onDelete={entry ? handleDelete : undefined}
+        deleteMessage="Hapus penghargaan ini?"
+      />
     </div>
   );
 }

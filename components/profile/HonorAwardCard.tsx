@@ -1,25 +1,29 @@
 "use client";
 
-import { Pencil, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { HonorAwardEntry } from "@/apis/users";
-import Button from "../buttons/Button";
 import EditHonorAwardForm from "../forms/EditHonorAwardForm";
+import { AddEntryButton, EditEntryButton } from "./ProfileEntryButtons";
 
 interface HonorAwardCardProps {
-  userId?: string;
   entries: HonorAwardEntry[];
   isOwnProfile?: boolean;
 }
 
 export default function HonorAwardCard({
-  userId,
   entries,
   isOwnProfile,
 }: HonorAwardCardProps) {
   const router = useRouter();
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<HonorAwardEntry | null>(null);
+
+  function openForm(entry: HonorAwardEntry | null) {
+    setEditTarget(entry);
+    setFormOpen(true);
+  }
 
   if (entries.length === 0 && !isOwnProfile) return null;
 
@@ -30,10 +34,7 @@ export default function HonorAwardCard({
           Honor & Penghargaan
         </h2>
         {isOwnProfile && (
-          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
-            <Pencil className="size-3.5" />
-            Edit
-          </Button>
+          <AddEntryButton onClick={() => openForm(null)} />
         )}
       </div>
 
@@ -48,7 +49,7 @@ export default function HonorAwardCard({
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
                 <Trophy className="size-5" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-heading xl:text-[15px]">
                   {entry.title}
                 </p>
@@ -64,6 +65,12 @@ export default function HonorAwardCard({
                   </p>
                 )}
               </div>
+              {isOwnProfile && (
+                <EditEntryButton
+                  onClick={() => openForm(entry)}
+                  label="Edit penghargaan"
+                />
+              )}
             </div>
           ))
         )}
@@ -71,14 +78,13 @@ export default function HonorAwardCard({
 
       {isOwnProfile && (
         <EditHonorAwardForm
-          open={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
           onSaved={() => {
-            setIsEditOpen(false);
+            setFormOpen(false);
             router.refresh();
           }}
-          userId={userId}
-          entries={entries}
+          entry={editTarget}
         />
       )}
     </div>

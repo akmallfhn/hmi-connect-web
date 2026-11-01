@@ -1,25 +1,29 @@
 "use client";
 
-import { Briefcase, Pencil } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { WorkExperienceEntry } from "@/apis/users";
-import Button from "../buttons/Button";
 import EditWorkExperienceForm from "../forms/EditWorkExperienceForm";
+import { AddEntryButton, EditEntryButton } from "./ProfileEntryButtons";
 
 interface WorkExperienceCardProps {
-  userId?: string;
   entries: WorkExperienceEntry[];
   isOwnProfile?: boolean;
 }
 
 export default function WorkExperienceCard({
-  userId,
   entries,
   isOwnProfile,
 }: WorkExperienceCardProps) {
   const router = useRouter();
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<WorkExperienceEntry | null>(null);
+
+  function openForm(entry: WorkExperienceEntry | null) {
+    setEditTarget(entry);
+    setFormOpen(true);
+  }
 
   if (entries.length === 0 && !isOwnProfile) return null;
 
@@ -30,10 +34,7 @@ export default function WorkExperienceCard({
           Pengalaman Kerja
         </h2>
         {isOwnProfile && (
-          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
-            <Pencil className="size-3.5" />
-            Edit
-          </Button>
+          <AddEntryButton onClick={() => openForm(null)} />
         )}
       </div>
 
@@ -48,7 +49,7 @@ export default function WorkExperienceCard({
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
                 <Briefcase className="size-5" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-heading xl:text-[15px]">
                   {entry.position_title}
                 </p>
@@ -64,6 +65,12 @@ export default function WorkExperienceCard({
                   </p>
                 )}
               </div>
+              {isOwnProfile && (
+                <EditEntryButton
+                  onClick={() => openForm(entry)}
+                  label="Edit pengalaman kerja"
+                />
+              )}
             </div>
           ))
         )}
@@ -71,14 +78,13 @@ export default function WorkExperienceCard({
 
       {isOwnProfile && (
         <EditWorkExperienceForm
-          open={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
           onSaved={() => {
-            setIsEditOpen(false);
+            setFormOpen(false);
             router.refresh();
           }}
-          userId={userId}
-          entries={entries}
+          entry={editTarget}
         />
       )}
     </div>

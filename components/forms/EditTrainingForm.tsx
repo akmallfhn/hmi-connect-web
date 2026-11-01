@@ -1,6 +1,5 @@
 "use client";
 
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { TrainingHistoryEntry } from "@/apis/users";
@@ -9,17 +8,15 @@ import {
   deleteTrainingHistory,
   updateTrainingHistory,
 } from "@/lib/actions";
-import {
-  isSuccessStatus,
-  type TrainingHistoryLevelEnum,
-  type TrainingResultEnum,
-} from "@/lib/types";
+import type { TrainingHistoryLevelEnum, TrainingResultEnum } from "@/lib/types";
 import { TRAINING_HISTORY_LEVEL_OPTIONS } from "@/lib/training-history";
-import Button from "../buttons/Button";
+import { pastYears } from "@/lib/year-options";
 import Input from "../fields/Input";
-import NumberInput from "../fields/NumberInput";
+import YearSelect from "../fields/YearSelect";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
+import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
+import { runProfileEntryMutation } from "./profile-entry-mutation";
 
 const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },
@@ -27,279 +24,137 @@ const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Tidak Lulus", value: "failed" },
 ];
 
-type TrainingDraft = {
-  id: string;
-  level: TrainingHistoryLevelEnum;
-  result: TrainingResultEnum;
-  organizerName: string;
-  year: string;
-  isNew: boolean;
-  removed: boolean;
-};
-
-function toDrafts(entries: TrainingHistoryEntry[]): TrainingDraft[] {
-  return entries.map((entry) => ({
-    id: entry.id,
-    level: entry.level,
-    result: entry.result,
-    organizerName: entry.organizer_name,
-    year: String(entry.year),
-    isNew: false,
-    removed: false,
-  }));
-}
-
-function emptyDraft(): TrainingDraft {
-  return {
-    id: `new-${crypto.randomUUID()}`,
-    level: "LK2",
-    result: "passed",
-    organizerName: "",
-    year: "",
-    isNew: true,
-    removed: false,
-  };
-}
-
 interface EditTrainingFormProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  userId?: string;
-  entries: TrainingHistoryEntry[];
+  // null adds a new entry; an entry edits (or deletes) that one row.
+  entry: TrainingHistoryEntry | null;
 }
 
 export default function EditTrainingForm({
   open,
   onClose,
   onSaved,
-  userId,
-  entries,
+  entry,
 }: EditTrainingFormProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Edit Riwayat Kaderisasi">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={entry ? "Edit Riwayat Kaderisasi" : "Tambah Riwayat Kaderisasi"}
+    >
       {open && (
         <TrainingFields
+          key={entry?.id ?? "new"}
           onClose={onClose}
           onSaved={onSaved}
-          userId={userId}
-          entries={entries}
+          entry={entry}
         />
       )}
     </Modal>
   );
 }
 
-interface TrainingFieldsProps {
-  onClose: () => void;
-  onSaved: () => void;
-  userId?: string;
-  entries: TrainingHistoryEntry[];
-}
-
-// Mounted only while open, so drafts always seed fresh from entries — no reset effect needed.
+// Mounted only while open (and keyed by entry), so fields always seed fresh — no reset effect needed.
 function TrainingFields({
   onClose,
   onSaved,
-  userId,
-  entries,
-}: TrainingFieldsProps) {
-  const [drafts, setDrafts] = useState<TrainingDraft[]>(() => toDrafts(entries));
+  entry,
+}: Omit<EditTrainingFormProps, "open">) {
+  const [level, setLevel] = useState<TrainingHistoryLevelEnum>(entry?.level ?? "LK1");
+  const [result, setResult] = useState<TrainingResultEnum>(entry?.result ?? "passed");
+  const [organizerName, setOrganizerName] = useState(entry?.organizer_name ?? "");
+  const [year, setYear] = useState(entry ? String(entry.year) : "");
   const [isSaving, setIsSaving] = useState(false);
 
-  function updateDraft<K extends keyof TrainingDraft>(
-    id: string,
-    key: K,
-    value: TrainingDraft[K]
-  ) {
-    setDrafts((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, [key]: value } : draft))
-    );
-  }
-
-  function addDraft() {
-    setDrafts((prev) => [...prev, emptyDraft()]);
-  }
-
-  function toggleRemoved(id: string) {
-    setDrafts((prev) =>
-      prev.map((draft) =>
-        draft.id === id ? { ...draft, removed: !draft.removed } : draft
-      )
-    );
-  }
-
-  async function handleSubmit() {
-    if (!userId) {
-      toast.error("ID pengguna tidak ditemukan.");
+  function handleSubmit() {
+    if (!organizerName.trim() || !year.trim()) {
+      toast.error("Lengkapi penyelenggara dan tahun.");
       return;
     }
-
-    const newDrafts = drafts.filter((draft) => draft.isNew && !draft.removed);
-    const missingOrganizer = newDrafts.find((draft) => !draft.organizerName.trim());
-    const missingYear = newDrafts.find((draft) => !draft.year.trim());
-    if (missingOrganizer || missingYear) {
-      toast.error("Lengkapi penyelenggara dan tahun untuk entri baru.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const results = await Promise.all(
-        drafts.map((draft) => {
-          if (draft.isNew) {
-            if (draft.removed) return null;
-            return createTrainingHistory({
-              level: draft.level,
-              result: draft.result,
-              organizer_name: draft.organizerName,
-              year: Number(draft.year),
-            });
-          }
-          if (draft.removed) {
-            return deleteTrainingHistory(draft.id);
-          }
-          return updateTrainingHistory({
-            id: draft.id,
-            level: draft.level,
-            result: draft.result,
-            organizer_name: draft.organizerName,
-            year: Number(draft.year),
-          });
-        })
-      );
-
-      const attempted = results.filter(Boolean);
-      const failed = attempted.filter(
-        (result) => !isSuccessStatus(result!.status)
-      );
-
-      if (failed.length > 0) {
-        toast.error(
-          `${failed.length} dari ${attempted.length} perubahan gagal disimpan.`
-        );
-        return;
+    const fields = {
+      level,
+      result,
+      organizer_name: organizerName.trim(),
+      year: Number(year),
+    };
+    void runProfileEntryMutation(
+      () =>
+        entry
+          ? updateTrainingHistory({ id: entry.id, ...fields })
+          : createTrainingHistory(fields),
+      {
+        success: entry
+          ? "Riwayat kaderisasi berhasil diperbarui."
+          : "Riwayat kaderisasi berhasil ditambahkan.",
+        failure: "Gagal menyimpan riwayat kaderisasi.",
+        setSaving: setIsSaving,
+        onDone: onSaved,
+        tag: "EditTrainingForm",
       }
+    );
+  }
 
-      toast.success("Riwayat kaderisasi berhasil diperbarui.");
-      onSaved();
-    } catch (err) {
-      console.error("[EditTrainingForm] history mutation threw:", err);
-      toast.error("Gagal menyimpan perubahan.");
-    } finally {
-      setIsSaving(false);
-    }
+  function handleDelete() {
+    if (!entry) return;
+    void runProfileEntryMutation(() => deleteTrainingHistory(entry.id), {
+      success: "Riwayat kaderisasi berhasil dihapus.",
+      failure: "Gagal menghapus riwayat kaderisasi.",
+      setSaving: setIsSaving,
+      onDone: onSaved,
+      tag: "EditTrainingForm",
+    });
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {drafts.map((draft, index) => (
-        <div
-          key={draft.id}
-          className={[
-            "flex flex-col gap-4 rounded-xl border p-4",
-            draft.removed
-              ? "border-destructive/30 bg-destructive-soft/30"
-              : "border-border",
-          ].join(" ")}
-        >
-          {(draft.isNew || draft.removed) && (
-            <div className="flex flex-wrap gap-2">
-              {draft.isNew && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-primary px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Baru
-                </span>
-              )}
-              {draft.removed && (
-                <span className="inline-flex w-fit items-center rounded-full bg-badge-destructive px-2 py-0.5 text-xs font-semibold text-badge-foreground">
-                  Akan dihapus
-                </span>
-              )}
-            </div>
-          )}
-
-          <Select
-            selectId={`training-level-${index}`}
-            label="Tingkat"
-            placeholder="Pilih tingkat"
-            value={draft.level}
-            disabled={draft.removed}
-            onChange={(value) =>
-              updateDraft(draft.id, "level", value as TrainingHistoryLevelEnum)
-            }
-            options={TRAINING_HISTORY_LEVEL_OPTIONS}
-          />
-          <Input
-            inputId={`training-organizer-${index}`}
-            label="Penyelenggara"
-            placeholder="Contoh: Komisariat FH UI"
-            value={draft.organizerName}
-            disabled={draft.removed}
-            onChange={(e) =>
-              updateDraft(draft.id, "organizerName", e.target.value)
-            }
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Select
-              selectId={`training-result-${index}`}
-              label="Hasil"
-              placeholder="Pilih hasil"
-              value={draft.result}
-              disabled={draft.removed}
-              onChange={(value) =>
-                updateDraft(draft.id, "result", value as TrainingResultEnum)
-              }
-              options={RESULT_OPTIONS}
-            />
-            <NumberInput
-              inputId={`training-year-${index}`}
-              label="Tahun"
-              placeholder="2020"
-              value={draft.year}
-              disabled={draft.removed}
-              onValueChange={(value) => updateDraft(draft.id, "year", value)}
-            />
-          </div>
-
-          <div className="flex justify-end border-t border-border pt-4">
-            <Button
-              variant={draft.removed ? "outline" : "destructive"}
-              size="sm"
-              onClick={() => toggleRemoved(draft.id)}
-            >
-              {draft.removed ? (
-                <>
-                  <RotateCcw className="size-3.5" />
-                  Batalkan
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  Hapus
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      ))}
-
-      <Button
-        variant="ghost"
-        onClick={addDraft}
-        className="w-full gap-1.5 rounded-lg border border-dashed border-border-strong py-2.5 text-primary-foreground hover:bg-primary-soft"
-      >
-        <Plus className="size-4" />
-        Tambah Riwayat Kaderisasi
-      </Button>
-
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onClose} disabled={isSaving}>
-          Batal
-        </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? "Menyimpan..." : "Simpan"}
-        </Button>
+    <div className="flex flex-col gap-4">
+      <Select
+        selectId="training-level"
+        label="Tingkat"
+        placeholder="Pilih tingkat"
+        value={level}
+        disabled={isSaving}
+        onChange={(value) => setLevel(value as TrainingHistoryLevelEnum)}
+        options={TRAINING_HISTORY_LEVEL_OPTIONS}
+      />
+      <Input
+        inputId="training-organizer"
+        label="Penyelenggara"
+        placeholder="Contoh: Komisariat FH UI"
+        value={organizerName}
+        disabled={isSaving}
+        onChange={(e) => setOrganizerName(e.target.value)}
+        required
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          selectId="training-result"
+          label="Hasil"
+          placeholder="Pilih hasil"
+          value={result}
+          disabled={isSaving}
+          onChange={(value) => setResult(value as TrainingResultEnum)}
+          options={RESULT_OPTIONS}
+        />
+        <YearSelect
+          selectId="training-year"
+          label="Tahun"
+          value={year}
+          onChange={setYear}
+          years={pastYears()}
+          disabled={isSaving}
+          required
+        />
       </div>
+
+      <ProfileEntryFormFooter
+        isSaving={isSaving}
+        onCancel={onClose}
+        onSubmit={handleSubmit}
+        onDelete={entry ? handleDelete : undefined}
+        deleteMessage="Hapus riwayat kaderisasi ini?"
+      />
     </div>
   );
 }

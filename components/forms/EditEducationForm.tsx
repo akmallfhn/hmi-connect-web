@@ -1,6 +1,5 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Institution } from "@/apis/institutions";
@@ -13,14 +12,15 @@ import {
 } from "@/lib/actions";
 import { DEGREE_OPTIONS } from "@/lib/education";
 import { isSuccessStatus, type Degree } from "@/lib/types";
-import Button from "../buttons/Button";
+import { graduationYears, pastYears } from "@/lib/year-options";
 import CreateableSelect, {
   type SearchableOption,
 } from "../fields/CreateableSelect";
 import Input from "../fields/Input";
-import NumberInput from "../fields/NumberInput";
 import Select from "../fields/Select";
+import YearSelect from "../fields/YearSelect";
 import Modal from "../modals/Modal";
+import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
 
 interface EditEducationFormProps {
   open: boolean;
@@ -112,7 +112,6 @@ function EducationFields({
     entry?.end_year ? String(entry.end_year) : ""
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const institutionOptions: SearchableOption[] = institutions.map((item) => ({
     label: item.name,
@@ -130,8 +129,12 @@ function EducationFields({
       toast.error("Tahun masuk wajib diisi.");
       return;
     }
-    const end = endYear.trim() ? Number(endYear) : null;
-    if (end !== null && end < start) {
+    if (!endYear.trim()) {
+      toast.error("Tahun lulus (perkiraan) wajib diisi.");
+      return;
+    }
+    const end = Number(endYear);
+    if (end < start) {
       toast.error("Tahun lulus tidak boleh sebelum tahun masuk.");
       return;
     }
@@ -145,15 +148,14 @@ function EducationFields({
             degree,
             major,
             start_year: start,
-            // 0 clears end_year on the backend, putting the education back to ongoing.
-            end_year: end ?? 0,
+            end_year: end,
           })
         : await createEducationHistory({
             institution_id: Number(institution.value),
             degree,
             major,
             start_year: start,
-            end_year: end ?? undefined,
+            end_year: end,
           });
 
       if (!isSuccessStatus(result.status)) {
@@ -225,77 +227,34 @@ function EducationFields({
         options={DEGREE_OPTIONS}
       />
       <div className="grid grid-cols-2 gap-4">
-        <NumberInput
-          inputId="edu-start"
+        <YearSelect
+          selectId="edu-start"
           label="Tahun Masuk"
-          placeholder="2020"
           value={startYear}
+          onChange={setStartYear}
+          years={pastYears()}
           disabled={isSaving}
-          onValueChange={setStartYear}
           required
         />
-        <NumberInput
-          inputId="edu-end"
-          label="Tahun Lulus"
-          placeholder="Kosongkan jika masih berjalan"
+        <YearSelect
+          selectId="edu-end"
+          label="Tahun Lulus (perkiraan)"
           value={endYear}
+          onChange={setEndYear}
+          years={graduationYears()}
+          minYear={startYear ? Number(startYear) : undefined}
           disabled={isSaving}
-          onValueChange={setEndYear}
+          required
         />
       </div>
 
-      {confirmingDelete ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-heading">Hapus riwayat pendidikan ini?</p>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmingDelete(false)}
-              disabled={isSaving}
-            >
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => void handleDelete()}
-              disabled={isSaving}
-            >
-              {isSaving ? "Menghapus..." : "Ya, Hapus"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-          {entry ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={isSaving}
-              className="text-destructive-foreground hover:bg-destructive-soft!"
-            >
-              <Trash2 className="size-3.5" />
-              Hapus
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Batal
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => void handleSubmit()}
-              disabled={isSaving}
-            >
-              {isSaving ? "Menyimpan..." : "Simpan"}
-            </Button>
-          </div>
-        </div>
-      )}
+      <ProfileEntryFormFooter
+        isSaving={isSaving}
+        onCancel={onClose}
+        onSubmit={() => void handleSubmit()}
+        onDelete={entry ? () => void handleDelete() : undefined}
+        deleteMessage="Hapus riwayat pendidikan ini?"
+      />
     </div>
   );
 }

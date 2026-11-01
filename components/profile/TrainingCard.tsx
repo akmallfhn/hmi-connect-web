@@ -1,13 +1,13 @@
 "use client";
 
-import { Award, Pencil } from "lucide-react";
+import { Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { TrainingResultEnum } from "@/lib/types";
 import { TRAINING_HISTORY_LEVEL_LABELS } from "@/lib/training-history";
 import type { TrainingHistoryEntry } from "@/apis/users";
-import Button from "../buttons/Button";
 import EditTrainingForm from "../forms/EditTrainingForm";
+import { AddEntryButton, EditEntryButton } from "./ProfileEntryButtons";
 
 const RESULT_LABELS: Record<TrainingResultEnum, string> = {
   passed: "Lulus",
@@ -16,18 +16,22 @@ const RESULT_LABELS: Record<TrainingResultEnum, string> = {
 };
 
 interface TrainingCardProps {
-  userId?: string;
   entries: TrainingHistoryEntry[];
   isOwnProfile?: boolean;
 }
 
 export default function TrainingCard({
-  userId,
   entries,
   isOwnProfile,
 }: TrainingCardProps) {
   const router = useRouter();
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<TrainingHistoryEntry | null>(null);
+
+  function openForm(entry: TrainingHistoryEntry | null) {
+    setEditTarget(entry);
+    setFormOpen(true);
+  }
 
   if (entries.length === 0 && !isOwnProfile) return null;
 
@@ -38,10 +42,7 @@ export default function TrainingCard({
           Riwayat Kaderisasi
         </h2>
         {isOwnProfile && (
-          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
-            <Pencil className="size-3.5" />
-            Edit
-          </Button>
+          <AddEntryButton onClick={() => openForm(null)} />
         )}
       </div>
 
@@ -51,7 +52,7 @@ export default function TrainingCard({
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
               <Award className="size-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-heading xl:text-[15px]">
                 {TRAINING_HISTORY_LEVEL_LABELS[entry.level]}
               </p>
@@ -62,20 +63,25 @@ export default function TrainingCard({
                 {entry.year}
               </p>
             </div>
+            {isOwnProfile && (
+              <EditEntryButton
+                onClick={() => openForm(entry)}
+                label="Edit riwayat kaderisasi"
+              />
+            )}
           </div>
         ))}
       </div>
 
       {isOwnProfile && (
         <EditTrainingForm
-          open={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
           onSaved={() => {
-            setIsEditOpen(false);
+            setFormOpen(false);
             router.refresh();
           }}
-          userId={userId}
-          entries={entries}
+          entry={editTarget}
         />
       )}
     </div>

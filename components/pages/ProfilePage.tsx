@@ -113,9 +113,6 @@ export default function ProfilePage({
     institutions,
     socialMediaPlatforms,
     socialMediaAccounts: profile.socialMediaAccounts,
-    trainingHistories: profile.trainingHistories,
-    organizationExperiences: profile.organizationExperiences,
-    workExperiences: profile.workExperiences,
   };
   const hasProfileDetails = Boolean(
     profile.bio ||
@@ -286,12 +283,10 @@ export default function ProfilePage({
                   )}
                   <AboutCard bio={profile.bio} />
                   <WorkExperienceCard
-                    userId={profile.userId}
                     entries={profile.workExperiences}
                     isOwnProfile={isOwnProfile}
                   />
                   <OrganizationExperienceCard
-                    userId={profile.userId}
                     entries={profile.organizationExperiences}
                     isOwnProfile={isOwnProfile}
                   />
@@ -301,17 +296,14 @@ export default function ProfilePage({
                     isOwnProfile={isOwnProfile}
                   />
                   <TrainingCard
-                    userId={profile.userId}
                     entries={profile.trainingHistories}
                     isOwnProfile={isOwnProfile}
                   />
                   <PublicationCard
-                    userId={profile.userId}
                     entries={profile.publications}
                     isOwnProfile={isOwnProfile}
                   />
                   <HonorAwardCard
-                    userId={profile.userId}
                     entries={profile.honorAwards}
                     isOwnProfile={isOwnProfile}
                   />

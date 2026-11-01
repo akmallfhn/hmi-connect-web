@@ -7,11 +7,8 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import type { Institution } from "@/apis/institutions";
 import type { SocialMediaPlatform } from "@/apis/social-media-platforms";
 import type {
-  OrganizationExperienceEntry,
   ProfileCompletion,
   SocialMediaAccountEntry,
-  TrainingHistoryEntry,
-  WorkExperienceEntry,
 } from "@/apis/users";
 import type { ProfileCompletionStageEnum } from "@/lib/types";
 import EditEducationForm from "../forms/EditEducationForm";
@@ -31,9 +28,6 @@ export interface ProfileCompletionForms {
   institutions: Institution[];
   socialMediaPlatforms: SocialMediaPlatform[];
   socialMediaAccounts: SocialMediaAccountEntry[];
-  trainingHistories: TrainingHistoryEntry[];
-  organizationExperiences: OrganizationExperienceEntry[];
-  workExperiences: WorkExperienceEntry[];
 }
 
 interface ProfileCompletionCardProps {
@@ -204,22 +198,19 @@ export default function ProfileCompletionCard({
         open={openForm === "training"}
         onClose={closeForm}
         onSaved={handleSaved}
-        userId={forms.userId}
-        entries={forms.trainingHistories}
+        entry={null}
       />
       <EditOrganizationExperienceForm
         open={openForm === "organization"}
         onClose={closeForm}
         onSaved={handleSaved}
-        userId={forms.userId}
-        entries={forms.organizationExperiences}
+        entry={null}
       />
       <EditWorkExperienceForm
         open={openForm === "work"}
         onClose={closeForm}
         onSaved={handleSaved}
-        userId={forms.userId}
-        entries={forms.workExperiences}
+        entry={null}
       />
     </div>
   );

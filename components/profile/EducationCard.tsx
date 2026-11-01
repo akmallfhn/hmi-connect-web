@@ -1,6 +1,6 @@
 "use client";
 
-import { GraduationCap, Pencil, Plus } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,8 +9,8 @@ import type { Institution } from "@/apis/institutions";
 import type { EducationHistoryEntry } from "@/apis/users";
 import { DEGREE_LABELS } from "@/lib/education";
 import { institutionHref } from "@/lib/institution";
-import Button from "../buttons/Button";
 import EditEducationForm from "../forms/EditEducationForm";
+import { AddEntryButton, EditEntryButton } from "./ProfileEntryButtons";
 
 interface EducationCardProps {
   entries: EducationHistoryEntry[];
@@ -43,10 +43,7 @@ export default function EducationCard({
           Pendidikan
         </h2>
         {isOwnProfile && (
-          <Button variant="ghost" size="sm" onClick={() => openForm(null)}>
-            <Plus className="size-3.5" />
-            Tambah
-          </Button>
+          <AddEntryButton onClick={() => openForm(null)} />
         )}
       </div>
 
@@ -55,12 +52,9 @@ export default function EducationCard({
           Belum ada riwayat pendidikan.
         </p>
       ) : (
-        <div className="mt-3 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-4">
           {entries.map((entry) => (
-            <div
-              key={entry.id}
-              className="flex items-start gap-3 rounded-xl border border-border p-3 transition hover:bg-surface-muted"
-            >
+            <div key={entry.id} className="flex items-start gap-3">
               <Link
                 href={institutionHref(entry.institution_id, entry.institution_slug)}
                 className="flex min-w-0 flex-1 items-start gap-3"
@@ -92,16 +86,10 @@ export default function EducationCard({
                 </div>
               </Link>
               {isOwnProfile && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <EditEntryButton
                   onClick={() => openForm(entry)}
-                  aria-label={`Edit pendidikan ${entry.institution_name}`}
-                  className="shrink-0"
-                >
-                  <Pencil className="size-3.5" />
-                  Edit
-                </Button>
+                  label={`Edit pendidikan ${entry.institution_name}`}
+                />
               )}
             </div>
           ))}

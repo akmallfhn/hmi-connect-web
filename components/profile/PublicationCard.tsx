@@ -1,25 +1,29 @@
 "use client";
 
-import { BookOpen, Pencil } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PublicationEntry } from "@/apis/users";
-import Button from "../buttons/Button";
 import EditPublicationForm from "../forms/EditPublicationForm";
+import { AddEntryButton, EditEntryButton } from "./ProfileEntryButtons";
 
 interface PublicationCardProps {
-  userId?: string;
   entries: PublicationEntry[];
   isOwnProfile?: boolean;
 }
 
 export default function PublicationCard({
-  userId,
   entries,
   isOwnProfile,
 }: PublicationCardProps) {
   const router = useRouter();
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<PublicationEntry | null>(null);
+
+  function openForm(entry: PublicationEntry | null) {
+    setEditTarget(entry);
+    setFormOpen(true);
+  }
 
   if (entries.length === 0 && !isOwnProfile) return null;
 
@@ -30,10 +34,7 @@ export default function PublicationCard({
           Publikasi
         </h2>
         {isOwnProfile && (
-          <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
-            <Pencil className="size-3.5" />
-            Edit
-          </Button>
+          <AddEntryButton onClick={() => openForm(null)} />
         )}
       </div>
 
@@ -48,7 +49,7 @@ export default function PublicationCard({
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
                 <BookOpen className="size-5" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 {entry.url ? (
                   <a
                     href={entry.url}
@@ -75,6 +76,12 @@ export default function PublicationCard({
                   </p>
                 )}
               </div>
+              {isOwnProfile && (
+                <EditEntryButton
+                  onClick={() => openForm(entry)}
+                  label="Edit publikasi"
+                />
+              )}
             </div>
           ))
         )}
@@ -82,14 +89,13 @@ export default function PublicationCard({
 
       {isOwnProfile && (
         <EditPublicationForm
-          open={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
           onSaved={() => {
-            setIsEditOpen(false);
+            setFormOpen(false);
             router.refresh();
           }}
-          userId={userId}
-          entries={entries}
+          entry={editTarget}
         />
       )}
     </div>

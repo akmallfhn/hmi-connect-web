@@ -1694,11 +1694,9 @@ EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG illustrations 
   sits directly above `OrganizationExperienceCard` ("Pengalaman Organisasi"), `PublicationCard`
   sits directly below `TrainingCard` ("Riwayat Kaderisasi") and directly above `HonorAwardCard`
   in `ProfilePage.tsx`'s section order, and all three of `WorkExperienceCard`/`PublicationCard`/
-  `HonorAwardCard` are otherwise a straight copy of `OrganizationExperienceCard`'s shape — same
-  batch-draft `Edit*Form` (`EditWorkExperienceForm.tsx`/`EditPublicationForm.tsx`/
-  `EditHonorAwardForm.tsx`, add/edit/remove several rows in one Modal, submitted together via
-  `Promise.all`, same `userId`-not-actually-in-the-payload guard the sibling forms keep for
-  consistency), same "hide the whole card if empty and not your own profile" rule.
+  `HonorAwardCard` are otherwise a straight copy of `OrganizationExperienceCard`'s shape — the
+  same single-entry `Edit*Form` with per-item Edit and a section Tambah (see `Edit*Form.tsx`
+  below), same "hide the whole card if empty and not your own profile" rule.
   Training-history levels use the broader `TrainingHistoryLevelEnum` and the shared
   `lib/training-history.ts` labels/options: LK1/LK2/LK3 plus Senior Course (SC), Latihan Khusus
   Kohati (LKK), and Latihan Kader Sensitif Gender (LKSG). Keep `TrainingStatusEnum` restricted to
@@ -2544,16 +2542,23 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   independent. `EditAvatarForm` persists on every change/removal by itself (calling
   `updateMyProfile` directly) rather than batching into the profile form's own "Simpan"
   button, since it's opened from a separate trigger (clicking the avatar itself).
-  `EditEducationForm` is the one single-entry form among them rather than a batch draft:
-  `EducationCard` puts a "Tambah" button beside the Pendidikan title (`entry={null}`) and renders
-  each item as its own bordered card holding the institution link plus a matching ghost "Edit"
-  button (`entry={item}`), whose form can change the
-  university, major, degree, and both years, and carries the delete action behind an inline
-  confirmation. An empty Tahun Lulus means still studying; on update it is sent as `end_year: 0`,
-  which the backend treats as clearing it (`null` would leave it unchanged).
-  `ProfileCompletionCard`'s education stage opens the same form in add mode. Each item's square
-  `rounded-lg` logo and text link to `/institutions/{institution_slug}/{institution_id}`
-  (`lib/institution.ts#institutionHref`); the edit button sits outside that link. The backend
+  All six profile-history forms (`EditEducationForm`, `EditTrainingForm`,
+  `EditOrganizationExperienceForm`, `EditWorkExperienceForm`, `EditPublicationForm`,
+  `EditHonorAwardForm`) are single-entry forms, not batch drafts: each takes `entry` (`null`
+  adds one, a row edits or deletes that row). Their cards share
+  `components/profile/ProfileEntryButtons.tsx`: a `soft` "Tambah" beside the section title and a
+  ghost "Edit" beside every item, with no container, padding, or hover fill on the item itself.
+  The forms share `ProfileEntryFormFooter.tsx` (a `destructive` Hapus behind an inline
+  confirmation, then Batal/Simpan) and `profile-entry-mutation.ts` (toast plus `onSaved` on
+  success). Every year is picked from `components/fields/YearSelect.tsx`, never typed: start and
+  single years run 1990 to the current year (`lib/year-options.ts#pastYears`), and an end year
+  cannot precede its start. Education's Tahun Lulus (perkiraan) is required and reaches ten years
+  ahead (`graduationYears`). Organization and work experience mark an ongoing role with a "Saya
+  masih ... di sini" checkbox that hides the end year; on update that is sent as `end_year: 0`,
+  which the backend treats as clearing it (`null` would leave it unchanged). `ProfileCompletionCard` opens the education, training, organization, and work
+  forms in add mode. Each education item's square `rounded-lg` logo and text link to
+  `/institutions/{institution_slug}/{institution_id}` (`lib/institution.ts#institutionHref`), with
+  the pointer cursor as the only hover cue; the edit button sits outside that link. The backend
   derives `slug` on create and rename (`universitas-indonesia`, then `-2`, `-3` on collisions),
   but only the id resolves, so a stale or missing slug still lands on the right institution.
   That gated route renders `InstitutionDetailPage`, which for now shows only the logo, name,
