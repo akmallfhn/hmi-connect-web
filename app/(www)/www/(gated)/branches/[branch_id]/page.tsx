@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { getBranchDetail, listAllBranchesAdmin } from "@/apis/branches";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { listCoordinatingChaptersAdmin } from "@/apis/coordinating-chapters";
-import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
+import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
+import { ORGANIZATION_SHORT_NAME } from "@/lib/constants";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface BranchProfileRouteProps {
@@ -49,7 +50,7 @@ export default async function BranchProfile({
   );
 
   // A Cabang's own kader/Komisariat counts are only exposed on its parent's branch list row.
-  const [siblings, chapters, coordinatingChapters, activity] =
+  const [siblings, chapters, coordinatingChapters, feeds] =
     await Promise.all([
       listAllBranchesAdmin({
         ...(branch.coordinating_body_id
@@ -63,11 +64,11 @@ export default async function BranchProfile({
         status: "active",
         pageSize: 1,
       }),
-      listEntityActivity("branch", branch_id, { pageSize: 3 }),
+      loadEntityProfileFeeds("branch", branch_id),
     ]);
   const self = siblings.find((row) => row.id === branch_id);
 
-  // A Cabang without a Badko sits directly under its organization.
+  // A special or Badko-less Cabang sits directly under PB HMI.
   const parent = branch.coordinating_body
     ? {
         label: formatEntityAuthorName(
@@ -76,12 +77,10 @@ export default async function BranchProfile({
         ),
         href: entityProfileHref("coordinating_body", branch.coordinating_body.id),
       }
-    : branch.organization_name
-      ? {
-          label: formatEntityAuthorName("organization", branch.organization_name),
-          href: entityProfileHref("organization", branch.organization_id),
-        }
-      : null;
+    : {
+        label: ORGANIZATION_SHORT_NAME,
+        href: entityProfileHref("organization", branch.organization_id),
+      };
 
   return (
     <EntityProfilePage
@@ -92,8 +91,7 @@ export default async function BranchProfile({
         imageUrl: branch.image_url,
         description: branch.description,
         type: branch.type,
-        createdAt: branch.created_at,
-        affiliations: parent ? [parent] : [],
+        parents: [parent],
         stats: [
           {
             label: "Komisariat",
@@ -102,10 +100,10 @@ export default async function BranchProfile({
           { label: "Korkom", value: coordinatingChapters.totalData },
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
-        activities: activity.list,
+        feeds,
         children: {
+          tab: "chapters",
           title: "Daftar Komisariat",
-          emptyMessage: "Belum ada Komisariat yang terdaftar.",
           items: chapters.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("chapter", row.name),

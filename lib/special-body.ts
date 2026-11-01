@@ -1,4 +1,5 @@
 import { ADMIN_ENTITY_LABEL, ADMIN_ENTITY_ORDER } from "@/lib/access";
+import { ORGANIZATION_SHORT_NAME } from "@/lib/constants";
 import { formatEntityAuthorName, stripEntityNamePrefix } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum, SpecialBodyTypeEnum } from "@/lib/types";
 
@@ -32,8 +33,6 @@ export const SPECIAL_BODY_PARENT_TYPES: Record<
   balitbang: ["organization"],
   lpp: ["organization", "branch"],
 };
-
-const ORGANIZATION_SHORT_NAME = "PB HMI";
 
 // Tingkatan label; the organization level reads as PB HMI rather than "Organisasi".
 export function specialBodyLevelLabel(level: AccessEntityTypeEnum): string {

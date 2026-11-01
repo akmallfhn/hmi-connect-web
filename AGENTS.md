@@ -1864,53 +1864,48 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   rather than calling `stat/summary/*`, which needs a manage grant a plain member doesn't have.
   A Badko-less Cabang names its organization as its parent affiliation instead, and the
   organization profile counts Cabang/Kader from the full `branches/list` (not from Badko
-  aggregates, which miss those Cabang) and lists them after its Badko as "Daftar Badko & Cabang".
+  aggregates, which miss those Cabang).
   `lib/entity-profile.ts` holds only what all five genuinely share and nothing per-entity:
-  `kaderMeta`, `entityActivitiesMetadata`, and `entityProfileMetadata` (title/description/canonical/robots, so five `generateMetadata`s don't
-  each rebuild the same object).
+  `kaderMeta`, `entityProfileMetadata` (title/description/canonical/robots), the `EntityTab` union,
+  and the two query keys shared by server hydration and the client lists.
+  `lib/entity-profile-data.ts#loadEntityProfileFeeds` (`server-only`) fetches, for every route, the
+  first page of posts (`listEntityActivity`, 20 rows), kader (`apis/entity-follows.ts#listEntityMembers`,
+  `ENTITY_MEMBERS_PAGE_SIZE` 18), and the viewer's follow state (`getEntityFollowStatus`).
   `components/pages/EntityProfilePage.tsx` mirrors `ProfilePage.tsx`'s shell exactly (`Header`,
   `PageMargin` two-column grid, `SuggestedConnectionsCard` aside, `BottomNav`) and takes the
   `SessionUser` as-is rather than a pre-mapped viewer object, since all five routes render identical
-  chrome and would otherwise repeat that mapping. It stacks `EntityProfileHeader` (gradient banner,
-  the entity logo as a circle with a `ring-2 ring-primary` outside its white border — the one place
-  an entity logo is round rather than the square `rounded-lg` badge the admin lists use — name via
-  `formatEntityAuthorName`, `Penuh`/`Persiapan` label, parent-chain links, "Terdaftar {bulan tahun}",
-  and a stat row), the shared `AboutCard` (an
-  organization has no `description`, so it renders nothing there), and `EntityChildrenCard` (Daftar Badko/Cabang/Komisariat, each linking to its own entity profile;
-  a Komisariat is a leaf and passes `null`). The `Official Account` marker is a primary-colored check
-  badge pinned to the logo's bottom-right — the same marker `FeedAuthorAvatar` puts on every entity
-  avatar in the feed, just larger — revealing that text as a `role="tooltip"` pill on hover (same
-  `group-hover`/`opacity-0` treatment as `StructuralPage`'s `OfficerNode` position tooltip); the
-  badge carries its own `aria-label`, since a tooltip alone says nothing on touch. The old
-  `EntityInfoCard` (Tingkat/parent/Status Kepengurusan grid) and `EntityStructuralCard` (current
-  officer list) were **deleted** — the header already names the level and parents, and the routes
-  no longer fetch `getStructuralOverview` at all. Header and children cards carry a `border`, no
-  shadow, and the aside's sticky offset is `lg:top-6`, matching `ProfilePage`.
-  Last comes the entity's own feed activity from `apis/feeds.ts#listEntityActivity` — the
-  entity-side twin of `users/activity/list`, registered by the backend under all five resources
-  (`/organizations/activity/list`, `/coordinating-bodies/activity/list`, ...) but implemented in its
-  `internal/feed`, which is why one `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covers all five rather
-  than a copy per `apis/*.ts` entity file. It splits exactly the way a user's activity does: the
-  profile page fetches `pageSize: 3` and renders the shared `components/profile/ActivityCard.tsx`
-  (titled "Postingan" here, via its `title`/`emptyMessage`/`seeAllHref` props),
-  while the full history lives at `{entityProfileHref}/activities`, five explicit routes mirroring
-  the five profile routes. Those render `components/pages/EntityActivitiesPage.tsx`, the twin of
-  the former standalone user activity page — same two-column shell, but with
-  `components/entity/EntitySummarySidebar.tsx` in the aside: the logo,
-  the name, and a link back — nothing else. No counts, since an entity's own live on its *parent's*
-  list row and a sidebar isn't worth refetching them for, and no level line either, since the name
-  already reads `HMI Korkom {name}`. It passes `mobileBackTitle`,
-  since the aside is `lg:`-only and mobile would otherwise have no way back. Both pages share
-  `components/profile/ActivityInfiniteList.tsx`, which owns the
-  infinite-scroll-via-`IntersectionObserver` list and takes a `loadMore(page)` closure so each
-  caller reaches its own Server Action (`loadMoreUserActivity` / `loadMoreEntityActivity`).
-  Rows render through the shared `ActivityEntryCard`, not `FeedItemCard`, matching how a user's own
-  activity renders; `type` is only ever `post` or `quote_repost` here, since reposts, comments, and
-  reactions still belong to a person, so `comment` is always `null`. This replaces the earlier rule
-  that there was deliberately no activity section — that held only while `feeds/list` had no
-  author-entity filter, and this endpoint is the answer, so still don't fake one from the home
-  timeline. `ActivityEntry` itself lives in `apis/feeds.ts` (not `users.ts`, which now imports it)
-  now that both a user and an entity return it.
+  chrome and would otherwise repeat that mapping. `EntityProfileHeader` copies `ProfileHeader`'s
+  `primary-soft` cover with its two rings, then the entity logo as a circle with a ring outside its
+  white border (the one place an entity logo is round rather than the admin lists' square badge), the
+  name via `formatEntityAuthorName` (`HMI Badko X`, `HMI Cabang Y`, an organization named outright),
+  a `TypeBadge` beside it for Cabang/Komisariat (green solid bolt "Cabang Penuh", amber
+  hourglass "Cabang Persiapan", on the success/warning soft tokens — not the shared `Label`; the
+  icon circle inverts the pill's own fg/bg pair, so it stays above WCAG AA in both themes), then a
+  Tabler `IconBuilding` line "{Level} ini merupakan {level} aktif di bawah naungan {parents}" linking
+  each parent nearest first (Komisariat: Korkom then Cabang; a special or Badko-less Cabang and every
+  Badko: `ORGANIZATION_SHORT_NAME`, "PB HMI"; the organization has none), and a stat row ending in Pengikut. There is no "Terdaftar" date. A primary `+ Ikuti` button
+  (light `Mengikuti` once following) sits top-right, toggling `entity-follows/follow|unfollow`
+  optimistically with rollback; it and the Pengikut stat come from `entity-follows/status` and are
+  hidden signed out or while browsing `?as=` an official account, since following is personal.
+  The `Official Account` marker is a primary check badge pinned to the logo's bottom-right with a
+  hover `role="tooltip"` pill and its own `aria-label`. The shared `AboutCard` follows, then
+  `components/entity/EntitySections.tsx`: tabs, in order, **Post** (`EntityPostTimeline` over the
+  shared `components/feeds/FeedPostTimeline.tsx`, the same `FeedItemCard` infinite list as a user's
+  Post tab, loading later pages through `loadMoreEntityActivity`; delete only removes a card while
+  acting as that very entity), **People** (`EntityMemberGrid` over the shared
+  `components/feeds/FollowCardGrid.tsx`, the institution members grid's card layout, titled
+  "{N} kader terdaftar", subtitle headline → `HMI Komisariat` → `HMI Cabang`), and **Komisariat**
+  (Cabang, Korkom) or **Cabang** (Badko, organization — every Cabang, Badko-less ones included)
+  rendered through `EntityChildrenCard`. A section whose first page is empty is omitted, and the tab
+  bar only renders with at least two sections; one section shows bare, none shows nothing. URLs use
+  `?tab=posts|people|chapters|branches`, switched locally through `useLocalTabs`, and an unknown tab
+  is stripped from the URL. Header and cards carry a `border`, no shadow; the aside is `lg:top-6`.
+  The backend's `{entity}/members/list` returns active users under the entity without a grant
+  (organization and Badko through the user's branch, Korkom through the user's chapter).
+  There are no `{entityProfileHref}/activities` routes any more: postings live on the Post tab, and
+  `EntityActivitiesPage`, `EntitySummarySidebar`, `ActivityCard`, and `ActivityInfiniteList` were deleted. `listEntityActivity` stays the entity twin of `users/activity/list`, one
+  `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covering all five resources; `type` is only ever `post` or
+  `quote_repost` there. `ActivityEntry` lives in `apis/feeds.ts`, since users and entities both return it.
 - `/official/{organizations,coordinating-bodies,branches,coordinating-chapters,chapters}/[id]` —
   the five official-account surfaces, where someone acts *as* an entity rather than looking at it.
   They live under `app/(www)/www/(gated)/official/`, so a logged-out visitor is bounced by
@@ -1944,7 +1939,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `usePressPulse`/`NavIconPulse`, so the tap feedback matches.
   **Leaving the timeline keeps the entity's point of view through `?as={entity_type}:{entity_id}`.**
   `/feeds/[feed_id]`, `/profile/[username]` (both tabs), and the five entity
-  profile routes plus their `/activities` twins read that param
+  profile routes read that param
   through `lib/acting-entity.ts#resolveActingEntity` (`server-only`), which applies the official
   pages' own gate — `holdsGrantAtEntity`, so `Super Admin` alone does not qualify — and resolves
   the name from the session grant and the logo from the same `listGrantEntityLogos` lookup the
@@ -1965,8 +1960,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   entity. The param is carried from link to link by
   `hooks/useActingEntity.tsx`: `ActingEntityProvider` wraps the official
   timeline and every page rendered as the entity, and `useActingHref()` — used by `FeedItemCard`,
-  `CommentItem`, `QuotedFeed`, `ActivityEntryCard`, `ActivityCard`, `ReactorsListModal`, and
-  `FollowListModal`, `EntityChildrenCard`, `EntityProfileHeader`, `EntitySummarySidebar` — appends it
+  `CommentItem`, `QuotedFeed`, `ActivityEntryCard`, `ReactorsListModal`, and
+  `FollowListModal`, `EntityChildrenCard`, `EntityProfileHeader`, `EntitySections` — appends it
   through `lib/access.ts#withActingEntity`, which only touches `/feeds/`, `/profile/`, and the five
   entity profile paths (`supportsActingEntity`) and passes every other link through untouched. Add
   `useActingHref` to any new component that links to either inside a feed card.
@@ -2576,7 +2571,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   (`lib/institution.ts#institutionAddressLine`: street, Kecamatan, city, Provinsi, missing parts
   skipped). Institutions have no description. Then "{N} orang pernah bersekolah di sini" counts and lists
   `institutions/members/list`: active users with an education history there, one card each through
-  `InstitutionMemberGrid`, which reuses `FollowRecommendationRow`'s `card` variant with the member's
+  `InstitutionMemberGrid` (a thin wrapper over `components/feeds/FollowCardGrid.tsx`), which reuses
+  `FollowRecommendationRow`'s `card` variant with the member's
   degree, major, and years as its `subtitle`, the server's `is_followed_by_me` as
   `initialFollowing`, and `hideFollow` on the viewer's own card and for signed-out visitors. Pages
   are `INSTITUTION_MEMBERS_PAGE_SIZE` (18, so two- and three-column rows both fill evenly) and later ones load

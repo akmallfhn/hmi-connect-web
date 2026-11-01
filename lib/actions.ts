@@ -222,6 +222,11 @@ import {
   listNotifications as listNotificationsApi,
   markNotificationsAsRead as markNotificationsAsReadApi,
 } from "@/apis/notifications";
+import {
+  followEntity as followEntityApi,
+  listEntityMembers as listEntityMembersApi,
+  unfollowEntity as unfollowEntityApi,
+} from "@/apis/entity-follows";
 import { searchOverview as searchOverviewApi, searchResults as searchResultsApi, type SearchCategory } from "@/apis/search";
 import {
   deleteChatMessage as deleteChatMessageApi,
@@ -723,6 +728,22 @@ export async function deleteInstitution(id: number) {
 
 export async function loadMoreInstitutionMembers(institutionId: number, page: number) {
   return listInstitutionMembersApi(institutionId, { page });
+}
+
+export async function followEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+  return followEntityApi(entityType, entityId);
+}
+
+export async function unfollowEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+  return unfollowEntityApi(entityType, entityId);
+}
+
+export async function loadMoreEntityMembers(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+  page: number
+) {
+  return listEntityMembersApi(entityType, entityId, { page });
 }
 
 export async function getSpecialBodyDetail(id: string) {

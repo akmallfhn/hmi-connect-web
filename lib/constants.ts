@@ -2,6 +2,9 @@ export const SESSION_COOKIE_NAME = "session_token_hmi";
 
 // How a Cabang without a Badko is labelled; such Cabang sit directly under the organization.
 export const NO_COORDINATING_BODY_LABEL = "Cabang Istimewa/Luar Negeri";
+
+// How the organization reads when it is named as a parent ("di bawah naungan PB HMI").
+export const ORGANIZATION_SHORT_NAME = "PB HMI";
 // The coordinating_body_id URL value that filters the Cabang list to those without a Badko.
 export const NO_COORDINATING_BODY_FILTER = "none";
 

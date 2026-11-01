@@ -1,26 +1,31 @@
-import type { ActivityEntry } from "@/apis/feeds";
 import type { SessionUser } from "@/apis/session";
+import { entityMembersQueryKey, entityPostsQueryKey } from "@/lib/entity-profile";
+import type { EntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileHref } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum, BranchTypeEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import EntityChildrenCard, {
   type EntityChildItem,
 } from "../entity/EntityChildrenCard";
+import EntityMemberGrid from "../entity/EntityMemberGrid";
+import EntityPostTimeline from "../entity/EntityPostTimeline";
 import EntityProfileHeader, {
   type EntityAffiliation,
   type EntityStat,
 } from "../entity/EntityProfileHeader";
+import EntitySections, { type EntitySection } from "../entity/EntitySections";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import ActingAwareBottomNav from "../official/ActingAwareBottomNav";
 import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import Header from "../navigations/Header";
 import AboutCard from "../profile/AboutCard";
-import ActivityCard from "../profile/ActivityCard";
+import ServerQueryHydration from "../query/ServerQueryHydration";
 
 export interface EntityProfileChildren {
+  // Komisariat for a Cabang or Korkom, Cabang for a Badko or the organization.
+  tab: "chapters" | "branches";
   title: string;
-  emptyMessage: string;
   items: EntityChildItem[];
 }
 
@@ -31,27 +36,102 @@ export interface EntityProfileData {
   imageUrl: string | null;
   description: string | null;
   type?: BranchTypeEnum | null;
-  createdAt?: string;
-  affiliations: EntityAffiliation[];
+  parents: EntityAffiliation[];
   stats: EntityStat[];
   children: EntityProfileChildren | null;
-  // The three most recent postings; the full history lives on the entity's own activities route.
-  activities: ActivityEntry[];
+  feeds: EntityProfileFeeds;
 }
 
 interface EntityProfilePageProps {
   entity: EntityProfileData;
   // The session user as-is — every entity route renders the same chrome, so mapping it here keeps five routes from repeating it.
   viewer: SessionUser | null;
-  // Set by a valid ?as=: browsing as an official account, so personal suggestions and the tab bar go.
+  // Set by a valid ?as=: browsing as an official account, so personal suggestions and following go.
   actingEntity?: ComposerAuthorEntity | null;
 }
+
+const CHILD_TAB_LABEL: Record<EntityProfileChildren["tab"], string> = {
+  chapters: "Komisariat",
+  branches: "Cabang",
+};
 
 export default function EntityProfilePage({
   entity,
   viewer,
   actingEntity,
 }: EntityProfilePageProps) {
+  const { posts, members, follow } = entity.feeds;
+  const sections: EntitySection[] = [];
+
+  if (posts.list.length > 0) {
+    sections.push({
+      value: "posts",
+      label: "Post",
+      panel: (
+        <ServerQueryHydration
+          queryKey={entityPostsQueryKey(entity.entityType, entity.entityId, viewer?.id)}
+          data={{ pages: [posts], pageParams: [1] }}
+        >
+          <EntityPostTimeline
+            entityType={entity.entityType}
+            entityId={entity.entityId}
+            initialItems={posts.list}
+            initialHasMore={posts.hasMore}
+            viewer={{
+              id: viewer?.id,
+              name: viewer?.full_name,
+              avatar: viewer?.avatar,
+              status: viewer?.status,
+              verificationStatus: viewer?.verification_status,
+            }}
+            actingEntity={actingEntity}
+          />
+        </ServerQueryHydration>
+      ),
+    });
+  }
+
+  if (members.list.length > 0) {
+    sections.push({
+      value: "people",
+      label: "People",
+      panel: (
+        <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
+          <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
+            {members.totalData.toLocaleString("id-ID")} kader terdaftar
+          </h2>
+          <div className="mt-4">
+            <ServerQueryHydration
+              queryKey={entityMembersQueryKey(entity.entityType, entity.entityId, viewer?.id)}
+              data={{ pages: [members], pageParams: [1] }}
+            >
+              <EntityMemberGrid
+                entityType={entity.entityType}
+                entityId={entity.entityId}
+                viewerId={viewer?.id}
+                initialItems={members.list}
+                initialHasMore={members.hasMore}
+              />
+            </ServerQueryHydration>
+          </div>
+        </section>
+      ),
+    });
+  }
+
+  if (entity.children && entity.children.items.length > 0) {
+    sections.push({
+      value: entity.children.tab,
+      label: CHILD_TAB_LABEL[entity.children.tab],
+      panel: (
+        <EntityChildrenCard
+          title={entity.children.title}
+          items={entity.children.items}
+        />
+      ),
+    });
+  }
+
   return (
     <ActingEntityProvider entity={actingEntity ?? null}>
       <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -64,29 +144,23 @@ export default function EntityProfilePage({
         />
 
         <PageMargin noMobilePadding className="pb-6 lg:py-6">
-          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
+          <div className="grid grid-cols-1 gap-1.5 lg:items-start lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
             <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
               <EntityProfileHeader
+                entityType={entity.entityType}
+                entityId={entity.entityId}
                 name={entity.name}
                 imageUrl={entity.imageUrl}
                 type={entity.type}
-                affiliations={entity.affiliations}
-                createdAt={entity.createdAt}
+                parents={entity.parents}
                 stats={entity.stats}
+                // Following is personal, so it goes while browsing as an official account.
+                follow={viewer?.id && !actingEntity ? follow : null}
               />
               <AboutCard bio={entity.description ?? undefined} />
-              {entity.children && (
-                <EntityChildrenCard
-                  title={entity.children.title}
-                  items={entity.children.items}
-                  emptyMessage={entity.children.emptyMessage}
-                />
-              )}
-              <ActivityCard
-                entries={entity.activities}
-                seeAllHref={`${entityProfileHref(entity.entityType, entity.entityId)}/activities`}
-                title="Postingan"
-                emptyMessage="Belum ada postingan."
+              <EntitySections
+                baseHref={entityProfileHref(entity.entityType, entity.entityId)}
+                sections={sections}
               />
             </div>
 

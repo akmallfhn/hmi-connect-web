@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
-import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
+import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
@@ -52,14 +52,12 @@ export default async function CoordinatingChapterProfile({
     (await searchParams)?.as,
   );
 
-  const [chapters, activity] = await Promise.all([
+  const [chapters, feeds] = await Promise.all([
     listAllChaptersAdmin({
       coordinatingChapterId: coordinating_chapter_id,
       status: "active",
     }),
-    listEntityActivity("coordinating_chapter", coordinating_chapter_id, {
-      pageSize: 3,
-    }),
+    loadEntityProfileFeeds("coordinating_chapter", coordinating_chapter_id),
   ]);
 
   const branchHref = entityProfileHref("branch", coordinatingChapter.branch_id);
@@ -75,8 +73,7 @@ export default async function CoordinatingChapterProfile({
         ),
         imageUrl: coordinatingChapter.image_url,
         description: coordinatingChapter.description,
-        createdAt: coordinatingChapter.created_at,
-        affiliations: [
+        parents: [
           {
             label: formatEntityAuthorName(
               "branch",
@@ -95,10 +92,10 @@ export default async function CoordinatingChapterProfile({
             ),
           },
         ],
-        activities: activity.list,
+        feeds,
         children: {
+          tab: "chapters",
           title: "Daftar Komisariat",
-          emptyMessage: "Belum ada Komisariat yang terdaftar.",
           items: chapters.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("chapter", row.name),

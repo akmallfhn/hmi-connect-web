@@ -7,20 +7,23 @@ export function kaderMeta(userCount?: number): string | undefined {
   return userCount === undefined ? undefined : `${userCount} kader`;
 }
 
-export function entityActivitiesMetadata(options: {
-  entityType: AccessEntityTypeEnum;
-  entityId: string;
-  name: string | null;
-}): Metadata {
-  const { entityType, entityId, name } = options;
+export type EntityTab = "posts" | "people" | "chapters" | "branches";
 
-  return {
-    title: name ? `Postingan ${name}` : "Halaman Tidak Ditemukan",
-    alternates: {
-      canonical: `${entityProfileHref(entityType, entityId)}/activities`,
-    },
-    robots: { index: false, follow: false },
-  };
+// Shared by the server hydration and the client lists, so both address the same cache entry.
+export function entityPostsQueryKey(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+  viewerId?: string,
+) {
+  return ["entity-posts", entityType, entityId, viewerId ?? "public"] as const;
+}
+
+export function entityMembersQueryKey(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+  viewerId?: string,
+) {
+  return ["entity-members", entityType, entityId, viewerId ?? "public"] as const;
 }
 
 export function entityProfileMetadata(options: {

@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
-import { listEntityActivity } from "@/apis/feeds";
 import { getOrganizationDetail } from "@/apis/organizations";
 import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
+import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
@@ -49,17 +49,15 @@ export default async function OrganizationProfile({
     (await searchParams)?.as,
   );
 
-  const [coordinatingBodies, branches, activity] = await Promise.all([
+  const [coordinatingBodies, branches, feeds] = await Promise.all([
     listCoordinatingBodiesAdmin({
       organizationId: organization_id,
       status: "active",
       pageSize: 100,
     }),
     listAllBranchesAdmin({ organizationId: organization_id, status: "active" }),
-    listEntityActivity("organization", organization_id, { pageSize: 3 }),
+    loadEntityProfileFeeds("organization", organization_id),
   ]);
-  // Cabang without a Badko (the overseas ones) hang straight off the organization.
-  const directBranches = branches.filter((row) => !row.coordinating_body_id);
 
   return (
     <EntityProfilePage
@@ -70,8 +68,7 @@ export default async function OrganizationProfile({
         imageUrl: organization.logo_url,
         // organizations/detail carries no description, so the Tentang card stays hidden here.
         description: null,
-        createdAt: organization.created_at,
-        affiliations: [],
+        parents: [],
         stats: [
           { label: "Badko", value: coordinatingBodies.list.length },
           { label: "Cabang", value: branches.length },
@@ -83,27 +80,17 @@ export default async function OrganizationProfile({
             ),
           },
         ],
-        activities: activity.list,
+        feeds,
         children: {
-          title:
-            directBranches.length > 0 ? "Daftar Badko & Cabang" : "Daftar Badko",
-          emptyMessage: "Belum ada Badko yang terdaftar.",
-          items: [
-            ...coordinatingBodies.list.map((row) => ({
-              id: row.id,
-              name: formatEntityAuthorName("coordinating_body", row.name),
-              href: entityProfileHref("coordinating_body", row.id),
-              imageUrl: row.image_url,
-              meta: kaderMeta(row.user_count),
-            })),
-            ...directBranches.map((row) => ({
-              id: row.id,
-              name: formatEntityAuthorName("branch", row.name),
-              href: entityProfileHref("branch", row.id),
-              imageUrl: row.image_url,
-              meta: kaderMeta(row.user_count),
-            })),
-          ],
+          tab: "branches",
+          title: "Daftar Cabang",
+          items: branches.map((row) => ({
+            id: row.id,
+            name: formatEntityAuthorName("branch", row.name),
+            href: entityProfileHref("branch", row.id),
+            imageUrl: row.image_url,
+            meta: kaderMeta(row.user_count),
+          })),
         },
       }}
       actingEntity={actingEntity}

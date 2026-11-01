@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
-import { listEntityActivity } from "@/apis/feeds";
 import {
   getCoordinatingBodyDetail,
   listCoordinatingBodiesAdmin,
@@ -9,7 +8,9 @@ import {
 import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
+import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
+import { ORGANIZATION_SHORT_NAME } from "@/lib/constants";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingBodyProfileRouteProps {
@@ -55,19 +56,15 @@ export default async function CoordinatingBodyProfile({
   );
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
-  const [siblings, branches, activity] = await Promise.all([
+  const [siblings, branches, feeds] = await Promise.all([
     listCoordinatingBodiesAdmin({ status: "active", pageSize: 100 }),
     listAllBranchesAdmin({
       coordinatingBodyId: coordinating_body_id,
       status: "active",
     }),
-    listEntityActivity("coordinating_body", coordinating_body_id, {
-      pageSize: 3,
-    }),
+    loadEntityProfileFeeds("coordinating_body", coordinating_body_id),
   ]);
   const self = siblings.list.find((row) => row.id === coordinating_body_id);
-
-  const organizationName = coordinatingBody.organization?.name;
 
   return (
     <EntityProfilePage
@@ -80,8 +77,12 @@ export default async function CoordinatingBodyProfile({
         ),
         imageUrl: coordinatingBody.image_url,
         description: coordinatingBody.description,
-        createdAt: coordinatingBody.created_at,
-        affiliations: organizationName ? [{ label: organizationName }] : [],
+        parents: [
+          {
+            label: ORGANIZATION_SHORT_NAME,
+            href: entityProfileHref("organization", coordinatingBody.organization_id),
+          },
+        ],
         stats: [
           { label: "Cabang", value: self?.branch_count ?? branches.length },
           {
@@ -93,10 +94,10 @@ export default async function CoordinatingBodyProfile({
           },
           { label: "Kader", value: self?.user_count ?? 0 },
         ],
-        activities: activity.list,
+        feeds,
         children: {
+          tab: "branches",
           title: "Daftar Cabang",
-          emptyMessage: "Belum ada Cabang yang terdaftar.",
           items: branches.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("branch", row.name),

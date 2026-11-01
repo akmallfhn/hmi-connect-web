@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getChapterDetail, listAllChaptersAdmin } from "@/apis/chapters";
-import { listEntityActivity } from "@/apis/feeds";
 import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
+import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import { entityProfileMetadata } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
@@ -47,9 +47,9 @@ export default async function ChapterProfile({
   );
 
   // A Komisariat's own kader count is only exposed on its Cabang's chapter list row.
-  const [siblings, activity] = await Promise.all([
+  const [siblings, feeds] = await Promise.all([
     listAllChaptersAdmin({ branchId: chapter.branch_id, status: "active" }),
-    listEntityActivity("chapter", chapter_id, { pageSize: 3 }),
+    loadEntityProfileFeeds("chapter", chapter_id),
   ]);
   const self = siblings.find((row) => row.id === chapter_id);
 
@@ -67,12 +67,7 @@ export default async function ChapterProfile({
         imageUrl: chapter.image_url,
         description: chapter.description,
         type: chapter.type,
-        createdAt: chapter.created_at,
-        affiliations: [
-          {
-            label: formatEntityAuthorName("branch", chapter.branch_name),
-            href: branchHref,
-          },
+        parents: [
           ...(chapter.coordinating_chapter_name
             ? [
                 {
@@ -84,9 +79,13 @@ export default async function ChapterProfile({
                 },
               ]
             : []),
+          {
+            label: formatEntityAuthorName("branch", chapter.branch_name),
+            href: branchHref,
+          },
         ],
         stats: [{ label: "Kader", value: self?.user_count ?? 0 }],
-        activities: activity.list,
+        feeds,
         children: null,
       }}
       actingEntity={actingEntity}
