@@ -57,6 +57,8 @@ export type MentionSearchResult = {
   subtitle: string | null;
   description: string | null;
   status: string;
+  // The level a special body hangs off, so it can read as "KOHATI Cabang X"; null for every other target.
+  parent_entity_type: AccessEntityTypeEnum | null;
 };
 
 export type SearchResultMap = {

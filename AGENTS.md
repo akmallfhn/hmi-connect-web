@@ -1541,7 +1541,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `CommentSubmitter` uses the shared `MentionTextarea`: after `@` plus a keyword it debounces
   `/api/mentions/search`, backed by `search/mentions/list`, and combines users with organizations,
   Badko, branches, Korkom, and chapters while retaining each result's `target_type`; after `#` it
-  uses `/api/hashtags/search`, backed by `hashtags/list`. Both support arrow/Enter selection and insert a canonical plain-text token. Its portalled suggestion panel is anchored directly
+  uses `/api/hashtags/search`, backed by `hashtags/list`. Entity suggestions read as feeds name them
+  (`HMI Cabang Depok`, `KOHATI Cabang Depok` from `parent_entity_type` and `subtitle`), and an entity
+  without a logo shows the HMI emblem, or the KOHATI/BPL one, instead of initials. Both support arrow/Enter selection and insert a canonical plain-text token. Its portalled suggestion panel is anchored directly
   below the text caret rather than the textarea edge, is 320px wide within viewport margins, and
   scrolls internally above a 240px maximum height. `MentionText` renders valid `@username` and
   `#hashtag` tokens in feed/comment/reply bodies with the primary green text token; mentions link to

@@ -12,7 +12,9 @@ import {
 import { createPortal } from "react-dom";
 import type { MentionSearchResult } from "@/apis/search";
 import type { HashtagSuggestion } from "@/apis/hashtags";
-import { SPECIAL_BODY_LABEL } from "@/lib/special-body";
+import Image from "next/image";
+import { formatEntityAuthorName } from "@/lib/feed-author";
+import { formatSpecialBodyName, SPECIAL_BODY_LABEL } from "@/lib/special-body";
 import type { SpecialBodyTypeEnum } from "@/lib/types";
 import {
   activeSocialTokenAt,
@@ -20,6 +22,8 @@ import {
   type ActiveSocialToken,
 } from "@/lib/mentions";
 import Avatar from "../common/Avatar";
+import LogoHmi from "../svg/LogoHmi";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
 
 const SEARCH_DEBOUNCE_MS = 250;
 const SUGGESTION_LIMIT = 6;
@@ -43,6 +47,42 @@ function entityMentionLabel(target: MentionSearchResult) {
 
 function isSpecialBodyType(value: string | null): value is SpecialBodyTypeEnum {
   return value !== null && value in SPECIAL_BODY_LABEL;
+}
+
+// Entities read as feeds render them ("HMI Cabang Depok", "KOHATI Cabang Depok"); people keep their own name.
+function mentionDisplayName(target: MentionSearchResult) {
+  if (target.target_type === "user") return target.name;
+  if (target.target_type !== "special_body") return formatEntityAuthorName(target.target_type, target.name);
+  if (!isSpecialBodyType(target.subtitle)) return target.name;
+  return target.parent_entity_type
+    ? formatSpecialBodyName(target.subtitle, target.parent_entity_type, target.name)
+    : `${SPECIAL_BODY_LABEL[target.subtitle]} ${target.name}`;
+}
+
+const MENTION_AVATAR_SIZE = 36;
+
+// An entity without a logo falls back to its emblem, never to a person's initials.
+function MentionAvatar({ target }: { target: MentionSearchResult }) {
+  if (target.target_type === "user") {
+    return <Avatar src={target.image_url ?? undefined} name={target.name} size={MENTION_AVATAR_SIZE} />;
+  }
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted">
+      {target.image_url ? (
+        <Image
+          src={target.image_url}
+          alt=""
+          width={MENTION_AVATAR_SIZE}
+          height={MENTION_AVATAR_SIZE}
+          className="size-full object-cover"
+        />
+      ) : target.target_type === "special_body" && isSpecialBodyType(target.subtitle) ? (
+        <SpecialBodyLogoFallback type={target.subtitle} className="size-5" />
+      ) : (
+        <LogoHmi className="size-5" />
+      )}
+    </span>
+  );
 }
 
 type CaretAnchor = { left: number; top: number };
@@ -345,10 +385,10 @@ export default function MentionTextarea({
               >
                 {suggestion.type === "mention" ? (
                   <>
-                    <Avatar src={suggestion.target.image_url ?? undefined} name={suggestion.target.name} size={36} />
+                    <MentionAvatar target={suggestion.target} />
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-heading">
-                        {suggestion.target.name}
+                        {mentionDisplayName(suggestion.target)}
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
                         @{suggestion.target.mention_name} · {entityMentionLabel(suggestion.target)}
