@@ -11,8 +11,8 @@ import {
   Search,
   Table2,
   Trash2,
-  University,
 } from "lucide-react";
+import { IconBuildingBank } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -71,7 +71,7 @@ interface AdminChapterListPageProps {
   hideBranchFilter?: boolean;
 }
 
-// Circle avatar for the chapter's university — falls back to a plain University glyph, same treatment as the table's existing "Asal Universitas" cell.
+// Rounded square like the institution list's own logo, with the same IconBuildingBank fallback.
 function InstitutionAvatar({
   imageUrl,
   name,
@@ -83,7 +83,7 @@ function InstitutionAvatar({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-muted ${className}`}
     >
       {imageUrl ? (
         <Image
@@ -94,7 +94,7 @@ function InstitutionAvatar({
           className="h-full w-full object-cover"
         />
       ) : (
-        <University className="size-1/2 text-muted-foreground" />
+        <IconBuildingBank className="size-3/5 text-muted-foreground" stroke={1.8} />
       )}
     </span>
   );
