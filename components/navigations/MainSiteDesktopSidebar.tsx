@@ -246,7 +246,7 @@ export default function MainSiteDesktopSidebar({
   }
 
   return (
-    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-border bg-surface px-3 py-5 dark:bg-[#141414] lg:flex">
+    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start overflow-y-auto overscroll-contain border-r border-border bg-surface px-3 py-5 [scrollbar-width:none] dark:bg-[#141414] lg:flex [&::-webkit-scrollbar]:hidden">
       <Link href="/" className="mb-7 flex items-center px-2">
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>

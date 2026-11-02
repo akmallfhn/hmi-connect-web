@@ -201,7 +201,7 @@ export default function EntityProfileHeader({
           </div>
 
           {mentionName && (
-            <p className="text-sm text-muted-foreground xl:text-[15px]">
+            <p className="mt-1 text-sm text-muted-foreground xl:text-[15px]">
               @{mentionName}
             </p>
           )}
