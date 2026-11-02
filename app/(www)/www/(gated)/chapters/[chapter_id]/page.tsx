@@ -7,6 +7,7 @@ import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
 import {
+  canonicalEntityProfileHref,
   entityProfileHandle,
   redirectToCanonicalEntityProfile,
   resolveEntityProfileSegment,
@@ -31,8 +32,10 @@ export async function generateMetadata({
   const chapter = (await loadChapter(segment))?.entity;
 
   return entityProfileMetadata({
-    entityType: "chapter",
-    handle: chapter ? entityProfileHandle(chapter) : segment,
+    canonicalPath: entityProfileHref(
+      "chapter",
+      chapter ? entityProfileHandle(chapter) : segment,
+    ),
     name: chapter ? formatEntityAuthorName("chapter", chapter.name) : null,
     description: chapter?.description,
     status: chapter?.status,
@@ -79,6 +82,7 @@ export default async function ChapterProfile({
         entityType: "chapter",
         entityId: chapter_id,
         mentionName: chapter.mention_name,
+        profileHref: canonicalEntityProfileHref("chapter", chapter),
         name: formatEntityAuthorName("chapter", chapter.name),
         imageUrl: chapter.image_url,
         description: chapter.description,

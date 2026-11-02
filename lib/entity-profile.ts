@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { entityProfileHref } from "@/lib/feed-author";
-import type { AccessEntityTypeEnum, StatusEnum } from "@/lib/types";
+import type { MentionEntityTypeEnum, StatusEnum } from "@/lib/types";
 
 // The pieces every one of the five entity profile routes shares; the per-entity fetching stays in its own route.
 export function kaderMeta(userCount?: number): string | undefined {
@@ -11,7 +10,7 @@ export type EntityTab = "posts" | "people" | "chapters" | "branches";
 
 // Shared by the server hydration and the client lists, so both address the same cache entry.
 export function entityPostsQueryKey(
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string,
   viewerId?: string,
 ) {
@@ -19,7 +18,7 @@ export function entityPostsQueryKey(
 }
 
 export function entityMembersQueryKey(
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string,
   viewerId?: string,
 ) {
@@ -27,14 +26,13 @@ export function entityMembersQueryKey(
 }
 
 export function entityProfileMetadata(options: {
-  entityType: AccessEntityTypeEnum;
-  // The lowercase mention name the canonical URL is built on.
-  handle: string;
+  // The profile's own lowercase-handle URL, which every spelling of it collapses onto.
+  canonicalPath: string;
   name: string | null;
   description?: string | null;
   status?: StatusEnum;
 }): Metadata {
-  const { entityType, handle, name, description, status } = options;
+  const { canonicalPath, name, description, status } = options;
   const title = name ?? "Halaman Tidak Ditemukan";
 
   return {
@@ -42,7 +40,7 @@ export function entityProfileMetadata(options: {
     description: name
       ? (description ?? `Profil resmi ${name} di HMI Connect.`)
       : "Halaman HMI Connect yang kamu cari tidak ditemukan.",
-    alternates: { canonical: entityProfileHref(entityType, handle) },
+    alternates: { canonical: canonicalPath },
     robots: { index: status === "active", follow: status === "active" },
   };
 }

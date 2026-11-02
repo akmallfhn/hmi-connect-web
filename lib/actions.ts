@@ -261,6 +261,7 @@ import {
 import type {
   AccessEntityTypeEnum,
   BranchTypeEnum,
+  MentionEntityTypeEnum,
   ReactionTargetTypeEnum,
   ReactionTypeEnum,
 } from "@/lib/types";
@@ -549,7 +550,7 @@ export async function loadMoreUserFeeds(username: string, page: number) {
 }
 
 export async function loadMoreEntityActivity(
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string,
   page: number
 ) {
@@ -730,11 +731,11 @@ export async function loadMoreInstitutionMembers(institutionId: number, page: nu
   return listInstitutionMembersApi(institutionId, { page });
 }
 
-export async function followEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+export async function followEntity(entityType: MentionEntityTypeEnum, entityId: string) {
   return followEntityApi(entityType, entityId);
 }
 
-export async function unfollowEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+export async function unfollowEntity(entityType: MentionEntityTypeEnum, entityId: string) {
   return unfollowEntityApi(entityType, entityId);
 }
 

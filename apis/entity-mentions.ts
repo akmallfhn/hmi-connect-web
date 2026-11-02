@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type { MentionEntityTypeEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type MentionNameAvailability = {
@@ -14,7 +14,7 @@ export type MentionNameAvailability = {
 // The optional entity is the one being edited, so its own current handle reads as available.
 export async function checkMentionNameAvailability(
   mentionName: string,
-  entity?: { type: AccessEntityTypeEnum; id: string },
+  entity?: { type: MentionEntityTypeEnum; id: string },
 ): Promise<ApiEnvelope<MentionNameAvailability>> {
   const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
   if (!sessionToken) {

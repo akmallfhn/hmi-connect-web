@@ -17,6 +17,20 @@ export const SPECIAL_BODY_FULL_NAME: Record<SpecialBodyTypeEnum, string> = {
   lpp: "Lembaga Pengembangan Profesi",
 };
 
+// Only KOHATI and BPL have a public profile page so far.
+const SPECIAL_BODY_PROFILE_BASE_PATH: Partial<Record<SpecialBodyTypeEnum, string>> = {
+  kohati: "/kohati",
+  bpl: "/bpl",
+};
+
+export function specialBodyProfileHref(
+  type: SpecialBodyTypeEnum,
+  handle: string
+): string | null {
+  const basePath = SPECIAL_BODY_PROFILE_BASE_PATH[type];
+  return basePath ? `${basePath}/${handle}` : null;
+}
+
 // Mirrors the backend's SpecialBodyParentTypes allowed-level check.
 export const SPECIAL_BODY_PARENT_TYPES: Record<
   SpecialBodyTypeEnum,

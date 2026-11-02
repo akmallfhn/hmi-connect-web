@@ -33,8 +33,10 @@ export async function generateMetadata({
   const coordinatingChapter = (await loadCoordinatingChapter(segment))?.entity;
 
   return entityProfileMetadata({
-    entityType: "coordinating_chapter",
-    handle: coordinatingChapter ? entityProfileHandle(coordinatingChapter) : segment,
+    canonicalPath: entityProfileHref(
+      "coordinating_chapter",
+      coordinatingChapter ? entityProfileHandle(coordinatingChapter) : segment,
+    ),
     name: coordinatingChapter
       ? formatEntityAuthorName("coordinating_chapter", coordinatingChapter.name)
       : null,
@@ -81,6 +83,7 @@ export default async function CoordinatingChapterProfile({
         entityType: "coordinating_chapter",
         entityId: coordinating_chapter_id,
         mentionName: coordinatingChapter.mention_name,
+        profileHref: canonicalEntityProfileHref("coordinating_chapter", coordinatingChapter),
         name: formatEntityAuthorName(
           "coordinating_chapter",
           coordinatingChapter.name,

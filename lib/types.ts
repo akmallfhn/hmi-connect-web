@@ -79,6 +79,8 @@ export type AccessEntityTypeEnum =
   | "branch"
   | "chapter"
   | "coordinating_chapter";
+// Anything with a public mention handle and profile: the five levels plus every special body.
+export type MentionEntityTypeEnum = AccessEntityTypeEnum | "special_body";
 // The units special-bodies/* holds; each hangs off one hierarchy entity rather than being a level.
 export type SpecialBodyTypeEnum = "kohati" | "bpl" | "balitbang" | "lpp";
 export type AccessCapabilityEnum = "manage";

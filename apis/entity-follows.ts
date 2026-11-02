@@ -6,6 +6,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
+  type MentionEntityTypeEnum,
   type VerificationStatusEnum,
 } from "@/lib/types";
 
@@ -21,7 +22,7 @@ export type EntityFollowStatus = {
 
 // Whether the caller follows the entity, plus its follower count; null when it can't be read.
 export async function getEntityFollowStatus(
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string
 ): Promise<EntityFollowStatus | null> {
   const sessionToken = await getSessionToken();
@@ -44,7 +45,7 @@ export async function getEntityFollowStatus(
 
 async function writeEntityFollow(
   path: string,
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string
 ): Promise<ApiEnvelope<unknown>> {
   const sessionToken = await getSessionToken();
@@ -58,11 +59,11 @@ async function writeEntityFollow(
   });
 }
 
-export async function followEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+export async function followEntity(entityType: MentionEntityTypeEnum, entityId: string) {
   return writeEntityFollow("/api/v1/entity-follows/follow", entityType, entityId);
 }
 
-export async function unfollowEntity(entityType: AccessEntityTypeEnum, entityId: string) {
+export async function unfollowEntity(entityType: MentionEntityTypeEnum, entityId: string) {
   return writeEntityFollow("/api/v1/entity-follows/unfollow", entityType, entityId);
 }
 

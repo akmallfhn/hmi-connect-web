@@ -12,6 +12,8 @@ import {
 import { createPortal } from "react-dom";
 import type { MentionSearchResult } from "@/apis/search";
 import type { HashtagSuggestion } from "@/apis/hashtags";
+import { SPECIAL_BODY_LABEL } from "@/lib/special-body";
+import type { SpecialBodyTypeEnum } from "@/lib/types";
 import {
   activeSocialTokenAt,
   replaceActiveSocialToken,
@@ -33,8 +35,14 @@ const ENTITY_MENTION_LABEL = {
   chapter: "Komisariat",
 } as const;
 
-function entityMentionLabel(type: Exclude<MentionSearchResult["target_type"], "user">) {
-  return ENTITY_MENTION_LABEL[type];
+function entityMentionLabel(target: MentionSearchResult) {
+  if (target.target_type === "user") return "Kader";
+  if (target.target_type !== "special_body") return ENTITY_MENTION_LABEL[target.target_type];
+  return isSpecialBodyType(target.subtitle) ? SPECIAL_BODY_LABEL[target.subtitle] : "Badan Khusus";
+}
+
+function isSpecialBodyType(value: string | null): value is SpecialBodyTypeEnum {
+  return value !== null && value in SPECIAL_BODY_LABEL;
 }
 
 type CaretAnchor = { left: number; top: number };
@@ -343,7 +351,7 @@ export default function MentionTextarea({
                         {suggestion.target.name}
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        @{suggestion.target.mention_name} · {suggestion.target.target_type === "user" ? "Kader" : entityMentionLabel(suggestion.target.target_type)}
+                        @{suggestion.target.mention_name} · {entityMentionLabel(suggestion.target)}
                       </span>
                     </span>
                   </>

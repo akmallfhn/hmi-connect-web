@@ -4,13 +4,13 @@ import type { ActivityEntry } from "@/apis/feeds";
 import type { ComposerAuthorEntity } from "@/components/forms/CreateFeedForms";
 import { loadMoreEntityActivity } from "@/lib/actions";
 import { entityPostsQueryKey } from "@/lib/entity-profile";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type { MentionEntityTypeEnum } from "@/lib/types";
 import FeedPostTimeline, {
   type PostTimelineViewer,
 } from "../feeds/FeedPostTimeline";
 
 interface EntityPostTimelineProps {
-  entityType: AccessEntityTypeEnum;
+  entityType: MentionEntityTypeEnum;
   entityId: string;
   initialItems: ActivityEntry[];
   initialHasMore: boolean;

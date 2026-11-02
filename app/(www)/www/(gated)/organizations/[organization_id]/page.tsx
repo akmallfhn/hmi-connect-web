@@ -15,7 +15,7 @@ import {
   resolveEntityProfileSegment,
 } from "@/lib/entity-profile-route";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
-import { formatEntityAuthorName } from "@/lib/feed-author";
+import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface OrganizationProfileRouteProps {
   params: Promise<{ organization_id: string }>;
@@ -34,8 +34,10 @@ export async function generateMetadata({
   const organization = (await loadOrganization(segment))?.entity;
 
   return entityProfileMetadata({
-    entityType: "organization",
-    handle: organization ? entityProfileHandle(organization) : segment,
+    canonicalPath: entityProfileHref(
+      "organization",
+      organization ? entityProfileHandle(organization) : segment,
+    ),
     name: organization
       ? formatEntityAuthorName("organization", organization.name)
       : null,
@@ -81,6 +83,7 @@ export default async function OrganizationProfile({
         entityType: "organization",
         entityId: organization_id,
         mentionName: organization.mention_name,
+        profileHref: canonicalEntityProfileHref("organization", organization),
         name: formatEntityAuthorName("organization", organization.name),
         imageUrl: organization.logo_url,
         // organizations/detail carries no description, so the Tentang card stays hidden here.

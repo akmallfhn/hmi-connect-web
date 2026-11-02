@@ -1921,6 +1921,19 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `EntityActivitiesPage`, `EntitySummarySidebar`, `ActivityCard`, and `ActivityInfiniteList` were deleted. `listEntityActivity` stays the entity twin of `users/activity/list`, one
   `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covering all five resources; `type` is only ever `post` or
   `quote_repost` there. `ActivityEntry` lives in `apis/feeds.ts`, since users and entities both return it.
+- `/kohati/[mention_name]` and `/bpl/[mention_name]` are the special body profiles, gated like the five
+  entity routes and rendered by the same `EntityProfilePage` through `lib/special-body-profile.tsx`.
+  The profile path set is `MentionEntityTypeEnum` (`AccessEntityTypeEnum` plus `special_body`), and
+  `EntityProfileData.profileHref` carries each page's canonical URL because a special body's path follows
+  its own `type`, not an entity level (`lib/special-body.ts#specialBodyProfileHref`; Balitbang and LPP have
+  none yet). The segment resolves like the entity routes (`special-bodies/detail` by `mention_name`, then id,
+  redirecting to the lowercase handle via `redirectToCanonicalProfile`), and a handle of another special
+  body type 404s rather than rendering under the wrong path. The header uses `affiliationLead` ("KOHATI ini
+  merupakan badan khusus aktif di bawah naungan HMI Cabang X") and `specialBodyType` for the KOHATI/BPL emblem
+  fallback. The page shows posts from `special-bodies/activity/list` and the entity follow button, and has
+  no People tab, since a special body registers no kader of its own. Special bodies appear in mention
+  autocomplete labelled by their `subtitle` type, and `/mentions/[name]` redirects them to these pages.
+  The KOHATI/BPL admin create and edit sheets carry the same Official Account ID field.
 - `/official/{organizations,coordinating-bodies,branches,coordinating-chapters,chapters}/[id]` —
   the five official-account surfaces, where someone acts *as* an entity rather than looking at it.
   They live under `app/(www)/www/(gated)/official/`, so a logged-out visitor is bounced by
@@ -3520,6 +3533,7 @@ Universitas Indonesia`). The backend requires both on `create` and accepts both 
   `image_url`, which the backend derives from the asset on every read since `special_bodies` has no
   `image_url` column); edit sends it only when the logo changed, and an empty string clears it.
   Balitbang and LPP are typed but have no admin menu yet, nor do the Badko-to-Komisariat scopes.
+  Every special body carries a required `mention_name` (the Official Account ID), edited in those sheets.
 - `/master/organizations/[organization_id]` is Master's "Kelola Organisasi" page
   (`components/pages/OrganizationDetailPage.tsx`). There is deliberately **no list route above it**:
   this deployment manages the one configured `ORGANIZATION_ID`, so a list of one row is noise —

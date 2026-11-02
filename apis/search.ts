@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import type { ArticleListEntry } from "./articles";
 import { getFeedById, type Feed } from "./feeds";
 import { callApi } from "./api";
-import { isSuccessStatus, type AccessEntityTypeEnum, type VerificationStatusEnum } from "@/lib/types";
+import { isSuccessStatus, type AccessEntityTypeEnum, type MentionEntityTypeEnum, type VerificationStatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export const SEARCH_CATEGORIES = ["user", "feed", "entity", "article"] as const;
@@ -44,7 +44,8 @@ export type SearchEntityResult = {
   created_at: string;
 };
 
-export type MentionTargetType = "user" | AccessEntityTypeEnum;
+// A special body carries its own `type` (kohati, bpl, ...) in the target's `subtitle`.
+export type MentionTargetType = "user" | MentionEntityTypeEnum;
 
 export type MentionSearchResult = {
   target_type: MentionTargetType;

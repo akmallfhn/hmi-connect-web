@@ -6,7 +6,7 @@ import {
   MENTION_NAME_ERROR,
   normalizeMentionName,
 } from "@/lib/mentions";
-import { isSuccessStatus, type AccessEntityTypeEnum, type StatusName } from "@/lib/types";
+import { isSuccessStatus, type MentionEntityTypeEnum, type StatusName } from "@/lib/types";
 
 export type MentionNameStatus =
   | "idle"
@@ -29,7 +29,7 @@ const CHECK_DEBOUNCE_MS = 400;
 // Debounces an availability check against every user and entity handle; the entity's own handle reads as current.
 export function useMentionNameField(options: {
   initial?: string;
-  entityType: AccessEntityTypeEnum;
+  entityType: MentionEntityTypeEnum;
   entityId?: string;
 }): MentionNameField {
   const { initial = "", entityType, entityId } = options;

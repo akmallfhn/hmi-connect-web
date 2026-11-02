@@ -35,8 +35,10 @@ export async function generateMetadata({
   const branch = (await loadBranch(segment))?.entity;
 
   return entityProfileMetadata({
-    entityType: "branch",
-    handle: branch ? entityProfileHandle(branch) : segment,
+    canonicalPath: entityProfileHref(
+      "branch",
+      branch ? entityProfileHandle(branch) : segment,
+    ),
     name: branch ? formatEntityAuthorName("branch", branch.name) : null,
     description: branch?.description,
     status: branch?.status,
@@ -104,6 +106,7 @@ export default async function BranchProfile({
         entityType: "branch",
         entityId: branch_id,
         mentionName: branch.mention_name,
+        profileHref: canonicalEntityProfileHref("branch", branch),
         name: formatEntityAuthorName("branch", branch.name),
         imageUrl: branch.image_url,
         description: branch.description,

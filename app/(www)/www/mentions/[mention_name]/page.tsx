@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getMentionTarget } from "@/apis/search";
 import { entityProfileHref } from "@/lib/feed-author";
+import { specialBodyProfileHref } from "@/lib/special-body";
+import type { SpecialBodyTypeEnum } from "@/lib/types";
 
 interface MentionRouteProps {
   params: Promise<{ mention_name: string }>;
@@ -12,6 +14,13 @@ export default async function MentionRoute({ params }: MentionRouteProps) {
   if (!target) return notFound();
   if (target.target_type === "user") {
     redirect(`/profile/${encodeURIComponent(target.mention_name)}`);
+  }
+  if (target.target_type === "special_body") {
+    const type = target.subtitle as SpecialBodyTypeEnum | null;
+    const href = type ? specialBodyProfileHref(type, target.mention_name_normalized) : null;
+    // Balitbang and LPP have no profile page yet.
+    if (!href) return notFound();
+    redirect(href);
   }
   // Entity profiles are addressed by their lowercase mention name.
   redirect(entityProfileHref(target.target_type, target.mention_name_normalized));

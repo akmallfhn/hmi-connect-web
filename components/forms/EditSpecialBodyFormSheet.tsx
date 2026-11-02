@@ -15,6 +15,8 @@ import {
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
+import MentionNameInput from "../fields/MentionNameInput";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import SpecialBodyLogoField, {
@@ -121,6 +123,11 @@ function EditSpecialBodyFields({
   const [name, setName] = useState(
     stripSpecialBodyName(specialBody.parent_entity_type, specialBody.name),
   );
+  const mention = useMentionNameField({
+    initial: specialBody.mention_name,
+    entityType: "special_body",
+    entityId: specialBody.id,
+  });
   const [description, setDescription] = useState(
     specialBody.description ?? "",
   );
@@ -141,12 +148,18 @@ function EditSpecialBodyFields({
       toast.error(`Nama ${label} wajib diisi.`);
       return;
     }
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await updateSpecialBody({
         id: specialBody.id,
         name: trimmedName,
+        mention_name: mention.mentionName,
         description: description.trim(),
         ...(logoChanged ? { image_media_id: logo.mediaId } : {}),
       });
@@ -202,7 +215,7 @@ function EditSpecialBodyFields({
         {name.trim() && (
           <p className="pl-1 text-xs text-muted-foreground">
             Tampil sebagai{" "}
-            <span className="font-medium text-heading">
+            <span className="font-medium text-primary">
               {formatSpecialBodyName(
                 specialBody.type,
                 specialBody.parent_entity_type,
@@ -212,6 +225,13 @@ function EditSpecialBodyFields({
           </p>
         )}
       </div>
+
+      <MentionNameInput
+        inputId="special-body-mention-name"
+        field={mention}
+        placeholder="Contoh: KOHATICabangSamarinda"
+        disabled={isSaving}
+      />
 
       <TextArea
         textAreaId="special-body-description"

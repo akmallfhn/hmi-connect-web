@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { callApi, type ApiEnvelope } from "./api";
+import { callApi, type ApiEnvelope, type EntityDetailKey } from "./api";
 import { getBranchDetail } from "./branches";
 import { getChapterDetail } from "./chapters";
 import { getCoordinatingBodyDetail } from "./coordinating-bodies";
@@ -22,6 +22,8 @@ export type SpecialBodyListEntry = {
   parent_entity_type: AccessEntityTypeEnum;
   parent_entity_id: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   image_url?: string | null;
   status: StatusEnum;
 };
@@ -75,6 +77,7 @@ export type CreateSpecialBodyPayload = {
   parent_entity_type: AccessEntityTypeEnum;
   parent_entity_id: string;
   name: string;
+  mention_name: string;
   description?: string;
   image_media_id?: string;
 };
@@ -83,6 +86,7 @@ export type CreateSpecialBodyPayload = {
 export type UpdateSpecialBodyPayload = {
   id: string;
   name?: string;
+  mention_name?: string;
   description?: string;
   image_media_id?: string;
 };
@@ -92,7 +96,7 @@ async function getSessionToken() {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
-async function resolveParent(
+export async function resolveSpecialBodyParent(
   type: AccessEntityTypeEnum,
   id: string
 ): Promise<SpecialBodyParent | null> {
@@ -203,7 +207,7 @@ export async function listSpecialBodiesAdmin(
         async (row) =>
           [
             parentKey(row),
-            await resolveParent(row.parent_entity_type, row.parent_entity_id),
+            await resolveSpecialBodyParent(row.parent_entity_type, row.parent_entity_id),
           ] as const
       )
     )
@@ -219,15 +223,17 @@ export async function listSpecialBodiesAdmin(
   };
 }
 
+// `by: "mention_name"` reads the body by its public handle, matched case-insensitively.
 export async function getSpecialBodyDetail(
-  id: string
+  id: string,
+  by: EntityDetailKey = "id",
 ): Promise<SpecialBodyDetail | null> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) return null;
 
   const result = await callApi<SpecialBodyDetail>(
     "/api/v1/special-bodies/detail",
-    { method: "POST", token: sessionToken, body: { id } }
+    { method: "POST", token: sessionToken, body: { [by]: id } }
   );
   if (!isSuccessStatus(result.status) || !result.data) return null;
   return result.data;

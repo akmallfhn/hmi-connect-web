@@ -37,8 +37,10 @@ export async function generateMetadata({
   const coordinatingBody = (await loadCoordinatingBody(segment))?.entity;
 
   return entityProfileMetadata({
-    entityType: "coordinating_body",
-    handle: coordinatingBody ? entityProfileHandle(coordinatingBody) : segment,
+    canonicalPath: entityProfileHref(
+      "coordinating_body",
+      coordinatingBody ? entityProfileHandle(coordinatingBody) : segment,
+    ),
     name: coordinatingBody
       ? formatEntityAuthorName("coordinating_body", coordinatingBody.name)
       : null,
@@ -86,6 +88,7 @@ export default async function CoordinatingBodyProfile({
         entityType: "coordinating_body",
         entityId: coordinating_body_id,
         mentionName: coordinatingBody.mention_name,
+        profileHref: canonicalEntityProfileHref("coordinating_body", coordinatingBody),
         name: formatEntityAuthorName(
           "coordinating_body",
           coordinatingBody.name,

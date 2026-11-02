@@ -12,9 +12,16 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { followEntity, unfollowEntity } from "@/lib/actions";
 import { ADMIN_ENTITY_LABEL } from "@/lib/access";
-import { isSuccessStatus, type AccessEntityTypeEnum, type BranchTypeEnum } from "@/lib/types";
+import {
+  isSuccessStatus,
+  type AccessEntityTypeEnum,
+  type BranchTypeEnum,
+  type MentionEntityTypeEnum,
+  type SpecialBodyTypeEnum,
+} from "@/lib/types";
 import Button from "../buttons/Button";
 import LogoHmi from "../svg/LogoHmi";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
 import { useActingHref } from "@/hooks/useActingEntity";
 
 export type EntityStat = {
@@ -28,7 +35,11 @@ export type EntityAffiliation = {
 };
 
 interface EntityProfileHeaderProps {
-  entityType: AccessEntityTypeEnum;
+  entityType: MentionEntityTypeEnum;
+  // A special body's own type, which picks its emblem when no logo was uploaded.
+  specialBodyType?: SpecialBodyTypeEnum;
+  // Replaces the level sentence before the parents, for units that aren't a hierarchy level.
+  affiliationLead?: string;
   entityId: string;
   name: string;
   // The public handle in its display casing, shown under the name like a username.
@@ -91,6 +102,8 @@ function TypeBadge({ entityType, type }: { entityType: AccessEntityTypeEnum; typ
 
 export default function EntityProfileHeader({
   entityType,
+  specialBodyType,
+  affiliationLead,
   entityId,
   name,
   mentionName,
@@ -132,6 +145,11 @@ export default function EntityProfileHeader({
   }
 
   const allStats = follow ? [...stats, { label: "Pengikut", value: followerCount }] : stats;
+  const lead =
+    affiliationLead ??
+    (entityType === "special_body"
+      ? "Berada di bawah naungan"
+      : `${ADMIN_ENTITY_LABEL[entityType]} ini merupakan ${LEVEL_NOUN[entityType]} aktif di bawah naungan`);
 
   return (
     <div className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
@@ -157,6 +175,8 @@ export default function EntityProfileHeader({
                   height={112}
                   className="h-full w-full object-cover"
                 />
+              ) : specialBodyType ? (
+                <SpecialBodyLogoFallback type={specialBodyType} className="size-14" />
               ) : (
                 <LogoHmi className="size-14" />
               )}
@@ -197,7 +217,7 @@ export default function EntityProfileHeader({
             <h1 className="font-stack-sans-headline text-xl font-medium text-heading sm:text-2xl">
               {name}
             </h1>
-            {type && <TypeBadge entityType={entityType} type={type} />}
+            {type && entityType !== "special_body" && <TypeBadge entityType={entityType} type={type} />}
           </div>
 
           {mentionName && (
@@ -210,8 +230,7 @@ export default function EntityProfileHeader({
             <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground xl:text-[15px]">
               <IconBuilding className="mt-0.5 size-4 shrink-0 text-primary-foreground" stroke={1.8} />
               <span>
-                {ADMIN_ENTITY_LABEL[entityType]} ini merupakan {LEVEL_NOUN[entityType]} aktif di bawah
-                naungan{" "}
+                {lead}{" "}
                 {parents.map((parent, index) => (
                   <Fragment key={parent.label}>
                     {index > 0 && ", "}

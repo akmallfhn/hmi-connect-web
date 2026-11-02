@@ -6,6 +6,7 @@ import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
   type ActivityTypeEnum,
+  type MentionEntityTypeEnum,
   type FeedAttachmentTypeEnum,
   type FeedUploadAttachmentTypeEnum,
   type ReactionTypeEnum,
@@ -215,17 +216,18 @@ export type ActivityEntry = {
 };
 
 // The same activity/list endpoint is registered under all five entity resources, keyed by that level's own id.
-const ENTITY_ACTIVITY_PATH: Record<AccessEntityTypeEnum, string> = {
+const ENTITY_ACTIVITY_PATH: Record<MentionEntityTypeEnum, string> = {
   organization: "/api/v1/organizations/activity/list",
   coordinating_body: "/api/v1/coordinating-bodies/activity/list",
   branch: "/api/v1/branches/activity/list",
   coordinating_chapter: "/api/v1/coordinating-chapters/activity/list",
   chapter: "/api/v1/chapters/activity/list",
+  special_body: "/api/v1/special-bodies/activity/list",
 };
 
 // An entity only ever posts under its own name, so `type` is always post or quote_repost here.
 export async function listEntityActivity(
-  entityType: AccessEntityTypeEnum,
+  entityType: MentionEntityTypeEnum,
   entityId: string,
   options: { page?: number; pageSize?: number } = {},
 ): Promise<{ list: ActivityEntry[]; hasMore: boolean }> {

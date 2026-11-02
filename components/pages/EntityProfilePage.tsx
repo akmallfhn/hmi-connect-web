@@ -1,8 +1,11 @@
 import type { SessionUser } from "@/apis/session";
 import { entityMembersQueryKey, entityPostsQueryKey } from "@/lib/entity-profile";
 import type { EntityProfileFeeds } from "@/lib/entity-profile-data";
-import { entityProfileHref } from "@/lib/feed-author";
-import type { AccessEntityTypeEnum, BranchTypeEnum } from "@/lib/types";
+import type {
+  BranchTypeEnum,
+  MentionEntityTypeEnum,
+  SpecialBodyTypeEnum,
+} from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import EntityChildrenCard, {
   type EntityChildItem,
@@ -30,10 +33,14 @@ export interface EntityProfileChildren {
 }
 
 export interface EntityProfileData {
-  entityType: AccessEntityTypeEnum;
+  entityType: MentionEntityTypeEnum;
+  specialBodyType?: SpecialBodyTypeEnum;
+  affiliationLead?: string;
   entityId: string;
   name: string;
   mentionName: string;
+  // The canonical lowercase-handle URL; tabs rewrite the URL in place, so they must keep it.
+  profileHref: string;
   imageUrl: string | null;
   description: string | null;
   type?: BranchTypeEnum | null;
@@ -92,7 +99,7 @@ export default function EntityProfilePage({
     });
   }
 
-  if (members.list.length > 0) {
+  if (members.list.length > 0 && entity.entityType !== "special_body") {
     sections.push({
       value: "people",
       label: "People",
@@ -149,6 +156,8 @@ export default function EntityProfilePage({
             <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
               <EntityProfileHeader
                 entityType={entity.entityType}
+                specialBodyType={entity.specialBodyType}
+                affiliationLead={entity.affiliationLead}
                 entityId={entity.entityId}
                 name={entity.name}
                 mentionName={entity.mentionName}
@@ -161,11 +170,7 @@ export default function EntityProfilePage({
               />
               <AboutCard bio={entity.description ?? undefined} />
               <EntitySections
-                // Tabs rewrite the URL in place, so they must keep the lowercase handle the page canonicalized to.
-                baseHref={entityProfileHref(
-                  entity.entityType,
-                  entity.mentionName.toLowerCase() || entity.entityId,
-                )}
+                baseHref={entity.profileHref}
                 sections={sections}
               />
             </div>
