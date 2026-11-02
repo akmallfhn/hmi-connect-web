@@ -14,11 +14,14 @@ import {
   updateCoordinatingBody,
 } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Input from "../fields/Input";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import CoordinatingBodyLogoField from "../forms/CoordinatingBodyLogoField";
 
@@ -139,6 +142,11 @@ function ProfileTab({
 }) {
   const router = useRouter();
   const [name, setName] = useState(coordinatingBody.name);
+  const mention = useMentionNameField({
+    initial: coordinatingBody.mention_name,
+    entityType: "coordinating_body",
+    entityId: coordinatingBody.id,
+  });
   const [description, setDescription] = useState(
     coordinatingBody.description ?? ""
   );
@@ -153,10 +161,17 @@ function ProfileTab({
       return;
     }
 
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await updateCoordinatingBody({
         id: coordinatingBody.id,
+        mention_name: mention.mentionName,
         name: sanitizedName,
         description,
         image_url: imageUrl,
@@ -192,13 +207,23 @@ function ProfileTab({
         </div>
 
         <div className="flex flex-1 flex-col gap-4">
-          <Input
-            inputId="coordinating-body-settings-name"
-            label="Nama Badko"
-            placeholder="Contoh: Sumatera Bagian Utara"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+          <div className="flex flex-col gap-1">
+            <Input
+              inputId="coordinating-body-settings-name"
+              label="Nama Badko"
+              placeholder="Contoh: Sumatera Bagian Utara"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <EntityNamePreview entityType="coordinating_body" name={name} />
+          </div>
+
+          <MentionNameInput
+            inputId="coordinating-body-settings-mention-name"
+            field={mention}
+            placeholder="Contoh: HMIBadkoJabodetabekaBanten"
+            disabled={isSaving}
           />
 
           <TextArea

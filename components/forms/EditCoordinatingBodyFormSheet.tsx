@@ -8,7 +8,9 @@ import type {
 } from "@/apis/coordinating-bodies";
 import { getCoordinatingBodyDetail, updateCoordinatingBody } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -116,7 +118,11 @@ function EditCoordinatingBodyFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [mentionName, setMentionName] = useState(initialMentionName);
+  const mention = useMentionNameField({
+    initial: initialMentionName,
+    entityType: "coordinating_body",
+    entityId: id,
+  });
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -128,8 +134,9 @@ function EditCoordinatingBodyFields({
       toast.error("Nama Badko wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
 
@@ -138,7 +145,7 @@ function EditCoordinatingBodyFields({
       const result = await updateCoordinatingBody({
         id,
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         description,
         image_url: imageUrl,
       });
@@ -167,22 +174,23 @@ function EditCoordinatingBodyFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="coordinating-body-name"
-        label="Nama Badko"
-        placeholder="Contoh: Sumatera Bagian Utara"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="coordinating-body-name"
+          label="Nama Badko"
+          placeholder="Contoh: Sumatera Bagian Utara"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="coordinating_body" name={name} />
+      </div>
 
-      <Input
+      <MentionNameInput
         inputId="coordinating-body-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMIBadkoJabodetabekaBanten"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
 
       <TextArea

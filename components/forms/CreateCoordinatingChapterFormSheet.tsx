@@ -12,7 +12,9 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import CoordinatingChapterLogoField from "./CoordinatingChapterLogoField";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 
 interface CreateCoordinatingChapterFormSheetProps {
   open: boolean;
@@ -62,7 +64,7 @@ function CreateCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
-  const [mentionName, setMentionName] = useState("");
+  const mention = useMentionNameField({ entityType: "coordinating_chapter" });
   const [legalName, setLegalName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -93,8 +95,9 @@ function CreateCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
     const trimmedLegalName = legalName.trim();
@@ -111,7 +114,7 @@ function CreateCoordinatingChapterFields({
     try {
       const result = await createCoordinatingChapter({
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
         image_url: imageUrl,
         status: "active",
@@ -142,22 +145,23 @@ function CreateCoordinatingChapterFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="coordinating-chapter-name"
-        label="Nama Korkom"
-        placeholder="Contoh: UI"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="coordinating-chapter-name"
+          label="Nama Korkom"
+          placeholder="Contoh: UI"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="coordinating_chapter" name={name} />
+      </div>
 
-      <Input
+      <MentionNameInput
         inputId="coordinating-chapter-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMIKorkomUI"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
 
       <Input

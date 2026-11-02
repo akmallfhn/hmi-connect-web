@@ -1,7 +1,7 @@
 import { USERNAME_PATTERN } from "./username";
 
 export const MENTION_NAME_ERROR =
-  "ID mention harus 3-100 karakter dan hanya boleh berisi huruf, angka, titik, atau garis bawah.";
+  "Official Account ID harus 3-100 karakter dan hanya boleh berisi huruf, angka, titik, atau garis bawah.";
 
 export function normalizeMentionName(value: string) {
   return value.trim().replace(/^@/u, "");

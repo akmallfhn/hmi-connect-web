@@ -8,11 +8,14 @@ import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { CoordinatingChapterDetail } from "@/apis/coordinating-chapters";
 import { updateCoordinatingChapter } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Input from "../fields/Input";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import CoordinatingChapterLogoField from "../forms/CoordinatingChapterLogoField";
 
@@ -137,6 +140,11 @@ function ProfileTab({
 }) {
   const router = useRouter();
   const [name, setName] = useState(coordinatingChapter.name);
+  const mention = useMentionNameField({
+    initial: coordinatingChapter.mention_name,
+    entityType: "coordinating_chapter",
+    entityId: coordinatingChapter.id,
+  });
   const [legalName, setLegalName] = useState(coordinatingChapter.legal_name);
   const [description, setDescription] = useState(
     coordinatingChapter.description ?? ""
@@ -157,10 +165,17 @@ function ProfileTab({
       return;
     }
 
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await updateCoordinatingChapter({
         id: coordinatingChapter.id,
+        mention_name: mention.mentionName,
         name: sanitizedName,
         legal_name: trimmedLegalName,
         description,
@@ -200,13 +215,23 @@ function ProfileTab({
         </div>
 
         <div className="flex flex-1 flex-col gap-4">
-          <Input
-            inputId="coordinating-chapter-settings-name"
-            label="Nama Korkom"
-            placeholder="Contoh: UI"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+          <div className="flex flex-col gap-1">
+            <Input
+              inputId="coordinating-chapter-settings-name"
+              label="Nama Korkom"
+              placeholder="Contoh: UI"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <EntityNamePreview entityType="coordinating_chapter" name={name} />
+          </div>
+
+          <MentionNameInput
+            inputId="coordinating-chapter-settings-mention-name"
+            field={mention}
+            placeholder="Contoh: HMIKorkomUI"
+            disabled={isSaving}
           />
 
           <Input

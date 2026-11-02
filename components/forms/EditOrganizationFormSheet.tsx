@@ -4,7 +4,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { OrganizationDetail } from "@/apis/organizations";
 import { updateOrganization } from "@/lib/actions";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -53,7 +55,11 @@ function EditOrganizationFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(organization.name);
-  const [mentionName, setMentionName] = useState(organization.mention_name);
+  const mention = useMentionNameField({
+    initial: organization.mention_name,
+    entityType: "organization",
+    entityId: organization.id,
+  });
   const [slug, setSlug] = useState(organization.slug);
   const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -68,8 +74,9 @@ function EditOrganizationFields({
       toast.error("Slug organisasi wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
 
@@ -78,7 +85,7 @@ function EditOrganizationFields({
       const result = await updateOrganization({
         id: organization.id,
         name,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         slug,
         logo_url: logoUrl,
       });
@@ -107,28 +114,24 @@ function EditOrganizationFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="organization-name"
-        label="Nama Organisasi"
-        placeholder="Contoh: Himpunan Mahasiswa Islam"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-
       <div className="flex flex-col gap-1">
         <Input
-          inputId="organization-mention-name"
-          label="ID Mention"
-          placeholder="Contoh: PBHMI"
-          value={mentionName}
-          onChange={(e) => setMentionName(e.target.value)}
+          inputId="organization-name"
+          label="Nama Organisasi"
+          placeholder="Contoh: Himpunan Mahasiswa Islam"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
         />
-        <p className="pl-1 text-xs text-muted-foreground">
-          Ditampilkan sebagai @{normalizeMentionName(mentionName) || "PBHMI"} dan unik tanpa membedakan huruf besar-kecil.
-        </p>
+        <EntityNamePreview entityType="organization" name={name} />
       </div>
+
+      <MentionNameInput
+        inputId="organization-mention-name"
+        field={mention}
+        placeholder="Contoh: PBHMI"
+        disabled={isSaving}
+      />
 
       <div className="flex flex-col gap-1">
         <Input

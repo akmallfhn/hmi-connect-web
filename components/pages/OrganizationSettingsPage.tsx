@@ -7,11 +7,14 @@ import { toast } from "sonner";
 import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { OrganizationDetail } from "@/apis/organizations";
 import { updateOrganization } from "@/lib/actions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Input from "../fields/Input";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import OrganizationLogoField from "../forms/OrganizationLogoField";
 
 export type OrganizationSettingsTab = "profile" | "access";
@@ -121,6 +124,11 @@ export default function OrganizationSettingsPage({
 function ProfileTab({ organization }: { organization: OrganizationDetail }) {
   const router = useRouter();
   const [name, setName] = useState(organization.name);
+  const mention = useMentionNameField({
+    initial: organization.mention_name,
+    entityType: "organization",
+    entityId: organization.id,
+  });
   const [slug, setSlug] = useState(organization.slug);
   const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -136,10 +144,17 @@ function ProfileTab({ organization }: { organization: OrganizationDetail }) {
       return;
     }
 
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await updateOrganization({
         id: organization.id,
+        mention_name: mention.mentionName,
         name,
         slug,
         logo_url: logoUrl,
@@ -175,13 +190,23 @@ function ProfileTab({ organization }: { organization: OrganizationDetail }) {
         </div>
 
         <div className="flex flex-1 flex-col gap-4">
-          <Input
-            inputId="organization-settings-name"
-            label="Nama Organisasi"
-            placeholder="Contoh: Himpunan Mahasiswa Islam"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+          <div className="flex flex-col gap-1">
+            <Input
+              inputId="organization-settings-name"
+              label="Nama Organisasi"
+              placeholder="Contoh: Himpunan Mahasiswa Islam"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <EntityNamePreview entityType="organization" name={name} />
+          </div>
+
+          <MentionNameInput
+            inputId="organization-settings-mention-name"
+            field={mention}
+            placeholder="Contoh: PBHMI"
+            disabled={isSaving}
           />
 
           <div className="flex flex-col gap-1">

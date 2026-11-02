@@ -80,6 +80,7 @@ export default async function CoordinatingChapterProfile({
       entity={{
         entityType: "coordinating_chapter",
         entityId: coordinating_chapter_id,
+        mentionName: coordinatingChapter.mention_name,
         name: formatEntityAuthorName(
           "coordinating_chapter",
           coordinatingChapter.name,

@@ -33,6 +33,7 @@ export interface EntityProfileData {
   entityType: AccessEntityTypeEnum;
   entityId: string;
   name: string;
+  mentionName: string;
   imageUrl: string | null;
   description: string | null;
   type?: BranchTypeEnum | null;
@@ -150,6 +151,7 @@ export default function EntityProfilePage({
                 entityType={entity.entityType}
                 entityId={entity.entityId}
                 name={entity.name}
+                mentionName={entity.mentionName}
                 imageUrl={entity.imageUrl}
                 type={entity.type}
                 parents={entity.parents}
@@ -159,7 +161,11 @@ export default function EntityProfilePage({
               />
               <AboutCard bio={entity.description ?? undefined} />
               <EntitySections
-                baseHref={entityProfileHref(entity.entityType, entity.entityId)}
+                // Tabs rewrite the URL in place, so they must keep the lowercase handle the page canonicalized to.
+                baseHref={entityProfileHref(
+                  entity.entityType,
+                  entity.mentionName.toLowerCase() || entity.entityId,
+                )}
                 sections={sections}
               />
             </div>

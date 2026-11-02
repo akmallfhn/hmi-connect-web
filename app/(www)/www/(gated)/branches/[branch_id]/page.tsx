@@ -103,6 +103,7 @@ export default async function BranchProfile({
       entity={{
         entityType: "branch",
         entityId: branch_id,
+        mentionName: branch.mention_name,
         name: formatEntityAuthorName("branch", branch.name),
         imageUrl: branch.image_url,
         description: branch.description,

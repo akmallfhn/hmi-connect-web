@@ -1892,6 +1892,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `primary-soft` cover with its two rings, then the entity logo as a circle with a ring outside its
   white border (the one place an entity logo is round rather than the admin lists' square badge), the
   name via `formatEntityAuthorName` (`HMI Badko X`, `HMI Cabang Y`, an organization named outright),
+  with `@{mention_name}` (display casing) beneath it, the same line `ProfileHeader` gives a username,
   a `TypeBadge` beside it for Cabang/Komisariat (green solid bolt "Cabang Penuh", amber
   hourglass "Cabang Persiapan", on the success/warning soft tokens — not the shared `Label`; the
   icon circle inverts the pill's own fg/bg pair, so it stays above WCAG AA in both themes), then a
@@ -3672,6 +3673,16 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   scope instead gets a flat "Daftar Cabang" item (view-only wording, matching its read-only list/detail
   — no group wrapper either, since Badko only has this one Cabang-related link). `MasterSidebar`'s
   pre-existing Cabang item is relabeled "Kelola Cabang" to match Master's real CRUD rights.
+- **Official Account ID.** Every form that writes a hierarchy entity's `mention_name`, labelled **Official Account ID** (all five settings pages and the
+  Create/Edit sheets), uses `hooks/useMentionNameField.ts` with `components/fields/MentionNameInput.tsx`.
+  The hook validates the format and debounces `/admin/api/entity-mentions/check-availability`, which
+  wraps `apis/entity-mentions.ts` and `entity-mentions/check-availability`. It sends the edited
+  entity's pair, so its own handle reads as available, and an unchanged handle is never checked.
+  The field shows a status icon, a "Tampil sebagai @handle" preview, and an availability line.
+  `mentionNameSubmitError` blocks saving while the handle is invalid, taken, or still being checked;
+  a failed check still saves and leaves the final word to the backend's `409`. Each name input
+  carries `components/fields/EntityNamePreview.tsx` ("Tampil sebagai HMI Komisariat FT UI", hidden
+  for an organization, which has no prefix), and both previews set the value in `text-primary`.
 - Badko, Cabang, Korkom, and Komisariat each have their own self-service "Pengaturan" page on their
   own scoped dashboard (`/coordinating-bodies/[coordinating_body_id]/settings`,
   `/branches/[branch_id]/settings`, `/coordinating-chapters/[coordinating_chapter_id]/settings`,
@@ -3684,7 +3695,7 @@ BranchDetailPage.tsx` mirrors `CoordinatingBodyDetailPage.tsx`'s current shape �
   — deliberately narrower than the Master/Organization Edit form, no Tipe/parent
   picker/Status here, calling
   `updateCoordinatingBody`/`updateBranch`/`updateCoordinatingChapter`/`updateChapter` with just
-  `{id, name, description, image_url}`, plus `legal_name` for those two) and Akses (a table of that entity's own admins —
+  `{id, name, mention_name, description, image_url}`, plus `legal_name` for those two) and Akses (a table of that entity's own admins —
   all four render the **one shared** `components/admin/EntityAccessTab.tsx`, parameterized by
   `entityType`/`entityId`, rather than four copies of the same table+modal pair. It's fed by
   `apis/access-grants.ts#listAllAccessGrants(entityType, entityId)`, which pages through

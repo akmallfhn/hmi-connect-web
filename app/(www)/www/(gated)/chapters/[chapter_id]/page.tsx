@@ -78,6 +78,7 @@ export default async function ChapterProfile({
       entity={{
         entityType: "chapter",
         entityId: chapter_id,
+        mentionName: chapter.mention_name,
         name: formatEntityAuthorName("chapter", chapter.name),
         imageUrl: chapter.image_url,
         description: chapter.description,

@@ -31,6 +31,8 @@ interface EntityProfileHeaderProps {
   entityType: AccessEntityTypeEnum;
   entityId: string;
   name: string;
+  // The public handle in its display casing, shown under the name like a username.
+  mentionName?: string;
   imageUrl?: string | null;
   type?: BranchTypeEnum | null;
   // The units this one sits under, nearest first; empty for the organization itself.
@@ -91,6 +93,7 @@ export default function EntityProfileHeader({
   entityType,
   entityId,
   name,
+  mentionName,
   imageUrl,
   type,
   parents,
@@ -196,6 +199,12 @@ export default function EntityProfileHeader({
             </h1>
             {type && <TypeBadge entityType={entityType} type={type} />}
           </div>
+
+          {mentionName && (
+            <p className="text-sm text-muted-foreground xl:text-[15px]">
+              @{mentionName}
+            </p>
+          )}
 
           {parents.length > 0 && (
             <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground xl:text-[15px]">

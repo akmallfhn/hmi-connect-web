@@ -6,7 +6,9 @@ import type { BranchDetail, BranchListEntry } from "@/apis/branches";
 import { getBranchDetail, updateBranch } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
@@ -139,7 +141,11 @@ function EditBranchFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [mentionName, setMentionName] = useState(initialMentionName);
+  const mention = useMentionNameField({
+    initial: initialMentionName,
+    entityType: "branch",
+    entityId: id,
+  });
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -165,8 +171,9 @@ function EditBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
     setIsSaving(true);
@@ -174,7 +181,7 @@ function EditBranchFields({
       const result = await updateBranch({
         id,
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         description,
         image_url: imageUrl,
         // An empty string detaches the Cabang; omitting it leaves a Badko-less Cabang as is.
@@ -209,22 +216,23 @@ function EditBranchFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="branch-name"
-        label="Nama Cabang"
-        placeholder="Contoh: Banda Aceh"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="branch-name"
+          label="Nama Cabang"
+          placeholder="Contoh: Banda Aceh"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="branch" name={name} />
+      </div>
 
-      <Input
+      <MentionNameInput
         inputId="branch-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMICabangDumai"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
 
       {lockCoordinatingBody ? (

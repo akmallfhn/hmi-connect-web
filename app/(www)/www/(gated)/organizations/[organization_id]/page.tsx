@@ -80,6 +80,7 @@ export default async function OrganizationProfile({
       entity={{
         entityType: "organization",
         entityId: organization_id,
+        mentionName: organization.mention_name,
         name: formatEntityAuthorName("organization", organization.name),
         imageUrl: organization.logo_url,
         // organizations/detail carries no description, so the Tentang card stays hidden here.

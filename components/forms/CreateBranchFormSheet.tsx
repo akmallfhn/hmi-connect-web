@@ -12,7 +12,9 @@ import SearchableSelect, { type SearchableOption } from "../fields/SearchableSel
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
 import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -72,7 +74,7 @@ function CreateBranchFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
-  const [mentionName, setMentionName] = useState("");
+  const mention = useMentionNameField({ entityType: "branch" });
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
@@ -99,15 +101,16 @@ function CreateBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
     setIsSaving(true);
     try {
       const result = await createBranch({
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         image_url: imageUrl,
         type,
         status: "active",
@@ -142,22 +145,23 @@ function CreateBranchFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="branch-name"
-        label="Nama Cabang"
-        placeholder="Contoh: Banda Aceh"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="branch-name"
+          label="Nama Cabang"
+          placeholder="Contoh: Banda Aceh"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="branch" name={name} />
+      </div>
 
-      <Input
+      <MentionNameInput
         inputId="branch-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMICabangDumai"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
 
       {lockCoordinatingBody ? (

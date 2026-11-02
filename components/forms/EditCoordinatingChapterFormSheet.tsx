@@ -11,7 +11,9 @@ import {
   updateCoordinatingChapter,
 } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -134,7 +136,11 @@ function EditCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [mentionName, setMentionName] = useState(initialMentionName);
+  const mention = useMentionNameField({
+    initial: initialMentionName,
+    entityType: "coordinating_chapter",
+    entityId: id,
+  });
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
@@ -166,8 +172,9 @@ function EditCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
     const trimmedLegalName = legalName.trim();
@@ -185,7 +192,7 @@ function EditCoordinatingChapterFields({
       const result = await updateCoordinatingChapter({
         id,
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
@@ -216,21 +223,22 @@ function EditCoordinatingChapterFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="coordinating-chapter-name"
-        label="Nama Korkom"
-        placeholder="Contoh: UI"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <Input
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="coordinating-chapter-name"
+          label="Nama Korkom"
+          placeholder="Contoh: UI"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="coordinating_chapter" name={name} />
+      </div>
+      <MentionNameInput
         inputId="coordinating-chapter-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMIKorkomUI"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
       <Input
         inputId="coordinating-chapter-legal-name"

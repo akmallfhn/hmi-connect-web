@@ -10,7 +10,9 @@ import {
   updateChapter,
 } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
-import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
@@ -145,7 +147,11 @@ function EditChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [mentionName, setMentionName] = useState(initialMentionName);
+  const mention = useMentionNameField({
+    initial: initialMentionName,
+    entityType: "chapter",
+    entityId: id,
+  });
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
@@ -204,8 +210,9 @@ function EditChapterFields({
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
-    if (!isMentionNameFormatValid(mentionName)) {
-      toast.error(MENTION_NAME_ERROR);
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
       return;
     }
     const trimmedLegalName = legalName.trim();
@@ -223,7 +230,7 @@ function EditChapterFields({
       const result = await updateChapter({
         id,
         name: sanitizedName,
-        mention_name: normalizeMentionName(mentionName),
+        mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
@@ -255,21 +262,22 @@ function EditChapterFields({
         disabled={isSaving}
       />
 
-      <Input
-        inputId="chapter-name"
-        label="Nama Komisariat"
-        placeholder="Contoh: FEB Undip"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <Input
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="chapter-name"
+          label="Nama Komisariat"
+          placeholder="Contoh: FEB Undip"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <EntityNamePreview entityType="chapter" name={name} />
+      </div>
+      <MentionNameInput
         inputId="chapter-mention-name"
-        label="ID Mention"
+        field={mention}
         placeholder="Contoh: HMIKomisariatFTUI"
-        value={mentionName}
-        onChange={(e) => setMentionName(e.target.value)}
-        required
+        disabled={isSaving}
       />
       <Input
         inputId="chapter-legal-name"

@@ -12,11 +12,14 @@ import type { AccessGrantEntry } from "@/apis/access-grants";
 import type { BranchDetail } from "@/apis/branches";
 import { updateBranch } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import EntityAccessTab from "../admin/EntityAccessTab";
 import AdminPageTitle from "../common/AdminPageTitle";
 import Input from "../fields/Input";
+import EntityNamePreview from "../fields/EntityNamePreview";
+import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import BranchLogoField from "../forms/BranchLogoField";
 
@@ -132,6 +135,11 @@ export default function BranchSettingsPage({
 function ProfileTab({ branch }: { branch: BranchDetail }) {
   const router = useRouter();
   const [name, setName] = useState(branch.name);
+  const mention = useMentionNameField({
+    initial: branch.mention_name,
+    entityType: "branch",
+    entityId: branch.id,
+  });
   const [description, setDescription] = useState(branch.description ?? "");
   const [imageUrl, setImageUrl] = useState(branch.image_url ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -144,10 +152,17 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
       return;
     }
 
+    const mentionError = mentionNameSubmitError(mention.status);
+    if (mentionError) {
+      toast.error(mentionError);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await updateBranch({
         id: branch.id,
+        mention_name: mention.mentionName,
         name: sanitizedName,
         description,
         image_url: imageUrl,
@@ -183,13 +198,23 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
         </div>
 
         <div className="flex flex-1 flex-col gap-4">
-          <Input
-            inputId="branch-settings-name"
-            label="Nama Cabang"
-            placeholder="Contoh: Banda Aceh"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+          <div className="flex flex-col gap-1">
+            <Input
+              inputId="branch-settings-name"
+              label="Nama Cabang"
+              placeholder="Contoh: Banda Aceh"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <EntityNamePreview entityType="branch" name={name} />
+          </div>
+
+          <MentionNameInput
+            inputId="branch-settings-mention-name"
+            field={mention}
+            placeholder="Contoh: HMICabangDepok"
+            disabled={isSaving}
           />
 
           <TextArea

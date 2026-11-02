@@ -85,6 +85,7 @@ export default async function CoordinatingBodyProfile({
       entity={{
         entityType: "coordinating_body",
         entityId: coordinating_body_id,
+        mentionName: coordinatingBody.mention_name,
         name: formatEntityAuthorName(
           "coordinating_body",
           coordinatingBody.name,
