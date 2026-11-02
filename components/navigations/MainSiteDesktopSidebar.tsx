@@ -246,13 +246,13 @@ export default function MainSiteDesktopSidebar({
   }
 
   return (
-    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start overflow-y-auto overscroll-contain border-r border-border bg-surface px-3 py-5 [scrollbar-width:none] dark:bg-[#141414] lg:flex [&::-webkit-scrollbar]:hidden">
-      <Link href="/" className="mb-7 flex items-center px-2">
+    <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-border bg-surface px-3 py-5 dark:bg-[#141414] lg:flex">
+      <Link href="/" className="mb-7 flex shrink-0 items-center px-2">
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>
 
       {official && (
-        <div className="mb-5 flex items-center gap-3 rounded-xl border border-border p-3">
+        <div className="mb-5 flex shrink-0 items-center gap-3 rounded-xl border border-border p-3">
           <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted">
             {officialGrant?.entity_image_url ? (
               <Image
@@ -280,46 +280,47 @@ export default function MainSiteDesktopSidebar({
         </div>
       )}
 
-      <nav className="flex flex-col gap-1" aria-label="Navigasi utama">
-        {navItems.map(({ label, href, icon: Icon, matches }) => {
-          const active = matches(pathname);
-          return (
-            <Link
-              key={label}
-              href={href}
-              className={[
-                "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
-                active
-                  ? "bg-primary-soft text-primary-foreground"
-                  : "text-foreground hover:bg-surface-muted hover:text-heading",
-              ].join(" ")}
-            >
-              <span className="relative flex size-5 shrink-0 items-center justify-center">
-                <Icon className="size-5" stroke={active ? 2.4 : 2} />
-                {label === "Chat" && unreadChatCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
-                    {unreadChatCount > 9 ? "9+" : unreadChatCount}
-                  </span>
-                )}
-                {label === "Notifications" && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </span>
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Only the menu scrolls; the logo above and Posting/Lainnya below stay put. */}
+      <div className="-mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex flex-col gap-1" aria-label="Navigasi utama">
+          {navItems.map(({ label, href, icon: Icon, matches }) => {
+            const active = matches(pathname);
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={[
+                  "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
+                  active
+                    ? "bg-primary-soft text-primary-foreground"
+                    : "text-foreground hover:bg-surface-muted hover:text-heading",
+                ].join(" ")}
+              >
+                <span className="relative flex size-5 shrink-0 items-center justify-center">
+                  <Icon className="size-5" stroke={active ? 2.4 : 2} />
+                  {label === "Chat" && unreadChatCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
+                      {unreadChatCount > 9 ? "9+" : unreadChatCount}
+                    </span>
+                  )}
+                  {label === "Notifications" && unreadCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </span>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* The official page has its own composer, and the personal profile isn't who's speaking there. */}
-      {!official && (
-        <div className="mt-1">
+        {/* The official page has its own composer, and the personal profile isn't who's speaking there. */}
+        {!official && (
           <Link
             href={profileHref}
             className={[
-              "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
+              "mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
               profileIsActive
                 ? "bg-primary-soft text-primary-foreground"
                 : "text-foreground hover:bg-surface-muted hover:text-heading",
@@ -345,8 +346,12 @@ export default function MainSiteDesktopSidebar({
               size={14}
             />
           </Link>
+        )}
+      </div>
 
-          {canPost ? (
+      <div className="shrink-0 pt-3">
+        {!official &&
+          (canPost ? (
             <Dropdown
               align="left"
               panelClassName="w-60 rounded-xl"
@@ -356,7 +361,7 @@ export default function MainSiteDesktopSidebar({
                   variant="secondary"
                   onClick={toggle}
                   aria-expanded={open}
-                  className="mt-3 h-11 w-full rounded-xl"
+                  className="h-11 w-full rounded-xl"
                 >
                   <IconPlus className="size-5" />
                   Posting
@@ -376,71 +381,70 @@ export default function MainSiteDesktopSidebar({
               variant="secondary"
               title={userId ? postingHint : undefined}
               onClick={handleBlockedPost}
-              className="mt-3 h-11 w-full rounded-xl"
+              className="h-11 w-full rounded-xl"
             >
               <IconPlus className="size-5" />
               Posting
             </Button>
-          )}
-        </div>
-      )}
+          ))}
 
-      <div className="mt-auto">
-        {official ? (
-          // Leaving the entity's voice goes through Settings, where the personal account lives.
-          <Link
-            href="/settings"
-            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive-foreground transition hover:bg-destructive-soft"
-          >
-            <IconArrowBackUp className="size-5" />
-            Mode User
-          </Link>
-        ) : (
-          <Dropdown
-            align="left"
-            panelClassName="w-56 rounded-xl"
-            trigger={({ open, toggle }) => (
-              <button
-                type="button"
-                onClick={toggle}
-                aria-expanded={open}
-                className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-foreground transition hover:bg-surface-muted hover:text-heading"
-              >
-                <IconDots className="size-5" />
-                Lainnya
-              </button>
-            )}
-          >
-            <div className="py-1 font-stack-sans-headline font-normal">
-              <Link
-                href="/settings"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
-              >
-                <IconSettings className="size-4 text-muted-foreground" />
-                Pengaturan
-              </Link>
-              {userId ? (
+        <div className={official ? undefined : "mt-4"}>
+          {official ? (
+            // Leaving the entity's voice goes through Settings, where the personal account lives.
+            <Link
+              href="/settings"
+              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive-foreground transition hover:bg-destructive-soft"
+            >
+              <IconArrowBackUp className="size-5" />
+              Mode User
+            </Link>
+          ) : (
+            <Dropdown
+              align="left"
+              panelClassName="w-56 rounded-xl"
+              trigger={({ open, toggle }) => (
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive-foreground transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={toggle}
+                  aria-expanded={open}
+                  className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-normal text-foreground transition hover:bg-surface-muted hover:text-heading"
                 >
-                  <IconLogout className="size-4" />
-                  {loggingOut ? "Keluar..." : "Keluar"}
+                  <IconDots className="size-5" />
+                  Lainnya
                 </button>
-              ) : (
+              )}
+            >
+              <div className="py-1 font-stack-sans-headline font-normal">
                 <Link
-                  href="/auth/login"
+                  href="/settings"
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
                 >
-                  <IconLogin className="size-4 text-muted-foreground" />
-                  Masuk
+                  <IconSettings className="size-4 text-muted-foreground" />
+                  Pengaturan
                 </Link>
-              )}
-            </div>
-          </Dropdown>
-        )}
+                {userId ? (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive-foreground transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <IconLogout className="size-4" />
+                    {loggingOut ? "Keluar..." : "Keluar"}
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
+                  >
+                    <IconLogin className="size-4 text-muted-foreground" />
+                    Masuk
+                  </Link>
+                )}
+              </div>
+            </Dropdown>
+          )}
+        </div>
       </div>
     </aside>
   );
