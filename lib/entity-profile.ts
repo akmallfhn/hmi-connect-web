@@ -28,12 +28,13 @@ export function entityMembersQueryKey(
 
 export function entityProfileMetadata(options: {
   entityType: AccessEntityTypeEnum;
-  entityId: string;
+  // The lowercase mention name the canonical URL is built on.
+  handle: string;
   name: string | null;
   description?: string | null;
   status?: StatusEnum;
 }): Metadata {
-  const { entityType, entityId, name, description, status } = options;
+  const { entityType, handle, name, description, status } = options;
   const title = name ?? "Halaman Tidak Ditemukan";
 
   return {
@@ -41,7 +42,7 @@ export function entityProfileMetadata(options: {
     description: name
       ? (description ?? `Profil resmi ${name} di HMI Connect.`)
       : "Halaman HMI Connect yang kamu cari tidak ditemukan.",
-    alternates: { canonical: entityProfileHref(entityType, entityId) },
+    alternates: { canonical: entityProfileHref(entityType, handle) },
     robots: { index: status === "active", follow: status === "active" },
   };
 }

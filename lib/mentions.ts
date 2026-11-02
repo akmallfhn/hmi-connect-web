@@ -1,5 +1,18 @@
 import { USERNAME_PATTERN } from "./username";
 
+export const MENTION_NAME_ERROR =
+  "ID mention harus 3-100 karakter dan hanya boleh berisi huruf, angka, titik, atau garis bawah.";
+
+export function normalizeMentionName(value: string) {
+  return value.trim().replace(/^@/u, "");
+}
+
+export function isMentionNameFormatValid(value: string) {
+  const normalized = normalizeMentionName(value);
+  return normalized.length >= 3 && normalized.length <= 100 &&
+    new RegExp(`^(?:${USERNAME_PATTERN})$`, "u").test(normalized);
+}
+
 export type MentionSegment =
   | { type: "text"; value: string }
   | { type: "mention"; value: string; username: string }

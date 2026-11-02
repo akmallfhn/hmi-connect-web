@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import { listCoordinatingBodiesAdmin } from "@/apis/coordinating-bodies";
@@ -7,23 +8,34 @@ import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
+import {
+  canonicalEntityProfileHref,
+  entityProfileHandle,
+  redirectToCanonicalEntityProfile,
+  resolveEntityProfileSegment,
+} from "@/lib/entity-profile-route";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
-import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
+import { formatEntityAuthorName } from "@/lib/feed-author";
 
 interface OrganizationProfileRouteProps {
   params: Promise<{ organization_id: string }>;
-  searchParams?: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
+
+// Shared by generateMetadata and the page, so one request resolves the segment.
+const loadOrganization = cache((segment: string) =>
+  resolveEntityProfileSegment(segment, getOrganizationDetail),
+);
 
 export async function generateMetadata({
   params,
 }: OrganizationProfileRouteProps): Promise<Metadata> {
-  const { organization_id } = await params;
-  const organization = await getOrganizationDetail(organization_id);
+  const { organization_id: segment } = await params;
+  const organization = (await loadOrganization(segment))?.entity;
 
   return entityProfileMetadata({
     entityType: "organization",
-    entityId: organization_id,
+    handle: organization ? entityProfileHandle(organization) : segment,
     name: organization
       ? formatEntityAuthorName("organization", organization.name)
       : null,
@@ -35,18 +47,22 @@ export default async function OrganizationProfile({
   params,
   searchParams,
 }: OrganizationProfileRouteProps) {
-  const { organization_id } = await params;
-  const [{ user: viewer }, organization] = await Promise.all([
+  const { organization_id: segment } = await params;
+  const [{ user: viewer }, resolved, query] = await Promise.all([
     getSession(),
-    getOrganizationDetail(organization_id),
+    loadOrganization(segment),
+    searchParams,
   ]);
 
-  if (!organization || organization.status !== "active") return notFound();
+  if (!resolved || resolved.entity.status !== "active") return notFound();
+  redirectToCanonicalEntityProfile("organization", segment, resolved, query);
+  const organization = resolved.entity;
+  const organization_id = organization.id;
 
   const actingEntity = await resolveActingEntity(
     viewer,
 
-    (await searchParams)?.as,
+    query?.as,
   );
 
   const [coordinatingBodies, branches, feeds] = await Promise.all([
@@ -87,7 +103,7 @@ export default async function OrganizationProfile({
           items: branches.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("branch", row.name),
-            href: entityProfileHref("branch", row.id),
+            href: canonicalEntityProfileHref("branch", row),
             imageUrl: row.image_url,
             meta: kaderMeta(row.user_count),
           })),

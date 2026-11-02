@@ -12,6 +12,7 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import CoordinatingChapterLogoField from "./CoordinatingChapterLogoField";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 
 interface CreateCoordinatingChapterFormSheetProps {
   open: boolean;
@@ -61,6 +62,7 @@ function CreateCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [mentionName, setMentionName] = useState("");
   const [legalName, setLegalName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -91,6 +93,10 @@ function CreateCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     const trimmedLegalName = legalName.trim();
     if (!trimmedLegalName) {
       toast.error("Nama resmi Korkom wajib diisi.");
@@ -105,6 +111,7 @@ function CreateCoordinatingChapterFields({
     try {
       const result = await createCoordinatingChapter({
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         legal_name: trimmedLegalName,
         image_url: imageUrl,
         status: "active",
@@ -141,6 +148,15 @@ function CreateCoordinatingChapterFields({
         placeholder="Contoh: UI"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="coordinating-chapter-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIKorkomUI"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

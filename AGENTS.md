@@ -1538,13 +1538,16 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   row (`N Reaksi · M Komentar`, replies counted, with the post's timestamp on the right; the
   reaction count opens `ReactorsListModal`), then the `CommentSubmitter` card, then the threads
   newest first, so a new comment lands right under the composer.
-  `CommentSubmitter` uses the shared `MentionTextarea`: after `@` plus a keyword it debounces the
-  existing `/api/users/search` member search; after `#` it uses `/api/hashtags/search`, backed by
-  `hashtags/list`. Both support arrow/Enter selection and insert a canonical plain-text token. Its portalled suggestion panel is anchored directly
+  `CommentSubmitter` uses the shared `MentionTextarea`: after `@` plus a keyword it debounces
+  `/api/mentions/search`, backed by `search/mentions/list`, and combines users with organizations,
+  Badko, branches, Korkom, and chapters while retaining each result's `target_type`; after `#` it
+  uses `/api/hashtags/search`, backed by `hashtags/list`. Both support arrow/Enter selection and insert a canonical plain-text token. Its portalled suggestion panel is anchored directly
   below the text caret rather than the textarea edge, is 320px wide within viewport margins, and
   scrolls internally above a 240px maximum height. `MentionText` renders valid `@username` and
   `#hashtag` tokens in feed/comment/reply bodies with the primary green text token; mentions link to
-  `/profile/[username]`, while hashtags link to the Feed tab of the shared search page.
+  `/mentions/[mention_name]`, whose public resolver calls `search/mentions/detail` and redirects users
+  to their profile or hierarchy entities to their entity profile, while hashtags link to the Feed tab
+  of the shared search page.
   The backend DB trigger owns `mention` notification creation for active, non-self users, collapses
   repeated usernames, and avoids a duplicate mention row when the normal parent comment/reply
   notification already reaches that recipient.
@@ -1855,6 +1858,17 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   different slug names at the same position. They sit under `(gated)` rather than beside the public
   `/profile/[username]`, so a logged-out visitor is bounced by `next.config.mts`'s own no-session
   rule — these paths are deliberately not in that rule's allowlist.
+  **The URL segment is the entity's lowercase `mention_name_normalized`** (`/branches/hmicabangdepok`),
+  even though the folders are still named `[branch_id]` etc. `lib/entity-profile-route.ts` resolves
+  it: a valid mention-format segment is read through `*/detail`'s `mention_name` key (each
+  `get*Detail` takes `by: "mention_name"`), otherwise it falls back to `id`. Any other spelling
+  redirects to the lowercase handle, keeping the query string: a casing fix is a permanent redirect,
+  while a legacy id is a temporary one, since a mention name can be renamed and an id cannot. Links
+  built from ids (feed authors, parents) still work through that redirect; child lists link
+  straight to `canonicalEntityProfileHref(type, row)`. Each route wraps the resolver in React
+  `cache()` so `generateMetadata` and the page share one lookup, uses the resolved `entity.id` for
+  everything after it, and points its canonical tag at the handle. `/mentions/[mention_name]`
+  redirects entities to that same lowercase URL.
   Each route fetches its own `*/detail` (all five are open to any authenticated user on the backend
   — no grant needed, unlike the admin `users/list` reads), `notFound()`s on a missing or `inactive`
   entity, then fetches its own relations. An entity's own kader/child counts are only exposed on its

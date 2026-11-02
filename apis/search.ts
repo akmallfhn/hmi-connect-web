@@ -44,6 +44,20 @@ export type SearchEntityResult = {
   created_at: string;
 };
 
+export type MentionTargetType = "user" | AccessEntityTypeEnum;
+
+export type MentionSearchResult = {
+  target_type: MentionTargetType;
+  target_id: string;
+  mention_name: string;
+  mention_name_normalized: string;
+  name: string;
+  image_url: string | null;
+  subtitle: string | null;
+  description: string | null;
+  status: string;
+};
+
 export type SearchResultMap = {
   user: SearchPersonResult;
   feed: SearchFeedResult;
@@ -217,4 +231,47 @@ export function searchPeople(
   options?: { page?: number; pageSize?: number }
 ) {
   return searchResults("user", keyword, options);
+}
+
+export async function searchMentions(
+  search: string,
+  options: { page?: number; pageSize?: number } = {},
+): Promise<PagedSearchResult<MentionSearchResult>> {
+  const { page = 1, pageSize = 20 } = options;
+  const empty = { list: [], totalData: 0, currentPage: page, hasMore: false };
+  const normalized = search.trim();
+  if (!normalized) return empty;
+  const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+  if (!sessionToken) return empty;
+
+  const result = await callApi<ListResponse<MentionSearchResult>>(
+    "/api/v1/search/mentions/list",
+    {
+      method: "POST",
+      token: sessionToken,
+      body: { search: normalized, page, page_size: pageSize },
+    },
+  );
+  if (!isSuccessStatus(result.status)) return empty;
+  const list = result.data?.list ?? [];
+  const currentPage = result.data?.metapaging?.current_page ?? page;
+  return {
+    list,
+    totalData: result.data?.metapaging?.total_data ?? list.length,
+    currentPage,
+    hasMore: currentPage < (result.data?.metapaging?.total_page ?? 1),
+  };
+}
+
+export async function getMentionTarget(
+  mentionName: string,
+): Promise<MentionSearchResult | null> {
+  const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+  const token = sessionToken ?? process.env.CLIENT_SECRET;
+  if (!token) return null;
+  const result = await callApi<MentionSearchResult>(
+    "/api/v1/search/mentions/detail",
+    { method: "POST", token, body: { mention_name: mentionName } },
+  );
+  return isSuccessStatus(result.status) && result.data ? result.data : null;
 }

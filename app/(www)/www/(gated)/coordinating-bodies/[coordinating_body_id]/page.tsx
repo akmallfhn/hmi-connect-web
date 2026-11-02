@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { listAllBranchesAdmin } from "@/apis/branches";
 import {
@@ -9,25 +10,35 @@ import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
+import {
+  canonicalEntityProfileHref,
+  entityProfileHandle,
+  redirectToCanonicalEntityProfile,
+  resolveEntityProfileSegment,
+} from "@/lib/entity-profile-route";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { ORGANIZATION_SHORT_NAME } from "@/lib/constants";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingBodyProfileRouteProps {
   params: Promise<{ coordinating_body_id: string }>;
-  searchParams?: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
+
+// Shared by generateMetadata and the page, so one request resolves the segment.
+const loadCoordinatingBody = cache((segment: string) =>
+  resolveEntityProfileSegment(segment, getCoordinatingBodyDetail),
+);
 
 export async function generateMetadata({
   params,
 }: CoordinatingBodyProfileRouteProps): Promise<Metadata> {
-  const { coordinating_body_id } = await params;
-  const coordinatingBody =
-    await getCoordinatingBodyDetail(coordinating_body_id);
+  const { coordinating_body_id: segment } = await params;
+  const coordinatingBody = (await loadCoordinatingBody(segment))?.entity;
 
   return entityProfileMetadata({
     entityType: "coordinating_body",
-    entityId: coordinating_body_id,
+    handle: coordinatingBody ? entityProfileHandle(coordinatingBody) : segment,
     name: coordinatingBody
       ? formatEntityAuthorName("coordinating_body", coordinatingBody.name)
       : null,
@@ -40,19 +51,22 @@ export default async function CoordinatingBodyProfile({
   params,
   searchParams,
 }: CoordinatingBodyProfileRouteProps) {
-  const { coordinating_body_id } = await params;
-  const [{ user: viewer }, coordinatingBody] = await Promise.all([
+  const { coordinating_body_id: segment } = await params;
+  const [{ user: viewer }, resolved, query] = await Promise.all([
     getSession(),
-    getCoordinatingBodyDetail(coordinating_body_id),
+    loadCoordinatingBody(segment),
+    searchParams,
   ]);
 
-  if (!coordinatingBody || coordinatingBody.status !== "active")
-    return notFound();
+  if (!resolved || resolved.entity.status !== "active") return notFound();
+  redirectToCanonicalEntityProfile("coordinating_body", segment, resolved, query);
+  const coordinatingBody = resolved.entity;
+  const coordinating_body_id = coordinatingBody.id;
 
   const actingEntity = await resolveActingEntity(
     viewer,
 
-    (await searchParams)?.as,
+    query?.as,
   );
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
@@ -101,7 +115,7 @@ export default async function CoordinatingBodyProfile({
           items: branches.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("branch", row.name),
-            href: entityProfileHref("branch", row.id),
+            href: canonicalEntityProfileHref("branch", row),
             imageUrl: row.image_url,
             meta: kaderMeta(row.user_count),
           })),

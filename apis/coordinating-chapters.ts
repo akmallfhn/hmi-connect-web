@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { callApi, type ApiEnvelope } from "./api";
+import { callApi, type ApiEnvelope, type EntityDetailKey } from "./api";
 import { isSuccessStatus, type StatusEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import type { ChapterDetail } from "./chapters";
@@ -12,6 +12,8 @@ export type CoordinatingChapterListEntry = {
   branch_id: string;
   branch_name: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   // The full official name the short `name` stands for, e.g. "Universitas Indonesia".
   legal_name: string;
   image_url: string | null;
@@ -89,6 +91,8 @@ export type CoordinatingChapterDetail = {
   branch_id: string;
   branch_name: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   legal_name: string;
   description: string | null;
   image_url: string | null;
@@ -97,8 +101,10 @@ export type CoordinatingChapterDetail = {
   updated_at: string;
 };
 
+// `by: "mention_name"` reads the entity by its public handle, matched case-insensitively.
 export async function getCoordinatingChapterDetail(
-  id: string
+  id: string,
+  by: EntityDetailKey = "id",
 ): Promise<CoordinatingChapterDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -109,7 +115,7 @@ export async function getCoordinatingChapterDetail(
     {
       method: "POST",
       token: sessionToken,
-      body: { id },
+      body: { [by]: id },
     }
   );
 
@@ -120,6 +126,7 @@ export async function getCoordinatingChapterDetail(
 export type CreateCoordinatingChapterPayload = {
   branch_id: string;
   name: string;
+  mention_name: string;
   // Required by the backend alongside `name` — both are rejected as missing when empty.
   legal_name: string;
   description?: string;
@@ -153,6 +160,7 @@ export type UpdateCoordinatingChapterPayload = {
   id: string;
   branch_id?: string;
   name?: string;
+  mention_name?: string;
   legal_name?: string;
   description?: string;
   image_url?: string;

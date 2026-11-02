@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getBranchDetail, listAllBranchesAdmin } from "@/apis/branches";
 import { listAllChaptersAdmin } from "@/apis/chapters";
@@ -7,24 +8,35 @@ import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
+import {
+  canonicalEntityProfileHref,
+  entityProfileHandle,
+  redirectToCanonicalEntityProfile,
+  resolveEntityProfileSegment,
+} from "@/lib/entity-profile-route";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { ORGANIZATION_SHORT_NAME } from "@/lib/constants";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface BranchProfileRouteProps {
   params: Promise<{ branch_id: string }>;
-  searchParams?: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
+
+// Shared by generateMetadata and the page, so one request resolves the segment.
+const loadBranch = cache((segment: string) =>
+  resolveEntityProfileSegment(segment, getBranchDetail),
+);
 
 export async function generateMetadata({
   params,
 }: BranchProfileRouteProps): Promise<Metadata> {
-  const { branch_id } = await params;
-  const branch = await getBranchDetail(branch_id);
+  const { branch_id: segment } = await params;
+  const branch = (await loadBranch(segment))?.entity;
 
   return entityProfileMetadata({
     entityType: "branch",
-    entityId: branch_id,
+    handle: branch ? entityProfileHandle(branch) : segment,
     name: branch ? formatEntityAuthorName("branch", branch.name) : null,
     description: branch?.description,
     status: branch?.status,
@@ -35,18 +47,22 @@ export default async function BranchProfile({
   params,
   searchParams,
 }: BranchProfileRouteProps) {
-  const { branch_id } = await params;
-  const [{ user: viewer }, branch] = await Promise.all([
+  const { branch_id: segment } = await params;
+  const [{ user: viewer }, resolved, query] = await Promise.all([
     getSession(),
-    getBranchDetail(branch_id),
+    loadBranch(segment),
+    searchParams,
   ]);
 
-  if (!branch || branch.status !== "active") return notFound();
+  if (!resolved || resolved.entity.status !== "active") return notFound();
+  redirectToCanonicalEntityProfile("branch", segment, resolved, query);
+  const branch = resolved.entity;
+  const branch_id = branch.id;
 
   const actingEntity = await resolveActingEntity(
     viewer,
 
-    (await searchParams)?.as,
+    query?.as,
   );
 
   // A Cabang's own kader/Komisariat counts are only exposed on its parent's branch list row.
@@ -107,7 +123,7 @@ export default async function BranchProfile({
           items: chapters.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("chapter", row.name),
-            href: entityProfileHref("chapter", row.id),
+            href: canonicalEntityProfileHref("chapter", row),
             imageUrl: row.image_url,
             meta: row.institution_name ?? kaderMeta(row.user_count),
           })),

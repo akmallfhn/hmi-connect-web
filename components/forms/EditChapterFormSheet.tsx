@@ -10,6 +10,7 @@ import {
   updateChapter,
 } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import CreateableSelect, {
@@ -96,6 +97,7 @@ function EditChapterLoader({
     <EditChapterFields
       id={chapter.id}
       initialName={detail?.name ?? chapter.name}
+      initialMentionName={detail?.mention_name ?? chapter.mention_name}
       initialLegalName={detail?.legal_name ?? chapter.legal_name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? chapter.image_url}
@@ -122,6 +124,7 @@ function EditChapterLoader({
 function EditChapterFields({
   id,
   initialName,
+  initialMentionName,
   initialLegalName,
   initialDescription,
   initialImageUrl,
@@ -132,6 +135,7 @@ function EditChapterFields({
 }: {
   id: string;
   initialName: string;
+  initialMentionName: string;
   initialLegalName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
@@ -141,6 +145,7 @@ function EditChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [mentionName, setMentionName] = useState(initialMentionName);
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
@@ -199,6 +204,10 @@ function EditChapterFields({
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     const trimmedLegalName = legalName.trim();
     if (!trimmedLegalName) {
       toast.error("Nama resmi Komisariat wajib diisi.");
@@ -214,6 +223,7 @@ function EditChapterFields({
       const result = await updateChapter({
         id,
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
@@ -251,6 +261,14 @@ function EditChapterFields({
         placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <Input
+        inputId="chapter-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIKomisariatFTUI"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
       <Input

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { callApi, type ApiEnvelope } from "./api";
+import { callApi, type ApiEnvelope, type EntityDetailKey } from "./api";
 import {
   isSuccessStatus,
   type CoordinatingBodySortByEnum,
@@ -13,6 +13,8 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 export type CoordinatingBody = {
   id: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
 };
 
 // Mirrors POST /api/v1/coordinating-bodies/detail's response — used to seed the Badko filter's default label on /master/branches, and to seed the edit form (description isn't on the list row).
@@ -20,6 +22,8 @@ export type CoordinatingBodyDetail = {
   id: string;
   organization_id: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   index: number | null;
   description: string | null;
   image_url: string | null;
@@ -34,8 +38,10 @@ export type CoordinatingBodyDetail = {
   };
 };
 
+// `by: "mention_name"` reads the entity by its public handle, matched case-insensitively.
 export async function getCoordinatingBodyDetail(
-  id: string
+  id: string,
+  by: EntityDetailKey = "id",
 ): Promise<CoordinatingBodyDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -46,7 +52,7 @@ export async function getCoordinatingBodyDetail(
     {
       method: "POST",
       token: sessionToken,
-      body: { id },
+      body: { [by]: id },
     }
   );
 
@@ -111,6 +117,8 @@ export async function searchCoordinatingBodies(
 export type CoordinatingBodyListEntry = {
   id: string;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   // West-to-east position (Aceh first, Papua last); null when not set.
   index: number | null;
   image_url: string | null;
@@ -192,6 +200,7 @@ export async function listCoordinatingBodiesAdmin(
 
 export type CreateCoordinatingBodyPayload = {
   name: string;
+  mention_name: string;
   description?: string;
   image_url?: string;
   status?: StatusEnum;
@@ -220,6 +229,7 @@ export async function createCoordinatingBody(
 export type UpdateCoordinatingBodyPayload = {
   id: string;
   name?: string;
+  mention_name?: string;
   description?: string;
   image_url?: string;
   status?: StatusEnum;

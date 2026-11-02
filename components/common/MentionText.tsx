@@ -53,7 +53,7 @@ export default function MentionText({
     return (
       <Link
         key={`${segment.username}-${index}`}
-        href={actingHref(`/profile/${encodeURIComponent(segment.username)}`)}
+        href={actingHref(`/mentions/${encodeURIComponent(segment.username)}`)}
         className={tokenClassName}
       >
         {segment.value}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { listAllChaptersAdmin } from "@/apis/chapters";
 import { getCoordinatingChapterDetail } from "@/apis/coordinating-chapters";
@@ -6,25 +7,34 @@ import { getSession } from "@/apis/session";
 import { resolveActingEntity } from "@/lib/acting-entity";
 import EntityProfilePage from "@/components/pages/EntityProfilePage";
 import { loadEntityProfileFeeds } from "@/lib/entity-profile-data";
+import {
+  canonicalEntityProfileHref,
+  entityProfileHandle,
+  redirectToCanonicalEntityProfile,
+  resolveEntityProfileSegment,
+} from "@/lib/entity-profile-route";
 import { entityProfileMetadata, kaderMeta } from "@/lib/entity-profile";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 
 interface CoordinatingChapterProfileRouteProps {
   params: Promise<{ coordinating_chapter_id: string }>;
-  searchParams?: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
+
+// Shared by generateMetadata and the page, so one request resolves the segment.
+const loadCoordinatingChapter = cache((segment: string) =>
+  resolveEntityProfileSegment(segment, getCoordinatingChapterDetail),
+);
 
 export async function generateMetadata({
   params,
 }: CoordinatingChapterProfileRouteProps): Promise<Metadata> {
-  const { coordinating_chapter_id } = await params;
-  const coordinatingChapter = await getCoordinatingChapterDetail(
-    coordinating_chapter_id,
-  );
+  const { coordinating_chapter_id: segment } = await params;
+  const coordinatingChapter = (await loadCoordinatingChapter(segment))?.entity;
 
   return entityProfileMetadata({
     entityType: "coordinating_chapter",
-    entityId: coordinating_chapter_id,
+    handle: coordinatingChapter ? entityProfileHandle(coordinatingChapter) : segment,
     name: coordinatingChapter
       ? formatEntityAuthorName("coordinating_chapter", coordinatingChapter.name)
       : null,
@@ -37,19 +47,22 @@ export default async function CoordinatingChapterProfile({
   params,
   searchParams,
 }: CoordinatingChapterProfileRouteProps) {
-  const { coordinating_chapter_id } = await params;
-  const [{ user: viewer }, coordinatingChapter] = await Promise.all([
+  const { coordinating_chapter_id: segment } = await params;
+  const [{ user: viewer }, resolved, query] = await Promise.all([
     getSession(),
-    getCoordinatingChapterDetail(coordinating_chapter_id),
+    loadCoordinatingChapter(segment),
+    searchParams,
   ]);
 
-  if (!coordinatingChapter || coordinatingChapter.status !== "active")
-    return notFound();
+  if (!resolved || resolved.entity.status !== "active") return notFound();
+  redirectToCanonicalEntityProfile("coordinating_chapter", segment, resolved, query);
+  const coordinatingChapter = resolved.entity;
+  const coordinating_chapter_id = coordinatingChapter.id;
 
   const actingEntity = await resolveActingEntity(
     viewer,
 
-    (await searchParams)?.as,
+    query?.as,
   );
 
   const [chapters, feeds] = await Promise.all([
@@ -99,7 +112,7 @@ export default async function CoordinatingChapterProfile({
           items: chapters.map((row) => ({
             id: row.id,
             name: formatEntityAuthorName("chapter", row.name),
-            href: entityProfileHref("chapter", row.id),
+            href: canonicalEntityProfileHref("chapter", row),
             imageUrl: row.image_url,
             meta: row.institution_name ?? kaderMeta(row.user_count),
           })),

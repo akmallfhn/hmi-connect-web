@@ -6,6 +6,7 @@ import type { BranchDetail, BranchListEntry } from "@/apis/branches";
 import { getBranchDetail, updateBranch } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
@@ -17,7 +18,7 @@ import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 // Satisfied by both a list row and a detail response.
 type EditableBranch = Pick<
   BranchListEntry,
-  "id" | "name" | "image_url" | "coordinating_body_id"
+  "id" | "name" | "mention_name" | "image_url" | "coordinating_body_id"
 > & { coordinating_body_name?: string | null };
 
 interface EditBranchFormSheetProps {
@@ -98,6 +99,7 @@ function EditBranchLoader({
     <EditBranchFields
       id={branch.id}
       initialName={detail?.name ?? branch.name}
+      initialMentionName={detail?.mention_name ?? branch.mention_name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? branch.image_url}
       initialCoordinatingBody={
@@ -118,6 +120,7 @@ function EditBranchLoader({
 function EditBranchFields({
   id,
   initialName,
+  initialMentionName,
   initialDescription,
   initialImageUrl,
   initialCoordinatingBody,
@@ -127,6 +130,7 @@ function EditBranchFields({
 }: {
   id: string;
   initialName: string;
+  initialMentionName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
   initialCoordinatingBody: SearchableOption | null;
@@ -135,6 +139,7 @@ function EditBranchFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [mentionName, setMentionName] = useState(initialMentionName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -160,11 +165,16 @@ function EditBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     setIsSaving(true);
     try {
       const result = await updateBranch({
         id,
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         description,
         image_url: imageUrl,
         // An empty string detaches the Cabang; omitting it leaves a Badko-less Cabang as is.
@@ -205,6 +215,15 @@ function EditBranchFields({
         placeholder="Contoh: Banda Aceh"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="branch-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMICabangDumai"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

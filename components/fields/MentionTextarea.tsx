@@ -10,7 +10,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
-import type { SearchPersonResult } from "@/apis/search";
+import type { MentionSearchResult } from "@/apis/search";
 import type { HashtagSuggestion } from "@/apis/hashtags";
 import {
   activeSocialTokenAt,
@@ -25,9 +25,21 @@ const MENU_WIDTH = 320;
 const MENU_MAX_HEIGHT = 240;
 const VIEWPORT_MARGIN = 12;
 
+const ENTITY_MENTION_LABEL = {
+  organization: "Organisasi",
+  coordinating_body: "Badko",
+  branch: "Cabang",
+  coordinating_chapter: "Korkom",
+  chapter: "Komisariat",
+} as const;
+
+function entityMentionLabel(type: Exclude<MentionSearchResult["target_type"], "user">) {
+  return ENTITY_MENTION_LABEL[type];
+}
+
 type CaretAnchor = { left: number; top: number };
 type Suggestion =
-  | { type: "mention"; person: SearchPersonResult }
+  | { type: "mention"; target: MentionSearchResult }
   | { type: "hashtag"; hashtag: HashtagSuggestion };
 
 interface MentionTextareaProps
@@ -143,17 +155,17 @@ export default function MentionTextarea({
         });
         const endpoint = activeToken?.type === "hashtag"
           ? "/api/hashtags/search"
-          : "/api/users/search";
+          : "/api/mentions/search";
         const response = await fetch(`${endpoint}?${params}`, {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error(`Suggestion search failed with ${response.status}`);
-        const json = (await response.json()) as { data?: SearchPersonResult[] | HashtagSuggestion[] };
+        const json = (await response.json()) as { data?: MentionSearchResult[] | HashtagSuggestion[] };
         if (requestId !== requestIdRef.current) return;
         setResults(
           activeToken?.type === "hashtag"
             ? ((json.data ?? []) as HashtagSuggestion[]).map((hashtag) => ({ type: "hashtag", hashtag }))
-            : ((json.data ?? []) as SearchPersonResult[]).map((person) => ({ type: "mention", person })),
+            : ((json.data ?? []) as MentionSearchResult[]).map((target) => ({ type: "mention", target })),
         );
         setActiveIndex(0);
       } catch (error) {
@@ -201,7 +213,7 @@ export default function MentionTextarea({
   function selectSuggestion(suggestion: Suggestion) {
     if (!activeToken) return;
     const replacement = suggestion.type === "mention"
-      ? suggestion.person.username
+      ? suggestion.target.mention_name
       : suggestion.hashtag.name;
     const next = replaceActiveSocialToken(value, activeToken, replacement);
     onValueChange(next.value);
@@ -312,7 +324,7 @@ export default function MentionTextarea({
           ) : (
             results.map((suggestion, index) => (
               <button
-                key={suggestion.type === "mention" ? `user-${suggestion.person.id}` : `hashtag-${suggestion.hashtag.id}`}
+                key={suggestion.type === "mention" ? `${suggestion.target.target_type}-${suggestion.target.target_id}` : `hashtag-${suggestion.hashtag.id}`}
                 type="button"
                 role="option"
                 aria-selected={index === activeIndex}
@@ -325,13 +337,13 @@ export default function MentionTextarea({
               >
                 {suggestion.type === "mention" ? (
                   <>
-                    <Avatar src={suggestion.person.avatar} name={suggestion.person.full_name} size={36} />
+                    <Avatar src={suggestion.target.image_url ?? undefined} name={suggestion.target.name} size={36} />
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-heading">
-                        {suggestion.person.full_name}
+                        {suggestion.target.name}
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        @{suggestion.person.username}
+                        @{suggestion.target.mention_name} · {suggestion.target.target_type === "user" ? "Kader" : entityMentionLabel(suggestion.target.target_type)}
                       </span>
                     </span>
                   </>

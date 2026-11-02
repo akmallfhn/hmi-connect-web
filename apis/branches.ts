@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { callApi, type ApiEnvelope } from "./api";
+import { callApi, type ApiEnvelope, type EntityDetailKey } from "./api";
 import {
   isSuccessStatus,
   type BranchTypeEnum,
@@ -93,6 +93,8 @@ export type BranchListEntry = {
   // Null for a Cabang directly under the organization, such as the overseas ones.
   coordinating_body_id: string | null;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   image_url: string | null;
   type: BranchTypeEnum;
   is_special: boolean;
@@ -212,6 +214,8 @@ export type BranchDetail = {
   // Null (and coordinating_body omitted) for a Cabang without a Badko.
   coordinating_body_id: string | null;
   name: string;
+  mention_name: string;
+  mention_name_normalized: string;
   description: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
@@ -227,8 +231,10 @@ export type BranchDetail = {
   };
 };
 
+// `by: "mention_name"` reads the entity by its public handle, matched case-insensitively.
 export async function getBranchDetail(
-  id: string
+  id: string,
+  by: EntityDetailKey = "id",
 ): Promise<BranchDetail | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -237,7 +243,7 @@ export async function getBranchDetail(
   const result = await callApi<BranchDetail>("/api/v1/branches/detail", {
     method: "POST",
     token: sessionToken,
-    body: { id },
+    body: { [by]: id },
   });
 
   if (!isSuccessStatus(result.status) || !result.data) return null;
@@ -249,6 +255,7 @@ export type CreateBranchPayload = {
   organization_id?: string;
   coordinating_body_id?: string;
   name: string;
+  mention_name: string;
   description?: string;
   image_url?: string;
   is_special?: boolean;
@@ -294,6 +301,7 @@ export type UpdateBranchPayload = {
   // An empty string detaches the Cabang from its Badko.
   coordinating_body_id?: string;
   name?: string;
+  mention_name?: string;
   description?: string;
   image_url?: string;
   is_special?: boolean;

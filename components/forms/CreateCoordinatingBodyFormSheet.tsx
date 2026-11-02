@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createCoordinatingBody } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
 import { isSuccessStatus } from "@/lib/types";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Sheet from "../modals/Sheet";
@@ -44,6 +45,7 @@ function CreateCoordinatingBodyFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [mentionName, setMentionName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,11 +56,16 @@ function CreateCoordinatingBodyFields({
       toast.error("Nama Badko wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await createCoordinatingBody({
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         image_url: imageUrl,
         status: "active",
       });
@@ -93,6 +100,15 @@ function CreateCoordinatingBodyFields({
         placeholder="Contoh: Sumatera Bagian Utara"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="coordinating-body-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIBadkoJabodetabekaBanten"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

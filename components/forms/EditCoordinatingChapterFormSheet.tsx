@@ -11,6 +11,7 @@ import {
   updateCoordinatingChapter,
 } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -94,6 +95,7 @@ function EditCoordinatingChapterLoader({
     <EditCoordinatingChapterFields
       id={coordinatingChapter.id}
       initialName={detail?.name ?? coordinatingChapter.name}
+      initialMentionName={detail?.mention_name ?? coordinatingChapter.mention_name}
       initialLegalName={
         detail?.legal_name ?? coordinatingChapter.legal_name
       }
@@ -113,6 +115,7 @@ function EditCoordinatingChapterLoader({
 function EditCoordinatingChapterFields({
   id,
   initialName,
+  initialMentionName,
   initialLegalName,
   initialDescription,
   initialImageUrl,
@@ -122,6 +125,7 @@ function EditCoordinatingChapterFields({
 }: {
   id: string;
   initialName: string;
+  initialMentionName: string;
   initialLegalName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
@@ -130,6 +134,7 @@ function EditCoordinatingChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [mentionName, setMentionName] = useState(initialMentionName);
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
@@ -161,6 +166,10 @@ function EditCoordinatingChapterFields({
       toast.error("Nama Korkom wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     const trimmedLegalName = legalName.trim();
     if (!trimmedLegalName) {
       toast.error("Nama resmi Korkom wajib diisi.");
@@ -176,6 +185,7 @@ function EditCoordinatingChapterFields({
       const result = await updateCoordinatingChapter({
         id,
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         legal_name: trimmedLegalName,
         description,
         image_url: imageUrl,
@@ -212,6 +222,14 @@ function EditCoordinatingChapterFields({
         placeholder="Contoh: UI"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <Input
+        inputId="coordinating-chapter-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIKorkomUI"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
       <Input

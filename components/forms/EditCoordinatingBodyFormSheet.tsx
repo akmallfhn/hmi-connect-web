@@ -8,6 +8,7 @@ import type {
 } from "@/apis/coordinating-bodies";
 import { getCoordinatingBodyDetail, updateCoordinatingBody } from "@/lib/actions";
 import { stripEntityNamePrefix } from "@/lib/feed-author";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -87,6 +88,7 @@ function EditCoordinatingBodyLoader({
     <EditCoordinatingBodyFields
       id={coordinatingBody.id}
       initialName={detail?.name ?? coordinatingBody.name}
+      initialMentionName={detail?.mention_name ?? coordinatingBody.mention_name}
       initialDescription={detail?.description ?? null}
       initialImageUrl={detail?.image_url ?? coordinatingBody.image_url}
       onClose={onClose}
@@ -99,6 +101,7 @@ function EditCoordinatingBodyLoader({
 function EditCoordinatingBodyFields({
   id,
   initialName,
+  initialMentionName,
   initialDescription,
   initialImageUrl,
   onClose,
@@ -106,12 +109,14 @@ function EditCoordinatingBodyFields({
 }: {
   id: string;
   initialName: string;
+  initialMentionName: string;
   initialDescription: string | null;
   initialImageUrl: string | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [mentionName, setMentionName] = useState(initialMentionName);
   const [description, setDescription] = useState(initialDescription ?? "");
   const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -123,12 +128,17 @@ function EditCoordinatingBodyFields({
       toast.error("Nama Badko wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await updateCoordinatingBody({
         id,
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         description,
         image_url: imageUrl,
       });
@@ -163,6 +173,15 @@ function EditCoordinatingBodyFields({
         placeholder="Contoh: Sumatera Bagian Utara"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="coordinating-body-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIBadkoJabodetabekaBanten"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

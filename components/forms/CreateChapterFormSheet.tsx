@@ -17,6 +17,7 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -71,6 +72,7 @@ function CreateChapterFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [mentionName, setMentionName] = useState("");
   const [legalName, setLegalName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -127,6 +129,10 @@ function CreateChapterFields({
       toast.error("Nama Komisariat wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     const trimmedLegalName = legalName.trim();
     if (!trimmedLegalName) {
       toast.error("Nama resmi Komisariat wajib diisi.");
@@ -141,6 +147,7 @@ function CreateChapterFields({
     try {
       const result = await createChapter({
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         legal_name: trimmedLegalName,
         image_url: imageUrl,
         type,
@@ -179,6 +186,15 @@ function CreateChapterFields({
         placeholder="Contoh: FEB Undip"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="chapter-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMIKomisariatFTUI"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

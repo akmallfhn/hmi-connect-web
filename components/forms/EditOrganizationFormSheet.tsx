@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { OrganizationDetail } from "@/apis/organizations";
 import { updateOrganization } from "@/lib/actions";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Input from "../fields/Input";
@@ -52,6 +53,7 @@ function EditOrganizationFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(organization.name);
+  const [mentionName, setMentionName] = useState(organization.mention_name);
   const [slug, setSlug] = useState(organization.slug);
   const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -66,12 +68,17 @@ function EditOrganizationFields({
       toast.error("Slug organisasi wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await updateOrganization({
         id: organization.id,
         name,
+        mention_name: normalizeMentionName(mentionName),
         slug,
         logo_url: logoUrl,
       });
@@ -108,6 +115,20 @@ function EditOrganizationFields({
         onChange={(e) => setName(e.target.value)}
         required
       />
+
+      <div className="flex flex-col gap-1">
+        <Input
+          inputId="organization-mention-name"
+          label="ID Mention"
+          placeholder="Contoh: PBHMI"
+          value={mentionName}
+          onChange={(e) => setMentionName(e.target.value)}
+          required
+        />
+        <p className="pl-1 text-xs text-muted-foreground">
+          Ditampilkan sebagai @{normalizeMentionName(mentionName) || "PBHMI"} dan unik tanpa membedakan huruf besar-kecil.
+        </p>
+      </div>
 
       <div className="flex flex-col gap-1">
         <Input

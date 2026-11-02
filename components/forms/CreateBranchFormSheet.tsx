@@ -12,6 +12,7 @@ import SearchableSelect, { type SearchableOption } from "../fields/SearchableSel
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
 import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
+import { isMentionNameFormatValid, MENTION_NAME_ERROR, normalizeMentionName } from "@/lib/mentions";
 
 const TYPE_OPTIONS: { label: string; value: BranchTypeEnum }[] = [
   { label: "Penuh (Full)", value: "full" },
@@ -71,6 +72,7 @@ function CreateBranchFields({
   onSaved: () => void;
 }) {
   const [name, setName] = useState("");
+  const [mentionName, setMentionName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
@@ -97,10 +99,15 @@ function CreateBranchFields({
       toast.error("Nama Cabang wajib diisi.");
       return;
     }
+    if (!isMentionNameFormatValid(mentionName)) {
+      toast.error(MENTION_NAME_ERROR);
+      return;
+    }
     setIsSaving(true);
     try {
       const result = await createBranch({
         name: sanitizedName,
+        mention_name: normalizeMentionName(mentionName),
         image_url: imageUrl,
         type,
         status: "active",
@@ -141,6 +148,15 @@ function CreateBranchFields({
         placeholder="Contoh: Banda Aceh"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        required
+      />
+
+      <Input
+        inputId="branch-mention-name"
+        label="ID Mention"
+        placeholder="Contoh: HMICabangDumai"
+        value={mentionName}
+        onChange={(e) => setMentionName(e.target.value)}
         required
       />
 

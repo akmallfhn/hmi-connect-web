@@ -9,6 +9,9 @@ export type ApiEnvelope<T = unknown> = {
   data?: T;
 };
 
+// The hierarchy detail endpoints read one entity by its id or by its public mention name.
+export type EntityDetailKey = "id" | "mention_name";
+
 function statusNameFromCode(code: number): StatusName {
   switch (code) {
     case 200:
