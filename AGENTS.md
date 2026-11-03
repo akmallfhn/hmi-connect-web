@@ -2324,16 +2324,23 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   an article is not a feed post, and none of those endpoints accept an article target.
 - `/organizational-documents` (`app/(www)/www/(gated)/organizational-documents/page.tsx` ->
   `components/pages/OrganizationalDocumentListPage.tsx`) reads every active page from the backend's
-  `organizational-documents/list` and groups the result into the fixed Konstitusi, PDK, and PD-PRT BPL
-  categories. Each category has hardcoded explanatory copy, treats its newest `published_at` (then
-  highest id on a tie) as the large "Berlaku Saat Ini" document, and presents the remaining documents
-  as smaller chronological "Riwayat versi" rows. Every current and historical cover stays at 16:9.
-  `?search=` filters categories and historical titles
-  in memory while keeping the category's real current document visible for context; there is no list
-  pagination on this member-facing hierarchy. The API's paginated read remains unchanged for admin.
-  The page title has no description beneath it,
+  `organizational-documents/list` and shows exactly one card per type (Konstitusi, PDK, PD-PRT BPL):
+  that type's newest publication (`published_at`, then highest id on a tie, via
+  `lib/organizational-document.ts#compareNewestDocument`). There are no section headings, category
+  descriptions, type pills, or version history on the list. Each 16:9-cover card is headed by the
+  type's `ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS[type].fullName` ("Konstitusi HMI", "Pedoman Dasar KOHATI
+  (PDK)", ...), with smaller muted lines beneath from `organizationalDocumentEdition(title)`: the
+  title minus its first "(...)", then that parenthetical on its own line ("Hasil Kongres HMI XXXII
+  Pontianak 2023" / "PB HMI 2024-2026"); a title without one is a single line. A type with no active
+  document simply has no card. `?search=` filters those cards in memory by
+  title or type label; there is no list pagination on this member-facing page. The API's paginated
+  read remains unchanged for admin. The page title has no description beneath it,
   and `/organizational-documents/[document_slug]/[document_id]` renders
-  `OrganizationalDocumentDetailPage`, the canvas-rendered `pdfjs-dist` viewer: pages scroll
+  `OrganizationalDocumentDetailPage`, the canvas-rendered `pdfjs-dist` viewer. Its "Versi"
+  button (top-right of the desktop toolbar; on mobile, the top of the floating stack above search)
+  opens `DocumentVersionSheet`, a dot-and-line timeline of every active publication of the same
+  type newest first — marking the newest as "Terbaru" and the open one (primary dot) as "Sedang
+  dibuka" — which the route builds from `listAllOrganizationalDocuments`. In the viewer, pages scroll
   continuously and only pages near the viewport keep a canvas; search highlights every match in
   yellow (the active one orange) from a background text index; pinch or ctrl/trackpad wheel zooms
   continuously (100–300%, where 100% fills the reader width and stays centered with no sideways scroll) with a live CSS scale committed on release; the nested, clickable TOC highlights exactly one entry.

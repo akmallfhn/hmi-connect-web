@@ -17,24 +17,55 @@ export const ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS: {
 
 export const ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS: Record<
   OrganizationalDocumentTypeEnum,
-  { label: string; description: string }
+  { label: string; fullName: string; description: string }
 > = {
   pdk: {
     label: "PDK",
+    fullName: "Pedoman Dasar KOHATI (PDK)",
     description:
       "Pedoman Dasar KOHATI yang menjadi acuan arah, identitas, dan tata kelola organisasi KOHATI.",
   },
   konstitusi: {
     label: "Konstitusi",
+    fullName: "Konstitusi HMI",
     description:
       "Landasan aturan tertinggi HMI yang memuat Anggaran Dasar, Anggaran Rumah Tangga, dan ketentuan organisasi.",
   },
   "pd-prt-bpl": {
     label: "PD-PRT BPL",
+    fullName: "Pedoman Dasar - Pedoman Rumah Tangga BPL (PD-PRT BPL)",
     description:
       "Pedoman Dasar dan Pedoman Rumah Tangga BPL sebagai acuan pengelolaan latihan dan perkaderan HMI.",
   },
 };
+
+// "Hasil Kongres XXXII (PB HMI 2024-2026)" splits into the sentence and its parenthetical note.
+export function organizationalDocumentEdition(title: string) {
+  const match = title.match(/\(([^()]+)\)/);
+  if (!match || match.index === undefined) return { main: title.trim(), note: null };
+
+  const main = `${title.slice(0, match.index)} ${title.slice(match.index + match[0].length)}`
+    .replace(/\s+/g, " ")
+    .trim();
+  const note = match[1].trim();
+  return main ? { main, note } : { main: note, note: null };
+}
+
+function publicationTime(publishedAt: string) {
+  const value = Date.parse(publishedAt);
+  return Number.isNaN(value) ? 0 : value;
+}
+
+// Newest published_at first; a tie falls back to the higher id, the later upload.
+export function compareNewestDocument(
+  first: { id: number; published_at: string },
+  second: { id: number; published_at: string }
+) {
+  return (
+    publicationTime(second.published_at) -
+      publicationTime(first.published_at) || second.id - first.id
+  );
+}
 
 export function organizationalDocumentHref(document: {
   id: number;

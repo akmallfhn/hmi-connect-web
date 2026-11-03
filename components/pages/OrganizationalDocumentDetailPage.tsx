@@ -9,6 +9,7 @@ import {
   ChevronsRight,
   Download,
   FileText,
+  History,
   ListTree,
   LoaderCircle,
   Maximize2,
@@ -37,6 +38,9 @@ import type { DocumentOutlineItem } from "@/apis/organizational-documents";
 import BackButton from "../buttons/BackButton";
 import Button from "../buttons/Button";
 import PageMargin from "../common/PageMargin";
+import DocumentVersionSheet, {
+  type OrganizationalDocumentVersion,
+} from "../organizational-documents/DocumentVersionSheet";
 
 // 100% is fit-to-width; the page never shrinks below the reader's width.
 const MIN_ZOOM = 1;
@@ -524,6 +528,11 @@ interface OrganizationalDocumentDetailPageProps {
     fileUrl: string;
     tableOfContents: DocumentOutlineItem[];
   };
+  version: {
+    currentId: number;
+    typeLabel: string;
+    versions: OrganizationalDocumentVersion[];
+  };
 }
 
 // A point on a page, and where it sat inside the scroll area, so a zoom can keep it in place.
@@ -631,9 +640,11 @@ function subscribeNothing() {
 
 export default function OrganizationalDocumentDetailPage({
   document: organizationalDocument,
+  version,
 }: OrganizationalDocumentDetailPageProps) {
   const { title, fileUrl, tableOfContents } = organizationalDocument;
   const router = useRouter();
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const viewerRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -1317,6 +1328,14 @@ export default function OrganizationalDocumentDetailPage({
                     )}
                   </Button>
                 )}
+                <Button
+                  variant="soft"
+                  onClick={() => setVersionsOpen(true)}
+                  aria-label="Lihat riwayat versi"
+                >
+                  <History className="size-4" />
+                  Versi
+                </Button>
               </div>
             </div>
 
@@ -1573,6 +1592,15 @@ export default function OrganizationalDocumentDetailPage({
                 className={`flex flex-col gap-1.5 rounded-full p-1.5 ${FLOATING_SURFACE}`}
               >
                 <Button
+                  variant="soft"
+                  size="icon"
+                  onClick={() => setVersionsOpen(true)}
+                  aria-label="Lihat riwayat versi"
+                  className="size-11! rounded-full!"
+                >
+                  <History className="size-[18px]" />
+                </Button>
+                <Button
                   variant={mobileSearchOpen ? "primary" : "soft"}
                   size="icon"
                   onClick={() => {
@@ -1690,6 +1718,14 @@ export default function OrganizationalDocumentDetailPage({
           )}
         </div>
       </PageMargin>
+
+      <DocumentVersionSheet
+        open={versionsOpen}
+        onClose={() => setVersionsOpen(false)}
+        typeLabel={version.typeLabel}
+        currentId={version.currentId}
+        versions={version.versions}
+      />
     </div>
   );
 }
