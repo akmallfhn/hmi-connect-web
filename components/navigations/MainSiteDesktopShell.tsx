@@ -27,7 +27,8 @@ function hidesDesktopSidebar(pathname: string) {
     ARTICLE_EDIT_PATH.test(pathname) ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/reset-password/") ||
-    pathname === "/pendataan-komisariat"
+    pathname === "/pendataan-komisariat" ||
+    pathname.startsWith("/pages/")
   );
 }
 

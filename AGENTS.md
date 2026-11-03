@@ -136,7 +136,8 @@ holds the cookie-based redirect rules (no session → `/auth/login`, has session
 show login again). Paths listed in that first rule's negative lookahead opt out of it:
 `profile/*`, `trainings*`, and `feeds/*` because they're genuinely public;
 `api/attachment-palette` is public so those pages can color their attachments;
-`institutions/*` is public so institution pages can be crawled; and
+`institutions/*` is public so institution pages can be crawled; `pages/*` holds public campaign
+pages such as `/pages/kongres-hmi-xxxiii`; and
 `invitations/*` because it isn't — that route needs to redirect to login with its own
 `redirectTo` so the emailed link survives signing in, which a config-level redirect can't do.
 `auth/forget-password` and `reset-password/*` are allowlisted for the plainest reason of all:
@@ -2390,6 +2391,28 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   the fields that changed; an empty `image_media_id` clears the cover. The backend authorizes writes
   for Super Admin or an exact organization grant, matching the organization layout's
   `canManageEntity` gate.
+- `/pages/kongres-hmi-xxxiii` (`app/(www)/www/pages/kongres-hmi-xxxiii/page.tsx` ->
+  `components/pages/KongresPage.tsx`) is a public, indexable campaign page for Kongres XXXIII in
+  Bandar Lampung, with no backend; all content lives in `lib/kongres-data.ts`. Only the theme
+  ("Akselerasi HMI Untuk Kedaulatan Nasional"), the logo, the 13-member Panitia Nasional, and the
+  19-member Steering Committee (call names only, as published) are official; venues, rundown, news,
+  and "momen" posts are still placeholders. Both committee tabs (Organizing Committee is the default)
+  render `KongresCommitteePostCard`: a plain white card whose background-removed cutout
+  (`public/images/kongres/{panitia,sc}/*.webp`, 600×635 and bottom-aligned) rises out of a frame in its
+  announcement's colour (gold for Panasko, green for SC), then name and role; leaders lead each tab above the rest. Its sections live in
+  `components/kongres/*` — hero with a `useSyncExternalStore` countdown, a sticky scroll-spy section
+  nav, a "Filosofi Logo" section mirroring the committee's sheet (light horizontal logo, six element
+  icons under `public/images/kongres/filosofi/`, the four-colour brand strip) with the download
+  channel inside it (files under `public/images/kongres/`), SC/OC tabs, the host city,
+  venues with a per-venue Google Maps embed, an 8-day rundown timeline, news, and a moments gallery
+  whose CTA opens the home composer through `COMPOSE_INTENT_KEY`. It uses its own deep-green/gold
+  palette and the tumpal `TapisBand` divider rather than app tokens, and has no `Header`.
+  `MainSiteDesktopShell` hides the desktop rail on every `/pages/*` route. From `lg` the sticky section
+  nav is reordered above the hero as the page header (below `lg` it follows the hero); it carries
+  the white-text horizontal logo (`logo-kongres-xxxiii-horizontal.png`, dark backgrounds only) and
+  a home link back into the app; the footer repeats both. City photos
+  are Wikimedia Commons thumbnails hotlinked through `KONGRES_PHOTOS` and credited in the footer;
+  portraits are randomuser.me placeholders. Replace both with official assets before launch.
 - `/pendataan-komisariat` (`app/(www)/www/pendataan-komisariat/page.tsx` ->
   `components/pages/ChapterCensusPage.tsx`) is a public, pre-login census form: Data Pengisi (nama,
   email, jabatan), Asal Cabang (a Badko `SearchableSelect`, plus `NO_COORDINATING_BODY_LABEL` for

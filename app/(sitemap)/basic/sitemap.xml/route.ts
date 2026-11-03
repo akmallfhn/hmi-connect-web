@@ -6,5 +6,6 @@ export function GET() {
     { path: "/auth/login" },
     { path: "/articles" },
     { path: "/trainings" },
+    { path: "/pages/kongres-hmi-xxxiii" },
   ]);
 }
