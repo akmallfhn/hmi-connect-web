@@ -4,6 +4,7 @@ import {
   KONGRES_CULINARY,
   KONGRES_HOST_FACTS,
   KONGRES_HOST_HIGHLIGHTS,
+  kongresAsset,
 } from "@/lib/kongres-data";
 import { DuotonePhoto, KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
@@ -41,7 +42,7 @@ export default function KongresHostSection() {
 
           <div className="relative aspect-square w-full overflow-hidden rounded-3xl">
             <Image
-              src="/images/kongres/menara-siger.webp"
+              src={kongresAsset("menara-siger.webp")}
               alt="Bangunan berbentuk mahkota Siger di tengah perbukitan hijau Lampung"
               fill
               sizes="(min-width: 1280px) 40vw, 100vw"

@@ -1,10 +1,11 @@
-import { IconDownload } from "@tabler/icons-react";
 import Image from "next/image";
 import {
   KONGRES_BRAND_COLORS,
   KONGRES_LOGO_DOWNLOADS,
   KONGRES_LOGO_PHILOSOPHY,
+  kongresAsset,
 } from "@/lib/kongres-data";
+import KongresLogoDownloadButton from "./KongresLogoDownloadButton";
 import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS } from "./KongresDecor";
 
 // Mirrors the committee's "Filosofi Logo" sheet: title, logo, six elements, then the brand colour strip.
@@ -12,7 +13,7 @@ export default function KongresLogoSection() {
   return (
     <section id="logo" className={`relative border border-border bg-surface ${KONGRES_SECTION_CLASS}`}>
       <Image
-        src="/images/kongres/filosofi/kelopak-bunga.png"
+        src={kongresAsset("kelopak-bunga.png")}
         alt=""
         width={407}
         height={480}
@@ -20,7 +21,7 @@ export default function KongresLogoSection() {
         className="pointer-events-none absolute -right-24 -top-10 w-[420px] opacity-[0.06] grayscale lg:w-[560px]"
       />
       <Image
-        src="/images/kongres/filosofi/kelopak-bunga.png"
+        src={kongresAsset("kelopak-bunga.png")}
         alt=""
         width={407}
         height={480}
@@ -38,7 +39,7 @@ export default function KongresLogoSection() {
           </h2>
           <div className="mx-auto mt-8 max-w-xl rounded-2xl dark:bg-white dark:p-4">
             <Image
-              src="/images/kongres/logo-kongres-xxxiii-horizontal-light.png"
+              src={kongresAsset("logo-kongres-xxxiii-horizontal-light.png")}
               alt="Logo Kongres XXXIII Himpunan Mahasiswa Islam, Bandar Lampung 28 November – 5 Desember 2026"
               width={1600}
               height={398}
@@ -97,14 +98,7 @@ export default function KongresLogoSection() {
                   <p className="font-semibold text-heading">{file.title}</p>
                   <p className="text-xs text-muted-foreground">{file.meta}</p>
                   <p className="mt-2 flex-1 text-sm text-muted-foreground">{file.description}</p>
-                  <a
-                    href={file.href}
-                    download={file.fileName}
-                    className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#0a8a42] text-sm font-semibold text-white transition hover:bg-[#08743a]"
-                  >
-                    <IconDownload className="size-4" />
-                    Unduh
-                  </a>
+                  <KongresLogoDownloadButton href={file.href} downloadName={file.downloadName} />
                 </div>
               </li>
             ))}

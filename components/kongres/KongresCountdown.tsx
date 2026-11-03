@@ -38,7 +38,7 @@ export default function KongresCountdown() {
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
         Menuju pembukaan
       </p>
-      <div className="mt-3 flex gap-2 sm:gap-3" role="timer" aria-live="off">
+      <div className="mt-3 flex justify-center gap-2 sm:justify-start sm:gap-3" role="timer" aria-live="off">
         {units.map((unit) => (
           <div
             key={unit.label}

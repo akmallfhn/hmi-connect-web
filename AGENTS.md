@@ -2393,12 +2393,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `canManageEntity` gate.
 - `/pages/kongres-hmi-xxxiii` (`app/(www)/www/pages/kongres-hmi-xxxiii/page.tsx` ->
   `components/pages/KongresPage.tsx`) is a public, indexable campaign page for Kongres XXXIII in
-  Bandar Lampung, with no backend; all content lives in `lib/kongres-data.ts`. Only the theme
+  Bandar Lampung, with no backend; all content lives in `lib/kongres-data.ts`. Every image and logo is served flat from `https://cdn.hmiconnect.id/kongres/` (the R2 bucket's `kongres/` folder, no subfolders) through `kongresAsset(file)`; nothing lives in `public/`. Only the theme
   ("Akselerasi HMI Untuk Kedaulatan Nasional"), the logo, the 13-member Panitia Nasional, and the
   19-member Steering Committee (call names only, as published) are official; venues, rundown, news,
   and "momen" posts are still placeholders. Both committee tabs (Organizing Committee is the default)
   render `KongresCommitteePostCard`: a plain white card whose background-removed cutout
-  (`public/images/kongres/{panitia,sc}/*.webp`, 600×635 and bottom-aligned) rises out of a frame in its
+  (`{slug}.webp`, 600×635 and bottom-aligned) rises out of a frame in its
   announcement's colour (gold for Panasko, green for SC), then name and role; leaders lead each tab above the rest.
   The tabs read "Panitia Nasional Kongres" (default) and "Steering Committee". A member with a
   confirmed HMI Connect account carries `username` in `lib/kongres-data.ts`, and its card shows
@@ -2413,8 +2413,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   other page; there is no `Header`, aside, or footer. Section order:
   hero ("Kongres HMI XXXIII", countdown, Pasang Twibbon and Bagikan Momen), statistics, host city,
   venues (per-venue Google Maps embed), the 8-day rundown on a light card, committees, moments,
-  news, then "Filosofi Logo" (the committee's sheet: light horizontal logo, six element icons under
-  `public/images/kongres/filosofi/`, downloads, the four-colour brand strip). Pasang Twibbon only
+  news, then "Filosofi Logo" (the committee's sheet: light horizontal logo, six element icons, logo
+  downloads fetched as blobs by `KongresLogoDownloadButton`, the four-colour brand strip). Pasang Twibbon only
   toasts until the editor on `feat/twibbon-kongres` ships; both Bagikan Momen buttons (hero and
   the moments section) open the home composer through `COMPOSE_INTENT_KEY` (`useShareMoment`) with
   `#KongresHMI33Lampung` (`KONGRES_HASHTAG`) already typed, handed over as

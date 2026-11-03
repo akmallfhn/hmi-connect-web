@@ -1,13 +1,24 @@
 import { IconCalendarEvent, IconMapPin } from "@tabler/icons-react";
 import Image from "next/image";
-import { KONGRES_PHOTOS, KONGRES_THEME } from "@/lib/kongres-data";
+import {
+  KONGRES_PHOTOS,
+  KONGRES_THEME,
+  kongresAsset,
+} from "@/lib/kongres-data";
 import KongresCountdown from "./KongresCountdown";
-import { KONGRES_GOLD_TEXT, KONGRES_SECTION_CLASS, TapisBand } from "./KongresDecor";
+import {
+  KONGRES_GOLD_TEXT,
+  KONGRES_SECTION_CLASS,
+  TapisBand,
+} from "./KongresDecor";
 import KongresHeroActions from "./KongresHeroActions";
 
 export default function KongresHero() {
   return (
-    <section id="beranda" className={`relative isolate bg-[#04291a] text-white ${KONGRES_SECTION_CLASS}`}>
+    <section
+      id="beranda"
+      className={`relative isolate bg-[#04291a] text-white ${KONGRES_SECTION_CLASS}`}
+    >
       <Image
         src={KONGRES_PHOTOS.cityPanorama.src}
         alt=""
@@ -21,17 +32,20 @@ export default function KongresHero() {
       <div className="absolute -left-24 bottom-0 -z-10 size-[320px] rounded-full bg-[#0a8a42]/40 blur-[100px]" />
 
       <div className="grid items-center gap-8 px-5 pb-12 pt-10 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] sm:px-8 lg:px-10 lg:pb-14 lg:pt-12">
-        <div>
-          <h1 className="font-stack-sans-headline text-5xl font-medium leading-[0.95] sm:text-6xl xl:text-7xl">
+        <div className="text-center sm:text-left">
+          <h1 className="font-stack-sans-headline text-3xl font-medium leading-[0.95] lg:text-4xl">
             Kongres HMI
             <br />
             <span className={KONGRES_GOLD_TEXT}>XXXIII</span>
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-7 text-white/80">
-            &ldquo;{KONGRES_THEME}&rdquo;
+          <p className="mx-auto mt-5 max-w-xl text-lg leading-7 text-white/80 sm:mx-0">
+            {KONGRES_THEME}
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-2 text-sm">
+          {/* Mobile has no side column, so the emblem sits above the venue and date chips. */}
+          <KongresEmblem className="mt-8 max-w-[240px] sm:hidden" />
+
+          <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm sm:justify-start">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5">
               <IconMapPin className="size-4 text-[#e8b628]" />
               Bandar Lampung
@@ -51,20 +65,26 @@ export default function KongresHero() {
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[240px] sm:max-w-none">
-          <div className="absolute inset-[12%] rounded-full bg-[#e8b628]/25 blur-3xl" />
-          <Image
-            src="/images/kongres/emblem-kongres-xxxiii.png"
-            alt="Logo Kongres XXXIII HMI"
-            width={695}
-            height={800}
-            priority
-            className="relative h-auto w-full drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-          />
-        </div>
+        <KongresEmblem className="hidden sm:block" />
       </div>
 
       <TapisBand className="text-[#e8b628]" />
     </section>
+  );
+}
+
+function KongresEmblem({ className }: { className: string }) {
+  return (
+    <div className={`relative mx-auto w-full ${className}`}>
+      <div className="absolute inset-[12%] rounded-full bg-[#e8b628]/25 blur-3xl" />
+      <Image
+        src={kongresAsset("emblem-kongres-xxxiii.png")}
+        alt="Logo Kongres XXXIII HMI"
+        width={695}
+        height={800}
+        priority
+        className="relative h-auto w-full drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+      />
+    </div>
   );
 }

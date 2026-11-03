@@ -9,7 +9,7 @@ export default function KongresHeroActions() {
   const shareMoment = useShareMoment();
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap justify-center gap-3 sm:justify-start">
       {/* The twibbon editor is still on its own branch; this toast stands in until it ships. */}
       <button
         type="button"

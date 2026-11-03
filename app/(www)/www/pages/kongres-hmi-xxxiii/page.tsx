@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
 import KongresPage from "@/components/pages/KongresPage";
-import { KONGRES_PATH, KONGRES_THEME } from "@/lib/kongres-data";
+import { KONGRES_PATH, KONGRES_THEME, kongresAsset } from "@/lib/kongres-data";
 
 const DESCRIPTION = `Kongres XXXIII Himpunan Mahasiswa Islam di Bandar Lampung, 28 November – 5 Desember 2026. ${KONGRES_THEME}.`;
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Kongres XXXIII HMI · Bandar Lampung 2026",
     description: DESCRIPTION,
     url: KONGRES_PATH,
-    images: [{ url: "/images/kongres/logo-kongres-xxxiii.png", width: 991, height: 1200 }],
+    images: [{ url: kongresAsset("logo-kongres-xxxiii.png"), width: 991, height: 1200 }],
   },
 };
 

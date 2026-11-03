@@ -6,6 +6,10 @@ export const KONGRES_STARTS_AT = "2026-11-28T08:00:00+07:00";
 export const KONGRES_ENDS_AT = "2026-12-05T23:59:00+07:00";
 export const KONGRES_THEME = "Akselerasi HMI Untuk Kedaulatan Nasional";
 
+// Every Kongres asset sits flat in the CDN's /kongres folder (no subfolders).
+const KONGRES_CDN = "https://cdn.hmiconnect.id/kongres";
+export const kongresAsset = (file: string) => `${KONGRES_CDN}/${file}`;
+
 export type KongresPhoto = {
   src: string;
   alt: string;
@@ -82,36 +86,36 @@ export const KONGRES_LOGO_DOWNLOADS = [
     title: "Logo Lengkap",
     description: "PNG transparan resolusi tinggi untuk cetak dan baliho.",
     meta: "PNG · 3256 × 3944",
-    href: "/images/kongres/logo-kongres-xxxiii-hd.png",
-    fileName: "logo-kongres-hmi-xxxiii-hd.png",
-    preview: "/images/kongres/logo-kongres-xxxiii.png",
+    href: kongresAsset("logo-kongres-xxxiii-hd.png"),
+    downloadName: "logo-kongres-hmi-xxxiii-hd",
+    preview: kongresAsset("logo-kongres-xxxiii.png"),
     dark: false,
   },
   {
     title: "Logo Horizontal",
     description: "Versi mendatar untuk latar terang: kop surat, spanduk, dan slide.",
     meta: "PNG · 1600 × 398",
-    href: "/images/kongres/logo-kongres-xxxiii-horizontal-light.png",
-    fileName: "logo-kongres-hmi-xxxiii-horizontal.png",
-    preview: "/images/kongres/logo-kongres-xxxiii-horizontal-light.png",
+    href: kongresAsset("logo-kongres-xxxiii-horizontal-light.png"),
+    downloadName: "logo-kongres-hmi-xxxiii-horizontal",
+    preview: kongresAsset("logo-kongres-xxxiii-horizontal-light.png"),
     dark: false,
   },
   {
     title: "Logo Horizontal Gelap",
     description: "Versi mendatar bertulisan putih, khusus untuk latar gelap.",
     meta: "PNG · 10072 × 2754",
-    href: "/images/kongres/logo-kongres-xxxiii-horizontal-hd.png",
-    fileName: "logo-kongres-hmi-xxxiii-horizontal-gelap.png",
-    preview: "/images/kongres/logo-kongres-xxxiii-horizontal.png",
+    href: kongresAsset("logo-kongres-xxxiii-horizontal-hd.png"),
+    downloadName: "logo-kongres-hmi-xxxiii-horizontal-gelap",
+    preview: kongresAsset("logo-kongres-xxxiii-horizontal.png"),
     dark: true,
   },
   {
     title: "Emblem",
     description: "Lambang tanpa tulisan untuk ikon, stiker, dan watermark.",
     meta: "PNG · 695 × 800",
-    href: "/images/kongres/emblem-kongres-xxxiii.png",
-    fileName: "emblem-kongres-hmi-xxxiii.png",
-    preview: "/images/kongres/emblem-kongres-xxxiii.png",
+    href: kongresAsset("emblem-kongres-xxxiii.png"),
+    downloadName: "emblem-kongres-hmi-xxxiii",
+    preview: kongresAsset("emblem-kongres-xxxiii.png"),
     dark: false,
   },
 ];
@@ -120,32 +124,32 @@ export const KONGRES_LOGO_DOWNLOADS = [
 export const KONGRES_LOGO_PHILOSOPHY = [
   {
     title: "Siger Lampung",
-    icon: "/images/kongres/filosofi/siger.png",
+    icon: kongresAsset("siger.png"),
     body: "Siger merupakan simbol kehormatan dan identitas budaya masyarakat Lampung. Kehadirannya dalam logo melambangkan kemuliaan, kebijaksanaan, serta penghormatan terhadap adat dan tradisi sebagai bagian dari identitas daerah tuan rumah Kongres XXXIII HMI.",
   },
   {
     title: "Gajah",
-    icon: "/images/kongres/filosofi/gajah.png",
+    icon: kongresAsset("gajah.png"),
     body: "Gajah merupakan satwa ikonik Lampung yang merepresentasikan kekuatan, keteguhan, dan kebijaksanaan. Sepasang gajah dalam logo melambangkan persatuan, solidaritas, serta semangat kebersamaan kader HMI dalam menghadapi tantangan dan memperjuangkan tujuan organisasi.",
   },
   {
     title: "Tugu Adipura",
-    icon: "/images/kongres/filosofi/tugu-adipura.png",
+    icon: kongresAsset("tugu-adipura.png"),
     body: "Tugu Adipura menjadi representasi identitas Kota Bandar Lampung sebagai lokasi penyelenggaraan kongres. Elemen ini melambangkan kemajuan, kebanggaan daerah, dan semangat membangun, sekaligus menjadi pengingat akan pentingnya kontribusi nyata HMI bagi masyarakat, daerah, dan bangsa.",
   },
   {
     title: "Kelopak Bunga",
-    icon: "/images/kongres/filosofi/kelopak-bunga.png",
+    icon: kongresAsset("kelopak-bunga.png"),
     body: "Bentuk bunga atau kelopak melambangkan pertumbuhan, keharmonisan, dan regenerasi. Elemen ini menggambarkan proses perkaderan HMI dalam melahirkan generasi yang berintelektualitas, berkarakter, dan berintegritas, serta mampu berkembang tanpa meninggalkan nilai-nilai luhur budaya.",
   },
   {
     title: "Bulan Bintang",
-    icon: "/images/kongres/filosofi/bulan-bintang.png",
+    icon: kongresAsset("bulan-bintang.png"),
     body: "Bulan bintang merepresentasikan nilai-nilai keislaman sebagai landasan utama perjuangan HMI. Simbol ini menggambarkan cahaya petunjuk, harapan, dan semangat pembaruan dalam membentuk kader yang beriman, berintegritas, serta berpegang teguh pada nilai-nilai Islam.",
   },
   {
     title: "Motif Lampung",
-    icon: "/images/kongres/filosofi/motif-lampung.png",
+    icon: kongresAsset("motif-lampung.png"),
     body: "Motif Lampung merepresentasikan kekayaan seni dan warisan budaya masyarakat setempat. Susunan motif yang berulang melambangkan kesinambungan, keteraturan, dan persatuan, sekaligus menegaskan pentingnya menjaga jati diri budaya sebagai bagian dari perjalanan menuju masa depan.",
   },
 ];
@@ -167,7 +171,7 @@ export type KongresCommitteeMember = {
 };
 
 // The Panitia Nasional (Panasko) as announced on @kongreshmike33_lampung; portraits are background-removed cutouts.
-const panitia = (slug: string) => `/images/kongres/panitia/${slug}.webp`;
+const panitia = (slug: string) => kongresAsset(`${slug}.webp`);
 
 export const KONGRES_NATIONAL_COMMITTEE: KongresCommitteeMember[] = [
   { name: "Mauldan Agusta Rifanda", role: "Ketua Panitia Nasional Kongres", photo: panitia("mauldan-agusta-rifanda"), leader: true },
@@ -186,7 +190,7 @@ export const KONGRES_NATIONAL_COMMITTEE: KongresCommitteeMember[] = [
 ];
 
 // The Steering Committee as announced by the committee; only call names were published, so that is what shows.
-const sc = (slug: string) => `/images/kongres/sc/${slug}.webp`;
+const sc = (slug: string) => kongresAsset(`${slug}.webp`);
 
 export const KONGRES_STEERING_COMMITTEE: KongresCommitteeMember[] = [
   { name: "Sukrin", role: "Koordinator SC Kongres", photo: sc("sukrin"), leader: true, username: "sukrin" },
