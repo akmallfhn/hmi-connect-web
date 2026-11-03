@@ -23,6 +23,7 @@ import SearchableSelect, {
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import CoordinatingChapterLogoField from "./CoordinatingChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 interface EditCoordinatingChapterFormSheetProps {
   open: boolean;
@@ -143,7 +144,8 @@ function EditCoordinatingChapterFields({
   });
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
-  const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : initialImageUrl ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [branch, setBranch] = useState<SearchableOption | null>(initialBranch);
   const [isSaving, setIsSaving] = useState(false);
@@ -195,7 +197,7 @@ function EditCoordinatingChapterFields({
         mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         branch_id: String(branch.value),
       });
 
@@ -218,7 +220,7 @@ function EditCoordinatingChapterFields({
     <div className="flex flex-col gap-4">
       <CoordinatingChapterLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

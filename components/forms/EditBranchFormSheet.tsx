@@ -15,6 +15,7 @@ import SearchableSelect, { type SearchableOption } from "../fields/SearchableSel
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 
 // Satisfied by both a list row and a detail response.
@@ -147,7 +148,8 @@ function EditBranchFields({
     entityId: id,
   });
   const [description, setDescription] = useState(initialDescription ?? "");
-  const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : initialImageUrl ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [coordinatingBody, setCoordinatingBody] =
     useState<SearchableOption | null>(initialCoordinatingBody);
@@ -183,7 +185,7 @@ function EditBranchFields({
         name: sanitizedName,
         mention_name: mention.mentionName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         // An empty string detaches the Cabang; omitting it leaves a Badko-less Cabang as is.
         ...(coordinatingBody
           ? { coordinating_body_id: String(coordinatingBody.value) }
@@ -211,7 +213,7 @@ function EditBranchFields({
     <div className="flex flex-col gap-4">
       <BranchLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

@@ -26,6 +26,7 @@ export type CoordinatingBodyDetail = {
   mention_name_normalized: string;
   index: number | null;
   description: string | null;
+  image_media_id?: string | null;
   image_url: string | null;
   status: StatusEnum;
   created_at: string;
@@ -121,6 +122,7 @@ export type CoordinatingBodyListEntry = {
   mention_name_normalized: string;
   // West-to-east position (Aceh first, Papua last); null when not set.
   index: number | null;
+  image_media_id?: string | null;
   image_url: string | null;
   status: StatusEnum;
   user_count?: number;
@@ -202,7 +204,8 @@ export type CreateCoordinatingBodyPayload = {
   name: string;
   mention_name: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   status?: StatusEnum;
 };
 
@@ -231,7 +234,8 @@ export type UpdateCoordinatingBodyPayload = {
   name?: string;
   mention_name?: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   status?: StatusEnum;
 };
 

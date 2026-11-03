@@ -12,6 +12,7 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import CoordinatingChapterLogoField from "./CoordinatingChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
@@ -66,7 +67,8 @@ function CreateCoordinatingChapterFields({
   const [name, setName] = useState("");
   const mention = useMentionNameField({ entityType: "coordinating_chapter" });
   const [legalName, setLegalName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,7 +118,7 @@ function CreateCoordinatingChapterFields({
         name: sanitizedName,
         mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         status: "active",
         branch_id: String(branch.value),
       });
@@ -140,7 +142,7 @@ function CreateCoordinatingChapterFields({
     <div className="flex flex-col gap-4">
       <CoordinatingChapterLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

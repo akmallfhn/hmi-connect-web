@@ -18,6 +18,7 @@ import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import ChapterLogoField from "../forms/ChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 function formatChapterName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?komisariat\s+/i, "").trim();
@@ -138,7 +139,8 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
   });
   const [legalName, setLegalName] = useState(chapter.legal_name);
   const [description, setDescription] = useState(chapter.description ?? "");
-  const [imageUrl, setImageUrl] = useState(chapter.image_url ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : chapter.image_url ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -168,7 +170,7 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
         name: sanitizedName,
         legal_name: trimmedLegalName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -192,7 +194,7 @@ function ProfileTab({ chapter }: { chapter: ChapterDetail }) {
         <div className="lg:w-56 lg:shrink-0">
           <ChapterLogoField
             imageUrl={imageUrl}
-            onChange={setImageUrl}
+            onChange={setLogo}
             onUploadingChange={setIsUploadingImage}
             disabled={isSaving}
             size={160}

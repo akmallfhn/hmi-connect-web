@@ -5,7 +5,10 @@ import Image from "next/image";
 import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/compress-image";
-import { uploadPublicMediaFile } from "@/lib/media-upload";
+import {
+  uploadPublicMediaFile,
+  type EntityLogoValue,
+} from "@/lib/media-upload";
 import Button from "../buttons/Button";
 
 const LOGO_ALLOWED_TYPES = [
@@ -20,7 +23,7 @@ const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 
 interface CoordinatingChapterLogoFieldProps {
   imageUrl: string;
-  onChange: (imageUrl: string) => void;
+  onChange: (value: EntityLogoValue) => void;
   onUploadingChange?: (uploading: boolean) => void;
   disabled?: boolean;
   size?: number;
@@ -75,11 +78,11 @@ export default function CoordinatingChapterLogoField({
         toast.error("Logo masih terlalu besar setelah dikompres.");
         return;
       }
-      const { publicUrl } = await uploadPublicMediaFile(
+      const { assetId, publicUrl } = await uploadPublicMediaFile(
         compressed,
         "entity_image",
       );
-      onChange(publicUrl);
+      onChange({ mediaId: assetId, imageUrl: publicUrl });
     } catch (error) {
       console.error("[CoordinatingChapterLogoField] logo upload threw:", error);
       toast.error(
@@ -146,7 +149,7 @@ export default function CoordinatingChapterLogoField({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => onChange("")}
+              onClick={() => onChange({ mediaId: "", imageUrl: "" })}
               disabled={isBusy}
               className="w-fit"
             >

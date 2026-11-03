@@ -16,6 +16,7 @@ export type CoordinatingChapterListEntry = {
   mention_name_normalized: string;
   // The full official name the short `name` stands for, e.g. "Universitas Indonesia".
   legal_name: string;
+  image_media_id?: string | null;
   image_url: string | null;
   status: StatusEnum;
 };
@@ -95,6 +96,7 @@ export type CoordinatingChapterDetail = {
   mention_name_normalized: string;
   legal_name: string;
   description: string | null;
+  image_media_id?: string | null;
   image_url: string | null;
   status: StatusEnum;
   created_at: string;
@@ -130,7 +132,8 @@ export type CreateCoordinatingChapterPayload = {
   // Required by the backend alongside `name` — both are rejected as missing when empty.
   legal_name: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   status?: StatusEnum;
 };
 
@@ -163,7 +166,8 @@ export type UpdateCoordinatingChapterPayload = {
   mention_name?: string;
   legal_name?: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   status?: StatusEnum;
 };
 

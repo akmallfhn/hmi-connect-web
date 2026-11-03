@@ -16,6 +16,7 @@ import Input from "../fields/Input";
 import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
 import OrganizationLogoField from "../forms/OrganizationLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 export type OrganizationSettingsTab = "profile" | "access";
 
@@ -130,7 +131,8 @@ function ProfileTab({ organization }: { organization: OrganizationDetail }) {
     entityId: organization.id,
   });
   const [slug, setSlug] = useState(organization.slug);
-  const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const logoUrl = logo ? logo.imageUrl : organization.logo_url ?? "";
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -157,7 +159,7 @@ function ProfileTab({ organization }: { organization: OrganizationDetail }) {
         mention_name: mention.mentionName,
         name,
         slug,
-        logo_url: logoUrl,
+        ...(logo ? { logo_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -181,7 +183,7 @@ function ProfileTab({ organization }: { organization: OrganizationDetail }) {
         <div className="lg:w-56 lg:shrink-0">
           <OrganizationLogoField
             imageUrl={logoUrl}
-            onChange={setLogoUrl}
+            onChange={setLogo}
             onUploadingChange={setIsUploadingLogo}
             disabled={isSaving}
             size={160}

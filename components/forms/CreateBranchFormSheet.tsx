@@ -11,6 +11,7 @@ import Select from "../fields/Select";
 import SearchableSelect, { type SearchableOption } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import BranchLogoField from "./BranchLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 import { NO_COORDINATING_BODY_LABEL } from "@/lib/constants";
 import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import EntityNamePreview from "../fields/EntityNamePreview";
@@ -75,7 +76,8 @@ function CreateBranchFields({
 }) {
   const [name, setName] = useState("");
   const mention = useMentionNameField({ entityType: "branch" });
-  const [imageUrl, setImageUrl] = useState("");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
   const [coordinatingBody, setCoordinatingBody] =
@@ -111,7 +113,7 @@ function CreateBranchFields({
       const result = await createBranch({
         name: sanitizedName,
         mention_name: mention.mentionName,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         type,
         status: "active",
         is_special: isSpecial,
@@ -140,7 +142,7 @@ function CreateBranchFields({
     <div className="flex flex-col gap-4">
       <BranchLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

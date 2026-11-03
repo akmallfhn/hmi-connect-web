@@ -12,6 +12,7 @@ export type OrganizationDetail = {
   mention_name: string;
   mention_name_normalized: string;
   slug: string;
+  logo_media_id?: string | null;
   logo_url: string | null;
   status: StatusEnum;
   created_at: string;
@@ -42,7 +43,8 @@ export type UpdateOrganizationPayload = {
   mention_name?: string;
   slug?: string;
   // An empty string clears the column, matching the backend's own nullable handling.
-  logo_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  logo_media_id?: string;
   status?: StatusEnum;
 };
 

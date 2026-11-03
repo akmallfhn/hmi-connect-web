@@ -17,6 +17,7 @@ import Input from "../fields/Input";
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import CoordinatingBodyLogoField from "./CoordinatingBodyLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 interface EditCoordinatingBodyFormSheetProps {
   open: boolean;
@@ -124,7 +125,8 @@ function EditCoordinatingBodyFields({
     entityId: id,
   });
   const [description, setDescription] = useState(initialDescription ?? "");
-  const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : initialImageUrl ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -147,7 +149,7 @@ function EditCoordinatingBodyFields({
         name: sanitizedName,
         mention_name: mention.mentionName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -169,7 +171,7 @@ function EditCoordinatingBodyFields({
     <div className="flex flex-col gap-4">
       <CoordinatingBodyLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

@@ -16,6 +16,12 @@ import {
 export { MediaUploadError } from "@/lib/media-upload-core";
 export type { UploadedMedia } from "@/lib/media-upload-core";
 
+// An entity logo field's value: the asset id is what gets saved, the URL only drives the preview.
+export type EntityLogoValue = {
+  mediaId: string;
+  imageUrl: string;
+};
+
 export type UploadedPublicMedia = {
   assetId: string;
   publicUrl: string;

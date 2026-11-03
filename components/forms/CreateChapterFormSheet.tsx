@@ -17,6 +17,7 @@ import SearchableSelect, {
 } from "../fields/SearchableSelect";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 import { mentionNameSubmitError, useMentionNameField } from "@/hooks/useMentionNameField";
 import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
@@ -76,7 +77,8 @@ function CreateChapterFields({
   const [name, setName] = useState("");
   const mention = useMentionNameField({ entityType: "chapter" });
   const [legalName, setLegalName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [type, setType] = useState<BranchTypeEnum>("full");
   const [branch, setBranch] = useState<SearchableOption | null>(defaultBranch);
@@ -152,7 +154,7 @@ function CreateChapterFields({
         name: sanitizedName,
         mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         type,
         status: "active",
         branch_id: String(branch.value),
@@ -178,7 +180,7 @@ function CreateChapterFields({
     <div className="flex flex-col gap-4">
       <ChapterLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

@@ -87,6 +87,7 @@ export type ChapterListEntry = {
   mention_name_normalized: string;
   // The full official name the short `name` stands for, e.g. "Fakultas Teknik Universitas Syiah Kuala".
   legal_name: string;
+  image_media_id?: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
@@ -198,6 +199,7 @@ export type ChapterDetail = {
   mention_name_normalized: string;
   legal_name: string;
   description: string | null;
+  image_media_id?: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
   status: StatusEnum;
@@ -234,7 +236,8 @@ export type CreateChapterPayload = {
   // Required by the backend alongside `name` — both are rejected as missing when empty.
   legal_name: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   type?: BranchTypeEnum;
   status?: StatusEnum;
   // Must match an existing lookup_institutions row.
@@ -268,7 +271,8 @@ export type UpdateChapterPayload = {
   mention_name?: string;
   legal_name?: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   status?: StatusEnum;
   // Must match an existing lookup_institutions row.
   institution_id?: number;

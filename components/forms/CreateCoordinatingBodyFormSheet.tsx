@@ -12,6 +12,7 @@ import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Sheet from "../modals/Sheet";
 import CoordinatingBodyLogoField from "./CoordinatingBodyLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 interface CreateCoordinatingBodyFormSheetProps {
   open: boolean;
@@ -48,7 +49,8 @@ function CreateCoordinatingBodyFields({
 }) {
   const [name, setName] = useState("");
   const mention = useMentionNameField({ entityType: "coordinating_body" });
-  const [imageUrl, setImageUrl] = useState("");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -69,7 +71,7 @@ function CreateCoordinatingBodyFields({
       const result = await createCoordinatingBody({
         name: sanitizedName,
         mention_name: mention.mentionName,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         status: "active",
       });
 
@@ -92,7 +94,7 @@ function CreateCoordinatingBodyFields({
     <div className="flex flex-col gap-4">
       <CoordinatingBodyLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

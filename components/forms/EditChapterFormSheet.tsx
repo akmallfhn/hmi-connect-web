@@ -25,6 +25,7 @@ import SearchableSelect, {
 import TextArea from "../fields/TextArea";
 import Sheet from "../modals/Sheet";
 import ChapterLogoField from "./ChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 interface EditChapterFormSheetProps {
   open: boolean;
@@ -154,7 +155,8 @@ function EditChapterFields({
   });
   const [legalName, setLegalName] = useState(initialLegalName);
   const [description, setDescription] = useState(initialDescription ?? "");
-  const [imageUrl, setImageUrl] = useState(initialImageUrl ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : initialImageUrl ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [branch, setBranch] = useState<SearchableOption | null>(initialBranch);
   const [institution, setInstitution] = useState<CreateableOption | null>(
@@ -233,7 +235,7 @@ function EditChapterFields({
         mention_name: mention.mentionName,
         legal_name: trimmedLegalName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
         branch_id: String(branch.value),
         ...(institution ? { institution_id: Number(institution.value) } : {}),
       });
@@ -257,7 +259,7 @@ function EditChapterFields({
     <div className="flex flex-col gap-4">
       <ChapterLogoField
         imageUrl={imageUrl}
-        onChange={setImageUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingImage}
         disabled={isSaving}
       />

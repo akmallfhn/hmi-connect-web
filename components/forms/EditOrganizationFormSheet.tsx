@@ -12,6 +12,7 @@ import Button from "../buttons/Button";
 import Input from "../fields/Input";
 import Sheet from "../modals/Sheet";
 import OrganizationLogoField from "./OrganizationLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 interface EditOrganizationFormSheetProps {
   open: boolean;
@@ -61,7 +62,8 @@ function EditOrganizationFields({
     entityId: organization.id,
   });
   const [slug, setSlug] = useState(organization.slug);
-  const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const logoUrl = logo ? logo.imageUrl : organization.logo_url ?? "";
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -87,7 +89,7 @@ function EditOrganizationFields({
         name,
         mention_name: mention.mentionName,
         slug,
-        logo_url: logoUrl,
+        ...(logo ? { logo_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -109,7 +111,7 @@ function EditOrganizationFields({
     <div className="flex flex-col gap-4">
       <OrganizationLogoField
         imageUrl={logoUrl}
-        onChange={setLogoUrl}
+        onChange={setLogo}
         onUploadingChange={setIsUploadingLogo}
         disabled={isSaving}
       />

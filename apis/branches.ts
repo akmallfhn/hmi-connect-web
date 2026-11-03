@@ -95,6 +95,7 @@ export type BranchListEntry = {
   name: string;
   mention_name: string;
   mention_name_normalized: string;
+  image_media_id?: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
   is_special: boolean;
@@ -217,6 +218,7 @@ export type BranchDetail = {
   mention_name: string;
   mention_name_normalized: string;
   description: string | null;
+  image_media_id?: string | null;
   image_url: string | null;
   type: BranchTypeEnum;
   is_special: boolean;
@@ -257,7 +259,8 @@ export type CreateBranchPayload = {
   name: string;
   mention_name: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   is_special?: boolean;
   type?: BranchTypeEnum;
   status?: StatusEnum;
@@ -303,7 +306,8 @@ export type UpdateBranchPayload = {
   name?: string;
   mention_name?: string;
   description?: string;
-  image_url?: string;
+  // An entity_image asset id from media upload; an empty string removes the logo.
+  image_media_id?: string;
   is_special?: boolean;
   status?: StatusEnum;
 };

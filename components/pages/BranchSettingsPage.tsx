@@ -22,6 +22,7 @@ import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import BranchLogoField from "../forms/BranchLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 function formatBranchName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?cabang\s+/i, "").trim();
@@ -141,7 +142,8 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
     entityId: branch.id,
   });
   const [description, setDescription] = useState(branch.description ?? "");
-  const [imageUrl, setImageUrl] = useState(branch.image_url ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : branch.image_url ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -165,7 +167,7 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
         mention_name: mention.mentionName,
         name: sanitizedName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -189,7 +191,7 @@ function ProfileTab({ branch }: { branch: BranchDetail }) {
         <div className="lg:w-56 lg:shrink-0">
           <BranchLogoField
             imageUrl={imageUrl}
-            onChange={setImageUrl}
+            onChange={setLogo}
             onUploadingChange={setIsUploadingImage}
             disabled={isSaving}
             size={160}

@@ -18,6 +18,7 @@ import EntityNamePreview from "../fields/EntityNamePreview";
 import MentionNameInput from "../fields/MentionNameInput";
 import TextArea from "../fields/TextArea";
 import CoordinatingChapterLogoField from "../forms/CoordinatingChapterLogoField";
+import type { EntityLogoValue } from "@/lib/media-upload";
 
 function formatCoordinatingChapterName(name: string) {
   const normalizedName = name.replace(/^(?:hmi\s+)?korkom\s+/i, "").trim();
@@ -149,7 +150,8 @@ function ProfileTab({
   const [description, setDescription] = useState(
     coordinatingChapter.description ?? ""
   );
-  const [imageUrl, setImageUrl] = useState(coordinatingChapter.image_url ?? "");
+  const [logo, setLogo] = useState<EntityLogoValue | null>(null);
+  const imageUrl = logo ? logo.imageUrl : coordinatingChapter.image_url ?? "";
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -179,7 +181,7 @@ function ProfileTab({
         name: sanitizedName,
         legal_name: trimmedLegalName,
         description,
-        image_url: imageUrl,
+        ...(logo ? { image_media_id: logo.mediaId } : {}),
       });
 
       if (!isSuccessStatus(result.status)) {
@@ -206,7 +208,7 @@ function ProfileTab({
         <div className="lg:w-56 lg:shrink-0">
           <CoordinatingChapterLogoField
             imageUrl={imageUrl}
-            onChange={setImageUrl}
+            onChange={setLogo}
             onUploadingChange={setIsUploadingImage}
             disabled={isSaving}
             size={160}
