@@ -1658,6 +1658,22 @@ EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG illustrations 
   (`/membership`), Latihan Kader (`/trainings`), Al-Qur'an (`/quran`, see `QuranPage`
   below), Pedoman Organisasi (`/organizational-documents`), and Jadwal Sholat
   (`/prayer-schedules`) all route through `Link`.
+- `components/twibbon/*` — the Kongres XXXIII twibbon, **frontend-only** (no backend, nothing stored).
+  `FeedPage` renders `TwibbonFloatingButton`, a fixed round button with the Kongres emblem
+  (`bottom-20` above `BottomNav` on mobile, `bottom-8` on desktop), opening `TwibbonEditorModal`.
+  Frames are PNGs with a transparent photo area under `public/images/twibbon/`, listed with their
+  intrinsic `width`/`height` in `lib/twibbon.ts#TWIBBON_FRAMES`; output is always 1080px wide with the
+  frame's own aspect ratio, so a long frame yields a long twibbon. In the "Pilih Frame" picker every
+  thumbnail shares one height (`h-20`) and only its width follows the frame. A checkerboard marks the
+  transparent area in the preview and thumbnails; the export fills it white. An uploaded photo runs
+  through `optimizeImage`'s `twibbon_photo` policy (2160px, 80% quality). Upload/Ganti/Hapus Foto sit
+  in the preview's top-right corner and clicking the empty preview also opens the picker, leaving
+  Unduh and Bagikan ke Feed as the only CTAs. Positioning is drag, pinch, scroll, or arrow/+/- keys,
+  explained by an instruction list — there are deliberately no on-screen move/zoom buttons. Offsets
+  are clamped so the photo never uncovers or leaves the canvas. Unduh uses `downloadImageBlob`;
+  Bagikan ke Feed stores the JPEG as a data URL in `sessionStorage[COMPOSE_INTENT_PHOTO_KEY]` and
+  fires the usual compose intent, and `FeedTimeline` hands it to `CreateFeedForms`'
+  `forceOpenPhotos`, which stages it as an already-final photo.
 - `hooks/useInteractionGuard.ts` — the one gate every feed interaction runs through, shared by
   `FeedItemCard` and `CommentItem` (it replaced a `requireVerified` copy in each, so the rule lives
   in one place). `verification_status === "verified"` passes; no session pushes `/auth/login`; an

@@ -2,7 +2,8 @@ export type ImageUploadCategory =
   | "avatar"
   | "feed_image"
   | "event_banner"
-  | "institution_image";
+  | "institution_image"
+  | "twibbon_photo";
 
 export class ImageOptimizationError extends Error {}
 
@@ -67,6 +68,13 @@ export const IMAGE_POLICIES: Record<ImageUploadCategory, ImagePolicy> = {
     maxBytes: 2 * 1024 * 1024,
     jpegQuality: 0.86,
     webpQuality: 0.84,
+  },
+  // Twice the 1080px twibbon so a zoomed-in crop stays sharp; never encoded below 80% quality.
+  twibbon_photo: {
+    maxDimension: 2160,
+    maxBytes: 5 * 1024 * 1024,
+    jpegQuality: 0.8,
+    webpQuality: 0.8,
   },
 };
 

@@ -137,6 +137,7 @@ interface CreateFeedFormsProps {
   forceOpenNews?: ComposerNewsDraft;
   forceOpenArticle?: ComposerArticleDraft;
   forceOpenTraining?: ComposerTrainingDraft;
+  forceOpenPhotos?: File[];
 }
 
 type PhotoDraft = {
@@ -273,6 +274,7 @@ export default function CreateFeedForms({
   forceOpenNews,
   forceOpenArticle,
   forceOpenTraining,
+  forceOpenPhotos,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] =
@@ -286,6 +288,9 @@ export default function CreateFeedForms({
   const [initialTraining, setInitialTraining] = useState<
     ComposerTrainingDraft | undefined
   >(undefined);
+  const [initialPhotos, setInitialPhotos] = useState<File[] | undefined>(
+    undefined
+  );
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
@@ -297,9 +302,11 @@ export default function CreateFeedForms({
     mode: FeedUploadAttachmentTypeEnum | null = null,
     news?: ComposerNewsDraft,
     article?: ComposerArticleDraft,
-    training?: ComposerTrainingDraft
+    training?: ComposerTrainingDraft,
+    photos?: File[]
   ) {
     setInitialMode(mode);
+    setInitialPhotos(photos);
     setInitialNews(news);
     setInitialArticle(article);
     setInitialTraining(training);
@@ -314,6 +321,8 @@ export default function CreateFeedForms({
         openComposer(null, undefined, forceOpenArticle);
       else if (forceOpenTraining)
         openComposer(null, undefined, undefined, forceOpenTraining);
+      else if (forceOpenPhotos?.length)
+        openComposer(null, undefined, undefined, undefined, forceOpenPhotos);
       else openComposer();
     }
   }
@@ -371,6 +380,7 @@ export default function CreateFeedForms({
         initialNews={initialNews}
         initialArticle={initialArticle}
         initialTraining={initialTraining}
+        initialPhotos={initialPhotos}
         onCreated={onCreated}
       />
     </>
@@ -388,6 +398,7 @@ interface FeedComposerModalProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialPhotos?: File[];
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
@@ -404,6 +415,7 @@ export function FeedComposerModal({
   initialNews,
   initialArticle,
   initialTraining,
+  initialPhotos,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -423,6 +435,7 @@ export function FeedComposerModal({
           initialNews={initialNews}
           initialArticle={initialArticle}
           initialTraining={initialTraining}
+          initialPhotos={initialPhotos}
           quoteFeed={quoteFeed}
           authorEntity={authorEntity}
           onClose={onClose}
@@ -442,6 +455,7 @@ interface FeedComposerFieldsProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialPhotos?: File[];
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -456,6 +470,7 @@ function FeedComposerFields({
   initialNews,
   initialArticle,
   initialTraining,
+  initialPhotos,
   quoteFeed,
   onClose,
   onCreated,
@@ -464,7 +479,14 @@ function FeedComposerFields({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewUrlsRef = useRef(new Set<string>());
   const [content, setContent] = useState("");
-  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  // Handed-in photos (the twibbon editor's output) are already final, so they skip optimizeImage.
+  const [photos, setPhotos] = useState<PhotoDraft[]>(() =>
+    (initialPhotos ?? []).slice(0, MAX_PHOTOS).map((file) => ({
+      id: `${file.name}-${randomId()}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }))
+  );
   const [compressingPhotos, setCompressingPhotos] = useState(false);
   const [youtubeValue, setYoutubeValue] = useState("");
   const [youtubeActive, setYoutubeActive] = useState(initialMode === "video");
