@@ -54,13 +54,13 @@ export default function ChatNewThreadPage({
     };
   }, []);
 
-  async function handleSend(content: string, attachmentUrl?: string) {
+  async function handleSend(content: string, attachmentMediaId?: string) {
     if (!recipient) return;
 
     const { message, envelope } = await sendChatMessage({
       recipientId: recipient.id,
       content,
-      attachmentUrl,
+      attachmentMediaId,
     });
 
     if (!message) {

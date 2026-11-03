@@ -124,11 +124,11 @@ export default function ChatThreadPage({
     });
   }
 
-  async function handleSend(content: string, attachmentUrl?: string) {
+  async function handleSend(content: string, attachmentMediaId?: string) {
     const { message, envelope } = await sendChatMessage({
       conversationId,
       content,
-      attachmentUrl,
+      attachmentMediaId,
     });
     if (!message) {
       toast.error(envelope.message ?? "Gagal mengirim pesan.");

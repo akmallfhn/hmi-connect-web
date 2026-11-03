@@ -61,7 +61,7 @@ type ArticleImageFolder = "covers" | "content";
 async function uploadArticleImage(
   file: File,
   folder: ArticleImageFolder
-): Promise<string> {
+): Promise<{ assetId: string; publicUrl: string }> {
   if (!ARTICLE_IMAGE_TYPES.includes(file.type)) {
     throw new Error("Format gambar harus JPG, PNG, WebP, AVIF, atau GIF.");
   }
@@ -79,8 +79,8 @@ async function uploadArticleImage(
   }
   const category =
     folder === "covers" ? "article_cover" : "article_content";
-  const { publicUrl } = await uploadPublicMediaFile(compressed, category);
-  return publicUrl;
+  const { assetId, publicUrl } = await uploadPublicMediaFile(compressed, category);
+  return { assetId, publicUrl };
 }
 
 function ArticleBodyImage({
@@ -166,6 +166,7 @@ export type ArticleDraft = {
   id: string;
   title: string;
   description: string;
+  imageMediaId: string;
   imageUrl: string;
   bodyHtml: string;
   categoryId: number | null;
@@ -203,6 +204,7 @@ export default function ArticleComposerPage({
   const [keywordInput, setKeywordInput] = useState("");
   const [keywords, setKeywords] = useState<string[]>(draft?.keywords ?? []);
   const [coverUrl, setCoverUrl] = useState(draft?.imageUrl ?? "");
+  const [coverMediaId, setCoverMediaId] = useState(draft?.imageMediaId ?? "");
   const [isCoverUploading, setIsCoverUploading] = useState(false);
   const [isBodyImageUploading, setIsBodyImageUploading] = useState(false);
   const [isSaved, setIsSaved] = useState(true);
@@ -326,8 +328,9 @@ export default function ArticleComposerPage({
     setIsCoverUploading(true);
     const toastId = toast.loading("Mengunggah cover...");
     try {
-      const url = await uploadArticleImage(file, "covers");
-      setCoverUrl(url);
+      const cover = await uploadArticleImage(file, "covers");
+      setCoverUrl(cover.publicUrl);
+      setCoverMediaId(cover.assetId);
       markAsChanged();
       toast.success("Cover berhasil diunggah.", { id: toastId });
     } catch (error) {
@@ -351,8 +354,8 @@ export default function ArticleComposerPage({
     setIsBodyImageUploading(true);
     const toastId = toast.loading("Mengunggah gambar...");
     try {
-      const url = await uploadArticleImage(file, "content");
-      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+      const { publicUrl } = await uploadArticleImage(file, "content");
+      editor.chain().focus().setImage({ src: publicUrl, alt: file.name }).run();
       toast.success("Gambar berhasil disisipkan.", { id: toastId });
     } catch (error) {
       console.error("[ArticleComposerPage] body image upload threw:", error);
@@ -377,7 +380,7 @@ export default function ArticleComposerPage({
       toast.error("Isi artikel belum boleh kosong.");
       return;
     }
-    if (!coverUrl) {
+    if (!coverMediaId) {
       toast.error("Unggah cover artikel terlebih dahulu.");
       return;
     }
@@ -402,7 +405,7 @@ export default function ArticleComposerPage({
     );
     const fields = {
       title: title.trim(),
-      image_url: coverUrl,
+      image_media_id: coverMediaId,
       body_content: bodyContent,
       category_id: categoryId,
       description: subtitle.trim(),
@@ -588,6 +591,7 @@ export default function ArticleComposerPage({
                     title="Hapus cover"
                     onClick={() => {
                       setCoverUrl("");
+                      setCoverMediaId("");
                       markAsChanged();
                     }}
                     className="h-10 rounded-xl px-4 shadow-lg"

@@ -58,6 +58,7 @@ export default async function EditArticleRoute({
         id: article.id,
         title: article.title,
         description: article.description ?? "",
+        imageMediaId: article.image_media_id ?? "",
         imageUrl: article.image_url,
         // Sanitized here so another author's raw HTML never reaches the editor's own parser.
         bodyHtml: prepareArticleBody(article.body_content) ?? "",

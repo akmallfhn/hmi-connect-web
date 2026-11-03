@@ -9,7 +9,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
 export const TRAINING_POSTER_ACCEPT = ".jpg,.jpeg,.png,.webp";
 
 export type TrainingPosterUploadResult =
-  | { ok: true; url: string }
+  | { ok: true; url: string; assetId: string }
   | { ok: false; message: string };
 
 // Validates, optimizes, and uploads a training poster through the media service.
@@ -34,7 +34,7 @@ export async function uploadTrainingPoster(
     }
     const uploaded = await uploadMediaFile(compressed, "event_banner");
     if (!uploaded.publicUrl) throw new Error("missing public url");
-    return { ok: true, url: uploaded.publicUrl };
+    return { ok: true, url: uploaded.publicUrl, assetId: uploaded.assetId };
   } catch (error) {
     console.error("[uploadTrainingPoster] upload threw:", error);
     return { ok: false, message: "Gagal mengunggah gambar. Coba lagi." };

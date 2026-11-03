@@ -53,6 +53,8 @@ export default function TrainingCreatePage({
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [imageUrl, setImageUrl] = useState(training?.image_url ?? "");
+  // null means the poster was not touched, so an edit leaves the stored one alone.
+  const [imageMediaId, setImageMediaId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [name, setName] = useState(training?.name ?? "");
   const [level, setLevel] = useState<TrainingStatusEnum | null>(
@@ -84,8 +86,12 @@ export default function TrainingCreatePage({
     setIsUploadingImage(true);
     const result = await uploadTrainingPoster(file);
     setIsUploadingImage(false);
-    if (result.ok) setImageUrl(result.url);
-    else toast.error(result.message);
+    if (result.ok) {
+      setImageUrl(result.url);
+      setImageMediaId(result.assetId);
+    } else {
+      toast.error(result.message);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -118,7 +124,7 @@ export default function TrainingCreatePage({
             end_date: endDate,
             location_name: locationName.trim(),
             location_url: locationUrl.trim(),
-            image_url: imageUrl,
+            ...(imageMediaId !== null ? { image_media_id: imageMediaId } : {}),
           })
         : await createTraining({
             name: name.trim(),
@@ -135,7 +141,7 @@ export default function TrainingCreatePage({
             ...(locationUrl.trim()
               ? { location_url: locationUrl.trim() }
               : {}),
-            ...(imageUrl ? { image_url: imageUrl } : {}),
+            ...(imageMediaId ? { image_media_id: imageMediaId } : {}),
           });
 
       if (!isSuccessStatus(result.status) || !result.data) {
@@ -217,7 +223,10 @@ export default function TrainingCreatePage({
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => setImageUrl("")}
+                        onClick={() => {
+                  setImageUrl("");
+                  setImageMediaId("");
+                }}
                         disabled={busy}
                         className="w-fit"
                       >

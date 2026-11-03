@@ -23,6 +23,7 @@ export type TrainingListEntry = {
   is_registration_open: boolean;
   is_evaluation_locked: boolean;
   location_name?: string;
+  image_media_id?: string;
   image_url?: string;
   // Only present on a user-JWT read; a client-secret read omits it.
   is_reminder_active?: boolean;
@@ -230,7 +231,8 @@ export type CreateTrainingPayload = {
   end_date: string;
   location_name?: string;
   location_url?: string;
-  image_url?: string;
+  // An event_banner asset id from media upload; the API derives image_url from it.
+  image_media_id?: string;
 };
 
 export async function createTraining(
@@ -264,7 +266,8 @@ export type UpdateTrainingPayload = {
   is_registration_open?: boolean;
   location_name?: string;
   location_url?: string;
-  image_url?: string;
+  // An event_banner asset id from media upload; an empty string removes the poster.
+  image_media_id?: string;
 };
 
 export async function updateTraining(

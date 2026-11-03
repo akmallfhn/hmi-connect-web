@@ -90,6 +90,8 @@ function TrainingFields({
   );
   const [locationUrl, setLocationUrl] = useState(training?.location_url ?? "");
   const [imageUrl, setImageUrl] = useState(training?.image_url ?? "");
+  // null means the poster was not touched, so an edit leaves the stored one alone.
+  const [imageMediaId, setImageMediaId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -165,8 +167,12 @@ function TrainingFields({
     setIsUploadingImage(true);
     const result = await uploadTrainingPoster(file);
     setIsUploadingImage(false);
-    if (result.ok) setImageUrl(result.url);
-    else toast.error(result.message);
+    if (result.ok) {
+      setImageUrl(result.url);
+      setImageMediaId(result.assetId);
+    } else {
+      toast.error(result.message);
+    }
   }
 
   async function handleSubmit() {
@@ -200,7 +206,7 @@ function TrainingFields({
             is_registration_open: isRegistrationOpen,
             location_name: locationName.trim(),
             location_url: locationUrl.trim(),
-            image_url: imageUrl,
+            ...(imageMediaId !== null ? { image_media_id: imageMediaId } : {}),
           })
         : await createBranchTraining({
             name: name.trim(),
@@ -217,7 +223,7 @@ function TrainingFields({
             ...(locationUrl.trim()
               ? { location_url: locationUrl.trim() }
               : {}),
-            ...(imageUrl ? { image_url: imageUrl } : {}),
+            ...(imageMediaId ? { image_media_id: imageMediaId } : {}),
           });
 
       if (!isSuccessStatus(result.status)) {
@@ -284,7 +290,10 @@ function TrainingFields({
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setImageUrl("")}
+                onClick={() => {
+                  setImageUrl("");
+                  setImageMediaId("");
+                }}
                 disabled={isUploadingImage || isSaving}
                 className="w-fit"
               >

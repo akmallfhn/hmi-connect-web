@@ -14,6 +14,7 @@ export type ArticleListEntry = {
   title: string;
   // Present on articles/list; optional because list-filter has not published this field in its contract.
   description?: string | null;
+  image_media_id?: string | null;
   image_url: string;
   status: ArticleStatusEnum;
   category_id: number;
@@ -205,7 +206,8 @@ export async function listArticleFeed({
 
 export type CreateArticlePayload = {
   title: string;
-  image_url: string;
+  // An article_cover asset id from media upload; the API derives image_url from it.
+  image_media_id: string;
   body_content: string;
   category_id: number;
   author_id: string;

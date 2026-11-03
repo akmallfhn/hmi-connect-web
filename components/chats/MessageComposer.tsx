@@ -22,7 +22,7 @@ const MAX_TEXTAREA_HEIGHT = 120;
 const CHAT_IMAGE_TARGET_BYTES = 500 * 1024;
 
 interface MessageComposerProps {
-  onSend: (content: string, attachmentUrl?: string) => Promise<void>;
+  onSend: (content: string, attachmentMediaId?: string) => Promise<void>;
 }
 
 export default function MessageComposer({
@@ -104,7 +104,7 @@ export default function MessageComposer({
 
     setSending(true);
     try {
-      let attachmentUrl: string | undefined;
+      let attachmentMediaId: string | undefined;
       if (imageFile) {
         const compressed = await compressImage(imageFile, {
           maxDimension: 1600,
@@ -115,9 +115,9 @@ export default function MessageComposer({
           return;
         }
         const uploaded = await uploadPublicMediaFile(compressed, "chat_image");
-        attachmentUrl = uploaded.publicUrl;
+        attachmentMediaId = uploaded.assetId;
       }
-      await onSend(trimmed, attachmentUrl);
+      await onSend(trimmed, attachmentMediaId);
       setText("");
       removeImage();
       setShowEmoji(false);

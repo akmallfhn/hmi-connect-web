@@ -28,6 +28,7 @@ export type ChatMessage = {
   conversation_id: string;
   sender_id: string;
   content: string;
+  attachment_media_id?: string;
   attachment_url?: string;
   status: MessageStatusEnum;
   read_at?: string;
@@ -128,7 +129,8 @@ export type SendMessagePayload = {
   conversationId?: string;
   recipientId?: string;
   content?: string;
-  attachmentUrl?: string;
+  // A chat_image asset id from media upload; the API derives attachment_url from it.
+  attachmentMediaId?: string;
 };
 
 export async function sendChatMessage(
@@ -150,7 +152,7 @@ export async function sendChatMessage(
       conversation_id: payload.conversationId,
       recipient_id: payload.recipientId,
       content: payload.content,
-      attachment_url: payload.attachmentUrl,
+      attachment_media_id: payload.attachmentMediaId,
     },
   });
 
