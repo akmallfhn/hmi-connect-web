@@ -14,6 +14,7 @@ import {
   COMPOSE_INTENT_KEY,
   COMPOSE_INTENT_NEWS_KEY,
   COMPOSE_INTENT_TEXT_KEY,
+  COMPOSE_INTENT_PHOTO_KEY,
   COMPOSE_INTENT_TRAINING_KEY,
 } from "@/lib/constants";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
@@ -74,6 +75,23 @@ function parseTrainingIntent(
   }
 }
 
+// Written by the twibbon editor; anything but a JPEG/PNG/WebP data URL is ignored.
+function parsePhotoIntent(raw: string | null): File[] | undefined {
+  const match = raw && /^data:(image\/(jpeg|png|webp));base64,(.+)$/.exec(raw);
+  if (!match) return undefined;
+  try {
+    const binary = window.atob(match[3]);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index++) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    const extension = match[2] === "jpeg" ? "jpg" : match[2];
+    return [new File([bytes], `twibbon.${extension}`, { type: match[1] })];
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedTimeline({
   initialItems,
   initialHasMore,
@@ -101,6 +119,9 @@ export default function FeedTimeline({
   const [composerTraining, setComposerTraining] = useState<
     ComposerTrainingDraft | undefined
   >(undefined);
+  const [composerPhotos, setComposerPhotos] = useState<File[] | undefined>(
+    undefined
+  );
 
   const [composerText, setComposerText] = useState<string | undefined>(
     undefined
@@ -168,6 +189,9 @@ export default function FeedTimeline({
       const rawText = window.sessionStorage.getItem(COMPOSE_INTENT_TEXT_KEY);
       if (rawText) window.sessionStorage.removeItem(COMPOSE_INTENT_TEXT_KEY);
       setComposerText(rawText ?? undefined);
+      const rawPhoto = window.sessionStorage.getItem(COMPOSE_INTENT_PHOTO_KEY);
+      if (rawPhoto) window.sessionStorage.removeItem(COMPOSE_INTENT_PHOTO_KEY);
+      setComposerPhotos(parsePhotoIntent(rawPhoto));
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -211,6 +235,7 @@ export default function FeedTimeline({
         forceOpenArticle={composerArticle}
         forceOpenTraining={composerTraining}
         forceOpenText={composerText}
+        forceOpenPhotos={composerPhotos}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}

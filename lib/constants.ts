@@ -51,6 +51,8 @@ export const COMPOSE_INTENT_TRAINING_KEY = "hmi-compose-intent-training";
 
 // Text companion to the intents above: prefilled composer content, such as a campaign hashtag.
 export const COMPOSE_INTENT_TEXT_KEY = "hmi-compose-intent-text";
+// Photo twin of the intents above: a data URL (the twibbon editor's output) the composer opens with as a staged photo.
+export const COMPOSE_INTENT_PHOTO_KEY = "hmi-compose-intent-photo";
 
 // sessionStorage key NewMessageModal uses to hand the picked recipient's profile to /chats/new, since there's no conversation id yet.
 export const CHAT_NEW_RECIPIENT_KEY = "hmi-chat-new-recipient";
