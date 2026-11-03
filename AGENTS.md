@@ -2361,8 +2361,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   resolved into `file_url`/`image_url`, plus a required `published_at`; there is no description.
   Admins manage them at `/master/organizational-documents` and
   `/organizations/[organization_id]/organizational-documents` ("Pedoman Organisasi" in both
-  sidebars' Organisasi group) through `AdminOrganizationalDocumentListPage` (search, a Status
-  filter, and delete behind `AlertConfirmation`); each row shows the 16:9 cover, the title with its
+  sidebars' Organisasi group) through `AdminOrganizationalDocumentListPage` (search, Tipe and Status
+  filters, and delete behind `AlertConfirmation`); Tipe is sent as `organizational-documents/list`'s own
+  `type`, so pagination stays the backend's; each row shows the 16:9 cover, the title with its
   page count beneath, the publication date, and the uploader's avatar and name from the backend's
   flattened `created_by_name`/`created_by_username`/`created_by_avatar`. The backend shows inactive rows to whoever may
   manage them: Super Admin, or a `manage` grant at the document's organization. Three sheets split the work, sharing their fields from

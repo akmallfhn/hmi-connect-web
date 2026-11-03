@@ -91,6 +91,7 @@ export async function listOrganizationalDocuments(
   options: {
     search?: string;
     status?: StatusEnum;
+    type?: OrganizationalDocumentTypeEnum;
     page?: number;
     pageSize?: number;
   } = {}
@@ -108,6 +109,7 @@ export async function listOrganizationalDocuments(
       body: {
         ...(options.search ? { search: options.search } : {}),
         ...(options.status ? { status: options.status } : {}),
+        ...(options.type ? { type: options.type } : {}),
         page,
         page_size: options.pageSize ?? 20,
       },

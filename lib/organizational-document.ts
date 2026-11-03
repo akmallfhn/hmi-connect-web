@@ -15,6 +15,15 @@ export const ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS: {
   { label: "PD-PRT BPL", value: "pd-prt-bpl" },
 ];
 
+export function parseOrganizationalDocumentType(
+  value: string | undefined
+): OrganizationalDocumentTypeEnum | "" {
+  return (
+    ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS.find((option) => option.value === value)
+      ?.value ?? ""
+  );
+}
+
 export const ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS: Record<
   OrganizationalDocumentTypeEnum,
   { label: string; fullName: string; description: string }

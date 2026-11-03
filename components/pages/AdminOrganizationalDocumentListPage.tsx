@@ -16,7 +16,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { OrganizationalDocumentListEntry } from "@/apis/organizational-documents";
 import { deleteOrganizationalDocument } from "@/lib/actions";
-import { organizationalDocumentHref } from "@/lib/organizational-document";
+import {
+  ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS,
+  organizationalDocumentHref,
+} from "@/lib/organizational-document";
 import { formatShortDate } from "@/lib/time-manipulation";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
@@ -42,6 +45,13 @@ const STATUS_FILTER_OPTIONS = [
   { label: "Tidak Aktif", value: "inactive" },
 ];
 
+const TYPE_FILTER_OPTIONS = [
+  { label: "Semua Tipe", value: "" },
+  ...ORGANIZATIONAL_DOCUMENT_TYPE_OPTIONS,
+];
+
+const CLEARED_FILTERS = { status: "", type: "" };
+
 interface AdminOrganizationalDocumentListPageProps {
   documents: OrganizationalDocumentListEntry[];
   totalData: number;
@@ -49,6 +59,7 @@ interface AdminOrganizationalDocumentListPageProps {
   currentPage: number;
   initialSearch: string;
   initialStatus: string;
+  initialType: string;
   organizationId: string;
   defaultPublishedDate: string;
   mainSiteOrigin: string;
@@ -123,6 +134,7 @@ export default function AdminOrganizationalDocumentListPage({
   currentPage,
   initialSearch,
   initialStatus,
+  initialType,
   organizationId,
   defaultPublishedDate,
   mainSiteOrigin,
@@ -240,20 +252,28 @@ export default function AdminOrganizationalDocumentListPage({
     );
   }
 
-  const filterChips: ActiveFilterChip[] = initialStatus
-    ? [
-        {
-          key: "status",
-          label: "Status",
-          value:
-            STATUS_FILTER_OPTIONS.find(
-              (option) => option.value === initialStatus
-            )?.label ?? initialStatus,
-          onRemove: () => pushParams({ status: "" }),
-        },
-      ]
-    : [];
-  const isFiltered = Boolean(initialSearch || initialStatus);
+  const filterChips: ActiveFilterChip[] = [];
+  if (initialType) {
+    filterChips.push({
+      key: "type",
+      label: "Tipe",
+      value:
+        TYPE_FILTER_OPTIONS.find((option) => option.value === initialType)
+          ?.label ?? initialType,
+      onRemove: () => pushParams({ type: "" }),
+    });
+  }
+  if (initialStatus) {
+    filterChips.push({
+      key: "status",
+      label: "Status",
+      value:
+        STATUS_FILTER_OPTIONS.find((option) => option.value === initialStatus)
+          ?.label ?? initialStatus,
+      onRemove: () => pushParams({ status: "" }),
+    });
+  }
+  const isFiltered = Boolean(initialSearch || initialStatus || initialType);
 
   return (
     <div className="p-4 pb-24 sm:p-6 lg:p-8">
@@ -296,8 +316,16 @@ export default function AdminOrganizationalDocumentListPage({
           panelId="organizational-document-filters"
           ariaLabel="Filter daftar pedoman"
           activeCount={filterChips.length}
-          onReset={() => pushParams({ status: "" })}
+          onReset={() => pushParams(CLEARED_FILTERS)}
         >
+          <Select
+            selectId="organizational-document-type-filter"
+            label="Tipe"
+            placeholder="Semua Tipe"
+            value={initialType || null}
+            onChange={(value) => pushParams({ type: String(value ?? "") })}
+            options={TYPE_FILTER_OPTIONS}
+          />
           <Select
             selectId="organizational-document-status-filter"
             label="Status"
@@ -311,7 +339,7 @@ export default function AdminOrganizationalDocumentListPage({
 
       <ActiveFilterChips
         chips={filterChips}
-        onClearAll={() => pushParams({ status: "" })}
+        onClearAll={() => pushParams(CLEARED_FILTERS)}
       />
 
       {documents.length === 0 ? (
@@ -320,7 +348,7 @@ export default function AdminOrganizationalDocumentListPage({
             title={isFiltered ? "Pedoman tidak ditemukan" : "Belum ada pedoman"}
             description={
               isFiltered
-                ? "Coba ubah kata kunci pencarian atau filter status."
+                ? "Coba ubah kata kunci pencarian atau filter tipe dan status."
                 : "Unggah PDF pedoman pertama supaya kader bisa membacanya di HMI Connect."
             }
             action={

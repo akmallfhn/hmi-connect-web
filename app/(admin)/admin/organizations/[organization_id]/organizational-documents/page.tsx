@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listOrganizationalDocuments } from "@/apis/organizational-documents";
 import AdminOrganizationalDocumentListPage from "@/components/pages/AdminOrganizationalDocumentListPage";
 import { getMainSiteOrigin } from "@/lib/constants";
+import { parseOrganizationalDocumentType } from "@/lib/organizational-document";
 import { localDateKey } from "@/lib/time-manipulation";
 import type { StatusEnum } from "@/lib/types";
 
@@ -20,7 +21,12 @@ export default async function OrganizationOrganizationalDocumentsPage({
   searchParams,
 }: {
   params: Promise<{ organization_id: string }>;
-  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    type?: string;
+    page?: string;
+  }>;
 }) {
   const [{ organization_id }, query] = await Promise.all([
     params,
@@ -31,11 +37,13 @@ export default async function OrganizationOrganizationalDocumentsPage({
     query.status === "active" || query.status === "inactive"
       ? query.status
       : "";
+  const type = parseOrganizationalDocumentType(query.type);
   const page = Number(query.page ?? "1") || 1;
 
   const result = await listOrganizationalDocuments({
     search: search || undefined,
     status: (status || undefined) as StatusEnum | undefined,
+    type: type || undefined,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -50,6 +58,7 @@ export default async function OrganizationOrganizationalDocumentsPage({
       currentPage={result.currentPage}
       initialSearch={search}
       initialStatus={status}
+      initialType={type}
       organizationId={organization_id}
       defaultPublishedDate={localDateKey()}
       mainSiteOrigin={getMainSiteOrigin()}
