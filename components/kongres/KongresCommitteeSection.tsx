@@ -6,13 +6,13 @@ import {
   KONGRES_STEERING_COMMITTEE,
 } from "@/lib/kongres-data";
 import KongresCommitteePostCard from "./KongresCommitteePostCard";
-import { SectionHeading, TapisBand } from "./KongresDecor";
+import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading, TapisBand } from "./KongresDecor";
 
 type CommitteeTab = "sc" | "oc";
 
-const TABS: { value: CommitteeTab; label: string; caption: string }[] = [
-  { value: "oc", label: "Organizing Committee", caption: "Panitia Nasional Kongres (Panasko) HMI ke-XXXIII" },
-  { value: "sc", label: "Steering Committee", caption: "SC Kongres HMI ke-XXXIII, penyusun materi & pengarah persidangan" },
+const TABS: { value: CommitteeTab; label: string }[] = [
+  { value: "oc", label: "Panitia Nasional Kongres" },
+  { value: "sc", label: "Steering Committee" },
 ];
 
 const OC_LEADERS = KONGRES_NATIONAL_COMMITTEE.filter((member) => member.leader);
@@ -24,14 +24,13 @@ export default function KongresCommitteeSection() {
   const [tab, setTab] = useState<CommitteeTab>("oc");
 
   return (
-    <section id="panitia" className="relative scroll-mt-14 overflow-hidden bg-[#04291a] py-16 text-white lg:py-24">
+    <section id="panitia" className={`relative bg-[#04291a] text-white ${KONGRES_SECTION_CLASS}`}>
       <div className="absolute -left-40 top-20 size-[480px] rounded-full bg-[#0a8a42]/30 blur-[120px]" />
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <div className={`relative ${KONGRES_SECTION_BODY}`}>
         <SectionHeading
           tone="dark"
           eyebrow="Struktur Kepanitiaan"
           title="Panitia & Steering Committee"
-          description="Mereka yang memastikan Kongres XXXIII berjalan tertib, bermartabat, dan berkesan bagi setiap utusan."
         />
 
         <div
@@ -59,9 +58,6 @@ export default function KongresCommitteeSection() {
             );
           })}
         </div>
-        <p className="mt-3 text-sm text-white/60">
-          {TABS.find((item) => item.value === tab)?.caption}
-        </p>
 
         <div
           role="tabpanel"
@@ -79,7 +75,7 @@ export default function KongresCommitteeSection() {
               <h3 className="mt-12 text-center font-stack-sans-headline text-xl font-medium">
                 Anggota SC
               </h3>
-              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 {SC_MEMBERS.map((member) => (
                   <KongresCommitteePostCard key={member.name} member={member} tone="green" />
                 ))}
@@ -108,7 +104,7 @@ export default function KongresCommitteeSection() {
               <h3 className="mt-12 text-center font-stack-sans-headline text-xl font-medium">
                 Kepala Divisi
               </h3>
-              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+              <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 {OC_DIVISIONS.map((member) => (
                   <KongresCommitteePostCard key={member.name} member={member} tone="gold" />
                 ))}

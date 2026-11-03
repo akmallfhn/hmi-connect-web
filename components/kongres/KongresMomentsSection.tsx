@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { KONGRES_HASHTAG, KONGRES_MOMENTS } from "@/lib/kongres-data";
 import KongresShareMomentButton from "./KongresShareMomentButton";
-import { SectionHeading } from "./KongresDecor";
+import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
 const HASHTAG_SEARCH_HREF = `/search?q=${encodeURIComponent(`#${KONGRES_HASHTAG.toLowerCase()}`)}&tab=feed`;
 
@@ -11,8 +11,8 @@ const compactNumber = new Intl.NumberFormat("id-ID", { notation: "compact" });
 
 export default function KongresMomentsSection() {
   return (
-    <section id="momen" className="scroll-mt-14 bg-[#fbf6e9] py-16 dark:bg-surface-muted lg:py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section id="momen" className={`bg-[#fbf6e9] dark:bg-surface-muted ${KONGRES_SECTION_CLASS}`}>
+      <div className={KONGRES_SECTION_BODY}>
         <SectionHeading
           eyebrow={`#${KONGRES_HASHTAG}`}
           title="Momen Kongres"
@@ -31,7 +31,7 @@ export default function KongresMomentsSection() {
           }
         />
 
-        <ul className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3">
+        <ul className="mt-10 columns-1 gap-4 sm:columns-2 xl:columns-3">
           {KONGRES_MOMENTS.map((moment) => (
             <li key={moment.id} className="mb-4 break-inside-avoid overflow-hidden rounded-3xl bg-surface">
               <div className={`group relative overflow-hidden ${moment.tall ? "aspect-[3/4]" : "aspect-[4/3]"}`}>

@@ -5,11 +5,12 @@ import {
   KONGRES_LOGO_DOWNLOADS,
   KONGRES_LOGO_PHILOSOPHY,
 } from "@/lib/kongres-data";
+import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS } from "./KongresDecor";
 
 // Mirrors the committee's "Filosofi Logo" sheet: title, logo, six elements, then the brand colour strip.
 export default function KongresLogoSection() {
   return (
-    <section id="logo" className="relative scroll-mt-14 overflow-hidden bg-surface">
+    <section id="logo" className={`relative border border-border bg-surface ${KONGRES_SECTION_CLASS}`}>
       <Image
         src="/images/kongres/filosofi/kelopak-bunga.png"
         alt=""
@@ -27,7 +28,7 @@ export default function KongresLogoSection() {
         className="pointer-events-none absolute -left-32 top-1/2 w-[380px] opacity-[0.05] grayscale lg:w-[480px]"
       />
 
-      <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
+      <div className={`relative ${KONGRES_SECTION_BODY}`}>
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
             Identitas Visual
@@ -46,10 +47,10 @@ export default function KongresLogoSection() {
           </div>
         </div>
 
-        <ul className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-2 lg:mt-20 lg:gap-y-14">
+        <ul className="mt-12 grid gap-x-10 gap-y-10 xl:grid-cols-2">
           {KONGRES_LOGO_PHILOSOPHY.map((item) => (
             <li key={item.title} className="flex items-start gap-5 sm:gap-6">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center sm:h-32 sm:w-36">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-28">
                 <Image
                   src={item.icon}
                   alt=""
@@ -68,12 +69,12 @@ export default function KongresLogoSection() {
           ))}
         </ul>
 
-        <div className="mt-16 lg:mt-24">
+        <div className="mt-14">
           <h3 className="font-stack-sans-headline text-2xl font-medium text-heading">Kanal Unduhan</h3>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Gunakan file resmi berikut tanpa mengubah warna, proporsi, atau susunannya.
           </p>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {KONGRES_LOGO_DOWNLOADS.map((file) => (
               <li
                 key={file.href}

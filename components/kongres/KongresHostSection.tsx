@@ -1,17 +1,17 @@
 import { IconToolsKitchen2 } from "@tabler/icons-react";
+import Image from "next/image";
 import {
   KONGRES_CULINARY,
   KONGRES_HOST_FACTS,
   KONGRES_HOST_HIGHLIGHTS,
-  KONGRES_PHOTOS,
 } from "@/lib/kongres-data";
-import { DuotonePhoto, SectionHeading } from "./KongresDecor";
+import { DuotonePhoto, KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
 export default function KongresHostSection() {
   return (
-    <section id="tuan-rumah" className="scroll-mt-14 bg-[#fbf6e9] py-16 dark:bg-surface-muted lg:py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    <section id="tuan-rumah" className={`bg-[#fbf6e9] dark:bg-surface-muted ${KONGRES_SECTION_CLASS}`}>
+      <div className={KONGRES_SECTION_BODY}>
+        <div className="grid items-center gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <div>
             <SectionHeading
               eyebrow="Tabik Pun · Tuan Rumah"
@@ -22,7 +22,7 @@ export default function KongresHostSection() {
               }
               description="Kota Tapis Berseri di ujung selatan Sumatera. Pertemuan budaya pesisir dan pepadun, gerbang utama Jawa–Sumatera, dan kini rumah bagi musyawarah tertinggi HMI."
             />
-            <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
+            <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
               {KONGRES_HOST_FACTS.map((fact) => (
                 <div
                   key={fact.label}
@@ -39,26 +39,13 @@ export default function KongresHostSection() {
             </dl>
           </div>
 
-          <div className="grid h-[420px] grid-cols-3 grid-rows-2 gap-3 sm:h-[480px]">
-            <DuotonePhoto
-              photo={KONGRES_PHOTOS.cityPortrait}
-              sizes="(min-width: 1024px) 18vw, 33vw"
-              className="row-span-2 rounded-3xl"
-            />
-            <DuotonePhoto
-              photo={KONGRES_PHOTOS.city}
-              sizes="(min-width: 1024px) 36vw, 66vw"
-              className="col-span-2 rounded-3xl"
-            />
-            <DuotonePhoto
-              photo={KONGRES_PHOTOS.adipura}
-              sizes="(min-width: 1024px) 18vw, 33vw"
-              className="rounded-3xl"
-            />
-            <DuotonePhoto
-              photo={KONGRES_PHOTOS.furqon}
-              sizes="(min-width: 1024px) 18vw, 33vw"
-              className="rounded-3xl"
+          <div className="relative aspect-square w-full overflow-hidden rounded-3xl">
+            <Image
+              src="/images/kongres/menara-siger.webp"
+              alt="Bangunan berbentuk mahkota Siger di tengah perbukitan hijau Lampung"
+              fill
+              sizes="(min-width: 1280px) 40vw, 100vw"
+              className="object-cover"
             />
           </div>
         </div>
@@ -66,7 +53,7 @@ export default function KongresHostSection() {
         <h3 className="mt-16 font-stack-sans-headline text-2xl font-medium text-heading">
           Kenali Lampung lebih dekat
         </h3>
-        <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           {KONGRES_HOST_HIGHLIGHTS.map((item, index) => (
             <li key={item.title} className="group overflow-hidden rounded-2xl bg-surface sm:rounded-3xl">
               <div className="relative">

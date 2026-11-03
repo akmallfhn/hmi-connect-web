@@ -13,6 +13,7 @@ import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,
   COMPOSE_INTENT_NEWS_KEY,
+  COMPOSE_INTENT_TEXT_KEY,
   COMPOSE_INTENT_TRAINING_KEY,
 } from "@/lib/constants";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
@@ -101,6 +102,10 @@ export default function FeedTimeline({
     ComposerTrainingDraft | undefined
   >(undefined);
 
+  const [composerText, setComposerText] = useState<string | undefined>(
+    undefined
+  );
+
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
 
@@ -159,6 +164,10 @@ export default function FeedTimeline({
       setComposerNews(parseNewsIntent(raw));
       setComposerArticle(parseArticleIntent(rawArticle));
       setComposerTraining(parseTrainingIntent(rawTraining));
+
+      const rawText = window.sessionStorage.getItem(COMPOSE_INTENT_TEXT_KEY);
+      if (rawText) window.sessionStorage.removeItem(COMPOSE_INTENT_TEXT_KEY);
+      setComposerText(rawText ?? undefined);
       setComposerSignal((prev) => prev + 1);
     }
 
@@ -201,6 +210,7 @@ export default function FeedTimeline({
         forceOpenNews={composerNews}
         forceOpenArticle={composerArticle}
         forceOpenTraining={composerTraining}
+        forceOpenText={composerText}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}

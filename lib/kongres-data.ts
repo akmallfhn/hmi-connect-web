@@ -1,7 +1,7 @@
 // Campaign content for /pages/kongres-hmi-xxxiii. Only the theme, logo, and national committee are official; the rest is placeholder.
 
 export const KONGRES_PATH = "/pages/kongres-hmi-xxxiii";
-export const KONGRES_HASHTAG = "KongresHMIXXXIII";
+export const KONGRES_HASHTAG = "KongresHMI33Lampung";
 export const KONGRES_STARTS_AT = "2026-11-28T08:00:00+07:00";
 export const KONGRES_ENDS_AT = "2026-12-05T23:59:00+07:00";
 export const KONGRES_THEME = "Akselerasi HMI Untuk Kedaulatan Nasional";
@@ -162,6 +162,8 @@ export type KongresCommitteeMember = {
   role: string;
   photo: string;
   leader?: boolean;
+  // Set only where an HMI Connect profile was confirmed by full name or the member's Instagram handle.
+  username?: string;
 };
 
 // The Panitia Nasional (Panasko) as announced on @kongreshmike33_lampung; portraits are background-removed cutouts.
@@ -170,7 +172,7 @@ const panitia = (slug: string) => `/images/kongres/panitia/${slug}.webp`;
 export const KONGRES_NATIONAL_COMMITTEE: KongresCommitteeMember[] = [
   { name: "Mauldan Agusta Rifanda", role: "Ketua Panitia Nasional Kongres", photo: panitia("mauldan-agusta-rifanda"), leader: true },
   { name: "Ramanda Ansori", role: "Sekretaris Panitia Nasional Kongres", photo: panitia("ramanda-ansori"), leader: true },
-  { name: "Anida", role: "Bendahara Panitia Nasional Kongres", photo: panitia("anida"), leader: true },
+  { name: "Anida", role: "Bendahara Panitia Nasional Kongres", photo: panitia("anida"), leader: true, username: "anida" },
   { name: "Putri Haryani", role: "Kepala Divisi Acara Kongres", photo: panitia("putri-haryani") },
   { name: "Andika Pezri Mulia", role: "Kepala Divisi HUMAS Internal", photo: panitia("andika-pezri-mulia") },
   { name: "Mahdi Arifan", role: "Kepala Divisi HUMAS Eksternal", photo: panitia("mahdi-arifan") },
@@ -187,27 +189,29 @@ export const KONGRES_NATIONAL_COMMITTEE: KongresCommitteeMember[] = [
 const sc = (slug: string) => `/images/kongres/sc/${slug}.webp`;
 
 export const KONGRES_STEERING_COMMITTEE: KongresCommitteeMember[] = [
-  { name: "Sukrin", role: "Koordinator SC Kongres", photo: sc("sukrin"), leader: true },
+  { name: "Sukrin", role: "Koordinator SC Kongres", photo: sc("sukrin"), leader: true, username: "sukrin" },
   { name: "Gian", role: "Sekretaris SC Kongres", photo: sc("gian"), leader: true },
-  ...[
-    ["Rheno", "rheno"],
-    ["Yusuf", "yusuf"],
-    ["Arsyi", "arsyi"],
-    ["Romadhon", "romadhon"],
-    ["Syaiful", "syaiful"],
-    ["Nur Ghina", "nur-ghina"],
-    ["Ilham Mandala", "ilham-mandala"],
-    ["Maryadi", "maryadi"],
-    ["Sri Meisista", "sri-meisista"],
-    ["Ramon", "ramon"],
-    ["A Hakim El", "a-hakim-el"],
-    ["Nur Hariyani", "nur-hariyani"],
-    ["Rifyan", "rifyan"],
-    ["Ibnu", "ibnu"],
-    ["Dini Asmiatul", "dini-asmiatul"],
-    ["Fajar", "fajar"],
-    ["Alif", "alif"],
-  ].map(([name, slug]) => ({ name, role: "Anggota SC Kongres", photo: sc(slug) })),
+  ...(
+    [
+      ["Rheno", "rheno"],
+      ["Yusuf", "yusuf"],
+      ["Arsyi", "arsyi"],
+      ["Romadhon", "romadhon", "romaadhon.odn"],
+      ["Syaiful", "syaiful", "amsyaifull"],
+      ["Nur Ghina", "nur-ghina", "nurghinaa"],
+      ["Ilham Mandala", "ilham-mandala"],
+      ["Maryadi", "maryadi"],
+      ["Sri Meisista", "sri-meisista", "srimeisista"],
+      ["Ramon", "ramon"],
+      ["A Hakim El", "a-hakim-el"],
+      ["Nur Hariyani", "nur-hariyani", "nurhariyani_"],
+      ["Rifyan", "rifyan", "officialrrs7"],
+      ["Ibnu", "ibnu"],
+      ["Dini Asmiatul", "dini-asmiatul", "diniasmiatul"],
+      ["Fajar", "fajar"],
+      ["Alif", "alif"],
+    ] as [string, string, string?][]
+  ).map(([name, slug, username]) => ({ name, role: "Anggota SC Kongres", photo: sc(slug), username })),
 ];
 
 export const KONGRES_HOST_FACTS = [

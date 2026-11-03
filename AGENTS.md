@@ -2399,20 +2399,29 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   and "momen" posts are still placeholders. Both committee tabs (Organizing Committee is the default)
   render `KongresCommitteePostCard`: a plain white card whose background-removed cutout
   (`public/images/kongres/{panitia,sc}/*.webp`, 600×635 and bottom-aligned) rises out of a frame in its
-  announcement's colour (gold for Panasko, green for SC), then name and role; leaders lead each tab above the rest. Its sections live in
-  `components/kongres/*` — hero with a `useSyncExternalStore` countdown, a sticky scroll-spy section
-  nav, a "Filosofi Logo" section mirroring the committee's sheet (light horizontal logo, six element
-  icons under `public/images/kongres/filosofi/`, the four-colour brand strip) with the download
-  channel inside it (files under `public/images/kongres/`), SC/OC tabs, the host city,
-  venues with a per-venue Google Maps embed, an 8-day rundown timeline, news, and a moments gallery
-  whose CTA opens the home composer through `COMPOSE_INTENT_KEY`. It uses its own deep-green/gold
-  palette and the tumpal `TapisBand` divider rather than app tokens, and has no `Header`.
-  `MainSiteDesktopShell` hides the desktop rail on every `/pages/*` route. From `lg` the sticky section
-  nav is reordered above the hero as the page header (below `lg` it follows the hero); it carries
-  the white-text horizontal logo (`logo-kongres-xxxiii-horizontal.png`, dark backgrounds only) and
-  a home link back into the app; the footer repeats both. City photos
-  are Wikimedia Commons thumbnails hotlinked through `KONGRES_PHOTOS` and credited in the footer;
-  portraits are randomuser.me placeholders. Replace both with official assets before launch.
+  announcement's colour (gold for Panasko, green for SC), then name and role; leaders lead each tab above the rest.
+  The tabs read "Panitia Nasional Kongres" (default) and "Steering Committee". A member with a
+  confirmed HMI Connect account carries `username` in `lib/kongres-data.ts`, and its card shows
+  `@username` and links to `/profile/{username}`. Matches were checked by hand against `users/detail`
+  (full name or the member's Instagram handle); a shared first name alone is never enough.
+  The page is laid out like any HMI Connect page rather than a landing page: a `PageMargin` grid on
+  the white app background, every section a full-width rounded card (`KONGRES_SECTION_CLASS`/`_BODY`
+  in `KongresDecor`) stacked with a gap. Navigation is `KongresFloatingNav`,
+  a Liputan6-style floating pill of scroll-spy section links that fades in once the hero leaves the
+  viewport, centred over the content column (above `BottomNav` on mobile, where it scrolls
+  sideways to keep the active item in view). The app's desktop rail stays on the left like every
+  other page; there is no `Header`, aside, or footer. Section order:
+  hero ("Kongres HMI XXXIII", countdown, Pasang Twibbon and Bagikan Momen), statistics, host city,
+  venues (per-venue Google Maps embed), the 8-day rundown on a light card, committees, moments,
+  news, then "Filosofi Logo" (the committee's sheet: light horizontal logo, six element icons under
+  `public/images/kongres/filosofi/`, downloads, the four-colour brand strip). Pasang Twibbon only
+  toasts until the editor on `feat/twibbon-kongres` ships; both Bagikan Momen buttons (hero and
+  the moments section) open the home composer through `COMPOSE_INTENT_KEY` (`useShareMoment`) with
+  `#KongresHMI33Lampung` (`KONGRES_HASHTAG`) already typed, handed over as
+  `COMPOSE_INTENT_TEXT_KEY` and passed by `FeedTimeline` as `CreateFeedForms`' `forceOpenText`. It keeps its own deep-green/gold palette and the
+  tumpal `TapisBand` divider inside cards. City photos are Wikimedia Commons thumbnails hotlinked
+  through `KONGRES_PHOTOS` and credited by `KongresPhotoCredits` below the last card; "momen"
+  avatars are randomuser.me placeholders. Replace both with official assets before launch.
 - `/pendataan-komisariat` (`app/(www)/www/pendataan-komisariat/page.tsx` ->
   `components/pages/ChapterCensusPage.tsx`) is a public, pre-login census form: Data Pengisi (nama,
   email, jabatan), Asal Cabang (a Badko `SearchableSelect`, plus `NO_COORDINATING_BODY_LABEL` for

@@ -2,15 +2,15 @@ import { IconArrowRight } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import { KONGRES_NEWS } from "@/lib/kongres-data";
-import { SectionHeading } from "./KongresDecor";
+import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
 // Placeholder stories render as cards without links until real Kongres articles exist.
 export default function KongresNewsSection() {
   const [featured, ...rest] = KONGRES_NEWS;
 
   return (
-    <section id="berita" className="scroll-mt-14 bg-surface py-16 lg:py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section id="berita" className={`border border-border bg-surface ${KONGRES_SECTION_CLASS}`}>
+      <div className={KONGRES_SECTION_BODY}>
         <SectionHeading
           eyebrow="Kabar Kongres"
           title="Berita Terkini"
@@ -26,7 +26,7 @@ export default function KongresNewsSection() {
           }
         />
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+        <div className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <article className="group relative flex min-h-[420px] flex-col justify-end overflow-hidden rounded-3xl bg-[#04291a] text-white">
             <Image
               src={featured.photo.src}

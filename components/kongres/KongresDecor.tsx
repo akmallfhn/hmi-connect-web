@@ -8,6 +8,10 @@ export const KONGRES_GOLD_TEXT =
   "bg-linear-to-r from-[#fbe7a1] via-[#e8b628] to-[#b8860b] bg-clip-text text-transparent";
 export const KONGRES_GOLD_BG = "bg-linear-to-r from-[#f6d77a] via-[#e8b628] to-[#c89211]";
 
+// Every section is a rounded card in the page column.
+export const KONGRES_SECTION_CLASS = "scroll-mt-4 overflow-hidden rounded-3xl lg:scroll-mt-6";
+export const KONGRES_SECTION_BODY = "px-5 py-10 sm:px-8 lg:px-10 lg:py-12";
+
 const TAPIS_MASK = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="16"><path d="M0 12h32v4H0zM4 8h24v4H4zM8 4h16v4H8zM12 0h8v4h-8z"/></svg>'
 )}")`;
@@ -48,15 +52,14 @@ export function SectionHeading({
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
         <p
-          className={`flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] ${
+          className={`text-xs font-bold uppercase tracking-[0.2em] ${
             dark ? "text-[#e8b628]" : "text-[#0a8a42] dark:text-[#e8b628]"
           }`}
         >
-          <span className="h-px w-8 bg-current" />
           {eyebrow}
         </p>
         <h2
-          className={`mt-3 font-stack-sans-headline text-3xl font-medium leading-tight sm:text-4xl lg:text-5xl ${
+          className={`mt-3 font-stack-sans-headline text-3xl font-medium leading-tight sm:text-4xl ${
             dark ? "text-white" : "text-heading"
           }`}
         >

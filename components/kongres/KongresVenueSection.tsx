@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { KONGRES_VENUES } from "@/lib/kongres-data";
-import { DuotonePhoto, SectionHeading } from "./KongresDecor";
+import { DuotonePhoto, KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
 function mapEmbedUrl(query: string) {
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
@@ -23,15 +23,15 @@ export default function KongresVenueSection() {
   const venue = KONGRES_VENUES.find((item) => item.id === venueId) ?? KONGRES_VENUES[0];
 
   return (
-    <section id="lokasi" className="scroll-mt-14 bg-surface py-16 lg:py-24">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section id="lokasi" className={`border border-border bg-surface ${KONGRES_SECTION_CLASS}`}>
+      <div className={KONGRES_SECTION_BODY}>
         <SectionHeading
           eyebrow="Peta Kongres"
           title="Lokasi Kongres & Persidangan"
           description="Enam titik utama Kongres XXXIII di Bandar Lampung. Pilih lokasi untuk melihat detail dan petanya."
         />
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <ol className="flex flex-col gap-2.5">
             {KONGRES_VENUES.map((item, index) => {
               const selected = item.id === venue.id;
@@ -82,7 +82,7 @@ export default function KongresVenueSection() {
               </div>
             </div>
 
-            <ul className="grid gap-3 p-5 text-sm sm:grid-cols-3">
+            <ul className="grid gap-2.5 p-5 text-sm">
               <li className="flex gap-2 text-muted-foreground">
                 <IconMapPin className="size-4 shrink-0 text-[#0a8a42]" />
                 {venue.address}

@@ -137,6 +137,7 @@ interface CreateFeedFormsProps {
   forceOpenNews?: ComposerNewsDraft;
   forceOpenArticle?: ComposerArticleDraft;
   forceOpenTraining?: ComposerTrainingDraft;
+  forceOpenText?: string;
 }
 
 type PhotoDraft = {
@@ -273,6 +274,7 @@ export default function CreateFeedForms({
   forceOpenNews,
   forceOpenArticle,
   forceOpenTraining,
+  forceOpenText,
 }: CreateFeedFormsProps) {
   const [open, setOpen] = useState(false);
   const [initialMode, setInitialMode] =
@@ -286,6 +288,9 @@ export default function CreateFeedForms({
   const [initialTraining, setInitialTraining] = useState<
     ComposerTrainingDraft | undefined
   >(undefined);
+  const [initialContent, setInitialContent] = useState<string | undefined>(
+    undefined
+  );
   const [seenForceOpenSignal, setSeenForceOpenSignal] =
     useState(forceOpenSignal);
   const firstName = (fullName ?? "Kader").split(" ")[0];
@@ -303,6 +308,7 @@ export default function CreateFeedForms({
     setInitialNews(news);
     setInitialArticle(article);
     setInitialTraining(training);
+    setInitialContent(undefined);
     setOpen(true);
   }
 
@@ -315,6 +321,7 @@ export default function CreateFeedForms({
       else if (forceOpenTraining)
         openComposer(null, undefined, undefined, forceOpenTraining);
       else openComposer();
+      setInitialContent(forceOpenText);
     }
   }
 
@@ -371,6 +378,7 @@ export default function CreateFeedForms({
         initialNews={initialNews}
         initialArticle={initialArticle}
         initialTraining={initialTraining}
+        initialContent={initialContent}
         onCreated={onCreated}
       />
     </>
@@ -388,6 +396,7 @@ interface FeedComposerModalProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialContent?: string;
   quoteFeed?: Feed;
   onCreated?: (feed: Feed) => void;
 }
@@ -404,6 +413,7 @@ export function FeedComposerModal({
   initialNews,
   initialArticle,
   initialTraining,
+  initialContent,
   quoteFeed,
   onCreated,
 }: FeedComposerModalProps) {
@@ -423,6 +433,7 @@ export function FeedComposerModal({
           initialNews={initialNews}
           initialArticle={initialArticle}
           initialTraining={initialTraining}
+          initialContent={initialContent}
           quoteFeed={quoteFeed}
           authorEntity={authorEntity}
           onClose={onClose}
@@ -442,6 +453,7 @@ interface FeedComposerFieldsProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialContent?: string;
   quoteFeed?: Feed;
   onClose: () => void;
   onCreated?: (feed: Feed) => void;
@@ -456,6 +468,7 @@ function FeedComposerFields({
   initialNews,
   initialArticle,
   initialTraining,
+  initialContent,
   quoteFeed,
   onClose,
   onCreated,
@@ -463,7 +476,7 @@ function FeedComposerFields({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewUrlsRef = useRef(new Set<string>());
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(initialContent ?? "");
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [compressingPhotos, setCompressingPhotos] = useState(false);
   const [youtubeValue, setYoutubeValue] = useState("");
