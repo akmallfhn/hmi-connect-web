@@ -32,7 +32,11 @@ type ExperienceSectionProps = {
   emptyMessage: string;
 };
 
-function HmiExperienceLogo({ entry }: { entry: HmiOrganizationExperienceEntry }) {
+function HmiExperienceLogo({
+  entry,
+}: {
+  entry: HmiOrganizationExperienceEntry;
+}) {
   if (entry.entity_image_url) {
     return (
       <Image
@@ -71,7 +75,8 @@ function ExperienceSection({
 }: ExperienceSectionProps) {
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<OrganizationExperienceEntry | null>(null);
+  const [editTarget, setEditTarget] =
+    useState<OrganizationExperienceEntry | null>(null);
 
   function openForm(entry: OrganizationExperienceEntry | null) {
     setEditTarget(entry);
@@ -96,13 +101,14 @@ function ExperienceSection({
           </p>
         ) : (
           entries.map((entry) => {
-            const organizationName = entry.experience_type === "hmi"
-              ? formatMentionEntityName(
-                  entry.entity_type,
-                  entry.entity_name,
-                  entry.entity_mention_name_normalized,
-                )
-              : entry.organization_name;
+            const organizationName =
+              entry.experience_type === "hmi"
+                ? formatMentionEntityName(
+                    entry.entity_type,
+                    entry.entity_name,
+                    entry.entity_mention_name_normalized
+                  )
+                : entry.organization_name;
             const entryContent = (
               <>
                 <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface text-primary-foreground">
@@ -180,11 +186,11 @@ export default function OrganizationExperienceCard({
 }: OrganizationExperienceCardProps) {
   const hmiEntries = entries.filter(
     (entry): entry is HmiOrganizationExperienceEntry =>
-      entry.experience_type === "hmi",
+      entry.experience_type === "hmi"
   );
   const nonHmiEntries = entries.filter(
     (entry): entry is NonHmiOrganizationExperienceEntry =>
-      entry.experience_type === "non_hmi",
+      entry.experience_type === "non_hmi"
   );
 
   return (
@@ -193,15 +199,15 @@ export default function OrganizationExperienceCard({
         entries={hmiEntries}
         experienceType="hmi"
         isOwnProfile={isOwnProfile}
-        title="Riwayat Organisasi HMI"
+        title="Pengalaman Organisasi HMI"
         emptyMessage="Belum ada riwayat organisasi HMI yang ditambahkan."
       />
       <ExperienceSection
         entries={nonHmiEntries}
         experienceType="non_hmi"
         isOwnProfile={isOwnProfile}
-        title="Riwayat Organisasi (Non-HMI)"
-        emptyMessage="Belum ada riwayat organisasi non-HMI yang ditambahkan."
+        title="Pengalaman Organisasi Lain"
+        emptyMessage="Belum ada riwayat organisasi lain yang ditambahkan."
       />
     </>
   );
