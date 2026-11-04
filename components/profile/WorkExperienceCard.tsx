@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase } from "lucide-react";
+import { IconBriefcase } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { WorkExperienceEntry } from "@/apis/users";
@@ -46,8 +46,8 @@ export default function WorkExperienceCard({
         ) : (
           entries.map((entry) => (
             <div key={entry.id} className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
-                <Briefcase className="size-5" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-primary-foreground">
+                <IconBriefcase className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-heading xl:text-[15px]">

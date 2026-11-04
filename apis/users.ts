@@ -9,6 +9,7 @@ import {
   isSuccessStatus,
   type Degree,
   type GenderEnum,
+  type MentionEntityTypeEnum,
   type ProfileCompletionStageEnum,
   type SortTypeEnum,
   type TrainingHistoryLevelEnum,
@@ -407,14 +408,33 @@ export type EducationHistoryEntry = {
   end_year?: number;
 };
 
-export type OrganizationExperienceEntry = {
+type OrganizationExperienceEntryBase = {
   id: string;
-  organization_name: string;
   position_title: string;
   start_year: number;
   end_year?: number;
   description?: string;
 };
+
+export type HmiOrganizationExperienceEntry =
+  OrganizationExperienceEntryBase & {
+    experience_type: "hmi";
+    entity_type: MentionEntityTypeEnum;
+    entity_id: string;
+    entity_name: string;
+    entity_mention_name_normalized: string;
+    entity_image_url: string | null;
+  };
+
+export type NonHmiOrganizationExperienceEntry =
+  OrganizationExperienceEntryBase & {
+    experience_type: "non_hmi";
+    organization_name: string;
+  };
+
+export type OrganizationExperienceEntry =
+  | HmiOrganizationExperienceEntry
+  | NonHmiOrganizationExperienceEntry;
 
 export type WorkExperienceEntry = {
   id: string;
@@ -1373,13 +1393,27 @@ export async function deleteTrainingHistory(id: string): Promise<ApiEnvelope> {
   });
 }
 
-export type CreateOrganizationExperiencePayload = {
-  organization_name: string;
+type OrganizationExperiencePayloadFields = {
   position_title: string;
   start_year: number;
   end_year?: number;
   description?: string;
 };
+
+type HmiOrganizationExperienceSource = {
+  experience_type: "hmi";
+  entity_type: MentionEntityTypeEnum;
+  entity_id: string;
+};
+
+type NonHmiOrganizationExperienceSource = {
+  experience_type: "non_hmi";
+  organization_name: string;
+};
+
+export type CreateOrganizationExperiencePayload =
+  OrganizationExperiencePayloadFields &
+    (HmiOrganizationExperienceSource | NonHmiOrganizationExperienceSource);
 
 export async function createOrganizationExperience(
   payload: CreateOrganizationExperiencePayload
@@ -1405,7 +1439,10 @@ export async function createOrganizationExperience(
 
 export type UpdateOrganizationExperiencePayload = {
   id: string;
+  experience_type?: "hmi" | "non_hmi";
   organization_name?: string;
+  entity_type?: MentionEntityTypeEnum;
+  entity_id?: string;
   position_title?: string;
   start_year?: number;
   end_year?: number;

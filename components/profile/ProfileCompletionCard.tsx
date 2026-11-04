@@ -42,7 +42,7 @@ const STAGE_LABEL: Record<ProfileCompletionStageEnum, string> = {
   basic_profile: "Headline & Nomor HP",
   education_histories: "Pendidikan",
   training_histories: "Riwayat Kaderisasi",
-  organization_experiences: "Pengalaman Organisasi",
+  organization_experiences: "Riwayat Organisasi",
   work_experiences: "Pengalaman Kerja",
   social_media_accounts: "Media Sosial",
 };
@@ -204,6 +204,7 @@ export default function ProfileCompletionCard({
         open={openForm === "organization"}
         onClose={closeForm}
         onSaved={handleSaved}
+        experienceType="hmi"
         entry={null}
       />
       <EditWorkExperienceForm

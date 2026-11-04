@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy } from "lucide-react";
+import { IconAward } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { HonorAwardEntry } from "@/apis/users";
@@ -46,8 +46,8 @@ export default function HonorAwardCard({
         ) : (
           entries.map((entry) => (
             <div key={entry.id} className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
-                <Trophy className="size-5" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-secondary-foreground">
+                <IconAward className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-heading xl:text-[15px]">

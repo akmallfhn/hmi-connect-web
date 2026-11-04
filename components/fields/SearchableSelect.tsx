@@ -63,6 +63,7 @@ interface SearchableSelectProps {
   menuPlacement?: MenuPlacement;
   portalMenu?: boolean;
   showOptionAvatar?: boolean;
+  optionAvatarFallback?: ReactNode;
   isClearable?: boolean;
 }
 
@@ -82,6 +83,7 @@ export default function SearchableSelect({
   menuPlacement = "auto",
   portalMenu = true,
   showOptionAvatar = false,
+  optionAvatarFallback,
   isClearable = true,
 }: SearchableSelectProps) {
   const [inputValue, setInputValue] = useState("");
@@ -192,6 +194,8 @@ export default function SearchableSelect({
                         sizes="24px"
                         className="object-cover"
                       />
+                    ) : optionAvatarFallback ? (
+                      optionAvatarFallback
                     ) : (
                       <UserRound className="size-3.5" />
                     )}

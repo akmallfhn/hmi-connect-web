@@ -40,6 +40,7 @@ export type SearchEntityResult = {
   entity_id: string;
   entity_name: string;
   entity_legal_name: string | null;
+  entity_mention_name: string;
   entity_image_url: string | null;
   created_at: string;
 };

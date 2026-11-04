@@ -1,6 +1,6 @@
 "use client";
 
-import { Award } from "lucide-react";
+import { IconCertificate } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { TrainingResultEnum } from "@/lib/types";
@@ -49,8 +49,8 @@ export default function TrainingCard({
       <div className="mt-3 flex flex-col gap-4">
         {entries.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary-soft text-secondary-foreground">
-              <Award className="size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-secondary-foreground">
+              <IconCertificate className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-heading xl:text-[15px]">

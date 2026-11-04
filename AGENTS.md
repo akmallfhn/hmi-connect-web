@@ -70,6 +70,10 @@ fix the rule, not just the code.
   Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
   Notification item badges use Tabler's filled icons for likes, comments, replies, follows,
   and access invitations. Share actions on every surface use Tabler's `IconShare2`.
+  The profile-detail lists also use Tabler for work, non-HMI organization, training history,
+  publication, and honor/award rows; their 40px icon holders are square `rounded-lg` badges like
+  Education, never circles. HMI-organization rows render the entity image and fall back to the
+  HMI, KOHATI, or BPL emblem as appropriate.
   The admin sidebars are Tabler too: `AdminSidebar` types `AdminNavItem.icon` as `TablerIcon` (its
   own burger/collapse/chevron/logout/close glyphs included, active nav icons at `stroke` 2.2 vs 1.8
   idle), and `MasterSidebar`/`EntitySidebar` take every nav icon from the one
@@ -1701,7 +1705,9 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   `publications/list`, and `honor-awards/list` all take `{ username }` now
   (`apis/users.ts#getUserByUsername` + the matching `list*` functions);
   `social-media-accounts/list` is the one holdout still keyed by `{ id }`. `WorkExperienceCard`
-  sits directly above `OrganizationExperienceCard` ("Pengalaman Organisasi"), `PublicationCard`
+  sits directly above `OrganizationExperienceCard`, which renders separate "Riwayat Organisasi
+  HMI" and "Riwayat Organisasi (Non-HMI)" containers. HMI CRUD stores an entity reference selected
+  through `search/entity`; non-HMI CRUD stores a free-text `organization_name`. `PublicationCard`
   sits directly below `TrainingCard` ("Riwayat Kaderisasi") and directly above `HonorAwardCard`
   in `ProfilePage.tsx`'s section order, and all three of `WorkExperienceCard`/`PublicationCard`/
   `HonorAwardCard` are otherwise a straight copy of `OrganizationExperienceCard`'s shape — the
