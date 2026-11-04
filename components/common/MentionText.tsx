@@ -35,10 +35,7 @@ export default function MentionText({
     }
 
     if (segment.type === "hashtag") {
-      const params = new URLSearchParams({
-        q: `#${segment.name}`,
-        tab: "feed",
-      });
+      const params = new URLSearchParams({ q: `#${segment.name}` });
       return (
         <Link
           key={`${segment.name}-${index}`}

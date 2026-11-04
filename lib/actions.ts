@@ -891,13 +891,14 @@ export async function markNotificationsAsRead(ids?: string[]) {
 export async function fetchSearchResults(
   category: SearchCategory,
   keyword: string,
-  page: number
+  page: number,
+  pageSize = 15,
 ) {
-  return searchResultsApi(category, keyword, { page });
+  return searchResultsApi(category, keyword, { page, pageSize });
 }
 
-export async function fetchSearchOverview(category: SearchCategory, keyword: string) {
-  return searchOverviewApi(category, keyword);
+export async function fetchSearchOverview(keyword: string) {
+  return searchOverviewApi(keyword);
 }
 
 export async function listReactors(

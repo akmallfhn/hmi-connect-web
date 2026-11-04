@@ -77,7 +77,9 @@ export type PagedSearchResult<T> = {
   hasMore: boolean;
 };
 
-export type SearchCounts = Record<SearchCategory, number>;
+export type SearchOverviewResults = {
+  [Category in SearchCategory]: PagedSearchResult<SearchResultMap[Category]>;
+};
 
 type ListResponse<T> = {
   list?: T[];
@@ -187,46 +189,17 @@ export async function searchResults<Category extends SearchCategory>(
   };
 }
 
-async function searchResultCount(category: SearchCategory, keyword: string): Promise<number> {
-  if (!keyword.trim()) return 0;
-  const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionToken) return 0;
-
-  try {
-    const result = await callApi<ListResponse<unknown>>(`/api/v1/search/${category}`, {
-      method: "POST",
-      token: sessionToken,
-      body: { keyword: keyword.trim(), page: 1, page_size: 1 },
-    });
-    if (!isSuccessStatus(result.status)) {
-      console.error(`[search:${category}] count request failed:`, result);
-      return 0;
-    }
-    return result.data?.metapaging?.count ?? result.data?.metapaging?.total_data ?? 0;
-  } catch (error) {
-    console.error(`[search:${category}] count request failed:`, error);
-    return 0;
-  }
-}
-
-export async function searchOverview<Category extends SearchCategory>(
-  category: Category,
+export async function searchOverview(
   keyword: string
-): Promise<{
-  results: PagedSearchResult<SearchResultMap[Category]>;
-  counts: SearchCounts;
-}> {
-  const otherCategories = SEARCH_CATEGORIES.filter((item) => item !== category);
-  const [results, otherCounts] = await Promise.all([
-    searchResults(category, keyword),
-    Promise.all(otherCategories.map((item) => searchResultCount(item, keyword))),
+): Promise<SearchOverviewResults> {
+  const [user, feed, entity, article] = await Promise.all([
+    searchResults("user", keyword, { pageSize: 7 }),
+    searchResults("feed", keyword, { pageSize: 7 }),
+    searchResults("entity", keyword, { pageSize: 7 }),
+    searchResults("article", keyword, { pageSize: 7 }),
   ]);
-  const counts: SearchCounts = { user: 0, feed: 0, entity: 0, article: 0 };
-  counts[category] = results.totalData;
-  otherCategories.forEach((item, index) => {
-    counts[item] = otherCounts[index];
-  });
-  return { results, counts };
+
+  return { user, feed, entity, article };
 }
 
 // Shared user pickers on both subdomains use the same public member search.

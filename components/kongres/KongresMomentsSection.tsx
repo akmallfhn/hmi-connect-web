@@ -5,7 +5,7 @@ import { KONGRES_HASHTAG, KONGRES_MOMENTS } from "@/lib/kongres-data";
 import KongresShareMomentButton from "./KongresShareMomentButton";
 import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading } from "./KongresDecor";
 
-const HASHTAG_SEARCH_HREF = `/search?q=${encodeURIComponent(`#${KONGRES_HASHTAG.toLowerCase()}`)}&tab=feed`;
+const HASHTAG_SEARCH_HREF = `/search?q=${encodeURIComponent(`#${KONGRES_HASHTAG.toLowerCase()}`)}`;
 
 const compactNumber = new Intl.NumberFormat("id-ID", { notation: "compact" });
 

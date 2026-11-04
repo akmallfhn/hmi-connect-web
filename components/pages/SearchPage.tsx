@@ -1,7 +1,6 @@
 "use client";
 
 import { IconSearch } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import {
   type FormEvent,
   type ReactNode,
@@ -9,15 +8,13 @@ import {
   useEffect,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import type { ArticleListEntry } from "@/apis/articles";
 import type {
-  PagedSearchResult,
   SearchCategory,
-  SearchCounts,
   SearchEntityResult,
   SearchFeedResult,
+  SearchOverviewResults,
   SearchPersonResult,
   SearchResultItem,
 } from "@/apis/search";
@@ -45,70 +42,65 @@ interface ViewerProps {
 interface SearchPageProps {
   viewer: ViewerProps;
   initialQuery: string;
-  activeCategory: SearchCategory;
-  initialResults: PagedSearchResult<SearchResultItem>;
-  initialCounts: SearchCounts;
+  initialResults: SearchOverviewResults;
   aside: ReactNode;
 }
 
-const CATEGORIES: { value: SearchCategory; label: string; noun: string }[] = [
-  { value: "user", label: "People", noun: "orang" },
-  { value: "feed", label: "Feed", noun: "postingan" },
-  { value: "entity", label: "Official", noun: "akun resmi" },
-  { value: "article", label: "Artikel", noun: "artikel" },
+const CATEGORIES: { value: SearchCategory; label: string }[] = [
+  { value: "user", label: "People" },
+  { value: "feed", label: "Post" },
+  { value: "entity", label: "Organisasi" },
+  { value: "article", label: "Artikel" },
 ];
 const SEARCH_DEBOUNCE_MS = 400;
+const EXPANDED_PAGE_SIZE = 15;
 
-function searchHref(query: string, category: SearchCategory) {
+function searchHref(query: string) {
   const params = new URLSearchParams();
   if (query.trim()) params.set("q", query.trim());
-  if (category !== "user") params.set("tab", category);
   return `/search${params.size ? `?${params}` : ""}`;
 }
 
 export default function SearchPage({
   viewer,
   initialQuery,
-  activeCategory,
   initialResults,
-  initialCounts,
   aside,
 }: SearchPageProps) {
-  const router = useRouter();
-  const [, startNavigation] = useTransition();
   const [keyword, setKeyword] = useState(initialQuery);
   const [searchedQuery, setSearchedQuery] = useState(initialQuery);
   const [results, setResults] = useState(initialResults);
-  const [counts, setCounts] = useState(initialCounts);
   const [searchError, setSearchError] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loadError, setLoadError] = useState(false);
+  const [loadingMore, setLoadingMore] = useState<
+    Partial<Record<SearchCategory, boolean>>
+  >({});
+  const [loadErrors, setLoadErrors] = useState<
+    Partial<Record<SearchCategory, boolean>>
+  >({});
+  const [expandedCategories, setExpandedCategories] = useState<
+    Set<SearchCategory>
+  >(() => new Set());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRequestIdRef = useRef(0);
 
-  const runSearch = useCallback(
-    async (query: string, requestId: number) => {
-      window.history.replaceState(null, "", searchHref(query, activeCategory));
-      try {
-        const next = await fetchSearchOverview(activeCategory, query);
-        if (requestId !== searchRequestIdRef.current) return;
-        setResults(next.results);
-        setCounts(next.counts);
-        setSearchedQuery(query);
-        setSearchError(false);
-        setLoadError(false);
-        setLoadingMore(false);
-      } catch {
-        if (requestId !== searchRequestIdRef.current) return;
-        setResults({ list: [], totalData: 0, currentPage: 1, hasMore: false });
-        setCounts({ user: 0, feed: 0, entity: 0, article: 0 });
-        setSearchedQuery(query);
-        setSearchError(true);
-        setLoadingMore(false);
-      }
-    },
-    [activeCategory]
-  );
+  const runSearch = useCallback(async (query: string, requestId: number) => {
+    window.history.replaceState(null, "", searchHref(query));
+    try {
+      const next = await fetchSearchOverview(query);
+      if (requestId !== searchRequestIdRef.current) return;
+      setResults(next);
+      setSearchedQuery(query);
+      setSearchError(false);
+      setLoadErrors({});
+      setLoadingMore({});
+      setExpandedCategories(new Set());
+    } catch {
+      if (requestId !== searchRequestIdRef.current) return;
+      setSearchedQuery(query);
+      setSearchError(true);
+      setLoadingMore({});
+    }
+  }, []);
 
   useEffect(() => {
     const query = keyword.trim();
@@ -131,47 +123,65 @@ export default function SearchPage({
     void runSearch(query, requestId);
   }
 
-  async function handleLoadMore() {
-    if (loadingMore || !results.hasMore) return;
+  async function handleLoadMore(category: SearchCategory) {
+    const categoryResults = results[category];
+    if (loadingMore[category] || !categoryResults.hasMore) return;
+
     const requestId = searchRequestIdRef.current;
-    setLoadingMore(true);
-    setLoadError(false);
+    const isFirstExpandedPage = !expandedCategories.has(category);
+    const page = isFirstExpandedPage ? 1 : categoryResults.currentPage + 1;
+    setLoadingMore((previous) => ({ ...previous, [category]: true }));
+    setLoadErrors((previous) => ({ ...previous, [category]: false }));
+
     try {
       const next = await fetchSearchResults(
-        activeCategory,
+        category,
         searchedQuery,
-        results.currentPage + 1
+        page,
+        EXPANDED_PAGE_SIZE,
       );
       if (requestId !== searchRequestIdRef.current) return;
-      setResults((previous) => ({
-        ...next,
-        list: [...previous.list, ...next.list],
-      }));
+
+      setResults((previous) => {
+        const previousItems = previous[category].list as SearchResultItem[];
+        const nextItems = next.list as SearchResultItem[];
+        return {
+          ...previous,
+          [category]: {
+            ...next,
+            list: isFirstExpandedPage
+              ? nextItems
+              : [...previousItems, ...nextItems],
+          },
+        } as SearchOverviewResults;
+      });
+      setExpandedCategories((previous) => new Set(previous).add(category));
     } catch {
-      if (requestId === searchRequestIdRef.current) setLoadError(true);
+      if (requestId === searchRequestIdRef.current) {
+        setLoadErrors((previous) => ({ ...previous, [category]: true }));
+      }
     } finally {
-      if (requestId === searchRequestIdRef.current) setLoadingMore(false);
+      if (requestId === searchRequestIdRef.current) {
+        setLoadingMore((previous) => ({ ...previous, [category]: false }));
+      }
     }
   }
 
   function handleFeedDeleted(feedId: string) {
     setResults((previous) => ({
       ...previous,
-      list: previous.list.filter(
-        (item) => (item as SearchFeedResult).feed?.id !== feedId
-      ),
-      totalData: Math.max(0, previous.totalData - 1),
-    }));
-    setCounts((previous) => ({
-      ...previous,
-      feed: Math.max(0, previous.feed - 1),
+      feed: {
+        ...previous.feed,
+        list: previous.feed.list.filter((item) => item.feed?.id !== feedId),
+        totalData: Math.max(0, previous.feed.totalData - 1),
+      },
     }));
   }
 
-  function renderResults() {
-    switch (activeCategory) {
+  function renderResults(category: SearchCategory) {
+    switch (category) {
       case "feed":
-        return (results.list as SearchFeedResult[])
+        return (results.feed.list as SearchFeedResult[])
           .filter((posting) => posting?.feed?.id)
           .map((posting, index) => (
             <FeedItemCard
@@ -195,26 +205,27 @@ export default function SearchPage({
             />
           ));
       case "user":
-        return (results.list as SearchPersonResult[]).map((person) => (
+        return (results.user.list as SearchPersonResult[]).map((person) => (
           <SearchPersonRow key={person.id} person={person} />
         ));
       case "entity":
-        return (results.list as SearchEntityResult[]).map((entity) => (
+        return (results.entity.list as SearchEntityResult[]).map((entity) => (
           <SearchEntityRow
             key={`${entity.entity_type}:${entity.entity_id}`}
             entity={entity}
           />
         ));
       case "article":
-        return (results.list as ArticleListEntry[]).map((article) => (
+        return (results.article.list as ArticleListEntry[]).map((article) => (
           <SearchArticleRow key={article.id} article={article} />
         ));
     }
   }
 
-  const currentCategory = CATEGORIES.find(
-    (item) => item.value === activeCategory
-  )!;
+  const hasAnyResults = CATEGORIES.some(
+    ({ value }) => results[value].list.length > 0,
+  );
+  const isSearching = keyword.trim() !== searchedQuery;
 
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
@@ -226,10 +237,17 @@ export default function SearchPage({
         verificationStatus={viewer.verificationStatus}
       />
 
-      <PageMargin className="grid grid-cols-1 gap-8 pb-8 pt-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:pt-8">
+      <PageMargin
+        noMobilePadding
+        className="grid grid-cols-1 gap-8 pb-8 pt-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:pt-8"
+      >
         <main className="min-w-0">
           <h1 className="sr-only">Cari di HMI Connect</h1>
-          <form role="search" onSubmit={handleSubmit}>
+          <form
+            role="search"
+            onSubmit={handleSubmit}
+            className="px-4 lg:px-0"
+          >
             <Input
               inputId="site-search"
               type="search"
@@ -251,49 +269,23 @@ export default function SearchPage({
             />
           </form>
 
-          <nav
-            aria-label="Kategori pencarian"
-            className="mt-5 grid grid-cols-4 border-b border-border"
-          >
-            {CATEGORIES.map((category) => {
-              const active = category.value === activeCategory;
-              return (
-                <button
-                  key={category.value}
-                  type="button"
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => {
-                    clearTimeout(debounceTimerRef.current ?? undefined);
-                    searchRequestIdRef.current++;
-                    startNavigation(() =>
-                      router.push(searchHref(keyword, category.value))
-                    );
-                  }}
-                  className={`-mb-px min-h-10 cursor-pointer border-b-2 px-1 text-center text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:text-sm ${
-                    active
-                      ? "border-border-strong font-semibold text-heading"
-                      : "border-transparent font-medium text-subtle-foreground hover:text-heading"
-                  }`}
-                >
-                  <span className="inline-flex items-center justify-center gap-1.5">
-                    <span>{category.label}</span>
-                    <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-badge-primary text-[10px] font-semibold leading-none text-badge-foreground">
-                      {Math.min(counts[category.value], 99)}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <section
-            aria-label={`Hasil pencarian ${currentCategory.label}`}
-            className="pt-5"
-          >
-            {keyword.trim() !== searchedQuery ? (
-              <div role="status">
+          <div className="mt-5">
+            {isSearching ? (
+              <div role="status" className="flex flex-col gap-1.5 lg:gap-4">
                 <span className="sr-only">Mencari...</span>
-                <SearchResultsSkeleton category={activeCategory} />
+                {CATEGORIES.map((category) => (
+                  <section
+                    key={category.value}
+                    className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x"
+                  >
+                    <h2 className="px-5 pb-2 pt-5 font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
+                      {category.label}
+                    </h2>
+                    <div className={category.value === "feed" ? "px-5" : "px-2"}>
+                      <SearchResultsSkeleton category={category.value} />
+                    </div>
+                  </section>
+                ))}
               </div>
             ) : searchError ? (
               <p
@@ -304,39 +296,61 @@ export default function SearchPage({
               </p>
             ) : !searchedQuery ? (
               <p className="py-16 text-center text-sm text-subtle-foreground">
-                Ketik kata kunci untuk mencari {currentCategory.noun}.
+                Ketik kata kunci untuk mencari di HMI Connect.
               </p>
-            ) : results.list.length === 0 ? (
+            ) : !hasAnyResults ? (
               <p className="py-16 text-center text-sm text-subtle-foreground">
-                Tidak ada {currentCategory.noun} untuk &ldquo;{searchedQuery}
-                &rdquo;.
+                Tidak ada hasil untuk &ldquo;{searchedQuery}&rdquo;.
               </p>
             ) : (
-              <>
-                <div>{renderResults()}</div>
-                {results.hasMore && (
-                  <div className="py-6 text-center">
-                    <button
-                      type="button"
-                      onClick={handleLoadMore}
-                      disabled={loadingMore}
-                      className="cursor-pointer text-sm font-semibold text-primary-foreground hover:underline disabled:cursor-wait disabled:opacity-60"
+              <div className="flex flex-col gap-1.5 lg:gap-4">
+                {CATEGORIES.map((category) => {
+                  const categoryResults = results[category.value];
+                  if (categoryResults.list.length === 0) return null;
+
+                  return (
+                    <section
+                      key={category.value}
+                      aria-labelledby={`search-category-${category.value}`}
+                      className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x"
                     >
-                      {loadingMore ? "Memuat..." : "Muat lebih banyak"}
-                    </button>
-                    {loadError && (
-                      <p
-                        role="alert"
-                        className="mt-2 text-sm text-destructive-foreground"
+                      <h2
+                        id={`search-category-${category.value}`}
+                        className="px-5 pb-2 pt-5 font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]"
                       >
-                        Gagal memuat hasil. Coba lagi.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </>
+                        {category.label}
+                      </h2>
+                      <div className={category.value === "feed" ? "px-5" : "px-2"}>
+                        {renderResults(category.value)}
+                      </div>
+                      {categoryResults.hasMore && (
+                        <div className="px-5 py-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadMore(category.value)}
+                            disabled={loadingMore[category.value]}
+                            className="cursor-pointer text-sm font-semibold text-primary-foreground hover:underline disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {loadingMore[category.value]
+                              ? "Memuat..."
+                              : "Tampilkan lebih banyak"}
+                          </button>
+                          {loadErrors[category.value] && (
+                            <p
+                              role="alert"
+                              className="mt-2 text-sm text-destructive-foreground"
+                            >
+                              Gagal memuat hasil. Coba lagi.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
             )}
-          </section>
+          </div>
         </main>
 
         <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">

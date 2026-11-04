@@ -1265,39 +1265,36 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   `components/icons/ChatIcon.tsx` follows the same outline/bulk pattern as
   Home/Search/Notification/Profile, converted 1:1 from designer-provided
   `iconly-chat(-outline).svg` (now deleted, same conversion convention as `AlQuranIcon`).
-- /search (components/pages/SearchPage.tsx) has four tabs in order: People (search/user),
-  Feed (search/feed), Official (search/entity), and Artikel (search/article). There is no
-  training search tab. The URL holds the keyword (q) and category (tab); omitting tab
-  selects People. The route fetches the active category's first page server-side. The
-  clickable hashtag route is `/search?q=%23{name}&tab=feed`: Feed resolves it through the
-  backend's exact `feed_hashtags` relation, while the other tabs search the same word without
-  the leading hash when the visitor switches categories. Hashtag links always canonicalize
-  their query to lowercase.
-  search field debounces input by 400ms, fetches new first pages through the shared Server
-  Action, and replaces the URL without remounting the input; Enter searches immediately.
-  Each tab shows a 20px primary badge with white text, capped at 99, beside its label. The active tab uses
-  the list response's metapaging.count (falling back to total_data); the other three
-  endpoints are queried with page_size 1 in parallel for their counts. Blank queries
-  show zero counts. The debounced action refreshes both results and counts together.
-  The same action loads subsequent pages. Feed renders each hydrated result through
-  FeedItemCard, including repost attribution. Search uses the surface background, one plain search
-  fields/Input control without a trailing button, underlined tabs, and a two-column desktop layout with SuggestedConnectionsCard
-  ("Mungkin Kamu Kenal") on the right. All tabs use manual pagination. The search form
-  keeps the URL in sync; the route keys SearchPage by category and keyword so navigation and
-  browser back/forward start with matching result state. apis/search.ts validates feed
+- /search (components/pages/SearchPage.tsx) renders four profile-style result cards in order:
+  People (search/user), Post (search/feed), Organisasi (search/entity), and Artikel
+  (search/article). There is no training category and no category tab. The URL holds only
+  the keyword (`q`). The route fetches the first seven results for all four categories in
+  parallel server-side, and a category with no results is omitted entirely. A category with
+  more than seven results shows a centered "Tampilkan lebih banyak" control. Its first click
+  replaces the seven-row preview with the first 15-row page; later clicks append another
+  15-row backend page, with loading and errors isolated per card. The clickable hashtag route
+  is `/search?q=%23{name}`; hashtag links always canonicalize their query to lowercase.
+  The search field debounces input by 400ms, fetches all four new previews through the shared
+  Server Action, and replaces the URL without remounting the input; Enter searches immediately.
+  Feed renders each hydrated result through FeedItemCard, including repost attribution.
+  Search uses the surface background, one plain fields/Input control without a trailing
+  button, a 16px mobile gutter around that input while result cards stay full-width, the profile
+  page's 6px mobile/16px desktop gap between category cards, and a two-column desktop layout with
+  SuggestedConnectionsCard ("Mungkin Kamu Kenal") on the right. The search form keeps the URL in sync; the route keys SearchPage by keyword
+  so navigation and browser back/forward start with matching result state. apis/search.ts validates feed
   items before passing them to FeedItemCard and hydrates legacy flat feed rows by id.
   People rows show the name and username beside the avatar, then headline or HMI Cabang
   name below; both third-line variants use 13px on mobile and 14px on desktop.
   Verified and KAHMI badges use ProfileBadges and require
   verification_status/is_alumni from search/user.
-  Official rows use the same rounded hover area and name typography as People; they
+  Organisasi rows use the same rounded hover area and name typography as People; they
   show no entity-type label above the name, and legal_name is 13px on mobile or 14px
   on desktop. Their avatar uses FeedAuthorAvatar so a missing image falls back to LogoHmi.
   Article rows omit the category label, use 13px author/date text on mobile and 14px
   on desktop, and show descriptions at 14px on desktop. Their padded rounded hover
-  area matches People and Official.
-  `search/loading.tsx` mirrors the search field, tabs, People rows, desktop grid, and
-  SuggestedConnectionsCard aside. Debounced searches render category-specific row
+  area matches People and Organisasi.
+  `search/loading.tsx` mirrors the search field, all four category cards, desktop grid, and
+  SuggestedConnectionsCard aside. Debounced searches render all four category-specific row
   skeletons from `SearchResultsSkeleton` while the next result set loads.
   The searchPeople wrapper also powers user pickers
   on the main and admin subdomains through search/user. ExploreSearchBar in the home
