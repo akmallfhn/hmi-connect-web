@@ -11,12 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function OrganizationalDocuments({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string }>;
-}) {
-  const { search = "" } = await searchParams;
+export default async function OrganizationalDocuments() {
   const [{ user }, documents] = await Promise.all([
     getSession(),
     listAllOrganizationalDocuments(),
@@ -24,7 +19,6 @@ export default async function OrganizationalDocuments({
 
   return (
     <OrganizationalDocumentListPage
-      key={search}
       viewer={{
         fullName: user?.full_name,
         avatar: user?.avatar,
@@ -33,7 +27,6 @@ export default async function OrganizationalDocuments({
         verificationStatus: user?.verification_status,
       }}
       documents={documents.filter((document) => document.status === "active")}
-      search={search.trim()}
     />
   );
 }

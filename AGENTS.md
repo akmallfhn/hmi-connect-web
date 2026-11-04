@@ -1730,7 +1730,8 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   `user_id` UUID now, so `FeedItemCard`/`CommentItem`/`ReactorsListModal`'s profile links
   route through `/profile/${username}` (falling back to `"#"` if a response ever omits it —
   it's still `omitempty` on the Go side). `ProfilePage` also renders
-  `SuggestedConnectionsCard` as the desktop right sidebar. `ProfileHeader` has a quiet
+  `SuggestedConnectionsCard` as the desktop right sidebar, with `ExploreSearchBar` above its cards.
+  `ProfileHeader` has a quiet
   primary-soft cover whose smaller decorative ring overlaps halfway across the larger ring's
   left edge, and a
   single-column layout (avatar overlapping the banner on the left, Edit Profil/Ikuti
@@ -1851,7 +1852,8 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   noise. It renders **twice, one instance per breakpoint** rather than being repositioned by CSS,
   the same treatment `SendMessageButton` gets: a `collapsible` copy in the main column just above
   `AboutCard` for mobile, where the stage list hides behind "Lihat Selengkapnya", and a plain copy
-  at the top of the desktop `aside` above `SuggestedConnectionsCard`, where all six always show.
+  below `ExploreSearchBar` at the top of the desktop `aside` and above `SuggestedConnectionsCard`,
+  where all six always show.
   That aside became a `lg:flex lg:flex-col lg:gap-4` column to hold both cards. Stage labels come
   from the card's own `STAGE_LABEL` map keyed on the response's stable `name`, **not** its
   `description` — the backend reserves the right to reword that prose, and it is English.
@@ -2343,8 +2345,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   (PDK)", ...), with smaller muted lines beneath from `organizationalDocumentEdition(title)`: the
   title minus its first "(...)", then that parenthetical on its own line ("Hasil Kongres HMI XXXII
   Pontianak 2023" / "PB HMI 2024-2026"); a title without one is a single line. A type with no active
-  document simply has no card. `?search=` filters those cards in memory by
-  title or type label; there is no list pagination on this member-facing page. The API's paginated
+  document simply has no card; there is no search or list pagination on this member-facing page. The API's paginated
   read remains unchanged for admin. The page title has no description beneath it,
   and `/organizational-documents/[document_slug]/[document_id]` renders
   `OrganizationalDocumentDetailPage`, the canvas-rendered `pdfjs-dist` viewer. Its "Versi"

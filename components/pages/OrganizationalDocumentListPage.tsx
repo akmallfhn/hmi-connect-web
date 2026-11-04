@@ -5,14 +5,11 @@ import {
   IconDownload,
   IconFileDescription,
 } from "@tabler/icons-react";
-import { Search } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { OrganizationalDocumentListEntry } from "@/apis/organizational-documents";
 import {
   compareNewestDocument,
-  ORGANIZATIONAL_DOCUMENTS_PATH,
   ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS,
   organizationalDocumentEdition,
   organizationalDocumentHref,
@@ -24,7 +21,6 @@ import type {
 import { formatShortDate } from "@/lib/time-manipulation";
 import Label from "../common/Label";
 import PageMargin from "../common/PageMargin";
-import Input from "../fields/Input";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import EmptyState from "../states/EmptyState";
@@ -38,7 +34,6 @@ interface OrganizationalDocumentListPageProps {
     verificationStatus?: VerificationStatusEnum;
   };
   documents: OrganizationalDocumentListEntry[];
-  search: string;
 }
 
 const DOCUMENT_TYPES: OrganizationalDocumentTypeEnum[] = [
@@ -46,14 +41,6 @@ const DOCUMENT_TYPES: OrganizationalDocumentTypeEnum[] = [
   "pdk",
   "pd-prt-bpl",
 ];
-
-function normalizeSearchText(value: string) {
-  return value
-    .toLocaleLowerCase("id-ID")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
-}
 
 function DocumentCover({
   document,
@@ -152,12 +139,7 @@ function DocumentCard({
 export default function OrganizationalDocumentListPage({
   viewer,
   documents,
-  search,
 }: OrganizationalDocumentListPageProps) {
-  const router = useRouter();
-  const [query, setQuery] = useState(search);
-  const normalizedQuery = normalizeSearchText(search);
-
   // Only each type's newest publication is listed; older versions live in the reader's Versi sheet.
   const latestDocuments = useMemo(
     () =>
@@ -169,24 +151,6 @@ export default function OrganizationalDocumentListPage({
       }),
     [documents]
   );
-
-  const visibleDocuments = normalizedQuery
-    ? latestDocuments.filter(({ type, document }) =>
-        normalizeSearchText(
-          `${ORGANIZATIONAL_DOCUMENT_TYPE_DETAILS[type].fullName} ${document.title}`
-        ).includes(normalizedQuery)
-      )
-    : latestDocuments;
-
-  function submitSearch(event: FormEvent) {
-    event.preventDefault();
-    const trimmed = query.trim();
-    router.push(
-      trimmed
-        ? `${ORGANIZATIONAL_DOCUMENTS_PATH}?search=${encodeURIComponent(trimmed)}`
-        : ORGANIZATIONAL_DOCUMENTS_PATH
-    );
-  }
 
   return (
     <div className="min-h-screen bg-surface pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
@@ -206,30 +170,14 @@ export default function OrganizationalDocumentListPage({
           </h1>
         </div>
 
-        <form onSubmit={submitSearch} className="lg:mt-6 lg:max-w-lg">
-          <Input
-            inputId="organizational-document-search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Cari judul atau kategori dokumen..."
-            aria-label="Cari pedoman organisasi"
-            icon={<Search className="size-4" />}
-          />
-        </form>
-
-        {visibleDocuments.length === 0 ? (
+        {latestDocuments.length === 0 ? (
           <EmptyState
-            title={search ? "Pedoman tidak ditemukan" : "Belum ada pedoman"}
-            description={
-              search
-                ? `Tidak ada judul atau kategori yang cocok dengan "${search}".`
-                : "Pedoman organisasi yang diterbitkan akan tampil di sini."
-            }
+            title="Belum ada pedoman"
+            description="Pedoman organisasi yang diterbitkan akan tampil di sini."
           />
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleDocuments.map(({ type, document }) => (
+            {latestDocuments.map(({ type, document }) => (
               <DocumentCard key={type} document={document} />
             ))}
           </div>

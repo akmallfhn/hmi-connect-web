@@ -17,6 +17,7 @@ import type {
   VerificationStatusEnum,
 } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
+import ExploreSearchBar from "../feeds/ExploreSearchBar";
 import SuggestedConnectionsCard from "../feeds/SuggestedConnectionsCard";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import ActingAwareBottomNav from "../official/ActingAwareBottomNav";
@@ -312,6 +313,7 @@ export default function ProfilePage({
             </div>
 
             <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">
+              <ExploreSearchBar />
               {profileCompletion && (
                 <ProfileCompletionCard
                   completion={profileCompletion}
