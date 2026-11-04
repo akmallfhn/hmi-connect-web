@@ -56,7 +56,7 @@ export default async function CoordinatingBodyLayout({
         avatar={user?.avatar}
         email={user?.email}
       />
-      <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
+      <main className="min-h-screen min-w-0 flex-1 lg:relative lg:min-h-0 lg:overflow-y-auto">
         {children}
       </main>
     </div>

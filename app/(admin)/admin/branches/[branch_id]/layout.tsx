@@ -61,7 +61,7 @@ export default async function BranchLayout({
           email={user?.email}
           pendingVerificationCount={verificationCount?.pending_count ?? 0}
         />
-        <main className="min-h-screen min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
+        <main className="min-h-screen min-w-0 flex-1 lg:relative lg:min-h-0 lg:overflow-y-auto">
           {children}
         </main>
       </div>

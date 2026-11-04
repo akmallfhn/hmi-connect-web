@@ -2938,7 +2938,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `bg-admin-geo-pattern`, so every admin area gets the same background without painting the
   sidebar. The `/master` and all five scoped entity nested layouts lock their desktop shell to
   `h-screen`/`overflow-hidden` and make only `<main>` scroll (`lg:overflow-y-auto`), keeping the
-  sidebar pinned; mobile retains normal document scrolling. `AdminNavEntry` is
+  sidebar pinned; mobile retains normal document scrolling. `<main>` must keep `lg:relative`: without
+  a positioned ancestor, absolute descendants such as `sr-only` spans escape its clipping and stretch
+  the document, adding a second scrollbar and blank space below the shell. `AdminNavEntry` is
   `AdminNavItem | AdminNavGroup` — a plain item (`label`/`href`/`icon`/optional `exact`, same as
   before — `NavList`'s active-route check is `pathname.startsWith(href)` by default, e.g. so
   "User Management" stays lit on `/master/users/[username]`/`/master/users/create` too, but a
