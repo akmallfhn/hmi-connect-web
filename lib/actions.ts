@@ -114,6 +114,14 @@ import {
   type PresignMediaPayload,
 } from "@/apis/media";
 import {
+  createEvent as createEventApi,
+  deleteEvent as deleteEventApi,
+  updateEvent as updateEventApi,
+  updateEventAttendance as updateEventAttendanceApi,
+  type CreateEventPayload,
+  type UpdateEventPayload,
+} from "@/apis/events";
+import {
   addPassword as addPasswordApi,
   changePassword as changePasswordApi,
   loginWithEmail as loginWithEmailApi,
@@ -683,6 +691,25 @@ export async function downloadMedia(assetId: string) {
 
 export async function deleteMedia(assetId: string) {
   return deleteMediaApi(assetId);
+}
+
+export async function createEvent(payload: CreateEventPayload) {
+  return createEventApi(payload);
+}
+
+export async function updateEvent(payload: UpdateEventPayload) {
+  return updateEventApi(payload);
+}
+
+export async function deleteEvent(id: string) {
+  return deleteEventApi(id);
+}
+
+export async function updateEventAttendance(
+  eventId: string,
+  isAttending: boolean,
+) {
+  return updateEventAttendanceApi(eventId, isAttending);
 }
 
 export async function loginWithEmail(identifier: string, password: string) {

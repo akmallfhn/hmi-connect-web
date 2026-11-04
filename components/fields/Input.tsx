@@ -100,7 +100,11 @@ export default function Input({
         )}
       </div>
 
-      {computedError && <p className="text-xs text-destructive-foreground">{computedError}</p>}
+      {computedError && (
+        <p role="alert" className="text-xs text-destructive-foreground">
+          {computedError}
+        </p>
+      )}
     </div>
   );
 }

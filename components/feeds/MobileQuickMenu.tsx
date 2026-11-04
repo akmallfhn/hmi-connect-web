@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AgendaIcon from "../icons/AgendaIcon";
 import AlQuranIcon from "../icons/AlQuranIcon";
 import DocumentIcon from "../icons/DocumentIcon";
 import EKTAIcon from "../icons/EKTAIcon";
@@ -9,6 +10,7 @@ import PrayerIcon from "../icons/PrayerIcon";
 const MENU_ITEMS = [
   { label: "Artikel", href: "/articles", icon: NewsIcon },
   { label: "E-KTA", href: "/membership", icon: EKTAIcon },
+  { label: "Event", href: "/events", icon: AgendaIcon },
   { label: "LK Center", href: "/trainings", icon: EventIcon },
   { label: "Al-Qur'an", href: "/quran", icon: AlQuranIcon },
   {

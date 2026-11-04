@@ -6,6 +6,8 @@ interface OfficialGreetingBarProps {
   name: string;
   imageUrl?: string | null;
   profileHref: string;
+  // Only the timeline floats a composer over this band; other pages don't need the extra height.
+  compact?: boolean;
 }
 
 // The home greeting's twin, set on dark navy so an admin can tell at a glance they speak as the entity.
@@ -13,9 +15,10 @@ export default function OfficialGreetingBar({
   name,
   imageUrl,
   profileHref,
+  compact = false,
 }: OfficialGreetingBarProps) {
   return (
-    <div className="relative z-0 overflow-hidden bg-tertiary px-4 pb-20 pt-4 lg:hidden">
+    <div className={`relative z-0 overflow-hidden bg-tertiary px-4 pt-4 lg:hidden ${compact ? "pb-4" : "pb-20"}`}>
       <div className="pointer-events-none absolute -left-14 -top-16 size-56 rounded-full bg-primary/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-12 -top-20 size-52 rounded-full bg-secondary/30 blur-3xl" />
 

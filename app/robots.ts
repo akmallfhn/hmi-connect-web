@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         "/chats",
         "/notifications",
         "/organizational-documents",
+        "/events",
         "/official/",
         "/invitations/",
         "/reset-password/",

@@ -8,6 +8,7 @@ import {
   IconBrandHipchat,
   IconChevronDown,
   IconClockHour4,
+  IconCalendarEvent,
   IconCreditCard,
   IconDots,
   IconListSearch,
@@ -28,6 +29,7 @@ import { toast } from "sonner";
 import {
   ACTING_ENTITY_PARAM,
   officialEntityHref,
+  officialEntityEventsHref,
   parseActingEntityParam,
   parseOfficialEntityPath,
   supportsActingEntity,
@@ -143,12 +145,20 @@ function officialNavItems(
     official.entityId,
   );
   const profileHref = entityProfileHref(official.entityType, official.entityId);
+  const eventsHref = officialEntityEventsHref(official.entityType, official.entityId);
   return [
     {
       label: "Timeline",
       href: timelineHref,
       icon: IconSmartHome,
       matches: (pathname) => pathname === timelineHref,
+    },
+    {
+      label: "Event",
+      href: eventsHref,
+      icon: IconCalendarEvent,
+      matches: (pathname) =>
+        pathname === eventsHref || pathname.startsWith(`${eventsHref}/`),
     },
     {
       label: "Profile",

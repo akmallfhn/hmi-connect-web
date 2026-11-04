@@ -2,12 +2,17 @@
 
 import {
   IconArrowBackUp,
+  IconCalendarEvent,
   IconSmartHome,
   IconUserCircle,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { officialEntityHref, withActingEntity } from "@/lib/access";
+import {
+  officialEntityEventsHref,
+  officialEntityHref,
+  withActingEntity,
+} from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum } from "@/lib/types";
 import { NavIconPulse, usePressPulse } from "../navigations/BottomNav";
@@ -28,10 +33,13 @@ export default function OfficialBottomNav({
   const pathname = usePathname();
   const timelineHref = officialEntityHref(entityType, entityId);
   const profileHref = entityProfileHref(entityType, entityId);
+  const eventsHref = officialEntityEventsHref(entityType, entityId);
   const isTimeline = pathname === timelineHref;
   const isProfile = pathname === profileHref;
+  const isEvents = pathname === eventsHref || pathname.startsWith(`${eventsHref}/`);
   const [homePressed, triggerHome] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
+  const [eventsPressed, triggerEvents] = usePressPulse();
   const [exitPressed, triggerExit] = usePressPulse();
 
   return (
@@ -48,6 +56,17 @@ export default function OfficialBottomNav({
           <IconSmartHome className="size-5" stroke={isTimeline ? 2.4 : 2} />
         </NavIconPulse>
         Beranda
+      </Link>
+
+      <Link
+        href={eventsHref}
+        onClick={triggerEvents}
+        className={`${TAB_CLASS} ${isEvents ? "text-primary-foreground" : "text-muted-foreground"}`}
+      >
+        <NavIconPulse pressed={eventsPressed}>
+          <IconCalendarEvent className="size-5" stroke={isEvents ? 2.4 : 2} />
+        </NavIconPulse>
+        Event
       </Link>
 
       <Link

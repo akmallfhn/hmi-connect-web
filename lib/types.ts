@@ -25,6 +25,13 @@ export type TrainingOrganizerTypeEnum =
   | "branch"
   | "coordinating_body"
   | "organization";
+export type EventEntityTypeEnum =
+  | "organization"
+  | "coordinating_body"
+  | "branch"
+  | "coordinating_chapter"
+  | "chapter"
+  | "special_body";
 export type Degree =
   | "diploma_ahli_pratama"
   | "diploma_ahli_muda"

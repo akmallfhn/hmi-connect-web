@@ -42,6 +42,13 @@ export function officialEntityHref(
   return `/official${adminEntityHref(entityType, entityId)}`;
 }
 
+export function officialEntityEventsHref(
+  entityType: AccessEntityTypeEnum,
+  entityId: string,
+): string {
+  return `${officialEntityHref(entityType, entityId)}/events`;
+}
+
 // The inverse of officialEntityHref, so the desktop rail can tell which entity page it sits on.
 export function parseOfficialEntityPath(
   pathname: string,

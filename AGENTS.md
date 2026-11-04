@@ -108,6 +108,7 @@ npm run build
 npm run start
 npm run lint
 npm run test:query # shared cache, optimistic read, rollback, and scope regression tests
+npm run test:event # event WIB formatting, form round-trip, status, and stored-URL safety
 ```
 
 Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script).
@@ -510,6 +511,7 @@ Three layers, each with one job. Don't blend them.
    403/409/400 onto Indonesian copy — the composer's only failure surface is a toast, and
    "verify your identity first" versus "slug already exists" are different instructions to the
    author),
+   `events.ts` (the `events/*` resource, separate from `trainings.ts`; see `/events` below),
    `news.ts` (categories + articles, including `getNewsArticleDetail` — `news-articles/detail`
    is the one read `list` can't serve, resolving a single article by id; a soft-deleted
    article answers 404, while a feed attachment pointing at one renders as removed from the
@@ -921,8 +923,8 @@ iconSm`.
   is `bg-surface dark:bg-[#141414]`: white in light mode and `#141414` in dark mode,
   slightly brighter than the dark page surface. It contains the horizontal
   wordmark linking home, then
-  nine nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
-  Artikel `/articles`, Training Center `/trainings` (matching every `/trainings/*` route), Al-Quran
+  ten nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
+  Artikel `/articles`, Event `/events`, Training Center `/trainings` (matching every `/trainings/*` route), Al-Quran
   `/quran`, Jadwal Sholat `/prayer-schedules`, E-KTA `/membership`), then a Profile row, a
   secondary-variant
   "Posting" button, and a bottom-anchored "Lainnya" `Dropdown` (Pedoman Organisasi
@@ -1648,8 +1650,8 @@ lg:block` — the overlapping card reads better without one competing with the g
   much shadow weight.
   `MobileQuickMenu` is passed into `FeedTimeline` as a `quickMenu` prop (an unscoped
   `ReactNode`, wrapped in `lg:hidden` by `FeedTimeline` itself, not by the component) and renders right after `CreateFeedForms`,
-  above the timeline. Its six entries, four per row, use `components/icons/{NewsIcon,EKTAIcon,
-EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG illustrations with their
+  above the timeline. Its seven entries, four per row, use `components/icons/{NewsIcon,EKTAIcon,
+AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG illustrations with their
   original shapes. The last two were converted from designer SVGs (since deleted; DocumentIcon was
   later simplified to two books) with a padded
   `viewBox`, so their canvas renders the same size as the first four. Dark mode adjusts
@@ -2501,6 +2503,62 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   single pass, no sorting) and renders one bordered card per surah with its own name as a
   header row, rather than one flat list — the gradient header's `coverageLabel` then
   summarizes those groups as e.g. "Al-Fatihah 1-7, Al-Baqarah 1-141".
+- `/events` and `/events/[event_id]` (`components/pages/EventCatalogPage.tsx`,
+  `PublicEventDetailPage.tsx`, leaf pieces in `components/events/*`) are the member-facing agenda,
+  backed by `apis/events.ts`. An event is **not** a training: it is the backend's own `events/*`
+  module, owned by one entity (any hierarchy level or `special_body`), with thumbnail, gallery,
+  contacts, location and registration links, and per-user attendance. Every `events/*` endpoint is
+  `requireAuth`, including reads, so there is no `CLIENT_SECRET` fallback, no sitemap entry, and
+  the routes are `noindex`. They sit outside `(gated)` (`events(?:/.*)?` is in `next.config.mts`'s
+  allowlist) so each route owns its `/auth/login?redirectTo=` bounce and a shared link survives
+  signing in; each also owns the `pending` → `/activation` redirect `(gated)` would have done.
+  Because of `loading.tsx`, that login bounce streams after a 200 rather than answering 307.
+  `events/list` sorts by `start_date` ascending with no time filter and searches `title` only, so
+  `listEventsByTimeframe` reads every page (100 rows, 20 pages at most) and splits Akan datang
+  (soonest first) from Selesai (latest first) locally, paginating in memory; the `?tab=past` param
+  selects the second. Move this server-side if the backend ever gains a time filter.
+  `events/detail` declares `contacts` and `images` `omitempty`, so `getEventDetail` normalizes an
+  absent key to `[]`; don't read them raw. `lib/event-ui.ts` (tested by `npm run test:event`) pins
+  every label to WIB through `Intl`, never the runtime's zone, and the form edits wall-clock WIB
+  sent with an explicit `+07:00`. It also holds `safeExternalUrl`, which every stored
+  `location_url`/`registration_url` passes before reaching an `href` because the backend stores free
+  text, and `googleMapsEmbedUrl`, the only way a stored URL becomes an iframe `src`. `useEventAttendance`
+  is optimistic with rollback; a card or detail page owns one instance, so the button and the count
+  move together, and `router.refresh()` clears the router cache so going back shows the new state.
+  Ended events disable the button. `EventCard` follows `PublicTrainingCard` (16:9 thumbnail, one
+  link for the body, actions in a footer, border and no shadow); the status pill only appears when
+  it says something, so a plain upcoming event carries none, on the card or the detail page. From
+  `lg` the detail page opens with a full-width header band: the thumbnail blurred under a
+  `media-backdrop/60` overlay, with the status, title, and metadata in white. A sticky aside holds
+  the 16:9 photo, the CTA, and a repeat of the title and metadata for once the header scrolls away.
+  Its negative top margin must equal the photo's height at that breakpoint (191px at the 340px `lg`
+  column, 225px at the 400px `xl` column) so the photo ends level with the band, and the header's
+  right padding keeps text clear of it. Below `lg` there is no band and no blur: the aside goes edge
+  to edge and reorders to photo, then title and metadata on white, then the CTA, ahead of every other
+  section. Metadata is location, date and time, organizer, then `EventAttendeesSummary` (avatars, the
+  count, and names). The left column stacks Deskripsi, `EventLocationCard`, Penyelenggara, Galeri,
+  and Narahubung. `EventLocationCard` always
+  maps through `eventMapEmbedUrl`: a stored `/maps/embed` URL wins, otherwise `location_name` drives
+  Google's keyless `/maps/embed?origin=mfe&pb=...`, an undocumented format that needs replacing with
+  the Embed API if Google ever changes it. Text before the first comma in `location_name` renders as
+  the place and the rest as its address. **`listEventAttendeePreview` returns made-up sample faces,
+  because no attendee endpoint exists yet.** It only returns them when `DOMAIN_MODE=local`, and those
+  samples are added to the displayed total; production shows the real `attendee_count` and the
+  viewer's own avatar, so members never see invented people. Replace it with a real read once the
+  backend has one. `lib/event-image.ts` holds the `event_banner` upload that `lib/training-poster.ts`
+  also delegates to. Every action in this feature is the shared `Button` with no visual overrides and
+  never `size="lg"`; `EventLinkButton` wraps it for navigation, since `Button` only renders a
+  `<button>`. The one exception is the gallery's image tiles, which open the preview overlay.
+- `/official/{level}/[id]/events` plus `/create`, `/[event_id]`, and `/[event_id]/edit` (20 thin
+  route files over `lib/official-event-pages.tsx`, reachable from the rail and `OfficialBottomNav`)
+  manage an entity's events as `OfficialEventsPage`, `OfficialEventDetailPage`, and
+  `OfficialEventFormPage`. They use the same `holdsGrantAtEntity` gate as the official timeline,
+  and a detail or edit URL 404s for an event belonging to another entity. `OfficialPageShell` wraps
+  them; `compactGreeting` drops the tall band that only the timeline's floating composer needs. The
+  form validates per field with `noValidate`, focusing the first invalid input, and confirms before
+  discarding changes. A new start time pushes an empty or earlier end time forward two hours. Edit
+  sends `thumbnail_media_id` and `image_media_ids` only when they changed, since those arrays
+  replace everything on the backend; the contacts array is always sent for the same reason.
 - `/prayer-schedules` (`app/(www)/www/(gated)/prayer-schedules/page.tsx` ->
   `components/pages/PrayerSchedulePage.tsx`) is backed by `apis/prayer-schedules.ts`, which wraps the
   session-only `prayer-schedules/widget` (today plus the countdown to the next obligatory prayer) and
