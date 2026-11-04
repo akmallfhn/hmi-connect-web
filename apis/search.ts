@@ -36,7 +36,7 @@ export type SearchFeedResult = {
 };
 
 export type SearchEntityResult = {
-  entity_type: AccessEntityTypeEnum;
+  entity_type: MentionEntityTypeEnum;
   entity_id: string;
   entity_name: string;
   entity_legal_name: string | null;

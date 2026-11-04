@@ -1707,7 +1707,12 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   `social-media-accounts/list` is the one holdout still keyed by `{ id }`. `WorkExperienceCard`
   sits directly above `OrganizationExperienceCard`, which renders separate "Riwayat Organisasi
   HMI" and "Riwayat Organisasi (Non-HMI)" containers. HMI CRUD stores an entity reference selected
-  through `search/entity`; non-HMI CRUD stores a free-text `organization_name`. `PublicationCard`
+  through `search/entity`, and each HMI row links to that entity's public detail page (special
+  bodies resolve through `/mentions/[mention_name]`); non-HMI CRUD stores a free-text
+  `organization_name`. HMI history labels keep the Organization name as-is, prefix every other
+  hierarchy row (`HMI Badko`/`HMI Cabang`/`HMI Korkom`/`HMI Komisariat`), and prefix special
+  bodies with their type plus level (`BPL PB HMI`, `KOHATI Komisariat ...`) without a redundant
+  `HMI` infix. `PublicationCard`
   sits directly below `TrainingCard` ("Riwayat Kaderisasi") and directly above `HonorAwardCard`
   in `ProfilePage.tsx`'s section order, and all three of `WorkExperienceCard`/`PublicationCard`/
   `HonorAwardCard` are otherwise a straight copy of `OrganizationExperienceCard`'s shape — the

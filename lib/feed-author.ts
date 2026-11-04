@@ -1,5 +1,5 @@
 import type { Feed, FeedComment } from "@/apis/feeds";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type { AccessEntityTypeEnum, MentionEntityTypeEnum } from "@/lib/types";
 
 // Public profile route per entity, one gated route each — see components/entity/*.
 const ENTITY_PROFILE_BASE_PATH: Record<AccessEntityTypeEnum, string> = {
@@ -50,6 +50,39 @@ export function formatEntityAuthorName(
 ): string {
   const normalizedName = stripEntityNamePrefix(entityType, name);
   return `${ENTITY_NAME_PREFIX[entityType]}${normalizedName || name.trim()}`;
+}
+
+const SPECIAL_BODY_DISPLAY_LABEL = {
+  kohati: "KOHATI",
+  bpl: "BPL",
+  balitbang: "Balitbang",
+  lpp: "LPP",
+} as const;
+
+// Special-body names may still contain the legacy "HMI" infix (for example
+// "KOHATI HMI Cabang Depok"). Public labels keep the body + level prefixes,
+// while removing only that redundant infix.
+export function formatMentionEntityName(
+  entityType: MentionEntityTypeEnum,
+  name: string,
+  mentionName = "",
+): string {
+  if (entityType !== "special_body") {
+    return formatEntityAuthorName(entityType, name);
+  }
+
+  const identity = `${mentionName} ${name}`.trim();
+  const type = (Object.keys(SPECIAL_BODY_DISPLAY_LABEL) as Array<
+    keyof typeof SPECIAL_BODY_DISPLAY_LABEL
+  >).find((candidate) => new RegExp(`^${candidate}`, "i").test(identity));
+  if (!type) return name.trim();
+
+  const bodyName = name
+    .trim()
+    .replace(new RegExp(`^${type}\\s+`, "i"), "")
+    .replace(/^HMI\s+/i, "")
+    .trim();
+  return `${SPECIAL_BODY_DISPLAY_LABEL[type]}${bodyName ? ` ${bodyName}` : ""}`;
 }
 
 export function entityProfileHref(

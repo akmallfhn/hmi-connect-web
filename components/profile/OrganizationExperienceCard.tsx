@@ -2,6 +2,7 @@
 
 import { IconBuildingCommunity } from "@tabler/icons-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type {
@@ -9,6 +10,7 @@ import type {
   NonHmiOrganizationExperienceEntry,
   OrganizationExperienceEntry,
 } from "@/apis/users";
+import { entityProfileHref, formatMentionEntityName } from "@/lib/feed-author";
 import EditOrganizationExperienceForm from "../forms/EditOrganizationExperienceForm";
 import LogoBpl from "../svg/LogoBpl";
 import LogoHmi from "../svg/LogoHmi";
@@ -53,6 +55,13 @@ function HmiExperienceLogo({ entry }: { entry: HmiOrganizationExperienceEntry })
   return <LogoHmi className="h-8 w-auto" aria-hidden="true" />;
 }
 
+function hmiExperienceHref(entry: HmiOrganizationExperienceEntry) {
+  if (entry.entity_type === "special_body") {
+    return `/mentions/${encodeURIComponent(entry.entity_mention_name_normalized)}`;
+  }
+  return entityProfileHref(entry.entity_type, entry.entity_id);
+}
+
 function ExperienceSection({
   entries,
   experienceType,
@@ -88,11 +97,14 @@ function ExperienceSection({
         ) : (
           entries.map((entry) => {
             const organizationName = entry.experience_type === "hmi"
-              ? entry.entity_name
+              ? formatMentionEntityName(
+                  entry.entity_type,
+                  entry.entity_name,
+                  entry.entity_mention_name_normalized,
+                )
               : entry.organization_name;
-
-            return (
-              <div key={entry.id} className="flex items-start gap-3">
+            const entryContent = (
+              <>
                 <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface text-primary-foreground">
                   {entry.experience_type === "hmi" ? (
                     <HmiExperienceLogo entry={entry} />
@@ -116,6 +128,24 @@ function ExperienceSection({
                     </p>
                   )}
                 </div>
+              </>
+            );
+
+            return (
+              <div key={entry.id} className="flex items-start gap-3">
+                {entry.experience_type === "hmi" ? (
+                  <Link
+                    href={hmiExperienceHref(entry)}
+                    aria-label={`Lihat detail ${organizationName}`}
+                    className="flex min-w-0 flex-1 items-start gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    {entryContent}
+                  </Link>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    {entryContent}
+                  </div>
+                )}
                 {isOwnProfile && (
                   <EditEntryButton
                     onClick={() => openForm(entry)}

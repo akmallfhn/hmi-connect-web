@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { SearchEntityResult } from "@/apis/search";
-import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
+import { entityProfileHref, formatMentionEntityName } from "@/lib/feed-author";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
 
 export default function SearchEntityRow({
@@ -8,8 +8,14 @@ export default function SearchEntityRow({
 }: {
   entity: SearchEntityResult;
 }) {
-  const name = formatEntityAuthorName(entity.entity_type, entity.entity_name);
-  const href = entityProfileHref(entity.entity_type, entity.entity_id);
+  const name = formatMentionEntityName(
+    entity.entity_type,
+    entity.entity_name,
+    entity.entity_mention_name,
+  );
+  const href = entity.entity_type === "special_body"
+    ? `/mentions/${encodeURIComponent(entity.entity_mention_name)}`
+    : entityProfileHref(entity.entity_type, entity.entity_id);
   return (
     <div className="border-b border-border">
       <Link

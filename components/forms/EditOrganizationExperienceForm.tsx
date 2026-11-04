@@ -9,7 +9,7 @@ import {
   deleteOrganizationExperience,
   updateOrganizationExperience,
 } from "@/lib/actions";
-import { formatEntityAuthorName } from "@/lib/feed-author";
+import { formatMentionEntityName } from "@/lib/feed-author";
 import type { MentionEntityTypeEnum } from "@/lib/types";
 import { pastYears } from "@/lib/year-options";
 import Input from "../fields/Input";
@@ -61,7 +61,11 @@ async function loadHmiEntityOptions(
   };
   return {
     options: (payload.data ?? []).map((entity) => ({
-      label: formatEntityAuthorName(entity.entity_type, entity.entity_name),
+      label: formatMentionEntityName(
+        entity.entity_type,
+        entity.entity_name,
+        entity.entity_mention_name,
+      ),
       value: `${entity.entity_type}:${entity.entity_id}`,
       image: entity.entity_image_url ?? undefined,
       entityId: entity.entity_id,
@@ -112,7 +116,11 @@ function OrganizationExperienceFields({
   const [hmiEntity, setHmiEntity] = useState<HmiEntityOption | null>(
     hmiEntry
       ? {
-          label: hmiEntry.entity_name,
+          label: formatMentionEntityName(
+            hmiEntry.entity_type,
+            hmiEntry.entity_name,
+            hmiEntry.entity_mention_name_normalized,
+          ),
           value: `${hmiEntry.entity_type}:${hmiEntry.entity_id}`,
           image: hmiEntry.entity_image_url ?? undefined,
           entityId: hmiEntry.entity_id,
