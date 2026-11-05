@@ -50,13 +50,13 @@ test("location text splits into a place and its address", () => {
 
 test("attendee names lead the sentence and the rest are counted", () => {
   assert.equal(
-    formatEventAttendeeNames(["Kamu", "Rizky", "Fajar"], 12, false),
-    "Kamu, Rizky, dan 10 lainnya akan hadir",
+    formatEventAttendeeNames(["Kamu", "Rizky", "Fajar"], 12),
+    "Kamu, Rizky, dan 10 lainnya",
   );
-  assert.equal(formatEventAttendeeNames(["Kamu"], 12, false), "Kamu dan 11 lainnya akan hadir");
-  assert.equal(formatEventAttendeeNames(["Kamu"], 1, false), "Kamu akan hadir");
-  assert.equal(formatEventAttendeeNames(["Rizky", "Fajar"], 2, true), "Rizky dan Fajar hadir");
-  assert.equal(formatEventAttendeeNames([], 5, false), "");
+  assert.equal(formatEventAttendeeNames(["Kamu"], 12), "Kamu dan 11 lainnya");
+  assert.equal(formatEventAttendeeNames(["Kamu"], 1), "Kamu");
+  assert.equal(formatEventAttendeeNames(["Rizky", "Fajar"], 2), "Rizky dan Fajar");
+  assert.equal(formatEventAttendeeNames([], 5), "");
 });
 
 test("labels stay in WIB whatever zone the runtime is in", () => {

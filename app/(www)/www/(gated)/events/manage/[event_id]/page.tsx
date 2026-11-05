@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { renderOfficialEventDetail } from "@/components/pages/OfficialEventRoutes";
+import { renderOfficialEventEdit } from "@/components/pages/OfficialEventRoutes";
 
 export const metadata: Metadata = {
-  title: "Detail Event",
+  title: "Edit Event",
   robots: { index: false, follow: false },
 };
 
@@ -12,5 +12,5 @@ export default async function ManagedEventDetail({
   params: Promise<{ event_id: string }>;
 }) {
   const { event_id } = await params;
-  return renderOfficialEventDetail(event_id);
+  return renderOfficialEventEdit(event_id);
 }

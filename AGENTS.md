@@ -67,6 +67,8 @@ fix the rule, not just the code.
   `ExploreSearchBar`, `MembershipInfoCard`'s status pill). The Training Center catalog and
   `PublicTrainingCard` also use Tabler icons throughout; the shared `Pagination` accepts
   caller-provided icons so that catalog can use Tabler without changing admin pages.
+  The event create/edit form and its contact modal use Tabler throughout; the shared
+  `Select`, `SearchableSelect`, and `Modal` chrome use Tabler so these surfaces stay consistent.
   Tabler's `stroke` prop carries the navigation active state (`2.4` active, `2` idle).
   Notification item badges use Tabler's filled icons for likes, comments, replies, follows,
   and access invitations. Share actions on every surface use Tabler's `IconShare2`.
@@ -1989,7 +1991,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   than posting as it. `OfficialTimeline` uses the same feed list as personal home, with an entity
   composer and `authorEntity` on every feed card; the personal home retains its own inserts.
   The desktop header and rail read the validated selection from `HeaderAdminAccessContext`. The
-  rail shows Timeline (`/`), Event (`/events/manage`), and the entity profile in entity mode.
+  rail shows Beranda (`/`), Kelola Event (`/events/manage`), and the entity profile in entity mode;
+  it does not repeat the acting entity's name or avatar above the nav.
   `BottomNav` swaps to `OfficialBottomNav` across the main site, including Settings. Mode User
   clears the cookie and opens `/`; account switching in the desktop header or Settings writes
   the cookie before navigating to `/`. `OfficialAccountPage` uses `OfficialGreetingBar` and the
@@ -2493,61 +2496,86 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `PublicEventDetailPage.tsx`, leaf pieces in `components/events/*`) are the member-facing agenda,
   backed by `apis/events.ts`. An event is **not** a training: it is the backend's own `events/*`
   module, owned by one entity (any hierarchy level or `special_body`), with thumbnail, gallery,
-  contacts, location and registration links, and per-user attendance. Every `events/*` endpoint is
+  contacts, location and external links, and per-user attendance. Every `events/*` endpoint is
   `requireAuth`, including reads, so there is no `CLIENT_SECRET` fallback, no sitemap entry, and
   the routes are `noindex`. They sit outside `(gated)` (`events(?:/.*)?` is in `next.config.mts`'s
   allowlist) so each route owns its `/auth/login?redirectTo=` bounce and a shared link survives
   signing in; each also owns the `pending` → `/activation` redirect `(gated)` would have done.
   Because of `loading.tsx`, that login bounce streams after a 200 rather than answering 307.
   `events/list` sorts by `start_date` ascending with no time filter and searches `title` only, so
-  `listEventsByTimeframe` reads every page (100 rows, 20 pages at most) and splits Akan datang
-  (soonest first) from Selesai (latest first) locally, paginating in memory; the `?tab=past` param
-  selects the second. Move this server-side if the backend ever gains a time filter.
+  `listEventsChronological` reads every page (100 rows, 20 pages at most) and puts upcoming events
+  (soonest first) before ended events (latest first), paginating in memory. Both `/events` and
+  `/events/manage` show one combined list with a left-aligned desktop search and no time tabs; legacy `?tab=` links redirect
+  to the same list without the parameter. Move this sorting server-side if the backend gains it.
   `events/detail` declares `contacts` and `images` `omitempty`, so `getEventDetail` normalizes an
   absent key to `[]`; don't read them raw. `lib/event-ui.ts` (tested by `npm run test:event`) pins
   every label to WIB through `Intl`, never the runtime's zone, and the form edits wall-clock WIB
   sent with an explicit `+07:00`. It also holds `safeExternalUrl`, which every stored
-  `location_url`/`registration_url` passes before reaching an `href` because the backend stores free
+  `location_url`/`link_url` passes before reaching an `href` because the backend stores free
   text, and `googleMapsEmbedUrl`, the only way a stored URL becomes an iframe `src`. `useEventAttendance`
   is optimistic with rollback; a card or detail page owns one instance, so the button and the count
   move together, and `router.refresh()` clears the router cache so going back shows the new state.
   Ended events disable the button. `EventCard` follows `PublicTrainingCard` (16:9 thumbnail, one
-  link for the body, actions in a footer, border and no shadow); the status pill only appears when
-  it says something, so a plain upcoming event carries none, on the card or the detail page. From
+  link for the body, actions in a footer, `rounded-2xl` outer card, border and no shadow) on both
+  `/events` and `/events/manage`; the status pill only appears when
+  it says something, so a plain upcoming event carries none, on the card or the detail page.
+  On `/events/manage`, the same card keeps its event thumbnail, omits the organizer avatar/name, and leads metadata with
+  the attendee count (`0 orang akan hadir` for an empty upcoming event), since every listed event
+  belongs to the selected entity. From
   `lg` the detail page opens with a full-width header band: the thumbnail blurred under a
   `media-backdrop/60` overlay, with the status, title, and metadata in white. A sticky aside holds
   the 16:9 photo, the CTA, and a repeat of the title and metadata for once the header scrolls away.
-  Its negative top margin must equal the photo's height at that breakpoint (191px at the 340px `lg`
-  column, 225px at the 400px `xl` column) so the photo ends level with the band, and the header's
+  Its negative top margin equals the photo's height (180px in the 320px column) so the photo ends level with the band, and the header's
   right padding keeps text clear of it. Below `lg` there is no band and no blur: the aside goes edge
   to edge and reorders to photo, then title and metadata on white, then the CTA, ahead of every other
-  section. Metadata is location, date and time, organizer, then `EventAttendeesSummary` (avatars, the
-  count, and names). The left column stacks Deskripsi, `EventLocationCard`, Penyelenggara, Galeri,
-  and Narahubung. `EventLocationCard` always
+  section. Metadata is category, location, date and time, organizer, then `EventAttendeesSummary` (avatars, the
+  count, and names). The grid uses the profile page's 768px/320px columns, mobile edge-to-edge
+  card borders, desktop rounded corners, and small Stack Sans section headings. The left column
+  stacks Deskripsi, `EventLocationCard`, and a combined Penyelenggara/Narahubung card.
+  A "Lihat semua foto" action sits on the thumbnail and opens `ImagePreviewOverlay` with the
+  cover first and the gallery images after it, deduplicated by URL; the overlay handles arrows,
+  keyboard navigation, and touch swipes. There is no separate Galeri card.
+  `EventLocationCard` always
   maps through `eventMapEmbedUrl`: a stored `/maps/embed` URL wins, otherwise `location_name` drives
   Google's keyless `/maps/embed?origin=mfe&pb=...`, an undocumented format that needs replacing with
   the Embed API if Google ever changes it. Text before the first comma in `location_name` renders as
-  the place and the rest as its address. **`listEventAttendeePreview` returns made-up sample faces,
-  because no attendee endpoint exists yet.** It only returns them when `DOMAIN_MODE=local`, and those
-  samples are added to the displayed total; production shows the real `attendee_count` and the
-  viewer's own avatar, so members never see invented people. Replace it with a real read once the
-  backend has one. `lib/event-image.ts` holds the `event_banner` upload that `lib/training-poster.ts`
-  also delegates to. Every action in this feature is the shared `Button` with no visual overrides and
-  never `size="lg"`; `EventLinkButton` wraps it for navigation, since `Button` only renders a
-  `<button>`. The one exception is the gallery's image tiles, which open the preview overlay.
-- `/events/manage` plus `/create`, `/[event_id]`, and `/[event_id]/edit` (four route files over
+  the place and the rest as its address. The create/edit form searches explicitly with a Cari button;
+  changing the location hides the old preview until the next search. The iframe cannot send a clicked
+  point back to the form. Event contacts with `user_id` use the name, phone, and avatar already resolved
+  by the backend's `activity_contacts` join; the form and public detail show that avatar.
+  Their WhatsApp action is soft and shares the Chat button's height; a contact linked to another user also gets Chat in user mode,
+  reusing `SendMessageButton` to open an existing conversation or compose a new one.
+  `events/detail` returns `attendee_preview` with at most two real participants' names and avatars.
+  `EventAttendeesSummary` uses `attendee_count` as the sole count, shows only those two faces,
+  and adjusts the viewer's face after an optimistic attendance change. It is hidden when the
+  count is zero. The user catalog card omits attendee counts; the manage card keeps them.
+  `lib/event-image.ts` holds the `event_banner` upload that `lib/training-poster.ts`
+  also delegates to. Main actions use the shared `Button` and never `size="lg"`;
+  `EventLinkButton` wraps it for navigation, since `Button` only renders a `<button>`.
+  The photo action on the thumbnail is a positioned button that opens the preview overlay.
+- `/events/manage` plus `/create`, `/[event_id]`, and the legacy `/[event_id]/edit` redirect (four route files over
   `components/pages/OfficialEventRoutes.tsx`, reachable from the rail and `OfficialBottomNav`)
-  manage the selected entity's events as `OfficialEventsPage`, `OfficialEventDetailPage`, and
-  `OfficialEventFormPage`. Every route requires the validated acting-account cookie; user mode
-  returns 404. A detail or edit URL also 404s for an event belonging to another entity.
+  manage the selected entity's events as `OfficialEventsPage` and `OfficialEventFormPage`.
+  `/[event_id]` opens edit directly, while `/[event_id]/edit` redirects to that canonical URL.
+  Every route requires the validated acting-account cookie; user mode returns 404. An edit URL
+  also 404s for an event belonging to another entity.
   `createEvent`, `updateEvent`, and `deleteEvent` Server Actions require the same selected entity;
   update/delete read the event first to ensure it belongs to that entity.
   `OfficialPageShell` wraps
   them; `compactGreeting` drops the tall band that only the timeline's floating composer needs. The
-  form validates per field with `noValidate`, focusing the first invalid input, and confirms before
-  discarding changes. A new start time pushes an empty or earlier end time forward two hours. Edit
-  sends `thumbnail_media_id` and `image_media_ids` only when they changed, since those arrays
-  replace everything on the backend; the contacts array is always sent for the same reason.
+  form follows profile's `PageMargin` and card padding, validates per field with `noValidate`,
+  focuses the first invalid input, and confirms before discarding changes. Submit/cancel sit in
+  the top-right header; field guidance is in input tooltips. A new start time pushes an empty or
+  earlier end time forward two hours. Contacts are added or edited in a modal: search a user and
+  send `user_id`, or enter a manual name and phone number.
+  `category_id` is required and loaded from `event-categories/list`; the free external URL is
+  `link_url`. `events/create` and `events/update` receive only event fields. Contacts (name and
+  phone number, no email, or a selected `user_id`) use `events/contacts/*`; the cover and gallery (labeled "Foto lainnya" in the form) use `events/images/*`
+  after the event exists. `saveEventResources` compares the desired state with fresh backend
+  contacts and images, then calls their create/update/delete endpoints. A partial resource error
+  redirects to edit so the saved event and any successful resources are visible and retryable.
+  Successful create/update navigates to the manage list with a one-use `saved` query; the list
+  shows the success toast only after it renders and then removes the query from browser history.
 - `/prayer-schedules` (`app/(www)/www/(gated)/prayer-schedules/page.tsx` ->
   `components/pages/PrayerSchedulePage.tsx`) is backed by `apis/prayer-schedules.ts`, which wraps the
   session-only `prayer-schedules/widget` (today plus the countdown to the next obligatory prayer) and

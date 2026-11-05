@@ -107,11 +107,6 @@ export function isEventEnded(endValue: string, now: Date = new Date()) {
   return end ? now > end : false;
 }
 
-export function formatEventAttendees(count: number, ended: boolean) {
-  if (ended) return count > 0 ? `${count} orang ikut` : "Tidak ada yang tercatat ikut";
-  return count > 0 ? `${count} orang mau ikut` : "Jadilah yang pertama ikut";
-}
-
 function isAccessEntityType(type: EventEntityTypeEnum): type is AccessEntityTypeEnum {
   return type in ADMIN_ENTITY_BASE_PATH;
 }
@@ -203,17 +198,14 @@ export function splitEventLocation(locationName?: string | null) {
 export function formatEventAttendeeNames(
   names: string[],
   total: number,
-  ended: boolean,
 ): string {
   const shown = names.slice(0, 2);
-  const others = total - shown.length;
-  const verb = ended ? "hadir" : "akan hadir";
+  const others = Math.max(0, total - shown.length);
   if (shown.length === 0) return "";
   if (others > 0) {
-    const separator = shown.length > 1 ? ", dan" : " dan";
-    return `${shown.join(", ")}${separator} ${others} lainnya ${verb}`;
+    return `${shown.join(", ")}${shown.length > 1 ? "," : ""} dan ${others} lainnya`;
   }
-  return `${shown.join(" dan ")} ${verb}`;
+  return shown.join(" dan ");
 }
 
 // The form edits wall-clock WIB, so server and browser render the same value whatever their zone.

@@ -30,7 +30,7 @@ export default function OfficialAccountPage({
   return (
     <OfficialPageShell entity={authorEntity}>
       <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-        {/* The desktop rail carries Timeline and Profile here, so the page is one centered column. */}
+        {/* The desktop rail carries Beranda and Profile here, so the page is one centered column. */}
         <div className="mx-auto lg:max-w-[600px]">
           <main className="min-w-0">
             <OfficialTimeline

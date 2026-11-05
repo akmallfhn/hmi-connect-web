@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
-import { getEventDetail, listEventAttendeePreview } from "@/apis/events";
+import { getEventDetail } from "@/apis/events";
 import { getSession } from "@/apis/session";
+import { selectedActingEntityRef } from "@/lib/acting-entity";
 import PublicEventDetailPage from "@/components/pages/PublicEventDetailPage";
 
 const loadEvent = cache(getEventDetail);
@@ -35,11 +36,12 @@ export default async function EventDetailRoute({
   if (user.status === "pending") redirect("/activation");
   const event = await loadEvent(event_id);
   if (!event) notFound();
+  const canChat = !(await selectedActingEntityRef(user));
   return (
     <PublicEventDetailPage
       viewer={user}
       event={event}
-      attendees={listEventAttendeePreview()}
+      canChat={canChat}
     />
   );
 }

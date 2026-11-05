@@ -1,10 +1,11 @@
 import { IconPlus } from "@tabler/icons-react";
-import type { EventTimeframe, TimeframedEventResult } from "@/apis/events";
+import type { PagedEventResult } from "@/apis/events";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import { MANAGE_EVENTS_HREF } from "@/lib/access";
 import EventCard from "../events/EventCard";
 import EventLinkButton from "../events/EventLinkButton";
 import EventListControls from "../events/EventListControls";
+import EventSaveToast from "../events/EventSaveToast";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
 import EmptyState from "../states/EmptyState";
@@ -13,20 +14,21 @@ import OfficialPageShell from "../official/OfficialPageShell";
 export default function OfficialEventsPage({
   entity,
   result,
-  timeframe,
   initialSearch,
+  saved,
 }: {
   entity: ComposerAuthorEntity;
-  result: TimeframedEventResult;
-  timeframe: EventTimeframe;
+  result: PagedEventResult;
   initialSearch: string;
+  saved?: "created" | "updated";
 }) {
   const baseHref = MANAGE_EVENTS_HREF;
   const createHref = `${baseHref}/create`;
-  const isEmptyCollection = !initialSearch && timeframe === "upcoming";
+  const isEmptyCollection = !initialSearch;
 
   return (
     <OfficialPageShell entity={entity} compactGreeting>
+      <EventSaveToast kind={saved} />
       <PageMargin className="pt-4 lg:pt-6">
         <main className="flex flex-col gap-4 pb-6 lg:gap-6 lg:pb-10">
           <div className="flex items-center justify-between gap-3">
@@ -34,7 +36,6 @@ export default function OfficialEventsPage({
               <h1 className="font-stack-sans-headline text-xl font-medium text-heading sm:text-2xl">
                 Kelola Event
               </h1>
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">{entity.name}</p>
             </div>
             <EventLinkButton href={createHref}>
               <IconPlus className="size-4.5" stroke={2.4} />
@@ -44,10 +45,7 @@ export default function OfficialEventsPage({
 
           <EventListControls
             basePath={baseHref}
-            timeframe={timeframe}
             initialSearch={initialSearch}
-            upcomingCount={result.upcomingCount}
-            pastCount={result.pastCount}
           />
 
           {result.list.length === 0 ? (
@@ -56,16 +54,12 @@ export default function OfficialEventsPage({
                 title={
                   initialSearch
                     ? "Event tidak ditemukan"
-                    : timeframe === "past"
-                      ? "Belum ada event yang selesai"
-                      : "Belum ada event terdekat"
+                    : "Belum ada event"
                 }
                 description={
                   initialSearch
                     ? "Coba kata kunci lain atau hapus pencarian."
-                    : timeframe === "past"
-                      ? "Event yang sudah berlangsung akan tersimpan di sini."
-                      : `Buat agenda atas nama ${entity.name} agar kader bisa ikut.`
+                    : `Buat agenda atas nama ${entity.name} agar kader bisa ikut.`
                 }
                 action={
                   isEmptyCollection ? (

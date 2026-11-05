@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { listEventsByTimeframe } from "@/apis/events";
+import { listEventsChronological } from "@/apis/events";
 import { getSession } from "@/apis/session";
 import EventCatalogPage from "@/components/pages/EventCatalogPage";
 
@@ -20,12 +20,17 @@ export default async function EventsRoute({
   // This route sits outside (gated) to keep its redirectTo, so it owns the activation bounce too.
   if (user.status === "pending") redirect("/activation");
 
+  if (query.tab !== undefined) {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.page) params.set("page", query.page);
+    redirect(`/events${params.size ? `?${params}` : ""}`);
+  }
+
   const search = query.search?.trim() ?? "";
   const page = Math.max(1, Number(query.page ?? "1") || 1);
-  const timeframe = query.tab === "past" ? "past" : "upcoming";
-  const result = await listEventsByTimeframe({
+  const result = await listEventsChronological({
     search: search || undefined,
-    timeframe,
     page,
     pageSize: 12,
   });
@@ -33,7 +38,6 @@ export default async function EventsRoute({
     <EventCatalogPage
       viewer={user}
       result={result}
-      timeframe={timeframe}
       initialSearch={search}
     />
   );

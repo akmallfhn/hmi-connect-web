@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import { ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Button from "../buttons/Button";
@@ -90,7 +90,7 @@ export default function Modal({
             className="size-8 rounded-full text-muted-foreground hover:bg-surface-muted"
             aria-label="Tutup"
           >
-            <X className="size-4" />
+            <IconX className="size-4" stroke={2} />
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">

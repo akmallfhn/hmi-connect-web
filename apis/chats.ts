@@ -81,11 +81,15 @@ export async function listConversations(
   };
 }
 
-// No lookup-by-user endpoint exists, so this scans the caller's own conversations/list.
+// No lookup-by-user endpoint exists, so scan all pages before opening a new thread.
 export async function findConversationWithUser(otherUserId: string): Promise<string | null> {
-  const { list } = await listConversations({ pageSize: 100 });
-  const match = list.find((conversation) => conversation.other_user_id === otherUserId);
-  return match?.id ?? null;
+  for (let page = 1; ; page += 1) {
+    const result = await listConversations({ page, pageSize: 100 });
+    if (!result.ok) throw new Error("Failed to look up conversations");
+    const match = result.list.find((conversation) => conversation.other_user_id === otherUserId);
+    if (match) return match.id;
+    if (!result.hasMore) return null;
+  }
 }
 
 export async function deleteConversation(id: string): Promise<ApiEnvelope> {

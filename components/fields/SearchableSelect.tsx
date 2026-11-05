@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, UserRound } from "lucide-react";
+import { IconChevronDown, IconLoader2, IconUser, IconX } from "@tabler/icons-react";
 import Image from "next/image";
 import {
   createContext,
@@ -14,6 +14,8 @@ import ReactSelect, {
   components as SelectComponents,
   type MenuListProps,
   type MenuPlacement,
+  type DropdownIndicatorProps,
+  type ClearIndicatorProps,
 } from "react-select";
 
 export interface SearchableOption {
@@ -37,7 +39,7 @@ function MenuListWithLoader(props: MenuListProps<SearchableOption, false>) {
       {props.children}
       {isLoadingMore && (
         <div className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
+          <IconLoader2 className="size-4 animate-spin" stroke={2} />
           Memuat...
         </div>
       )}
@@ -45,7 +47,15 @@ function MenuListWithLoader(props: MenuListProps<SearchableOption, false>) {
   );
 }
 
-const selectComponents = { MenuList: MenuListWithLoader };
+function DropdownIndicator(props: DropdownIndicatorProps<SearchableOption, false>) {
+  return <SelectComponents.DropdownIndicator {...props}><IconChevronDown className="size-4" stroke={2} /></SelectComponents.DropdownIndicator>;
+}
+
+function ClearIndicator(props: ClearIndicatorProps<SearchableOption, false>) {
+  return <SelectComponents.ClearIndicator {...props}><IconX className="size-4" stroke={2} /></SelectComponents.ClearIndicator>;
+}
+
+const selectComponents = { MenuList: MenuListWithLoader, DropdownIndicator, ClearIndicator };
 
 interface SearchableSelectProps {
   selectId: string;
@@ -197,7 +207,7 @@ export default function SearchableSelect({
                     ) : optionAvatarFallback ? (
                       optionAvatarFallback
                     ) : (
-                      <UserRound className="size-3.5" />
+                      <IconUser className="size-3.5" stroke={2} />
                     )}
                   </span>
                   <span className="min-w-0 truncate">{option.label}</span>

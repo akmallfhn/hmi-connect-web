@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { renderOfficialEventEdit } from "@/components/pages/OfficialEventRoutes";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Edit Event",
@@ -12,5 +12,5 @@ export default async function EditManagedEvent({
   params: Promise<{ event_id: string }>;
 }) {
   const { event_id } = await params;
-  return renderOfficialEventEdit(event_id);
+  redirect(`/events/manage/${event_id}`);
 }

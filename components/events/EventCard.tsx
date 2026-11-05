@@ -16,7 +16,6 @@ import {
   eventOrganizer,
   eventShareText,
   eventStatus,
-  formatEventAttendees,
   formatEventTimeLabel,
 } from "@/lib/event-ui";
 import Button from "../buttons/Button";
@@ -45,6 +44,7 @@ export default function EventCard({
   const status = eventStatus(event.start_date, event.end_date);
   const ended = status.tone === "ended";
   const { author } = eventOrganizer(event);
+  const attendanceLabel = `${attendance.attendeeCount} orang ${ended ? "hadir" : "akan hadir"}`;
   const shareUrl =
     typeof window === "undefined" ? "" : `${window.location.origin}/events/${event.id}`;
 
@@ -85,6 +85,12 @@ export default function EventCard({
                 {event.title}
               </h2>
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                {manage && (
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <IconUsers className="size-4 shrink-0" stroke={2} />
+                    <span className="truncate">{attendanceLabel}</span>
+                  </span>
+                )}
                 <span className="flex min-w-0 items-center gap-1.5">
                   <IconClock className="size-4 shrink-0" stroke={2} />
                   <span className="truncate">
@@ -95,17 +101,13 @@ export default function EventCard({
                   <IconMapPin className="size-4 shrink-0" stroke={2} />
                   <span className="truncate">{event.location_name || "Lokasi menyusul"}</span>
                 </span>
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <IconUsers className="size-4 shrink-0" stroke={2} />
-                  <span className="truncate">
-                    {formatEventAttendees(attendance.attendeeCount, ended)}
-                  </span>
-                </span>
               </div>
-              <div className="mt-auto flex min-w-0 items-center gap-2 pt-2">
-                <FeedAuthorAvatar author={author} size={24} />
-                <span className="truncate text-sm font-medium text-heading">{author.name}</span>
-              </div>
+              {!manage && (
+                <div className="mt-auto flex min-w-0 items-center gap-2 pt-2">
+                  <FeedAuthorAvatar author={author} size={24} />
+                  <span className="truncate text-sm font-medium text-heading">{author.name}</span>
+                </div>
+              )}
             </div>
           </div>
         </Link>

@@ -1,38 +1,45 @@
 "use client";
 
 import {
-  CalendarDays,
-  ImagePlus,
-  Link2,
-  Loader2,
-  Mail,
-  MapPin,
-  Phone,
-  Plus,
-  Trash2,
-  Upload,
-  UserRound,
-} from "lucide-react";
+  IconExternalLink,
+  IconLink,
+  IconLoader2,
+  IconMapPin,
+  IconPhotoPlus,
+  IconPencil,
+  IconPlus,
+  IconSearch,
+  IconTrash,
+  IconUpload,
+  IconUser,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
-import type { EventContactInput, EventDetail } from "@/apis/events";
+import type { EventCategory, EventDetail } from "@/apis/events";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
-import { createEvent, updateEvent } from "@/lib/actions";
+import { createEvent, deleteEvent, saveEventResources, updateEvent } from "@/lib/actions";
 import { MANAGE_EVENTS_HREF } from "@/lib/access";
 import {
   addHoursToDateTimeLocal,
   dateTimeLocalToIso,
   eventMapEmbedUrl,
+  googleMapsSearchUrl,
   safeExternalUrl,
   toDateTimeLocal,
 } from "@/lib/event-ui";
 import { EVENT_IMAGE_ACCEPT, uploadEventImage } from "@/lib/event-image";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
+import Avatar from "../common/Avatar";
 import PageMargin from "../common/PageMargin";
+import EventLinkButton from "../events/EventLinkButton";
+import EventContactModal, { type EventContactSelection } from "../forms/EventContactModal";
+import FieldHelpTooltip from "../fields/FieldHelpTooltip";
 import Input from "../fields/Input";
+import Select from "../fields/Select";
 import TextArea from "../fields/TextArea";
 import AlertConfirmation from "../modals/AlertConfirmation";
 import OfficialPageShell from "../official/OfficialPageShell";
@@ -40,22 +47,29 @@ import LogoHmi from "../svg/LogoHmi";
 
 const MAX_GALLERY_IMAGES = 20;
 const DEFAULT_DURATION_HOURS = 2;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_ERROR = "Gunakan tautan lengkap yang diawali http:// atau https://.";
 
-type EditableContact = EventContactInput & { key: string };
+type EditableContact = {
+  key: string;
+  id?: string;
+  user_id?: string;
+  name: string;
+  phone_number: string;
+  avatar?: string;
+};
 type EditableImage = { mediaId: string; url: string };
 type FieldErrors = Partial<
-  Record<"title" | "startDate" | "endDate" | "locationUrl" | "registrationUrl", string>
+  Record<"title" | "category" | "startDate" | "endDate" | "locationUrl" | "linkUrl", string>
 >;
 
 // Field ids in the order they appear, so a failed submit can focus the first invalid one.
 const FIELD_INPUT_ID: Record<keyof FieldErrors, string> = {
   title: "event-title",
+  category: "event-category",
   startDate: "event-start-date",
   endDate: "event-end-date",
   locationUrl: "event-location-url",
-  registrationUrl: "event-registration-url",
+  linkUrl: "event-link-url",
 };
 
 function newKey() {
@@ -66,43 +80,22 @@ function urlError(value: string) {
   return value.trim() && !safeExternalUrl(value) ? URL_ERROR : undefined;
 }
 
-function contactError(contact: EditableContact) {
-  if (!contact.name.trim()) return "Isi nama atau peran narahubung.";
-  const phone = contact.phone_number?.trim();
-  const email = contact.email?.trim();
-  if (!phone && !email) return "Isi nomor WhatsApp atau email.";
-  if (email && !EMAIL_PATTERN.test(email)) return "Format email belum benar.";
-  return undefined;
-}
-
 function FormSection({
-  icon,
   title,
-  description,
   action,
   children,
 }: {
-  icon: ReactNode;
   title: string;
-  description: string;
   action?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-foreground">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <h2 className="font-stack-sans-headline font-medium text-heading">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
-        </div>
+    <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">{title}</h2>
         {action}
       </div>
-      <div className="mt-5">{children}</div>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -110,9 +103,11 @@ function FormSection({
 export default function OfficialEventFormPage({
   entity,
   event,
+  categories,
 }: {
   entity: ComposerAuthorEntity;
   event?: EventDetail;
+  categories: EventCategory[];
 }) {
   const router = useRouter();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -121,57 +116,62 @@ export default function OfficialEventFormPage({
   const isEditing = Boolean(event);
 
   const [title, setTitle] = useState(event?.title ?? "");
+  const [categoryId, setCategoryId] = useState<number | null>(event?.category_id ?? null);
   const [description, setDescription] = useState(event?.description ?? "");
   const [startDate, setStartDate] = useState(toDateTimeLocal(event?.start_date));
   const [endDate, setEndDate] = useState(toDateTimeLocal(event?.end_date));
   const [locationName, setLocationName] = useState(event?.location_name ?? "");
   const [locationUrl, setLocationUrl] = useState(event?.location_url ?? "");
-  const [registrationUrl, setRegistrationUrl] = useState(event?.registration_url ?? "");
-  // Updated on blur, so the map doesn't reload on every keystroke.
-  const [mapQuery, setMapQuery] = useState(event?.location_name ?? "");
+  const [linkUrl, setLinkUrl] = useState(event?.link_url ?? "");
+  // Search explicitly so the embedded map does not reload on every keystroke.
+  const [mapQuery, setMapQuery] = useState(event?.location_name?.trim() ?? "");
+  const [mapSearchActive, setMapSearchActive] = useState(false);
   const [thumbnail, setThumbnail] = useState<EditableImage | null>(
-    event?.thumbnail_media_id && event.thumbnail_url
-      ? { mediaId: event.thumbnail_media_id, url: event.thumbnail_url }
+    event?.thumbnail_media_id
+      ? { mediaId: event.thumbnail_media_id, url: event.thumbnail_url ?? "" }
       : null,
   );
   const [gallery, setGallery] = useState<EditableImage[]>(
-    event?.images.flatMap((image) =>
-      image.image_url ? [{ mediaId: image.media_id, url: image.image_url }] : [],
-    ) ?? [],
+    event?.images.map((image) => ({ mediaId: image.media_id, url: image.image_url ?? "" })) ?? [],
   );
   const [contacts, setContacts] = useState<EditableContact[]>(
     event?.contacts.map((contact) => ({
       key: contact.id,
       name: contact.name,
       phone_number: contact.phone_number ?? "",
-      email: contact.email ?? "",
+      user_id: contact.user_id,
+      avatar: contact.avatar,
+      id: contact.id,
     })) ?? [],
   );
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [contactErrors, setContactErrors] = useState<Record<string, string>>({});
+  const [contactModalKey, setContactModalKey] = useState<string | null>(null);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [saving, setSaving] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
-  const busy = saving || uploadingThumbnail || uploadingGallery;
-  const mapPreviewUrl = eventMapEmbedUrl(locationUrl, mapQuery);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const busy = saving || uploadingThumbnail || uploadingGallery || deleting;
+  const mapPreviewUrl = locationName.trim() === mapQuery
+    ? eventMapEmbedUrl(mapSearchActive ? null : locationUrl, mapQuery)
+    : null;
 
   const snapshot = JSON.stringify({
     title,
+    categoryId,
     description,
     startDate,
     endDate,
     locationName,
     locationUrl,
-    registrationUrl,
+    linkUrl,
     thumbnail: thumbnail?.mediaId,
     gallery: gallery.map((image) => image.mediaId),
-    contacts: contacts.map(({ name, phone_number, email }) => [name, phone_number, email]),
+    contacts: contacts.map(({ user_id, name, phone_number }) => [user_id, name, phone_number]),
   });
   const [initialSnapshot] = useState(snapshot);
   const isDirty = snapshot !== initialSnapshot;
-  const [initialThumbnailId] = useState(thumbnail?.mediaId);
-  const [initialGalleryIds] = useState(JSON.stringify(gallery.map((image) => image.mediaId)));
 
   function setFieldError(field: keyof FieldErrors, message?: string) {
     setErrors((current) => ({ ...current, [field]: message }));
@@ -208,7 +208,7 @@ export default function OfficialEventFormPage({
     const slots = MAX_GALLERY_IMAGES - gallery.length;
     const selected = files.slice(0, slots);
     if (selected.length < files.length) {
-      toast.info(`Galeri maksimal ${MAX_GALLERY_IMAGES} foto, jadi hanya ${slots} yang ditambahkan.`);
+      toast.info(`Foto lainnya maksimal ${MAX_GALLERY_IMAGES} foto, jadi hanya ${slots} yang ditambahkan.`);
     }
 
     setUploadingGallery(true);
@@ -224,50 +224,46 @@ export default function OfficialEventFormPage({
     setUploadingGallery(false);
   }
 
-  function updateContact(contactKey: string, patch: Partial<EditableContact>) {
-    setContacts((current) =>
-      current.map((contact) =>
-        contact.key === contactKey ? { ...contact, ...patch } : contact,
-      ),
-    );
-    setContactErrors((current) => ({ ...current, [contactKey]: "" }));
+  function saveContact(selection: EventContactSelection) {
+    const contact = {
+      user_id: selection.user_id,
+      name: selection.displayName,
+      phone_number: selection.displayPhone,
+      avatar: selection.avatar,
+    };
+    setContacts((current) => contactModalKey === "new"
+      ? [...current, { key: newKey(), ...contact }]
+      : current.map((item) => item.key === contactModalKey ? { ...item, ...contact } : item));
+    setContactModalKey(null);
   }
 
   function validate() {
     const nextErrors: FieldErrors = {};
     if (!title.trim()) nextErrors.title = "Judul event wajib diisi.";
+    if (!categoryId || !categories.some((category) => category.id === categoryId)) {
+      nextErrors.category = "Pilih kategori event.";
+    }
     if (!startDate) nextErrors.startDate = "Pilih waktu mulai.";
     if (!endDate) nextErrors.endDate = "Pilih waktu selesai.";
     else if (startDate && new Date(endDate) <= new Date(startDate)) {
       nextErrors.endDate = "Waktu selesai harus setelah waktu mulai.";
     }
     nextErrors.locationUrl = urlError(locationUrl);
-    nextErrors.registrationUrl = urlError(registrationUrl);
-
-    const nextContactErrors: Record<string, string> = {};
-    for (const contact of contacts) {
-      const message = contactError(contact);
-      if (message) nextContactErrors[contact.key] = message;
-    }
+    nextErrors.linkUrl = urlError(linkUrl);
 
     setErrors(nextErrors);
-    setContactErrors(nextContactErrors);
 
     const firstField = (Object.keys(FIELD_INPUT_ID) as (keyof FieldErrors)[]).find(
       (field) => nextErrors[field],
     );
-    const firstContact = contacts.find((contact) => nextContactErrors[contact.key]);
-    const firstInputId = firstField
-      ? FIELD_INPUT_ID[firstField]
-      : firstContact
-        ? `event-contact-name-${firstContact.key}`
-        : null;
+    const firstInputId = firstField ? FIELD_INPUT_ID[firstField] : null;
     if (firstInputId) document.getElementById(firstInputId)?.focus();
     return !firstInputId;
   }
 
   async function handleSubmit(submitEvent: FormEvent) {
     submitEvent.preventDefault();
+    if (busy) return;
     if (!validate()) return;
 
     setSaving(true);
@@ -279,77 +275,97 @@ export default function OfficialEventFormPage({
         end_date: dateTimeLocalToIso(endDate),
         location_name: locationName.trim(),
         location_url: locationUrl.trim(),
-        registration_url: registrationUrl.trim(),
-        contacts: contacts.map((contact) => ({
-          name: contact.name.trim(),
-          ...(contact.phone_number?.trim() ? { phone_number: contact.phone_number.trim() } : {}),
-          ...(contact.email?.trim() ? { email: contact.email.trim() } : {}),
-        })),
+        link_url: linkUrl.trim(),
+        category_id: categoryId!,
       };
-      const galleryIds = gallery.map((image) => image.mediaId);
       const result = event
         ? await updateEvent({
             id: event.id,
             ...common,
-            ...(thumbnail?.mediaId !== initialThumbnailId
-              ? { thumbnail_media_id: thumbnail?.mediaId ?? "" }
-              : {}),
-            ...(JSON.stringify(galleryIds) !== initialGalleryIds
-              ? { image_media_ids: galleryIds }
-              : {}),
           })
         : await createEvent({
             ...common,
             entity_type: entity.type,
             entity_id: entity.id,
-            ...(thumbnail ? { thumbnail_media_id: thumbnail.mediaId } : {}),
-            ...(galleryIds.length > 0 ? { image_media_ids: galleryIds } : {}),
           });
 
       if (!isSuccessStatus(result.status) || !result.data) {
+        setSaving(false);
         toast.error(
           result.status === "FORBIDDEN"
             ? "Akunmu tidak lagi punya akses untuk mengelola event ini."
             : "Event belum berhasil disimpan. Periksa isian lalu coba lagi.",
         );
-        setSaving(false);
         return;
       }
-      toast.success(isEditing ? "Perubahan event tersimpan." : "Event berhasil diterbitkan.");
-      router.push(`${baseHref}/${result.data.id}`);
-      router.refresh();
+      const resources = await saveEventResources(result.data.id, {
+        contacts: contacts.map((contact) => ({
+          ...(contact.id ? { id: contact.id } : {}),
+          ...(contact.user_id
+            ? { user_id: contact.user_id }
+            : { name: contact.name.trim(), phone_number: contact.phone_number.trim() }),
+        })),
+        coverMediaId: thumbnail?.mediaId ?? null,
+        galleryMediaIds: gallery.map((image) => image.mediaId),
+      });
+      if (!resources.ok) {
+        flushSync(() => setSaving(false));
+        toast.error(`Event tersimpan, tetapi kontak atau gambar belum lengkap. ${resources.message ?? "Buka edit untuk mencoba lagi."}`);
+        router.push(`${baseHref}/${result.data.id}`);
+        return;
+      }
+      flushSync(() => setSaving(false));
+      router.push(`${baseHref}?saved=${isEditing ? "updated" : "created"}`);
     } catch (error) {
       console.error("[OfficialEventFormPage] save threw:", error);
-      toast.error("Event belum berhasil disimpan. Coba lagi.");
       setSaving(false);
+      toast.error("Event belum berhasil disimpan. Coba lagi.");
+    }
+  }
+
+  async function handleDelete() {
+    if (!event) return;
+    setDeleting(true);
+    try {
+      const result = await deleteEvent(event.id);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      setDeleting(false);
+      toast.success("Event berhasil dihapus.");
+      router.push(baseHref);
+    } catch {
+      setDeleting(false);
+      toast.error("Event belum berhasil dihapus. Coba lagi.");
     }
   }
 
   return (
     <OfficialPageShell entity={entity} compactGreeting>
-      <PageMargin className="pt-4 lg:pt-6">
-        <main className="mx-auto max-w-5xl pb-6 lg:pb-10">
-          <div className="mb-5">
+      <PageMargin noMobilePadding className="pb-6 pt-4 lg:py-6">
+        <main className="pb-6 lg:pb-10">
+          <div className="mb-4 flex min-h-11 items-center justify-between gap-3 px-4 lg:mb-6 lg:px-0">
             <h1 className="font-stack-sans-headline text-xl font-medium text-heading sm:text-2xl">
               {isEditing ? "Edit event" : "Buat event baru"}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isEditing
-                ? "Perubahan langsung terlihat oleh kader yang membuka event ini."
-                : "Event akan langsung tampil di menu Event setelah diterbitkan."}
-            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button variant="outline" onClick={() => (isDirty ? setDiscardOpen(true) : router.push(baseHref))} disabled={saving}>
+                Batal
+              </Button>
+              <Button type="submit" form="official-event-form" disabled={busy}>
+                {saving && <IconLoader2 className="size-4 animate-spin" stroke={2} />}
+                {saving ? "Menyimpan..." : isEditing ? "Simpan" : "Terbitkan"}
+              </Button>
+            </div>
           </div>
 
           <form
+            id="official-event-form"
             onSubmit={handleSubmit}
             noValidate
-            className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]"
+            className="grid items-start gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6"
           >
-            <div className="flex min-w-0 flex-col gap-5">
+            <div className="flex min-w-0 flex-col gap-1.5 lg:gap-4">
               <FormSection
-                icon={<CalendarDays className="size-4.5" />}
                 title="Informasi utama"
-                description="Judul, waktu, dan cerita event."
               >
                 <div className="flex flex-col gap-4">
                   <Input
@@ -365,6 +381,22 @@ export default function OfficialEventFormPage({
                     errorMessage={errors.title}
                     required
                   />
+                  <div>
+                    <Select
+                      selectId="event-category"
+                      label="Kategori event"
+                      placeholder="Pilih kategori"
+                      value={categoryId}
+                      onChange={(value) => {
+                        setCategoryId(typeof value === "number" ? value : null);
+                        setFieldError("category");
+                      }}
+                      options={categories.map((category) => ({ label: category.name, value: category.id }))}
+                      required
+                    />
+                    {errors.category && <p role="alert" className="mt-1 pl-1 text-xs text-destructive-foreground">{errors.category}</p>}
+                    {categories.length === 0 && <p className="mt-1 pl-1 text-sm text-muted-foreground">Kategori event belum tersedia. Coba muat ulang halaman.</p>}
+                  </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Input
                       inputId="event-start-date"
@@ -401,33 +433,42 @@ export default function OfficialEventFormPage({
               </FormSection>
 
               <FormSection
-                icon={<MapPin className="size-4.5" />}
-                title="Lokasi dan pendaftaran"
-                description="Bantu peserta menemukan tempat dan langkah berikutnya."
+                title="Lokasi dan tautan"
               >
                 <div className="flex flex-col gap-4">
                   <div>
-                    <Input
-                      inputId="event-location"
-                      label="Nama dan alamat lokasi"
-                      placeholder="Contoh: Monumen Nasional, Gambir, Jakarta Pusat"
-                      value={locationName}
-                      onChange={(changeEvent) => setLocationName(changeEvent.target.value)}
-                      onBlur={() => setMapQuery(locationName)}
-                      icon={<MapPin className="size-4" />}
-                    />
-                    <p className="mt-1 pl-1 text-sm text-muted-foreground">
-                      Tulis nama tempat, lalu alamatnya setelah koma. Peta dicari dari isian ini.
-                    </p>
-                    {mapPreviewUrl && (
-                      <div className="mt-3 aspect-[16/7] overflow-hidden rounded-xl border border-border bg-surface-muted">
-                        <iframe
-                          src={mapPreviewUrl}
-                          title="Pratinjau peta lokasi"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          className="size-full border-0"
+                    <div className="flex items-end gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Input
+                          inputId="event-location"
+                          label="Nama dan alamat lokasi"
+                          placeholder="Contoh: Monumen Nasional, Gambir, Jakarta Pusat"
+                          value={locationName}
+                          onChange={(changeEvent) => setLocationName(changeEvent.target.value)}
+                          icon={<IconMapPin className="size-4" stroke={2} />}
+                          trailing={<FieldHelpTooltip text="Tulis nama tempat, lalu alamatnya setelah koma. Tekan Cari untuk menampilkan pratinjau peta." />}
                         />
+                      </div>
+                      <Button variant="primary" onClick={() => { setMapQuery(locationName.trim()); setMapSearchActive(true); }} disabled={!locationName.trim()} className="h-[42px]">
+                        <IconSearch className="size-4" stroke={2} /> Cari
+                      </Button>
+                    </div>
+                    {mapPreviewUrl && (
+                      <div className="mt-3">
+                        <div className="aspect-[16/7] overflow-hidden rounded-xl border border-border bg-surface-muted">
+                          <iframe
+                            src={mapPreviewUrl}
+                            title="Pratinjau peta lokasi"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            className="size-full border-0"
+                          />
+                        </div>
+                        {mapQuery && (
+                          <EventLinkButton href={googleMapsSearchUrl(mapQuery)} newTab variant="ghost" size="sm" className="mt-2">
+                            Buka di Google Maps <IconExternalLink className="size-4" stroke={2} />
+                          </EventLinkButton>
+                        )}
                       </div>
                     )}
                   </div>
@@ -440,55 +481,41 @@ export default function OfficialEventFormPage({
                       value={locationUrl}
                       onChange={(changeEvent) => {
                         setLocationUrl(changeEvent.target.value);
+                        setMapSearchActive(false);
                         setFieldError("locationUrl");
                       }}
                       onBlur={() => setFieldError("locationUrl", urlError(locationUrl))}
                       errorMessage={errors.locationUrl}
-                      icon={<Link2 className="size-4" />}
+                      icon={<IconLink className="size-4" stroke={2} />}
+                      trailing={<FieldHelpTooltip text="Opsional. Buka hasil pencarian di Google Maps, pilih tempat yang tepat, lalu tempel tautan Bagikan di sini. Tautan embed juga dapat dipakai untuk mengatur pratinjau." />}
                     />
-                    <p className="mt-1 pl-1 text-sm text-muted-foreground">
-                      Opsional, untuk tombol petunjuk arah. Tautan embed Google Maps menggantikan
-                      peta di atas bila pinnya kurang tepat.
-                    </p>
                   </div>
                   <div>
                     <Input
-                      inputId="event-registration-url"
+                      inputId="event-link-url"
                       type="url"
-                      label="Formulir pendaftaran"
-                      placeholder="https://forms.google.com/..."
-                      value={registrationUrl}
+                      label="Tautan event"
+                      placeholder="https://..."
+                      value={linkUrl}
                       onChange={(changeEvent) => {
-                        setRegistrationUrl(changeEvent.target.value);
-                        setFieldError("registrationUrl");
+                        setLinkUrl(changeEvent.target.value);
+                        setFieldError("linkUrl");
                       }}
-                      onBlur={() => setFieldError("registrationUrl", urlError(registrationUrl))}
-                      errorMessage={errors.registrationUrl}
-                      icon={<Link2 className="size-4" />}
+                      onBlur={() => setFieldError("linkUrl", urlError(linkUrl))}
+                      errorMessage={errors.linkUrl}
+                      icon={<IconLink className="size-4" stroke={2} />}
+                      trailing={<FieldHelpTooltip text="Opsional. Bisa menuju formulir, situs, atau informasi event dari penyelenggara." />}
                     />
-                    <p className="mt-1 pl-1 text-sm text-muted-foreground">
-                      Opsional. Tombol &ldquo;Saya mau ikut&rdquo; tetap tersedia di HMI Connect.
-                    </p>
                   </div>
                 </div>
               </FormSection>
 
               <FormSection
-                icon={<UserRound className="size-4.5" />}
                 title="Narahubung"
-                description="Opsional, untuk peserta yang ingin bertanya."
                 action={
                   contacts.length > 0 ? (
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setContacts((current) => [
-                          ...current,
-                          { key: newKey(), name: "", phone_number: "", email: "" },
-                        ])
-                      }
-                    >
-                      <Plus className="size-4" />
+                    <Button variant="outline" size="sm" onClick={() => setContactModalKey("new")}>
+                      <IconPlus className="size-4" stroke={2} />
                       Tambah
                     </Button>
                   ) : undefined
@@ -497,93 +524,42 @@ export default function OfficialEventFormPage({
                 {contacts.length === 0 ? (
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      setContacts([{ key: newKey(), name: "", phone_number: "", email: "" }])
-                    }
+                    onClick={() => setContactModalKey("new")}
                     className="w-full"
                   >
-                    <Plus className="size-4" />
+                    <IconPlus className="size-4" stroke={2} />
                     Tambahkan narahubung
                   </Button>
                 ) : (
-                  <div className="flex flex-col gap-4">
-                    {contacts.map((contact, index) => (
-                      <fieldset
-                        key={contact.key}
-                        className="rounded-xl border border-border p-4"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <legend className="text-sm font-semibold text-muted-foreground">
-                            Narahubung {index + 1}
-                          </legend>
-                          <Button
-                            variant="destructive"
-                            size="iconSm"
-                            onClick={() =>
-                              setContacts((current) =>
-                                current.filter((item) => item.key !== contact.key),
-                              )
-                            }
-                            aria-label={`Hapus narahubung ${index + 1}`}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="sm:col-span-2">
-                            <Input
-                              inputId={`event-contact-name-${contact.key}`}
-                              label="Nama atau peran"
-                              placeholder="Contoh: Ketua Panitia"
-                              value={contact.name}
-                              onChange={(changeEvent) =>
-                                updateContact(contact.key, { name: changeEvent.target.value })
-                              }
-                              icon={<UserRound className="size-4" />}
-                              required
-                            />
-                          </div>
-                          <Input
-                            inputId={`event-contact-phone-${contact.key}`}
-                            type="tel"
-                            autoComplete="tel"
-                            label="Nomor WhatsApp"
-                            placeholder="08xxxxxxxxxx"
-                            value={contact.phone_number}
-                            onChange={(changeEvent) =>
-                              updateContact(contact.key, {
-                                phone_number: changeEvent.target.value,
-                              })
-                            }
-                            icon={<Phone className="size-4" />}
-                          />
-                          <Input
-                            inputId={`event-contact-email-${contact.key}`}
-                            type="email"
-                            autoComplete="email"
-                            label="Email"
-                            placeholder="panitia@contoh.id"
-                            value={contact.email}
-                            onChange={(changeEvent) =>
-                              updateContact(contact.key, { email: changeEvent.target.value })
-                            }
-                            icon={<Mail className="size-4" />}
-                          />
-                        </div>
-                        {contactErrors[contact.key] && (
-                          <p role="alert" className="mt-2 pl-1 text-xs text-destructive-foreground">
-                            {contactErrors[contact.key]}
-                          </p>
+                  <div className="flex flex-col gap-2">
+                    {contacts.map((contact) => (
+                      <div key={contact.key} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                        {contact.user_id && contact.avatar ? (
+                          <Avatar src={contact.avatar} name={contact.name} size={36} />
+                        ) : (
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
+                            <IconUser className="size-5" stroke={2} />
+                          </span>
                         )}
-                      </fieldset>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-heading">{contact.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{contact.user_id ? "User HMI Connect" : contact.phone_number}</p>
+                        </div>
+                        <Button variant="ghost" size="iconSm" onClick={() => setContactModalKey(contact.key)} aria-label={`Edit ${contact.name}`}>
+                          <IconPencil className="size-4" stroke={2} />
+                        </Button>
+                        <Button variant="ghost" size="iconSm" onClick={() => setContacts((current) => current.filter((item) => item.key !== contact.key))} aria-label={`Hapus ${contact.name}`}>
+                          <IconTrash className="size-4" stroke={2} />
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
               </FormSection>
             </div>
 
-            <aside className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-6">
-              <section className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+            <aside className="flex min-w-0 flex-col gap-1.5 lg:sticky lg:top-6 lg:gap-4">
+              <section className="flex items-center gap-3 border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
                 <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-muted">
                   {entity.imageUrl ? (
                     <Image
@@ -603,8 +579,8 @@ export default function OfficialEventFormPage({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-border bg-surface p-5">
-                <h2 className="font-stack-sans-headline font-medium text-heading">Thumbnail</h2>
+              <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
+                <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">Thumbnail</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   Rasio 16:9 disarankan. JPG, PNG, atau WEBP.
                 </p>
@@ -616,7 +592,7 @@ export default function OfficialEventFormPage({
                   onChange={handleThumbnail}
                 />
                 <div className="relative mt-3 flex aspect-[16/9] w-full overflow-hidden rounded-xl border border-dashed border-border-strong bg-surface-muted">
-                  {thumbnail ? (
+                  {thumbnail?.url ? (
                     <Image
                       src={thumbnail.url}
                       alt="Pratinjau thumbnail"
@@ -626,7 +602,7 @@ export default function OfficialEventFormPage({
                     />
                   ) : (
                     <span className="m-auto text-sm text-muted-foreground">
-                      Belum ada gambar
+                      {thumbnail ? "Gambar tersimpan" : "Belum ada gambar"}
                     </span>
                   )}
                 </div>
@@ -638,9 +614,9 @@ export default function OfficialEventFormPage({
                     className="min-w-0 flex-1"
                   >
                     {uploadingThumbnail ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <IconLoader2 className="size-4 animate-spin" stroke={2} />
                     ) : (
-                      <Upload className="size-4" />
+                      <IconUpload className="size-4" stroke={2} />
                     )}
                     {uploadingThumbnail ? "Mengunggah..." : thumbnail ? "Ganti" : "Pilih gambar"}
                   </Button>
@@ -656,9 +632,9 @@ export default function OfficialEventFormPage({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-border bg-surface p-5">
+              <section className="border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x">
                 <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="font-stack-sans-headline font-medium text-heading">Galeri</h2>
+                  <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">Foto lainnya</h2>
                   <p className="text-sm tabular-nums text-muted-foreground">
                     {gallery.length}/{MAX_GALLERY_IMAGES}
                   </p>
@@ -678,13 +654,17 @@ export default function OfficialEventFormPage({
                         key={image.mediaId}
                         className="relative aspect-square overflow-hidden rounded-lg bg-surface-muted"
                       >
-                        <Image
-                          src={image.url}
-                          alt={`Foto galeri ${index + 1}`}
-                          fill
-                          sizes="90px"
-                          className="object-cover"
-                        />
+                        {image.url ? (
+                          <Image
+                            src={image.url}
+                            alt={`Foto lainnya ${index + 1}`}
+                            fill
+                            sizes="90px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="flex size-full items-center justify-center text-xs text-muted-foreground">Gambar tersimpan</span>
+                        )}
                         <span className="absolute right-1 top-1">
                           <Button
                             variant="destructive"
@@ -696,7 +676,7 @@ export default function OfficialEventFormPage({
                             }
                             aria-label={`Hapus foto ${index + 1}`}
                           >
-                            <Trash2 className="size-3.5" />
+                            <IconTrash className="size-3.5" stroke={2} />
                           </Button>
                         </span>
                       </div>
@@ -710,46 +690,60 @@ export default function OfficialEventFormPage({
                   className="mt-3 w-full"
                 >
                   {uploadingGallery ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <IconLoader2 className="size-4 animate-spin" stroke={2} />
                   ) : (
-                    <ImagePlus className="size-4" />
+                    <IconPhotoPlus className="size-4" stroke={2} />
                   )}
                   {uploadingGallery ? "Mengunggah foto..." : "Tambah foto"}
                 </Button>
               </section>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => (isDirty ? setDiscardOpen(true) : router.back())}
-                  disabled={saving}
-                  className="min-w-0 flex-1"
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={busy}
-                  className="min-w-0 flex-1"
-                >
-                  {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {saving ? "Menyimpan..." : isEditing ? "Simpan" : "Terbitkan"}
-                </Button>
-              </div>
+              {event && (
+                <div className="px-4 lg:px-0">
+                  <Button variant="destructive" onClick={() => setDeleteOpen(true)} disabled={busy} className="w-full">
+                    <IconTrash className="size-4" stroke={2} /> Hapus event
+                  </Button>
+                </div>
+              )}
+
             </aside>
           </form>
         </main>
       </PageMargin>
 
+      {contactModalKey && (
+        <EventContactModal
+          key={contactModalKey}
+          open
+          initial={(() => {
+            const contact = contacts.find((item) => item.key === contactModalKey);
+            if (!contact) return undefined;
+            return contact.user_id
+              ? { user_id: contact.user_id, displayName: contact.name, displayPhone: contact.phone_number, avatar: contact.avatar }
+              : { name: contact.name, phone_number: contact.phone_number, displayName: contact.name, displayPhone: contact.phone_number };
+          })()}
+          onClose={() => setContactModalKey(null)}
+          onSave={saveContact}
+        />
+      )}
+
       <AlertConfirmation
         open={discardOpen}
         onClose={() => setDiscardOpen(false)}
-        onConfirm={() => router.back()}
+        onConfirm={() => router.push(baseHref)}
         title="Buang perubahan?"
         message="Isian yang belum disimpan akan hilang."
         confirmLabel="Buang"
         cancelLabel="Lanjut mengisi"
+      />
+      <AlertConfirmation
+        open={deleteOpen}
+        onClose={() => { if (!deleting) setDeleteOpen(false); }}
+        onConfirm={handleDelete}
+        title="Hapus event ini?"
+        message="Event akan hilang dari daftar dan tidak bisa dibuka lagi, termasuk lewat tautan yang sudah dibagikan."
+        confirmLabel="Hapus event"
+        loading={deleting}
       />
     </OfficialPageShell>
   );

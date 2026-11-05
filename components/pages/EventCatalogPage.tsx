@@ -1,5 +1,5 @@
 import { IconCalendarEvent } from "@tabler/icons-react";
-import type { EventTimeframe, TimeframedEventResult } from "@/apis/events";
+import type { PagedEventResult } from "@/apis/events";
 import type { SessionUser } from "@/apis/session";
 import EventCard from "../events/EventCard";
 import EventListControls from "../events/EventListControls";
@@ -12,24 +12,16 @@ import EmptyState from "../states/EmptyState";
 export default function EventCatalogPage({
   viewer,
   result,
-  timeframe,
   initialSearch,
 }: {
   viewer: SessionUser;
-  result: TimeframedEventResult;
-  timeframe: EventTimeframe;
+  result: PagedEventResult;
   initialSearch: string;
 }) {
-  const emptyTitle = initialSearch
-    ? "Event tidak ditemukan"
-    : timeframe === "past"
-      ? "Belum ada event yang selesai"
-      : "Belum ada event terdekat";
+  const emptyTitle = initialSearch ? "Event tidak ditemukan" : "Belum ada event";
   const emptyDescription = initialSearch
     ? "Coba kata kunci lain atau hapus pencarian."
-    : timeframe === "past"
-      ? "Event yang sudah berlangsung akan tersimpan di sini."
-      : "Agenda baru dari Official Account HMI akan muncul di sini.";
+    : "Agenda dari Official Account HMI akan muncul di sini.";
 
   return (
     <EventPageShell viewer={viewer} mobileBackTitle="Event">
@@ -53,10 +45,7 @@ export default function EventCatalogPage({
 
           <EventListControls
             basePath="/events"
-            timeframe={timeframe}
             initialSearch={initialSearch}
-            upcomingCount={result.upcomingCount}
-            pastCount={result.pastCount}
           />
 
           {result.list.length === 0 ? (

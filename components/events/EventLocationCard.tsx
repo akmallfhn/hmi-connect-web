@@ -19,7 +19,7 @@ export default function EventLocationCard({
   if (!mapUrl && !place) return null;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <section className="overflow-hidden border border-x-0 border-border bg-surface lg:rounded-2xl lg:border-x">
       {mapUrl && (
         <div className="aspect-[4/3] bg-surface-muted sm:aspect-[21/9]">
           <iframe
@@ -31,8 +31,8 @@ export default function EventLocationCard({
           />
         </div>
       )}
-      <div className="p-4">
-        <h2 className="break-words font-stack-sans-headline text-lg font-medium text-heading">
+      <div className="p-5">
+        <h2 className="break-words font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
           {place || "Lokasi event"}
         </h2>
         {address && (

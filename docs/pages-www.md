@@ -27,8 +27,8 @@ Dokumen ini mencatat **route halaman** pada host `www` (segmen internal `/www` t
 | `/events/[event_id]` | Login | Detail event dan aksi hadir | Detail event | Event tak ditemukan menghasilkan 404. |
 | `/events/manage` | Login | **404** | Daftar event entity terpilih | Hanya cookie valid beserta grant saat ini yang dapat memilih entity. |
 | `/events/manage/create` | Login | **404** | Buat event entity terpilih | Server Action juga mencocokkan entity pada payload. |
-| `/events/manage/[event_id]` | Login | **404** | Detail event entity terpilih | Event milik entity lain menghasilkan 404. |
-| `/events/manage/[event_id]/edit` | Login | **404** | Edit event entity terpilih | Server Action update/delete memeriksa kepemilikan event. |
+| `/events/manage/[event_id]` | Login | **404** | Form edit event entity terpilih | Event milik entity lain menghasilkan 404; Server Action update/delete memeriksa kepemilikan. |
+| `/events/manage/[event_id]/edit` | Login | **404** | Redirect ke `/events/manage/[event_id]` | URL edit lama tetap bisa dibuka. |
 | `/search` | Login | Pencarian sebagai user | Pencarian sebagai entity | Interaksi feed menggunakan identitas aktif. |
 | `/feeds/[feed_id]` | Bisa baca | Detail feed dan interaksi user | Detail feed dan interaksi entity | Query lama `?as=` dibersihkan tanpa mengganti mode. |
 | `/profile/[username]` | Bisa baca | Profil anggota | Profil anggota dengan interaksi entity | Profil yang tidak aktif/tidak ada menghasilkan 404. |
@@ -51,5 +51,5 @@ Dokumen ini mencatat **route halaman** pada host `www` (segmen internal `/www` t
 ## Lokasi pemeriksaan mode
 
 - `lib/user-mode.ts#requireUserMode` memanggil `selectedActingEntityRef` dan mengembalikan 404 untuk mode Entity. `components/layouts/UserOnlyWwwLayout.tsx` memasangnya pada root route personal di atas, termasuk kedua cabang `/articles`, `/membership`, `/verification`, dan `/invitations`. Layout `/chats` memanggil helper yang sama sebelum membangun UI percakapan.
-- `components/pages/OfficialEventRoutes.tsx` mewajibkan pilihan Entity yang valid untuk seluruh `/events/manage` dan mencocokkan entity pemilik event pada halaman detail/edit.
+- `components/pages/OfficialEventRoutes.tsx` mewajibkan pilihan Entity yang valid untuk seluruh `/events/manage` dan mencocokkan entity pemilik event pada form edit.
 - `lib/acting-entity.ts` memvalidasi isi cookie terhadap ID user dan grant terkini. Beralih ke mode User menghapus cookie; sesi login tidak ikut dihapus.

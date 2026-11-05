@@ -9,11 +9,14 @@ export type EventContact = {
   id: string;
   name: string;
   phone_number?: string;
-  email?: string;
+  user_id?: string;
+  avatar?: string;
   position: number;
 };
 
 export type EventImage = {
+  id: string;
+  role: "cover" | "gallery";
   media_id: string;
   position: number;
   image_url?: string;
@@ -22,6 +25,8 @@ export type EventImage = {
 export type EventListEntry = {
   id: string;
   title: string;
+  category_id: number;
+  category_name: string;
   entity_type: EventEntityTypeEnum;
   entity_id: string;
   entity_name: string;
@@ -40,9 +45,10 @@ export type EventListEntry = {
 export type EventDetail = EventListEntry & {
   description?: string;
   location_url?: string;
-  registration_url?: string;
+  link_url?: string;
   contacts: EventContact[];
   images: EventImage[];
+  attendee_preview: EventAttendeePreview[];
   created_by: string;
   updated_at: string;
 };
@@ -119,41 +125,18 @@ export async function listEvents(
 export type EventAttendeePreview = {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: string | null;
 };
-
-const SAMPLE_ATTENDEES: EventAttendeePreview[] = [
-  { id: "sample-1", name: "Rizky", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-  { id: "sample-2", name: "Salsabila", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-  { id: "sample-3", name: "Fajar", avatar: "https://randomuser.me/api/portraits/men/46.jpg" },
-  { id: "sample-4", name: "Nadia", avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
-  { id: "sample-5", name: "Hafiz", avatar: "https://randomuser.me/api/portraits/men/75.jpg" },
-  { id: "sample-6", name: "Aulia", avatar: "https://randomuser.me/api/portraits/women/21.jpg" },
-  { id: "sample-7", name: "Yusuf", avatar: "https://randomuser.me/api/portraits/men/11.jpg" },
-];
-
-// No attendee endpoint exists yet; samples stay local-only so members never see invented people attending.
-export function listEventAttendeePreview(): EventAttendeePreview[] {
-  return process.env.DOMAIN_MODE === "local" ? SAMPLE_ATTENDEES : [];
-}
-
-export type EventTimeframe = "upcoming" | "past";
 
 const ALL_EVENTS_PAGE_SIZE = 100;
 const ALL_EVENTS_MAX_PAGES = 20;
 
-export type TimeframedEventResult = PagedEventResult & {
-  upcomingCount: number;
-  pastCount: number;
-};
-
-// events/list sorts oldest-first with no time filter, so ended events would otherwise lead every catalog.
-export async function listEventsByTimeframe({
-  timeframe,
+// events/list sorts oldest-first; keep upcoming events first and recent ended events after them.
+export async function listEventsChronological({
   page = 1,
   pageSize = 12,
   ...filters
-}: ListEventsOptions & { timeframe: EventTimeframe }): Promise<TimeframedEventResult> {
+}: ListEventsOptions = {}): Promise<PagedEventResult> {
   const all: EventListEntry[] = [];
   for (let current = 1; current <= ALL_EVENTS_MAX_PAGES; current += 1) {
     const result = await listEvents({
@@ -170,7 +153,7 @@ export async function listEventsByTimeframe({
   const past = all
     .filter((event) => new Date(event.end_date).getTime() < now)
     .reverse();
-  const rows = timeframe === "past" ? past : upcoming;
+  const rows = [...upcoming, ...past];
   const totalPage = Math.max(1, Math.ceil(rows.length / pageSize));
   const currentPage = Math.min(page, totalPage);
 
@@ -179,8 +162,6 @@ export async function listEventsByTimeframe({
     totalData: rows.length,
     totalPage,
     currentPage,
-    upcomingCount: upcoming.length,
-    pastCount: past.length,
   };
 }
 
@@ -193,22 +174,42 @@ export async function getEventDetail(id: string): Promise<EventDetail | null> {
     body: { id },
   });
   if (!isSuccessStatus(result.status) || !result.data) return null;
-  // Both keys are omitempty on the backend, so an event without any comes back with neither.
+  // Keep older backend responses safe while the attendee preview rollout completes.
   return {
     ...result.data,
     contacts: result.data.contacts ?? [],
     images: result.data.images ?? [],
+    attendee_preview: result.data.attendee_preview ?? [],
   };
 }
 
-export type EventContactInput = {
-  name: string;
-  phone_number?: string;
-  email?: string;
-};
+export type EventContactInput =
+  | { user_id: string; name?: never; phone_number?: never }
+  | { user_id?: never; name: string; phone_number: string };
+
+export type EventCategory = { id: number; name: string };
+
+export async function listEventCategories(): Promise<EventCategory[]> {
+  const token = await sessionToken();
+  if (!token) return [];
+  const categories: EventCategory[] = [];
+  for (let page = 1; page <= 20; page += 1) {
+    const result = await callApi<{ list: EventCategory[]; metapaging?: { total_page: number } }>(
+      "/api/v1/event-categories/list",
+      { method: "POST", token, body: { page, page_size: 100 } },
+    );
+    if (!isSuccessStatus(result.status) || !result.data) {
+      throw new Error(result.message || "Kategori event gagal dimuat.");
+    }
+    categories.push(...result.data.list);
+    if (page >= (result.data.metapaging?.total_page ?? 1)) break;
+  }
+  return categories;
+}
 
 export type CreateEventPayload = {
   title: string;
+  category_id: number;
   description?: string;
   entity_type: EventEntityTypeEnum;
   entity_id: string;
@@ -216,10 +217,7 @@ export type CreateEventPayload = {
   end_date: string;
   location_name?: string;
   location_url?: string;
-  registration_url?: string;
-  thumbnail_media_id?: string;
-  contacts?: EventContactInput[];
-  image_media_ids?: string[];
+  link_url?: string;
 };
 
 export async function createEvent(
@@ -246,6 +244,59 @@ export async function updateEvent(
     token,
     body: payload,
   });
+}
+
+export async function createEventContact(eventId: string, contact: EventContactInput) {
+  const token = await sessionToken();
+  if (!token) return unauthorized<EventContact>();
+  return callApi<EventContact>("/api/v1/events/contacts/create", {
+    method: "POST", token, body: { event_id: eventId, ...contact },
+  });
+}
+
+export async function updateEventContact(id: string, contact: EventContactInput) {
+  const token = await sessionToken();
+  if (!token) return unauthorized<EventContact>();
+  return callApi<EventContact>("/api/v1/events/contacts/update", {
+    method: "POST", token, body: { id, ...contact },
+  });
+}
+
+export async function deleteEventContact(id: string) {
+  const token = await sessionToken();
+  if (!token) return unauthorized();
+  return callApi("/api/v1/events/contacts/delete", { method: "POST", token, body: { id } });
+}
+
+export async function listEventImages(eventId: string): Promise<EventImage[] | null> {
+  const token = await sessionToken();
+  if (!token) return null;
+  const result = await callApi<{ list: EventImage[] }>("/api/v1/events/images/list", {
+    method: "POST", token, body: { event_id: eventId, page: 1, page_size: 100 },
+  });
+  return isSuccessStatus(result.status) && result.data ? result.data.list : null;
+}
+
+export async function createEventImage(eventId: string, role: EventImage["role"], mediaId: string) {
+  const token = await sessionToken();
+  if (!token) return unauthorized<EventImage>();
+  return callApi<EventImage>("/api/v1/events/images/create", {
+    method: "POST", token, body: { event_id: eventId, role, media_id: mediaId },
+  });
+}
+
+export async function updateEventImage(id: string, mediaId: string) {
+  const token = await sessionToken();
+  if (!token) return unauthorized<EventImage>();
+  return callApi<EventImage>("/api/v1/events/images/update", {
+    method: "POST", token, body: { id, media_id: mediaId },
+  });
+}
+
+export async function deleteEventImage(id: string) {
+  const token = await sessionToken();
+  if (!token) return unauthorized();
+  return callApi("/api/v1/events/images/delete", { method: "POST", token, body: { id } });
 }
 
 export async function deleteEvent(id: string): Promise<ApiEnvelope> {

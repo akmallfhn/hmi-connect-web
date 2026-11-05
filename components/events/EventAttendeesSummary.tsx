@@ -1,8 +1,6 @@
 import type { EventAttendeePreview } from "@/apis/events";
-import { formatEventAttendeeNames, formatEventAttendees } from "@/lib/event-ui";
+import { formatEventAttendeeNames } from "@/lib/event-ui";
 import Avatar from "../common/Avatar";
-
-const MAX_FACES = 5;
 
 // Inherits its text color like the metadata above it; only the avatar ring depends on the surface.
 export default function EventAttendeesSummary({
@@ -20,15 +18,14 @@ export default function EventAttendeesSummary({
   ended: boolean;
   onDark?: boolean;
 }) {
-  const viewerFace =
-    isAttending && viewer?.id
-      ? [{ id: viewer.id, name: viewer.name ?? "Kamu", avatar: viewer.avatar ?? undefined }]
-      : [];
-  const faces = [...viewerFace, ...attendees].slice(0, MAX_FACES);
-  // The real count already includes the viewer; preview samples are the only faces added on top.
-  const total = count + attendees.length;
-  const hiddenFaces = Math.max(0, total - faces.length);
-  const names = [...(viewerFace.length ? ["Kamu"] : []), ...attendees.map((person) => person.name)];
+  const withoutViewer = attendees.filter((person) => person.id !== viewer?.id);
+  const viewerPreview = attendees.find((person) => person.id === viewer?.id);
+  const viewerFace = isAttending && viewer?.id
+    ? [{ id: viewer.id, name: viewer.name ?? viewerPreview?.name ?? "Kamu", avatar: viewer.avatar ?? viewerPreview?.avatar }]
+    : [];
+  const faces = [...viewerFace, ...withoutViewer].slice(0, Math.min(2, count));
+  const hiddenFaces = Math.max(0, count - faces.length);
+  const names = faces.map((person) => person.id === viewer?.id ? "Kamu" : person.name);
   const ringClass = onDark ? "ring-on-dark/70" : "ring-surface";
 
   return (
@@ -54,10 +51,12 @@ export default function EventAttendeesSummary({
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-[15px] font-semibold leading-5">{formatEventAttendees(total, ended)}</p>
+        <p className="text-[15px] font-semibold leading-5">
+          {count} orang {ended ? "telah menghadiri" : "akan menghadiri"} event ini.
+        </p>
         {names.length > 0 && (
           <p className="mt-0.5 break-words text-sm leading-5 opacity-80">
-            {formatEventAttendeeNames(names, total, ended)}
+            {formatEventAttendeeNames(names, count)}
           </p>
         )}
       </div>

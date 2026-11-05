@@ -4,6 +4,7 @@ import { getSession } from "@/apis/session";
 import type { ApiEnvelope } from "@/apis/api";
 import { selectedActingEntityRef, setActingAccount } from "@/lib/acting-entity";
 import type { ActingEntityRef } from "@/lib/access";
+import { isSuccessStatus } from "@/lib/types";
 
 import {
   acceptAccessGrant as acceptAccessGrantApi,
@@ -119,12 +120,20 @@ import {
   type PresignMediaPayload,
 } from "@/apis/media";
 import {
+  createEventContact as createEventContactApi,
+  createEventImage as createEventImageApi,
   createEvent as createEventApi,
+  deleteEventContact as deleteEventContactApi,
+  deleteEventImage as deleteEventImageApi,
   deleteEvent as deleteEventApi,
   getEventDetail as getEventDetailApi,
+  listEventImages as listEventImagesApi,
+  updateEventContact as updateEventContactApi,
+  updateEventImage as updateEventImageApi,
   updateEvent as updateEventApi,
   updateEventAttendance as updateEventAttendanceApi,
   type CreateEventPayload,
+  type EventContactInput,
   type UpdateEventPayload,
 } from "@/apis/events";
 import {
@@ -732,6 +741,76 @@ export async function updateEvent(payload: UpdateEventPayload) {
   if (payload.entity_type && payload.entity_type !== selected?.entityType) return ACTING_ACCOUNT_FORBIDDEN;
   if (payload.entity_id && payload.entity_id !== selected?.entityId) return ACTING_ACCOUNT_FORBIDDEN;
   return updateEventApi(payload);
+}
+
+export type EventResourceDraft = {
+  contacts: (EventContactInput & { id?: string })[];
+  coverMediaId: string | null;
+  galleryMediaIds: string[];
+};
+
+// Resource endpoints are separate from create/update. Re-read server state so retrying
+// after a partial failure only applies changes that are still missing.
+export async function saveEventResources(eventId: string, draft: EventResourceDraft) {
+  if (!(await canManageSelectedEvent(eventId))) {
+    return { ok: false, message: "Akunmu tidak lagi punya akses untuk mengelola event ini." };
+  }
+  const event = await getEventDetailApi(eventId);
+  const images = await listEventImagesApi(eventId);
+  if (!event || !images) return { ok: false, message: "Lampiran event gagal dimuat." };
+
+  async function requireSuccess(result: ApiEnvelope, label: string) {
+    if (!isSuccessStatus(result.status)) throw new Error(`${label}: ${result.message || "gagal disimpan"}`);
+  }
+
+  try {
+    const desiredContactIds = new Set(draft.contacts.map((contact) => contact.id).filter(Boolean));
+    for (const contact of event.contacts) {
+      if (!desiredContactIds.has(contact.id)) {
+        await requireSuccess(await deleteEventContactApi(contact.id), "Hapus narahubung");
+      }
+    }
+    for (const contact of draft.contacts) {
+      const input: EventContactInput = contact.user_id
+        ? { user_id: contact.user_id }
+        : { name: contact.name?.trim() ?? "", phone_number: contact.phone_number?.trim() ?? "" };
+      const existing = event.contacts.find((item) => item.id === contact.id);
+      if (existing) {
+        if (existing.user_id !== contact.user_id ||
+            (!contact.user_id && (existing.name !== input.name || existing.phone_number !== input.phone_number))) {
+          await requireSuccess(await updateEventContactApi(existing.id, input), "Ubah narahubung");
+        }
+      } else {
+        await requireSuccess(await createEventContactApi(eventId, input), "Tambah narahubung");
+      }
+    }
+
+    const cover = images.find((image) => image.role === "cover");
+    if (cover && !draft.coverMediaId) {
+      await requireSuccess(await deleteEventImageApi(cover.id), "Hapus thumbnail");
+    } else if (cover && draft.coverMediaId && cover.media_id !== draft.coverMediaId) {
+      await requireSuccess(await updateEventImageApi(cover.id, draft.coverMediaId), "Ubah thumbnail");
+    } else if (!cover && draft.coverMediaId) {
+      await requireSuccess(await createEventImageApi(eventId, "cover", draft.coverMediaId), "Tambah thumbnail");
+    }
+
+    const wantedGallery = new Set(draft.galleryMediaIds);
+    for (const image of images.filter((item) => item.role === "gallery")) {
+      if (!wantedGallery.has(image.media_id)) {
+        await requireSuccess(await deleteEventImageApi(image.id), "Hapus foto galeri");
+      }
+    }
+    const existingGallery = new Set(images.filter((item) => item.role === "gallery").map((item) => item.media_id));
+    for (const mediaId of wantedGallery) {
+      if (!existingGallery.has(mediaId)) {
+        await requireSuccess(await createEventImageApi(eventId, "gallery", mediaId), "Tambah foto galeri");
+      }
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[saveEventResources] failed:", error);
+    return { ok: false, message: error instanceof Error ? error.message : "Lampiran event gagal disimpan." };
+  }
 }
 
 export async function deleteEvent(id: string) {

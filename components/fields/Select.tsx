@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import Image from "next/image";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
@@ -71,6 +71,7 @@ export default function Select({
 
       <div
         id={selectId}
+        tabIndex={disabled ? -1 : 0}
         className={[
           "relative flex w-full items-center rounded-lg border p-2 text-base transition",
           isOpen ? "border-primary ring-2 ring-primary/15" : "border-border-strong",
@@ -116,7 +117,7 @@ export default function Select({
 
         {!disabled && (
           <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <ChevronDown className="size-4" />
+            <IconChevronDown className="size-4" stroke={2} />
           </div>
         )}
 

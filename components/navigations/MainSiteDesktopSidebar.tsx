@@ -18,7 +18,6 @@ import {
   IconSmartHome,
   IconUserCircle,
 } from "@tabler/icons-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,12 +25,11 @@ import {
   MANAGE_EVENTS_HREF,
   type ActingEntityRef,
 } from "@/lib/access";
-import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
+import { entityProfileHref } from "@/lib/feed-author";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
 import Button from "../buttons/Button";
-import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 import SwitchAccountButton from "../official/SwitchAccountButton";
@@ -116,13 +114,13 @@ function officialNavItems(
   const eventsHref = MANAGE_EVENTS_HREF;
   return [
     {
-      label: "Timeline",
+      label: "Beranda",
       href: timelineHref,
       icon: IconSmartHome,
       matches: (pathname) => pathname === timelineHref,
     },
     {
-      label: "Event",
+      label: "Kelola Event",
       href: eventsHref,
       icon: IconCalendarEvent,
       matches: (pathname) =>
@@ -199,35 +197,6 @@ export default function MainSiteDesktopSidebar({
       <Link href="/" className="mb-7 flex shrink-0 items-center px-2">
         <LogoHmiConnectHorizontal className="h-8 w-auto" />
       </Link>
-
-      {official && (
-        <div className="mb-5 flex shrink-0 items-center gap-3 rounded-xl border border-border p-3">
-          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-muted">
-            {officialGrant?.entity_image_url ? (
-              <Image
-                src={officialGrant.entity_image_url}
-                alt=""
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <LogoHmi className="size-5" />
-            )}
-          </span>
-          <div className="min-w-0">
-            <p className="line-clamp-2 font-stack-sans-headline text-sm font-medium leading-snug text-heading">
-              {officialGrant?.entity_name
-                ? formatEntityAuthorName(
-                    official.entityType,
-                    officialGrant.entity_name,
-                  )
-                : "Official Account"}
-            </p>
-            <p className="text-xs text-subtle-foreground">Official Account</p>
-          </div>
-        </div>
-      )}
 
       {/* Only the menu scrolls; the logo above and Posting/Lainnya below stay put. */}
       <div className="-mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

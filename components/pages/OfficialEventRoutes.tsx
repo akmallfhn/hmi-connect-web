@@ -4,10 +4,9 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/apis/session";
 import {
   getEventDetail,
-  listEventAttendeePreview,
-  listEventsByTimeframe,
+  listEventCategories,
+  listEventsChronological,
 } from "@/apis/events";
-import OfficialEventDetailPage from "@/components/pages/OfficialEventDetailPage";
 import OfficialEventFormPage from "@/components/pages/OfficialEventFormPage";
 import OfficialEventsPage from "@/components/pages/OfficialEventsPage";
 import { selectedActingEntityRef } from "@/lib/acting-entity";
@@ -26,17 +25,15 @@ async function loadContext() {
 }
 
 export async function renderOfficialEvents(
-  query: { search?: string; page?: string; tab?: string },
+  query: { search?: string; page?: string; saved?: string },
 ) {
   const context = await loadContext();
   const search = query.search?.trim() ?? "";
   const page = Math.max(1, Number(query.page ?? "1") || 1);
-  const timeframe = query.tab === "past" ? "past" : "upcoming";
-  const result = await listEventsByTimeframe({
+  const result = await listEventsChronological({
     search: search || undefined,
     entityType: context.entity.type,
     entityId: context.entity.id,
-    timeframe,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -44,15 +41,16 @@ export async function renderOfficialEvents(
     <OfficialEventsPage
       entity={context.entity}
       result={result}
-      timeframe={timeframe}
       initialSearch={search}
+      saved={query.saved === "created" || query.saved === "updated" ? query.saved : undefined}
     />
   );
 }
 
 export async function renderOfficialEventCreate() {
   const context = await loadContext();
-  return <OfficialEventFormPage entity={context.entity} />;
+  const categories = await listEventCategories();
+  return <OfficialEventFormPage entity={context.entity} categories={categories} />;
 }
 
 async function loadOwnedEvent(eventId: string) {
@@ -66,18 +64,8 @@ async function loadOwnedEvent(eventId: string) {
   return { ...context, event };
 }
 
-export async function renderOfficialEventDetail(eventId: string) {
-  const context = await loadOwnedEvent(eventId);
-  return (
-    <OfficialEventDetailPage
-      entity={context.entity}
-      event={context.event}
-      attendees={listEventAttendeePreview()}
-    />
-  );
-}
-
 export async function renderOfficialEventEdit(eventId: string) {
   const context = await loadOwnedEvent(eventId);
-  return <OfficialEventFormPage entity={context.entity} event={context.event} />;
+  const categories = await listEventCategories();
+  return <OfficialEventFormPage entity={context.entity} event={context.event} categories={categories} />;
 }

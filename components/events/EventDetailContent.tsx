@@ -1,25 +1,21 @@
 "use client";
 
 import {
+  IconBrandWhatsapp,
   IconBuildingCommunity,
   IconCalendarEvent,
   IconExternalLink,
-  IconMail,
   IconMapPin,
-  IconPencil,
+  IconPhoto,
   IconPhotoOff,
   IconShare2,
-  IconTrash,
+  IconTag,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { toast } from "sonner";
 import type { EventAttendeePreview, EventDetail } from "@/apis/events";
 import { useEventAttendance } from "@/hooks/useEventAttendance";
-import { deleteEvent } from "@/lib/actions";
-import { socialIconUrl } from "@/lib/constants";
 import {
   eventOrganizer,
   eventShareText,
@@ -30,22 +26,23 @@ import {
   safeExternalUrl,
   splitEventLocation,
 } from "@/lib/event-ui";
-import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
 import PageMargin from "../common/PageMargin";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
-import AlertConfirmation from "../modals/AlertConfirmation";
 import ImagePreviewOverlay from "../modals/ImagePreviewOverlay";
 import ShareModal from "../modals/ShareModal";
+import SendMessageButton from "../profile/SendMessageButton";
 import EventAttendanceButton from "./EventAttendanceButton";
 import EventAttendeesSummary from "./EventAttendeesSummary";
 import EventLinkButton from "./EventLinkButton";
 import EventLocationCard from "./EventLocationCard";
 import EventStatusLabel from "./EventStatusLabel";
 
-const CARD_CLASS = "rounded-2xl border border-border bg-surface p-5";
-const CARD_TITLE_CLASS = "font-stack-sans-headline text-lg font-medium text-heading";
+const CARD_CLASS =
+  "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x";
+const CARD_TITLE_CLASS =
+  "font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]";
 const LONG_DESCRIPTION_LENGTH = 400;
 
 function whatsappHref(phone: string) {
@@ -64,11 +61,13 @@ function FactRow({ icon, children }: { icon: ReactNode; children: ReactNode }) {
 
 // Inherits its text color, so the same rows read on the dark header and on the white aside.
 function EventFacts({
+  categoryName,
   place,
   dateTime,
   organizerName,
   organizerHref,
 }: {
+  categoryName: string;
   place: string;
   dateTime: string;
   organizerName: string;
@@ -76,10 +75,17 @@ function EventFacts({
 }) {
   return (
     <ul className="flex flex-col gap-2.5">
+      {categoryName && (
+        <FactRow icon={<IconTag className="size-5" stroke={2} />}>
+          {categoryName}
+        </FactRow>
+      )}
       <FactRow icon={<IconMapPin className="size-5" stroke={2} />}>
         {place || "Lokasi menyusul"}
       </FactRow>
-      <FactRow icon={<IconCalendarEvent className="size-5" stroke={2} />}>{dateTime}</FactRow>
+      <FactRow icon={<IconCalendarEvent className="size-5" stroke={2} />}>
+        {dateTime}
+      </FactRow>
       <FactRow icon={<IconBuildingCommunity className="size-5" stroke={2} />}>
         {organizerHref ? (
           <Link href={organizerHref} className="hover:underline">
@@ -97,21 +103,14 @@ export default function EventDetailContent({
   event,
   attendees,
   viewer,
-  manage = false,
-  editHref,
-  afterDeleteHref = "/events",
+  canChat = false,
 }: {
   event: EventDetail;
   attendees: EventAttendeePreview[];
   viewer?: { id?: string; name?: string; avatar?: string | null };
-  manage?: boolean;
-  editHref?: string;
-  afterDeleteHref?: string;
+  canChat?: boolean;
 }) {
-  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const attendance = useEventAttendance({
@@ -124,7 +123,7 @@ export default function EventDetailContent({
   const ended = status.tone === "ended";
   const { author, href: organizerHref } = eventOrganizer(event);
   const duration = formatEventDuration(event.duration_minutes);
-  const registrationUrl = safeExternalUrl(event.registration_url);
+  const linkUrl = safeExternalUrl(event.link_url);
   const { place } = splitEventLocation(event.location_name);
   const dateTime = [
     formatEventDateLabel(event.start_date, event.end_date),
@@ -135,25 +134,26 @@ export default function EventDetailContent({
     .join(" · ");
   const description = event.description ?? "";
   const isLongDescription = description.length > LONG_DESCRIPTION_LENGTH;
-  const previewImages = event.images.flatMap((image) =>
-    image.image_url ? [{ id: image.media_id, url: image.image_url }] : [],
+  const previewImages = [
+    ...(event.thumbnail_url
+      ? [
+          {
+            id: event.thumbnail_media_id ?? "event-cover",
+            url: event.thumbnail_url,
+          },
+        ]
+      : []),
+    ...event.images.flatMap((image) =>
+      image.image_url ? [{ id: image.media_id, url: image.image_url }] : []
+    ),
+  ].filter(
+    (image, index, images) =>
+      images.findIndex((candidate) => candidate.url === image.url) === index
   );
   const shareUrl =
-    typeof window === "undefined" ? "" : `${window.location.origin}/events/${event.id}`;
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      const result = await deleteEvent(event.id);
-      if (!isSuccessStatus(result.status)) throw new Error(result.message);
-      toast.success("Event berhasil dihapus.");
-      router.replace(afterDeleteHref);
-      router.refresh();
-    } catch {
-      toast.error("Event belum berhasil dihapus. Coba lagi.");
-      setDeleting(false);
-    }
-  }
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/events/${event.id}`;
 
   const statusLabel =
     status.tone === "upcoming" ? null : (
@@ -164,19 +164,22 @@ export default function EventDetailContent({
     return (
       <div className="flex flex-col gap-3">
         <EventFacts
+          categoryName={event.category_name}
           place={place}
           dateTime={dateTime}
           organizerName={author.name}
           organizerHref={organizerHref}
         />
-        <EventAttendeesSummary
-          viewer={viewer}
-          attendees={attendees}
-          count={attendance.attendeeCount}
-          isAttending={attendance.isAttending}
-          ended={ended}
-          onDark={onDark}
-        />
+        {attendance.attendeeCount > 0 && (
+          <EventAttendeesSummary
+            viewer={viewer}
+            attendees={attendees}
+            count={attendance.attendeeCount}
+            isAttending={attendance.isAttending}
+            ended={ended}
+            onDark={onDark}
+          />
+        )}
       </div>
     );
   }
@@ -199,7 +202,7 @@ export default function EventDetailContent({
           <div className="absolute inset-0 bg-media-backdrop/60" />
           {/* The right padding keeps the text clear of the aside's photo, which overlaps this band. */}
           <PageMargin className="relative">
-            <div className="flex min-h-72 flex-col justify-center gap-4 py-8 pr-[372px] xl:pr-[432px]">
+            <div className="flex min-h-72 flex-col justify-center gap-4 py-8 pr-[352px]">
               {statusLabel}
               <h1 className="break-words font-stack-sans-headline text-3xl font-medium leading-tight">
                 {event.title}
@@ -209,10 +212,10 @@ export default function EventDetailContent({
           </PageMargin>
         </header>
 
-        <PageMargin>
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <PageMargin noMobilePadding>
+          <div className="grid items-start gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
             {/* The negative margin equals the 16:9 photo's height, so it ends level with the band. */}
-            <aside className="relative z-10 -mx-4 flex min-w-0 flex-col overflow-hidden border-b border-border bg-surface lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1 lg:mx-0 lg:-mt-[191px] lg:rounded-2xl lg:border xl:-mt-[225px]">
+            <aside className="relative z-10 flex min-w-0 flex-col overflow-hidden border border-x-0 border-border bg-surface lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1 lg:-mt-[180px] lg:rounded-2xl lg:border-x">
               <div className="relative order-1 aspect-[16/9] bg-linear-to-br from-brand-deep to-primary lg:order-none">
                 {event.thumbnail_url ? (
                   <Image
@@ -220,7 +223,7 @@ export default function EventDetailContent({
                     alt={`Thumbnail ${event.title}`}
                     fill
                     priority
-                    sizes="(min-width: 1280px) 400px, (min-width: 1024px) 340px, 100vw"
+                    sizes="(min-width: 1024px) 320px, 100vw"
                     className="object-cover"
                   />
                 ) : (
@@ -228,77 +231,50 @@ export default function EventDetailContent({
                     <IconPhotoOff className="size-10" stroke={1.6} />
                   </div>
                 )}
+                {previewImages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewId(previewImages[0].id)}
+                    className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-lg bg-media-backdrop/75 px-3 py-2 text-xs font-medium text-on-dark backdrop-blur-sm transition hover:bg-media-backdrop/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={`Lihat semua foto event (${previewImages.length})`}
+                  >
+                    <IconPhoto className="size-4" stroke={2} />
+                    Lihat semua foto ({previewImages.length})
+                  </button>
+                )}
               </div>
 
               {/* Desktop keeps the CTA under the photo; on mobile it follows the metadata. */}
               <div className="order-3 flex flex-col gap-3 px-4 pb-4 lg:order-none lg:border-b lg:border-border lg:pt-4">
-                {!manage && (
-                  <div className="flex gap-2">
-                    <EventAttendanceButton
-                      isAttending={attendance.isAttending}
-                      saving={attendance.saving}
-                      ended={ended}
-                      onToggle={attendance.toggle}
-                      className="min-w-0 flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => setShareOpen(true)}
-                      aria-label="Bagikan event"
-                      title="Bagikan"
-                    >
-                      <IconShare2 className="size-4.5" stroke={2} />
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <EventAttendanceButton
+                    isAttending={attendance.isAttending}
+                    saving={attendance.saving}
+                    ended={ended}
+                    onToggle={attendance.toggle}
+                    className="min-w-0 flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setShareOpen(true)}
+                    aria-label="Bagikan event"
+                    title="Bagikan"
+                  >
+                    <IconShare2 className="size-4.5" stroke={2} />
+                  </Button>
+                </div>
 
-                {!manage && registrationUrl && (
+                {linkUrl && (
                   <EventLinkButton
-                    href={registrationUrl}
+                    href={linkUrl}
                     newTab
                     variant="outline"
-                    title="Formulir dari penyelenggara, di luar HMI Connect"
+                    title="Tautan dari penyelenggara, di luar HMI Connect"
                     className="w-full"
                   >
-                    Isi formulir pendaftaran
+                    Buka tautan event
                     <IconExternalLink className="size-4" stroke={2} />
                   </EventLinkButton>
-                )}
-
-                {manage && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {editHref && (
-                      <EventLinkButton href={editHref} className="w-full">
-                        <IconPencil className="size-4.5" stroke={2} />
-                        Edit event
-                      </EventLinkButton>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={() => setShareOpen(true)}
-                      className="w-full"
-                    >
-                      <IconShare2 className="size-4.5" stroke={2} />
-                      Bagikan
-                    </Button>
-                    <EventLinkButton
-                      href={`/events/${event.id}`}
-                      newTab
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <IconExternalLink className="size-4.5" stroke={2} />
-                      Lihat publik
-                    </EventLinkButton>
-                    <Button
-                      variant="destructive"
-                      onClick={() => setDeleteOpen(true)}
-                      className="w-full"
-                    >
-                      <IconTrash className="size-4.5" stroke={2} />
-                      Hapus
-                    </Button>
-                  </div>
                 )}
               </div>
 
@@ -315,24 +291,27 @@ export default function EventDetailContent({
               </div>
             </aside>
 
-            <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:gap-6 lg:pt-6">
-              {(description || manage) && (
+            <div className="flex min-w-0 flex-col gap-1.5 lg:col-start-1 lg:row-start-1 lg:gap-4 lg:pt-6">
+              {description && (
                 <section className={CARD_CLASS}>
                   <h2 className={CARD_TITLE_CLASS}>Deskripsi</h2>
                   <p
                     className={`mt-3 whitespace-pre-line break-words text-[15px] leading-7 text-content-foreground ${isLongDescription && !descriptionExpanded ? "line-clamp-6" : ""}`}
                   >
-                    {description || "Belum ada deskripsi. Tambahkan lewat Edit event."}
+                    {description}
                   </p>
                   {isLongDescription && (
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => setDescriptionExpanded((current) => !current)}
+                      onClick={() =>
+                        setDescriptionExpanded((current) => !current)
+                      }
                       aria-expanded={descriptionExpanded}
                       className="mt-1"
                     >
-                      {descriptionExpanded ? "Tampilkan lebih sedikit" : "Lihat selengkapnya"}
+                      {descriptionExpanded
+                        ? "Tampilkan lebih sedikit"
+                        : "Lihat selengkapnya"}
                     </Button>
                   )}
                 </section>
@@ -347,94 +326,71 @@ export default function EventDetailContent({
                 <h2 className={CARD_TITLE_CLASS}>Penyelenggara</h2>
                 <div className="mt-3 flex items-center gap-3">
                   <FeedAuthorAvatar author={author} size={48} />
-                  <p className="min-w-0 flex-1 truncate font-medium text-heading">{author.name}</p>
+                  <p className="min-w-0 flex-1 truncate font-medium text-heading">
+                    {author.name}
+                  </p>
                   {organizerHref && (
                     <EventLinkButton href={organizerHref} variant="soft">
                       Lihat profil
                     </EventLinkButton>
                   )}
                 </div>
+                {event.contacts.length > 0 && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <h3 className={CARD_TITLE_CLASS}>Narahubung</h3>
+                    <div className="mt-3 flex flex-col gap-3">
+                      {event.contacts.map((contact) => (
+                        <div
+                          key={contact.id}
+                          className="flex flex-wrap items-center gap-3"
+                        >
+                          <Avatar
+                            src={contact.user_id ? contact.avatar : undefined}
+                            name={contact.name}
+                            size={40}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-heading">
+                              {contact.name}
+                            </p>
+                            {contact.phone_number && (
+                              <p className="truncate text-sm text-muted-foreground">
+                                {contact.phone_number}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {canChat &&
+                              contact.user_id &&
+                              contact.user_id !== viewer?.id && (
+                                <SendMessageButton
+                                  userId={contact.user_id}
+                                  fullName={contact.name}
+                                  avatar={contact.avatar}
+                                />
+                              )}
+                            {contact.phone_number && (
+                              <EventLinkButton
+                                href={whatsappHref(contact.phone_number)}
+                                newTab
+                                variant="soft"
+                                size="default"
+                                aria-label={`Hubungi ${contact.name} lewat WhatsApp`}
+                                title="WhatsApp"
+                              >
+                                <IconBrandWhatsapp
+                                  className="size-5"
+                                  stroke={2}
+                                />
+                              </EventLinkButton>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
-
-              {previewImages.length > 0 && (
-                <section className={CARD_CLASS}>
-                  <h2 className={CARD_TITLE_CLASS}>Galeri</h2>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {previewImages.map((image, index) => (
-                      <button
-                        key={image.id}
-                        type="button"
-                        onClick={() => setPreviewId(image.id)}
-                        aria-label={`Lihat foto ${index + 1}`}
-                        className="relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      >
-                        <Image
-                          src={image.url}
-                          alt=""
-                          fill
-                          loading="lazy"
-                          sizes="(min-width: 1024px) 200px, 33vw"
-                          className="object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {event.contacts.length > 0 && (
-                <section className={CARD_CLASS}>
-                  <h2 className={CARD_TITLE_CLASS}>Narahubung</h2>
-                  <div className="mt-3 flex flex-col gap-3">
-                    {event.contacts.map((contact) => (
-                      <div key={contact.id} className="flex items-center gap-3">
-                        <Avatar name={contact.name} size={40} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-heading">
-                            {contact.name}
-                          </p>
-                          <p className="truncate text-sm text-muted-foreground">
-                            {contact.phone_number || contact.email}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {contact.phone_number && (
-                            <EventLinkButton
-                              href={whatsappHref(contact.phone_number)}
-                              newTab
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Hubungi ${contact.name} lewat WhatsApp`}
-                              title="WhatsApp"
-                            >
-                              <Image
-                                src={socialIconUrl("whatsapp")}
-                                alt=""
-                                width={28}
-                                height={28}
-                                className="size-7 rounded-full object-cover ring-1 ring-inset ring-black/5"
-                              />
-                            </EventLinkButton>
-                          )}
-                          {contact.email && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                window.location.href = `mailto:${contact.email}`;
-                              }}
-                              aria-label={`Kirim email ke ${contact.name}`}
-                              title="Email"
-                            >
-                              <IconMail className="size-5" stroke={2} />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
             </div>
           </div>
         </PageMargin>
@@ -453,17 +409,6 @@ export default function EventDetailContent({
         title="Bagikan Event"
         url={shareUrl}
         text={eventShareText(event.title, event.start_date, event.end_date)}
-      />
-      <AlertConfirmation
-        open={deleteOpen}
-        onClose={() => {
-          if (!deleting) setDeleteOpen(false);
-        }}
-        onConfirm={handleDelete}
-        title="Hapus event ini?"
-        message="Event akan hilang dari daftar dan tidak bisa dibuka lagi, termasuk lewat tautan yang sudah dibagikan."
-        confirmLabel="Hapus event"
-        loading={deleting}
       />
     </>
   );

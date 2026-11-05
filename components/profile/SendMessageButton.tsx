@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircleMore } from "lucide-react";
+import { IconBrandHipchat } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ interface SendMessageButtonProps {
   userId: string;
   username?: string;
   fullName: string;
-  avatar?: string;
+  avatar?: string | null;
   className?: string;
 }
 
@@ -52,7 +52,7 @@ export default function SendMessageButton({
 
   return (
     <Button variant="light" onClick={handleClick} disabled={loading} className={className}>
-      <MessageCircleMore className="size-3.5" />
+      <IconBrandHipchat className="size-4" stroke={2} />
       {loading ? "Membuka..." : "Chat"}
     </Button>
   );
