@@ -14,7 +14,7 @@ import Button from "../buttons/Button";
 import Dropdown from "../common/Dropdown";
 import Label, { type LabelVariant } from "../common/Label";
 import ArticleShareModal from "./ArticleShareModal";
-import { articleComposeDraft } from "./article-compose-draft";
+import { articleComposeDraft } from "@/lib/article-compose-draft";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,

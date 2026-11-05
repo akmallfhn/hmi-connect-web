@@ -3,7 +3,7 @@
 import { IconCameraPlus, IconFrame } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { KONGRES_GOLD_BG } from "./KongresDecor";
-import { useShareMoment } from "./useShareMoment";
+import { useShareMoment } from "@/lib/useShareMoment";
 
 export default function KongresHeroActions() {
   const shareMoment = useShareMoment();

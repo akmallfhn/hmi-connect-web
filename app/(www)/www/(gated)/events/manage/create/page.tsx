@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { renderOfficialEventCreate } from "@/lib/official-event-pages";
+import { renderOfficialEventCreate } from "@/components/pages/OfficialEventRoutes";
 
 export const metadata: Metadata = {
   title: "Buat Event",

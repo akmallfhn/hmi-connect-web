@@ -80,7 +80,10 @@ fix the rule, not just the code.
   `components/navigations/admin-nav-icons.ts#ADMIN_NAV_ICON` map, keyed by concept (Badko, Cabang,
   Korkom, Komisariat, Kader, ...), so a menu keeps the same icon from Master down to Komisariat.
   Add a new concept there rather than importing an icon in a sidebar file.
-- Fonts come from `next/font/google`: Google Sans remains the general UI face, while
+- Google Sans is the general UI face, loaded through `next/font/google` in `app/layout.tsx`
+  with its `--font-google-sans` variable on `<html>`. Other app fonts are self-hosted under
+  `public/fonts/`; `app/globals.css` owns their `@font-face` declarations and `:root`
+  variables. See `public/fonts/README.md` for sources and licenses.
   Stack Sans Headline is exposed as `font-stack-sans-headline`. On the **admin** side it is
   reserved for page titles plus all sidebar chrome (including scoped entity names in
   `EntitySidebar`). On the **main site** it now also carries the desktop sidebar's nav labels,
@@ -1964,7 +1967,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `ENTITY_ACTIVITY_PATH` map in `feeds.ts` covering all five resources; `type` is only ever `post` or
   `quote_repost` there. `ActivityEntry` lives in `apis/feeds.ts`, since users and entities both return it.
 - `/kohati/[mention_name]` and `/bpl/[mention_name]` are the special body profiles, gated like the five
-  entity routes and rendered by the same `EntityProfilePage` through `lib/special-body-profile.tsx`.
+  entity routes and rendered by the same `EntityProfilePage` through
+  `components/pages/SpecialBodyProfile.tsx`; `lib/special-body-profile.ts` owns the shared
+  lookup and metadata helpers.
   The profile path set is `MentionEntityTypeEnum` (`AccessEntityTypeEnum` plus `special_body`), and
   `EntityProfileData.profileHref` carries each page's canonical URL because a special body's path follows
   its own `type`, not an entity level (`lib/special-body.ts#specialBodyProfileHref`; Balitbang and LPP have
@@ -1998,6 +2003,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   not carry identity. Old `?as=` bookmarks redirect to clean URLs without changing the mode.
   Feed and reaction Server Actions verify that the supplied author matches the validated cookie
   and current grant. The Go backend must independently enforce the grant on mutations.
+  The route-by-route www access matrix is in `docs/pages-www.md`. Server layouts reject a valid
+  acting entity with 404 on `/settings`, `/notifications`, all `/articles` pages,
+  `/organizational-documents`, `/people-recommendation`, all `/quran` pages,
+  `/prayer-schedules`, all `/chats` pages, `/membership`, `/verification`, and `/invitations`.
+  `/events/manage` and its children do the converse:
+  their page loader requires the selected entity and rejects user mode with 404.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + an Aktif/Tidak Aktif `Label` pill — green/gray, with a Tabler
@@ -2116,7 +2127,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   article `description`; `ArticleListEntry.description` remains optional because the sibling
   `articles/list-filter` contract does not advertise it, so the row hides the description line when
   it is absent or blank. Reposts from both the list and detail page go through
-  `components/articles/article-compose-draft.ts` so their feed attachment previews receive the same
+  `lib/article-compose-draft.ts` so their feed attachment previews receive the same
   title, description, cover, category, and author fields without fetching detail per row.
   Four signed-in tabs (Semua, News, Mengikuti, Tulisan Saya) use the shared `Tabs` control and
   `?tab=following`/`?tab=me`/`?tab=news` (absent for Semua). Direct visits remain server-rendered.
@@ -2462,11 +2473,11 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   button (building a per-verse `QuranAudioTrack` from `verse.audio`, again nullable) at the
   top, then `text_arabic` (right-to-left, `lang="ar"`), `text_latin`, and `translation_id`.
   `text_arabic`/`name_arabic` use the `font-arabic-quran` Tailwind utility (wired in
-  `app/globals.css`'s `@theme inline` to `--font-amiri-quran`, loaded in `app/layout.tsx` via
-  `next/font/google`'s `Amiri_Quran`) — picked specifically because it's a Quran-script font
+  `app/globals.css`'s `@theme inline` to `--font-amiri-quran`, self-hosted from
+  `public/fonts/amiri-quran/AmiriQuran-Regular.ttf`) — picked specifically because it's a Quran-script font
   with correct tashkeel/diacritic placement, not just a generic Arabic UI font, and it's the
   only place in the app this font is used (every other page still uses the Latin/Indonesian
-  fonts from `layout.tsx`).
+  fonts declared in `app/globals.css`).
 - `components/pages/QuranJuzDetailPage.tsx` (`/quran/juz/[juz_id]`) — same layout shape as
   `QuranSurahDetailPage` (gradient header + `VerseCard` list + `QuranMiniPlayer`), backed by
   `apis/quran.ts#getQuranJuzDetail` (`quran-juz/detail`, `notFound()` on an unparseable or
@@ -2525,7 +2536,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   never `size="lg"`; `EventLinkButton` wraps it for navigation, since `Button` only renders a
   `<button>`. The one exception is the gallery's image tiles, which open the preview overlay.
 - `/events/manage` plus `/create`, `/[event_id]`, and `/[event_id]/edit` (four route files over
-  `lib/official-event-pages.tsx`, reachable from the rail and `OfficialBottomNav`)
+  `components/pages/OfficialEventRoutes.tsx`, reachable from the rail and `OfficialBottomNav`)
   manage the selected entity's events as `OfficialEventsPage`, `OfficialEventDetailPage`, and
   `OfficialEventFormPage`. Every route requires the validated acting-account cookie; user mode
   returns 404. A detail or edit URL also 404s for an event belonging to another entity.
@@ -2652,7 +2663,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `components/profile/ProfileEntryButtons.tsx`: a `soft` "Tambah" beside the section title and a
   ghost "Edit" beside every item, with no container, padding, or hover fill on the item itself.
   The forms share `ProfileEntryFormFooter.tsx` (a `destructive` Hapus behind an inline
-  confirmation, then Batal/Simpan) and `profile-entry-mutation.ts` (toast plus `onSaved` on
+  confirmation, then Batal/Simpan) and `lib/profile-entry-mutation.ts` (toast plus `onSaved` on
   success). Every year is picked from `components/fields/YearSelect.tsx`, never typed: start and
   single years run 1990 to the current year (`lib/year-options.ts#pastYears`), and an end year
   cannot precede its start. Education's Tahun Lulus (perkiraan) is required and reaches ten years

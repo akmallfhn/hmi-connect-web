@@ -1,5 +1,5 @@
 import type { ArticleListEntry } from "@/apis/articles";
-import type { ComposerArticleDraft } from "../forms/CreateFeedForms";
+import type { ComposerArticleDraft } from "@/components/forms/CreateFeedForms";
 
 // One mapper keeps article attachments identical whether reposted from the index or detail page.
 export function articleComposeDraft(

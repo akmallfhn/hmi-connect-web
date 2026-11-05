@@ -1,8 +1,53 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist/Geist.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono/GeistMono.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Stack Sans Headline";
+  src: url("/fonts/stack-sans-headline/StackSansHeadline.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amiri Quran";
+  src: url("/fonts/amiri-quran/AmiriQuran-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Crayonize";
+  src: url("/fonts/crayonize/PintassilgoPrints-Crayonize-Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --font-geist-sans: "Geist", Arial, sans-serif;
+  --font-geist-mono: "Geist Mono", monospace;
+  --font-stack-sans-headline: "Stack Sans Headline";
+  --font-amiri-quran: "Amiri Quran", serif;
+  --font-crayonize: "Crayonize", cursive;
   --background: #ffffff;
   --foreground: #171717;
   --surface: #ffffff;

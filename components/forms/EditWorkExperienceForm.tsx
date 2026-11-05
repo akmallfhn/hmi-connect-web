@@ -14,7 +14,7 @@ import YearSelect from "../fields/YearSelect";
 import Modal from "../modals/Modal";
 import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
 import { pastYears } from "@/lib/year-options";
-import { runProfileEntryMutation } from "./profile-entry-mutation";
+import { runProfileEntryMutation } from "@/lib/profile-entry-mutation";
 
 interface EditWorkExperienceFormProps {
   open: boolean;

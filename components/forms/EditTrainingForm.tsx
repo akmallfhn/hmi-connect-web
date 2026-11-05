@@ -16,7 +16,7 @@ import YearSelect from "../fields/YearSelect";
 import Select from "../fields/Select";
 import Modal from "../modals/Modal";
 import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
-import { runProfileEntryMutation } from "./profile-entry-mutation";
+import { runProfileEntryMutation } from "@/lib/profile-entry-mutation";
 
 const RESULT_OPTIONS: { label: string; value: TrainingResultEnum }[] = [
   { label: "Lulus", value: "passed" },

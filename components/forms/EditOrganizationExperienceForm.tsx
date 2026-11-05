@@ -22,7 +22,7 @@ import YearSelect from "../fields/YearSelect";
 import Modal from "../modals/Modal";
 import LogoHmi from "../svg/LogoHmi";
 import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
-import { runProfileEntryMutation } from "./profile-entry-mutation";
+import { runProfileEntryMutation } from "@/lib/profile-entry-mutation";
 
 type OrganizationExperienceType = "hmi" | "non_hmi";
 

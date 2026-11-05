@@ -7,7 +7,7 @@ import { useState } from "react";
 import type { ArticleDetail } from "@/apis/articles";
 import Button from "@/components/buttons/Button";
 import ArticleShareModal from "./ArticleShareModal";
-import { articleComposeDraft } from "./article-compose-draft";
+import { articleComposeDraft } from "@/lib/article-compose-draft";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
   COMPOSE_INTENT_KEY,

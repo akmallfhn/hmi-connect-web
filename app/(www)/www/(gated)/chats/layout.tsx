@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSession } from "@/apis/session";
 import ChatsPage from "@/components/pages/ChatsPage";
+import { requireUserMode } from "@/lib/user-mode";
 
 export const metadata: Metadata = {
   title: "Pesan",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ChatsLayout({ children }: { children: ReactNode }) {
+  await requireUserMode();
   const { user } = await getSession();
 
   return (

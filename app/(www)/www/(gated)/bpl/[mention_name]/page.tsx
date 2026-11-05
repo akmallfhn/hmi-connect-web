@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import {
-  SpecialBodyProfile,
-  specialBodyProfileMetadata,
-} from "@/lib/special-body-profile";
+import { SpecialBodyProfile } from "@/components/pages/SpecialBodyProfile";
+import { specialBodyProfileMetadata } from "@/lib/special-body-profile";
 
 interface BplProfileRouteProps {
   params: Promise<{ mention_name: string }>;

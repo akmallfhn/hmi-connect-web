@@ -1,14 +1,7 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { config as fontAwesomeConfig } from "@fortawesome/fontawesome-svg-core";
-import {
-  Amiri_Quran,
-  Geist,
-  Geist_Mono,
-  Google_Sans,
-  Stack_Sans_Headline,
-} from "next/font/google";
-import localFont from "next/font/local";
+import { Google_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import AppThemeProvider from "@/components/theme/AppThemeProvider";
@@ -19,38 +12,10 @@ import "./globals.css";
 // Ship Font Awesome's CSS ourselves (imported above) instead of a runtime-injected <style> tag that races SSR/hydration.
 fontAwesomeConfig.autoAddCss = false;
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 const googleSans = Google_Sans({
   variable: "--font-google-sans",
   subsets: ["latin"],
   adjustFontFallback: false,
-});
-
-const stackSansHeadline = Stack_Sans_Headline({
-  variable: "--font-stack-sans-headline",
-  subsets: ["latin"],
-  weight: "variable",
-  adjustFontFallback: false,
-});
-
-const amiriQuran = Amiri_Quran({
-  variable: "--font-amiri-quran",
-  subsets: ["arabic"],
-  weight: "400",
-});
-
-const crayonize = localFont({
-  src: "./fonts/PintassilgoPrints-Crayonize-Bold.otf",
-  variable: "--font-crayonize",
 });
 
 export default function RootLayout({
@@ -69,7 +34,7 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${googleSans.variable} ${stackSansHeadline.variable} ${amiriQuran.variable} ${crayonize.variable} h-full antialiased`}
+      className={`${googleSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AppThemeProvider>

@@ -10,7 +10,7 @@ import YearSelect from "../fields/YearSelect";
 import TextArea from "../fields/TextArea";
 import Modal from "../modals/Modal";
 import ProfileEntryFormFooter from "./ProfileEntryFormFooter";
-import { runProfileEntryMutation } from "./profile-entry-mutation";
+import { runProfileEntryMutation } from "@/lib/profile-entry-mutation";
 
 interface EditPublicationFormProps {
   open: boolean;
