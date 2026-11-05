@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
+import { ACTING_ACCOUNT_COOKIE_NAME, SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const cookieDomain = getSessionCookieDomain();
@@ -8,6 +8,10 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   cookieStore.delete({
     name: SESSION_COOKIE_NAME,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  });
+  cookieStore.delete({
+    name: ACTING_ACCOUNT_COOKIE_NAME,
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   });
 

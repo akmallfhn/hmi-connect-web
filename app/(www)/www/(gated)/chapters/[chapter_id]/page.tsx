@@ -58,11 +58,7 @@ export default async function ChapterProfile({
   const chapter = resolved.entity;
   const chapter_id = chapter.id;
 
-  const actingEntity = await resolveActingEntity(
-    viewer,
-
-    query?.as,
-  );
+  const actingEntity = await resolveActingEntity(viewer);
 
   // A Komisariat's own kader count is only exposed on its Cabang's chapter list row.
   const [siblings, feeds] = await Promise.all([

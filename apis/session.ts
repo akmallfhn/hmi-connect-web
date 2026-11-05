@@ -10,7 +10,7 @@ import {
   type UserStatusEnum,
   type VerificationStatusEnum,
 } from "@/lib/types";
-import { SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
+import { ACTING_ACCOUNT_COOKIE_NAME, SESSION_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
 
 // One accepted, unrevoked access grant — check-session only ever returns accepted ones.
 export type SessionGrant = {
@@ -56,6 +56,8 @@ export async function setSessionCookie(token: string) {
   const cookieStore = await cookies();
   const cookieDomain = getSessionCookieDomain();
 
+  cookieStore.delete({ name: ACTING_ACCOUNT_COOKIE_NAME, ...(cookieDomain ? { domain: cookieDomain } : {}) });
+
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: true,
@@ -93,19 +95,22 @@ export const getSession = cache(async () => {
 export async function logoutUser(): Promise<ApiEnvelope> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-  const result = sessionToken
-    ? await callApi("/api/v1/auth/logout", {
-        method: "POST",
-        token: sessionToken,
-      })
-    : { status: "OK" as const, message: "Already logged out" };
-
   const cookieDomain = getSessionCookieDomain();
-  cookieStore.delete({
-    name: SESSION_COOKIE_NAME,
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  });
-
-  return result;
+  try {
+    return sessionToken
+      ? await callApi("/api/v1/auth/logout", {
+          method: "POST",
+          token: sessionToken,
+        })
+      : { status: "OK" as const, message: "Already logged out" };
+  } finally {
+    cookieStore.delete({
+      name: SESSION_COOKIE_NAME,
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
+    });
+    cookieStore.delete({
+      name: ACTING_ACCOUNT_COOKIE_NAME,
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
+    });
+  }
 }

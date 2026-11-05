@@ -4,6 +4,7 @@ import { getSession } from "@/apis/session";
 import { searchOverview } from "@/apis/search";
 import { Suspense } from "react";
 import SuggestedConnectionsCard from "@/components/feeds/SuggestedConnectionsCard";
+import { resolveActingEntity } from "@/lib/acting-entity";
 
 export const metadata: Metadata = {
   title: "Cari",
@@ -22,7 +23,10 @@ export default async function Search({ searchParams }: SearchRouteProps) {
   const keyword = q?.trim() ?? "";
 
   const { user } = await getSession();
-  const results = await searchOverview(keyword);
+  const [results, actingEntity] = await Promise.all([
+    searchOverview(keyword),
+    resolveActingEntity(user),
+  ]);
 
   return (
     <SearchPage
@@ -37,10 +41,13 @@ export default async function Search({ searchParams }: SearchRouteProps) {
       }}
       initialQuery={keyword}
       initialResults={results}
+      actingEntity={actingEntity}
       aside={
-        <Suspense fallback={null}>
-          <SuggestedConnectionsCard />
-        </Suspense>
+        actingEntity ? null : (
+          <Suspense fallback={null}>
+            <SuggestedConnectionsCard />
+          </Suspense>
+        )
       }
     />
   );

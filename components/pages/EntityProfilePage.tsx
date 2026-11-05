@@ -54,7 +54,7 @@ interface EntityProfilePageProps {
   entity: EntityProfileData;
   // The session user as-is — every entity route renders the same chrome, so mapping it here keeps five routes from repeating it.
   viewer: SessionUser | null;
-  // Set by a valid ?as=: browsing as an official account, so personal suggestions and following go.
+  // Set by the validated active-account cookie: personal suggestions and following go.
   actingEntity?: ComposerAuthorEntity | null;
 }
 

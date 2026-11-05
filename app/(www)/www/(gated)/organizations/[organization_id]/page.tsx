@@ -61,11 +61,7 @@ export default async function OrganizationProfile({
   const organization = resolved.entity;
   const organization_id = organization.id;
 
-  const actingEntity = await resolveActingEntity(
-    viewer,
-
-    query?.as,
-  );
+  const actingEntity = await resolveActingEntity(viewer);
 
   const [coordinatingBodies, branches, feeds] = await Promise.all([
     listCoordinatingBodiesAdmin({

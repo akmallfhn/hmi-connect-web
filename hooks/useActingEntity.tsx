@@ -1,12 +1,11 @@
 "use client";
 
-import { createContext, useCallback, useContext, type ReactNode } from "react";
-import { withActingEntity } from "@/lib/access";
+import { createContext, useContext, type ReactNode } from "react";
 import type { ComposerAuthorEntity } from "@/components/forms/CreateFeedForms";
 
 const ActingEntityContext = createContext<ComposerAuthorEntity | null>(null);
 
-// Wraps a surface rendered as an official account, so its feed and profile links keep that point of view.
+// Provides the server-validated acting account to feed and profile controls.
 export function ActingEntityProvider({
   entity,
   children,
@@ -26,13 +25,5 @@ export function useActingEntity() {
 }
 
 export function useActingHref() {
-  const entity = useActingEntity();
-  return useCallback(
-    (href: string) =>
-      withActingEntity(
-        href,
-        entity ? { entityType: entity.type, entityId: entity.id } : null
-      ),
-    [entity]
-  );
+  return (href: string) => href;
 }

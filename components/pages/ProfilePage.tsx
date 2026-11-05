@@ -85,7 +85,7 @@ interface ProfilePageProps {
   profile: ProfileProps;
   viewer: ViewerProps;
   isOwnProfile: boolean;
-  // Set by a valid ?as=: the page is read from that entity's point of view, with no personal actions.
+  // Set by the validated active-account cookie: no personal actions in entity mode.
   actingEntity?: ComposerAuthorEntity | null;
   institutions: Institution[];
   socialMediaPlatforms: SocialMediaPlatform[];

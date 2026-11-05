@@ -19,11 +19,11 @@ import {
 } from "@/apis/users";
 import ProfilePage from "@/components/pages/ProfilePage";
 import type { ProfileTab } from "@/components/profile/ProfileTabs";
-import { resolveActingEntity } from "@/lib/acting-entity";
+import { redirectWithoutLegacyActingParam, resolveActingEntity } from "@/lib/acting-entity";
 
 interface ProfileRouteProps {
   params: Promise<{ username: string }>;
-  searchParams?: Promise<{ as?: string | string[]; tab?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({
@@ -73,11 +73,11 @@ export default async function Profile({
   searchParams,
 }: ProfileRouteProps) {
   const { username } = await params;
-  const { as } = (await searchParams) ?? {};
+  redirectWithoutLegacyActingParam(`/profile/${encodeURIComponent(username)}`, await searchParams);
   const { sessionToken, user: viewer } = await getSession();
   const [profile, actingEntity] = await Promise.all([
     getUserByUsername(username, sessionToken),
-    resolveActingEntity(viewer, as),
+    resolveActingEntity(viewer),
   ]);
 
   if (!profile || profile.status !== "active") return notFound();

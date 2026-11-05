@@ -1,7 +1,7 @@
 import { IconPlus } from "@tabler/icons-react";
 import type { EventTimeframe, TimeframedEventResult } from "@/apis/events";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
-import { officialEntityEventsHref } from "@/lib/access";
+import { MANAGE_EVENTS_HREF } from "@/lib/access";
 import EventCard from "../events/EventCard";
 import EventLinkButton from "../events/EventLinkButton";
 import EventListControls from "../events/EventListControls";
@@ -21,7 +21,7 @@ export default function OfficialEventsPage({
   timeframe: EventTimeframe;
   initialSearch: string;
 }) {
-  const baseHref = officialEntityEventsHref(entity.type, entity.id);
+  const baseHref = MANAGE_EVENTS_HREF;
   const createHref = `${baseHref}/create`;
   const isEmptyCollection = !initialSearch && timeframe === "upcoming";
 

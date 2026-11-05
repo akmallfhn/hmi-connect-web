@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import { ActingEntityProvider } from "@/hooks/useActingEntity";
 import { entityProfileHref } from "@/lib/feed-author";
-import { withActingEntity } from "@/lib/access";
 import OfficialBottomNav from "./OfficialBottomNav";
 import OfficialGreetingBar from "./OfficialGreetingBar";
 
@@ -15,10 +14,7 @@ export default function OfficialPageShell({
   compactGreeting?: boolean;
   children: ReactNode;
 }) {
-  const profileHref = withActingEntity(entityProfileHref(entity.type, entity.id), {
-    entityType: entity.type,
-    entityId: entity.id,
-  });
+  const profileHref = entityProfileHref(entity.type, entity.id);
 
   return (
     <ActingEntityProvider entity={entity}>

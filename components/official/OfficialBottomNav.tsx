@@ -9,13 +9,12 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  officialEntityEventsHref,
-  officialEntityHref,
-  withActingEntity,
+  MANAGE_EVENTS_HREF,
 } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
 import type { AccessEntityTypeEnum } from "@/lib/types";
-import { NavIconPulse, usePressPulse } from "../navigations/BottomNav";
+import { NavIconPulse, usePressPulse } from "../navigations/NavPulse";
+import SwitchAccountButton from "./SwitchAccountButton";
 
 interface OfficialBottomNavProps {
   entityType: AccessEntityTypeEnum;
@@ -31,16 +30,15 @@ export default function OfficialBottomNav({
   entityId,
 }: OfficialBottomNavProps) {
   const pathname = usePathname();
-  const timelineHref = officialEntityHref(entityType, entityId);
+  const timelineHref = "/";
   const profileHref = entityProfileHref(entityType, entityId);
-  const eventsHref = officialEntityEventsHref(entityType, entityId);
+  const eventsHref = MANAGE_EVENTS_HREF;
   const isTimeline = pathname === timelineHref;
   const isProfile = pathname === profileHref;
   const isEvents = pathname === eventsHref || pathname.startsWith(`${eventsHref}/`);
   const [homePressed, triggerHome] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
   const [eventsPressed, triggerEvents] = usePressPulse();
-  const [exitPressed, triggerExit] = usePressPulse();
 
   return (
     <nav
@@ -70,7 +68,7 @@ export default function OfficialBottomNav({
       </Link>
 
       <Link
-        href={withActingEntity(profileHref, { entityType, entityId })}
+        href={profileHref}
         onClick={triggerProfile}
         className={`${TAB_CLASS} ${isProfile ? "text-primary-foreground" : "text-muted-foreground"}`}
       >
@@ -80,16 +78,14 @@ export default function OfficialBottomNav({
         Profil HMI
       </Link>
 
-      <Link
-        href="/settings"
-        onClick={triggerExit}
+      <SwitchAccountButton
+        account={null}
+        href="/"
         className={`${TAB_CLASS} text-destructive-foreground`}
       >
-        <NavIconPulse pressed={exitPressed}>
-          <IconArrowBackUp className="size-5" stroke={2} />
-        </NavIconPulse>
+        <IconArrowBackUp className="size-5" stroke={2} />
         Mode User
-      </Link>
+      </SwitchAccountButton>
     </nav>
   );
 }

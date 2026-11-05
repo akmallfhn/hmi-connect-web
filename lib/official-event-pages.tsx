@@ -10,36 +10,32 @@ import {
 import OfficialEventDetailPage from "@/components/pages/OfficialEventDetailPage";
 import OfficialEventFormPage from "@/components/pages/OfficialEventFormPage";
 import OfficialEventsPage from "@/components/pages/OfficialEventsPage";
-import PageState from "@/components/states/PageState";
-import { holdsGrantAtEntity } from "@/lib/access";
+import { selectedActingEntityRef } from "@/lib/acting-entity";
 import { loadOfficialAccountEntity } from "@/lib/official-account";
-import type { AccessEntityTypeEnum } from "@/lib/types";
 
 const PAGE_SIZE = 12;
 
-// Same gate as the official timeline: checked before any fetch, so a wrong id confirms nothing.
-async function loadContext(type: AccessEntityTypeEnum, id: string) {
+// User mode has no event-management surface. The selected cookie is rechecked against grants.
+async function loadContext() {
   const { user } = await getSession();
-  if (!holdsGrantAtEntity(user, type, id)) return { forbidden: true as const };
-  const entity = await loadOfficialAccountEntity(type, id);
+  const selected = await selectedActingEntityRef(user);
+  if (!selected) notFound();
+  const entity = await loadOfficialAccountEntity(selected.entityType, selected.entityId);
   if (!entity) notFound();
-  return { forbidden: false as const, entity };
+  return { entity };
 }
 
 export async function renderOfficialEvents(
-  type: AccessEntityTypeEnum,
-  id: string,
   query: { search?: string; page?: string; tab?: string },
 ) {
-  const context = await loadContext(type, id);
-  if (context.forbidden) return <PageState variant="forbidden" />;
+  const context = await loadContext();
   const search = query.search?.trim() ?? "";
   const page = Math.max(1, Number(query.page ?? "1") || 1);
   const timeframe = query.tab === "past" ? "past" : "upcoming";
   const result = await listEventsByTimeframe({
     search: search || undefined,
-    entityType: type,
-    entityId: id,
+    entityType: context.entity.type,
+    entityId: context.entity.id,
     timeframe,
     page,
     pageSize: PAGE_SIZE,
@@ -54,34 +50,24 @@ export async function renderOfficialEvents(
   );
 }
 
-export async function renderOfficialEventCreate(
-  type: AccessEntityTypeEnum,
-  id: string,
-) {
-  const context = await loadContext(type, id);
-  if (context.forbidden) return <PageState variant="forbidden" />;
+export async function renderOfficialEventCreate() {
+  const context = await loadContext();
   return <OfficialEventFormPage entity={context.entity} />;
 }
 
-async function loadOwnedEvent(
-  type: AccessEntityTypeEnum,
-  id: string,
-  eventId: string,
-) {
-  const context = await loadContext(type, id);
-  if (context.forbidden) return context;
+async function loadOwnedEvent(eventId: string) {
+  const context = await loadContext();
   const event = await getEventDetail(eventId);
-  if (!event || event.entity_type !== type || event.entity_id !== id) notFound();
+  if (
+    !event ||
+    event.entity_type !== context.entity.type ||
+    event.entity_id !== context.entity.id
+  ) notFound();
   return { ...context, event };
 }
 
-export async function renderOfficialEventDetail(
-  type: AccessEntityTypeEnum,
-  id: string,
-  eventId: string,
-) {
-  const context = await loadOwnedEvent(type, id, eventId);
-  if (context.forbidden) return <PageState variant="forbidden" />;
+export async function renderOfficialEventDetail(eventId: string) {
+  const context = await loadOwnedEvent(eventId);
   return (
     <OfficialEventDetailPage
       entity={context.entity}
@@ -91,12 +77,7 @@ export async function renderOfficialEventDetail(
   );
 }
 
-export async function renderOfficialEventEdit(
-  type: AccessEntityTypeEnum,
-  id: string,
-  eventId: string,
-) {
-  const context = await loadOwnedEvent(type, id, eventId);
-  if (context.forbidden) return <PageState variant="forbidden" />;
+export async function renderOfficialEventEdit(eventId: string) {
+  const context = await loadOwnedEvent(eventId);
   return <OfficialEventFormPage entity={context.entity} event={context.event} />;
 }

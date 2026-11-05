@@ -34,83 +34,38 @@ export function adminEntityHref(
   return `${ADMIN_ENTITY_BASE_PATH[entityType]}/${entityId}`;
 }
 
-// The entity's own official-account surface on the main site, one route per level.
-export function officialEntityHref(
-  entityType: AccessEntityTypeEnum,
-  entityId: string,
-): string {
-  return `/official${adminEntityHref(entityType, entityId)}`;
-}
-
-export function officialEntityEventsHref(
-  entityType: AccessEntityTypeEnum,
-  entityId: string,
-): string {
-  return `${officialEntityHref(entityType, entityId)}/events`;
-}
-
-// The inverse of officialEntityHref, so the desktop rail can tell which entity page it sits on.
-export function parseOfficialEntityPath(
-  pathname: string,
-): { entityType: AccessEntityTypeEnum; entityId: string } | null {
-  const match = pathname.match(/^\/official(\/[^/]+)\/([^/]+)/);
-  if (!match) return null;
-  const entry = Object.entries(ADMIN_ENTITY_BASE_PATH).find(
-    ([, basePath]) => basePath === match[1],
-  );
-  if (!entry) return null;
-  return {
-    entityType: entry[0] as AccessEntityTypeEnum,
-    entityId: decodeURIComponent(match[2]),
-  };
-}
-
-// `?as=branch:{id}` lets /feeds/* and /profile/* render from an official account's point of view.
-export const ACTING_ENTITY_PARAM = "as";
+// Event management follows the selected account cookie rather than an entity id in the path.
+export const MANAGE_EVENTS_HREF = "/events/manage";
 
 export type ActingEntityRef = {
   entityType: AccessEntityTypeEnum;
   entityId: string;
 };
 
-export function formatActingEntityParam(entity: ActingEntityRef): string {
+export function formatActingEntityRef(entity: ActingEntityRef): string {
   return `${entity.entityType}:${entity.entityId}`;
 }
 
-export function parseActingEntityParam(
-  value: string | string[] | null | undefined,
-): ActingEntityRef | null {
-  const raw = Array.isArray(value) ? value[0] : value;
+export function parseActingEntityRef(raw: string | null | undefined): ActingEntityRef | null {
   if (!raw) return null;
   const separator = raw.indexOf(":");
   const entityType = raw.slice(0, separator);
   const entityId = raw.slice(separator + 1);
-  if (separator < 1 || !entityId || !(entityType in ADMIN_ENTITY_BASE_PATH)) {
+  if (separator < 1 || !entityId || !Object.hasOwn(ADMIN_ENTITY_BASE_PATH, entityType)) {
     return null;
   }
   return { entityType: entityType as AccessEntityTypeEnum, entityId };
 }
 
-// Feed detail, user profiles, and the five entity profiles understand the param; nothing else does.
-const ACTING_ENTITY_PATH = new RegExp(
-  `^/(feeds|profile|${Object.values(ADMIN_ENTITY_BASE_PATH)
-    .map((path) => path.slice(1))
-    .join("|")})/`,
-);
-
-export function supportsActingEntity(pathname: string): boolean {
-  return ACTING_ENTITY_PATH.test(pathname);
-}
-
-export function withActingEntity(
-  href: string,
-  entity: ActingEntityRef | null | undefined,
-): string {
-  if (!entity || !supportsActingEntity(href)) return href;
-  const separator = href.includes("?") ? "&" : "?";
-  return `${href}${separator}${ACTING_ENTITY_PARAM}=${encodeURIComponent(
-    formatActingEntityParam(entity),
-  )}`;
+export function resolveSelectedActingAccount(
+  raw: string | null | undefined,
+  user: SessionUser | null | undefined,
+): ActingEntityRef | null {
+  if (!raw || !user?.id) return null;
+  const separator = raw.indexOf("|");
+  if (separator < 1 || raw.slice(0, separator) !== user.id) return null;
+  const ref = parseActingEntityRef(raw.slice(separator + 1));
+  return ref && holdsGrantAtEntity(user, ref.entityType, ref.entityId) ? ref : null;
 }
 
 // Super Admin sits outside access_grants entirely — it is the root of the grant chain.

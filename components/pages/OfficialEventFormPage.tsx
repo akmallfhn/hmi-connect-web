@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import type { EventContactInput, EventDetail } from "@/apis/events";
 import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import { createEvent, updateEvent } from "@/lib/actions";
-import { officialEntityEventsHref } from "@/lib/access";
+import { MANAGE_EVENTS_HREF } from "@/lib/access";
 import {
   addHoursToDateTimeLocal,
   dateTimeLocalToIso,
@@ -117,7 +117,7 @@ export default function OfficialEventFormPage({
   const router = useRouter();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const baseHref = officialEntityEventsHref(entity.type, entity.id);
+  const baseHref = MANAGE_EVENTS_HREF;
   const isEditing = Boolean(event);
 
   const [title, setTitle] = useState(event?.title ?? "");

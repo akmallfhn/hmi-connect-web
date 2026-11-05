@@ -10,18 +10,11 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { logoutUser } from "@/lib/actions";
 import {
-  ACTING_ENTITY_PARAM,
   ADMIN_ENTITY_LABEL,
   ADMIN_ENTITY_ORDER,
-  officialEntityHref,
-  parseActingEntityParam,
-  parseOfficialEntityPath,
-  supportsActingEntity,
-  withActingEntity,
 } from "@/lib/access";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
@@ -36,6 +29,7 @@ import LogoHmi from "../svg/LogoHmi";
 import LogoKohati from "../svg/LogoKohati";
 import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 import type { HeaderAdminGrant } from "./HeaderAdminAccessContext";
+import SwitchAccountButton from "../official/SwitchAccountButton";
 
 interface MainSiteDesktopHeaderProps {
   userId?: string;
@@ -91,17 +85,11 @@ export default function MainSiteDesktopHeader({
   verificationStatus,
   isAlumni,
 }: MainSiteDesktopHeaderProps) {
-  const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams();
   const access = useHeaderAdminAccess();
   const unreadChatCount = useUnreadChatCount(userId);
   const { unreadCount } = useNotificationsBell(userId);
   const [loggingOut, setLoggingOut] = useState(false);
-  const requested =
-    parseOfficialEntityPath(pathname) ??
-    (supportsActingEntity(pathname)
-      ? parseActingEntityParam(searchParams.get(ACTING_ENTITY_PARAM))
-      : null);
+  const requested = access?.activeEntity;
   const grants = [...(access?.grants ?? [])].sort(
     (a, b) =>
       ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
@@ -124,24 +112,9 @@ export default function MainSiteDesktopHeader({
     : null;
   const personalDisplayName =
     fullName?.trim().split(/\s+/)[0] || username || "Profil";
-  const identityHref =
-    activeGrant && activeEntityName
-      ? withActingEntity(
-          entityProfileHref(activeGrant.entity_type, activeGrant.entity_id),
-          {
-            entityType: activeGrant.entity_type,
-            entityId: activeGrant.entity_id,
-          },
-        )
-      : `/profile/${username}`;
-  const personalHref = (() => {
-    if (!userId) return "/auth/login";
-    if (parseOfficialEntityPath(pathname)) return "/";
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(ACTING_ENTITY_PARAM);
-    const query = params.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  })();
+  const identityHref = activeGrant
+    ? entityProfileHref(activeGrant.entity_type, activeGrant.entity_id)
+    : `/profile/${username}`;
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -281,9 +254,10 @@ export default function MainSiteDesktopHeader({
                       Beralih Akun
                     </p>
                     {activeGrant && (
-                      <Link
-                        href={personalHref}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
+                      <SwitchAccountButton
+                        account={null}
+                        href="/"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
                       >
                         <Avatar
                           src={avatar}
@@ -298,7 +272,7 @@ export default function MainSiteDesktopHeader({
                             @{username}
                           </span>
                         )}
-                      </Link>
+                      </SwitchAccountButton>
                     )}
                     {grants.map((grant) => {
                       const current =
@@ -306,14 +280,11 @@ export default function MainSiteDesktopHeader({
                         requested.entityId === grant.entity_id;
                       if (current && activeGrant) return null;
                       return (
-                        <Link
+                        <SwitchAccountButton
                           key={grant.id}
-                          href={officialEntityHref(
-                            grant.entity_type,
-                            grant.entity_id,
-                          )}
-                          aria-current={current ? "page" : undefined}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
+                          account={{ entityType: grant.entity_type, entityId: grant.entity_id }}
+                          href="/"
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted"
                         >
                           <GrantLogo grant={grant} />
                           <span className="min-w-0 flex-1 truncate">
@@ -327,7 +298,7 @@ export default function MainSiteDesktopHeader({
                           {current && (
                             <span className="size-2 shrink-0 rounded-full bg-primary" />
                           )}
-                        </Link>
+                        </SwitchAccountButton>
                       );
                     })}
                   </div>

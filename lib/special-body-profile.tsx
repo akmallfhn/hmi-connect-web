@@ -78,7 +78,7 @@ export async function SpecialBodyProfile({
   redirectToCanonicalProfile(canonicalHref, segment, resolved, searchParams);
 
   const [actingEntity, parent, feeds] = await Promise.all([
-    resolveActingEntity(viewer, searchParams.as),
+    resolveActingEntity(viewer),
     resolveSpecialBodyParent(body.parent_entity_type, body.parent_entity_id),
     loadEntityProfileFeeds("special_body", body.id),
   ]);

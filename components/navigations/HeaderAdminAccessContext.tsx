@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import type { SessionGrant } from "@/apis/session";
+import type { ActingEntityRef } from "@/lib/access";
 
 // check-session's grant carries no logo, so the layout backfills one from access-grants/my/list.
 export type HeaderAdminGrant = SessionGrant & {
@@ -12,6 +13,7 @@ export interface HeaderAdminAccess {
   adminOrigin: string;
   roleName?: string;
   grants: HeaderAdminGrant[];
+  activeEntity: ActingEntityRef | null;
 }
 
 const HeaderAdminAccessContext = createContext<HeaderAdminAccess | null>(null);

@@ -56,7 +56,7 @@ export default function MainSiteDesktopShell({
       />
 
       <div className="flex flex-1">
-        {/* The rail reads ?as=, and useSearchParams needs a boundary on statically rendered routes. */}
+        {/* Keep the shell suspended while client navigation resolves. */}
         <Suspense fallback={null}>
           <MainSiteDesktopSidebar
             userId={userId}

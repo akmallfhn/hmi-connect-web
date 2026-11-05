@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function ChapterOfficialEventDetail({
+export default async function ManagedEventDetail({
   params,
 }: {
-  params: Promise<{ chapter_id: string; event_id: string }>;
+  params: Promise<{ event_id: string }>;
 }) {
-  const { chapter_id, event_id } = await params;
-  return renderOfficialEventDetail("chapter", chapter_id, event_id);
+  const { event_id } = await params;
+  return renderOfficialEventDetail(event_id);
 }

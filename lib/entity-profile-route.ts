@@ -61,10 +61,11 @@ export function redirectToCanonicalProfile<T extends ProfileEntity>(
   resolved: ResolvedEntityProfile<T>,
   searchParams: ProfileSearchParams = {},
 ) {
-  if (segment === entityProfileHandle(resolved.entity)) return;
+  if (segment === entityProfileHandle(resolved.entity) && !("as" in searchParams)) return;
 
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(searchParams)) {
+    if (key === "as") continue;
     for (const item of Array.isArray(value) ? value : value ? [value] : []) {
       query.append(key, item);
     }
@@ -73,6 +74,6 @@ export function redirectToCanonicalProfile<T extends ProfileEntity>(
   const href = `${canonicalHref}${search ? `?${search}` : ""}`;
 
   // A casing fix is permanent; an id redirect is not, since the mention name can still be renamed.
-  if (resolved.matchedBy === "mention_name") permanentRedirect(href);
+  if (resolved.matchedBy === "mention_name" && !("as" in searchParams)) permanentRedirect(href);
   redirect(href);
 }

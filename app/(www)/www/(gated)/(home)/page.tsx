@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import FeedPage from "@/components/pages/FeedPage";
+import OfficialAccountPage from "@/components/pages/OfficialAccountPage";
 import { getSession } from "@/apis/session";
+import { selectedActingEntityRef } from "@/lib/acting-entity";
+import { loadOfficialAccountEntity } from "@/lib/official-account";
+import { listFeeds } from "@/apis/feeds";
+import { notFound } from "next/navigation";
 
 const description =
   "Ikuti kabar, postingan, dan aktivitas kader HMI melalui feed HMI Connect.";
@@ -24,6 +29,23 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  if (selected) {
+    const entity = await loadOfficialAccountEntity(selected.entityType, selected.entityId);
+    if (!entity) notFound();
+    const timeline = await listFeeds({ page: 1, pageSize: 20 });
+    return (
+      <OfficialAccountPage
+        entityType={entity.type}
+        entityId={entity.id}
+        name={entity.name}
+        imageUrl={entity.imageUrl}
+        initialItems={timeline.list}
+        initialHasMore={timeline.hasMore}
+        viewer={user}
+      />
+    );
+  }
 
   return (
     <FeedPage

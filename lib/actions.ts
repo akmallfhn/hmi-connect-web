@@ -1,5 +1,10 @@
 "use server";
 
+import { getSession } from "@/apis/session";
+import type { ApiEnvelope } from "@/apis/api";
+import { selectedActingEntityRef, setActingAccount } from "@/lib/acting-entity";
+import type { ActingEntityRef } from "@/lib/access";
+
 import {
   acceptAccessGrant as acceptAccessGrantApi,
   inviteAccessGrant as inviteAccessGrantApi,
@@ -116,6 +121,7 @@ import {
 import {
   createEvent as createEventApi,
   deleteEvent as deleteEventApi,
+  getEventDetail as getEventDetailApi,
   updateEvent as updateEventApi,
   updateEventAttendance as updateEventAttendanceApi,
   type CreateEventPayload,
@@ -673,6 +679,23 @@ export async function logoutUser() {
   return logoutUserApi();
 }
 
+export async function switchActingAccount(ref: ActingEntityRef | null) {
+  const { user } = await getSession();
+  return setActingAccount(user, ref);
+}
+
+async function canActAs(authorEntity?: EntityAuthor): Promise<boolean> {
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  if (!authorEntity) return !selected;
+  return selected?.entityType === authorEntity.type && selected.entityId === authorEntity.id;
+}
+
+const ACTING_ACCOUNT_FORBIDDEN: ApiEnvelope<never> = {
+  status: "FORBIDDEN",
+  message: "Akun resmi tidak aktif atau aksesnya sudah dicabut. Pilih akun lagi.",
+};
+
 export async function presignMedia(payload: PresignMediaPayload) {
   return presignMediaApi(payload);
 }
@@ -694,15 +717,34 @@ export async function deleteMedia(assetId: string) {
 }
 
 export async function createEvent(payload: CreateEventPayload) {
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  if (selected?.entityType !== payload.entity_type || selected.entityId !== payload.entity_id) {
+    return ACTING_ACCOUNT_FORBIDDEN;
+  }
   return createEventApi(payload);
 }
 
 export async function updateEvent(payload: UpdateEventPayload) {
+  if (!(await canManageSelectedEvent(payload.id))) return ACTING_ACCOUNT_FORBIDDEN;
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  if (payload.entity_type && payload.entity_type !== selected?.entityType) return ACTING_ACCOUNT_FORBIDDEN;
+  if (payload.entity_id && payload.entity_id !== selected?.entityId) return ACTING_ACCOUNT_FORBIDDEN;
   return updateEventApi(payload);
 }
 
 export async function deleteEvent(id: string) {
+  if (!(await canManageSelectedEvent(id))) return ACTING_ACCOUNT_FORBIDDEN;
   return deleteEventApi(id);
+}
+
+async function canManageSelectedEvent(id: string): Promise<boolean> {
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  if (!selected) return false;
+  const event = await getEventDetailApi(id);
+  return event?.entity_type === selected.entityType && event.entity_id === selected.entityId;
 }
 
 export async function updateEventAttendance(
@@ -809,6 +851,15 @@ export async function loadMoreNewsArticles(
 }
 
 export async function createFeed(payload: CreateFeedPayload) {
+  if (Boolean(payload.author_entity_type) !== Boolean(payload.author_entity_id)) {
+    return ACTING_ACCOUNT_FORBIDDEN;
+  }
+  const authorEntity = payload.author_entity_type && payload.author_entity_id
+    ? { type: payload.author_entity_type, id: payload.author_entity_id }
+    : undefined;
+  if (!(await canActAs(authorEntity))) {
+    return ACTING_ACCOUNT_FORBIDDEN;
+  }
   return createFeedApi(payload);
 }
 
@@ -825,6 +876,7 @@ export async function createFeedComment(
   message: string,
   authorEntity?: EntityAuthor,
 ) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return createFeedCommentApi({ feedId, message, authorEntity });
 }
 
@@ -833,6 +885,7 @@ export async function createCommentReply(
   message: string,
   authorEntity?: EntityAuthor,
 ) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return createCommentReplyApi({ commentId, message, authorEntity });
 }
 
@@ -849,6 +902,7 @@ export async function deleteFeed(feedId: string) {
 }
 
 export async function repostFeed(feedId: string, authorEntity?: EntityAuthor) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return repostFeedApi(feedId, authorEntity);
 }
 
@@ -856,6 +910,7 @@ export async function unrepostFeed(
   feedId: string,
   authorEntity?: EntityAuthor,
 ) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return unrepostFeedApi(feedId, authorEntity);
 }
 
@@ -865,6 +920,7 @@ export async function sendReaction(
   type: ReactionTypeEnum,
   authorEntity?: EntityAuthor,
 ) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return sendReactionApi({ targetType, targetId, type, authorEntity });
 }
 
@@ -873,6 +929,7 @@ export async function unsendReaction(
   targetId: string,
   authorEntity?: EntityAuthor,
 ) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return unsendReactionApi({ targetType, targetId, authorEntity });
 }
 

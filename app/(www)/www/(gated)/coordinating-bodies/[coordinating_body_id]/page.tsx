@@ -65,11 +65,7 @@ export default async function CoordinatingBodyProfile({
   const coordinatingBody = resolved.entity;
   const coordinating_body_id = coordinatingBody.id;
 
-  const actingEntity = await resolveActingEntity(
-    viewer,
-
-    query?.as,
-  );
+  const actingEntity = await resolveActingEntity(viewer);
 
   // A Badko's own kader/Cabang counts are only exposed on the organization's own Badko list row.
   const [siblings, branches, feeds] = await Promise.all([

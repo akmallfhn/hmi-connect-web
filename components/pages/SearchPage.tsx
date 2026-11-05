@@ -23,7 +23,8 @@ import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import FeedItemCard from "../feeds/FeedItemCard";
 import Input from "../fields/Input";
-import BottomNav from "../navigations/BottomNav";
+import ActingAwareBottomNav from "../official/ActingAwareBottomNav";
+import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import Header from "../navigations/Header";
 import SearchArticleRow from "../search/SearchArticleRow";
 import SearchEntityRow from "../search/SearchEntityRow";
@@ -44,6 +45,7 @@ interface SearchPageProps {
   initialQuery: string;
   initialResults: SearchOverviewResults;
   aside: ReactNode;
+  actingEntity?: ComposerAuthorEntity | null;
 }
 
 const CATEGORIES: { value: SearchCategory; label: string }[] = [
@@ -66,6 +68,7 @@ export default function SearchPage({
   initialQuery,
   initialResults,
   aside,
+  actingEntity,
 }: SearchPageProps) {
   const [keyword, setKeyword] = useState(initialQuery);
   const [searchedQuery, setSearchedQuery] = useState(initialQuery);
@@ -202,6 +205,7 @@ export default function SearchPage({
                   : undefined
               }
               onDeleted={handleFeedDeleted}
+              authorEntity={actingEntity ?? undefined}
             />
           ));
       case "user":
@@ -358,7 +362,11 @@ export default function SearchPage({
         </aside>
       </PageMargin>
 
-      <BottomNav userId={viewer.userId} username={viewer.username} />
+      <ActingAwareBottomNav
+        actingEntity={actingEntity}
+        userId={viewer.userId}
+        username={viewer.username}
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import {
   listAllFeedComments,
   type FeedUploadAttachment,
 } from "@/apis/feeds";
-import { resolveActingEntity } from "@/lib/acting-entity";
+import { redirectWithoutLegacyActingParam, resolveActingEntity } from "@/lib/acting-entity";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import { getSession } from "@/apis/session";
 import FeedItemCard from "@/components/feeds/FeedItemCard";
@@ -17,7 +17,7 @@ import Header from "@/components/navigations/Header";
 
 interface FeedDetailRouteProps {
   params: Promise<{ feed_id: string }>;
-  searchParams: Promise<{ as?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({
@@ -66,18 +66,19 @@ export default async function FeedDetailPage({
   params,
   searchParams,
 }: FeedDetailRouteProps) {
-  const [{ feed_id }, { as }] = await Promise.all([params, searchParams]);
+  const { feed_id } = await params;
+  redirectWithoutLegacyActingParam(`/feeds/${feed_id}`, await searchParams);
   const { sessionToken, user } = await getSession();
 
   const [feed, comments, actingEntity] = await Promise.all([
     getFeedById(feed_id, sessionToken),
     listAllFeedComments(feed_id, { token: sessionToken }),
-    resolveActingEntity(user, as),
+    resolveActingEntity(user),
   ]);
 
   if (!feed) return notFound();
 
-  // With a valid ?as=, every like, comment, and repost here is the entity's, not the viewer's.
+  // A valid selected account makes likes, comments, and reposts act as that entity.
   return (
     <ActingEntityProvider entity={actingEntity}>
       <div className="min-h-screen bg-surface pb-16 lg:pb-0">

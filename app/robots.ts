@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         "/notifications",
         "/organizational-documents",
         "/events",
-        "/official/",
+        "/events/manage",
         "/invitations/",
         "/reset-password/",
         "/auth/forget-password",
@@ -24,7 +24,6 @@ export default function robots(): MetadataRoute.Robots {
         "/trainings/create",
         "/pendataan-komisariat",
         "/*/edit",
-        "/*?as=",
       ],
     },
     // The index at /sitemap.xml names every per-type sitemap, so it's the only one to advertise.

@@ -5,7 +5,7 @@ import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminA
 import MainSiteDesktopShell from "@/components/navigations/MainSiteDesktopShell";
 import ActivityQuerySync from "@/components/query/ActivityQuerySync";
 import { manageGrants } from "@/lib/access";
-import { listGrantEntityLogos } from "@/lib/acting-entity";
+import { listGrantEntityLogos, selectedActingEntityRef } from "@/lib/acting-entity";
 import { getAdminSiteOrigin, PROD_MAIN_SITE_URL } from "@/lib/constants";
 
 const siteDescription =
@@ -48,12 +48,14 @@ export const metadata: Metadata = {
 export default async function WwwLayout({ children }: { children: ReactNode }) {
   const { user } = await getSession();
   const grants = user ? manageGrants(user) : [];
+  const activeEntity = await selectedActingEntityRef(user);
   // Only a grant holder pays for this lookup, and only because check-session omits the entity logo.
   const logos = grants.length > 0 ? await listGrantEntityLogos() : new Map();
   const adminAccess = user
     ? {
         adminOrigin: getAdminSiteOrigin(),
         roleName: user.role_name,
+        activeEntity,
         grants: grants.map((grant) => ({
           ...grant,
           entity_image_url: logos.get(grant.entity_id) ?? null,

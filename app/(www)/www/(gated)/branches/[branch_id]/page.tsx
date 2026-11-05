@@ -61,11 +61,7 @@ export default async function BranchProfile({
   const branch = resolved.entity;
   const branch_id = branch.id;
 
-  const actingEntity = await resolveActingEntity(
-    viewer,
-
-    query?.as,
-  );
+  const actingEntity = await resolveActingEntity(viewer);
 
   // A Cabang's own kader/Komisariat counts are only exposed on its parent's branch list row.
   const [siblings, chapters, coordinatingChapters, feeds] =

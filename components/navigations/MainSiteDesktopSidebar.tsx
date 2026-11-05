@@ -20,16 +20,11 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  ACTING_ENTITY_PARAM,
-  officialEntityHref,
-  officialEntityEventsHref,
-  parseActingEntityParam,
-  parseOfficialEntityPath,
-  supportsActingEntity,
-  withActingEntity,
+  MANAGE_EVENTS_HREF,
+  type ActingEntityRef,
 } from "@/lib/access";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
@@ -39,6 +34,7 @@ import Button from "../buttons/Button";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
+import SwitchAccountButton from "../official/SwitchAccountButton";
 
 interface MainSiteDesktopSidebarProps {
   userId?: string;
@@ -113,14 +109,11 @@ type RailNavItem = {
 
 // On an official-account page the rail speaks for that entity: its timeline and its public profile.
 function officialNavItems(
-  official: NonNullable<ReturnType<typeof parseOfficialEntityPath>>,
+  official: ActingEntityRef,
 ): RailNavItem[] {
-  const timelineHref = officialEntityHref(
-    official.entityType,
-    official.entityId,
-  );
+  const timelineHref = "/";
   const profileHref = entityProfileHref(official.entityType, official.entityId);
-  const eventsHref = officialEntityEventsHref(official.entityType, official.entityId);
+  const eventsHref = MANAGE_EVENTS_HREF;
   return [
     {
       label: "Timeline",
@@ -137,8 +130,7 @@ function officialNavItems(
     },
     {
       label: "Profile",
-      // Carries ?as= so the entity's own profile opens in entity mode too.
-      href: withActingEntity(profileHref, official),
+      href: profileHref,
       icon: IconUserCircle,
       matches: (pathname) => pathname === profileHref,
     },
@@ -152,14 +144,8 @@ export default function MainSiteDesktopSidebar({
 }: MainSiteDesktopSidebarProps) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
-  const searchParams = useSearchParams();
   const adminAccess = useHeaderAdminAccess();
-  // Feed detail and profile pages opened with ?as= are viewed as the entity, so the rail follows.
-  const requested =
-    parseOfficialEntityPath(pathname) ??
-    (supportsActingEntity(pathname)
-      ? parseActingEntityParam(searchParams.get(ACTING_ENTITY_PARAM))
-      : null);
+  const requested = adminAccess?.activeEntity;
   // Reaching either surface as an entity requires a grant at it, so the layout's grant list names it.
   const officialGrant = requested
     ? adminAccess?.grants.find(
@@ -311,14 +297,14 @@ export default function MainSiteDesktopSidebar({
 
         <div className={official ? undefined : "mt-4"}>
           {official ? (
-            // Leaving the entity's voice goes through Settings, where the personal account lives.
-            <Link
-              href="/settings"
+            <SwitchAccountButton
+              account={null}
+              href="/"
               className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium text-destructive-foreground transition hover:bg-destructive-soft"
             >
               <IconArrowBackUp className="size-5" />
               Mode User
-            </Link>
+            </SwitchAccountButton>
           ) : (
             <Dropdown
               align="left"

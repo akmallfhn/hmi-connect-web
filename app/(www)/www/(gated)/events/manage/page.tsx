@@ -6,13 +6,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function OrganizationOfficialEvents({
-  params,
+export default async function ManageEvents({
   searchParams,
 }: {
-  params: Promise<{ organization_id: string }>;
   searchParams: Promise<{ search?: string; page?: string; tab?: string }>;
 }) {
-  const [{ organization_id }, query] = await Promise.all([params, searchParams]);
-  return renderOfficialEvents("organization", organization_id, query);
+  return renderOfficialEvents(await searchParams);
 }

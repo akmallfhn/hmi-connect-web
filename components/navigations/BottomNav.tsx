@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   IconBrandHipchat,
   IconPlus,
@@ -13,48 +13,9 @@ import {
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import Modal from "../modals/Modal";
 import CreateOptionList from "./CreateOptionList";
-
-const PULSE_DURATION = 350;
-
-// :active is too short-lived on a real tap to be visible, so hold the pulse on a timer instead.
-export function usePressPulse(duration = PULSE_DURATION) {
-  const [pressed, setPressed] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  function trigger() {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setPressed(true);
-    timeoutRef.current = setTimeout(() => setPressed(false), duration);
-  }
-
-  return [pressed, trigger] as const;
-}
-
-export function NavIconPulse({
-  pressed,
-  children,
-}: {
-  pressed: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <span className="relative inline-flex items-center justify-center">
-      <span
-        className={[
-          "pointer-events-none absolute left-1/2 top-1/2 h-11 w-16 -translate-x-1/2 -translate-y-1/2 -z-10 rounded-full bg-primary/15 transition-all duration-300 ease-out",
-          pressed ? "scale-100 opacity-100" : "scale-75 opacity-0",
-        ].join(" ")}
-      />
-      {children}
-    </span>
-  );
-}
+import { NavIconPulse, usePressPulse } from "./NavPulse";
+import OfficialBottomNav from "../official/OfficialBottomNav";
+import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 
 interface BottomNavProps {
   userId?: string;
@@ -62,6 +23,14 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ userId, username }: BottomNavProps) {
+  const activeEntity = useHeaderAdminAccess()?.activeEntity;
+  if (activeEntity) {
+    return <OfficialBottomNav entityType={activeEntity.entityType} entityId={activeEntity.entityId} />;
+  }
+  return <PersonalBottomNav userId={userId} username={username} />;
+}
+
+function PersonalBottomNav({ userId, username }: BottomNavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isSearch = pathname === "/search";

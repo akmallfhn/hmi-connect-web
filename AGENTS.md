@@ -112,6 +112,7 @@ npm run build
 npm run start
 npm run lint
 npm run test:query # shared cache, optimistic read, rollback, and scope regression tests
+npm run test:account # selected entity cookie, grant, and user-fallback checks
 npm run test:event # event WIB formatting, form round-trip, status, and stored-URL safety
 ```
 
@@ -383,9 +384,8 @@ endpoint enumerates users or feeds without a session (`users/list` needs a grant
 backend exposes a listing behind `requireClientSecret`, each becomes its own
 `app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
 `app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
-activation, verification, settings, chats, notifications, organizational documents, `/official/`, invitations, reset links,
-forget-password, the article composer and editors, `/trainings/create`) plus any `?as=` URL, whose canonical is the
-plain page anyway.
+activation, verification, settings, chats, notifications, organizational documents, `/events/manage`, invitations, reset links,
+forget-password, the article composer and editors, `/trainings/create`).
 
 ## Auth & session flow
 
@@ -393,6 +393,16 @@ plain page anyway.
   nowhere else. Every file that needs the cookie name (`apis/*.ts`, route handlers,
   `next.config.mts`) imports it from there. Do not re-declare or hardcode the literal
   string anywhere else.
+- The main site's selected acting account lives in `ACTING_ACCOUNT_COOKIE_NAME`, also in
+  `lib/constants.ts`. `lib/actions.ts#switchActingAccount` checks the current exact grant before
+  writing a 30-day `HttpOnly`, `Secure`, `SameSite=Lax` cookie containing the user id and entity
+  type/id. `lib/acting-entity.ts#selectedActingEntityRef` checks the user id and current grant on
+  every read; a missing, invalid, or revoked selection falls back to personal mode. This cookie
+  selects presentation and author identity, never authorizes an action by itself. Entity-author
+  feed/reaction Server Actions also compare the requested author with the validated selection.
+  Both sign-in paths clear the selection through `setSessionCookie`; logout and
+  `/api/auth/clear-session` clear it alongside the session cookie. The Go login/logout API is
+  unchanged. The backend must independently enforce entity-author grants on mutations.
 - `POST /www/api/auth/callback/google` exchanges a Google access token for the backend's
   session token (via `CLIENT_SECRET`) and sets the cookie. It's set via
   `lib/constants.ts#getSessionCookieDomain()`, which — same convention as sevenpreneur's
@@ -408,7 +418,8 @@ plain page anyway.
   Any code that deletes this cookie must call the same helper (no arguments needed) or the
   browser won't match it — see `logoutUser()` in `apis/session.ts` and
   `GET /www/api/auth/clear-session` below.
-- `GET /www/api/auth/clear-session` deletes the cookie (logout), domain-aware as above.
+- `GET /www/api/auth/clear-session` deletes both the session and selected-account cookies,
+  domain-aware as above.
 - **Password sign-in lives beside Google, not instead of it.** `apis/auth.ts` wraps the
   rest of the backend's `auth/*` resource: `loginWithEmail` (`login-email`, an email **or**
   username plus password), `requestPasswordReset` (`forget-password`),
@@ -948,15 +959,16 @@ iconSm`.
   Chat uses Tabler's `IconBrandHipchat` and carries its own unread badge alongside Notifications;
   both controls are hidden while an official account is active. The profile control
   shows the personal avatar and first name in personal mode, and replaces them with the matching
-  accepted grant's rounded-square logo/name while an official account is open or active via `?as=`.
+  accepted grant's rounded-square logo/name while that entity is selected in the cookie.
   Grant images preserve their intrinsic proportions without inner padding; fallback KOHATI, BPL,
   and HMI emblems retain padding. Chat and Notifications use unread badges from
   `hooks/useUnreadChatCount.ts` and
   `hooks/useNotificationsBell.ts`; both are links, and the full `/notifications` page is the only
   place a notification list renders. In official mode, the Profile dropdown's first row links to
-  the active entity profile with `?as=`, then "Beralih Akun" lists the personal account first
-  (removing `?as=`, or returning to `/` from an official-account page), followed by other accepted
-  grants sorted by entity level and linked via `officialEntityHref`. In personal mode its first
+  the active entity profile, then "Beralih Akun" lists the personal account first
+  (clearing the cookie and opening `/`), followed by other accepted grants sorted by entity
+  level. `SwitchAccountButton` calls the Server Action and fully navigates to the selected
+  official timeline, clearing prefetched data from the previous identity. In personal mode its first
   identity row links to the personal profile, followed by accepted grants under "Beralih Akun".
   Both modes retain Keluar. Logout calls `logoutUser` and hard-navigates to `/auth/login`. The
   Lainnya dropdown retains Pengaturan and the logged-out Masuk link.
@@ -981,7 +993,7 @@ iconSm`.
   every `(www)` route: a `flex min-h-dvh flex-col` shell holding `VerificationBanner` above a
   `flex flex-1` row of the rail plus a `flex min-w-0 flex-1 flex-col` content column. The
   desktop header is the first row in that content column, above route content; the shell wraps
-  both header and rail in `Suspense` boundaries because each reads `useSearchParams`. On the
+  both header and rail in `Suspense` boundaries. On the
   distraction-free routes its own `hidesDesktopSidebar` lists (`/activation`, `/verification`,
   `/articles/create`, the article edit route, `/auth/*`, `/reset-password/*`) it renders `children`
   bare — no rail, and no banner either. The rail sits **in flow** rather than `fixed`, and the
@@ -1023,7 +1035,9 @@ iconSm`.
   is dynamic (0, banner-only, or more), so a hardcoded offset silently leaves a gap once you
   scroll. Being one sticky block sidesteps that entirely.
   `BottomNav.tsx` is the `lg:hidden` mobile tab bar — Beranda/Cari/Posting/Pesan/Profil. It stays
-  mobile-only; the rail above covers desktop, so the two never render together.
+  mobile-only; the rail above covers desktop, so the two never render together. It reads the
+  validated selected account from `HeaderAdminAccessContext` and renders `OfficialBottomNav`
+  throughout the main site in entity mode; the personal tabs below apply in user mode.
   Beranda (`/`) is always a real link. Cari, Pesan, and Profil
   route to `/auth/login` when there's no `username` (logged out); otherwise Cari goes to
   `/search`, Pesan to `/chats`, Profil to `/profile/[username]`. The middle
@@ -1051,7 +1065,7 @@ iconSm`.
   `components/chats/*` entry below for the real backend/realtime this reads from.
   Since real `:active` is too short-lived on a tap to render its transition, the
   pill highlight behind each icon is driven by a
-  JS-timed press pulse (`usePressPulse`, `components/navigations/BottomNav.tsx`) rather
+  JS-timed press pulse (`usePressPulse`, `components/navigations/NavPulse.tsx`) rather
   than a CSS pseudo-class — see that file before changing the tap-feedback timing/size.
   Both entry points into composing — the rail's Posting dropdown and `BottomNav`'s Posting sheet —
   render the same `components/navigations/CreateOptionList.tsx`, which owns both choices and the
@@ -1797,7 +1811,7 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   bar is omitted when Profile is the only available panel. The first available tab is
   the default `/profile/[username]` panel, so a URL naming a hidden content tab falls back to that
   available default instead of exposing an empty panel, then `ProfileSections` removes the invalid
-  `tab` parameter while preserving other query parameters such as `as`.
+  `tab` parameter while preserving other query parameters.
   `ProfileSections` switches the server-rendered panels with `useLocalTabs`, avoiding a whole-page
   refetch. `ProfilePostTimeline`, `ProfileActivityTimeline`, and `ProfileArticlesTimeline` cache
   infinite pages by viewer and profile username. The route fetches page one of all three in parallel
@@ -1829,7 +1843,7 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   Entity activity lists retain the compact row variant of the same component.
   The Profile tab holds About, work and organization experience, education, training,
   publications, and honors in that order. The old `/profile/[username]/activities` URL
-  redirects to `?tab=activities` while preserving `?as=`; an empty Activity list still makes
+  redirects to `?tab=activities`; an empty Activity list still makes
   `ProfileSections` fall back to its first available tab. Pagination still uses the
   `loadMoreUserActivity` Server Action.
   `ProfileCompletionCard` is the "Lengkapi Profil" nudge, backed by
@@ -1929,7 +1943,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   Badko: `ORGANIZATION_SHORT_NAME`, "PB HMI"; the organization has none), and a stat row ending in Pengikut. There is no "Terdaftar" date. A primary `+ Ikuti` button
   (light `Mengikuti` once following) sits top-right, toggling `entity-follows/follow|unfollow`
   optimistically with rollback; it and the Pengikut stat come from `entity-follows/status` and are
-  hidden signed out or while browsing `?as=` an official account, since following is personal.
+  hidden signed out or while an official account is selected, since following is personal.
   The `Official Account` marker is a primary check badge pinned to the logo's bottom-right with a
   hover `role="tooltip"` pill and its own `aria-label`. The shared `AboutCard` follows, then
   `components/entity/EntitySections.tsx`: tabs, in order, **Post** (`EntityPostTimeline` over the
@@ -1962,91 +1976,28 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   no People tab, since a special body registers no kader of its own. Special bodies appear in mention
   autocomplete labelled by their `subtitle` type, and `/mentions/[name]` redirects them to these pages.
   The KOHATI/BPL admin create and edit sheets carry the same Official Account ID field.
-- `/official/{organizations,coordinating-bodies,branches,coordinating-chapters,chapters}/[id]` —
-  the five official-account surfaces, where someone acts *as* an entity rather than looking at it.
-  They live under `app/(www)/www/(gated)/official/`, so a logged-out visitor is bounced by
-  `next.config.mts`'s no-session rule, and their route segments come from `adminEntityHref` via
-  `lib/access.ts#officialEntityHref`, keeping the five paths spelled out in exactly one place.
-  The gate is **`holdsGrantAtEntity`, not `canManageEntity`** — a new helper that is `canManageEntity`
-  minus the `isSuperAdmin` shortcut (which now reads `isSuperAdmin(user) || holdsGrantAtEntity(...)`,
-  so the two can't drift). `Super Admin` is refused here on purpose: speaking in an entity's own
-  name is its appointed admins' job, and being the root of the grant chain does not make you a
-  Cabang. Anyone failing it gets `PageState` `forbidden`, checked **before** the entity is fetched so
-  a wrong id can't confirm what exists. That gate mirrors the backend's own rule for
-  `feeds/create`'s author pair exactly ("a grant above it does not reach down, and `Super Admin`
-  alone does not qualify"), which is what this page is for. All five render the shared
-  `components/pages/OfficialAccountPage.tsx`: a single centered `lg:max-w-[600px]` column holding
-  `components/official/OfficialTimeline.tsx`, with no profile sidebar. What orients the admin is
-  the desktop rail instead — `MainSiteDesktopSidebar` detects an `/official/{segment}/{id}` path
-  through `lib/access.ts#parseOfficialEntityPath` (the inverse of `officialEntityHref`) and swaps
-  its whole nav for two items: **Timeline** (this page) and **Profile** (the entity's public
-  `entityProfileHref`). Above them sits a bordered identity card — the entity's logo (`LogoHmi`
-  fallback) and its `formatEntityAuthorName` name under an "Akun Resmi" line — read from
-  `useHeaderAdminAccess()`'s grant for that entity rather than fetched, since reaching the route
-  already requires holding that grant. The personal Profile row and the Posting button are hidden
-  there, since the page carries its own entity composer, and More is replaced by a destructive
-  **Mode User** link to `/settings`, the way back to the personal account. Mobile gets the same split:
-  `OfficialAccountPage` renders **no** personal `Header` or `BottomNav`, and instead opens with
-  `components/official/OfficialGreetingBar.tsx` — `MobileGreetingBar`'s shape (the composer's
-  `-mt-16` still floats up into its `pb-20`) but on `bg-tertiary` navy with white copy, greeting the
-  entity by name, so speaking as the entity reads differently from home at a glance — and closes
-  with `components/official/OfficialBottomNav.tsx`: Beranda (this timeline), Profil HMI (the
-  entity profile), and a destructive Mode User tab to `/settings`. It reuses `BottomNav`'s exported
-  `usePressPulse`/`NavIconPulse`, so the tap feedback matches.
-  **Leaving the timeline keeps the entity's point of view through `?as={entity_type}:{entity_id}`.**
-  `/feeds/[feed_id]`, `/profile/[username]` (both tabs), and the five entity
-  profile routes read that param
-  through `lib/acting-entity.ts#resolveActingEntity` (`server-only`), which applies the official
-  pages' own gate — `holdsGrantAtEntity`, so `Super Admin` alone does not qualify — and resolves
-  the name from the session grant and the logo from the same `listGrantEntityLogos` lookup the
-  `(www)` layout uses (`cache`d, so layout and page share one request). An invalid or unheld param
-  is simply ignored and the page renders personally. When it resolves, the feed detail passes it as
-  `FeedItemCard`'s `authorEntity`, so like/comment/repost all go out as the entity; the profile is
-  read-only — `isOwnProfile` is forced `false` even on your own profile, and `ProfileHeader`'s
-  `readOnly` drops follow, chat, edit, share, and the settings gear, while `ExploreSearchBar`,
-  `SuggestedConnectionsCard`, and the completion card disappear. The entity profile pages drop
-  `SuggestedConnectionsCard` the same
-  way, and the rail's Profile item, `OfficialBottomNav`'s Profil HMI tab, and the official greeting
-  all link to the entity's profile **with** `?as=`, so opening it keeps entity mode. Edit/delete
-  follow the mode too: acting as an entity, `FeedItemCard` only offers them on feeds written as that
-  entity (`isOwnPersonalFeed` is forced `false`), and `CommentItem` hides personal comment delete —
-  those actions come back only in user mode. Both swap `BottomNav` for `OfficialBottomNav` via
-  `components/official/ActingAwareBottomNav.tsx`, and the desktop rail enters its entity mode too:
-  it reads the param with `useSearchParams` (hence the `Suspense` around it in
-  `MainSiteDesktopShell`) and only switches when the viewer's grant list actually holds that
-  entity. The param is carried from link to link by
-  `hooks/useActingEntity.tsx`: `ActingEntityProvider` wraps the official
-  timeline and every page rendered as the entity, and `useActingHref()` — used by `FeedItemCard`,
-  `CommentItem`, `QuotedFeed`, `ActivityEntryCard`, `ReactorsListModal`, and
-  `FollowListModal`, `EntityChildrenCard`, `EntityProfileHeader`, `EntitySections` — appends it
-  through `lib/access.ts#withActingEntity`, which only touches `/feeds/`, `/profile/`, and the five
-  entity profile paths (`supportsActingEntity`) and passes every other link through untouched. Add
-  `useActingHref` to any new component that links to either inside a feed card.
-  The timeline is `FeedTimeline`'s entity twin: the same `CreateFeedForms` composer above the same
-  `FeedItemCard` list, fed by the very same `feeds/list`/`loadMoreFeeds` the home feed uses (posts
-  and quote reposts only), with no news/suggested/quick-menu inserts. The entity's
-  own posts live on its profile, via `listEntityActivity`. Posting as
-  the entity is what `CreateFeedForms`' `authorEntity` prop does — it sends `feeds/create`'s
-  `author_entity_type`/`author_entity_id` pair and swaps the composer's own avatar and name for the
-  entity's. That avatar is deliberately a **plain** circle (logo, `LogoHmi` fallback, no
-  `ring-2 ring-primary` and no check badge, so not `FeedAuthorAvatar`): the ring and badge mark a
-  published feed as official, and a compose box isn't one yet. Its placeholder is likewise the flat
-  "Bagikan sesuatu..." rather than the personal composer's "Apa yang ingin kamu bagikan, {firstName}?"
-  — an entity has no first name, and repeating its full name back at it reads oddly. Omit the prop
-  and the composer stays personal, exactly as on `/`.
-  `OfficialTimeline` passes that same `ComposerAuthorEntity` down to every `FeedItemCard` as its own
-  `authorEntity` prop, which is what makes **every** interaction on this page the entity's rather
-  than the administrator's: `FeedItemCard` forwards it into `useReaction`, `createFeedComment`,
-  `repostFeed`/`unrepostFeed`, the quote-repost composer, and each `CommentItem` (which forwards it
-  again to its own replies and nested reactions). The comment/reply boxes also swap their avatar and
-  name for the entity's. Two consequences worth knowing: ownership of a feed's edit/delete menu is
-  `isOwnPersonalFeed || isOwnEntityFeed` — a grant holder may edit or delete **any** feed written as
-  the entity they hold, including one a predecessor posted, since the feed belongs to the entity and
-  not to whoever pressed post; and the same pair disables repost, so an entity can't amplify its own
-  post any more than a person can.`feeds/list` carries no per-entity repost state, so an
-  entity's repost button starts unlit on every load.
-  Omitting `authorEntity` anywhere leaves that surface personal, which is exactly what `/`,
-  `/profile/[username]`, and `/feeds/[feed_id]` do.
+- `/` is the one home route for both identities. `app/(www)/www/(gated)/(home)/page.tsx`
+  reads `selectedActingEntityRef`: without a valid cookie it renders `FeedPage`; with an exact
+  accepted entity grant it loads the active entity through `loadOfficialAccountEntity` and renders
+  `OfficialAccountPage` with `OfficialTimeline`. A missing, invalid, or revoked cookie falls back
+  to user mode. `Super Admin` alone has no acting grant. An inactive selected entity 404s rather
+  than posting as it. `OfficialTimeline` uses the same feed list as personal home, with an entity
+  composer and `authorEntity` on every feed card; the personal home retains its own inserts.
+  The desktop header and rail read the validated selection from `HeaderAdminAccessContext`. The
+  rail shows Timeline (`/`), Event (`/events/manage`), and the entity profile in entity mode.
+  `BottomNav` swaps to `OfficialBottomNav` across the main site, including Settings. Mode User
+  clears the cookie and opens `/`; account switching in the desktop header or Settings writes
+  the cookie before navigating to `/`. `OfficialAccountPage` uses `OfficialGreetingBar` and the
+  official mobile tab bar. No `/official/{level}/[id]` timeline routes remain.
+  `/feeds/[feed_id]`, `/profile/[username]`, `/search`, and the entity profile routes resolve the
+  same cookie through `lib/acting-entity.ts#resolveActingEntity`. Their feed interactions pass
+  `authorEntity`, and entity mode suppresses personal follow, chat, edit, suggestions, and
+  completion controls where applicable. Entity mode only offers edit/delete on entity-authored
+  feeds and hides personal comment delete. `ActingEntityProvider` supplies the resolved entity
+  to feed/profile controls; existing `useActingHref()` calls are pass-throughs because links do
+  not carry identity. Old `?as=` bookmarks redirect to clean URLs without changing the mode.
+  Feed and reaction Server Actions verify that the supplied author matches the validated cookie
+  and current grant. The Go backend must independently enforce the grant on mutations.
 - `components/membership/*` — `MembershipCard.tsx` (the ATM-card-style visual: gradient
   banner, formatted `member_card` number, cardholder name) and `MembershipInfoCard.tsx`
   (Badko/Cabang/Komisariat + an Aktif/Tidak Aktif `Label` pill — green/gray, with a Tabler
@@ -2118,7 +2069,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `Kelola` section label above them — the card headers already name each entity, and a
   heading over self-labelling cards was one label too many. The two rows are `Dashboard`
   (the cross-subdomain `adminEntityHref` link, a plain `<a target="_blank">` since it's a
-  different origin) and `Official Account` (an in-app `<Link>` to `officialEntityHref`).
+  different origin) and `Official Account` (a `SwitchAccountButton` that selects the entity
+  cookie and opens `/`).
   Both rows and the card header name the entity through the page's own local
   `formatEntityName` — `{ADMIN_ENTITY_LABEL} {entity_name}` ("Cabang Depok"), except an
   **organization, which is named outright** since "Organisasi Pengurus Besar HMI" says the
@@ -2572,11 +2524,14 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   also delegates to. Every action in this feature is the shared `Button` with no visual overrides and
   never `size="lg"`; `EventLinkButton` wraps it for navigation, since `Button` only renders a
   `<button>`. The one exception is the gallery's image tiles, which open the preview overlay.
-- `/official/{level}/[id]/events` plus `/create`, `/[event_id]`, and `/[event_id]/edit` (20 thin
-  route files over `lib/official-event-pages.tsx`, reachable from the rail and `OfficialBottomNav`)
-  manage an entity's events as `OfficialEventsPage`, `OfficialEventDetailPage`, and
-  `OfficialEventFormPage`. They use the same `holdsGrantAtEntity` gate as the official timeline,
-  and a detail or edit URL 404s for an event belonging to another entity. `OfficialPageShell` wraps
+- `/events/manage` plus `/create`, `/[event_id]`, and `/[event_id]/edit` (four route files over
+  `lib/official-event-pages.tsx`, reachable from the rail and `OfficialBottomNav`)
+  manage the selected entity's events as `OfficialEventsPage`, `OfficialEventDetailPage`, and
+  `OfficialEventFormPage`. Every route requires the validated acting-account cookie; user mode
+  returns 404. A detail or edit URL also 404s for an event belonging to another entity.
+  `createEvent`, `updateEvent`, and `deleteEvent` Server Actions require the same selected entity;
+  update/delete read the event first to ensure it belongs to that entity.
+  `OfficialPageShell` wraps
   them; `compactGreeting` drops the tall band that only the timeline's floating composer needs. The
   form validates per field with `noValidate`, focusing the first invalid input, and confirms before
   discarding changes. A new start time pushes an empty or earlier end time forward two hours. Edit

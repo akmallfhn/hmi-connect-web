@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function BranchOfficialEventEdit({
+export default async function EditManagedEvent({
   params,
 }: {
-  params: Promise<{ branch_id: string; event_id: string }>;
+  params: Promise<{ event_id: string }>;
 }) {
-  const { branch_id, event_id } = await params;
-  return renderOfficialEventEdit("branch", branch_id, event_id);
+  const { event_id } = await params;
+  return renderOfficialEventEdit(event_id);
 }

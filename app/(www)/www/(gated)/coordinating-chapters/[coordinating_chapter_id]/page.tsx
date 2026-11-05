@@ -61,11 +61,7 @@ export default async function CoordinatingChapterProfile({
   const coordinatingChapter = resolved.entity;
   const coordinating_chapter_id = coordinatingChapter.id;
 
-  const actingEntity = await resolveActingEntity(
-    viewer,
-
-    query?.as,
-  );
+  const actingEntity = await resolveActingEntity(viewer);
 
   const [chapters, feeds] = await Promise.all([
     listAllChaptersAdmin({

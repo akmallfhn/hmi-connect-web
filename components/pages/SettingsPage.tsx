@@ -4,7 +4,7 @@ import {
   ADMIN_ENTITY_LABEL,
   ADMIN_ENTITY_ORDER,
   adminEntityHref,
-  officialEntityHref,
+  type ActingEntityRef,
 } from "@/lib/access";
 import { logoutUser } from "@/lib/actions";
 import type { AccessEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
@@ -31,6 +31,7 @@ import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
 import { useHeaderAdminAccess } from "../navigations/HeaderAdminAccessContext";
 import LogoHmi from "../svg/LogoHmi";
+import SwitchAccountButton from "../official/SwitchAccountButton";
 
 interface SettingsPageProps {
   fullName?: string;
@@ -63,6 +64,7 @@ interface SettingsMenuItem {
   icon: ComponentType<{ className?: string }>;
   external?: boolean;
   showChevron?: boolean;
+  account?: ActingEntityRef;
 }
 
 export default function SettingsPage({
@@ -107,7 +109,8 @@ export default function SettingsPage({
             {
               label: "Official Account",
               description: `Buat postingan atas nama ${formatEntityName(grant.entity_type, grant.entity_name)}.`,
-              href: officialEntityHref(grant.entity_type, grant.entity_id),
+              href: "/",
+              account: { entityType: grant.entity_type, entityId: grant.entity_id },
               icon: BadgeCheck,
             },
           ] satisfies SettingsMenuItem[],
@@ -326,6 +329,18 @@ function MenuRow({
       )}
     </>
   );
+
+  if (item.account && item.href) {
+    return (
+      <SwitchAccountButton
+        account={item.account}
+        href={item.href}
+        className={`w-full cursor-pointer text-left ${rowClasses}`}
+      >
+        {body}
+      </SwitchAccountButton>
+    );
+  }
 
   if (!item.href) {
     return (
