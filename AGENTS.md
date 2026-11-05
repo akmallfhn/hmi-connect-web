@@ -921,36 +921,46 @@ iconSm`.
   `access_grants` replaced those booleans — granting now names an entity, so it lives on each
   entity's own Pengaturan → Akses tab instead (see `EntityAccessTab` below).
 - `components/navigations/*` — site chrome shown on every page. **The main site's desktop
-  navigation is a fixed left rail, not a top navbar.** `MainSiteDesktopSidebar.tsx` is that rail
+  navigation is a left rail plus a separate white header above the content column.**
+  `MainSiteDesktopSidebar.tsx` is that rail
   (`sticky top-0 h-dvh w-64 self-start`, `hidden lg:flex` — an in-flow flex column of the shell,
   not a `fixed` overlay, so the verification banner above it can push it down). Its background
   is `bg-surface dark:bg-[#141414]`: white in light mode and `#141414` in dark mode,
   slightly brighter than the dark page surface. It contains the horizontal
-  wordmark linking home, then
-  ten nav links (Beranda `/`, Explore `/search`, Pesan `/chats`, Notifikasi `/notifications`,
-  Artikel `/articles`, Event `/events`, Training Center `/trainings` (matching every `/trainings/*` route), Al-Quran
-  `/quran`, Jadwal Sholat `/prayer-schedules`, E-KTA `/membership`), then a Profile row, a
-  secondary-variant
-  "Posting" button, and a bottom-anchored "Lainnya" `Dropdown` (Pedoman Organisasi
-  `/organizational-documents`, Pengaturan, plus Keluar or Masuk).
+  wordmark linking home, then the main navigation links (Beranda `/`, Explore `/search`,
+  Artikel `/articles`, Pedoman Organisasi `/organizational-documents`, Training Center
+  `/trainings` (matching every `/trainings/*` route), Al-Quran `/quran`, Jadwal Sholat
+  `/prayer-schedules`, E-KTA `/membership`), a secondary-variant "Posting" button, and a
+  bottom-anchored "Lainnya" `Dropdown` (Pengaturan, plus Masuk when logged out).
   News is reached through the News tab on `/articles`, not a separate nav link.
   `MobileQuickMenu`'s first tile also opens `/articles`. The former `/news` and
   `/news/[category_slug]` routes were removed; the News tab is the single unfiltered list.
-  Labels are Indonesian like the rest of the app, except the long-standing Explore, Al-Quran, E-KTA,
-  and Profile; "Posting" matches `BottomNav`'s own label for the same action, since one
-  action named two ways in two navs reads as two features. They are set in
+  Labels are Indonesian like the rest of the app, except the long-standing Explore, Al-Quran, and
+  E-KTA; "Posting" matches `BottomNav`'s own label for the same action, since one action named two
+  ways in two navs reads as two features. They are set in
   `font-stack-sans-headline`. Each item carries its own `matches(pathname)` predicate rather than a
-  shared `startsWith` rule, since Home must match exactly while Chat/Quran/Articles must also
-  match their detail routes — Articles deliberately also covers `/articles/create`, which has no
+  shared `startsWith` rule, since Home must match exactly while Quran/Articles must also match
+  their detail routes — Articles deliberately also covers `/articles/create`, which has no
   nav entry of its own. The active item is `bg-primary-soft text-primary` with a heavier Tabler
-  `stroke`. Chat and Notifications each carry their own unread badge, from
-  `hooks/useUnreadChatCount.ts` and `hooks/useNotificationsBell.ts` — the Notifications entry is a
-  plain `Link`, **not** a dropdown, so `useNotificationsBell`'s `handleRead`/`handleMarkAllRead`
-  half now goes unused by both of its callers and `components/notifications/
-NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notifications` page is the
-  only place a notification list renders now. The Profile row shows the caller's real `Avatar` when
-  they have one (falling back to `IconUserCircle`) plus `ProfileBadges`, and points at
-  `/auth/login` when logged out. **Posting only works for an account that can actually post** —
+  `stroke`. Desktop Chat, Notifications, and Profile controls now live in
+  `MainSiteDesktopHeader.tsx`, a desktop-only white surface (`bg-surface dark:bg-[#141414]`)
+  above the content column, with a `PageMargin` matching the page content width. In personal mode,
+  Chat uses Tabler's `IconBrandHipchat` and carries its own unread badge alongside Notifications;
+  both controls are hidden while an official account is active. The profile control
+  shows the personal avatar and first name in personal mode, and replaces them with the matching
+  accepted grant's rounded-square logo/name while an official account is open or active via `?as=`.
+  Grant images preserve their intrinsic proportions without inner padding; fallback KOHATI, BPL,
+  and HMI emblems retain padding. Chat and Notifications use unread badges from
+  `hooks/useUnreadChatCount.ts` and
+  `hooks/useNotificationsBell.ts`; both are links, and the full `/notifications` page is the only
+  place a notification list renders. In official mode, the Profile dropdown's first row links to
+  the active entity profile with `?as=`, then "Beralih Akun" lists the personal account first
+  (removing `?as=`, or returning to `/` from an official-account page), followed by other accepted
+  grants sorted by entity level and linked via `officialEntityHref`. In personal mode its first
+  identity row links to the personal profile, followed by accepted grants under "Beralih Akun".
+  Both modes retain Keluar. Logout calls `logoutUser` and hard-navigates to `/auth/login`. The
+  Lainnya dropdown retains Pengaturan and the logged-out Masuk link.
+  **Posting only works for an account that can actually post** —
   signed in, `status !== "pending"`, and `verification_status === "verified"`, the same bar
   reactions and comments sit behind. A caller who fails that bar still gets a **live** button, not a
   `disabled` one: clicking it toasts the missing step (activation or verification), with a
@@ -969,7 +979,9 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   the same reason `SettingsPage`'s own row does.
   `MainSiteDesktopShell.tsx` is the thin client wrapper `app/(www)/www/layout.tsx` puts around
   every `(www)` route: a `flex min-h-dvh flex-col` shell holding `VerificationBanner` above a
-  `flex flex-1` row of the rail plus a `flex min-w-0 flex-1 flex-col` content column. On the
+  `flex flex-1` row of the rail plus a `flex min-w-0 flex-1 flex-col` content column. The
+  desktop header is the first row in that content column, above route content; the shell wraps
+  both header and rail in `Suspense` boundaries because each reads `useSearchParams`. On the
   distraction-free routes its own `hidesDesktopSidebar` lists (`/activation`, `/verification`,
   `/articles/create`, the article edit route, `/auth/*`, `/reset-password/*`) it renders `children`
   bare — no rail, and no banner either. The rail sits **in flow** rather than `fixed`, and the
@@ -978,9 +990,10 @@ NotificationsDropdownPanel.tsx` has **no caller at all**; the full `/notificatio
   remounting per page, and means public routes (`/profile/[username]`, `/feeds/[feed_id]`,
   `/trainings`) get it too. It reads identity straight off the layout's own `getSession()`, so no
   page passes nav props down.
-  **`Header.tsx` no longer renders any desktop row.** Its logo, centered search form, chat link,
-  bell dropdown, and avatar dropdown all moved into the rail above; the two verification banners
-  moved out too, up to `MainSiteDesktopShell` (see above). What's left is a `sticky top-0` stack of
+  **`Header.tsx` no longer renders any desktop row.** Desktop chrome is split between the rail
+  (wordmark and primary navigation) and `MainSiteDesktopHeader` (chat, notifications, and profile);
+  the two verification banners moved out too, up to `MainSiteDesktopShell` (see above). What's
+  left is a `sticky top-0` stack of
   optional strips: the `lg:`-only `desktopFilterBar` and the `lg:hidden`
   `mobileBackTitle`/`mobileMenu` row. The
   `<header>` itself now paints no border or background of its own — with no desktop row left to
@@ -1751,7 +1764,7 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   `MainSiteDesktopSidebar`'s Profile row so one person is marked identically wherever they appear: the blue
   `VerifiedBadge` when `verification_status` is `"verified"`, then the KAHMI emblem to its right when
   `is_alumni` is true. **One badge, one tooltip** — each carries its own `lg:`-only
-  `role="tooltip"` pill (`bg-black/70` + `backdrop-blur-sm`) repeating its own icon beside its own
+  `role="tooltip"` pill below its icon (`bg-black/70` + `backdrop-blur-sm`) repeating its own icon beside its own
   label (`Terverifikasi`, `Alumni HMI`), never a shared panel listing both. `lg:`-only because a tooltip says nothing on
   touch. `ProfileHeader` keeps its own `TriangleAlert` for the unverified case as a **sibling** of
   `ProfileBadges`, not an else-branch, so an unverified alumni still shows both. Its avatar carries
@@ -1990,8 +2003,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   is simply ignored and the page renders personally. When it resolves, the feed detail passes it as
   `FeedItemCard`'s `authorEntity`, so like/comment/repost all go out as the entity; the profile is
   read-only — `isOwnProfile` is forced `false` even on your own profile, and `ProfileHeader`'s
-  `readOnly` drops follow, chat, edit, share, and the settings gear, while `SuggestedConnectionsCard`
-  and the completion card disappear. The entity profile pages drop `SuggestedConnectionsCard` the same
+  `readOnly` drops follow, chat, edit, share, and the settings gear, while `ExploreSearchBar`,
+  `SuggestedConnectionsCard`, and the completion card disappear. The entity profile pages drop
+  `SuggestedConnectionsCard` the same
   way, and the rail's Profile item, `OfficialBottomNav`'s Profil HMI tab, and the official greeting
   all link to the entity's profile **with** `?as=`, so opening it keeps entity mode. Edit/delete
   follow the mode too: acting as an entity, `FeedItemCard` only offers them on feeds written as that

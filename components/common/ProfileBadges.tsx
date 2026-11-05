@@ -59,7 +59,7 @@ function BadgeWithTooltip({
       {badge}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg bg-media-backdrop/70 px-2.5 py-1.5 opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 lg:flex"
+        className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg bg-media-backdrop/70 px-2.5 py-1.5 opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 lg:flex"
       >
         {tooltipIcon}
         <span className="text-[13px] font-medium text-on-dark">{label}</span>

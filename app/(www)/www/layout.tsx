@@ -66,6 +66,7 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
       <ActivityQuerySync key={user?.id ?? "anonymous"} userId={user?.id} />
       <MainSiteDesktopShell
         userId={user?.id}
+        fullName={user?.full_name}
         avatar={user?.avatar}
         username={user?.username}
         userStatus={user?.status}

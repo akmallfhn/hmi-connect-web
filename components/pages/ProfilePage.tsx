@@ -313,7 +313,7 @@ export default function ProfilePage({
             </div>
 
             <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">
-              <ExploreSearchBar />
+              {!actingEntity && <ExploreSearchBar />}
               {profileCompletion && (
                 <ProfileCompletionCard
                   completion={profileCompletion}

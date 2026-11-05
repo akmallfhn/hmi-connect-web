@@ -4,11 +4,13 @@ import { usePathname } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import MainSiteDesktopSidebar from "./MainSiteDesktopSidebar";
+import MainSiteDesktopHeader from "./MainSiteDesktopHeader";
 import VerificationBanner from "./VerificationBanner";
 
 interface MainSiteDesktopShellProps {
   children: ReactNode;
   userId?: string;
+  fullName?: string;
   avatar?: string;
   username?: string;
   userStatus?: UserStatusEnum;
@@ -34,6 +36,7 @@ function hidesDesktopSidebar(pathname: string) {
 export default function MainSiteDesktopShell({
   children,
   userId,
+  fullName,
   avatar,
   username,
   userStatus,
@@ -57,14 +60,23 @@ export default function MainSiteDesktopShell({
         <Suspense fallback={null}>
           <MainSiteDesktopSidebar
             userId={userId}
-            avatar={avatar}
-            username={username}
             userStatus={userStatus}
             verificationStatus={verificationStatus}
-            isAlumni={isAlumni}
           />
         </Suspense>
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Suspense fallback={null}>
+            <MainSiteDesktopHeader
+              userId={userId}
+              fullName={fullName}
+              avatar={avatar}
+              username={username}
+              verificationStatus={verificationStatus}
+              isAlumni={isAlumni}
+            />
+          </Suspense>
+          {children}
+        </div>
       </div>
     </div>
   );

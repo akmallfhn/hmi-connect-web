@@ -3,17 +3,14 @@
 import {
   IconArrowBackUp,
   IconArticle,
-  IconBell,
   IconBook2,
-  IconBrandHipchat,
   IconChevronDown,
   IconClockHour4,
   IconCalendarEvent,
   IconCreditCard,
   IconDots,
-  IconListSearch,
   IconLogin,
-  IconLogout,
+  IconListSearch,
   IconMosque,
   IconPlus,
   IconSchool,
@@ -24,7 +21,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 import {
   ACTING_ENTITY_PARAM,
@@ -35,15 +31,10 @@ import {
   supportsActingEntity,
   withActingEntity,
 } from "@/lib/access";
-import { logoutUser } from "@/lib/actions";
 import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
-import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
-import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
-import Avatar from "../common/Avatar";
 import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
-import ProfileBadges from "../common/ProfileBadges";
 import Button from "../buttons/Button";
 import LogoHmi from "../svg/LogoHmi";
 import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
@@ -51,11 +42,8 @@ import { useHeaderAdminAccess } from "./HeaderAdminAccessContext";
 
 interface MainSiteDesktopSidebarProps {
   userId?: string;
-  avatar?: string;
-  username?: string;
   userStatus?: UserStatusEnum;
   verificationStatus?: VerificationStatusEnum;
-  isAlumni?: boolean;
 }
 
 const NAV_ITEMS = [
@@ -70,19 +58,6 @@ const NAV_ITEMS = [
     href: "/search",
     icon: IconListSearch,
     matches: (pathname: string) => pathname === "/search",
-  },
-  {
-    label: "Pesan",
-    href: "/chats",
-    icon: IconBrandHipchat,
-    matches: (pathname: string) =>
-      pathname === "/chats" || pathname.startsWith("/chats/"),
-  },
-  {
-    label: "Notifikasi",
-    href: "/notifications",
-    icon: IconBell,
-    matches: (pathname: string) => pathname === "/notifications",
   },
   {
     label: "Artikel",
@@ -172,17 +147,11 @@ function officialNavItems(
 
 export default function MainSiteDesktopSidebar({
   userId,
-  avatar,
-  username,
   userStatus,
   verificationStatus,
-  isAlumni,
 }: MainSiteDesktopSidebarProps) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
-  const unreadChatCount = useUnreadChatCount(userId);
-  const { unreadCount } = useNotificationsBell(userId);
-  const [loggingOut, setLoggingOut] = useState(false);
   const searchParams = useSearchParams();
   const adminAccess = useHeaderAdminAccess();
   // Feed detail and profile pages opened with ?as= are viewed as the entity, so the rail follows.
@@ -214,11 +183,6 @@ export default function MainSiteDesktopSidebar({
       : verificationStatus === "pending"
         ? "Verifikasi akunmu masih ditinjau admin."
         : "Verifikasi akunmu dulu untuk bisa membuat postingan.";
-  const profileHref = username ? `/profile/${username}` : "/auth/login";
-  const profileIsActive = username
-    ? pathname === profileHref || pathname.startsWith(`${profileHref}/`)
-    : false;
-
   // Posting stays clickable when it can't run — a disabled button never says why.
   function handleBlockedPost() {
     if (!userId) {
@@ -242,17 +206,6 @@ export default function MainSiteDesktopSidebar({
           }
         : undefined,
     );
-  }
-
-  async function handleLogout() {
-    setLoggingOut(true);
-    try {
-      await logoutUser();
-    } catch (error) {
-      console.error("[MainSiteDesktopSidebar] logoutUser threw:", error);
-    } finally {
-      window.location.href = "/auth/login";
-    }
   }
 
   return (
@@ -308,16 +261,6 @@ export default function MainSiteDesktopSidebar({
               >
                 <span className="relative flex size-5 shrink-0 items-center justify-center">
                   <Icon className="size-5" stroke={active ? 2.4 : 2} />
-                  {label === "Chat" && unreadChatCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
-                      {unreadChatCount > 9 ? "9+" : unreadChatCount}
-                    </span>
-                  )}
-                  {label === "Notifications" && unreadCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[9px] font-bold leading-4 text-badge-foreground">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
                 </span>
                 {label}
               </Link>
@@ -325,38 +268,6 @@ export default function MainSiteDesktopSidebar({
           })}
         </nav>
 
-        {/* The official page has its own composer, and the personal profile isn't who's speaking there. */}
-        {!official && (
-          <Link
-            href={profileHref}
-            className={[
-              "mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-stack-sans-headline font-medium transition",
-              profileIsActive
-                ? "bg-primary-soft text-primary-foreground"
-                : "text-foreground hover:bg-surface-muted hover:text-heading",
-            ].join(" ")}
-          >
-            {userId && avatar ? (
-              <Avatar
-                src={avatar}
-                name={username ?? "Profil"}
-                size={20}
-                className="border border-current"
-              />
-            ) : (
-              <IconUserCircle
-                className="size-5 shrink-0"
-                stroke={profileIsActive ? 2.4 : 2}
-              />
-            )}
-            Profile
-            <ProfileBadges
-              isVerified={verificationStatus === "verified"}
-              isAlumni={Boolean(isAlumni)}
-              size={14}
-            />
-          </Link>
-        )}
       </div>
 
       <div className="shrink-0 pt-3">
@@ -432,17 +343,7 @@ export default function MainSiteDesktopSidebar({
                   <IconSettings className="size-4 text-muted-foreground" />
                   Pengaturan
                 </Link>
-                {userId ? (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-destructive-foreground transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <IconLogout className="size-4" />
-                    {loggingOut ? "Keluar..." : "Keluar"}
-                  </button>
-                ) : (
+                {!userId && (
                   <Link
                     href="/auth/login"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-heading transition hover:bg-surface-muted"
