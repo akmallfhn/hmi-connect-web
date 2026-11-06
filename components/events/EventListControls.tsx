@@ -16,9 +16,11 @@ function buildHref(basePath: string, search: string) {
 export default function EventListControls({
   basePath,
   initialSearch,
+  noun = "event",
 }: {
   basePath: string;
   initialSearch: string;
+  noun?: string;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState(initialSearch);
@@ -38,10 +40,10 @@ export default function EventListControls({
     <div className="flex justify-start">
       <form onSubmit={handleSubmit} className="w-full sm:max-w-sm">
         <Input
-          inputId="event-search"
+          inputId={`${noun}-search`}
           type="search"
-          aria-label="Cari judul event"
-          placeholder="Cari judul event"
+          aria-label={`Cari judul ${noun}`}
+          placeholder={`Cari judul ${noun}`}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           icon={<IconSearch className="size-4 text-subtle-foreground" stroke={2} />}

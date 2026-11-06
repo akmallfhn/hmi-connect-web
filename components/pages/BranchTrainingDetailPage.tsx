@@ -171,7 +171,7 @@ export default function BranchTrainingDetailPage({
               initialSearch={initialEvaluationSearch}
               pageSize={pageSize}
               canManage={canManageEvaluations}
-              isLocked={training.is_evaluation_locked}
+              isLocked={Boolean(training.is_evaluation_locked)}
             />
           ) : (
             <EmptyState

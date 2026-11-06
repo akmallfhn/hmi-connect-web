@@ -128,6 +128,9 @@ const REQUIRED_HISTORY_LEVELS: Record<
   LK1: [],
   LK2: ["LK1"],
   LK3: ["LK1", "LK2"],
+  SC: [],
+  LKK: [],
+  LKSG: [],
 };
 
 const DOCUMENT_ALLOWED_TYPES = [

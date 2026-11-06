@@ -1,6 +1,6 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import type {
-  AccessEntityTypeEnum,
+  OfficialEntityTypeEnum,
   ReactionTargetTypeEnum,
   ReactionTypeEnum,
 } from "@/lib/types";
@@ -14,7 +14,7 @@ export type ReactionState = {
 };
 
 type ReactionActor = {
-  type: AccessEntityTypeEnum;
+  type: OfficialEntityTypeEnum;
   id: string;
 };
 

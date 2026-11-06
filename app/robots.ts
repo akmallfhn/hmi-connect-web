@@ -21,7 +21,7 @@ export default function robots(): MetadataRoute.Robots {
         "/reset-password/",
         "/auth/forget-password",
         "/articles/create",
-        "/trainings/create",
+        "/trainings/manage",
         "/pendataan-komisariat",
         "/*/edit",
       ],

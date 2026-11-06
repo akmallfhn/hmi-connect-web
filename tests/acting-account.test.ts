@@ -42,3 +42,16 @@ test("revocation, logout, and Super Admin without a grant fall back to user mode
     null,
   );
 });
+
+test("a special body needs its own accepted grant to become the acting account", () => {
+  const bodyUser: SessionUser = {
+    ...user,
+    grants: [{ id: "body-grant", entity_type: "special_body", entity_id: "body-1", capability: "manage" }],
+  };
+  assert.deepEqual(resolveSelectedActingAccount("user-1|special_body:body-1", bodyUser), {
+    entityType: "special_body",
+    entityId: "body-1",
+  });
+  assert.equal(resolveSelectedActingAccount("user-1|special_body:body-2", bodyUser), null);
+  assert.equal(resolveSelectedActingAccount("user-1|branch:body-1", bodyUser), null);
+});

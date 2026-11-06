@@ -14,7 +14,7 @@ export default function OfficialPageShell({
   compactGreeting?: boolean;
   children: ReactNode;
 }) {
-  const profileHref = entityProfileHref(entity.type, entity.id);
+  const profileHref = entity.profileHref ?? (entity.type === "special_body" ? "/settings" : entityProfileHref(entity.type, entity.id));
 
   return (
     <ActingEntityProvider entity={entity}>
@@ -26,7 +26,7 @@ export default function OfficialPageShell({
           compact={compactGreeting}
         />
         {children}
-        <OfficialBottomNav entityType={entity.type} entityId={entity.id} />
+        <OfficialBottomNav entityType={entity.type} entityId={entity.id} profileHref={profileHref} />
       </div>
     </ActingEntityProvider>
   );

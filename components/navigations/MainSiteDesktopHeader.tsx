@@ -16,7 +16,7 @@ import {
   ADMIN_ENTITY_LABEL,
   ADMIN_ENTITY_ORDER,
 } from "@/lib/access";
-import { entityProfileHref, formatEntityAuthorName } from "@/lib/feed-author";
+import { entityProfileHref, formatMentionEntityName } from "@/lib/feed-author";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { useNotificationsBell } from "@/hooks/useNotificationsBell";
 import type { VerificationStatusEnum } from "@/lib/types";
@@ -92,8 +92,8 @@ export default function MainSiteDesktopHeader({
   const requested = access?.activeEntity;
   const grants = [...(access?.grants ?? [])].sort(
     (a, b) =>
-      ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-      ADMIN_ENTITY_ORDER.indexOf(b.entity_type),
+      (a.entity_type === "special_body" ? 5 : ADMIN_ENTITY_ORDER.indexOf(a.entity_type)) -
+      (b.entity_type === "special_body" ? 5 : ADMIN_ENTITY_ORDER.indexOf(b.entity_type)),
   );
   const activeGrant = requested
     ? grants.find(
@@ -104,16 +104,16 @@ export default function MainSiteDesktopHeader({
     : undefined;
   const activeEntityName = activeGrant
     ? activeGrant.entity_name
-      ? formatEntityAuthorName(
+      ? formatMentionEntityName(
           activeGrant.entity_type,
           activeGrant.entity_name,
         )
-      : ADMIN_ENTITY_LABEL[activeGrant.entity_type]
+      : activeGrant.entity_type === "special_body" ? "Badan Khusus" : ADMIN_ENTITY_LABEL[activeGrant.entity_type]
     : null;
   const personalDisplayName =
     fullName?.trim().split(/\s+/)[0] || username || "Profil";
   const identityHref = activeGrant
-    ? entityProfileHref(activeGrant.entity_type, activeGrant.entity_id)
+    ? activeGrant.entity_type === "special_body" ? access?.activeProfileHref ?? "/settings" : entityProfileHref(activeGrant.entity_type, activeGrant.entity_id)
     : `/profile/${username}`;
 
   async function handleLogout() {
@@ -289,11 +289,11 @@ export default function MainSiteDesktopHeader({
                           <GrantLogo grant={grant} />
                           <span className="min-w-0 flex-1 truncate">
                             {grant.entity_name
-                              ? formatEntityAuthorName(
+                              ? formatMentionEntityName(
                                   grant.entity_type,
                                   grant.entity_name,
                                 )
-                              : ADMIN_ENTITY_LABEL[grant.entity_type]}
+                              : grant.entity_type === "special_body" ? "Badan Khusus" : ADMIN_ENTITY_LABEL[grant.entity_type]}
                           </span>
                           {current && (
                             <span className="size-2 shrink-0 rounded-full bg-primary" />

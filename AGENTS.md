@@ -390,7 +390,7 @@ backend exposes a listing behind `requireClientSecret`, each becomes its own
 `app/(sitemap)/{profiles,feeds}/sitemap.xml` plus one line in the index.
 `app/robots.ts` allows `/`, advertises only the index, and disallows the private surfaces (`/api/`,
 activation, verification, settings, chats, notifications, organizational documents, `/events/manage`, invitations, reset links,
-forget-password, the article composer and editors, `/trainings/create`).
+forget-password, the article composer and editors, `/trainings/manage`).
 
 ## Auth & session flow
 
@@ -1078,12 +1078,11 @@ iconSm`.
   Both entry points into composing — the rail's Posting dropdown and `BottomNav`'s Posting sheet —
   render the same `components/navigations/CreateOptionList.tsx`, which owns both choices and the
   navigation for each, so "what can I create" is answered in one file rather than once per nav.
-  Feed keeps the compose-intent mechanism below; Artikel and Event are plain `router.push`es to
-  `/articles/create` and `/trainings/create`. Each row is a flat single-color Tabler glyph
-  (`IconMessage2` for a feed, `IconArticle` for an article, `IconCalendarEvent` for an event) beside a label and a `truncate`d one-line description — the same
-  `size-4 text-[#5f6573]` treatment the "More" dropdown's own rows use, deliberately not a tinted
-  `primary-soft` circle, so the two menus hanging off the same rail read as one menu style. The
-  descriptions are kept short enough to survive that single line in a `w-60` panel. Picking Feed sets
+  Feed keeps the compose-intent mechanism below; Artikel uses a plain `router.push` to
+  `/articles/create`. Training creation is available from the selected Official Account's
+  `/trainings/manage` page. Each row is a flat single-color Tabler glyph beside its label
+  and one-line description, matching the adjacent More dropdown.
+    descriptions are kept short enough to survive that single line in a `w-60` panel. Picking Feed sets
   `sessionStorage[COMPOSE_INTENT_KEY]` (see
   `lib/constants.ts`) and dispatches a same-named `window` event, then navigates to `/`;
   `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
@@ -1778,8 +1777,7 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   below), same "hide the whole card if empty and not your own profile" rule.
   Training-history levels use the broader `TrainingHistoryLevelEnum` and the shared
   `lib/training-history.ts` labels/options: LK1/LK2/LK3 plus Senior Course (SC), Latihan Khusus
-  Kohati (LKK), and Latihan Kader Sensitif Gender (LKSG). Keep `TrainingStatusEnum` restricted to
-  LK1/LK2/LK3 because it models actual training-event levels, not profile history rows.
+  Kohati (LKK), and Latihan Kader Sensitif Gender (LKSG). `TrainingStatusEnum` also includes all six levels because the backend accepts SC, LKK, and LKSG as training-event levels.
   `WorkExperienceCard`'s fields (`company_name`, `position_title`, `start_year`, optional
   `end_year`, optional `description`) are `organization-experiences`' shape verbatim with
   `company_name` standing in for `organization_name`; `HonorAwardCard`'s four fields (`title`,
@@ -2113,7 +2111,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   heading over self-labelling cards was one label too many. The two rows are `Dashboard`
   (the cross-subdomain `adminEntityHref` link, a plain `<a target="_blank">` since it's a
   different origin) and `Official Account` (a `SwitchAccountButton` that selects the entity
-  cookie and opens `/`).
+  cookie and opens `/`). Special-body grants have only the Official Account row because there
+  is no matching entity dashboard route.
   Both rows and the card header name the entity through the page's own local
   `formatEntityName` — `{ADMIN_ENTITY_LABEL} {entity_name}` ("Cabang Depok"), except an
   **organization, which is named outright** since "Organisasi Pengurus Besar HMI" says the
@@ -3145,11 +3144,10 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `status: "active"` and rejects branch managers requesting another branch, while the handler's
   unscoped path keeps using the global people search for its other callers. Contact-person options
   opt into `SearchableSelect`'s avatar rendering, which falls back to a `UserRound` icon.
-  `trainings/create` no longer takes `contact_person_id` or `is_registration_open` — the caller always
-  becomes the contact person and registration starts open — so the sheet's create path follows up
-  with one `updateTraining` call only when the picked contact person or a closed registration differs.
-  It also sends `organizer_name` (the bare Cabang name): the backend stores that column as sent and
-  never derives it from the organizer pair, so omitting it leaves the catalog with no organizer line.
+  The backend now requires an organizer pair and resolves the organizer name from the entity.
+  `TrainingFormSheet` also omits the name input and lets the backend build the title. Its
+  single-user contact picker saves through `trainings/contacts/*`, and its poster saves as a
+  `cover` through `trainings/images/*` after the training row exists.
   `components/pages/BranchTrainingDetailPage.tsx` exposes Ringkasan, Materi, Peserta, and Penilaian tabs:
   Ringkasan uses a left column containing the desktop poster and contact-person details without a
   WhatsApp action; colored-icon execution metadata, a horizontal Total Sesi Materi/Total Peserta
@@ -3230,13 +3228,17 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   `components/common/PageBanner.tsx` — the shared banner wrapper `/trainings` and `/quran` both
   use, which owns only the size (600×200 below `lg`, 1200×200 from `lg`), rounding, and padding;
   each caller paints its own background and contents.
-  LK1/LK2/LK3 sit in an icon-only
+  LK1/LK2/LK3/SC/LKK/LKSG sit in an icon-only
   shared `Button` level dropdown beside the search input at every breakpoint; its red badge
   shows the active-filter count (capped at `9+`) and pokes just past the button's top-right
   corner, which is why that row has no `overflow` clipping. There are deliberately no
   category tabs (the old Terdekat/Pendaftaran/Berlangsung shortcuts are gone). There is
-  no agenda-total, divider, or create-event control in this catalog. A no-results catalog
-  state uses `EmptyStateIllustration`, not a calendar icon.
+  no agenda-total, divider, or create-event control in this catalog. Its banner opens
+  `TrainingCreateGuide` from Cara Membuat Training. Its modal follows the event upload
+  guide's numbered-card layout, then shows the same Akmal/Anida contact cards through
+  `OfficialAccountGuideContacts`. The public route resolves those users by exact username
+  through the client-secret user detail read; signed-out visitors see a login link in
+  place of Chat. A no-results catalog state uses `EmptyStateIllustration`, not a calendar icon.
   `PublicTrainingCard` uses a border without a shadow,
   keeps a dark gradient over the poster, and places gray date/level labels together
   inside the poster. It shows the organizer beside a round HMI logo fallback because
@@ -3245,21 +3247,29 @@ MasterSidebar.tsx` is a thin wrapper: `storageKey: "master_sidebar_collapsed"`, 
   title, organizer, and registration label owns the minimum height. Every button action in `PublicTrainingCard` must use the shared
   `components/buttons/Button.tsx` primitive: its footer has a plain detail link plus
   reminder, repost, and share actions.
-  `/trainings/create` (`components/pages/TrainingCreatePage.tsx`) is where **any verified member**
-  creates an event — `trainings/create` is open to every authenticated user on the backend, which
-  makes the caller the contact person and opens registration. It is reached from the catalog's
-  "Buat Event" link (shown to everyone, since the route owns its own login/`/activation`/
-  `/verification` bounces and renders `PageState` for a verification still under review) and from
-  `CreateOptionList`'s Event row. The organizer pair is **optional** on the backend now, so
-  `TrainingListEntry.organizer_type`/`organizer_id` are nullable. The form no longer offers the
-  caller's grants as organizers: it is one free-text Nama Penyelenggara field sent as `organizer_name`
-  with no pair, which every organizer display then shows unprefixed (`lib/organizer.ts`). The same
-  page is the editor at `/trainings/{training_id}/edit` (a `training` prop seeds it and routes the
-  submit to `updateTraining`). That route renders `PageState` `forbidden` unless the caller is the
-  contact person or passes `canManageEntity` on the organizer pair, mirroring `trainings/update`;
-  an event that still carries a pair shows its organizer disabled and never sends `organizer_name`,
-  since a blank value would clear it under the pair. The detail page's Edit/Hapus menu is shown to
-  the contact person only (and never to a logged-out viewer, whose id is also `undefined`). Poster upload
+  `/trainings/manage` follows the selected Official Account, like `/events/manage`. It lists
+  training with the organizer pair fixed to that entity; create and edit live at
+  `/trainings/manage/create` and `/trainings/manage/{training_id}`. The old personal create/edit
+  routes and posting option are gone. `OfficialTrainingRoutes` rechecks the selected account's
+  exact grant and verifies the training's organizer pair before editing. `lib/training-levels.ts`
+  mirrors the backend's level policy: Komisariat LK1, Korkom LK1/LK2, Cabang LK2, Badko and
+  PB HMI LK3, BPL SC, and branch-level KOHATI LKK/LKSG. Other special bodies cannot create.
+  `OfficialTrainingFormPage` uses the same section, sidebar, field validation, map preview,
+  contact modal, and discard confirmation pattern as the official event form for both create
+  and edit. The backend generates the title from level, organizer, and start year, so the form has
+  no name input. LK1/LK2/LK3 append Basic/Intermediate/Advanced Training; SC/LKK/LKSG have no
+  English suffix. The backend returns this title in `name` for catalog, manage, and detail views.
+  The form keeps the organizer fixed, disables the level select when only one option exists,
+  accepts an optional PDF proposal uploaded as a public `document` asset (10 MB maximum) and supports an
+  optional `cover` plus up to 20 `gallery` images in `activity_images`; the create/update payload
+  has no `image_media_id`. The detail displays the proposal and gallery, resolves the organizer
+  logo from `organizer_image_url` with HMI/BPL/KOHATI fallbacks, and offers Chat for a contact
+  with `user_id` when the viewer is a signed-in member in user mode. It reuses the event Google
+  Maps card and photo overlay, including a button on the poster.
+  It allows deleting the selected entity's training. Contacts use
+  `trainings/contacts/*` after the training is saved; partial attachment failure opens edit so
+  successfully saved data can be reviewed and retried. The public detail has no edit/delete menu.
+  Poster upload
   lives in `lib/training-poster.ts`, shared with `TrainingFormSheet`, and uses the shared media
   presign flow after `event_banner` optimization. The `/trainings`
   prefix is allowlisted in `next.config.mts`'s no-session redirect so list/detail stay public;

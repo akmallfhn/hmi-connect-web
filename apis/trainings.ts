@@ -14,17 +14,18 @@ export type TrainingListEntry = {
   id: string;
   name: string;
   level: TrainingStatusEnum;
-  // The organizer pair is optional; organizer_name is free text stored as sent, never derived from it.
-  organizer_type: TrainingOrganizerTypeEnum | null;
-  organizer_id: string | null;
+  // The backend requires an organizer pair and resolves its display name from the entity.
+  organizer_type: TrainingOrganizerTypeEnum;
+  organizer_id: string;
   organizer_name?: string | null;
+  organizer_image_url?: string | null;
   start_date: string;
   end_date: string;
-  is_registration_open: boolean;
-  is_evaluation_locked: boolean;
+  is_registration_open?: boolean;
+  is_evaluation_locked?: boolean;
   location_name?: string;
-  image_media_id?: string;
   image_url?: string;
+  proposal_url?: string;
   // Only present on a user-JWT read; a client-secret read omits it.
   is_reminder_active?: boolean;
   created_at: string;
@@ -32,6 +33,8 @@ export type TrainingListEntry = {
 
 export type TrainingDetail = TrainingListEntry & {
   description?: string;
+  contacts?: TrainingContact[];
+  images?: TrainingImage[];
   contact_person_id?: string;
   contact_person_name?: string;
   contact_person_avatar?: string;
@@ -39,6 +42,27 @@ export type TrainingDetail = TrainingListEntry & {
   location_url?: string;
   updated_at: string;
 };
+
+export type TrainingImage = {
+  id: string;
+  role: "cover" | "gallery";
+  media_id: string;
+  image_url?: string;
+  position: number;
+};
+
+export type TrainingContact = {
+  id: string;
+  user_id?: string;
+  name?: string;
+  phone_number?: string;
+  avatar?: string;
+  position?: number;
+};
+
+export type TrainingContactInput =
+  | { user_id: string; name?: never; phone_number?: never }
+  | { user_id?: never; name: string; phone_number: string };
 
 export type TrainingMaterial = {
   id: string;
@@ -219,20 +243,17 @@ export async function registerTraining(
   });
 }
 
-// The caller becomes the contact person and registration starts open; change either through updateTraining.
+// The organizer pair is mandatory; the backend checks an exact manage grant and level policy.
 export type CreateTrainingPayload = {
-  name: string;
   description?: string;
   level: TrainingStatusEnum;
-  organizer_type?: TrainingOrganizerTypeEnum;
-  organizer_id?: string;
-  organizer_name?: string;
+  organizer_type: TrainingOrganizerTypeEnum;
+  organizer_id: string;
   start_date: string;
   end_date: string;
   location_name?: string;
   location_url?: string;
-  // An event_banner asset id from media upload; the API derives image_url from it.
-  image_media_id?: string;
+  proposal_url?: string;
 };
 
 export async function createTraining(
@@ -254,20 +275,15 @@ export async function createTraining(
 
 export type UpdateTrainingPayload = {
   id: string;
-  name?: string;
   description?: string;
   level?: TrainingStatusEnum;
   organizer_type?: TrainingOrganizerTypeEnum;
   organizer_id?: string;
-  organizer_name?: string;
-  contact_person_id?: string;
   start_date?: string;
   end_date?: string;
-  is_registration_open?: boolean;
   location_name?: string;
   location_url?: string;
-  // An event_banner asset id from media upload; an empty string removes the poster.
-  image_media_id?: string;
+  proposal_url?: string;
 };
 
 export async function updateTraining(
@@ -301,6 +317,42 @@ export async function deleteTraining(id: string): Promise<ApiEnvelope> {
     token: sessionToken,
     body: { id },
   });
+}
+
+export async function createTrainingImage(trainingId: string, role: TrainingImage["role"], mediaId: string): Promise<ApiEnvelope<TrainingImage>> {
+  const token = await getSessionToken();
+  if (!token) return { status: "UNAUTHORIZED", message: "Sesi berakhir." };
+  return callApi<TrainingImage>("/api/v1/trainings/images/create", {
+    method: "POST", token, body: { training_id: trainingId, role, media_id: mediaId },
+  });
+}
+
+export async function deleteTrainingImage(id: string): Promise<ApiEnvelope> {
+  const token = await getSessionToken();
+  if (!token) return { status: "UNAUTHORIZED", message: "Sesi berakhir." };
+  return callApi("/api/v1/trainings/images/delete", { method: "POST", token, body: { id } });
+}
+
+export async function createTrainingContact(trainingId: string, contact: TrainingContactInput) {
+  const token = await getSessionToken();
+  if (!token) return { status: "UNAUTHORIZED", message: "Sesi berakhir." } as ApiEnvelope<TrainingContact>;
+  return callApi<TrainingContact>("/api/v1/trainings/contacts/create", {
+    method: "POST", token, body: { training_id: trainingId, ...contact },
+  });
+}
+
+export async function updateTrainingContact(id: string, contact: TrainingContactInput) {
+  const token = await getSessionToken();
+  if (!token) return { status: "UNAUTHORIZED", message: "Sesi berakhir." } as ApiEnvelope<TrainingContact>;
+  return callApi<TrainingContact>("/api/v1/trainings/contacts/update", {
+    method: "POST", token, body: { id, ...contact },
+  });
+}
+
+export async function deleteTrainingContact(id: string): Promise<ApiEnvelope> {
+  const token = await getSessionToken();
+  if (!token) return { status: "UNAUTHORIZED", message: "Sesi berakhir." };
+  return callApi("/api/v1/trainings/contacts/delete", { method: "POST", token, body: { id } });
 }
 
 export type ListTrainingMaterialsOptions = {

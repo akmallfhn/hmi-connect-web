@@ -4,6 +4,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { listMyAccessGrants } from "@/apis/access-grants";
+import { getSpecialBodyDetail } from "@/apis/special-bodies";
 import type { SessionUser } from "@/apis/session";
 import type { ComposerAuthorEntity } from "@/components/forms/CreateFeedForms";
 import {
@@ -14,7 +15,7 @@ import {
   type ActingEntityRef,
 } from "@/lib/access";
 import { ACTING_ACCOUNT_COOKIE_NAME, getSessionCookieDomain } from "@/lib/constants";
-import { formatEntityAuthorName } from "@/lib/feed-author";
+import { formatEntityAuthorName, formatMentionEntityName } from "@/lib/feed-author";
 
 // Old bookmarked `?as=` URLs are cleaned without allowing the URL to select an identity.
 export function redirectWithoutLegacyActingParam(
@@ -88,6 +89,20 @@ export async function resolveActingEntity(
       item.entity_type === ref.entityType && item.entity_id === ref.entityId,
   );
   const logos = await listGrantEntityLogos();
+
+  if (ref.entityType === "special_body") {
+    const body = await getSpecialBodyDetail(ref.entityId);
+    if (!body || body.status !== "active") return null;
+    return {
+      type: ref.entityType,
+      id: body.id,
+      name: formatMentionEntityName("special_body", body.name, body.mention_name),
+      imageUrl: body.image_url,
+      profileHref: `/mentions/${body.mention_name}`,
+      bodyType: body.type,
+      parentType: body.parent_entity_type,
+    };
+  }
 
   return {
     type: ref.entityType,

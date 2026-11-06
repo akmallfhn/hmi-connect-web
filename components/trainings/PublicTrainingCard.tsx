@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
+import { MANAGE_TRAININGS_HREF } from "@/lib/access";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDate } from "@/lib/time-manipulation";
 import Button from "../buttons/Button";
@@ -25,6 +26,7 @@ import { TrainingRegistrationLabel } from "./TrainingLabels";
 interface PublicTrainingCardProps {
   training: TrainingListEntry;
   isSignedIn: boolean;
+  manage?: boolean;
 }
 
 function TrainingPoster({ training }: { training: TrainingListEntry }) {
@@ -46,6 +48,7 @@ function TrainingPoster({ training }: { training: TrainingListEntry }) {
 export default function PublicTrainingCard({
   training,
   isSignedIn,
+  manage = false,
 }: PublicTrainingCardProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const {
@@ -63,12 +66,13 @@ export default function PublicTrainingCard({
       ? ""
       : `${window.location.origin}/trainings/${training.id}`;
   const organizerName = formatOrganizerName(training);
+  const detailHref = manage ? `${MANAGE_TRAININGS_HREF}/${training.id}` : `/trainings/${training.id}`;
 
   return (
     <>
       <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border-strong bg-surface transition-colors hover:border-primary/60 focus-within:border-primary">
         <Link
-          href={`/trainings/${training.id}`}
+          href={detailHref}
           className="block flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
         >
           <div className="relative aspect-[16/9] overflow-hidden bg-linear-to-br from-brand-deep to-primary">
@@ -104,18 +108,20 @@ export default function PublicTrainingCard({
                 {organizerName}
               </span>
             </div>
-            <TrainingRegistrationLabel isOpen={training.is_registration_open} />
+            {typeof training.is_registration_open === "boolean" && (
+              <TrainingRegistrationLabel isOpen={training.is_registration_open} />
+            )}
           </div>
         </Link>
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3">
           <Link
-            href={`/trainings/${training.id}`}
+            href={detailHref}
             className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary-action transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            Lihat detail
+            {manage ? "Kelola training" : "Lihat detail"}
           </Link>
-          <Button
+          {!manage && <Button
             onClick={toggleReminder}
             disabled={savingReminder}
             aria-label={
@@ -133,14 +139,14 @@ export default function PublicTrainingCard({
             ) : (
               <IconBellPlus className="size-5" />
             )}
-          </Button>
-          <RepostTrainingToFeedButton
+          </Button>}
+          {!manage && <RepostTrainingToFeedButton
             training={training}
             isSignedIn={isSignedIn}
             iconOnly
             variant="outline"
             size="icon"
-          />
+          />}
           <Button
             onClick={() => setShareOpen(true)}
             aria-label={`Bagikan ${training.name}`}

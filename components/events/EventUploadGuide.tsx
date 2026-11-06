@@ -3,15 +3,8 @@
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useState } from "react";
 import Button from "../buttons/Button";
+import OfficialAccountGuideContacts, { type GuideContact } from "../common/OfficialAccountGuideContacts";
 import Modal from "../modals/Modal";
-import SendMessageButton from "../profile/SendMessageButton";
-
-type GuideContact = {
-  id: string;
-  username: string;
-  full_name: string;
-  avatar?: string;
-};
 
 export default function EventUploadGuide({
   contacts,
@@ -94,54 +87,7 @@ export default function EventUploadGuide({
             untuk bantuan terkait undangan akses ke Official Account.
           </p>
 
-          <section aria-labelledby="event-guide-contacts" className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white p-3">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-heading dark:text-[#172033]">
-                    Akmal
-                  </p>
-                  <p className="text-xs text-[#5f6573]">
-                    Developer HMI Connect
-                  </p>
-                </div>
-                {contacts.akmal ? (
-                  <SendMessageButton
-                    userId={contacts.akmal.id}
-                    username={contacts.akmal.username}
-                    fullName={contacts.akmal.full_name}
-                    avatar={contacts.akmal.avatar}
-                    className="shrink-0"
-                  />
-                ) : (
-                  <span className="shrink-0 text-xs text-[#5f6573]">
-                    Akun chat tidak ditemukan
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white p-3">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-heading dark:text-[#172033]">
-                    Anida
-                  </p>
-                  <p className="text-xs text-[#5f6573]">Wakabid PAO PB HMI</p>
-                </div>
-                {contacts.anida ? (
-                  <SendMessageButton
-                    userId={contacts.anida.id}
-                    username={contacts.anida.username}
-                    fullName={contacts.anida.full_name}
-                    avatar={contacts.anida.avatar}
-                    className="shrink-0"
-                  />
-                ) : (
-                  <span className="shrink-0 text-xs text-[#5f6573]">
-                    Akun chat tidak ditemukan
-                  </span>
-                )}
-              </div>
-            </div>
-          </section>
+          <OfficialAccountGuideContacts contacts={contacts} />
         </div>
       </Modal>
     </>

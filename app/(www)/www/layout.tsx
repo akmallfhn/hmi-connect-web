@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSession } from "@/apis/session";
+import { getSpecialBodyDetail } from "@/apis/special-bodies";
 import { HeaderAdminAccessProvider } from "@/components/navigations/HeaderAdminAccessContext";
 import MainSiteDesktopShell from "@/components/navigations/MainSiteDesktopShell";
 import ActivityQuerySync from "@/components/query/ActivityQuerySync";
@@ -49,6 +50,9 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
   const { user } = await getSession();
   const grants = user ? manageGrants(user) : [];
   const activeEntity = await selectedActingEntityRef(user);
+  const activeBody = activeEntity?.entityType === "special_body"
+    ? await getSpecialBodyDetail(activeEntity.entityId)
+    : null;
   // Only a grant holder pays for this lookup, and only because check-session omits the entity logo.
   const logos = grants.length > 0 ? await listGrantEntityLogos() : new Map();
   const adminAccess = user
@@ -56,6 +60,7 @@ export default async function WwwLayout({ children }: { children: ReactNode }) {
         adminOrigin: getAdminSiteOrigin(),
         roleName: user.role_name,
         activeEntity,
+        activeProfileHref: activeBody ? `/mentions/${activeBody.mention_name}` : undefined,
         grants: grants.map((grant) => ({
           ...grant,
           entity_image_url: logos.get(grant.entity_id) ?? null,

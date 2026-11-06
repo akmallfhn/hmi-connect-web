@@ -9,9 +9,11 @@ import EventLinkButton from "./EventLinkButton";
 export default function EventLocationCard({
   locationName,
   locationUrl,
+  subject = "event",
 }: {
   locationName?: string;
   locationUrl?: string;
+  subject?: "event" | "training";
 }) {
   const mapUrl = eventMapEmbedUrl(locationUrl, locationName);
   const directionsUrl = eventDirectionsUrl(locationUrl, locationName);
@@ -24,7 +26,7 @@ export default function EventLocationCard({
         <div className="aspect-[4/3] bg-surface-muted sm:aspect-[21/9]">
           <iframe
             src={mapUrl}
-            title={`Peta lokasi ${place || "event"}`}
+            title={`Peta lokasi ${place || subject}`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="size-full border-0"
@@ -33,7 +35,7 @@ export default function EventLocationCard({
       )}
       <div className="p-5">
         <h2 className="break-words font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-          {place || "Lokasi event"}
+          {place || `Lokasi ${subject}`}
         </h2>
         {address && (
           <p className="mt-1 break-words text-sm leading-5 text-muted-foreground">{address}</p>

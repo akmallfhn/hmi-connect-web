@@ -24,6 +24,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   MANAGE_EVENTS_HREF,
+  MANAGE_TRAININGS_HREF,
   type ActingEntityRef,
 } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
@@ -75,7 +76,7 @@ const NAV_ITEMS = [
     label: "Training Center",
     href: "/trainings",
     icon: IconSchool,
-    // Covers the event detail, registration, and /trainings/create routes too.
+    // Covers the training detail and registration routes too.
     matches: (pathname: string) =>
       pathname === "/trainings" || pathname.startsWith("/trainings/"),
   },
@@ -117,10 +118,12 @@ type RailNavItem = {
 // On an official-account page the rail speaks for that entity: its timeline and its public profile.
 function officialNavItems(
   official: ActingEntityRef,
+  activeProfileHref?: string,
 ): RailNavItem[] {
   const timelineHref = "/";
-  const profileHref = entityProfileHref(official.entityType, official.entityId);
+  const profileHref = activeProfileHref ?? (official.entityType === "special_body" ? "/settings" : entityProfileHref(official.entityType, official.entityId));
   const eventsHref = MANAGE_EVENTS_HREF;
+  const trainingsHref = MANAGE_TRAININGS_HREF;
   return [
     {
       label: "Beranda",
@@ -134,6 +137,13 @@ function officialNavItems(
       icon: IconCalendarEvent,
       matches: (pathname) =>
         pathname === eventsHref || pathname.startsWith(`${eventsHref}/`),
+    },
+    {
+      label: "Kelola Training",
+      href: trainingsHref,
+      icon: IconSchool,
+      matches: (pathname) =>
+        pathname === trainingsHref || pathname.startsWith(`${trainingsHref}/`),
     },
     {
       label: "Profile",
@@ -163,7 +173,7 @@ export default function MainSiteDesktopSidebar({
     : undefined;
   const official = officialGrant ? requested : null;
   const navItems: readonly RailNavItem[] = official
-    ? officialNavItems(official)
+    ? officialNavItems(official, adminAccess?.activeProfileHref)
     : NAV_ITEMS;
   // Posting needs an activated, verified account — the same bar reactions and comments sit behind.
   const canPost =

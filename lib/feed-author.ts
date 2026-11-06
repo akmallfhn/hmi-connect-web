@@ -101,7 +101,7 @@ export type FeedAuthor = {
 };
 
 export type EntityAuthorSource = {
-  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_type?: MentionEntityTypeEnum | null;
   author_entity_id?: string | null;
   author_entity_name?: string | null;
   author_entity_image_url?: string | null;
@@ -117,16 +117,15 @@ export function resolveEntityAuthor(
 
   return {
     name: source.author_entity_name
-      ? formatEntityAuthorName(
+      ? formatMentionEntityName(
           source.author_entity_type,
           source.author_entity_name,
         )
       : "Akun resmi",
     avatar: source.author_entity_image_url ?? undefined,
-    href: entityProfileHref(
-      source.author_entity_type,
-      source.author_entity_id,
-    ),
+    href: source.author_entity_type === "special_body"
+      ? `/special-bodies/${source.author_entity_id}`
+      : entityProfileHref(source.author_entity_type, source.author_entity_id),
     isEntity: true,
   };
 }

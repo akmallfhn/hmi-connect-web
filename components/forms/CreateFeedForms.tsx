@@ -39,8 +39,11 @@ import { parseYouTubeId, youTubeWatchUrl } from "@/lib/youtube";
 import {
   isSuccessStatus,
   type AccessEntityTypeEnum,
+  type OfficialEntityTypeEnum,
+  type SpecialBodyTypeEnum,
   type FeedAttachmentTypeEnum,
   type FeedUploadAttachmentTypeEnum,
+  type TrainingStatusEnum,
 } from "@/lib/types";
 import type {
   CreateFeedPayload,
@@ -55,10 +58,13 @@ import MentionTextarea from "../fields/MentionTextarea";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
 export type ComposerAuthorEntity = {
-  type: AccessEntityTypeEnum;
+  type: OfficialEntityTypeEnum;
   id: string;
   name: string;
   imageUrl?: string | null;
+  profileHref?: string;
+  bodyType?: SpecialBodyTypeEnum;
+  parentType?: AccessEntityTypeEnum;
 };
 
 // Plain entity logo here — the ring and official badge mark a published feed, not a compose box.
@@ -119,7 +125,7 @@ export type ComposerArticleDraft = {
 export type ComposerTrainingDraft = {
   id: string;
   name: string;
-  level: "LK1" | "LK2" | "LK3";
+  level: TrainingStatusEnum;
   organizerName?: string;
   startDate: string;
   endDate: string;

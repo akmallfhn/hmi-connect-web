@@ -14,6 +14,7 @@ export interface HeaderAdminAccess {
   roleName?: string;
   grants: HeaderAdminGrant[];
   activeEntity: ActingEntityRef | null;
+  activeProfileHref?: string;
 }
 
 const HeaderAdminAccessContext = createContext<HeaderAdminAccess | null>(null);

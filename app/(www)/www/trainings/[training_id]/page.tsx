@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSession } from "@/apis/session";
 import { getTrainingDetail } from "@/apis/trainings";
+import { selectedActingEntityRef } from "@/lib/acting-entity";
 import PublicTrainingDetailPage from "@/components/pages/PublicTrainingDetailPage";
 
 interface TrainingDetailRouteProps {
@@ -55,10 +56,12 @@ export default async function TrainingDetailRoute({
   ]);
 
   if (!training) notFound();
+  const canChat = Boolean(user && user.status !== "pending" && !(await selectedActingEntityRef(user)));
 
   return (
     <PublicTrainingDetailPage
       training={training}
+      canChat={canChat}
       viewer={{
         fullName: user?.full_name,
         avatar: user?.avatar,

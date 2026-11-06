@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
 import {
   isSuccessStatus,
-  type AccessEntityTypeEnum,
+  type OfficialEntityTypeEnum,
   type ActivityTypeEnum,
   type MentionEntityTypeEnum,
   type FeedAttachmentTypeEnum,
@@ -53,7 +53,7 @@ export type FeedTrainingAttachment = FeedAttachmentBase & {
   reference_level: TrainingStatusEnum | null;
   reference_start_date: string | null;
   reference_end_date: string | null;
-  reference_organizer_entity_type: AccessEntityTypeEnum | null;
+  reference_organizer_entity_type: OfficialEntityTypeEnum | null;
   reference_organizer_entity_id: string | null;
   reference_organizer_entity_name: string | null;
   reference_organizer_entity_image_url: string | null;
@@ -90,7 +90,7 @@ export type Feed = {
   creator_username: string;
   creator_avatar?: string;
   // Set when the feed was posted on behalf of an entity — render its name and logo instead of the creator's.
-  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_type: OfficialEntityTypeEnum | null;
   author_entity_id: string | null;
   author_entity_name: string | null;
   author_entity_image_url: string | null;
@@ -125,13 +125,13 @@ export type CreateFeedPayload = {
     | { type: "article"; article_id: string };
   repost_of_id?: string;
   // Sent as a pair to publish under an entity; the backend requires a manage grant at that exact entity.
-  author_entity_type?: AccessEntityTypeEnum;
+  author_entity_type?: OfficialEntityTypeEnum;
   author_entity_id?: string;
 };
 
 // Used by every action that can speak as an official hierarchy account.
 export type EntityAuthor = {
-  type: AccessEntityTypeEnum;
+  type: OfficialEntityTypeEnum;
   id: string;
 };
 
@@ -145,7 +145,7 @@ export type FeedComment = {
   avatar?: string;
   // A comment/reply keeps its human audit author above, but renders as this
   // entity when the entity pair is present.
-  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_type: OfficialEntityTypeEnum | null;
   author_entity_id: string | null;
   author_entity_name: string | null;
   author_entity_image_url: string | null;
@@ -497,7 +497,7 @@ export async function deleteFeed(feedId: string): Promise<ApiEnvelope> {
 export type RepostResult = {
   feed_id: string;
   reposter_id: string;
-  author_entity_type?: AccessEntityTypeEnum | null;
+  author_entity_type?: OfficialEntityTypeEnum | null;
   author_entity_id?: string | null;
 };
 

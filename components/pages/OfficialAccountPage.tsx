@@ -1,15 +1,18 @@
 import type { FeedTimelineItem } from "@/apis/feeds";
 import type { SessionUser } from "@/apis/session";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type { AccessEntityTypeEnum, OfficialEntityTypeEnum, SpecialBodyTypeEnum } from "@/lib/types";
 import PageMargin from "../common/PageMargin";
 import OfficialTimeline from "../official/OfficialTimeline";
 import OfficialPageShell from "../official/OfficialPageShell";
 
 interface OfficialAccountPageProps {
-  entityType: AccessEntityTypeEnum;
+  entityType: OfficialEntityTypeEnum;
   entityId: string;
   name: string;
   imageUrl?: string | null;
+  profileHref?: string;
+  bodyType?: SpecialBodyTypeEnum;
+  parentType?: AccessEntityTypeEnum;
   initialItems: FeedTimelineItem[];
   initialHasMore: boolean;
   viewer: SessionUser | null;
@@ -20,11 +23,14 @@ export default function OfficialAccountPage({
   entityId,
   name,
   imageUrl,
+  profileHref,
+  bodyType,
+  parentType,
   initialItems,
   initialHasMore,
   viewer,
 }: OfficialAccountPageProps) {
-  const authorEntity = { type: entityType, id: entityId, name, imageUrl };
+  const authorEntity = { type: entityType, id: entityId, name, imageUrl, profileHref, bodyType, parentType };
 
   // No personal Header or BottomNav here: on mobile the entity gets its own greeting and tab bar.
   return (

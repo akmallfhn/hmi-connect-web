@@ -104,11 +104,13 @@ export default function EventDetailContent({
   attendees,
   viewer,
   canChat = false,
+  organizerName,
 }: {
   event: EventDetail;
   attendees: EventAttendeePreview[];
   viewer?: { id?: string; name?: string; avatar?: string | null };
   canChat?: boolean;
+  organizerName?: string;
 }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export default function EventDetailContent({
   const status = eventStatus(event.start_date, event.end_date);
   const ended = status.tone === "ended";
   const { author, href: organizerHref } = eventOrganizer(event);
+  if (organizerName) author.name = organizerName;
   const duration = formatEventDuration(event.duration_minutes);
   const linkUrl = safeExternalUrl(event.link_url);
   const { place } = splitEventLocation(event.location_name);
@@ -326,7 +329,7 @@ export default function EventDetailContent({
                 <h2 className={CARD_TITLE_CLASS}>Penyelenggara</h2>
                 <div className="mt-3 flex items-center gap-3">
                   <FeedAuthorAvatar author={author} size={48} />
-                  <p className="min-w-0 flex-1 truncate font-medium text-heading">
+                  <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-heading">
                     {author.name}
                   </p>
                   {organizerHref && (
@@ -350,7 +353,7 @@ export default function EventDetailContent({
                             size={40}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-heading">
+                            <p className="truncate text-[15px] font-semibold text-heading">
                               {contact.name}
                             </p>
                             {contact.phone_number && (

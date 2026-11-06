@@ -62,6 +62,7 @@ export default function TrainingSummaryTab({
   materialCount,
   participantCount,
 }: TrainingSummaryTabProps) {
+  const contact = training.contacts?.[0];
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="flex min-w-0 flex-col gap-4">
@@ -90,10 +91,10 @@ export default function TrainingSummaryTab({
           <h2 className="text-sm font-bold text-heading">Contact Person</h2>
           <div className="mt-4 flex items-center gap-3">
             <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-primary-foreground">
-              {training.contact_person_avatar ? (
+              {contact?.avatar ? (
                 <Image
-                  src={training.contact_person_avatar}
-                  alt={training.contact_person_name ?? "Contact Person"}
+                  src={contact.avatar}
+                  alt={contact.name ?? "Contact Person"}
                   fill
                   sizes="40px"
                   className="object-cover"
@@ -104,10 +105,10 @@ export default function TrainingSummaryTab({
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-heading">
-                {training.contact_person_name ?? "Belum ditentukan"}
+                {contact?.name ?? "Belum ditentukan"}
               </p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                {training.contact_person_phone_number ??
+                {contact?.phone_number ??
                   "Nomor HP belum tersedia"}
               </p>
             </div>

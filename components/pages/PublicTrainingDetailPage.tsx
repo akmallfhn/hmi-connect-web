@@ -1,545 +1,213 @@
-"use client";
+﻿"use client";
 
 import {
-  IconBellCheck,
-  IconBellPlus,
-  IconBrandWhatsapp,
-  IconCalendarStar,
-  IconShare2,
+  IconBellCheck, IconBellPlus, IconBrandWhatsapp, IconCalendarEvent,
+  IconExternalLink, IconFileTypePdf, IconMapPin, IconPhoto, IconPhotoOff, IconSchool, IconShare2,
 } from "@tabler/icons-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 import type { TrainingDetail } from "@/apis/trainings";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
-import { deleteTraining } from "@/lib/actions";
+import { safeExternalUrl } from "@/lib/event-ui";
+import { entityProfileHref } from "@/lib/feed-author";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
-import { ExternalLink, ImageOff, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import Dropdown from "../common/Dropdown";
+import Avatar from "../common/Avatar";
 import PageMargin from "../common/PageMargin";
-import AlertConfirmation from "../modals/AlertConfirmation";
+import EventLinkButton from "../events/EventLinkButton";
+import EventLocationCard from "../events/EventLocationCard";
+import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
+import ImagePreviewOverlay from "../modals/ImagePreviewOverlay";
 import ShareModal from "../modals/ShareModal";
-import LogoHmi from "../svg/LogoHmi";
-import TrainingPageShell, {
-  type TrainingViewer,
-} from "../trainings/TrainingPageShell";
+import SendMessageButton from "../profile/SendMessageButton";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
+import TrainingPageShell, { type TrainingViewer } from "../trainings/TrainingPageShell";
+import { TrainingRegistrationLabel } from "../trainings/TrainingLabels";
 import RepostTrainingToFeedButton from "../trainings/RepostTrainingToFeedButton";
 
-interface PublicTrainingDetailPageProps {
+const CARD_CLASS = "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x";
+const TITLE_CLASS = "font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]";
+
+function whatsappHref(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits.startsWith("62") ? digits : `62${digits.replace(/^0+/, "")}`}`;
+}
+
+function TrainingFacts({ training, organizerName, organizerHref }: {
+  training: TrainingDetail;
+  organizerName: string;
+  organizerHref: string | null;
+}) {
+  return <ul className="flex flex-col gap-2.5">
+    <li className="flex items-start gap-3 text-[15px] leading-6">
+      <IconCalendarEvent className="mt-0.5 size-5 shrink-0" stroke={2} />
+      <span className="min-w-0 break-words">{formatDateRangeWithWeekday(training.start_date, training.end_date)}</span>
+    </li>
+    <li className="flex items-start gap-3 text-[15px] leading-6">
+      <IconMapPin className="mt-0.5 size-5 shrink-0" stroke={2} />
+      <span className="min-w-0 break-words">{training.location_name || "Lokasi menyusul"}</span>
+    </li>
+    <li className="flex items-start gap-3 text-[15px] leading-6">
+      <IconSchool className="mt-0.5 size-5 shrink-0" stroke={2} />
+      <span className="min-w-0 break-words">{organizerHref ? <Link href={organizerHref} className="hover:underline">{organizerName}</Link> : organizerName}</span>
+    </li>
+  </ul>;
+}
+
+export default function PublicTrainingDetailPage({ viewer, training, canChat = false }: {
   viewer: TrainingViewer;
   training: TrainingDetail;
-}
-
-const EVENT_MENU_ITEM_CLASS =
-  "flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm text-heading transition hover:bg-surface-muted";
-
-function buildWhatsAppUrl(phoneNumber: string) {
-  const digits = phoneNumber.replace(/\D/g, "");
-  const normalized = digits.startsWith("62")
-    ? digits
-    : `62${digits.replace(/^0+/, "")}`;
-  return `https://wa.me/${normalized}`;
-}
-
-function getInitials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
-
-function ContactPersonSection({
-  training,
-  className,
-  variant = "card",
-}: {
-  training: TrainingDetail;
-  className?: string;
-  variant?: "card" | "plain";
+  canChat?: boolean;
 }) {
-  if (!training.contact_person_name) return null;
-
-  return (
-    <section className={className}>
-      <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-        Contact Person
-      </h2>
-      <div
-        className={
-          variant === "plain"
-            ? "mt-3 flex items-center gap-3"
-            : "mt-3 flex items-center gap-3 rounded-lg border border-border bg-surface p-3"
-        }
-      >
-        <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-on-primary xl:text-[13px]">
-          {training.contact_person_avatar ? (
-            <Image
-              src={training.contact_person_avatar}
-              alt={training.contact_person_name}
-              fill
-              sizes="36px"
-              className="object-cover"
-            />
-          ) : (
-            getInitials(training.contact_person_name)
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-bold text-heading">
-            {training.contact_person_name}
-          </p>
-          {training.contact_person_phone_number && (
-            <p className="truncate text-sm text-subtle-foreground xl:text-[15px]">
-              {training.contact_person_phone_number}
-            </p>
-          )}
-        </div>
-        {training.contact_person_phone_number && (
-          <a
-            href={buildWhatsAppUrl(training.contact_person_phone_number)}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Hubungi ${training.contact_person_name} via WhatsApp`}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary-action transition hover:bg-primary-hover"
-          >
-            <IconBrandWhatsapp className="size-5" stroke={2} />
-          </a>
-        )}
-      </div>
-    </section>
-  );
-}
-
-export default function PublicTrainingDetailPage({
-  viewer,
-  training,
-}: PublicTrainingDetailPageProps) {
-  const organizerName = training.organizer_name ?? "Penyelenggara HMI";
   const [shareOpen, setShareOpen] = useState(false);
-  const shareUrl =
-    typeof window === "undefined"
-      ? ""
-      : `${window.location.origin}/trainings/${training.id}`;
-  const router = useRouter();
-  const {
-    active: reminded,
-    saving: savingReminder,
-    toggle: toggleReminder,
-  } = useTrainingReminder({
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const reminder = useTrainingReminder({
     trainingId: training.id,
     initialActive: training.is_reminder_active,
     isSignedIn: Boolean(viewer.userId),
   });
-  const canEditTraining =
-    Boolean(viewer.userId) && training.contact_person_id === viewer.userId;
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  async function handleDeleteTraining() {
-    if (!canEditTraining) return;
-
-    setDeleting(true);
-    try {
-      const result = await deleteTraining(training.id);
-      if (!isSuccessStatus(result.status)) throw new Error(result.message);
-
-      toast.success("Event berhasil dihapus.");
-      router.replace("/trainings");
-    } catch {
-      toast.error("Gagal menghapus event. Coba lagi.");
-      setDeleting(false);
-    }
-  }
+  const organizerName = formatOrganizerName(training);
+  const organizerHref = training.organizer_type === "special_body" ? null
+    : entityProfileHref(training.organizer_type, training.organizer_id);
+  const organizerAuthor = { name: organizerName, avatar: training.organizer_image_url ?? undefined,
+    href: organizerHref ?? "#", isEntity: true };
+  const fallbackLogo = training.organizer_type === "special_body"
+    ? <SpecialBodyLogoFallback type={training.level === "SC" ? "bpl" : "kohati"} className="h-7 w-auto max-h-8 max-w-8" />
+    : undefined;
+  const proposalUrl = safeExternalUrl(training.proposal_url);
+  const cover = training.images?.find((image) => image.role === "cover");
+  const previewImages = [
+    ...(training.image_url ? [{ id: cover?.id ?? "training-cover", url: training.image_url }] : []),
+    ...(training.images ?? []).filter((image) => image.role === "gallery" && Boolean(image.image_url))
+      .map((image) => ({ id: image.id, url: image.image_url! })),
+  ].filter((image, index, images) => images.findIndex((candidate) => candidate.url === image.url) === index);
+  const galleryImages = previewImages.filter((image) => image.id !== (cover?.id ?? "training-cover"));
+  const shareUrl = typeof window === "undefined" ? "" : `${window.location.origin}/trainings/${training.id}`;
+  const contactName = training.contact_person_name;
+  const contacts = training.contacts?.length
+    ? training.contacts.map((contact) => ({
+        id: contact.id,
+        userId: contact.user_id,
+        name: contact.name ?? "Narahubung",
+        phone: contact.phone_number,
+        avatar: contact.avatar,
+      }))
+    : contactName ? [{ id: "legacy-contact", userId: undefined, name: contactName, phone: training.contact_person_phone_number, avatar: training.contact_person_avatar }] : [];
 
   return (
-    <TrainingPageShell
-      viewer={viewer}
-      mobileBackTitle={training.name}
-      hideBottomNav
-    >
-      <main>
-        {/* Mobile-only: hero image, then title, then detail sections stacked below. */}
-        <div className="bg-surface lg:hidden">
-          <div className="relative overflow-hidden">
-            {/* Blur band is half the poster's own height (275px at max-w-220px * 4:5). */}
-            <div className="relative h-[138px] w-full overflow-hidden bg-surface-muted">
-              {training.image_url && (
-                <Image
-                  src={training.image_url}
-                  alt=""
-                  fill
-                  priority
-                  aria-hidden="true"
-                  sizes="100vw"
-                  className="scale-110 object-cover opacity-50 blur-sm"
-                />
-              )}
-            </div>
-            <div className="relative -mt-20 mb-2">
-              <div className="relative mx-auto aspect-[4/5] w-full max-w-[220px] overflow-hidden rounded-lg bg-surface-muted">
-                {training.image_url ? (
-                  <Image
-                    src={training.image_url}
-                    alt={`Poster ${training.name}`}
-                    fill
-                    priority
-                    sizes="220px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex size-full flex-col items-center justify-center gap-3 text-subtle-foreground">
-                    <ImageOff className="size-11" />
-                    <span className="text-sm font-medium">
-                      Poster belum tersedia
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-surface px-4 pb-5 pt-5">
-            <div className="flex flex-col items-center text-center">
-              <h1 className="font-stack-sans-headline text-2xl font-medium leading-tight text-heading">
-                {training.name}
-              </h1>
-            </div>
-
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <Button
-                variant={reminded ? "outline" : "secondary"}
-                size="default"
-                onClick={toggleReminder}
-                disabled={savingReminder}
-                aria-pressed={reminded}
-              >
-                {reminded ? (
-                  <IconBellCheck className="size-5" stroke={2} />
-                ) : (
-                  <IconBellPlus className="size-5" stroke={2} />
-                )}
-                {reminded ? "Reminded" : "Remind me!"}
-              </Button>
-              <RepostTrainingToFeedButton
-                training={training}
-                isSignedIn={Boolean(viewer.userId)}
-                iconOnly
-                variant="outline"
-                size="icon"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShareOpen(true)}
-                aria-label={`Bagikan ${training.name}`}
-              >
-                <IconShare2 className="size-5" stroke={2} />
-              </Button>
-              {canEditTraining && (
-                <Dropdown
-                  align="right"
-                  panelClassName="w-48 rounded-xl"
-                  trigger={({ open, toggle }) => (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={toggle}
-                      aria-label={`Opsi ${training.name}`}
-                      aria-expanded={open}
-                    >
-                      <MoreHorizontal className="size-5" />
-                    </Button>
-                  )}
-                >
-                  <div className="py-1">
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/trainings/${training.id}/edit`)}
-                      className={EVENT_MENU_ITEM_CLASS}
-                    >
-                      <Pencil className="size-4 text-muted-foreground" />
-                      Edit event
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteOpen(true)}
-                      className={`${EVENT_MENU_ITEM_CLASS} text-destructive-foreground hover:bg-destructive-soft`}
-                    >
-                      <Trash2 className="size-4" />
-                      Hapus event
-                    </button>
-                  </div>
-                </Dropdown>
-              )}
-            </div>
-            <p className="mt-3 flex items-center justify-center gap-2 text-center text-base text-heading">
-              <IconCalendarStar className="size-5 shrink-0" stroke={2} />
-              {formatDateRangeWithWeekday(
-                training.start_date,
-                training.end_date,
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-1.5 bg-surface pb-6">
-            <section className="border border-x-0 border-border bg-surface p-5">
-              <h2 className="font-stack-sans-headline text-sm font-medium text-heading">
-                Deskripsi
-              </h2>
-              <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">
-                {training.description || "Deskripsi training belum tersedia."}
-              </p>
-            </section>
-
-            <section className="border border-x-0 border-border bg-surface p-5">
-              <h2 className="font-stack-sans-headline text-sm font-medium text-heading">
-                Penyelenggara
-              </h2>
-              <div className="mt-3 flex items-center gap-2.5">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-primary-soft">
-                  <LogoHmi className="h-7 w-auto" />
-                </div>
-                <p className="min-w-0 truncate text-sm text-heading">
-                  {formatOrganizerName(training)}
-                </p>
-              </div>
-            </section>
-
-            <ContactPersonSection
-              training={training}
-              className="border border-x-0 border-border bg-surface p-5"
-              variant="plain"
-            />
-
-            <section className="border border-x-0 border-border bg-surface p-5">
-              <h2 className="font-stack-sans-headline text-sm font-medium text-heading">
-                Lokasi
-              </h2>
-              <div className="mt-3 min-w-0">
-                <p className="text-sm text-muted-foreground">
-                  {training.location_name ?? "Lokasi training belum tersedia."}
-                </p>
-                {training.location_url && (
-                  <a
-                    href={training.location_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary-foreground hover:underline"
-                  >
-                    Buka lokasi
-                    <ExternalLink className="size-3.5" />
-                  </a>
-                )}
-              </div>
-            </section>
-          </div>
-        </div>
-
-        {/* Desktop-only: fixed blur band with a sticky poster column. */}
-        <div className="hidden min-h-[calc(100vh-4rem)] bg-surface lg:block">
-          <div className="relative h-[220px] overflow-hidden bg-surface-muted xl:h-[250px]">
-            {training.image_url && (
-              <Image
-                src={training.image_url}
-                alt=""
-                fill
-                priority
-                aria-hidden="true"
-                sizes="100vw"
-                className="scale-110 object-cover opacity-50 blur-lg"
-              />
-            )}
-          </div>
-
-          <PageMargin className="relative -mt-40 pb-16 xl:-mt-44">
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] xl:gap-8">
-              <aside className="sticky top-6 min-w-0 self-start">
-                <div className="relative mx-auto aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-xl border border-border bg-surface-muted shadow-[0_18px_50px_var(--shadow-card)]">
-                  {training.image_url ? (
-                    <Image
-                      src={training.image_url}
-                      alt={`Poster ${training.name}`}
-                      fill
-                      priority
-                      sizes="340px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex size-full flex-col items-center justify-center gap-3 text-subtle-foreground">
-                      <ImageOff className="size-11" />
-                      <span className="text-sm font-medium xl:text-[15px]">
-                        Poster belum tersedia
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mx-auto mt-4 flex w-full max-w-[340px] items-center gap-2">
-                  <Button
-                    variant={reminded ? "outline" : "secondary"}
-                    size="default"
-                    onClick={toggleReminder}
-                    disabled={savingReminder}
-                    aria-pressed={reminded}
-                    className="h-10 flex-1"
-                  >
-                    {reminded ? (
-                      <IconBellCheck className="size-5" stroke={2} />
-                    ) : (
-                      <IconBellPlus className="size-5" stroke={2} />
-                    )}
-                    {reminded ? "Reminded" : "Remind me!"}
-                  </Button>
-                  <RepostTrainingToFeedButton
-                    training={training}
-                    isSignedIn={Boolean(viewer.userId)}
-                    iconOnly
-                    variant="outline"
-                    size="icon"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShareOpen(true)}
-                    aria-label={`Bagikan ${training.name}`}
-                  >
-                    <IconShare2 className="size-5" stroke={2} />
-                  </Button>
-                  {canEditTraining && (
-                    <Dropdown
-                      align="right"
-                      panelClassName="w-48 rounded-xl"
-                      trigger={({ open, toggle }) => (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={toggle}
-                          aria-label={`Opsi ${training.name}`}
-                          aria-expanded={open}
-                        >
-                          <MoreHorizontal className="size-5" />
-                        </Button>
-                      )}
-                    >
-                      <div className="py-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            router.push(`/trainings/${training.id}/edit`)
-                          }
-                          className={EVENT_MENU_ITEM_CLASS}
-                        >
-                          <Pencil className="size-4 text-muted-foreground" />
-                          Edit event
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteOpen(true)}
-                          className={`${EVENT_MENU_ITEM_CLASS} text-destructive-foreground hover:bg-destructive-soft`}
-                        >
-                          <Trash2 className="size-4" />
-                          Hapus event
-                        </button>
-                      </div>
-                    </Dropdown>
-                  )}
-                </div>
-              </aside>
-
-              <article className="min-w-0 self-start rounded-xl border border-border bg-surface p-6 xl:p-8">
-                <h1 className="font-stack-sans-headline text-3xl font-medium leading-tight text-heading xl:text-[32px]">
-                  {training.name}
-                </h1>
-
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground xl:text-[15px]">
-                  <p className="flex items-center gap-2">
-                    <IconCalendarStar className="size-4 shrink-0" stroke={2} />
-                    {formatDateRangeWithWeekday(
-                      training.start_date,
-                      training.end_date,
-                    )}
-                  </p>
-                </div>
-
-                <section className="mt-8 border-t border-border pt-6">
-                  <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-                    Penyelenggara
-                  </h2>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-primary-soft">
-                      <LogoHmi className="h-8 w-auto" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-[15px] text-heading">
-                        {organizerName}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="mt-8 border-t border-border pt-6">
-                  <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-                    Deskripsi
-                  </h2>
-                  <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground">
-                    {training.description ||
-                      "Deskripsi training belum tersedia."}
-                  </p>
-                </section>
-
-                <ContactPersonSection
-                  training={training}
-                  className="mt-8 border-t border-border pt-6"
-                />
-
-                <section className="mt-8 border-t border-border pt-6">
-                  <h2 className="font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]">
-                    Lokasi
-                  </h2>
-                  <div className="mt-4 min-w-0">
-                    <p className="text-[15px] leading-7 text-foreground">
-                      {training.location_name ?? "Lokasi belum ditentukan"}
-                    </p>
-                    {training.location_url && (
-                      <a
-                        href={training.location_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary-foreground hover:underline xl:text-[15px]"
-                      >
-                        Buka lokasi
-                        <ExternalLink className="size-3.5" />
-                      </a>
-                    )}
-                  </div>
-                </section>
-              </article>
+    <TrainingPageShell viewer={viewer} mobileBackTitle="Detail Training" hideBottomNav>
+      <main className="pb-6 lg:pb-12">
+        <header className="relative hidden overflow-hidden bg-linear-to-br from-brand-deep to-primary text-on-dark lg:block">
+          {training.image_url && (
+            <Image src={training.image_url} alt="" fill aria-hidden="true" sizes="100vw" className="scale-110 object-cover blur-2xl" />
+          )}
+          <div className="absolute inset-0 bg-media-backdrop/60" />
+          <PageMargin className="relative">
+            <div className="flex min-h-72 flex-col justify-center gap-4 py-8 pr-[352px]">
+              <h1 className="break-words font-stack-sans-headline text-3xl font-medium leading-tight">{training.name}</h1>
+              <TrainingFacts training={training} organizerName={organizerName} organizerHref={organizerHref} />
             </div>
           </PageMargin>
-        </div>
+        </header>
+
+        <PageMargin noMobilePadding>
+          <div className="grid items-start gap-1.5 lg:grid-cols-[minmax(0,768px)_320px] lg:gap-6">
+            <aside className="relative z-10 flex min-w-0 flex-col overflow-hidden border border-x-0 border-border bg-surface lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1 lg:-mt-[180px] lg:rounded-2xl lg:border-x">
+              <div className="relative aspect-[4/5] bg-linear-to-br from-brand-deep to-primary">
+                {training.image_url ? (
+                  <Image src={training.image_url} alt={`Poster ${training.name}`} fill priority sizes="(min-width: 1024px) 320px, 100vw" className="object-cover" />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-on-dark/70"><IconPhotoOff className="size-10" stroke={1.6} /></div>
+                )}
+                {previewImages.length > 0 && <button type="button" onClick={() => setPreviewId(previewImages[0].id)}
+                  className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-lg bg-media-backdrop/75 px-3 py-2 text-xs font-medium text-on-dark backdrop-blur-sm transition hover:bg-media-backdrop/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`Lihat semua foto training (${previewImages.length})`}>
+                  <IconPhoto className="size-4" stroke={2} /> Lihat semua foto ({previewImages.length})
+                </button>}
+              </div>
+              <div className="order-2 flex flex-col items-start gap-3 p-4 text-heading lg:order-none">
+                <h1 className="break-words font-stack-sans-headline text-2xl font-medium leading-tight lg:hidden">{training.name}</h1>
+                <p className="hidden break-words font-stack-sans-headline text-lg font-medium leading-snug lg:block">{training.name}</p>
+                <div className="text-foreground"><TrainingFacts training={training} organizerName={organizerName} organizerHref={organizerHref} /></div>
+                {typeof training.is_registration_open === "boolean" && (
+                  <TrainingRegistrationLabel isOpen={training.is_registration_open} />
+                )}
+              </div>
+              <div className="order-3 flex flex-col gap-3 px-4 pb-4 lg:order-none lg:border-t lg:border-border lg:pt-4">
+                {training.is_registration_open && (
+                  <Link href={`/trainings/${training.id}/register`} className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary-action transition hover:bg-primary-hover">Daftar training</Link>
+                )}
+                <div className="flex gap-2">
+                  <Button variant={reminder.active ? "soft" : "outline"} onClick={reminder.toggle} disabled={reminder.saving} aria-pressed={reminder.active} className="min-w-0 flex-1">
+                    {reminder.active ? <IconBellCheck className="size-4.5" stroke={2} /> : <IconBellPlus className="size-4.5" stroke={2} />}
+                    {reminder.active ? "Pengingat aktif" : "Ingatkan saya"}
+                  </Button>
+                  <RepostTrainingToFeedButton training={training} isSignedIn={Boolean(viewer.userId)} iconOnly variant="outline" size="icon" />
+                  <Button variant="outline" size="icon" onClick={() => setShareOpen(true)} aria-label="Bagikan training"><IconShare2 className="size-5" stroke={2} /></Button>
+                </div>
+              </div>
+            </aside>
+
+            <div className="flex min-w-0 flex-col gap-1.5 lg:col-start-1 lg:row-start-1 lg:gap-4 lg:pt-6">
+              <section className={CARD_CLASS}>
+                <h2 className={TITLE_CLASS}>Deskripsi</h2>
+                <p className="mt-3 whitespace-pre-line break-words text-[15px] leading-7 text-content-foreground">{training.description || "Deskripsi training belum tersedia."}</p>
+              </section>
+              {proposalUrl && <section className={CARD_CLASS}>
+                <h2 className={TITLE_CLASS}>Proposal training</h2>
+                <a href={proposalUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-surface-muted">
+                  <IconFileTypePdf className="size-5" stroke={2} /> Lihat proposal PDF <IconExternalLink className="size-4" stroke={2} />
+                </a>
+              </section>}
+              {galleryImages.length > 0 && <section className={CARD_CLASS}>
+                <h2 className={TITLE_CLASS}>Foto lainnya</h2>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {galleryImages.map((image, index) => <button key={image.id} type="button" onClick={() => setPreviewId(image.id)}
+                    aria-label={`Lihat foto training ${index + 1}`} className="relative aspect-square overflow-hidden rounded-lg bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                    <Image src={image.url} alt={`Foto training ${index + 1}`} fill sizes="(min-width: 640px) 220px, 50vw" className="object-cover transition-transform hover:scale-105" />
+                  </button>)}
+                </div>
+              </section>}
+              <EventLocationCard locationName={training.location_name} locationUrl={training.location_url} subject="training" />
+              <section className={CARD_CLASS}>
+                <h2 className={TITLE_CLASS}>Penyelenggara</h2>
+                <div className="mt-3 flex items-center gap-3">
+                  <FeedAuthorAvatar author={organizerAuthor} size={48} fallbackLogo={fallbackLogo} />
+                  <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-heading">{organizerName}</p>
+                  {organizerHref && <EventLinkButton href={organizerHref} variant="soft">Lihat profil</EventLinkButton>}
+                </div>
+                {contacts.length > 0 && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <h3 className={TITLE_CLASS}>Narahubung</h3>
+                    {contacts.map((contact) => (
+                    <div key={contact.id} className="mt-3 flex flex-wrap items-center gap-3">
+                      <Avatar src={contact.userId ? contact.avatar : undefined} name={contact.name} size={40} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[15px] font-semibold text-heading">{contact.name}</p>
+                        {contact.phone && <p className="truncate text-sm text-muted-foreground">{contact.phone}</p>}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {canChat && contact.userId && contact.userId !== viewer.userId &&
+                          <SendMessageButton userId={contact.userId} fullName={contact.name} avatar={contact.avatar} />}
+                        {contact.phone && <EventLinkButton href={whatsappHref(contact.phone)} newTab variant="soft"
+                          aria-label={`Hubungi ${contact.name} lewat WhatsApp`} title="WhatsApp">
+                          <IconBrandWhatsapp className="size-5" stroke={2} />
+                        </EventLinkButton>}
+                      </div>
+                    </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </PageMargin>
       </main>
-      <ShareModal
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        url={shareUrl}
-        text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
-      />
-      <AlertConfirmation
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDeleteTraining}
-        title="Hapus event?"
-        message={`Event “${training.name}” akan dihapus dan tidak dapat dipulihkan.`}
-        confirmLabel="Hapus event"
-        loading={deleting}
-      />
+      <ImagePreviewOverlay images={previewImages} activeId={previewId} onActiveChange={setPreviewId}
+        onClose={() => setPreviewId(null)} downloadName={`training-${training.id}`} />
+      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} title="Bagikan Training" url={shareUrl} text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`} />
     </TrainingPageShell>
   );
 }

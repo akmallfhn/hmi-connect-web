@@ -17,6 +17,8 @@ import {
   splitEventLocation,
   toDateTimeLocal,
 } from "../lib/event-ui";
+import { formatOrganizerName } from "../lib/organizer";
+import { formatSpecialBodyName } from "../lib/special-body";
 
 test("a map always comes from Google, preferring a stored embed", () => {
   const embed = "https://www.google.com/maps/embed?pb=abc";
@@ -139,4 +141,14 @@ test("organizers read as entities, and special bodies get no profile link", () =
   });
   assert.equal(body.author.name, "KOHATI Cabang Depok");
   assert.equal(body.href, null);
+});
+
+test("training organizer names include entity level without duplicate prefixes", () => {
+  assert.equal(formatOrganizerName({ organizer_type: "chapter", organizer_name: "Komisariat X" }), "HMI Komisariat X");
+  assert.equal(formatOrganizerName({ organizer_type: "branch", organizer_name: "HMI Cabang Y" }), "HMI Cabang Y");
+  assert.equal(formatOrganizerName({ organizer_type: "coordinating_chapter", organizer_name: "F" }), "HMI Korkom F");
+  assert.equal(formatOrganizerName({ organizer_type: "organization", organizer_name: "HMI" }), "HMI");
+  assert.equal(formatOrganizerName({ organizer_type: "special_body", organizer_name: "G", level: "LKK" }), "KOHATI Cabang G");
+  assert.equal(formatOrganizerName({ organizer_type: "special_body", organizer_name: "BPL HMI", level: "SC" }), "BPL PB HMI");
+  assert.equal(formatSpecialBodyName("kohati", "organization", "HMI"), "KOHATI PB HMI");
 });

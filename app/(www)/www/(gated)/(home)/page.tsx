@@ -40,6 +40,9 @@ export default async function HomePage() {
         entityId={entity.id}
         name={entity.name}
         imageUrl={entity.imageUrl}
+        profileHref={entity.profileHref}
+        bodyType={entity.bodyType}
+        parentType={entity.parentType}
         initialItems={timeline.list}
         initialHasMore={timeline.hasMore}
         viewer={user}

@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { callApi, type ApiEnvelope } from "./api";
-import { isSuccessStatus, type AccessEntityTypeEnum, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
+import { isSuccessStatus, type OfficialEntityTypeEnum, type ReactionTargetTypeEnum, type ReactionTypeEnum } from "@/lib/types";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export type Reactor = {
@@ -12,7 +12,7 @@ export type Reactor = {
   avatar?: string;
   // The reaction this person (or entity) sent.
   type: ReactionTypeEnum;
-  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_type: OfficialEntityTypeEnum | null;
   author_entity_id: string | null;
   author_entity_name: string | null;
   author_entity_image_url: string | null;
@@ -23,7 +23,7 @@ export type SentReaction = {
   target_type: ReactionTargetTypeEnum;
   target_id: string;
   type: ReactionTypeEnum;
-  author_entity_type: AccessEntityTypeEnum | null;
+  author_entity_type: OfficialEntityTypeEnum | null;
   author_entity_id: string | null;
   author_entity_name: string | null;
   author_entity_image_url: string | null;
@@ -50,7 +50,7 @@ export async function sendReaction(payload: {
   targetType: ReactionTargetTypeEnum;
   targetId: string;
   type: ReactionTypeEnum;
-  authorEntity?: { type: AccessEntityTypeEnum; id: string };
+  authorEntity?: { type: OfficialEntityTypeEnum; id: string };
 }): Promise<ApiEnvelope<SentReaction>> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {
@@ -77,7 +77,7 @@ export async function sendReaction(payload: {
 export async function unsendReaction(payload: {
   targetType: ReactionTargetTypeEnum;
   targetId: string;
-  authorEntity?: { type: AccessEntityTypeEnum; id: string };
+  authorEntity?: { type: OfficialEntityTypeEnum; id: string };
 }): Promise<ApiEnvelope> {
   const sessionToken = await getSessionToken();
   if (!sessionToken) {

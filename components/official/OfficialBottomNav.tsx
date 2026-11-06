@@ -4,21 +4,25 @@ import {
   IconArrowBackUp,
   IconCalendarEvent,
   IconSmartHome,
+  IconSchool,
   IconUserCircle,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   MANAGE_EVENTS_HREF,
+  MANAGE_TRAININGS_HREF,
 } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import { useHeaderAdminAccess } from "../navigations/HeaderAdminAccessContext";
+import type { OfficialEntityTypeEnum } from "@/lib/types";
 import { NavIconPulse, usePressPulse } from "../navigations/NavPulse";
 import SwitchAccountButton from "./SwitchAccountButton";
 
 interface OfficialBottomNavProps {
-  entityType: AccessEntityTypeEnum;
+  entityType: OfficialEntityTypeEnum;
   entityId: string;
+  profileHref?: string;
 }
 
 const TAB_CLASS =
@@ -28,17 +32,22 @@ const TAB_CLASS =
 export default function OfficialBottomNav({
   entityType,
   entityId,
+  profileHref,
 }: OfficialBottomNavProps) {
   const pathname = usePathname();
+  const activeProfileHref = useHeaderAdminAccess()?.activeProfileHref;
   const timelineHref = "/";
-  const profileHref = entityProfileHref(entityType, entityId);
+  profileHref = profileHref ?? activeProfileHref ?? (entityType === "special_body" ? "/settings" : entityProfileHref(entityType, entityId));
   const eventsHref = MANAGE_EVENTS_HREF;
+  const trainingsHref = MANAGE_TRAININGS_HREF;
   const isTimeline = pathname === timelineHref;
   const isProfile = pathname === profileHref;
   const isEvents = pathname === eventsHref || pathname.startsWith(`${eventsHref}/`);
+  const isTrainings = pathname === trainingsHref || pathname.startsWith(`${trainingsHref}/`);
   const [homePressed, triggerHome] = usePressPulse();
   const [profilePressed, triggerProfile] = usePressPulse();
   const [eventsPressed, triggerEvents] = usePressPulse();
+  const [trainingsPressed, triggerTrainings] = usePressPulse();
 
   return (
     <nav
@@ -65,6 +74,17 @@ export default function OfficialBottomNav({
           <IconCalendarEvent className="size-5" stroke={isEvents ? 2.4 : 2} />
         </NavIconPulse>
         Event
+      </Link>
+
+      <Link
+        href={trainingsHref}
+        onClick={triggerTrainings}
+        className={`${TAB_CLASS} ${isTrainings ? "text-primary-foreground" : "text-muted-foreground"}`}
+      >
+        <NavIconPulse pressed={trainingsPressed}>
+          <IconSchool className="size-5" stroke={isTrainings ? 2.4 : 2} />
+        </NavIconPulse>
+        Training
       </Link>
 
       <Link

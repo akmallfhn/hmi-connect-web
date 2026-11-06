@@ -6,7 +6,7 @@ import { callApi, type ApiEnvelope } from "./api";
 import {
   isSuccessStatus,
   type AccessCapabilityEnum,
-  type AccessEntityTypeEnum,
+  type OfficialEntityTypeEnum,
   type UserStatusEnum,
   type VerificationStatusEnum,
 } from "@/lib/types";
@@ -15,7 +15,7 @@ import { ACTING_ACCOUNT_COOKIE_NAME, SESSION_COOKIE_NAME, getSessionCookieDomain
 // One accepted, unrevoked access grant — check-session only ever returns accepted ones.
 export type SessionGrant = {
   id: string;
-  entity_type: AccessEntityTypeEnum;
+  entity_type: OfficialEntityTypeEnum;
   entity_id: string;
   entity_name?: string;
   capability: AccessCapabilityEnum;

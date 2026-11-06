@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { PagedTrainingResult, TrainingListEntry } from "@/apis/trainings";
+import type { GuideContact } from "../common/OfficialAccountGuideContacts";
 import type { TrainingStatusEnum } from "@/lib/types";
 import Button from "../buttons/Button";
 import PageBanner from "../common/PageBanner";
@@ -22,6 +23,7 @@ import Dropdown from "../common/Dropdown";
 import Input from "../fields/Input";
 import EmptyStateIllustration from "../illustrations/EmptyStateIllustration";
 import PublicTrainingCard from "../trainings/PublicTrainingCard";
+import TrainingCreateGuide from "../trainings/TrainingCreateGuide";
 import TrainingPageShell, {
   type TrainingViewer,
 } from "../trainings/TrainingPageShell";
@@ -35,6 +37,8 @@ interface TrainingCatalogPageProps {
   result: PagedTrainingResult<TrainingListEntry>;
   initialSearch: string;
   initialLevel?: TrainingStatusEnum;
+  guideContacts: { akmal: GuideContact | null; anida: GuideContact | null };
+  canChatWithGuideContacts: boolean;
 }
 
 const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
@@ -42,6 +46,9 @@ const LEVELS: { label: string; value?: TrainingStatusEnum }[] = [
   { label: "LK1", value: "LK1" },
   { label: "LK2", value: "LK2" },
   { label: "LK3", value: "LK3" },
+  { label: "SC", value: "SC" },
+  { label: "LKK", value: "LKK" },
+  { label: "LKSG", value: "LKSG" },
 ];
 
 export default function TrainingCatalogPage({
@@ -49,6 +56,8 @@ export default function TrainingCatalogPage({
   result,
   initialSearch,
   initialLevel,
+  guideContacts,
+  canChatWithGuideContacts,
 }: TrainingCatalogPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -92,6 +101,7 @@ export default function TrainingCatalogPage({
                 Jelajahi Latihan Kader dari berbagai daerah, simpan dan
                 registrasi.
               </p>
+              <TrainingCreateGuide contacts={guideContacts} canChat={canChatWithGuideContacts} />
             </div>
             <div className="pointer-events-none absolute inset-y-0 right-0 w-[45%] [mask-image:linear-gradient(to_right,transparent,black)]">
               <Image

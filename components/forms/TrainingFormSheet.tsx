@@ -4,15 +4,14 @@ import { ImageOff, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
-import type { CreateTrainingPayload, TrainingDetail } from "@/apis/trainings";
-import { createTraining, updateTraining } from "@/lib/actions";
+import type { TrainingDetail } from "@/apis/trainings";
+import { createTraining, saveBranchTrainingContact, saveBranchTrainingCover, updateTraining } from "@/lib/actions";
 import {
   TRAINING_POSTER_ACCEPT,
   uploadTrainingPoster,
 } from "@/lib/training-poster";
 import { isSuccessStatus } from "@/lib/types";
 import Button from "../buttons/Button";
-import Switch from "../buttons/Switch";
 import Input from "../fields/Input";
 import SearchableSelect, {
   type SearchableOption,
@@ -61,7 +60,6 @@ export default function TrainingFormSheet({
       {open && (
         <TrainingFields
           branchId={branchId}
-          branchName={branchName}
           training={training}
           onClose={onClose}
           onSaved={onSaved}
@@ -73,18 +71,13 @@ export default function TrainingFormSheet({
 
 function TrainingFields({
   branchId,
-  branchName,
   training,
   onClose,
   onSaved,
-}: Omit<TrainingFormSheetProps, "open"> & { branchName: string }) {
-  const [name, setName] = useState(training?.name ?? "");
+}: Omit<TrainingFormSheetProps, "open">) {
   const [description, setDescription] = useState(training?.description ?? "");
   const [startDate, setStartDate] = useState(training?.start_date ?? "");
   const [endDate, setEndDate] = useState(training?.end_date ?? "");
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(
-    training?.is_registration_open ?? true
-  );
   const [locationName, setLocationName] = useState(
     training?.location_name ?? ""
   );
@@ -96,21 +89,21 @@ function TrainingFields({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [contactPerson, setContactPerson] = useState<SearchableOption | null>(
-    training?.contact_person_id && training?.contact_person_name
+    training?.contacts?.[0]?.user_id && training.contacts[0].name
         ? {
-          label: training.contact_person_name,
-          value: training.contact_person_id,
-          image: training.contact_person_avatar,
+          label: training.contacts[0].name,
+          value: training.contacts[0].user_id,
+          image: training.contacts[0].avatar,
         }
       : null
   );
   const contactPersonDefaultOptions: SearchableOption[] =
-    training?.contact_person_id && training?.contact_person_name
+    training?.contacts?.[0]?.user_id && training.contacts[0].name
       ? [
           {
-            label: training.contact_person_name,
-            value: training.contact_person_id,
-            image: training.contact_person_avatar,
+            label: training.contacts[0].name,
+            value: training.contacts[0].user_id,
+            image: training.contacts[0].avatar,
           },
         ]
       : [];
@@ -138,23 +131,6 @@ function TrainingFields({
     };
   }
 
-  // trainings/create always makes the caller the contact person with registration open, so apply both after.
-  async function createBranchTraining(payload: CreateTrainingPayload) {
-    const created = await createTraining(payload);
-    if (!isSuccessStatus(created.status) || !created.data) return created;
-
-    const contactPersonId = String(contactPerson?.value ?? "");
-    const needsContactPerson =
-      contactPersonId && contactPersonId !== created.data.contact_person_id;
-    if (!needsContactPerson && isRegistrationOpen) return created;
-
-    return updateTraining({
-      id: created.data.id,
-      ...(needsContactPerson ? { contact_person_id: contactPersonId } : {}),
-      is_registration_open: isRegistrationOpen,
-    });
-  }
-
   function handleImagePickClick() {
     imageInputRef.current?.click();
   }
@@ -176,8 +152,8 @@ function TrainingFields({
   }
 
   async function handleSubmit() {
-    if (!name.trim() || !startDate || !endDate) {
-      toast.error("Nama dan tanggal pelaksanaan wajib diisi.");
+    if (!startDate || !endDate) {
+      toast.error("Tanggal pelaksanaan wajib diisi.");
       return;
     }
     if (!contactPerson) {
@@ -198,23 +174,17 @@ function TrainingFields({
       const result = training
         ? await updateTraining({
             id: training.id,
-            name: name.trim(),
             description: description.trim(),
-            contact_person_id: String(contactPerson.value),
             start_date: startDate,
             end_date: endDate,
-            is_registration_open: isRegistrationOpen,
             location_name: locationName.trim(),
             location_url: locationUrl.trim(),
-            ...(imageMediaId !== null ? { image_media_id: imageMediaId } : {}),
           })
-        : await createBranchTraining({
-            name: name.trim(),
+        : await createTraining({
             ...(description.trim() ? { description: description.trim() } : {}),
             level: "LK2",
             organizer_type: "branch",
             organizer_id: branchId,
-            organizer_name: branchName,
             start_date: startDate,
             end_date: endDate,
             ...(locationName.trim()
@@ -223,11 +193,19 @@ function TrainingFields({
             ...(locationUrl.trim()
               ? { location_url: locationUrl.trim() }
               : {}),
-            ...(imageMediaId ? { image_media_id: imageMediaId } : {}),
           });
 
-      if (!isSuccessStatus(result.status)) {
+      if (!isSuccessStatus(result.status) || !result.data) {
         toast.error(result.message ?? "Gagal menyimpan batch LK2.");
+        return;
+      }
+      const currentCover = training?.images?.find((image) => image.role === "cover")?.media_id ?? null;
+      const cover = await saveBranchTrainingCover(result.data.id, branchId,
+        imageMediaId === null ? currentCover : imageMediaId || null);
+      const contact = await saveBranchTrainingContact(result.data.id, branchId, String(contactPerson.value));
+      if (!cover.ok || !contact.ok) {
+        toast.error(`Batch tersimpan, tetapi lampirannya belum lengkap. ${!cover.ok ? cover.message : contact.message}`);
+        onSaved();
         return;
       }
       toast.success(
@@ -307,14 +285,6 @@ function TrainingFields({
           </div>
         </div>
       </div>
-      <Input
-        inputId="training-name"
-        label="Nama Batch"
-        placeholder="Contoh: LK2 HMI Cabang Banda Aceh 2026"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        required
-      />
       <SearchableSelect
         selectId="training-contact-person"
         label="Contact Person"
@@ -352,15 +322,6 @@ function TrainingFields({
           value={endDate}
           onChange={(event) => setEndDate(event.target.value)}
           required
-        />
-      </div>
-      <div className="rounded-lg border border-border bg-surface-subtle p-3">
-        <Switch
-          switchId="training-registration-open"
-          label="Pendaftaran dibuka"
-          checked={isRegistrationOpen}
-          onChange={setIsRegistrationOpen}
-          disabled={isSaving}
         />
       </div>
       <Input

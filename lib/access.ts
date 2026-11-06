@@ -1,5 +1,5 @@
 import type { SessionGrant, SessionUser } from "@/apis/session";
-import type { AccessEntityTypeEnum } from "@/lib/types";
+import type { AccessEntityTypeEnum, OfficialEntityTypeEnum } from "@/lib/types";
 
 // Admin route segment per hierarchy entity — the one place these five paths are spelled out.
 export const ADMIN_ENTITY_BASE_PATH: Record<AccessEntityTypeEnum, string> = {
@@ -36,9 +36,10 @@ export function adminEntityHref(
 
 // Event management follows the selected account cookie rather than an entity id in the path.
 export const MANAGE_EVENTS_HREF = "/events/manage";
+export const MANAGE_TRAININGS_HREF = "/trainings/manage";
 
 export type ActingEntityRef = {
-  entityType: AccessEntityTypeEnum;
+  entityType: OfficialEntityTypeEnum;
   entityId: string;
 };
 
@@ -51,10 +52,10 @@ export function parseActingEntityRef(raw: string | null | undefined): ActingEnti
   const separator = raw.indexOf(":");
   const entityType = raw.slice(0, separator);
   const entityId = raw.slice(separator + 1);
-  if (separator < 1 || !entityId || !Object.hasOwn(ADMIN_ENTITY_BASE_PATH, entityType)) {
+  if (separator < 1 || !entityId || (entityType !== "special_body" && !Object.hasOwn(ADMIN_ENTITY_BASE_PATH, entityType))) {
     return null;
   }
-  return { entityType: entityType as AccessEntityTypeEnum, entityId };
+  return { entityType: entityType as OfficialEntityTypeEnum, entityId };
 }
 
 export function resolveSelectedActingAccount(
@@ -89,7 +90,7 @@ export function manageGrantsOfType(
 // An accepted grant at exactly this entity, with no Super Admin shortcut.
 export function holdsGrantAtEntity(
   user: SessionUser | null | undefined,
-  entityType: AccessEntityTypeEnum,
+  entityType: OfficialEntityTypeEnum,
   entityId: string | undefined,
 ): boolean {
   if (!entityId) return false;
@@ -115,7 +116,7 @@ export function canScopeToEntityLevel(
   if (isSuperAdmin(user)) return true;
   const targetLevel = ADMIN_ENTITY_ORDER.indexOf(entityType);
   return manageGrants(user).some(
-    (grant) => ADMIN_ENTITY_ORDER.indexOf(grant.entity_type) <= targetLevel,
+    (grant) => grant.entity_type !== "special_body" && ADMIN_ENTITY_ORDER.indexOf(grant.entity_type) <= targetLevel,
   );
 }
 

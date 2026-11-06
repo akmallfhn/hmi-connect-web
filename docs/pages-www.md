@@ -35,10 +35,11 @@ Dokumen ini mencatat **route halaman** pada host `www` (segmen internal `/www` t
 | `/profile/[username]/activities` | Bisa buka | Redirect ke tab aktivitas profil | Redirect ke tab aktivitas profil | Mengikuti gate route profil tujuan. |
 | `/organizations/[organization_id]`, `/coordinating-bodies/[coordinating_body_id]`, `/branches/[branch_id]`, `/coordinating-chapters/[coordinating_chapter_id]`, `/chapters/[chapter_id]` | Login | Profil entity | Profil entity dengan interaksi entity | Kelima route berada di `(gated)` dan memeriksa entity aktif. |
 | `/kohati/[mention_name]`, `/bpl/[mention_name]` | Login | Profil badan khusus | Profil badan khusus dengan interaksi entity | Keduanya berada di `(gated)`. |
+| `/special-bodies/[body_id]` | Login | Redirect ke profil badan khusus | Redirect ke profil badan khusus | Membuka tautan author feed berdasarkan ID lalu mengarah ke mention name kanonis. |
 | `/mentions/[mention_name]` | Redirect ke profil tujuan | Redirect ke profil tujuan | Redirect ke profil tujuan | Akses akhir mengikuti profil tujuan. |
 | `/institutions/[institution_slug]/[institution_id]` | Bisa baca | Profil institusi | Profil institusi | Halaman publik. |
 | `/trainings`, `/trainings/[training_id]` | Bisa baca | Katalog/detail pelatihan | Katalog/detail pelatihan | Halaman baca publik. |
-| `/trainings/create`, `/trainings/[training_id]/edit` | Login | Buat/edit sesuai pemeriksaan pemilik dan verifikasi | Route saat ini belum memblokir mode Entity | Keduanya di luar `(gated)` dengan pemeriksaan sesi sendiri. |
+| `/trainings/manage`, `/trainings/manage/create`, `/trainings/manage/[training_id]` | Login | **404** | Daftar, buat, dan edit training milik entity terpilih | Ketiganya di `(gated)`; server memeriksa grant dan kepemilikan training. Form resmi mengikuti pola event, termasuk narahubung, poster, lokasi, proposal PDF opsional, dan foto tambahan. Nama training dibuat otomatis dari tingkat, penyelenggara, serta tahun mulai. Badan khusus hanya dapat membuat level yang diizinkan backend. |
 | `/trainings/[training_id]/register` | 404 | 404 | 404 | Route registrasi belum diimplementasikan. |
 | `/membership` | Login | Kartu keanggotaan | **404** | Perlu status verifikasi yang sesuai. |
 | `/activation` | Login | Hanya akun berstatus `pending` | Tidak berlaku untuk akun pending | Selain pending diarahkan ke `/`. |

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSession } from "@/apis/session";
 import { listTrainings } from "@/apis/trainings";
+import { getUserByUsername } from "@/apis/users";
 import TrainingCatalogPage from "@/components/pages/TrainingCatalogPage";
 import type { TrainingStatusEnum } from "@/lib/types";
 
@@ -26,7 +27,7 @@ interface TrainingsRouteProps {
 const PAGE_SIZE = 12;
 
 function parseLevel(value?: string): TrainingStatusEnum | undefined {
-  if (value === "LK1" || value === "LK2" || value === "LK3") return value;
+  if (value === "LK1" || value === "LK2" || value === "LK3" || value === "SC" || value === "LKK" || value === "LKSG") return value;
   return undefined;
 }
 
@@ -38,7 +39,7 @@ export default async function TrainingsRoute({
   const level = parseLevel(query.level);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
 
-  const [result, { user }] = await Promise.all([
+  const [result, { user }, akmal, anida] = await Promise.all([
     listTrainings({
       search: search || undefined,
       level,
@@ -46,6 +47,8 @@ export default async function TrainingsRoute({
       pageSize: PAGE_SIZE,
     }),
     getSession(),
+    getUserByUsername("akmallfhn"),
+    getUserByUsername("anida"),
   ]);
 
   return (
@@ -61,6 +64,8 @@ export default async function TrainingsRoute({
       result={result}
       initialSearch={search}
       initialLevel={level}
+      guideContacts={{ akmal, anida }}
+      canChatWithGuideContacts={Boolean(user && user.status !== "pending")}
     />
   );
 }

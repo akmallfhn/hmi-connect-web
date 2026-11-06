@@ -3,7 +3,7 @@
 import { getSession } from "@/apis/session";
 import type { ApiEnvelope } from "@/apis/api";
 import { selectedActingEntityRef, setActingAccount } from "@/lib/acting-entity";
-import type { ActingEntityRef } from "@/lib/access";
+import { canManageEntity, type ActingEntityRef } from "@/lib/access";
 import { isSuccessStatus } from "@/lib/types";
 
 import {
@@ -265,17 +265,24 @@ import {
 import {
   activateTrainingReminder as activateTrainingReminderApi,
   createTraining as createTrainingApi,
+  createTrainingContact as createTrainingContactApi,
+  createTrainingImage as createTrainingImageApi,
   createTrainingMaterial as createTrainingMaterialApi,
   deactivateTrainingReminder as deactivateTrainingReminderApi,
   deleteTraining as deleteTrainingApi,
+  deleteTrainingContact as deleteTrainingContactApi,
+  deleteTrainingImage as deleteTrainingImageApi,
+  getTrainingDetail as getTrainingDetailApi,
   deleteTrainingMaterial as deleteTrainingMaterialApi,
   lockTrainingEvaluations as lockTrainingEvaluationsApi,
   registerTraining as registerTrainingApi,
   updateTraining as updateTrainingApi,
+  updateTrainingContact as updateTrainingContactApi,
   updateTrainingEvaluation as updateTrainingEvaluationApi,
   updateTrainingMaterial as updateTrainingMaterialApi,
   type CreateTrainingMaterialPayload,
   type CreateTrainingPayload,
+  type TrainingContactInput,
   type RegisterTrainingPayload,
   type UpdateTrainingEvaluationPayload,
   type UpdateTrainingMaterialPayload,
@@ -500,6 +507,127 @@ export async function updateTraining(payload: UpdateTrainingPayload) {
 
 export async function deleteTraining(id: string) {
   return deleteTrainingApi(id);
+}
+
+export async function saveTrainingContacts(trainingId: string, contacts: (TrainingContactInput & { id?: string })[]) {
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  const training = await getTrainingDetailApi(trainingId);
+  if (!selected || !training || training.organizer_type !== selected.entityType || training.organizer_id !== selected.entityId) {
+    return { ok: false, message: "Akunmu tidak lagi punya akses untuk mengelola training ini." };
+  }
+  try {
+    const existing = training.contacts ?? [];
+    const wantedIds = new Set(contacts.map((contact) => contact.id).filter(Boolean));
+    for (const contact of existing) {
+      if (!wantedIds.has(contact.id)) {
+        const result = await deleteTrainingContactApi(contact.id);
+        if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      }
+    }
+    for (const contact of contacts) {
+      const input: TrainingContactInput = contact.user_id
+        ? { user_id: contact.user_id }
+        : { name: contact.name?.trim() ?? "", phone_number: contact.phone_number?.trim() ?? "" };
+      const current = existing.find((item) => item.id === contact.id);
+      if (current) {
+        if (current.user_id === input.user_id && (input.user_id || (current.name === input.name && current.phone_number === input.phone_number))) continue;
+        const result = await updateTrainingContactApi(current.id, input);
+        if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      } else {
+        const result = await createTrainingContactApi(trainingId, input);
+        if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      }
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[saveTrainingContacts] failed:", error);
+    return { ok: false, message: error instanceof Error ? error.message : "Narahubung gagal disimpan." };
+  }
+}
+
+export async function saveTrainingImages(trainingId: string, coverMediaId: string | null, galleryMediaIds: string[]) {
+  const { user } = await getSession();
+  const selected = await selectedActingEntityRef(user);
+  const training = await getTrainingDetailApi(trainingId);
+  if (!selected || !training || training.organizer_type !== selected.entityType || training.organizer_id !== selected.entityId) {
+    return { ok: false, message: "Akunmu tidak lagi punya akses untuk mengelola training ini." };
+  }
+  if (galleryMediaIds.length > 20 || new Set(galleryMediaIds).size !== galleryMediaIds.length ||
+      (coverMediaId !== null && galleryMediaIds.includes(coverMediaId))) {
+    return { ok: false, message: "Foto lainnya maksimal 20 foto tanpa duplikat." };
+  }
+  try {
+    const existing = training.images ?? [];
+    const wanted = new Set(galleryMediaIds);
+    for (const image of existing) {
+      if ((image.role === "cover" && image.media_id !== coverMediaId) ||
+          (image.role === "gallery" && !wanted.has(image.media_id))) {
+        const result = await deleteTrainingImageApi(image.id);
+        if (!isSuccessStatus(result.status)) throw new Error(result.message);
+      }
+    }
+    if (coverMediaId && !existing.some((image) => image.role === "cover" && image.media_id === coverMediaId)) {
+      const result = await createTrainingImageApi(trainingId, "cover", coverMediaId);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+    }
+    const stored = new Set(existing.filter((image) => image.role === "gallery").map((image) => image.media_id));
+    for (const mediaId of galleryMediaIds) {
+      if (stored.has(mediaId)) continue;
+      const result = await createTrainingImageApi(trainingId, "gallery", mediaId);
+      if (!isSuccessStatus(result.status)) throw new Error(result.message);
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[saveTrainingImages] failed:", error);
+    return { ok: false, message: error instanceof Error ? error.message : "Foto lainnya gagal disimpan." };
+  }
+}
+
+export async function saveBranchTrainingCover(trainingId: string, branchId: string, coverMediaId: string | null) {
+  const { user } = await getSession();
+  const training = await getTrainingDetailApi(trainingId);
+  if (!training || training.organizer_type !== "branch" || training.organizer_id !== branchId ||
+      !canManageEntity(user, "branch", branchId)) {
+    return { ok: false, message: "Akunmu tidak punya akses untuk mengelola poster training ini." };
+  }
+  const current = training.images?.find((image) => image.role === "cover");
+  if (current?.media_id === coverMediaId) return { ok: true };
+  try {
+    if (current) {
+      const removed = await deleteTrainingImageApi(current.id);
+      if (!isSuccessStatus(removed.status)) throw new Error(removed.message);
+    }
+    if (coverMediaId) {
+      const created = await createTrainingImageApi(trainingId, "cover", coverMediaId);
+      if (!isSuccessStatus(created.status)) throw new Error(created.message);
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[saveBranchTrainingCover] failed:", error);
+    return { ok: false, message: error instanceof Error ? error.message : "Poster gagal disimpan." };
+  }
+}
+
+export async function saveBranchTrainingContact(trainingId: string, branchId: string, userId: string) {
+  const { user } = await getSession();
+  const training = await getTrainingDetailApi(trainingId);
+  if (!training || training.organizer_type !== "branch" || training.organizer_id !== branchId ||
+      !canManageEntity(user, "branch", branchId)) {
+    return { ok: false, message: "Akunmu tidak punya akses untuk mengelola narahubung training ini." };
+  }
+  try {
+    const first = training.contacts?.[0];
+    if (first?.user_id === userId) return { ok: true };
+    const result = first
+      ? await updateTrainingContactApi(first.id, { user_id: userId })
+      : await createTrainingContactApi(trainingId, { user_id: userId });
+    if (!isSuccessStatus(result.status)) throw new Error(result.message);
+    return { ok: true };
+  } catch (error) {
+    console.error("[saveBranchTrainingContact] failed:", error);
+    return { ok: false, message: error instanceof Error ? error.message : "Narahubung gagal disimpan." };
+  }
 }
 
 export async function registerTraining(payload: RegisterTrainingPayload) {

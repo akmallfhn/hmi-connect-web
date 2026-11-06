@@ -1,10 +1,10 @@
 "use client";
 
-import { IconArticle, IconCalendarEvent, IconMessage2 } from "@tabler/icons-react";
+import { IconArticle, IconMessage2 } from "@tabler/icons-react";
 import { usePathname, useRouter } from "next/navigation";
 import { COMPOSE_INTENT_KEY } from "@/lib/constants";
 
-type CreateOptionKind = "feed" | "article" | "event";
+type CreateOptionKind = "feed" | "article";
 
 const CREATE_OPTIONS: {
   kind: CreateOptionKind;
@@ -23,12 +23,6 @@ const CREATE_OPTIONS: {
     label: "Artikel",
     description: "Tulisan panjang dengan cover.",
     icon: IconArticle,
-  },
-  {
-    kind: "event",
-    label: "Event",
-    description: "Agenda Latihan Kader untuk didaftari.",
-    icon: IconCalendarEvent,
   },
 ];
 
@@ -50,10 +44,6 @@ export default function CreateOptionList({
 
     if (kind === "article") {
       router.push("/articles/create");
-      return;
-    }
-    if (kind === "event") {
-      router.push("/trainings/create");
       return;
     }
 

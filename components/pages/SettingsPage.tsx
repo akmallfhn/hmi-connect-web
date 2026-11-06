@@ -7,7 +7,7 @@ import {
   type ActingEntityRef,
 } from "@/lib/access";
 import { logoutUser } from "@/lib/actions";
-import type { AccessEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
+import type { OfficialEntityTypeEnum, VerificationStatusEnum } from "@/lib/types";
 import {
   BadgeCheck,
   ChevronRight,
@@ -48,9 +48,10 @@ interface SettingsPageProps {
 
 // An organization is named outright; the other four read as "Cabang Depok".
 function formatEntityName(
-  entityType: AccessEntityTypeEnum,
+  entityType: OfficialEntityTypeEnum,
   name?: string | null
 ) {
+  if (entityType === "special_body") return name || "Badan Khusus";
   if (!name) return ADMIN_ENTITY_LABEL[entityType];
   if (entityType === "organization") return name;
   return `${ADMIN_ENTITY_LABEL[entityType]} ${name}`;
@@ -91,21 +92,21 @@ export default function SettingsPage({
         .slice()
         .sort(
           (a, b) =>
-            ADMIN_ENTITY_ORDER.indexOf(a.entity_type) -
-            ADMIN_ENTITY_ORDER.indexOf(b.entity_type)
+            (a.entity_type === "special_body" ? 5 : ADMIN_ENTITY_ORDER.indexOf(a.entity_type)) -
+            (b.entity_type === "special_body" ? 5 : ADMIN_ENTITY_ORDER.indexOf(b.entity_type))
         )
         .map((grant) => ({
           key: grant.id,
           name: formatEntityName(grant.entity_type, grant.entity_name),
           imageUrl: grant.entity_image_url,
           items: [
-            {
+            ...(grant.entity_type === "special_body" ? [] : [{
               label: "Dashboard",
               description: `Kelola data dan anggota ${formatEntityName(grant.entity_type, grant.entity_name)}.`,
-              href: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type, grant.entity_id)}`,
+              href: `${adminAccess.adminOrigin}${adminEntityHref(grant.entity_type as Exclude<OfficialEntityTypeEnum, "special_body">, grant.entity_id)}`,
               icon: LayoutDashboard,
               external: true,
-            },
+            }]),
             {
               label: "Official Account",
               description: `Buat postingan atas nama ${formatEntityName(grant.entity_type, grant.entity_name)}.`,

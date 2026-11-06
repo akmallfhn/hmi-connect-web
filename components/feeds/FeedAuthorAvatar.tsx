@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Check } from "lucide-react";
+import type { ReactNode } from "react";
 import Avatar from "../common/Avatar";
 import LogoHmi from "../svg/LogoHmi";
 import type { FeedAuthor } from "@/lib/feed-author";
@@ -8,6 +9,7 @@ interface FeedAuthorAvatarProps {
   author: FeedAuthor;
   size?: number;
   className?: string;
+  fallbackLogo?: ReactNode;
 }
 
 // An entity author wears the same ringed logo treatment as its own profile header.
@@ -15,6 +17,7 @@ export default function FeedAuthorAvatar({
   author,
   size = 44,
   className,
+  fallbackLogo,
 }: FeedAuthorAvatarProps) {
   if (!author.isEntity) {
     return (
@@ -49,7 +52,7 @@ export default function FeedAuthorAvatar({
             className="h-full w-full object-cover"
           />
         ) : (
-          <LogoHmi style={{ width: size * 0.5, height: size * 0.5 }} />
+          fallbackLogo ?? <LogoHmi style={{ width: size * 0.5, height: size * 0.5 }} />
         )}
       </span>
 

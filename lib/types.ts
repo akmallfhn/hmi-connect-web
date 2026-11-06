@@ -13,7 +13,7 @@ export type OrganizationalDocumentTypeEnum =
   | "pdk"
   | "pd-prt-bpl"
   | "konstitusi";
-export type TrainingStatusEnum = "LK1" | "LK2" | "LK3";
+export type TrainingStatusEnum = "LK1" | "LK2" | "LK3" | "SC" | "LKK" | "LKSG";
 export type TrainingHistoryLevelEnum =
   | TrainingStatusEnum
   | "SC"
@@ -22,9 +22,11 @@ export type TrainingHistoryLevelEnum =
 export type TrainingResultEnum = "passed" | "conditional_pass" | "failed";
 export type TrainingOrganizerTypeEnum =
   | "chapter"
+  | "coordinating_chapter"
   | "branch"
   | "coordinating_body"
-  | "organization";
+  | "organization"
+  | "special_body";
 export type EventEntityTypeEnum =
   | "organization"
   | "coordinating_body"
@@ -79,7 +81,7 @@ export type ProfileCompletionStageEnum =
   | "social_media_accounts";
 export type RevelationPlaceEnum = "mekkah" | "madinah";
 export type MessageStatusEnum = "sent" | "read";
-// The five organization-hierarchy entities an access grant (and a structural period) can point at.
+// The five organization-hierarchy entities used for structural scopes and admin dashboards.
 export type AccessEntityTypeEnum =
   | "organization"
   | "coordinating_body"
@@ -88,6 +90,8 @@ export type AccessEntityTypeEnum =
   | "coordinating_chapter";
 // Anything with a public mention handle and profile: the five levels plus every special body.
 export type MentionEntityTypeEnum = AccessEntityTypeEnum | "special_body";
+// Access grants can also select a special body as an Official Account.
+export type OfficialEntityTypeEnum = MentionEntityTypeEnum;
 // The units special-bodies/* holds; each hangs off one hierarchy entity rather than being a level.
 export type SpecialBodyTypeEnum = "kohati" | "bpl" | "balitbang" | "lpp";
 export type AccessCapabilityEnum = "manage";

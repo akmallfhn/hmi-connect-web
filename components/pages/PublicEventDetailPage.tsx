@@ -7,10 +7,12 @@ export default function PublicEventDetailPage({
   viewer,
   event,
   canChat,
+  organizerName,
 }: {
   viewer: SessionUser;
   event: EventDetail;
   canChat: boolean;
+  organizerName?: string;
 }) {
   return (
     <EventPageShell viewer={viewer} mobileBackTitle="Detail Event">
@@ -18,6 +20,7 @@ export default function PublicEventDetailPage({
         event={event}
         attendees={event.attendee_preview}
         canChat={canChat}
+        organizerName={organizerName}
         viewer={{ id: viewer.id, name: viewer.full_name, avatar: viewer.avatar }}
       />
     </EventPageShell>

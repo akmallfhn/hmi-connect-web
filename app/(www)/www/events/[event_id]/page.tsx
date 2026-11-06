@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { getEventDetail } from "@/apis/events";
 import { getSession } from "@/apis/session";
+import { getSpecialBodyDetail } from "@/apis/special-bodies";
 import { selectedActingEntityRef } from "@/lib/acting-entity";
+import { formatSpecialBodyName } from "@/lib/special-body";
 import PublicEventDetailPage from "@/components/pages/PublicEventDetailPage";
 
 const loadEvent = cache(getEventDetail);
@@ -36,12 +38,19 @@ export default async function EventDetailRoute({
   if (user.status === "pending") redirect("/activation");
   const event = await loadEvent(event_id);
   if (!event) notFound();
+  const specialBody = event.entity_type === "special_body"
+    ? await getSpecialBodyDetail(event.entity_id)
+    : null;
+  const organizerName = specialBody
+    ? formatSpecialBodyName(specialBody.type, specialBody.parent_entity_type, specialBody.name)
+    : undefined;
   const canChat = !(await selectedActingEntityRef(user));
   return (
     <PublicEventDetailPage
       viewer={user}
       event={event}
       canChat={canChat}
+      organizerName={organizerName}
     />
   );
 }
