@@ -7,6 +7,7 @@ import type { VerificationStatusEnum } from "@/lib/types";
 import Dropdown from "../common/Dropdown";
 import PageMargin from "../common/PageMargin";
 import Button from "../buttons/Button";
+import LogoHmiConnectHorizontal from "../svg/LogoHmiConnectHorizontal";
 
 interface HeaderProps {
   fullName?: string;
@@ -17,6 +18,7 @@ interface HeaderProps {
   verificationStatus?: VerificationStatusEnum;
   loading?: boolean;
   mobileBackTitle?: string;
+  mobileBrandOnly?: boolean;
   mobileMenu?: ReactNode;
   mobileMenuLabel?: string;
   desktopFilterBar?: ReactNode;
@@ -24,6 +26,7 @@ interface HeaderProps {
 
 export default function Header({
   mobileBackTitle,
+  mobileBrandOnly = false,
   mobileMenu,
   mobileMenuLabel = "Menu",
   desktopFilterBar,
@@ -40,44 +43,58 @@ export default function Header({
         </div>
       )}
 
-      {(mobileBackTitle || mobileMenu) && (
+      {(mobileBrandOnly || mobileBackTitle || mobileMenu) && (
         <div className="border-y border-border bg-surface lg:hidden">
-          <PageMargin className="flex h-12 items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              aria-label="Kembali"
-              className="-ml-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
-            >
-              <ArrowLeft className="size-5" />
-            </Button>
-            {mobileBackTitle ? (
-              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-heading">
-                {mobileBackTitle}
-              </h1>
+          <PageMargin
+            className={`flex h-12 items-center ${
+              mobileBrandOnly ? "justify-center" : "gap-3"
+            }`}
+          >
+            {mobileBrandOnly ? (
+              <LogoHmiConnectHorizontal
+                className="h-7 w-auto"
+                role="img"
+                aria-label="HMI Connect"
+              />
             ) : (
-              <div className="min-w-0 flex-1" />
-            )}
-            {mobileMenu && (
-              <Dropdown
-                align="right"
-                panelClassName="w-56 rounded-xl"
-                trigger={({ open, toggle }) => (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggle}
-                    aria-label={mobileMenuLabel}
-                    aria-expanded={open}
-                    className="-mr-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
-                  >
-                    <EllipsisVertical className="size-5" />
-                  </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.back()}
+                  aria-label="Kembali"
+                  className="-ml-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
+                >
+                  <ArrowLeft className="size-5" />
+                </Button>
+                {mobileBackTitle ? (
+                  <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-heading">
+                    {mobileBackTitle}
+                  </h1>
+                ) : (
+                  <div className="min-w-0 flex-1" />
                 )}
-              >
-                {mobileMenu}
-              </Dropdown>
+                {mobileMenu && (
+                  <Dropdown
+                    align="right"
+                    panelClassName="w-56 rounded-xl"
+                    trigger={({ open, toggle }) => (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggle}
+                        aria-label={mobileMenuLabel}
+                        aria-expanded={open}
+                        className="-mr-2 size-8 shrink-0 rounded-full text-heading hover:bg-surface-muted"
+                      >
+                        <EllipsisVertical className="size-5" />
+                      </Button>
+                    )}
+                  >
+                    {mobileMenu}
+                  </Dropdown>
+                )}
+              </>
             )}
           </PageMargin>
         </div>

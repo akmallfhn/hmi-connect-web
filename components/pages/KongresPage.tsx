@@ -11,6 +11,7 @@ import KongresRundownSection from "../kongres/KongresRundownSection";
 import KongresFloatingNav from "../kongres/KongresFloatingNav";
 import KongresVenueSection from "../kongres/KongresVenueSection";
 import BottomNav from "../navigations/BottomNav";
+import Header from "../navigations/Header";
 
 interface KongresPageProps {
   userId?: string;
@@ -22,6 +23,7 @@ interface KongresPageProps {
 export default function KongresPage({ userId, username, newsArticles }: KongresPageProps) {
   return (
     <div className="min-h-screen bg-surface pb-16 lg:pb-0">
+      <Header mobileBrandOnly />
       <PageMargin className="pb-24 pt-4 lg:pt-6">
         <main className="flex min-w-0 flex-col gap-4 lg:gap-6">
           <KongresHero canShareToFeed={Boolean(userId)} />

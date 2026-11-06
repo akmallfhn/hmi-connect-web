@@ -80,6 +80,13 @@ const NAV_ITEMS = [
       pathname === "/trainings" || pathname.startsWith("/trainings/"),
   },
   {
+    label: "Event",
+    href: "/events",
+    icon: IconCalendarEvent,
+    matches: (pathname: string) =>
+      pathname === "/events" || pathname.startsWith("/events/"),
+  },
+  {
     label: "Al-Quran",
     href: "/quran",
     icon: IconMosque,

@@ -947,7 +947,8 @@ iconSm`.
   slightly brighter than the dark page surface. It contains the horizontal
   wordmark linking home, then the main navigation links (Beranda `/`, Explore `/search`,
   Artikel `/articles`, Pedoman Organisasi `/organizational-documents`, Training Center
-  `/trainings` (matching every `/trainings/*` route), Al-Quran `/quran`, Jadwal Sholat
+  `/trainings` (matching every `/trainings/*` route), Event `/events` (matching every `/events/*`
+  route), Al-Quran `/quran`, Jadwal Sholat
   `/prayer-schedules`, E-KTA `/membership`), a secondary-variant "Posting" button, and a
   bottom-anchored "Lainnya" `Dropdown` (Pengaturan, plus Masuk when logged out).
   News is reached through the News tab on `/articles`, not a separate nav link.
@@ -2442,7 +2443,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   a Liputan6-style floating pill of scroll-spy section links that fades in once the hero leaves the
   viewport, centred over the content column (above `BottomNav` on mobile, where it scrolls
   sideways to keep the active item in view). The app's desktop rail stays on the left like every
-  other page; there is no `Header`, aside, or footer. Section order:
+  other page; a mobile-only, centered HMI Connect logo header sits above the content, with no
+  back/title row, aside, or footer. Section order:
   hero ("Kongres HMI XXXIII", countdown, Pasang Twibbon and Bagikan Momen), statistics, host city,
   main venue and its three transport guides (Google Maps embed and directions), the 8-day rundown on a light card, committees, moments,
   news, then "Filosofi Logo" (the committee's sheet: light horizontal logo, six element icons, logo
@@ -2547,6 +2549,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   allowlist) so each route owns its `/auth/login?redirectTo=` bounce and a shared link survives
   signing in; each also owns the `pending` → `/activation` redirect `(gated)` would have done.
   Because of `loading.tsx`, that login bounce streams after a 200 rather than answering 307.
+  The public event detail page keeps its mobile "Detail Event" back/title row; the centered HMI
+  Connect logo header is reserved for `/pages` campaign pages.
   `events/list` sorts by `start_date` ascending with no time filter and searches `title` only, so
   `listEventsChronological` reads every page (100 rows, 20 pages at most) and puts upcoming events
   (soonest first) before ended events (latest first), paginating in memory. Both `/events` and
