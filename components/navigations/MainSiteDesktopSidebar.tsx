@@ -18,6 +18,7 @@ import {
   IconSmartHome,
   IconUserCircle,
 } from "@tabler/icons-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ import {
   type ActingEntityRef,
 } from "@/lib/access";
 import { entityProfileHref } from "@/lib/feed-author";
+import { KONGRES_PATH } from "@/lib/kongres-data";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 import CreateOptionList from "./CreateOptionList";
 import Dropdown from "../common/Dropdown";
@@ -194,9 +196,26 @@ export default function MainSiteDesktopSidebar({
 
   return (
     <aside className="sticky top-0 z-50 hidden h-dvh w-64 shrink-0 flex-col self-start border-r border-border bg-surface px-3 py-5 dark:bg-[#141414] lg:flex">
-      <Link href="/" className="mb-7 flex shrink-0 items-center px-2">
-        <LogoHmiConnectHorizontal className="h-8 w-auto" />
-      </Link>
+      <div className="mb-7 flex shrink-0 items-center gap-2 px-2">
+        <Link href="/" aria-label="HMI Connect" className="flex items-center">
+          <LogoHmiConnectHorizontal className="h-8 w-auto" />
+        </Link>
+        <Link
+          href={KONGRES_PATH}
+          aria-label="Kongres HMI XXXIII"
+          aria-current={pathname === KONGRES_PATH ? "page" : undefined}
+          title="Kongres HMI XXXIII"
+          className="ml-auto flex size-9 items-center justify-center rounded-lg transition hover:bg-surface-muted"
+        >
+          <Image
+            src="/images/twibbon/logo-kongres-emblem.png"
+            alt=""
+            width={28}
+            height={32}
+            className="size-8 object-contain"
+          />
+        </Link>
+      </div>
 
       {/* Only the menu scrolls; the logo above and Posting/Lainnya below stay put. */}
       <div className="-mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
