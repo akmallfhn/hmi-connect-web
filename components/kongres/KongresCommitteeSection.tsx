@@ -11,7 +11,7 @@ import { KONGRES_SECTION_BODY, KONGRES_SECTION_CLASS, SectionHeading, TapisBand 
 type CommitteeTab = "sc" | "oc";
 
 const TABS: { value: CommitteeTab; label: string }[] = [
-  { value: "oc", label: "Panitia Nasional Kongres" },
+  { value: "oc", label: "Organizing Committee" },
   { value: "sc", label: "Steering Committee" },
 ];
 

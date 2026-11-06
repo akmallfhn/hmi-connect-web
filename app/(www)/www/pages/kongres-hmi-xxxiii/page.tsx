@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listNewsArticles } from "@/apis/news";
 import { getSession } from "@/apis/session";
 import KongresPage from "@/components/pages/KongresPage";
 import { KONGRES_PATH, KONGRES_THEME, kongresAsset } from "@/lib/kongres-data";
@@ -19,6 +20,16 @@ export const metadata: Metadata = {
 
 // Public campaign page; the session only feeds BottomNav.
 export default async function KongresHmiXxxiii() {
-  const { user } = await getSession();
-  return <KongresPage userId={user?.id} username={user?.username} />;
+  const [{ user }, { list: newsArticles }] = await Promise.all([
+    getSession(),
+    listNewsArticles({ categorySlug: "kongres-hmi", page: 1, pageSize: 5 }),
+  ]);
+
+  return (
+    <KongresPage
+      userId={user?.id}
+      username={user?.username}
+      newsArticles={newsArticles}
+    />
+  );
 }

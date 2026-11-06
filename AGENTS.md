@@ -129,7 +129,7 @@ Type-check with `npx tsc --noEmit -p .` (there's no separate `typecheck` script)
 | --- | --- | --- |
 | `BASE_URL` | `apis/api.ts`, the Google callback route | Base URL of the Go backend all `callApi()` calls hit. |
 | `DOMAIN_MODE` | `lib/constants.ts` (`getSessionCookieDomain`, `getMainSiteOrigin`, `getAdminSiteOrigin`) | `"local"` → session cookie domain `example.com`; anything else → `hmiconnect.id`, the production domain. Set to `local` in local `.env`. |
-| `CLIENT_SECRET` | the Google callback route, `apis/auth.ts`, and the public reads in `apis/{articles,feeds,reactions,trainings,users}.ts` | Server-only bearer secret. Exchanges the Google token on `/api/v1/auth/login`, authorizes the password-reset flow, and is the fallback token for every public read (articles, feed/comment detail, reactions, trainings, profiles) so a logged-out visitor — or a crawler hitting the sitemap — can load them. |
+| `CLIENT_SECRET` | the Google callback route, `apis/auth.ts`, and the public reads in `apis/{articles,feeds,news,reactions,trainings,users}.ts` | Server-only bearer secret. Exchanges the Google token on `/api/v1/auth/login`, authorizes the password-reset flow, and is the fallback token for every public read (articles, news lists, feed/comment detail, reactions, trainings, profiles) so a logged-out visitor — or a crawler hitting the sitemap — can load them. |
 | `ORGANIZATION_ID` | `apis/branches.ts`, `apis/coordinating-bodies.ts`, the `/master` layout and dashboard, the organization layout | The one organization this deployment manages; scopes Badko/Cabang lookups and the Master dashboard. |
 | `NEXT_PUBLIC_GOOGLE_OAUTH_ID` | `app/layout.tsx`, Google login flow | Google OAuth client id. There is no server-only `GOOGLE_OAUTH_ID` twin — the public one is the only copy. |
 | `GOOGLE_ANALYTICS_ID` | `app/layout.tsx` | GA4 measurement ID passed to `GoogleAnalytics` from `@next/third-parties/google`, matching Sevenpreneur's pattern. Current production value is `G-L0VGNEPGBW`. The ID is public in the rendered tag but read server-side; no `NEXT_PUBLIC_` twin is needed. |
@@ -532,7 +532,9 @@ Three layers, each with one job. Don't blend them.
    "verify your identity first" versus "slug already exists" are different instructions to the
    author),
    `events.ts` (the `events/*` resource, separate from `trainings.ts`; see `/events` below),
-   `news.ts` (categories + articles, including `getNewsArticleDetail` — `news-articles/detail`
+   `news.ts` (categories + articles. The two list methods use the session token first and
+   `CLIENT_SECRET` as a fallback because those backend list endpoints accept both; this lets the
+   public Kongres page render category-filtered news for logged-out visitors. `getNewsArticleDetail` — `news-articles/detail`
    is the one read `list` can't serve, resolving a single article by id; a soft-deleted
    article answers 404, while a feed attachment pointing at one renders as removed from the
    feed response itself without ever calling it — grouped together like locations.ts, since
@@ -1695,8 +1697,18 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   below), Pedoman Organisasi (`/organizational-documents`), and Jadwal Sholat
   (`/prayer-schedules`) all route through `Link`.
 - `components/twibbon/*` — the Kongres XXXIII twibbon, **frontend-only** (no backend, nothing stored).
-  `FeedPage` renders `TwibbonFloatingButton`, a fixed round button with the Kongres emblem
-  (`bottom-20` above `BottomNav` on mobile, `bottom-8` on desktop), opening `TwibbonEditorModal`.
+  `FeedPage` renders `KongresCountdownFloatingLink`, a compact vertical link made from three
+  separate elements: a white square Kongres emblem, a secondary countdown label, and a primary
+  Kongres title label. The two equal-size text labels overlap slightly: countdown tilts counterclockwise,
+  while the single-line title tilts clockwise. The group sits slightly beyond the right viewport
+  edge on mobile and desktop to leave more feed space. A small black close button overlaps the
+  logo's upper-right edge and only hides the group for the current mount, so a page refresh shows
+  it again. It links to the
+  public Kongres page (`bottom-20` above `BottomNav` on mobile, `bottom-8` on desktop). It reads
+  `KONGRES_STARTS_AT` and `KONGRES_ENDS_AT` and changes its copy when the event starts or ends.
+  On the Kongres page, `TWIBBON_EDITOR_ENABLED` in `KongresHeroActions` currently stays `false`,
+  so Pasang Twibbon shows a "segera hadir" toast. The state, import, and conditional
+  `TwibbonEditorModal` render deliberately remain wired for re-enabling; do not delete the editor.
   Frames are PNGs with a transparent photo area under `public/images/twibbon/`, listed with their
   intrinsic `width`/`height` in `lib/twibbon.ts#TWIBBON_FRAMES`; output is always 1080px wide with the
   frame's own aspect ratio, so a long frame yields a long twibbon. In the "Pilih Frame" picker every
@@ -2401,14 +2413,26 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `canManageEntity` gate.
 - `/pages/kongres-hmi-xxxiii` (`app/(www)/www/pages/kongres-hmi-xxxiii/page.tsx` ->
   `components/pages/KongresPage.tsx`) is a public, indexable campaign page for Kongres XXXIII in
-  Bandar Lampung, with no backend; all content lives in `lib/kongres-data.ts`. Every image and logo is served flat from `https://cdn.hmiconnect.id/kongres/` (the R2 bucket's `kongres/` folder, no subfolders) through `kongresAsset(file)`; nothing lives in `public/`. Only the theme
+  Bandar Lampung. Campaign copy lives in `lib/kongres-data.ts`, while the news section is real
+  backend data: the route calls `listNewsArticles({ categorySlug: "kongres-hmi", pageSize: 5 })`
+  server-side and passes the newest five rows into `KongresNewsSection`. The list endpoint uses
+  `CLIENT_SECRET` when there is no session, so the public page shows the same news logged out;
+  cards link directly to each publisher's `source_url` and have a missing-image fallback. The
+  featured card deliberately omits the API summary and carries its publisher logo inside a white
+  publisher pill; rows two through five also show the publisher logo (falling back to a Tabler news
+  icon) and own their vertical padding on the `<li>`, so `first:`/`last:` spacing applies across the
+  list rather than treating every nested anchor as both first and last.
+  Every campaign image and logo is served flat from `https://cdn.hmiconnect.id/kongres/` (the R2 bucket's `kongres/` folder, no subfolders) through `kongresAsset(file)`; nothing lives in `public/`. Only the theme
   ("Akselerasi HMI Untuk Kedaulatan Nasional"), the logo, the 13-member Panitia Nasional, and the
-  19-member Steering Committee (call names only, as published) are official; venues, rundown, news,
-  and "momen" posts are still placeholders. Both committee tabs (Organizing Committee is the default)
+  19-member Steering Committee (call names only, as published) are official. PKOR Way Halim is the
+  one location presented as the Kongres venue. The same location section gives three transport
+  guides to PKOR: from Radin Inten II Airport, Bakauheni Port, and northern Sumatra via Rajabasa.
+  Each guide links to live Google Maps directions and avoids hard-coded fares or schedules. Rundown and "momen"
+  posts are still placeholders; news is never read from a local placeholder array. Both committee tabs (Organizing Committee is the default)
   render `KongresCommitteePostCard`: a plain white card whose background-removed cutout
   (`{slug}.webp`, 600×635 and bottom-aligned) rises out of a frame in its
   announcement's colour (gold for Panasko, green for SC), then name and role; leaders lead each tab above the rest.
-  The tabs read "Panitia Nasional Kongres" (default) and "Steering Committee". A member with a
+  The tabs read "Organizing Committee" (default) and "Steering Committee". A member with a
   confirmed HMI Connect account carries `username` in `lib/kongres-data.ts`, and its card shows
   `@username` and links to `/profile/{username}`. Matches were checked by hand against `users/detail`
   (full name or the member's Instagram handle); a shared first name alone is never enough.
@@ -2420,16 +2444,21 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   sideways to keep the active item in view). The app's desktop rail stays on the left like every
   other page; there is no `Header`, aside, or footer. Section order:
   hero ("Kongres HMI XXXIII", countdown, Pasang Twibbon and Bagikan Momen), statistics, host city,
-  venues (per-venue Google Maps embed), the 8-day rundown on a light card, committees, moments,
+  main venue and its three transport guides (Google Maps embed and directions), the 8-day rundown on a light card, committees, moments,
   news, then "Filosofi Logo" (the committee's sheet: light horizontal logo, six element icons, logo
-  downloads fetched as blobs by `KongresLogoDownloadButton`, the four-colour brand strip). Pasang Twibbon only
-  toasts until the editor on `feat/twibbon-kongres` ships; both Bagikan Momen buttons (hero and
+  downloads fetched as blobs by `KongresLogoDownloadButton`, the four-colour brand strip). Pasang Twibbon
+  temporarily shows a "segera hadir" toast behind a disabled local feature flag; the browser-only
+  editor remains implemented and wired for later activation. Download works for everyone and
+  sharing to the feed requires a signed-in user. Both Bagikan Momen buttons (hero and
   the moments section) open the home composer through `COMPOSE_INTENT_KEY` (`useShareMoment`) with
   `#KongresHMI33Lampung` (`KONGRES_HASHTAG`) already typed, handed over as
   `COMPOSE_INTENT_TEXT_KEY` and passed by `FeedTimeline` as `CreateFeedForms`' `forceOpenText`. It keeps its own deep-green/gold palette and the
   tumpal `TapisBand` divider inside cards. City photos are Wikimedia Commons thumbnails hotlinked
   through `KONGRES_PHOTOS` and credited by `KongresPhotoCredits` below the last card; "momen"
   avatars are randomuser.me placeholders. Replace both with official assets before launch.
+  Every top-level section title, including the hero and Filosofi Logo, uses the same
+  `text-3xl sm:text-4xl` size as "Selamat datang di Bandar Lampung". Top-level descriptions are
+  omitted everywhere except that host-city section.
 - `/pendataan-komisariat` (`app/(www)/www/pendataan-komisariat/page.tsx` ->
   `components/pages/ChapterCensusPage.tsx`) is a public, pre-login census form: Data Pengisi (nama,
   email, jabatan), Asal Cabang (a Badko `SearchableSelect`, plus `NO_COORDINATING_BODY_LABEL` for

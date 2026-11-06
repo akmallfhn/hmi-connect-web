@@ -2,7 +2,6 @@ import { IconCalendarEvent, IconMapPin } from "@tabler/icons-react";
 import Image from "next/image";
 import {
   KONGRES_PHOTOS,
-  KONGRES_THEME,
   kongresAsset,
 } from "@/lib/kongres-data";
 import KongresCountdown from "./KongresCountdown";
@@ -13,7 +12,7 @@ import {
 } from "./KongresDecor";
 import KongresHeroActions from "./KongresHeroActions";
 
-export default function KongresHero() {
+export default function KongresHero({ canShareToFeed }: { canShareToFeed: boolean }) {
   return (
     <section
       id="beranda"
@@ -33,14 +32,11 @@ export default function KongresHero() {
 
       <div className="grid items-center gap-8 px-5 pb-12 pt-10 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] sm:px-8 lg:px-10 lg:pb-14 lg:pt-12">
         <div className="text-center sm:text-left">
-          <h1 className="font-stack-sans-headline text-3xl font-medium leading-[0.95] lg:text-4xl">
+          <h1 className="font-stack-sans-headline text-3xl font-medium leading-tight sm:text-4xl">
             Kongres HMI
             <br />
             <span className={KONGRES_GOLD_TEXT}>XXXIII</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-7 text-white/80 sm:mx-0">
-            {KONGRES_THEME}
-          </p>
 
           {/* Mobile has no side column, so the emblem sits above the venue and date chips. */}
           <KongresEmblem className="mt-8 max-w-[240px] sm:hidden" />
@@ -48,7 +44,7 @@ export default function KongresHero() {
           <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm sm:justify-start">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5">
               <IconMapPin className="size-4 text-[#e8b628]" />
-              Bandar Lampung
+              PKOR Way Halim, Lampung
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5">
               <IconCalendarEvent className="size-4 text-[#e8b628]" />
@@ -61,7 +57,7 @@ export default function KongresHero() {
           </div>
 
           <div className="mt-8">
-            <KongresHeroActions />
+            <KongresHeroActions canShareToFeed={canShareToFeed} />
           </div>
         </div>
 

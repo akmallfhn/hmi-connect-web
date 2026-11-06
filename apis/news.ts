@@ -43,6 +43,12 @@ async function getSessionToken(): Promise<string | undefined> {
   return cookieStore.get(SESSION_COOKIE_NAME)?.value;
 }
 
+// News list endpoints also accept the organization client secret, allowing public
+// server-rendered surfaces such as the Kongres campaign page to load real news.
+async function getNewsReadToken(): Promise<string | undefined> {
+  return (await getSessionToken()) ?? process.env.CLIENT_SECRET;
+}
+
 function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
   return metapaging ? metapaging.current_page < metapaging.total_page : false;
 }
@@ -50,15 +56,15 @@ function hasMoreFromMetapaging(metapaging?: Metapaging): boolean {
 export async function listNewsCategories(
   options: { search?: string; page?: number; pageSize?: number } = {}
 ): Promise<{ list: NewsCategory[]; hasMore: boolean }> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  const readToken = await getNewsReadToken();
+  if (!readToken) return { list: [], hasMore: false };
 
   const { search, page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<NewsCategory>>(
     "/api/v1/news-categories/list",
     {
       method: "POST",
-      token: sessionToken,
+      token: readToken,
       body: { search, page, page_size: pageSize },
     }
   );
@@ -83,15 +89,15 @@ export async function listNewsArticles(
     pageSize?: number;
   } = {}
 ): Promise<{ list: NewsArticle[]; hasMore: boolean }> {
-  const sessionToken = await getSessionToken();
-  if (!sessionToken) return { list: [], hasMore: false };
+  const readToken = await getNewsReadToken();
+  if (!readToken) return { list: [], hasMore: false };
 
   const { search, categorySlug, sourceId, page = 1, pageSize = 20 } = options;
   const result = await callApi<ListResponse<NewsArticle>>(
     "/api/v1/news-articles/list",
     {
       method: "POST",
-      token: sessionToken,
+      token: readToken,
       body: {
         search,
         category_slug: categorySlug,

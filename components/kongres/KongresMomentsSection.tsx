@@ -16,7 +16,6 @@ export default function KongresMomentsSection() {
         <SectionHeading
           eyebrow={`#${KONGRES_HASHTAG}`}
           title="Momen Kongres"
-          description="Kumpulan foto dan cerita pilihan dari kader. Bagikan momenmu dengan tagar resmi agar tampil di sini."
           action={
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link

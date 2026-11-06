@@ -24,7 +24,6 @@ export default function KongresRundownSection() {
         <SectionHeading
           eyebrow="Rundown"
           title="Delapan hari menuju kepemimpinan baru"
-          description="Dari kirab budaya hingga pemilihan Ketua Umum PB HMI. Jadwal dapat berubah mengikuti keputusan sidang."
         />
 
         {/* The day picker doubles as the week's timeline: one connected track, one stop per day. */}

@@ -4,7 +4,7 @@ import MobileGreetingBar from "../feeds/MobileGreetingBar";
 import RightSidebar from "../feeds/RightSidebar";
 import BottomNav from "../navigations/BottomNav";
 import Header from "../navigations/Header";
-import TwibbonFloatingButton from "../twibbon/TwibbonFloatingButton";
+import KongresCountdownFloatingLink from "../kongres/KongresCountdownFloatingLink";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface FeedPageProps {
@@ -65,7 +65,7 @@ export default function FeedPage({
         </aside>
       </PageMargin>
 
-      <TwibbonFloatingButton canShareToFeed={Boolean(userId)} />
+      <KongresCountdownFloatingLink />
 
       <BottomNav userId={userId} username={username} />
     </div>

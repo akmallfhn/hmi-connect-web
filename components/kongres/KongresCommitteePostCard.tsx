@@ -41,7 +41,7 @@ export default function KongresCommitteePostCard({
       >
         {member.name}
       </p>
-      <p className="mt-0.5 text-center text-[11px] italic leading-snug text-[#333] sm:text-xs">
+      <p className="mt-0.5 text-center text-[11px] leading-snug text-[#333] sm:text-xs">
         {member.role}
       </p>
       {member.username && (

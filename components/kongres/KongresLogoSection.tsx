@@ -34,7 +34,7 @@ export default function KongresLogoSection() {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
             Identitas Visual
           </p>
-          <h2 className="mt-3 bg-linear-to-b from-[#0a9a4a] to-[#0b5d33] bg-clip-text font-stack-sans-headline text-5xl font-medium text-transparent sm:text-6xl lg:text-7xl dark:from-[#3fd07f] dark:to-[#0a9a4a]">
+          <h2 className="mt-3 bg-linear-to-b from-[#0a9a4a] to-[#0b5d33] bg-clip-text font-stack-sans-headline text-3xl font-medium leading-tight text-transparent sm:text-4xl dark:from-[#3fd07f] dark:to-[#0a9a4a]">
             Filosofi Logo
           </h2>
           <div className="mx-auto mt-8 max-w-xl rounded-2xl dark:bg-white dark:p-4">
@@ -72,9 +72,6 @@ export default function KongresLogoSection() {
 
         <div className="mt-14">
           <h3 className="font-stack-sans-headline text-2xl font-medium text-heading">Kanal Unduhan</h3>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Gunakan file resmi berikut tanpa mengubah warna, proporsi, atau susunannya.
-          </p>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {KONGRES_LOGO_DOWNLOADS.map((file) => (
               <li

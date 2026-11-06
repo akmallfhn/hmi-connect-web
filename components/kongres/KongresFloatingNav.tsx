@@ -3,7 +3,6 @@
 import {
   IconBuildingCommunity,
   IconCalendarTime,
-  IconChartBar,
   IconHome,
   IconMapPin,
   IconNews,
@@ -16,7 +15,6 @@ import { useEffect, useRef, useState } from "react";
 
 export const KONGRES_SECTIONS: { id: string; label: string; icon: TablerIcon }[] = [
   { id: "beranda", label: "Beranda", icon: IconHome },
-  { id: "statistik", label: "Statistik", icon: IconChartBar },
   { id: "tuan-rumah", label: "Tuan Rumah", icon: IconBuildingCommunity },
   { id: "lokasi", label: "Lokasi", icon: IconMapPin },
   { id: "rundown", label: "Rundown", icon: IconCalendarTime },
