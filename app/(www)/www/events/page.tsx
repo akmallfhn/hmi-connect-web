@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { listEventsChronological } from "@/apis/events";
+import { searchPeople } from "@/apis/search";
 import { getSession } from "@/apis/session";
 import EventCatalogPage from "@/components/pages/EventCatalogPage";
 
@@ -29,16 +30,27 @@ export default async function EventsRoute({
 
   const search = query.search?.trim() ?? "";
   const page = Math.max(1, Number(query.page ?? "1") || 1);
-  const result = await listEventsChronological({
-    search: search || undefined,
-    page,
-    pageSize: 12,
-  });
+  const [result, akmalSearch, anidaSearch] = await Promise.all([
+    listEventsChronological({
+      search: search || undefined,
+      page,
+      pageSize: 12,
+    }),
+    searchPeople("akmallfhn", { pageSize: 5 }),
+    searchPeople("anida", { pageSize: 5 }),
+  ]);
+  const akmal = akmalSearch.list.find(
+    (person) => person.username.toLowerCase() === "akmallfhn",
+  ) ?? null;
+  const anida = anidaSearch.list.find(
+    (person) => person.username.toLowerCase() === "anida",
+  ) ?? null;
   return (
     <EventCatalogPage
       viewer={user}
       result={result}
       initialSearch={search}
+      eventContacts={{ akmal, anida }}
     />
   );
 }

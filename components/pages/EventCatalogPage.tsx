@@ -1,9 +1,11 @@
 import { IconCalendarEvent } from "@tabler/icons-react";
 import type { PagedEventResult } from "@/apis/events";
+import type { SearchPersonResult } from "@/apis/search";
 import type { SessionUser } from "@/apis/session";
 import EventCard from "../events/EventCard";
 import EventListControls from "../events/EventListControls";
 import EventPageShell from "../events/EventPageShell";
+import EventUploadGuide from "../events/EventUploadGuide";
 import PageBanner from "../common/PageBanner";
 import PageMargin from "../common/PageMargin";
 import Pagination from "../common/Pagination";
@@ -13,10 +15,15 @@ export default function EventCatalogPage({
   viewer,
   result,
   initialSearch,
+  eventContacts,
 }: {
   viewer: SessionUser;
   result: PagedEventResult;
   initialSearch: string;
+  eventContacts: {
+    akmal: SearchPersonResult | null;
+    anida: SearchPersonResult | null;
+  };
 }) {
   const emptyTitle = initialSearch ? "Event tidak ditemukan" : "Belum ada event";
   const emptyDescription = initialSearch
@@ -35,6 +42,7 @@ export default function EventCatalogPage({
               <p className="mt-1 text-[11px] text-on-dark/70 sm:text-sm lg:text-base">
                 Temukan agenda dari Official Account HMI, lalu ikuti yang kamu minati.
               </p>
+              <EventUploadGuide contacts={eventContacts} />
             </div>
             <IconCalendarEvent
               className="pointer-events-none absolute -bottom-4 right-3 size-24 text-on-dark/15 lg:right-10 lg:size-36"

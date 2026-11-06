@@ -2556,6 +2556,12 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   (soonest first) before ended events (latest first), paginating in memory. Both `/events` and
   `/events/manage` show one combined list with a left-aligned desktop search and no time tabs; legacy `?tab=` links redirect
   to the same list without the parameter. Move this sorting server-side if the backend gains it.
+  The catalog banner's "Cara Unggah Event" action opens `components/events/EventUploadGuide.tsx`,
+  which explains switching to an authorized organization's Official Account and reaching event
+  management from mobile or desktop navigation. The three numbered instructions use white cards,
+  and the guide resolves the exact HMI Connect users `akmallfhn` and `anida` through the signed-in
+  user search before rendering Chat actions focused on requesting or receiving Official Account
+  invitations (Akmal for technical help, Anida for organizational coordination).
   `events/detail` declares `contacts` and `images` `omitempty`, so `getEventDetail` normalizes an
   absent key to `[]`; don't read them raw. `lib/event-ui.ts` (tested by `npm run test:event`) pins
   every label to WIB through `Intl`, never the runtime's zone, and the form edits wall-clock WIB
