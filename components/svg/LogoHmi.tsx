@@ -7,9 +7,9 @@ interface LogoHmiProps extends SVGProps<SVGSVGElement> {
 }
 
 export default function LogoHmi({
-  colorDark = "var(--logo-ink)",
+  colorDark = "#141517",
   colorGreen = "#009B4D",
-  colorWhite = "var(--logo-paper)",
+  colorWhite = "#ffffff",
   ...props
 }: LogoHmiProps) {
   return (

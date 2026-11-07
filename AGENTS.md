@@ -41,6 +41,8 @@ fix the rule, not just the code.
   Keep text/background pairs at WCAG AA contrast; run
   `python scripts/check-theme-contrast.py` after changing the palette. The
   original inventory and impacted-file list are in `docs/dark-mode-audit.md`.
+  `LogoHmi` keeps its black `#141517`, green `#009B4D`, and white `#ffffff`
+  artwork in both themes; its colors do not follow the theme tokens.
   Feed and comment/reply body text use `--content-foreground`, which matches
   heading text in light mode and is slightly dimmer in dark mode.
   Solid secondary controls use white text in both themes. Keep

@@ -325,14 +325,14 @@ async function prepareEditorial(
   };
 }
 
-// Mirrors TrainingAttachmentCard: poster on the left, label/title/organizer/schedule beside it.
+// The export uses a compact activity summary that fits the fixed share-canvas width.
 async function prepareActivity(context: Ctx, attachment: FeedTrainingAttachment | FeedEventAttachment): Promise<PreparedAttachment> {
   const isEvent = attachment.type === "event";
   if (attachment.reference_is_deleted) return deletedStrip(isEvent ? "Event yang dibagikan sudah dihapus" : "Latihan kader yang dibagikan sudah dihapus");
 
   const poster = await optionalImage(attachment.reference_image_url);
-  const posterWidth = 112;
-  const posterHeight = 140;
+  const posterWidth = isEvent ? 160 : 112;
+  const posterHeight = isEvent ? 90 : 140;
   const inner = 16;
   const textX = inner + posterWidth + inner;
   const textWidth = MEDIA_WIDTH - textX - inner;
@@ -345,7 +345,7 @@ async function prepareActivity(context: Ctx, attachment: FeedTrainingAttachment 
   context.font = headlineFont(19, 500);
   const titleLines = wrapText(context, attachment.reference_title ?? (isEvent ? "Event HMI" : "Latihan Kader"), textWidth, 2);
   const blockHeight = 26 + 8 + titleLines.length * 24 + 8 + 20 + (schedule ? 6 + 20 : 0);
-  const height = posterHeight + inner * 2;
+  const height = Math.max(posterHeight, blockHeight) + inner * 2;
 
   return {
     height,
@@ -357,12 +357,13 @@ async function prepareActivity(context: Ctx, attachment: FeedTrainingAttachment 
       context.lineWidth = 1.5;
       context.stroke();
 
-      roundRect(context, x + inner, y + inner, posterWidth, posterHeight, 10);
+      const posterY = y + (height - posterHeight) / 2;
+      roundRect(context, x + inner, posterY, posterWidth, posterHeight, 10);
       context.save();
       context.clip();
       context.fillStyle = "#3a3a3f";
-      context.fillRect(x + inner, y + inner, posterWidth, posterHeight);
-      if (poster) coverImage(context, poster, x + inner, y + inner, posterWidth, posterHeight);
+      context.fillRect(x + inner, posterY, posterWidth, posterHeight);
+      if (poster) coverImage(context, poster, x + inner, posterY, posterWidth, posterHeight);
       context.restore();
 
       let cursor = y + (height - blockHeight) / 2;
