@@ -6,12 +6,14 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { TrainingDetail } from "@/apis/trainings";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
 import { safeExternalUrl } from "@/lib/event-ui";
 import { entityProfileHref } from "@/lib/feed-author";
 import { formatOrganizerName } from "@/lib/organizer";
+import { openFeedComposerWithAttachment, trainingComposeIntent } from "@/lib/feed-compose-intent";
 import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
 import Button from "../buttons/Button";
 import Avatar from "../common/Avatar";
@@ -25,7 +27,6 @@ import SendMessageButton from "../profile/SendMessageButton";
 import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
 import TrainingPageShell, { type TrainingViewer } from "../trainings/TrainingPageShell";
 import { TrainingRegistrationLabel } from "../trainings/TrainingLabels";
-import RepostTrainingToFeedButton from "../trainings/RepostTrainingToFeedButton";
 
 const CARD_CLASS = "border border-x-0 border-border bg-surface p-5 lg:rounded-2xl lg:border-x";
 const TITLE_CLASS = "font-stack-sans-headline text-sm font-medium text-heading xl:text-[15px]";
@@ -61,6 +62,7 @@ export default function PublicTrainingDetailPage({ viewer, training, canChat = f
   training: TrainingDetail;
   canChat?: boolean;
 }) {
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const reminder = useTrainingReminder({
@@ -144,7 +146,6 @@ export default function PublicTrainingDetailPage({ viewer, training, canChat = f
                     {reminder.active ? <IconBellCheck className="size-4.5" stroke={2} /> : <IconBellPlus className="size-4.5" stroke={2} />}
                     {reminder.active ? "Pengingat aktif" : "Ingatkan saya"}
                   </Button>
-                  <RepostTrainingToFeedButton training={training} isSignedIn={Boolean(viewer.userId)} iconOnly variant="outline" size="icon" />
                   <Button variant="outline" size="icon" onClick={() => setShareOpen(true)} aria-label="Bagikan training"><IconShare2 className="size-5" stroke={2} /></Button>
                 </div>
               </div>
@@ -207,7 +208,11 @@ export default function PublicTrainingDetailPage({ viewer, training, canChat = f
       </main>
       <ImagePreviewOverlay images={previewImages} activeId={previewId} onActiveChange={setPreviewId}
         onClose={() => setPreviewId(null)} downloadName={`training-${training.id}`} />
-      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} title="Bagikan Training" url={shareUrl} text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`} />
+      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} title="Bagikan Training" url={shareUrl} text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
+        onShareToFeed={() => {
+          const { key, draft } = trainingComposeIntent(training);
+          openFeedComposerWithAttachment(key, draft, router.push, Boolean(viewer.userId));
+        }} />
     </TrainingPageShell>
   );
 }

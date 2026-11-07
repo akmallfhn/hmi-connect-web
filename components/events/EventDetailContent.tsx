@@ -13,9 +13,11 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import type { EventAttendeePreview, EventDetail } from "@/apis/events";
 import { useEventAttendance } from "@/hooks/useEventAttendance";
+import { eventComposeIntent, openFeedComposerWithAttachment } from "@/lib/feed-compose-intent";
 import {
   eventOrganizer,
   eventShareText,
@@ -112,6 +114,7 @@ export default function EventDetailContent({
   canChat?: boolean;
   organizerName?: string;
 }) {
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -412,6 +415,10 @@ export default function EventDetailContent({
         title="Bagikan Event"
         url={shareUrl}
         text={eventShareText(event.title, event.start_date, event.end_date)}
+        onShareToFeed={() => {
+          const { key, draft } = eventComposeIntent(event);
+          openFeedComposerWithAttachment(key, draft, router.push, Boolean(viewer?.id));
+        }}
       />
     </>
   );

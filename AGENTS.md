@@ -1088,8 +1088,8 @@ iconSm`.
   `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
   live listener, so it also fires when "Posting" is clicked while already on `/` — and
   bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
-  modal in response. `components/news/RepostToFeedButton.tsx` (the `Repeat2` icon rendered
-  on every `NewsArticleCard` variant, see below) rides the same mechanism plus a companion
+  modal in response. The "Bagikan ke Feed" action in `NewsArticleCard`'s share modal
+  rides the same mechanism plus a companion
   `sessionStorage[COMPOSE_INTENT_NEWS_KEY]` — a JSON `ComposerNewsDraft` (the article id plus
   enough to preview it). `FeedTimeline` reads both together and passes the draft through as
   `forceOpenNews` on `CreateFeedForms`, which opens the composer with the article already
@@ -1367,8 +1367,8 @@ iconSm`.
   entirely, and the array is built in reading order because an unreached slot renders below the
   last post. Both news slots render `components/feeds/NewsCarousel.tsx` — the same heading-above-
   a-snap-strip shell as the suggestions carousel, filled with `NewsArticleCard`'s own
-  `carousel` variant (a `w-64` card: 4/3 cover, then the source row over a two-line title beside
-  `RepostToFeedButton` — there is no bookmark action anywhere in this app to put there instead).
+  `carousel` variant (a `w-64` card: 4/3 cover, then the source row over a two-line title;
+  its share button opens "Bagikan ke Feed" as the first option).
   The shape lives as a variant there rather than as a second card component, so every news card
   in the app still renders from one file. The strip keeps the name **"Kabar Trending"**, which
   is what this same unfiltered query was already called before it moved off the sidebar.
@@ -1495,23 +1495,27 @@ iconSm`.
   `repost_count` comes from the backend's visible plain and quote repost aggregate, and
   the card adjusts it optimistically when reposting or unreposting and increments it after
   creating a quote repost. `TrainingAttachmentCard` uses a neutral
-  card surface: poster and event details in the main link, then a separate footer
+  card surface: poster and training details in the main link, then a separate footer
   for detail, reminder, and optional composer remove actions. Keep those actions
   outside the main link. Its reminder uses the shared primary `Button` variant;
-  the card border and detail link have no hover treatment. `feeds/*` answers
+  the card border and detail link have no hover treatment. `EventAttachmentCard`
+  uses the same poster and separate footer layout for event references. The first
+  action in the share pop up for news, training, event, and article is "Bagikan ke Feed";
+  it opens the composer with that item's card attached.
+  `feeds/*` answers
   with `attachments`, an array
   whose items differ by `type`: `photo`/`video`/`url` carry only `reference_url` (and
-  `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training`/`article` carry a
+  `reference_index`, 1-5 for a carousel, 1 otherwise), while `news`/`training`/`event`/`article` carry a
   target id plus that record's display fields resolved server-side. Every field a type
   owns is always present (`null` when empty) and no field of another type ever appears — so
   narrow on `type` (the `FeedUploadAttachment`/`FeedNewsAttachment`/`FeedTrainingAttachment`/
-  `FeedArticleAttachment` union in `apis/feeds.ts`), never read across shapes. **`article` is the
+  `FeedEventAttachment`/`FeedArticleAttachment` union in `apis/feeds.ts`), never read across shapes. **`article` is the
   one type whose target id is `article_id`, not `reference_id`** — that asymmetry is the
   backend's (see `docs/api/feed.md` in the `ordina` repo), so mirror it rather than renaming the
   field on this side; `feeds/create` likewise takes `article_id` for an `article` and 400s if
-  `urls` or `reference_id` comes along with it. A `training` and an `article` deliberately have no
-  `reference_url`: their cards are in-app `<Link>`s to `/trainings/{reference_id}` and
-  `/articles/{reference_slug_url}/{article_id}`, while a news
+  `urls` or `reference_id` comes along with it. `training`, `event`, and `article` deliberately have no
+  `reference_url`: their cards are in-app `<Link>`s to `/trainings/{reference_id}`,
+  `/events/{reference_id}`, and `/articles/{reference_slug_url}/{article_id}`, while a news
   card opens out to the outlet's own `reference_url`. An `article`'s
   `reference_slug_url` fills the decorative first segment of that route and falls back to the
   literal `"artikel"` when absent — the id is what resolves, since `articles/detail` keys on `id`
@@ -2134,8 +2138,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   title, date/category, action row, and right-hand thumbnail. A missing image keeps the
   same thumbnail box with a CSS background and Tabler `IconPhotoOff` placeholder, as in
   `ArticleListRow`; the carousel uses the same placeholder in its larger image slot. The whole row opens
-  `source_url` on the publisher's site. Repost, share, and the source-link menu take the
-  same action slots; `ShareModal` accepts a custom title for this news share. The carousel
+  `source_url` on the publisher's site. Share and the source-link menu take the
+  action slots; `ShareModal` puts "Bagikan ke Feed" first and accepts a custom title. The carousel
   keeps its compact image-led `carousel` variant.
 - `/articles?tab=news` is handled by `app/(www)/www/articles/page.tsx` and
   `components/pages/ArticlesPage.tsx`; there is no `/news` route. The News tab and its
@@ -2157,7 +2161,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   light CSS background when the image URL is empty. `articles/list` now carries the optional
   article `description`; `ArticleListEntry.description` remains optional because the sibling
   `articles/list-filter` contract does not advertise it, so the row hides the description line when
-  it is absent or blank. Reposts from both the list and detail page go through
+  it is absent or blank. "Bagikan ke Feed" from both the list and detail share pop ups goes through
   `lib/article-compose-draft.ts` so their feed attachment previews receive the same
   title, description, cover, category, and author fields without fetching detail per row.
   Four signed-in tabs (Semua, News, Mengikuti, Tulisan Saya) use the shared `Tabs` control and
@@ -2492,7 +2496,7 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `/quran/{slug}` — shows `name_latin`/`total_verses`/`revelation_place` (mapped to
   "Makkiyah"/"Madaniyah")/`estimated_reading_seconds` (rounded to whole minutes) plus a play
   button; the button's own `onClick` calls `preventDefault`/`stopPropagation` (same nested-
-  interactive-inside-a-link pattern as `RepostToFeedButton`) so tapping it toggles playback
+  interactive-inside-a-link pattern as the news row's share action) so tapping it toggles playback
   in place instead of also navigating. Playback (here and on the surah detail page) mounts
   `components/quran/QuranMiniPlayer.tsx` (a `lg:hidden` floating bar fixed above `BottomNav`,
   real `<audio>` element, play/pause + a thin progress bar + close), driven by a generic
@@ -2838,18 +2842,16 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   picker sits in a portaled `Dropdown`, so the modal's scroll area can't clip it.
   `feeds/create` takes one `attachment` object — `{type, media_ids}` for new photos,
   `{type, urls}` for external `video`/`url` and legacy photo callers,
-  `{type, reference_id}` for `news`/`training`, never both — so the composer's own
+  `{type, reference_id}` for `news`/`training`/`event`, never both — so the composer's own
   `attachmentMode` is what locks the buttons: photos keep the photo button live up to five, while
-  any other attachment (video, url, news, article) disables all three until its own X clears it. The
-  two linked attachments it can produce are `news`, handed in as `forceOpenNews` by
-  `RepostToFeedButton`, and `article`, handed in as `forceOpenArticle` by the article reader's own
-  share-to-feed button (see `components/navigations/*` above for the shared compose-intent
-  mechanism); `training` still has no producer, and there's no in-composer picker for browsing
-  either. The two follow the same shape end to end — a `ComposerNewsDraft`/`ComposerArticleDraft` in
-  `sessionStorage`, a `news`/`article` branch in `attachmentMode` that locks the upload buttons, and
-  a `{type: "news", reference_id}`/`{type: "article", article_id}` payload (note the asymmetric
-  field, which is the backend's). Both preview through the very card the published feed renders
-  (`NewsAttachmentCard`/`ArticleAttachmentCard`), so composer and feed can't drift.
+  any other attachment (video, url, news, training, event, article) disables all three until its own X clears it.
+  The linked attachments it can produce are `news`, `training`, `event`, and `article`, handed in
+  by their share pop ups through `forceOpenNews`/`forceOpenTraining`/`forceOpenEvent`/
+  `forceOpenArticle`; there is no in-composer picker for browsing them. They follow the same shape end to end — a draft in
+  `sessionStorage`, a matching `attachmentMode` branch that locks the upload buttons, and
+  a `{type, reference_id}` payload for news, training, and event or `{type: "article", article_id}`
+  for article (the asymmetric field is the backend's). Each previews through the same card
+  the published feed renders, so composer and feed stay aligned.
   Photos (max 5, up to 20MB each as selected — `MAX_RAW_PHOTO_BYTES`, a sanity cap only)
   run through `lib/optimize-image.ts` before they're staged or uploaded. That utility verifies
   JPEG/PNG/WebP signatures, inspects dimensions, preserves small already-optimized files, resizes

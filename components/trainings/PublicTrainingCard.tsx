@@ -10,17 +10,18 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { TrainingListEntry } from "@/apis/trainings";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
 import { MANAGE_TRAININGS_HREF } from "@/lib/access";
+import { openFeedComposerWithAttachment, trainingComposeIntent } from "@/lib/feed-compose-intent";
 import { formatOrganizerName } from "@/lib/organizer";
 import { formatDate } from "@/lib/time-manipulation";
 import Button from "../buttons/Button";
 import Label from "../common/Label";
 import ShareModal from "../modals/ShareModal";
 import LogoHmi from "../svg/LogoHmi";
-import RepostTrainingToFeedButton from "./RepostTrainingToFeedButton";
 import { TrainingRegistrationLabel } from "./TrainingLabels";
 
 interface PublicTrainingCardProps {
@@ -50,6 +51,7 @@ export default function PublicTrainingCard({
   isSignedIn,
   manage = false,
 }: PublicTrainingCardProps) {
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
   const {
     active: reminded,
@@ -140,13 +142,6 @@ export default function PublicTrainingCard({
               <IconBellPlus className="size-5" />
             )}
           </Button>}
-          {!manage && <RepostTrainingToFeedButton
-            training={training}
-            isSignedIn={isSignedIn}
-            iconOnly
-            variant="outline"
-            size="icon"
-          />}
           <Button
             onClick={() => setShareOpen(true)}
             aria-label={`Bagikan ${training.name}`}
@@ -163,6 +158,10 @@ export default function PublicTrainingCard({
         onClose={() => setShareOpen(false)}
         url={eventUrl}
         text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
+        onShareToFeed={!manage ? () => {
+          const { key, draft } = trainingComposeIntent(training);
+          openFeedComposerWithAttachment(key, draft, router.push, isSignedIn);
+        } : undefined}
       />
     </>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { socialIconUrl } from "@/lib/constants";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Repeat2 } from "lucide-react";
 import { IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -15,6 +15,7 @@ interface ShareModalProps {
   url: string;
   text?: string;
   title?: string;
+  onShareToFeed?: () => void;
 }
 
 export type SharePlatform = {
@@ -57,7 +58,7 @@ export const SHARE_PLATFORMS: SharePlatform[] = [
   },
 ];
 
-export default function ShareModal({ open, onClose, url, text = "Lihat postingan ini di HMI Connect", title = "Bagikan Postingan" }: ShareModalProps) {
+export default function ShareModal({ open, onClose, url, text = "Lihat postingan ini di HMI Connect", title = "Bagikan Postingan", onShareToFeed }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopyLink() {
@@ -79,6 +80,22 @@ export default function ShareModal({ open, onClose, url, text = "Lihat postingan
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
+        {onShareToFeed && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onShareToFeed();
+            }}
+            className="flex min-w-0 cursor-pointer flex-col items-center gap-1.5"
+            aria-label="Bagikan ke Feed"
+          >
+            <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-foreground">
+              <Repeat2 className="size-5" />
+            </span>
+            <span className="text-center text-xs text-muted-foreground">Bagikan ke Feed</span>
+          </button>
+        )}
         {SHARE_PLATFORMS.map((platform) => (
           <a
             key={platform.name}

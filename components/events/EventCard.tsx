@@ -9,9 +9,11 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { EventListEntry } from "@/apis/events";
 import { useEventAttendance } from "@/hooks/useEventAttendance";
+import { eventComposeIntent, openFeedComposerWithAttachment } from "@/lib/feed-compose-intent";
 import {
   eventOrganizer,
   eventShareText,
@@ -35,6 +37,7 @@ export default function EventCard({
   href?: string;
   manage?: boolean;
 }) {
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
   const attendance = useEventAttendance({
     eventId: event.id,
@@ -142,6 +145,10 @@ export default function EventCard({
         title="Bagikan Event"
         url={shareUrl}
         text={eventShareText(event.title, event.start_date, event.end_date)}
+        onShareToFeed={!manage ? () => {
+          const { key, draft } = eventComposeIntent(event);
+          openFeedComposerWithAttachment(key, draft, router.push);
+        } : undefined}
       />
     </>
   );

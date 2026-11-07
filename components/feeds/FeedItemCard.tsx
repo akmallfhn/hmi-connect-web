@@ -37,6 +37,7 @@ import LinkPreviewCard from "./LinkPreviewCard";
 import ArticleAttachmentCard from "./ArticleAttachmentCard";
 import NewsAttachmentCard from "./NewsAttachmentCard";
 import TrainingAttachmentCard from "./TrainingAttachmentCard";
+import EventAttachmentCard from "./EventAttachmentCard";
 import QuotedFeed from "./QuotedFeed";
 import FeedAuthorAvatar from "./FeedAuthorAvatar";
 import EditFeedForm from "../forms/EditFeedForm";
@@ -55,6 +56,7 @@ import type {
   FeedComment,
   FeedNewsAttachment,
   FeedTrainingAttachment,
+  FeedEventAttachment,
   FeedUploadAttachment,
 } from "@/apis/feeds";
 import {
@@ -283,6 +285,9 @@ export default function FeedItemCard({
   );
   const trainingAttachment = attachments.find(
     (item): item is FeedTrainingAttachment => item.type === "training",
+  );
+  const eventAttachment = attachments.find(
+    (item): item is FeedEventAttachment => item.type === "event",
   );
   const articleAttachment = attachments.find(
     (item): item is FeedArticleAttachment => item.type === "article",
@@ -527,6 +532,7 @@ export default function FeedItemCard({
           isSignedIn={Boolean(currentUserId)}
         />
       )}
+      {eventAttachment && <EventAttachmentCard attachment={eventAttachment} />}
       {feed.repost_of ? (
         <QuotedFeed feed={feed.repost_of} linkToDetail />
       ) : (

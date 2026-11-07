@@ -6,6 +6,7 @@ import CreateFeedForms, {
   type ComposerArticleDraft,
   type ComposerNewsDraft,
   type ComposerTrainingDraft,
+  type ComposerEventDraft,
 } from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
@@ -16,6 +17,7 @@ import {
   COMPOSE_INTENT_TEXT_KEY,
   COMPOSE_INTENT_PHOTO_KEY,
   COMPOSE_INTENT_TRAINING_KEY,
+  COMPOSE_INTENT_EVENT_KEY,
 } from "@/lib/constants";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
@@ -40,7 +42,7 @@ export type TimelineInsertion = {
   mobileOnly?: boolean;
 };
 
-// Written by RepostToFeedButton; a malformed entry just opens an empty composer.
+// Written by the share-to-feed action; a malformed entry just opens an empty composer.
 function parseNewsIntent(raw: string | null): ComposerNewsDraft | undefined {
   if (!raw) return undefined;
   try {
@@ -70,6 +72,16 @@ function parseTrainingIntent(
   try {
     const parsed = JSON.parse(raw) as ComposerTrainingDraft;
     return parsed.id && parsed.name && parsed.level ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseEventIntent(raw: string | null): ComposerEventDraft | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as ComposerEventDraft;
+    return parsed.id && parsed.title && parsed.startDate && parsed.endDate ? parsed : undefined;
   } catch {
     return undefined;
   }
@@ -119,6 +131,7 @@ export default function FeedTimeline({
   const [composerTraining, setComposerTraining] = useState<
     ComposerTrainingDraft | undefined
   >(undefined);
+  const [composerEvent, setComposerEvent] = useState<ComposerEventDraft | undefined>(undefined);
   const [composerPhotos, setComposerPhotos] = useState<File[] | undefined>(
     undefined
   );
@@ -181,10 +194,13 @@ export default function FeedTimeline({
       if (rawTraining) {
         window.sessionStorage.removeItem(COMPOSE_INTENT_TRAINING_KEY);
       }
+      const rawEvent = window.sessionStorage.getItem(COMPOSE_INTENT_EVENT_KEY);
+      if (rawEvent) window.sessionStorage.removeItem(COMPOSE_INTENT_EVENT_KEY);
 
       setComposerNews(parseNewsIntent(raw));
       setComposerArticle(parseArticleIntent(rawArticle));
       setComposerTraining(parseTrainingIntent(rawTraining));
+      setComposerEvent(parseEventIntent(rawEvent));
 
       const rawText = window.sessionStorage.getItem(COMPOSE_INTENT_TEXT_KEY);
       if (rawText) window.sessionStorage.removeItem(COMPOSE_INTENT_TEXT_KEY);
@@ -234,6 +250,7 @@ export default function FeedTimeline({
         forceOpenNews={composerNews}
         forceOpenArticle={composerArticle}
         forceOpenTraining={composerTraining}
+        forceOpenEvent={composerEvent}
         forceOpenText={composerText}
         forceOpenPhotos={composerPhotos}
       />

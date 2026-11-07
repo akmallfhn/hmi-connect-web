@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Repeat2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { IconShare2 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,9 +8,9 @@ import type { ArticleDetail } from "@/apis/articles";
 import Button from "@/components/buttons/Button";
 import ArticleShareModal from "./ArticleShareModal";
 import { articleComposeDraft } from "@/lib/article-compose-draft";
+import { openFeedComposerWithAttachment } from "@/lib/feed-compose-intent";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
-  COMPOSE_INTENT_KEY,
 } from "@/lib/constants";
 
 const ACTION_CLASS = "size-9 shrink-0 rounded-lg";
@@ -34,16 +34,13 @@ export default function ArticleDetailActions({
       ? `${window.location.origin}${articlePath}`
       : "";
 
-  // Same hand-off RepostToFeedButton uses for news, just carrying an article instead.
   function handleShareToFeed() {
-    const draft = articleComposeDraft(article);
-    window.sessionStorage.setItem(
+    openFeedComposerWithAttachment(
       COMPOSE_INTENT_ARTICLE_KEY,
-      JSON.stringify(draft)
+      articleComposeDraft(article),
+      router.push,
+      isSignedIn,
     );
-    window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
-    window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
-    router.push(isSignedIn ? "/" : "/auth/login?redirectTo=%2F");
   }
 
   return (
@@ -67,18 +64,6 @@ export default function ArticleDetailActions({
           type="button"
           variant="secondarySoft"
           size="icon"
-          onClick={handleShareToFeed}
-          aria-label="Bagikan ke feed"
-          title="Bagikan ke feed"
-          className={ACTION_CLASS}
-        >
-          <Repeat2 className="size-4" />
-        </Button>
-
-        <Button
-          type="button"
-          variant="secondarySoft"
-          size="icon"
           onClick={() => setShareOpen(true)}
           aria-label="Bagikan artikel"
           title="Bagikan artikel"
@@ -93,6 +78,7 @@ export default function ArticleDetailActions({
         onClose={() => setShareOpen(false)}
         article={article}
         url={shareUrl}
+        onShareToFeed={handleShareToFeed}
       />
     </>
   );

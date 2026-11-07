@@ -4,15 +4,16 @@ import { IconPhotoOff } from "@tabler/icons-react";
 import { ExternalLink, MoreHorizontal } from "lucide-react";
 import { IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { NewsArticle } from "@/apis/news";
+import { newsComposeIntent, openFeedComposerWithAttachment } from "@/lib/feed-compose-intent";
 import { formatShortDate } from "@/lib/time-manipulation";
 import Avatar from "../common/Avatar";
 import Button from "../buttons/Button";
 import Dropdown from "../common/Dropdown";
 import Label from "../common/Label";
 import ShareModal from "../modals/ShareModal";
-import RepostToFeedButton from "./RepostToFeedButton";
 
 interface NewsArticleCardProps {
   article: NewsArticle;
@@ -37,30 +38,49 @@ function CarouselImage({ article }: { article: NewsArticle }) {
 }
 
 export default function NewsArticleCard({ article, variant }: NewsArticleCardProps) {
+  const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
+
+  function shareToFeed() {
+    const { key, draft } = newsComposeIntent(article);
+    openFeedComposerWithAttachment(key, draft, router.push);
+  }
+
+  const shareModal = (
+    <ShareModal
+      open={shareOpen}
+      onClose={() => setShareOpen(false)}
+      url={article.source_url}
+      text={article.title}
+      title="Bagikan Berita"
+      onShareToFeed={shareToFeed}
+    />
+  );
 
   if (variant === "carousel") {
     return (
-      <a
-        href={article.source_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex w-64 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border bg-surface"
-      >
-        <CarouselImage article={article} />
-        <div className="flex flex-1 flex-col gap-2 p-3">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Avatar src={article.source_logo_url} name={article.source_name} size={16} />
-            <span className="truncate text-xs text-muted-foreground">{article.source_name}</span>
-          </div>
-          <div className="flex items-start gap-1">
-            <p className="font-stack-sans-headline line-clamp-2 min-w-0 flex-1 text-sm font-medium leading-snug text-heading transition lg:text-[15px]">
-              {article.title}
-            </p>
-            <RepostToFeedButton article={article} className="shrink-0 text-muted-foreground" />
-          </div>
+      <>
+        <div className="relative w-64 shrink-0 snap-start overflow-hidden rounded-xl border border-border bg-surface">
+          <a href={article.source_url} target="_blank" rel="noopener noreferrer" className="group flex h-full flex-col">
+            <CarouselImage article={article} />
+            <div className="flex flex-1 flex-col gap-2 p-3 pb-10">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <Avatar src={article.source_logo_url} name={article.source_name} size={16} />
+                <span className="truncate text-xs text-muted-foreground">{article.source_name}</span>
+              </div>
+              <p className="font-stack-sans-headline line-clamp-2 min-w-0 flex-1 text-sm font-medium leading-snug text-heading transition lg:text-[15px]">
+                {article.title}
+              </p>
+            </div>
+          </a>
+          <Button variant="ghost" size="icon" onClick={() => setShareOpen(true)}
+            aria-label={`Bagikan berita ${article.title}`} title="Bagikan berita"
+            className="absolute bottom-2 right-2 size-8 rounded-full text-muted-foreground hover:bg-surface-muted">
+            <IconShare2 className="size-4" />
+          </Button>
         </div>
-      </a>
+        {shareModal}
+      </>
     );
   }
 
@@ -95,10 +115,6 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
           )}
 
           <div className="-ml-2 mt-3 flex items-center gap-1">
-            <RepostToFeedButton
-              article={article}
-              className="size-8 text-muted-foreground hover:bg-surface-muted"
-            />
             <Button
               variant="ghost"
               size="icon"
@@ -161,13 +177,7 @@ export default function NewsArticleCard({ article, variant }: NewsArticleCardPro
         </div>
       </a>
 
-      <ShareModal
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        url={article.source_url}
-        text={article.title}
-        title="Bagikan Berita"
-      />
+      {shareModal}
     </>
   );
 }

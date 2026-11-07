@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, MoreHorizontal, Pencil, Repeat2 } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil } from "lucide-react";
 import { IconPhotoOff, IconShare2 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,9 +15,9 @@ import Dropdown from "../common/Dropdown";
 import Label, { type LabelVariant } from "../common/Label";
 import ArticleShareModal from "./ArticleShareModal";
 import { articleComposeDraft } from "@/lib/article-compose-draft";
+import { openFeedComposerWithAttachment } from "@/lib/feed-compose-intent";
 import {
   COMPOSE_INTENT_ARTICLE_KEY,
-  COMPOSE_INTENT_KEY,
 } from "@/lib/constants";
 
 const MENU_ITEM_CLASS =
@@ -71,17 +71,13 @@ export default function ArticleListRow({
     };
   }
 
-  function repostToFeed(event: React.MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    const draft = articleComposeDraft(article);
-    window.sessionStorage.setItem(
+  function shareToFeed() {
+    openFeedComposerWithAttachment(
       COMPOSE_INTENT_ARTICLE_KEY,
-      JSON.stringify(draft)
+      articleComposeDraft(article),
+      router.push,
+      Boolean(viewerId),
     );
-    window.sessionStorage.setItem(COMPOSE_INTENT_KEY, "1");
-    window.dispatchEvent(new Event(COMPOSE_INTENT_KEY));
-    router.push(viewerId ? "/" : "/auth/login?redirectTo=%2F");
   }
 
   return (
@@ -127,16 +123,6 @@ export default function ArticleListRow({
           </div>
 
           <div className="-ml-2 mt-3 flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={repostToFeed}
-              aria-label={`Repost artikel ${article.title} ke feed`}
-              title="Repost ke feed"
-              className="size-8 shrink-0 rounded-full text-muted-foreground hover:bg-surface-muted"
-            >
-              <Repeat2 className="size-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -214,6 +200,7 @@ export default function ArticleListRow({
         onClose={() => setShareOpen(false)}
         article={article}
         url={shareUrl}
+        onShareToFeed={shareToFeed}
       />
     </>
   );

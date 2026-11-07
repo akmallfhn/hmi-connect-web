@@ -51,9 +51,11 @@ import type {
   FeedArticleAttachment,
   FeedNewsAttachment,
   FeedTrainingAttachment,
+  FeedEventAttachment,
 } from "@/apis/feeds";
 import LogoHmi from "../svg/LogoHmi";
 import TrainingAttachmentCard from "../feeds/TrainingAttachmentCard";
+import EventAttachmentCard from "../feeds/EventAttachmentCard";
 import MentionTextarea from "../fields/MentionTextarea";
 
 // Set on the official-account pages, where a post is published under the entity instead of the caller.
@@ -133,6 +135,18 @@ export type ComposerTrainingDraft = {
   description?: string;
 };
 
+export type ComposerEventDraft = {
+  id: string;
+  title: string;
+  categoryName?: string;
+  organizerName?: string;
+  organizerImageUrl?: string;
+  startDate: string;
+  endDate: string;
+  imageUrl?: string;
+  description?: string;
+};
+
 interface CreateFeedFormsProps {
   fullName?: string;
   avatar?: string;
@@ -143,6 +157,7 @@ interface CreateFeedFormsProps {
   forceOpenNews?: ComposerNewsDraft;
   forceOpenArticle?: ComposerArticleDraft;
   forceOpenTraining?: ComposerTrainingDraft;
+  forceOpenEvent?: ComposerEventDraft;
   forceOpenText?: string;
   forceOpenPhotos?: File[];
 }
@@ -271,6 +286,26 @@ function trainingPreviewAttachment(
   };
 }
 
+function eventPreviewAttachment(event: ComposerEventDraft): FeedEventAttachment {
+  return {
+    id: `event-draft-${event.id}`,
+    type: "event",
+    reference_id: event.id,
+    reference_index: 1,
+    reference_title: event.title,
+    reference_description: event.description ?? null,
+    reference_image_url: event.imageUrl ?? null,
+    reference_category_name: event.categoryName ?? null,
+    reference_start_date: event.startDate,
+    reference_end_date: event.endDate,
+    reference_organizer_entity_type: null,
+    reference_organizer_entity_id: null,
+    reference_organizer_entity_name: event.organizerName ?? null,
+    reference_organizer_entity_image_url: event.organizerImageUrl ?? null,
+    reference_is_deleted: false,
+  };
+}
+
 export default function CreateFeedForms({
   fullName,
   avatar,
@@ -281,6 +316,7 @@ export default function CreateFeedForms({
   forceOpenNews,
   forceOpenArticle,
   forceOpenTraining,
+  forceOpenEvent,
   forceOpenText,
   forceOpenPhotos,
 }: CreateFeedFormsProps) {
@@ -296,6 +332,7 @@ export default function CreateFeedForms({
   const [initialTraining, setInitialTraining] = useState<
     ComposerTrainingDraft | undefined
   >(undefined);
+  const [initialEvent, setInitialEvent] = useState<ComposerEventDraft | undefined>(undefined);
   const [initialContent, setInitialContent] = useState<string | undefined>(
     undefined
   );
@@ -314,6 +351,7 @@ export default function CreateFeedForms({
     news?: ComposerNewsDraft,
     article?: ComposerArticleDraft,
     training?: ComposerTrainingDraft,
+    event?: ComposerEventDraft,
     photos?: File[]
   ) {
     setInitialMode(mode);
@@ -321,6 +359,7 @@ export default function CreateFeedForms({
     setInitialNews(news);
     setInitialArticle(article);
     setInitialTraining(training);
+    setInitialEvent(event);
     setInitialContent(undefined);
     setOpen(true);
   }
@@ -333,8 +372,10 @@ export default function CreateFeedForms({
         openComposer(null, undefined, forceOpenArticle);
       else if (forceOpenTraining)
         openComposer(null, undefined, undefined, forceOpenTraining);
+      else if (forceOpenEvent)
+        openComposer(null, undefined, undefined, undefined, forceOpenEvent);
       else if (forceOpenPhotos?.length)
-        openComposer(null, undefined, undefined, undefined, forceOpenPhotos);
+        openComposer(null, undefined, undefined, undefined, undefined, forceOpenPhotos);
       else openComposer();
       setInitialContent(forceOpenText);
     }
@@ -393,6 +434,7 @@ export default function CreateFeedForms({
         initialNews={initialNews}
         initialArticle={initialArticle}
         initialTraining={initialTraining}
+        initialEvent={initialEvent}
         initialContent={initialContent}
         initialPhotos={initialPhotos}
         onCreated={onCreated}
@@ -412,6 +454,7 @@ interface FeedComposerModalProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialEvent?: ComposerEventDraft;
   initialContent?: string;
   initialPhotos?: File[];
   quoteFeed?: Feed;
@@ -430,6 +473,7 @@ export function FeedComposerModal({
   initialNews,
   initialArticle,
   initialTraining,
+  initialEvent,
   initialContent,
   initialPhotos,
   quoteFeed,
@@ -451,6 +495,7 @@ export function FeedComposerModal({
           initialNews={initialNews}
           initialArticle={initialArticle}
           initialTraining={initialTraining}
+          initialEvent={initialEvent}
           initialContent={initialContent}
           initialPhotos={initialPhotos}
           quoteFeed={quoteFeed}
@@ -472,6 +517,7 @@ interface FeedComposerFieldsProps {
   initialNews?: ComposerNewsDraft;
   initialArticle?: ComposerArticleDraft;
   initialTraining?: ComposerTrainingDraft;
+  initialEvent?: ComposerEventDraft;
   initialContent?: string;
   initialPhotos?: File[];
   quoteFeed?: Feed;
@@ -488,6 +534,7 @@ function FeedComposerFields({
   initialNews,
   initialArticle,
   initialTraining,
+  initialEvent,
   initialContent,
   initialPhotos,
   quoteFeed,
@@ -520,6 +567,7 @@ function FeedComposerFields({
   const [training, setTraining] = useState<ComposerTrainingDraft | null>(
     initialTraining ?? null
   );
+  const [attachedEvent, setAttachedEvent] = useState<ComposerEventDraft | null>(initialEvent ?? null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const attachmentMode: FeedAttachmentTypeEnum | null = photos.length
@@ -534,7 +582,9 @@ function FeedComposerFields({
             ? "article"
             : training
               ? "training"
-              : null;
+              : attachedEvent
+                ? "event"
+                : null;
   const normalizedUrl = normalizeUrl(urlValue);
   const hasValidUrl = urlValue.trim() ? isValidUrl(urlValue) : false;
   const youtubeId = parseYouTubeId(youtubeValue);
@@ -741,6 +791,8 @@ function FeedComposerFields({
           attachment = { type: "article", article_id: article.id };
         } else if (training) {
           attachment = { type: "training", reference_id: training.id };
+        } else if (attachedEvent) {
+          attachment = { type: "event", reference_id: attachedEvent.id };
         }
       }
 
@@ -932,6 +984,13 @@ function FeedComposerFields({
           isSignedIn={Boolean(userId)}
           showReminder={false}
           onRemove={() => setTraining(null)}
+          removeDisabled={submitting}
+        />
+      )}
+      {attachedEvent && (
+        <EventAttachmentCard
+          attachment={eventPreviewAttachment(attachedEvent)}
+          onRemove={() => setAttachedEvent(null)}
           removeDisabled={submitting}
         />
       )}

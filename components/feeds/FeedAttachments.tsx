@@ -6,12 +6,14 @@ import { useState } from "react";
 import type {
   FeedArticleAttachment,
   FeedAttachment,
+  FeedEventAttachment,
   FeedNewsAttachment,
   FeedTrainingAttachment,
   FeedUploadAttachment,
 } from "@/apis/feeds";
 import { parseYouTubeId } from "@/lib/youtube";
 import ArticleAttachmentCard from "./ArticleAttachmentCard";
+import EventAttachmentCard from "./EventAttachmentCard";
 import AutoplayVideo from "./AutoplayVideo";
 import LinkPreviewCard from "./LinkPreviewCard";
 import NewsAttachmentCard from "./NewsAttachmentCard";
@@ -134,6 +136,9 @@ export default function FeedAttachments({
   const trainingAttachment = attachments.find(
     (item): item is FeedTrainingAttachment => item.type === "training",
   );
+  const eventAttachment = attachments.find(
+    (item): item is FeedEventAttachment => item.type === "event",
+  );
   const articleAttachment = attachments.find(
     (item): item is FeedArticleAttachment => item.type === "article",
   );
@@ -171,6 +176,7 @@ export default function FeedAttachments({
           showReminder={showTrainingReminder}
         />
       )}
+      {eventAttachment && <EventAttachmentCard attachment={eventAttachment} />}
       <ImagePreviewOverlay
         images={previewImages}
         activeId={previewPhotoId}

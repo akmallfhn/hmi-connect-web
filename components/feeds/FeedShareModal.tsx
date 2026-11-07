@@ -11,6 +11,7 @@ import type {
   FeedAttachment,
   FeedNewsAttachment,
   FeedTrainingAttachment,
+  FeedEventAttachment,
   FeedUploadAttachment,
 } from "@/apis/feeds";
 import Button from "@/components/buttons/Button";
@@ -20,6 +21,7 @@ import Modal from "@/components/modals/Modal";
 import { SHARE_PLATFORMS } from "@/components/modals/ShareModal";
 import { requestAttachmentColor } from "@/hooks/useAttachmentPalette";
 import { DEFAULT_ATTACHMENT_COLOR } from "@/lib/attachment-palette";
+import { formatEventDateLabel } from "@/lib/event-ui";
 import { socialIconUrl } from "@/lib/constants";
 import { resolveFeedAuthor } from "@/lib/feed-author";
 import {
@@ -324,8 +326,9 @@ async function prepareEditorial(
 }
 
 // Mirrors TrainingAttachmentCard: poster on the left, label/title/organizer/schedule beside it.
-async function prepareTraining(context: Ctx, attachment: FeedTrainingAttachment): Promise<PreparedAttachment> {
-  if (attachment.reference_is_deleted) return deletedStrip("Latihan kader yang dibagikan sudah dihapus");
+async function prepareActivity(context: Ctx, attachment: FeedTrainingAttachment | FeedEventAttachment): Promise<PreparedAttachment> {
+  const isEvent = attachment.type === "event";
+  if (attachment.reference_is_deleted) return deletedStrip(isEvent ? "Event yang dibagikan sudah dihapus" : "Latihan kader yang dibagikan sudah dihapus");
 
   const poster = await optionalImage(attachment.reference_image_url);
   const posterWidth = 112;
@@ -333,14 +336,14 @@ async function prepareTraining(context: Ctx, attachment: FeedTrainingAttachment)
   const inner = 16;
   const textX = inner + posterWidth + inner;
   const textWidth = MEDIA_WIDTH - textX - inner;
-  const levelNumber = attachment.reference_level?.match(/\d+/)?.[0];
-  const label = levelNumber ? `Latihan Kader ${levelNumber}` : "Latihan Kader";
+  const levelNumber = !isEvent ? attachment.reference_level?.match(/\d+/)?.[0] : null;
+  const label = isEvent ? attachment.reference_category_name ?? "Event HMI" : levelNumber ? `Latihan Kader ${levelNumber}` : "Latihan Kader";
   const organizer = attachment.reference_organizer_entity_name?.trim() || "Penyelenggara HMI";
   const { reference_start_date: start, reference_end_date: end } = attachment;
-  const schedule = start ? formatDateRange(start, end ?? start) : null;
+  const schedule = start ? isEvent ? formatEventDateLabel(start, end ?? start) : formatDateRange(start, end ?? start) : null;
 
   context.font = headlineFont(19, 500);
-  const titleLines = wrapText(context, attachment.reference_title ?? "Latihan Kader", textWidth, 2);
+  const titleLines = wrapText(context, attachment.reference_title ?? (isEvent ? "Event HMI" : "Latihan Kader"), textWidth, 2);
   const blockHeight = 26 + 8 + titleLines.length * 24 + 8 + 20 + (schedule ? 6 + 20 : 0);
   const height = posterHeight + inner * 2;
 
@@ -457,7 +460,8 @@ function prepareAttachment(context: Ctx, feed: Feed, attachment: FeedAttachment)
     case "news":
       return prepareEditorial(context, attachment);
     case "training":
-      return prepareTraining(context, attachment);
+    case "event":
+      return prepareActivity(context, attachment);
   }
 }
 

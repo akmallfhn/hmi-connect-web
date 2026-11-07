@@ -47,6 +47,7 @@ export type FeedAttachmentTypeEnum =
   | "url"
   | "news"
   | "training"
+  | "event"
   | "article";
 // The three the composer can actually produce — news/training/article are linked, never uploaded.
 export type FeedUploadAttachmentTypeEnum = Extract<

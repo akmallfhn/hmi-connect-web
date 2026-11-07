@@ -1,6 +1,7 @@
 "use client";
 
 import { IconDownload, IconLink, IconShare2 } from "@tabler/icons-react";
+import { Repeat2 } from "lucide-react";
 import Image from "next/image";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ interface ArticleShareModalProps {
   onClose: () => void;
   article: ShareArticle;
   url: string;
+  onShareToFeed: () => void;
 }
 
 function headlineFont(size: number, weight: number) {
@@ -274,23 +276,25 @@ function MobileAction({
   label,
   onClick,
   disabled,
+  wide = false,
 }: {
   icon: ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  wide?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-[68px] shrink-0 snap-start flex-col items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
+      className={`flex shrink-0 snap-start flex-col items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50 ${wide ? "w-[94px]" : "w-[68px]"}`}
     >
       <span className="flex size-12 items-center justify-center rounded-full bg-surface-muted text-heading">
         {icon}
       </span>
-      <span className="w-full truncate text-center text-xs text-muted-foreground">
+      <span className={`w-full text-center text-xs text-muted-foreground ${wide ? "leading-4" : "truncate"}`}>
         {label}
       </span>
     </button>
@@ -302,6 +306,7 @@ export default function ArticleShareModal({
   onClose,
   article,
   url,
+  onShareToFeed,
 }: ArticleShareModalProps) {
   const [busy, setBusy] = useState<"copy" | "download" | "share" | null>(null);
   const imageKey = `${article.id}:${article.updated_at}`;
@@ -409,6 +414,11 @@ export default function ArticleShareModal({
     onClose();
   }
 
+  function handleShareToFeed() {
+    handleClose();
+    onShareToFeed();
+  }
+
   return (
     <Modal
       open={open}
@@ -442,6 +452,12 @@ export default function ArticleShareModal({
 
         <div className="-mx-5 w-[calc(100%+2.5rem)] shrink-0 lg:hidden">
           <div className="flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <MobileAction
+              icon={<Repeat2 className="size-5" />}
+              label="Bagikan ke Feed"
+              onClick={handleShareToFeed}
+              wide
+            />
             <MobileAction
               icon={<IconLink className="size-5" stroke={2} />}
               label={busy === "copy" ? "Menyalin..." : "Copy Link"}
@@ -493,6 +509,16 @@ export default function ArticleShareModal({
             Unduh gambar ini untuk Story atau postingan, atau kirim tautan
             artikelnya langsung ke teman.
           </p>
+
+          <div className="mt-6">
+            <DesktopAction
+              icon={<Repeat2 className="size-5" />}
+              title="Bagikan ke Feed"
+              description="Buat postingan dengan artikel ini"
+              onClick={handleShareToFeed}
+              disabled={false}
+            />
+          </div>
 
           <div className="mt-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-disabled-foreground">

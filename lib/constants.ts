@@ -40,7 +40,7 @@ export function getAdminSiteOrigin(): string {
 // sessionStorage key + window event name the bottom navbar's compose button uses to open the composer after navigating.
 export const COMPOSE_INTENT_KEY = "hmi-compose-intent";
 
-// Companion to COMPOSE_INTENT_KEY — a JSON news draft (RepostToFeedButton) the composer opens with as a news attachment.
+// Companion to COMPOSE_INTENT_KEY — a JSON news draft the composer opens with as a news attachment.
 export const COMPOSE_INTENT_NEWS_KEY = "hmi-compose-intent-news";
 
 // Same companion shape for an editorial article, which the composer attaches as type "article".
@@ -48,6 +48,8 @@ export const COMPOSE_INTENT_ARTICLE_KEY = "hmi-compose-intent-article";
 
 // Training twin of the news and article compose intents; it carries the preview for a training attachment.
 export const COMPOSE_INTENT_TRAINING_KEY = "hmi-compose-intent-training";
+
+export const COMPOSE_INTENT_EVENT_KEY = "hmi-compose-intent-event";
 
 // Text companion to the intents above: prefilled composer content, such as a campaign hashtag.
 export const COMPOSE_INTENT_TEXT_KEY = "hmi-compose-intent-text";

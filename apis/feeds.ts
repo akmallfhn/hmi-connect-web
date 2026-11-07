@@ -61,6 +61,22 @@ export type FeedTrainingAttachment = FeedAttachmentBase & {
   reference_is_deleted: boolean;
 };
 
+export type FeedEventAttachment = FeedAttachmentBase & {
+  type: "event";
+  reference_id: string;
+  reference_title: string | null;
+  reference_description: string | null;
+  reference_image_url: string | null;
+  reference_category_name: string | null;
+  reference_start_date: string | null;
+  reference_end_date: string | null;
+  reference_organizer_entity_type: OfficialEntityTypeEnum | null;
+  reference_organizer_entity_id: string | null;
+  reference_organizer_entity_name: string | null;
+  reference_organizer_entity_image_url: string | null;
+  reference_is_deleted: boolean;
+};
+
 // The one type keyed by `article_id` rather than `reference_id` — mirror the backend, don't rename.
 export type FeedArticleAttachment = FeedAttachmentBase & {
   type: "article";
@@ -81,6 +97,7 @@ export type FeedAttachment =
   | FeedUploadAttachment
   | FeedNewsAttachment
   | FeedTrainingAttachment
+  | FeedEventAttachment
   | FeedArticleAttachment;
 
 export type Feed = {
@@ -121,7 +138,7 @@ export type CreateFeedPayload = {
   attachment?:
     | { type: "photo"; media_ids: string[] }
     | { type: "video" | "url"; urls: string[] }
-    | { type: "news" | "training"; reference_id: string }
+    | { type: "news" | "training" | "event"; reference_id: string }
     | { type: "article"; article_id: string };
   repost_of_id?: string;
   // Sent as a pair to publish under an entity; the backend requires a manage grant at that exact entity.
