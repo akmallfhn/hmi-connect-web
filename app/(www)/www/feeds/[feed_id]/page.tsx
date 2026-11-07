@@ -92,7 +92,9 @@ export default async function FeedDetailPage({
         />
 
         <PageMargin noMobilePadding className="pb-6 lg:pt-6">
-          <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-8">
+          <div className={actingEntity
+            ? "mx-auto lg:max-w-[600px]"
+            : "grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-8"}>
             <main className="min-w-0">
               <FeedItemCard
                 surface="page"
@@ -109,9 +111,11 @@ export default async function FeedDetailPage({
               />
             </main>
 
-            <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-              <RightSidebar userId={user?.id} />
-            </aside>
+            {!actingEntity && (
+              <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+                <RightSidebar userId={user?.id} />
+              </aside>
+            )}
           </div>
         </PageMargin>
 

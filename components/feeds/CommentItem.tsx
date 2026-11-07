@@ -123,8 +123,9 @@ export default function CommentItem({
       {replyTarget && (
         <div className="mt-4">
           <CommentSubmitter
-            avatar={viewer.authorEntity?.imageUrl ?? viewer.currentUserAvatar}
-            name={viewer.authorEntity?.name ?? viewer.currentUserName}
+            avatar={viewer.currentUserAvatar}
+            name={viewer.currentUserName}
+            authorEntity={viewer.authorEntity}
             avatarSize={32}
             value={replyText}
             onChange={setReplyText}

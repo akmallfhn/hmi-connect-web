@@ -29,6 +29,8 @@ export type SentReaction = {
   author_entity_image_url: string | null;
 };
 
+export type ActorReaction = { type: ReactionTypeEnum | null };
+
 type Metapaging = {
   total_data: number;
   total_page: number;
@@ -96,6 +98,27 @@ export async function unsendReaction(payload: {
             author_entity_id: payload.authorEntity.id,
           }
         : {}),
+    },
+  });
+}
+
+export async function getActorReaction(payload: {
+  targetType: ReactionTargetTypeEnum;
+  targetId: string;
+  authorEntity: { type: OfficialEntityTypeEnum; id: string };
+}): Promise<ApiEnvelope<ActorReaction>> {
+  const sessionToken = await getSessionToken();
+  if (!sessionToken) {
+    return { status: "UNAUTHORIZED", message: "Session expired. Please log in again." };
+  }
+  return callApi("/api/v1/reactions/mine", {
+    method: "POST",
+    token: sessionToken,
+    body: {
+      target_type: payload.targetType,
+      target_id: payload.targetId,
+      author_entity_type: payload.authorEntity.type,
+      author_entity_id: payload.authorEntity.id,
     },
   });
 }

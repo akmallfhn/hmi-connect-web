@@ -2,12 +2,16 @@
 
 import { FormEvent, KeyboardEvent, useState } from "react";
 import Avatar from "../common/Avatar";
+import FeedAuthorAvatar from "./FeedAuthorAvatar";
+import SpecialBodyLogoFallback from "../svg/SpecialBodyLogoFallback";
+import type { ComposerAuthorEntity } from "../forms/CreateFeedForms";
 import Button from "../buttons/Button";
 import MentionTextarea from "../fields/MentionTextarea";
 
 interface CommentSubmitterProps {
   avatar?: string;
   name?: string;
+  authorEntity?: ComposerAuthorEntity;
   avatarSize?: number;
   value: string;
   onChange: (value: string) => void;
@@ -24,6 +28,7 @@ const LINE_HEIGHT = 24;
 export default function CommentSubmitter({
   avatar,
   name,
+  authorEntity,
   avatarSize = 32,
   value,
   onChange,
@@ -52,7 +57,27 @@ export default function CommentSubmitter({
       className="rounded-lg border border-border-strong bg-surface px-3 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 sm:px-4 sm:py-3"
     >
       <div className="flex items-start gap-3">
-        <Avatar src={avatar} name={name ?? "Kader"} size={avatarSize} />
+        {authorEntity ? (
+          <FeedAuthorAvatar
+            author={{
+              name: authorEntity.name,
+              avatar: authorEntity.imageUrl ?? undefined,
+              href: authorEntity.profileHref ?? "#",
+              isEntity: true,
+            }}
+            size={avatarSize}
+            fallbackLogo={
+              authorEntity.type === "special_body" && authorEntity.bodyType ? (
+                <SpecialBodyLogoFallback
+                  type={authorEntity.bodyType}
+                  style={{ width: avatarSize * 0.5, height: avatarSize * 0.5 }}
+                />
+              ) : undefined
+            }
+          />
+        ) : (
+          <Avatar src={avatar} name={name ?? "Kader"} size={avatarSize} />
+        )}
         <MentionTextarea
           rows={1}
           value={value}

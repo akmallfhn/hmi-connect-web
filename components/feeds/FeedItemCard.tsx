@@ -667,8 +667,9 @@ export default function FeedItemCard({
           <div className="mt-4">
             {currentUserId ? (
               <CommentSubmitter
-                avatar={authorEntity?.imageUrl ?? currentUserAvatar}
-                name={authorEntity?.name ?? currentUserName}
+                avatar={currentUserAvatar}
+                name={currentUserName}
+                authorEntity={authorEntity}
                 avatarSize={36}
                 value={commentText}
                 onChange={setCommentText}

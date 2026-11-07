@@ -2,23 +2,10 @@
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import FeedItemCard from "./FeedItemCard";
-import CreateFeedForms, {
-  type ComposerArticleDraft,
-  type ComposerNewsDraft,
-  type ComposerTrainingDraft,
-  type ComposerEventDraft,
-} from "../forms/CreateFeedForms";
+import CreateFeedForms from "../forms/CreateFeedForms";
 import type { Feed, FeedTimelineItem } from "@/apis/feeds";
 import { loadMoreFeeds } from "@/lib/actions";
-import {
-  COMPOSE_INTENT_ARTICLE_KEY,
-  COMPOSE_INTENT_KEY,
-  COMPOSE_INTENT_NEWS_KEY,
-  COMPOSE_INTENT_TEXT_KEY,
-  COMPOSE_INTENT_PHOTO_KEY,
-  COMPOSE_INTENT_TRAINING_KEY,
-  COMPOSE_INTENT_EVENT_KEY,
-} from "@/lib/constants";
+import { useFeedComposeIntent } from "@/hooks/useFeedComposeIntent";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface FeedTimelineProps {
@@ -42,68 +29,6 @@ export type TimelineInsertion = {
   mobileOnly?: boolean;
 };
 
-// Written by the share-to-feed action; a malformed entry just opens an empty composer.
-function parseNewsIntent(raw: string | null): ComposerNewsDraft | undefined {
-  if (!raw) return undefined;
-  try {
-    const parsed = JSON.parse(raw) as ComposerNewsDraft;
-    return parsed.id && parsed.title ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function parseArticleIntent(
-  raw: string | null
-): ComposerArticleDraft | undefined {
-  if (!raw) return undefined;
-  try {
-    const parsed = JSON.parse(raw) as ComposerArticleDraft;
-    return parsed.id && parsed.title ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function parseTrainingIntent(
-  raw: string | null,
-): ComposerTrainingDraft | undefined {
-  if (!raw) return undefined;
-  try {
-    const parsed = JSON.parse(raw) as ComposerTrainingDraft;
-    return parsed.id && parsed.name && parsed.level ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function parseEventIntent(raw: string | null): ComposerEventDraft | undefined {
-  if (!raw) return undefined;
-  try {
-    const parsed = JSON.parse(raw) as ComposerEventDraft;
-    return parsed.id && parsed.title && parsed.startDate && parsed.endDate ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-// Written by the twibbon editor; anything but a JPEG/PNG/WebP data URL is ignored.
-function parsePhotoIntent(raw: string | null): File[] | undefined {
-  const match = raw && /^data:(image\/(jpeg|png|webp));base64,(.+)$/.exec(raw);
-  if (!match) return undefined;
-  try {
-    const binary = window.atob(match[3]);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index++) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-    const extension = match[2] === "jpeg" ? "jpg" : match[2];
-    return [new File([bytes], `twibbon.${extension}`, { type: match[1] })];
-  } catch {
-    return undefined;
-  }
-}
-
 export default function FeedTimeline({
   initialItems,
   initialHasMore,
@@ -121,24 +46,7 @@ export default function FeedTimeline({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
-  const [composerSignal, setComposerSignal] = useState(0);
-  const [composerNews, setComposerNews] = useState<
-    ComposerNewsDraft | undefined
-  >(undefined);
-  const [composerArticle, setComposerArticle] = useState<
-    ComposerArticleDraft | undefined
-  >(undefined);
-  const [composerTraining, setComposerTraining] = useState<
-    ComposerTrainingDraft | undefined
-  >(undefined);
-  const [composerEvent, setComposerEvent] = useState<ComposerEventDraft | undefined>(undefined);
-  const [composerPhotos, setComposerPhotos] = useState<File[] | undefined>(
-    undefined
-  );
-
-  const [composerText, setComposerText] = useState<string | undefined>(
-    undefined
-  );
+  const composeIntent = useFeedComposeIntent();
 
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -174,48 +82,6 @@ export default function FeedTimeline({
     return () => observer.disconnect();
   }, [hasMore, loadNextPage]);
 
-  useEffect(() => {
-    function consumeComposeIntent() {
-      if (!window.sessionStorage.getItem(COMPOSE_INTENT_KEY)) return;
-      window.sessionStorage.removeItem(COMPOSE_INTENT_KEY);
-
-      const raw = window.sessionStorage.getItem(COMPOSE_INTENT_NEWS_KEY);
-      if (raw) window.sessionStorage.removeItem(COMPOSE_INTENT_NEWS_KEY);
-
-      const rawArticle = window.sessionStorage.getItem(
-        COMPOSE_INTENT_ARTICLE_KEY
-      );
-      if (rawArticle) {
-        window.sessionStorage.removeItem(COMPOSE_INTENT_ARTICLE_KEY);
-      }
-      const rawTraining = window.sessionStorage.getItem(
-        COMPOSE_INTENT_TRAINING_KEY,
-      );
-      if (rawTraining) {
-        window.sessionStorage.removeItem(COMPOSE_INTENT_TRAINING_KEY);
-      }
-      const rawEvent = window.sessionStorage.getItem(COMPOSE_INTENT_EVENT_KEY);
-      if (rawEvent) window.sessionStorage.removeItem(COMPOSE_INTENT_EVENT_KEY);
-
-      setComposerNews(parseNewsIntent(raw));
-      setComposerArticle(parseArticleIntent(rawArticle));
-      setComposerTraining(parseTrainingIntent(rawTraining));
-      setComposerEvent(parseEventIntent(rawEvent));
-
-      const rawText = window.sessionStorage.getItem(COMPOSE_INTENT_TEXT_KEY);
-      if (rawText) window.sessionStorage.removeItem(COMPOSE_INTENT_TEXT_KEY);
-      setComposerText(rawText ?? undefined);
-      const rawPhoto = window.sessionStorage.getItem(COMPOSE_INTENT_PHOTO_KEY);
-      if (rawPhoto) window.sessionStorage.removeItem(COMPOSE_INTENT_PHOTO_KEY);
-      setComposerPhotos(parsePhotoIntent(rawPhoto));
-      setComposerSignal((prev) => prev + 1);
-    }
-
-    consumeComposeIntent();
-    window.addEventListener(COMPOSE_INTENT_KEY, consumeComposeIntent);
-    return () => window.removeEventListener(COMPOSE_INTENT_KEY, consumeComposeIntent);
-  }, []);
-
   function handleFeedDeleted(feedId: string) {
     setItems((prev) => prev.filter((item) => item.feed.id !== feedId));
   }
@@ -246,13 +112,7 @@ export default function FeedTimeline({
         avatar={currentUserAvatar}
         userId={currentUserId}
         onCreated={handleFeedCreated}
-        forceOpenSignal={composerSignal}
-        forceOpenNews={composerNews}
-        forceOpenArticle={composerArticle}
-        forceOpenTraining={composerTraining}
-        forceOpenEvent={composerEvent}
-        forceOpenText={composerText}
-        forceOpenPhotos={composerPhotos}
+        {...composeIntent}
       />
 
       {quickMenu && <div className="lg:hidden">{quickMenu}</div>}

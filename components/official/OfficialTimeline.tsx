@@ -7,6 +7,7 @@ import CreateFeedForms, {
 } from "../forms/CreateFeedForms";
 import FeedItemCard from "../feeds/FeedItemCard";
 import { loadMoreFeeds } from "@/lib/actions";
+import { useFeedComposeIntent } from "@/hooks/useFeedComposeIntent";
 import type { UserStatusEnum, VerificationStatusEnum } from "@/lib/types";
 
 interface OfficialTimelineProps {
@@ -36,6 +37,7 @@ export default function OfficialTimeline({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
+  const composeIntent = useFeedComposeIntent();
 
   const loadNextPage = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -94,6 +96,7 @@ export default function OfficialTimeline({
         userId={currentUserId}
         authorEntity={authorEntity}
         onCreated={handleFeedCreated}
+        {...composeIntent}
       />
 
       <div className="flex flex-col gap-1.5 lg:gap-4">

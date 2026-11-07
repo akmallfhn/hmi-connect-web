@@ -220,6 +220,7 @@ import {
   type EntityAuthor,
 } from "@/apis/feeds";
 import {
+  getActorReaction as getActorReactionApi,
   listReactors as listReactorsApi,
   sendReaction as sendReactionApi,
   unsendReaction as unsendReactionApi,
@@ -1138,6 +1139,15 @@ export async function unsendReaction(
 ) {
   if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
   return unsendReactionApi({ targetType, targetId, authorEntity });
+}
+
+export async function getActorReaction(
+  targetType: ReactionTargetTypeEnum,
+  targetId: string,
+  authorEntity: EntityAuthor,
+) {
+  if (!(await canActAs(authorEntity))) return ACTING_ACCOUNT_FORBIDDEN;
+  return getActorReactionApi({ targetType, targetId, authorEntity });
 }
 
 export async function listNotifications(page?: number) {

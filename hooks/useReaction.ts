@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { REACTIONS } from "@/components/modals/ReactionPickerModal";
-import { sendReaction, unsendReaction } from "@/lib/actions";
+import { getActorReaction, sendReaction, unsendReaction } from "@/lib/actions";
 import type { EntityAuthor } from "@/apis/feeds";
 import {
   isSuccessStatus,
@@ -51,10 +51,24 @@ export function useReaction(
     initial,
     Boolean(initial.authorEntity),
   );
-  const { data: state } = useQuery<ReactionState>({
+  const { data: state, isFetching } = useQuery<ReactionState>({
     queryKey,
-    enabled: false,
+    enabled: Boolean(initial.authorEntity),
     initialData: initialState,
+    refetchOnMount: "always",
+    queryFn: async () => {
+      if (!initial.authorEntity) return initialState;
+      const result = await getActorReaction(
+        targetType,
+        targetId,
+        initial.authorEntity,
+      );
+      if (!isSuccessStatus(result.status)) {
+        throw new Error(result.message ?? "Gagal memuat reaksi akun resmi.");
+      }
+      const current = client.getQueryData<ReactionState>(queryKey) ?? initialState;
+      return { ...current, activeReaction: result.data?.type ?? null };
+    },
   });
   const mutation = useMutation({
     mutationKey,
@@ -78,7 +92,9 @@ export function useReaction(
       toast.error(error.message);
     },
   });
-  const reacting = useIsMutating({ mutationKey }) > 0;
+  const reacting =
+    useIsMutating({ mutationKey }) > 0 ||
+    Boolean(initial.authorEntity && isFetching);
   const activeReaction = state.activeReaction;
   const reactionCount = state.total;
   const reactionBreakdown = state.byType;

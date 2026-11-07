@@ -158,10 +158,10 @@ export default function PublicTrainingCard({
         onClose={() => setShareOpen(false)}
         url={eventUrl}
         text={`Lihat ${training.name}, agenda ${training.level} dari HMI Connect`}
-        onShareToFeed={!manage ? () => {
+        onShareToFeed={() => {
           const { key, draft } = trainingComposeIntent(training);
           openFeedComposerWithAttachment(key, draft, router.push, isSignedIn);
-        } : undefined}
+        }}
       />
     </>
   );

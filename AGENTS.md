@@ -1085,13 +1085,13 @@ iconSm`.
     descriptions are kept short enough to survive that single line in a `w-60` panel. Picking Feed sets
   `sessionStorage[COMPOSE_INTENT_KEY]` (see
   `lib/constants.ts`) and dispatches a same-named `window` event, then navigates to `/`;
-  `FeedTimeline` (mounted only on the home feed) consumes that flag — on mount and via a
-  live listener, so it also fires when "Posting" is clicked while already on `/` — and
-  bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
+  `useFeedComposeIntent` is used by both `FeedTimeline` and `OfficialTimeline` to consume
+  that flag on mount and via a live listener, so it also fires when "Posting" is clicked
+  while already on `/`. It bumps a `forceOpenSignal` counter passed to `CreateFeedForms`, which opens its composer
   modal in response. The "Bagikan ke Feed" action in `NewsArticleCard`'s share modal
   rides the same mechanism plus a companion
   `sessionStorage[COMPOSE_INTENT_NEWS_KEY]` — a JSON `ComposerNewsDraft` (the article id plus
-  enough to preview it). `FeedTimeline` reads both together and passes the draft through as
+  enough to preview it). The timeline reads both together and passes the draft through as
   `forceOpenNews` on `CreateFeedForms`, which opens the composer with the article already
   attached as a real `news` attachment, so reposting a news article to the feed is a straight
   click-then-post instead of copy/pasting the link by hand. It deliberately links the article
@@ -1501,7 +1501,8 @@ iconSm`.
   the card border and detail link have no hover treatment. `EventAttachmentCard`
   uses the same poster and separate footer layout for event references. The first
   action in the share pop up for news, training, event, and article is "Bagikan ke Feed";
-  it opens the composer with that item's card attached.
+  it opens the composer with that item's card attached. Training and event cards also
+  expose this action in entity manage lists, where the selected entity authors the feed.
   `feeds/*` answers
   with `attachments`, an array
   whose items differ by `type`: `photo`/`video`/`url` carry only `reference_url` (and
@@ -1598,8 +1599,8 @@ iconSm`.
   The old `ProfileSidebar.tsx` (the viewer's identity/counts/education card) is
   **deleted** — the desktop-rail redesign dropped it from the home feed, `/search`,
   `/notifications`, `/settings`, `/profile/[username]`, and finally `/feeds/[feed_id]`
-  (which now shares the home feed's two-column grid, with `RightSidebar` as its `lg:`-only
-  sticky aside), each of which lost the
+  (which uses the home feed's two-column grid for a personal viewer and a centered feed
+  column without an aside for an acting entity), each of which lost the
   `getUserByUsername`/`listEducationHistories` fetches that fed it. The rail already shows who you
   are on every page, so don't bring a per-page identity card back. `NewsCard.tsx`
   (rendered by `RightSidebar`, titled "Kabar HMI") is real-API-backed — an async Server
@@ -1613,7 +1614,7 @@ iconSm`.
   is still fully backed by `mockData.ts`, not a real API, and is no longer referenced by
   `RightSidebar` at all (no backing endpoint yet). `RightSidebar` is now
   `ExploreSearchBar` → `FollowingCard` → `NewsCard` → the footer note, and it is the
-  only aside on the home feed and on `/feeds/[feed_id]` — `SuggestedConnectionsCard` left it when the follow suggestions moved
+  only aside on the personal home feed and personal `/feeds/[feed_id]` — `SuggestedConnectionsCard` left it when the follow suggestions moved
   into the timeline at every breakpoint (see `Feed.tsx`'s insertion plan below); repeating them
   beside a timeline that already carries them is the same list twice. It takes a `userId`,
   threaded from `FeedPage`, purely for `FollowingCard`.
@@ -1750,8 +1751,9 @@ AgendaIcon,EventIcon,AlQuranIcon,DocumentIcon,PrayerIcon}.tsx`, colorful SVG ill
   Its optional `authorEntity` is what makes a reaction the entity's rather than the caller's, and
   it **also suppresses the seeded `my_reaction`**: a feed row's `my_reaction` is the viewer's own
   personal reaction, so seeding it while acting as an entity would light the button up for a
-  reaction the entity never sent. There is no per-entity `my_reaction` on the response, so an
-  entity's reaction state starts empty each load rather than being guessed.
+  reaction the entity never sent. When an entity is active, `reactions/mine` loads that
+  entity's actual reaction for feeds, comments, and replies into the actor-scoped query cache.
+  It refetches on mount so a reaction sent by another manager is reflected on detail pages.
 - `hooks/useNotificationsRealtime.ts` — subscribes a `userId` to the Supabase Realtime
   Broadcast channel `notifications:<userId>` and calls the given `onChange` callback on every
   insert/update/delete broadcast for that user; used by `Header` and `BottomNav` (see
@@ -2021,6 +2023,8 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   to user mode. `Super Admin` alone has no acting grant. An inactive selected entity 404s rather
   than posting as it. `OfficialTimeline` uses the same feed list as personal home, with an entity
   composer and `authorEntity` on every feed card; the personal home retains its own inserts.
+  Both timelines consume share-to-feed intents, so sharing from an entity manage card opens
+  the entity composer with its attachment preview.
   The desktop header and rail read the validated selection from `HeaderAdminAccessContext`. The
   rail shows Beranda (`/`), Kelola Event (`/events/manage`), and the entity profile in entity mode;
   it does not repeat the acting entity's name or avatar above the nav.

@@ -145,10 +145,10 @@ export default function EventCard({
         title="Bagikan Event"
         url={shareUrl}
         text={eventShareText(event.title, event.start_date, event.end_date)}
-        onShareToFeed={!manage ? () => {
+        onShareToFeed={() => {
           const { key, draft } = eventComposeIntent(event);
           openFeedComposerWithAttachment(key, draft, router.push);
-        } : undefined}
+        }}
       />
     </>
   );
