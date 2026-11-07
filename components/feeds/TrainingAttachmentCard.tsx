@@ -1,33 +1,38 @@
 "use client";
 
-import { IconBellCheck, IconBellPlus } from "@tabler/icons-react";
-import { ArrowRight, CalendarDays, GraduationCap, Loader2, X } from "lucide-react";
+import {
+  IconArrowRight,
+  IconBellCheck,
+  IconBellPlus,
+  IconBuildingCommunity,
+  IconCalendarEvent,
+  IconLoader2,
+  IconMapPin,
+  IconSchool,
+  IconX,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { FeedTrainingAttachment } from "@/apis/feeds";
 import Button from "@/components/buttons/Button";
-import Label from "@/components/common/Label";
-import LogoHmi from "@/components/svg/LogoHmi";
 import { useTrainingReminder } from "@/hooks/useTrainingReminder";
-import {
-  formatDateRange,
-  formatDateRangeWithWeekday,
-} from "@/lib/time-manipulation";
+import { formatOrganizerName } from "@/lib/organizer";
+import { formatDateRangeWithWeekday } from "@/lib/time-manipulation";
+import type { TrainingStatusEnum } from "@/lib/types";
 
-function scheduleLabel(
-  attachment: FeedTrainingAttachment,
-  includeWeekday: boolean
-) {
-  const { reference_start_date: start, reference_end_date: end } = attachment;
-  const format = includeWeekday ? formatDateRangeWithWeekday : formatDateRange;
-  if (start && end) return format(start, end);
-  if (start) return format(start, start);
-  return null;
-}
+const TRAINING_TITLES: Record<TrainingStatusEnum, string> = {
+  LK1: "Latihan Kader 1 (Basic Training)",
+  LK2: "Latihan Kader 2 (Intermediate Training)",
+  LK3: "Latihan Kader 3 (Advanced Training)",
+  SC: "Senior Course",
+  LKK: "Latihan Khusus Kohati",
+  LKSG: "Latihan Kepemimpinan dan Sensitivitas Gender",
+};
 
-function trainingLabel(level: FeedTrainingAttachment["reference_level"]) {
-  const levelNumber = level?.match(/\d+/)?.[0];
-  return levelNumber ? `Latihan Kader ${levelNumber}` : "Latihan Kader";
+function scheduleLabel(attachment: FeedTrainingAttachment) {
+  const start = attachment.reference_start_date;
+  const end = attachment.reference_end_date ?? start;
+  return start && end ? formatDateRangeWithWeekday(start, end) : null;
 }
 
 interface TrainingAttachmentCardProps {
@@ -38,7 +43,6 @@ interface TrainingAttachmentCardProps {
   removeDisabled?: boolean;
 }
 
-// An image-led event preview with its actions in a separate footer.
 export default function TrainingAttachmentCard({
   attachment,
   isSignedIn,
@@ -59,130 +63,114 @@ export default function TrainingAttachmentCard({
   if (attachment.reference_is_deleted) {
     return (
       <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-muted px-3 py-4 text-sm text-muted-foreground">
-        <GraduationCap className="size-4 shrink-0" />
+        <IconSchool className="size-4 shrink-0" stroke={2} />
         Latihan kader yang dibagikan sudah dihapus
       </div>
     );
   }
 
-  const mobileSchedule = scheduleLabel(attachment, false);
-  const desktopSchedule = scheduleLabel(attachment, true);
-  const label = trainingLabel(attachment.reference_level);
-  const organizerName =
-    attachment.reference_organizer_entity_name?.trim() || "Penyelenggara HMI";
+  const title = attachment.reference_level
+    ? TRAINING_TITLES[attachment.reference_level]
+    : attachment.reference_title || "Training HMI";
+  const schedule = scheduleLabel(attachment);
+  const location = attachment.reference_location_name?.trim() || "Lokasi menyusul";
+  const organizer = formatOrganizerName({
+    organizer_type: attachment.reference_organizer_entity_type,
+    organizer_name: attachment.reference_organizer_entity_name,
+    level: attachment.reference_level,
+  });
+  const href = `/trainings/${attachment.reference_id}`;
+
+  const renderActions = () => (
+    <>
+      <Link href={href}>
+        <Button variant="secondary">
+          Lihat training <IconArrowRight className="size-4 shrink-0" stroke={2} />
+        </Button>
+      </Link>
+      {showReminder && (
+        <Button
+          variant={reminded ? "soft" : "outline"}
+          onClick={toggleReminder}
+          disabled={savingReminder}
+          aria-label={reminded ? `Batalkan pengingat ${title}` : `Ingatkan saya tentang ${title}`}
+          aria-pressed={reminded}
+          title={reminded ? "Batalkan pengingat" : "Ingatkan saya"}
+        >
+          {savingReminder ? (
+            <IconLoader2 className="size-5 animate-spin motion-reduce:animate-none" stroke={2} />
+          ) : reminded ? (
+            <IconBellCheck className="size-5" stroke={2} />
+          ) : (
+            <IconBellPlus className="size-5" stroke={2} />
+          )}
+          <span>{reminded ? "Pengingat aktif" : "Ingatkan saya"}</span>
+        </Button>
+      )}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={removeDisabled}
+          aria-label="Hapus training"
+          title="Hapus training"
+          className="ml-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/5 text-muted-foreground transition-colors hover:bg-black/10 hover:text-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60 dark:bg-on-dark/10 dark:hover:bg-on-dark/20"
+        >
+          <IconX className="size-4" stroke={2} />
+        </button>
+      )}
+    </>
+  );
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-border-strong bg-surface transition-colors focus-within:border-primary">
-      <Link
-        href={`/trainings/${attachment.reference_id}`}
-        className="group flex min-w-0 items-stretch gap-3 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:gap-4 sm:p-4"
-      >
-        <div className="relative aspect-[4/5] w-[88px] shrink-0 overflow-hidden rounded-xl bg-primary-soft sm:w-28">
+    <div className="mt-3 w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-[#f5f7fb] dark:bg-[#1e1e1e]">
+      <div className="flex min-w-0 items-start gap-4 p-4 pb-0 sm:p-5">
+        <Link href={href} className="relative block aspect-[4/5] w-[112px] shrink-0 overflow-hidden rounded-xl bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-36">
           {attachment.reference_image_url ? (
             <Image
               src={attachment.reference_image_url}
               alt=""
               fill
-              sizes="(max-width: 639px) 88px, 112px"
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+              sizes="(max-width: 639px) 112px, 144px"
+              className="object-cover"
               unoptimized
             />
           ) : (
-            <div className="flex size-full items-center justify-center bg-linear-to-br from-primary-soft to-surface-muted text-primary-foreground">
-              <GraduationCap className="size-8" />
+            <div className="flex size-full items-center justify-center text-muted-foreground">
+              <IconSchool className="size-9" stroke={1.5} />
             </div>
           )}
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col items-start gap-2 py-0.5">
-          <Label variant="orange" size="sm">
-            {label}
-          </Label>
-          <p className="line-clamp-2 font-stack-sans-headline text-[15px] font-medium leading-5 text-heading sm:text-base sm:leading-6">
-            {attachment.reference_title ?? "Latihan Kader"}
-          </p>
-
-          <div className="mt-auto flex w-full min-w-0 flex-col gap-1.5">
-            {mobileSchedule && (
-              <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-secondary-foreground sm:text-[13px] lg:hidden">
-                <CalendarDays className="size-3.5 shrink-0" />
-                <span className="line-clamp-2">{mobileSchedule}</span>
-              </span>
-            )}
-            {desktopSchedule && (
-              <span className="hidden min-w-0 items-center gap-1.5 text-[13px] font-medium text-secondary-foreground lg:flex">
-                <CalendarDays className="size-3.5 shrink-0" />
-                <span className="line-clamp-2">{desktopSchedule}</span>
-              </span>
-            )}
-            <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground sm:text-[13px]">
-              <span className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft ring-1 ring-border">
-                {attachment.reference_organizer_entity_image_url ? (
-                  <Image
-                    src={attachment.reference_organizer_entity_image_url}
-                    alt=""
-                    fill
-                    sizes="20px"
-                    className="object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <LogoHmi className="h-3.5 w-auto" />
-                )}
-              </span>
-              <span className="truncate">{organizerName}</span>
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      <div className="flex items-center justify-between gap-2 border-t border-divider bg-surface-subtle px-3 py-2.5 sm:px-4">
-        <Link
-          href={`/trainings/${attachment.reference_id}`}
-          className="inline-flex min-h-9 items-center gap-1.5 text-xs font-semibold text-primary-foreground focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
-        >
-          Lihat detail
-          <ArrowRight className="size-3.5" />
         </Link>
-        {(showReminder || onRemove) && (
-          <div className="flex shrink-0 items-center gap-2">
-            {showReminder && (
-              <Button
-                variant="primary"
-                onClick={toggleReminder}
-                disabled={savingReminder}
-                aria-label={
-                  reminded
-                    ? `Batalkan pengingat ${attachment.reference_title ?? "training"}`
-                    : `Ingatkan saya tentang ${attachment.reference_title ?? "training"}`
-                }
-                aria-pressed={reminded}
-                title={reminded ? "Batalkan pengingat" : "Ingatkan saya"}
-              >
-                {savingReminder ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : reminded ? (
-                  <IconBellCheck className="size-4" stroke={2} />
-                ) : (
-                  <IconBellPlus className="size-4" stroke={2} />
-                )}
-                <span>{reminded ? "Pengingat aktif" : "Ingatkan saya"}</span>
-              </Button>
-            )}
-            {onRemove && (
-              <button
-                type="button"
-                onClick={onRemove}
-                disabled={removeDisabled}
-                aria-label="Hapus training"
-                title="Hapus training"
-                className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-border-strong bg-surface text-muted-foreground transition hover:bg-destructive-soft hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <X className="size-4" />
-              </button>
-            )}
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <Link href={href} className="block min-w-0 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <p className="line-clamp-3 min-w-0 break-words font-stack-sans-headline text-[17px] font-medium leading-6 text-heading sm:text-xl sm:leading-7">
+              {title}
+            </p>
+            <div className="mt-3 flex min-w-0 flex-col gap-1.5">
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-muted-foreground sm:text-sm">
+                <IconBuildingCommunity className="size-4 shrink-0" stroke={1.8} />
+                <span className="line-clamp-1 min-w-0">{organizer}</span>
+              </span>
+              {schedule && (
+                <span className="flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-muted-foreground sm:text-sm">
+                  <IconCalendarEvent className="size-4 shrink-0" stroke={1.8} />
+                  <span className="line-clamp-1 min-w-0">{schedule}</span>
+                </span>
+              )}
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-muted-foreground sm:text-sm">
+                <IconMapPin className="size-4 shrink-0" stroke={1.8} />
+                <span className="line-clamp-1 min-w-0">{location}</span>
+              </span>
+            </div>
+          </Link>
+          <div className="hidden flex-wrap items-center gap-2 sm:flex">
+            {renderActions()}
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 px-4 pb-4 pt-4 sm:hidden">
+        {renderActions()}
       </div>
     </div>
   );

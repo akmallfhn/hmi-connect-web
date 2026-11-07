@@ -1498,12 +1498,16 @@ iconSm`.
   Profile activity cards use the same control for their main post or comment text.
   `repost_count` comes from the backend's visible plain and quote repost aggregate, and
   the card adjusts it optimistically when reposting or unreposting and increments it after
-  creating a quote repost. `TrainingAttachmentCard` uses a neutral
-  card surface: poster and training details in the main link, then a separate footer
-  for detail, reminder, and optional composer remove actions. Keep those actions
-  outside the main link. Its reminder uses the shared primary `Button` variant;
-  the card border and detail link have no hover treatment. `EventAttachmentCard`
-  uses the same poster and separate footer layout for event references. The first
+  creating a quote repost. `TrainingAttachmentCard` uses a 4:5 poster beside a level
+  name clamped to three lines; organizer, weekday/date, and location sit below that
+  name to the right of the poster, each clamped to one line. The organizer uses a
+  Tabler icon, and the reminder always shows its icon and text. At `sm` and wider,
+  the detail and reminder actions sit directly below the location in that right column;
+  on phones they sit below the poster row. Its location comes from the feed
+  attachment's `reference_location_name`. `EventAttachmentCard` uses a full-width 16:9
+  image above its information. Both cards use `#f5f7fb` in light mode and `#1e1e1e`
+  in dark mode, with a card border.
+  The first
   action in the share pop up for news, training, event, and article is "Bagikan ke Feed";
   it opens the composer with that item's card attached. Training and event cards also
   expose this action in entity manage lists, where the selected entity authors the feed.

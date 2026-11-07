@@ -131,6 +131,7 @@ export type ComposerTrainingDraft = {
   organizerName?: string;
   startDate: string;
   endDate: string;
+  locationName?: string;
   imageUrl?: string;
   description?: string;
 };
@@ -278,6 +279,7 @@ function trainingPreviewAttachment(
     reference_level: training.level,
     reference_start_date: training.startDate,
     reference_end_date: training.endDate,
+    reference_location_name: training.locationName ?? null,
     reference_organizer_entity_type: null,
     reference_organizer_entity_id: null,
     reference_organizer_entity_name: training.organizerName ?? null,

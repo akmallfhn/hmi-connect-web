@@ -48,6 +48,7 @@ export function trainingComposeIntent(training: TrainingListEntry) {
     organizerName: formatOrganizerName(training),
     startDate: training.start_date,
     endDate: training.end_date,
+    locationName: training.location_name,
     imageUrl: training.image_url,
   };
   return { key: COMPOSE_INTENT_TRAINING_KEY, draft };
