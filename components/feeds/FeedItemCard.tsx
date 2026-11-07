@@ -26,7 +26,6 @@ import {
 import { toast } from "sonner";
 import Avatar from "../common/Avatar";
 import Dropdown from "../common/Dropdown";
-import MentionText from "../common/MentionText";
 import Button from "../buttons/Button";
 import CommentItem from "./CommentItem";
 import CommentSubmitter from "./CommentSubmitter";
@@ -34,6 +33,7 @@ import AutoplayVideo from "./AutoplayVideo";
 import YouTubeEmbed from "./YouTubeEmbed";
 import { parseYouTubeId } from "@/lib/youtube";
 import LinkPreviewCard from "./LinkPreviewCard";
+import ExpandableFeedText from "./ExpandableFeedText";
 import ArticleAttachmentCard from "./ArticleAttachmentCard";
 import NewsAttachmentCard from "./NewsAttachmentCard";
 import TrainingAttachmentCard from "./TrainingAttachmentCard";
@@ -420,14 +420,14 @@ export default function FeedItemCard({
           className="flex min-w-0 items-center gap-3"
         >
           {/* Two instances, not one CSS-scaled node: Avatar sizes itself with inline width/height. */}
-          <span className="lg:hidden">
+          <span className="shrink-0 lg:hidden">
             <FeedAuthorAvatar author={author} size={surface === "flat" ? 36 : 40} />
           </span>
-          <span className="hidden lg:block">
+          <span className="hidden shrink-0 lg:block">
             <FeedAuthorAvatar author={author} size={surface === "flat" ? 36 : 44} />
           </span>
           <div className="min-w-0">
-            <p className={`font-semibold text-heading ${surface === "flat" ? "text-sm" : ""}`}>{author.name}</p>
+            <p className={`break-words font-semibold text-heading ${surface === "flat" ? "text-sm" : ""}`}>{author.name}</p>
             <p className={`text-xs text-muted-foreground ${surface === "flat" ? "" : "xl:text-[13px]"}`}>
               {formatRelativeTime(feed.created_at)}
               {isEdited && " • Diedit"}
@@ -497,9 +497,11 @@ export default function FeedItemCard({
         </div>
       </div>
 
-      <p className={`mt-3 whitespace-pre-line break-words text-content-foreground ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}>
-        <MentionText className="underline-offset-2">{content}</MentionText>
-      </p>
+      <ExpandableFeedText
+        text={content}
+        showFullText={surface === "page"}
+        className={`mt-3 whitespace-pre-line break-words text-content-foreground ${surface === "flat" ? "text-[13px] leading-5 sm:text-sm" : "text-sm leading-6 xl:text-[15px]"}`}
+      />
 
       {photoAttachments.length > 0 && (
         <PhotoGrid

@@ -18,6 +18,7 @@ import Avatar from "../common/Avatar";
 import MentionText from "../common/MentionText";
 import FeedAttachments from "../feeds/FeedAttachments";
 import FeedAuthorAvatar from "../feeds/FeedAuthorAvatar";
+import ExpandableFeedText from "../feeds/ExpandableFeedText";
 import QuotedFeed from "../feeds/QuotedFeed";
 
 const TYPE_LABEL: Record<ActivityTypeEnum, string> = {
@@ -152,9 +153,10 @@ export default function ActivityEntryCard({
       <div className="mt-5">
         {type === "comment" && comment ? (
           <>
-            <p className="line-clamp-5 whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base">
-              <MentionText>{comment.message}</MentionText>
-            </p>
+            <ExpandableFeedText
+              text={comment.message}
+              className="whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base"
+            />
             <div className="mt-4 rounded-xl border border-border bg-surface-subtle px-4 py-3">
               <div className="flex items-center gap-2">
                 <FeedAuthorAvatar author={author} size={26} />
@@ -172,9 +174,10 @@ export default function ActivityEntryCard({
         ) : (
           <>
             {feed.content && (
-              <p className="line-clamp-5 whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base">
-                <MentionText>{feed.content}</MentionText>
-              </p>
+              <ExpandableFeedText
+                text={feed.content}
+                className="whitespace-pre-line break-words text-[15px] leading-6 text-content-foreground sm:text-base"
+              />
             )}
             {feed.repost_of ? (
               <QuotedFeed feed={feed.repost_of} linkToDetail />

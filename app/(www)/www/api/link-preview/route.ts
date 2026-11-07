@@ -5,6 +5,7 @@ export type LinkPreview = {
   title: string | null;
   description: string | null;
   image: string | null;
+  favicon: string | null;
   siteName: string;
 };
 
@@ -32,6 +33,30 @@ function ogPatterns(property: string): RegExp[] {
   ];
 }
 
+function linkAttribute(tag: string, name: string): string | undefined {
+  const value = tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i"));
+  return value ? decodeHtmlEntities((value[1] ?? value[2] ?? value[3]).trim()) : undefined;
+}
+
+function extractFavicon(html: string, baseUrl: URL): string | undefined {
+  const links = html.match(/<link\b[^>]*>/gi) ?? [];
+  for (const iconRel of ["icon", "apple-touch-icon"]) {
+    for (const tag of links) {
+      const rel = linkAttribute(tag, "rel");
+      if (!rel?.split(/\s+/).some((part) => part.toLowerCase() === iconRel)) continue;
+      const href = linkAttribute(tag, "href");
+      if (!href) continue;
+      try {
+        const icon = new URL(href, baseUrl);
+        if (icon.protocol === "https:" || icon.protocol === "http:") return icon.toString();
+      } catch {
+        continue;
+      }
+    }
+  }
+  return undefined;
+}
+
 function extractOpenGraph(html: string, baseUrl: URL) {
   const title =
     extractMetaContent(html, ogPatterns("title")) ??
@@ -52,7 +77,7 @@ function extractOpenGraph(html: string, baseUrl: URL) {
     }
   }
 
-  return { title, description, image, siteName };
+  return { title, description, image, favicon: extractFavicon(html, baseUrl), siteName };
 }
 
 export async function GET(request: Request) {
@@ -79,6 +104,7 @@ export async function GET(request: Request) {
     title: null,
     description: null,
     image: null,
+    favicon: null,
     siteName: parsed.hostname,
   };
 
@@ -101,6 +127,7 @@ export async function GET(request: Request) {
       title: meta.title ?? null,
       description: meta.description ?? null,
       image: meta.image ?? null,
+      favicon: meta.favicon ?? null,
       siteName: meta.siteName ?? parsed.hostname,
     });
   } catch {

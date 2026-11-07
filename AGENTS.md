@@ -1479,7 +1479,7 @@ iconSm`.
   cross-origin `<a download>` only navigates, and opens the image in a new tab if CORS refuses;
   closing the overlay restores the exact pre-open page position instantly —, video,
   `LinkPreviewCard.tsx` for a `url` attachment — backed by the `/www/api/link-preview` Route
-  Handler that scrapes OG tags server-side — or `NewsAttachmentCard.tsx`/
+  Handler that scrapes OG tags and the site's favicon server-side — or `NewsAttachmentCard.tsx`/
   `TrainingAttachmentCard.tsx`/`ArticleAttachmentCard.tsx` for the three linked types) plus
   reactions/comments/repost/share actions. Those four controls sit together at the left
   in one horizontally scrollable row, with full-round hover fills and compact reaction,
@@ -1492,6 +1492,10 @@ iconSm`.
   a preview comment field; feed detail loads comments separately. Repost controls that use
   Tabler icons use `IconRefresh`. The feed card's top-right "..." menu closes on page scroll
   through the shared `Dropdown`'s `closeOnScroll` option.
+  Feed author avatar wrappers never shrink when a name wraps. `ExpandableFeedText` clamps
+  post bodies after 10 rendered lines and shows a "Baca selengkapnya" control only when
+  the text actually exceeds that height; the feed detail page shows the full body.
+  Profile activity cards use the same control for their main post or comment text.
   `repost_count` comes from the backend's visible plain and quote repost aggregate, and
   the card adjusts it optimistically when reposting or unreposting and increments it after
   creating a quote repost. `TrainingAttachmentCard` uses a neutral
