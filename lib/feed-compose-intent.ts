@@ -62,6 +62,7 @@ export function eventComposeIntent(event: EventListEntry) {
     organizerImageUrl: event.entity_image_url ?? undefined,
     startDate: event.start_date,
     endDate: event.end_date,
+    locationName: event.location_name,
     imageUrl: event.thumbnail_url,
   };
   return { key: COMPOSE_INTENT_EVENT_KEY, draft };

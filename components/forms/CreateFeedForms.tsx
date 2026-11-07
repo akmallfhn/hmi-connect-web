@@ -143,6 +143,7 @@ export type ComposerEventDraft = {
   organizerImageUrl?: string;
   startDate: string;
   endDate: string;
+  locationName?: string;
   imageUrl?: string;
   description?: string;
 };
@@ -298,6 +299,7 @@ function eventPreviewAttachment(event: ComposerEventDraft): FeedEventAttachment 
     reference_category_name: event.categoryName ?? null,
     reference_start_date: event.startDate,
     reference_end_date: event.endDate,
+    reference_location_name: event.locationName ?? null,
     reference_organizer_entity_type: null,
     reference_organizer_entity_id: null,
     reference_organizer_entity_name: event.organizerName ?? null,

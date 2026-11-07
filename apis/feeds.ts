@@ -70,6 +70,7 @@ export type FeedEventAttachment = FeedAttachmentBase & {
   reference_category_name: string | null;
   reference_start_date: string | null;
   reference_end_date: string | null;
+  reference_location_name: string | null;
   reference_organizer_entity_type: OfficialEntityTypeEnum | null;
   reference_organizer_entity_id: string | null;
   reference_organizer_entity_name: string | null;
