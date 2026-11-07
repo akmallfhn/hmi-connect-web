@@ -127,6 +127,7 @@ import {
   deleteEventImage as deleteEventImageApi,
   deleteEvent as deleteEventApi,
   getEventDetail as getEventDetailApi,
+  listEventsChronological as listEventsChronologicalApi,
   listEventImages as listEventImagesApi,
   updateEventContact as updateEventContactApi,
   updateEventImage as updateEventImageApi,
@@ -276,6 +277,7 @@ import {
   getTrainingDetail as getTrainingDetailApi,
   deleteTrainingMaterial as deleteTrainingMaterialApi,
   lockTrainingEvaluations as lockTrainingEvaluationsApi,
+  listTrainings as listTrainingsApi,
   registerTraining as registerTrainingApi,
   updateTraining as updateTrainingApi,
   updateTrainingContact as updateTrainingContactApi,
@@ -289,6 +291,7 @@ import {
   type UpdateTrainingMaterialPayload,
   type UpdateTrainingPayload,
 } from "@/apis/trainings";
+import { ENTITY_AGENDA_PAGE_SIZE } from "@/lib/entity-profile";
 import type {
   AccessEntityTypeEnum,
   BranchTypeEnum,
@@ -1022,6 +1025,32 @@ export async function loadMoreEntityMembers(
   page: number
 ) {
   return listEntityMembersApi(entityType, entityId, { page });
+}
+
+export async function loadMoreEntityEvents(
+  entityType: MentionEntityTypeEnum,
+  entityId: string,
+  page: number,
+) {
+  return listEventsChronologicalApi({
+    entityType,
+    entityId,
+    page,
+    pageSize: ENTITY_AGENDA_PAGE_SIZE,
+  });
+}
+
+export async function loadMoreEntityTrainings(
+  entityType: MentionEntityTypeEnum,
+  entityId: string,
+  page: number,
+) {
+  return listTrainingsApi({
+    organizerType: entityType,
+    organizerId: entityId,
+    page,
+    pageSize: ENTITY_AGENDA_PAGE_SIZE,
+  });
 }
 
 export async function getSpecialBodyDetail(id: string) {

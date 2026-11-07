@@ -10,6 +10,7 @@ import PageMargin from "../common/PageMargin";
 import EntityChildrenCard, {
   type EntityChildItem,
 } from "../entity/EntityChildrenCard";
+import { EntityEventList, EntityTrainingList } from "../entity/EntityAgendaLists";
 import EntityMemberGrid from "../entity/EntityMemberGrid";
 import EntityPostTimeline from "../entity/EntityPostTimeline";
 import EntityProfileHeader, {
@@ -68,7 +69,7 @@ export default function EntityProfilePage({
   viewer,
   actingEntity,
 }: EntityProfilePageProps) {
-  const { posts, members, follow } = entity.feeds;
+  const { posts, members, follow, events, trainings } = entity.feeds;
   const sections: EntitySection[] = [];
 
   if (posts.list.length > 0) {
@@ -135,6 +136,37 @@ export default function EntityProfilePage({
         <EntityChildrenCard
           title={entity.children.title}
           items={entity.children.items}
+        />
+      ),
+    });
+  }
+
+  if (events.list.length > 0) {
+    sections.push({
+      value: "events",
+      label: "Event",
+      panel: (
+        <EntityEventList
+          key={`${entity.entityType}:${entity.entityId}:events`}
+          entityType={entity.entityType}
+          entityId={entity.entityId}
+          initialPage={events}
+        />
+      ),
+    });
+  }
+
+  if (trainings.list.length > 0) {
+    sections.push({
+      value: "trainings",
+      label: "Training",
+      panel: (
+        <EntityTrainingList
+          key={`${entity.entityType}:${entity.entityId}:trainings`}
+          entityType={entity.entityType}
+          entityId={entity.entityId}
+          initialPage={trainings}
+          isSignedIn={Boolean(viewer?.id)}
         />
       ),
     });

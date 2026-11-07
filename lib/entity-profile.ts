@@ -6,7 +6,9 @@ export function kaderMeta(userCount?: number): string | undefined {
   return userCount === undefined ? undefined : `${userCount} kader`;
 }
 
-export type EntityTab = "posts" | "people" | "chapters" | "branches";
+export type EntityTab = "posts" | "people" | "chapters" | "branches" | "events" | "trainings";
+
+export const ENTITY_AGENDA_PAGE_SIZE = 12;
 
 // Shared by the server hydration and the client lists, so both address the same cache entry.
 export function entityPostsQueryKey(

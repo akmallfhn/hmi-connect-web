@@ -1971,10 +1971,13 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   aggregates, which miss those Cabang).
   `lib/entity-profile.ts` holds only what all five genuinely share and nothing per-entity:
   `kaderMeta`, `entityProfileMetadata` (title/description/canonical/robots), the `EntityTab` union,
-  and the two query keys shared by server hydration and the client lists.
+  the agenda page size, and the two query keys shared by server hydration and the client lists.
   `lib/entity-profile-data.ts#loadEntityProfileFeeds` (`server-only`) fetches, for every route, the
   first page of posts (`listEntityActivity`, 20 rows), kader (`apis/entity-follows.ts#listEntityMembers`,
-  `ENTITY_MEMBERS_PAGE_SIZE` 18), and the viewer's follow state (`getEntityFollowStatus`).
+  `ENTITY_MEMBERS_PAGE_SIZE` 18), entity-owned events (`listEventsChronological`, 12 rows),
+  entity-organized trainings (`listTrainings`, 12 rows), and the viewer's follow state
+  (`getEntityFollowStatus`). Special bodies have no kader list but still load their own events
+  and trainings.
   `components/pages/EntityProfilePage.tsx` mirrors `ProfilePage.tsx`'s shell exactly (`Header`,
   `PageMargin` two-column grid, `SuggestedConnectionsCard` aside, `BottomNav`) and takes the
   `SessionUser` as-is rather than a pre-mapped viewer object, since all five routes render identical
@@ -2001,9 +2004,23 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   `components/feeds/FollowCardGrid.tsx`, the institution members grid's card layout, titled
   "{N} kader terdaftar", subtitle headline → `HMI Komisariat` → `HMI Cabang`), and **Komisariat**
   (Cabang, Korkom) or **Cabang** (Badko, organization — every Cabang, Badko-less ones included)
-  rendered through `EntityChildrenCard`. A section whose first page is empty is omitted, and the tab
+  rendered through `EntityChildrenCard`, followed by **Event** and **Training** grids in the same
+  bordered, padded panel as People, with a `{totalData} Event` or `{totalData} Training` heading.
+  Both use the catalog cards and a load-more button backed by `loadMoreEntityEvents` and
+  `loadMoreEntityTrainings` Server Actions. Both agenda reads use the exact entity type/id pair,
+  including for KOHATI and BPL. On phones, only the profile's Event cards use `compactMobile`:
+  a borderless list row with a 16:9 image on the left and truncated title/date/location on the
+  right. Mobile rows are separated by dividers inside the shared panel; the time row is hidden.
+  From `sm` up the image, radius, and metadata keep the catalog layout. The profile Event list
+  passes `showActions={false}`, so attendance and share controls are absent at every size.
+  The profile Training list also has divider-separated borderless mobile rows, with a 4:5 poster
+  and title/date/location/registration state to its right. From `sm` up it keeps the catalog card
+  layout, but moves the date out of the poster and shows date and location below the organizer;
+  the level label stays on the poster. Its `showActions={false}` removes detail, reminder, and share footer controls at every
+  size; the card body remains a link to the training detail.
+  A section whose first page is empty is omitted, and the tab
   bar only renders with at least two sections; one section shows bare, none shows nothing. URLs use
-  `?tab=posts|people|chapters|branches`, switched locally through `useLocalTabs`, and an unknown tab
+  `?tab=posts|people|chapters|branches|events|trainings`, switched locally through `useLocalTabs`, and an unknown tab
   is stripped from the URL. Header and cards carry a `border`, no shadow; the aside is `lg:top-6`.
   The backend's `{entity}/members/list` returns active users under the entity without a grant
   (organization and Badko through the user's branch, Korkom through the user's chapter).
@@ -2022,8 +2039,9 @@ branches/[branch_id],coordinating-chapters/[coordinating_chapter_id],chapters/[c
   redirecting to the lowercase handle via `redirectToCanonicalProfile`), and a handle of another special
   body type 404s rather than rendering under the wrong path. The header uses `affiliationLead` ("KOHATI ini
   merupakan badan khusus aktif di bawah naungan HMI Cabang X") and `specialBodyType` for the KOHATI/BPL emblem
-  fallback. The page shows posts from `special-bodies/activity/list` and the entity follow button, and has
-  no People tab, since a special body registers no kader of its own. Special bodies appear in mention
+  fallback. The page shows posts from `special-bodies/activity/list`, its own Event and Training
+  tabs when populated, and the entity follow button. It has no People tab, since a special body
+  registers no kader of its own. Special bodies appear in mention
   autocomplete labelled by their `subtitle` type, and `/mentions/[name]` redirects them to these pages.
   The KOHATI/BPL admin create and edit sheets carry the same Official Account ID field.
 - `/` is the one home route for both identities. `app/(www)/www/(gated)/(home)/page.tsx`
